@@ -26,16 +26,16 @@ namespace LLGL
 //! \deprecated Since 0.04b; Write custom structure instead!
 struct LLGL_DEPRECATED("LLGL::VideoOutputDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoOutputDescriptor
 {
-    vector<DisplayMode> displayModes;
+    STL::vector<DisplayMode> displayModes;
 };
 
 //! \deprecated Since 0.04b; Write custom structure instead!
 struct LLGL_DEPRECATED("LLGL::VideoAdapterDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoAdapterDescriptor
 {
-    std::wstring                    name;
-    string                          vendor;
+    STL::wstring                    name;
+    STL::string                          vendor;
     std::uint64_t                   videoMemory = 0;
-    vector<VideoOutputDescriptor>   outputs;
+    STL::vector<VideoOutputDescriptor>   outputs;
 };
 
 

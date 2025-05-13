@@ -35,7 +35,7 @@ void D3D11SetObjectNameSubscript(ID3D11DeviceChild* obj, const char* name, const
     {
         if (name != nullptr)
         {
-            string nameWithSubscript = name;
+            STL::string nameWithSubscript = name;
             nameWithSubscript += subscript;
             const std::size_t nameLen = nameWithSubscript.size();
             obj->SetPrivateData(DXGetD3DDebugObjectNameGUID(), static_cast<UINT>(nameLen), nameWithSubscript.c_str());
@@ -50,20 +50,20 @@ void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::ui
     if (name != nullptr)
     {
         /* Append subscript to label */
-        const string subscript = std::to_string(index);
+        const STL::string subscript = std::to_string(index);
         D3D11SetObjectNameSubscript(obj, name, subscript.c_str());
     }
     else
         D3D11SetObjectName(obj, nullptr);
 }
 
-string D3D11GetObjectName(ID3D11DeviceChild* obj)
+STL::string D3D11GetObjectName(ID3D11DeviceChild* obj)
 {
     if (obj != nullptr)
     {
         UINT nameLen = 0;
         obj->GetPrivateData(DXGetD3DDebugObjectNameGUID(), &nameLen, nullptr);
-        string name;
+        STL::string name;
         name.resize(nameLen);
         obj->GetPrivateData(DXGetD3DDebugObjectNameGUID(), &nameLen, &name[0]);
         return name;
@@ -77,7 +77,7 @@ void D3D11ThrowIfFailed(HRESULT hr, const char* info, ID3D11DeviceChild* obj)
     {
         if (obj != nullptr)
         {
-            const string infoExt = string(info) + " \"" + D3D11GetObjectName(obj) + "\"";
+            const STL::string infoExt = STL::string(info) + " \"" + D3D11GetObjectName(obj) + "\"";
             DXThrowIfFailed(hr, infoExt.c_str());
         }
         else

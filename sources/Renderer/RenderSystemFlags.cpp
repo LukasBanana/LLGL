@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-static bool ReportValidationFailure(const ValidateRenderingCapsFunc& callback, const string& info, const string& attrib)
+static bool ReportValidationFailure(const ValidateRenderingCapsFunc& callback, const STL::string& info, const STL::string& attrib)
 {
     if (callback)
         return callback(info, attrib);
@@ -44,7 +44,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
         {
             bool continueValidation = ReportValidationFailure(
                 callback,
-                "shading language not supported: " + string(ToString(shaderLang)),
+                "shading language not supported: " + STL::string(ToString(shaderLang)),
                 "shadingLanguages[" + std::to_string(i) + ']'
             );
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);
@@ -59,7 +59,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
         {
             bool continueValidation = ReportValidationFailure(
                 callback,
-                "texture format not supported: " + string(ToString(texFormat)),
+                "texture format not supported: " + STL::string(ToString(texFormat)),
                 "textureFormats[" + std::to_string(i) + ']'
             );
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);

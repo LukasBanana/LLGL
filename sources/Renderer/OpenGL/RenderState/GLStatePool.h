@@ -82,11 +82,11 @@ class GLStatePool
 
     private:
 
-        vector<GLDepthStencilStateSPtr>    depthStencilStates_;
-        vector<GLRasterizerStateSPtr>      rasterizerStates_;
-        vector<GLBlendStateSPtr>           blendStates_;
-        vector<GLShaderBindingLayoutSPtr>  shaderBindingLayouts_;
-        vector<GLShaderPipelineSPtr>       shaderPipelines_;
+        STL::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
+        STL::vector<GLRasterizerStateSPtr>      rasterizerStates_;
+        STL::vector<GLBlendStateSPtr>           blendStates_;
+        STL::vector<GLShaderBindingLayoutSPtr>  shaderBindingLayouts_;
+        STL::vector<GLShaderPipelineSPtr>       shaderPipelines_;
 
 };
 

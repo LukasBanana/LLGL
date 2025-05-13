@@ -143,7 +143,7 @@ void DXThrowIfCastFailed(HRESULT hr, const char* interfaceName, const char* cont
 {
     if (FAILED(hr))
     {
-        string s;
+        STL::string s;
         {
             s = "failed to interpret object as instance of <";
             s += interfaceName;
@@ -162,7 +162,7 @@ void DXThrowIfCreateFailed(HRESULT hr, const char* interfaceName, const char* co
 {
     if (FAILED(hr))
     {
-        string s;
+        STL::string s;
         {
             s = "failed to create instance of <";
             s += interfaceName;
@@ -181,7 +181,7 @@ void DXThrowIfInvocationFailed(HRESULT hr, const char* funcName, const char* con
 {
     if (FAILED(hr))
     {
-        string s;
+        STL::string s;
         {
             s = "invocation of <";
             s += funcName;
@@ -215,18 +215,18 @@ Cont GetBlobDataTmpl(ID3DBlob* blob)
     return container;
 }
 
-string DXGetBlobString(ID3DBlob* blob)
+STL::string DXGetBlobString(ID3DBlob* blob)
 {
     if (blob != nullptr)
-        return GetBlobDataTmpl<string>(blob);
+        return GetBlobDataTmpl<STL::string>(blob);
     else
         return {};
 }
 
-vector<char> DXGetBlobData(ID3DBlob* blob)
+STL::vector<char> DXGetBlobData(ID3DBlob* blob)
 {
     if (blob != nullptr)
-        return GetBlobDataTmpl<vector<char>>(blob);
+        return GetBlobDataTmpl<STL::vector<char>>(blob);
     else
         return {};
 }
@@ -242,7 +242,7 @@ ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size)
     return blob;
 }
 
-ComPtr<ID3DBlob> DXCreateBlob(const vector<char>& data)
+ComPtr<ID3DBlob> DXCreateBlob(const STL::vector<char>& data)
 {
     return DXCreateBlob(data.data(), data.size());
 }
@@ -327,11 +327,11 @@ UINT DXGetFxcCompilerFlags(int flags)
     return dxFlags;
 }
 
-static vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapter* adapter)
+static STL::vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapter* adapter)
 {
     LLGL_ASSERT_PTR(adapter);
 
-    vector<VideoAdapterOutputInfo> outputInfos;
+    STL::vector<VideoAdapterOutputInfo> outputInfos;
 
     /* Enumerate over all adapter outputs */
     ComPtr<IDXGIOutput> output;
@@ -346,7 +346,7 @@ static vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapter* ad
         output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, nullptr);
 
         /* Query display modes */
-        vector<DXGI_MODE_DESC> modeDesc(numModes);
+        STL::vector<DXGI_MODE_DESC> modeDesc(numModes);
 
         HRESULT hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, modeDesc.data());
         DXThrowIfFailed(hr, "failed to get display mode list with format DXGI_FORMAT_R8G8B8A8_UNORM");

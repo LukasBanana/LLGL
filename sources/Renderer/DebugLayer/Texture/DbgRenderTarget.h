@@ -40,7 +40,7 @@ class DbgRenderTarget final : public RenderTarget
 
         RenderTarget&                   instance;
         const RenderTargetDescriptor    desc;
-        string                          label;
+        STL::string                          label;
 
     private:
 

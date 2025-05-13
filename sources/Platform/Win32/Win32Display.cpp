@@ -34,8 +34,8 @@ struct Win32DisplayContainer
     int                             cacheIndex = 0;
 };
 
-static vector<Win32DisplayContainer>   g_displayList;
-static vector<Display*>                g_displayRefList;
+static STL::vector<Win32DisplayContainer>   g_displayList;
+static STL::vector<Display*>                g_displayRefList;
 static Win32Display*                        g_primaryDisplay;
 static int                                  g_displayCacheIndex;
 
@@ -317,9 +317,9 @@ DisplayMode Win32Display::GetDisplayMode() const
     return {};
 }
 
-vector<DisplayMode> Win32Display::GetSupportedDisplayModes() const
+STL::vector<DisplayMode> Win32Display::GetSupportedDisplayModes() const
 {
-    vector<DisplayMode> displayModes;
+    STL::vector<DisplayMode> displayModes;
 
     /* Get display device name */
     MONITORINFOEX infoEx;

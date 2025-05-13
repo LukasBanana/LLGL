@@ -35,7 +35,7 @@ class NullRenderPass final : public RenderPass
 
     private:
 
-        string label_;
+        STL::string label_;
 
 };
 

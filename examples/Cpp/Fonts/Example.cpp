@@ -10,7 +10,7 @@
 #include <LLGL/Platform/Platform.h>
 #include <chrono>
 #include <sstream>
-#include <LLGL/Container/Map.h>
+#include <LLGL/STL/Map.h>
 
 
 class Example_Fonts : public ExampleBase
@@ -212,7 +212,7 @@ private:
             int x0, y0, x1, y1, offset[2], spacing;
         };
 
-        map<char, GlyphMapping> mappings;
+        LLGL::STL::map<char, GlyphMapping> mappings;
 
         // Read glyph mapping, i.e. bounding box within texture atlas, offset, and spacing, line by line
         for (const string& ln : lines)

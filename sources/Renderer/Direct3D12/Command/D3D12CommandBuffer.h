@@ -154,7 +154,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         D3D12Resource                           soDrawArgBuffer_;
         D3D12_RESOURCE_STATES                   soBufferStates_[LLGL_MAX_NUM_SO_BUFFERS]    = {};
 
-        vector<D3D12ResourceTransition>         bundleResourceTransitions_;
+        STL::vector<D3D12ResourceTransition>         bundleResourceTransitions_;
 
 };
 

@@ -98,7 +98,7 @@ class GLContextManager
     private:
 
         RendererConfigurationOpenGL             profile_;
-        vector<GLPixelFormatWithContext>        pixelFormats_;
+        STL::vector<GLPixelFormatWithContext>        pixelFormats_;
         DynamicByteArray                        customNativeHandle_;
         NewGLContextCallback                    newContextCallback_;
 

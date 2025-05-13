@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/STL/STLAllocator.h>
 
 
 namespace LLGL
@@ -25,7 +26,7 @@ namespace LLGL
 template
 <
     typename T,
-    typename Allocator       = std::allocator<T>,
+    typename Allocator       = STL::allocator<T>,
     typename GrowStrategy    = GrowStrategyAddHalf
 >
 using DynamicVector = SmallVector<T, 0, Allocator, GrowStrategy>;

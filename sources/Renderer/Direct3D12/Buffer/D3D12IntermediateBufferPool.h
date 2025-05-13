@@ -46,7 +46,7 @@ class D3D12IntermediateBufferPool
 
         ID3D12Device*                   device_     = nullptr;
         D3D12_HEAP_TYPE                 heapType_   = D3D12_HEAP_TYPE_DEFAULT;
-        vector<D3D12StagingBuffer>      chunks_; // Chunks are always growing in size, i.e. chunk[N] must always be smaller than chunk[N+1]
+        STL::vector<D3D12StagingBuffer>      chunks_; // Chunks are always growing in size, i.e. chunk[N] must always be smaller than chunk[N+1]
 
 };
 

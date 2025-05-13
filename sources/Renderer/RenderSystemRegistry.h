@@ -56,7 +56,7 @@ class RenderSystemRegistry
 
     private:
 
-        vector<RenderSystemModulePtr>       modules_;
+        STL::vector<RenderSystemModulePtr>       modules_;
         SmallVector<RenderSystemEntry, 1>   renderSystemEntries_;
 
 };

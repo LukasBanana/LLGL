@@ -47,7 +47,7 @@ struct CanvasFlags
 */
 struct CanvasDescriptor
 {
-    //! Canvas title as UTF16 string.
+    //! Canvas title as UTF16 STL::string.
     UTF8String  title;
 
     /**

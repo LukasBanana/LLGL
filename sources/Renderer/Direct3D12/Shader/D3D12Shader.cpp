@@ -96,7 +96,7 @@ bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) cons
     return false;
 }
 
-HRESULT D3D12Shader::ReflectAndCacheConstantBuffers(const vector<D3D12ConstantBufferReflection>** outConstantBuffers)
+HRESULT D3D12Shader::ReflectAndCacheConstantBuffers(const STL::vector<D3D12ConstantBufferReflection>** outConstantBuffers)
 {
     if (cbufferReflectionResult_ == S_FALSE)
     {
@@ -139,7 +139,7 @@ void D3D12Shader::ReserveVertexAttribs(const ShaderDescriptor& shaderDesc)
 
 /*
 Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
+and stores the semantic name in the specified linear STL::string container
 */
 static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
 {
@@ -165,7 +165,7 @@ void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute*
 
 /*
 Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
+and stores the semantic name in the specified linear STL::string container
 */
 static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
 {
@@ -234,7 +234,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
 
 static bool IsProfileDxcAppropriate(const char* target)
 {
-    // LLGL allows for a blank string to be sent into the target of a ShaderDescriptor, but
+    // LLGL allows for a blank STL::string to be sent into the target of a ShaderDescriptor, but
     // FXC nor DXC supports this behavior, so it doesn't matter if we send to FXC or DXC.
     if (target == nullptr || *target == '\0')
         return false;
@@ -245,7 +245,7 @@ static bool IsProfileDxcAppropriate(const char* target)
         // find our first underscore
         if (c[0] == '_')
         {
-            // Safe to use next character in NUL-terminated string, since it's either our major version number or '\0'
+            // Safe to use next character in NUL-terminated STL::string, since it's either our major version number or '\0'
             char majorShaderVersion = c[1];
             return (majorShaderVersion >= '6');
         }
@@ -258,7 +258,7 @@ static bool IsProfileDxcAppropriate(const char* target)
 bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
     /* Get source code */
-    string fileContent;
+    STL::string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
     const char* sourceName      = nullptr;
@@ -277,7 +277,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         sourceName      = shaderDesc.debugName;
     }
 
-    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source string */
+    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source STL::string */
     if (sourceLength == 0 && sourceCode != nullptr)
         sourceLength = std::strlen(sourceCode);
 
@@ -302,23 +302,23 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         }
 
         /* Get DXC compiler arguments */
-        vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
+        STL::vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
 
         compilerArgs.push_back(L"-E");
-        const std::wstring entryWide = ToWideString(entry);
+        const STL::wstring entryWide = ToWideString(entry);
         compilerArgs.push_back(entryWide.c_str());
 
         compilerArgs.push_back(L"-T");
-        const std::wstring targetWide = ToWideString(target);
+        const STL::wstring targetWide = ToWideString(target);
         compilerArgs.push_back(targetWide.c_str());
 
-        vector<std::wstring> definesWide;
+        STL::vector<STL::wstring> definesWide;
         if (defines != nullptr)
         {
             /* Append macro definitions as compiler arguments "-D<NAME>" or "-D<NAME>=<VALUE>" */
             for (; defines->Name != nullptr; ++defines)
             {
-                std::wstring defineWide = std::wstring(L"-D") + ToWideString(defines->Name);
+                STL::wstring defineWide = STL::wstring(L"-D") + ToWideString(defines->Name);
                 if (defines->Definition != nullptr && defines->Definition[0] != '\0')
                 {
                     defineWide += L'=';
@@ -328,7 +328,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
             }
 
             compilerArgs.reserve(compilerArgs.size() + definesWide.size());
-            for (const std::wstring& s : definesWide)
+            for (const STL::wstring& s : definesWide)
                 compilerArgs.push_back(s.c_str());
         }
 
@@ -456,7 +456,7 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     return S_OK;
 }
 
-HRESULT D3D12Shader::ReflectConstantBuffers(vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
+HRESULT D3D12Shader::ReflectConstantBuffers(STL::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
 {
     HRESULT hr = S_OK;
 
@@ -495,7 +495,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(vector<D3D12ConstantBufferReflection
             if (FAILED(hr))
                 return hr;
 
-            vector<D3D12ConstantReflection> fieldsInfo;
+            STL::vector<D3D12ConstantReflection> fieldsInfo;
 
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {

@@ -67,7 +67,7 @@ static const char* GetASCIIName(char c)
     }
     else
     {
-        /* Return input character as NUL-terminated string */
+        /* Return input character as NUL-terminated STL::string */
         static thread_local char buf[2] = { '\0', '\0' };
         buf[0] = c;
         return buf;
@@ -142,7 +142,7 @@ class Parser
         // Returns the current token with an optional offset.
         StringView Token(int offset = 0) const;
 
-        // Returns true if the current token (with optional offset) matches the specified string.
+        // Returns true if the current token (with optional offset) matches the specified STL::string.
         bool Match(const StringView& match, int offset = 0) const;
 
         // Returns true if the current token (with optional offset) matches an identifier.
@@ -154,7 +154,7 @@ class Parser
         // Accepts and returns the current token, then moves to the next token.
         StringView Accept();
 
-        // Accepts the current token if it matches the specified string.
+        // Accepts the current token if it matches the specified STL::string.
         bool Accept(const StringView& match);
 
         // Returns true if there are further tokens to parse.
@@ -344,7 +344,7 @@ static bool ParseValueFromDictionary(Parser& parser, const Dictionary<T>& dict, 
         }
     }
 
-    string tokStr{ tok.begin(), tok.end() };
+    STL::string tokStr{ tok.begin(), tok.end() };
     parser.report.Errorf("unknown %s: %s", valueName, tokStr.c_str());
     return false;
 }
@@ -356,7 +356,7 @@ static bool ReturnWithParseError(Parser& parser, const char* format)
     const StringView prevTok = parser.Token(-1);
     if (!prevTok.empty())
     {
-        string prevTokStr{ prevTok.begin(), prevTok.end() };
+        STL::string prevTokStr{ prevTok.begin(), prevTok.end() };
         parser.report.Errorf("%s; last token = '%s'", format, prevTokStr.c_str());
     }
     else
@@ -366,7 +366,7 @@ static bool ReturnWithParseError(Parser& parser, const char* format)
 
 static bool ReturnWithParseError(Parser& parser, const char* format, const StringView& tok)
 {
-    string tokStr{ tok.begin(), tok.end() };
+    STL::string tokStr{ tok.begin(), tok.end() };
     parser.report.Errorf(format, tokStr.c_str());
     return false;
 }
@@ -643,7 +643,7 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
     if (!parser.Accept("("))
         return ReturnWithParseError(parser, "expected open bracket '(' after resource type");
 
-    vector<BindingDescriptor> intermediateBindings;
+    STL::vector<BindingDescriptor> intermediateBindings;
 
     while (parser.Feed() && !parser.Match(")"))
     {
@@ -982,7 +982,7 @@ static void RaiseParsingError(const Parser& parser, const char* descName)
     {
         /* Raise token error */
         StringView errorToken = parser.Token();
-        const string errorTokenStr{ errorToken.begin(), errorToken.end() };
+        const STL::string errorTokenStr{ errorToken.begin(), errorToken.end() };
         LLGL_TRAP("parsing %s failed at token '%s'", descName, errorTokenStr.c_str());
     }
 }
@@ -1007,7 +1007,7 @@ static bool ParseSamplerDescAddress(Parser& parser, SamplerDescriptor& outDesc)
         {
             if ((axes & axis) != 0)
             {
-                string tokStr{ tok.begin(), tok.end() };
+                STL::string tokStr{ tok.begin(), tok.end() };
                 parser.report.Errorf("duplicate sampler address mode %s axis: %s", axisName, tokStr.c_str());
                 return false;
             }
@@ -1628,13 +1628,13 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...)
 {
     if (std::strchr(format, '%') != nullptr)
     {
-        string s;
+        STL::string s;
         LLGL_STRING_PRINTF(s, format);
         return ParseContext{ UTF8String{ s.c_str() } };
     }
     else
     {
-        /* Forward string to ParseContext unmodified */
+        /* Forward STL::string to ParseContext unmodified */
         return ParseContext{ StringView{ format } };
     }
 }

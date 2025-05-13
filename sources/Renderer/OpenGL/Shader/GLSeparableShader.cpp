@@ -63,7 +63,7 @@ void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLa
     }
 }
 
-void GLSeparableShader::QueryInfoLog(string& text, bool& hasErrors)
+void GLSeparableShader::QueryInfoLog(STL::string& text, bool& hasErrors)
 {
     if (!GLShaderProgram::GetLinkStatus(GetID()))
         hasErrors = true;
@@ -151,7 +151,7 @@ void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLa
     // dummy
 }
 
-void GLSeparableShader::QueryInfoLog(string& text, bool& hasErrors)
+void GLSeparableShader::QueryInfoLog(STL::string& text, bool& hasErrors)
 {
     // dummy
 }

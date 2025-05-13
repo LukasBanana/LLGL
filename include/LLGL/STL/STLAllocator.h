@@ -15,16 +15,21 @@
 namespace LLGL
 {
 
+namespace STL
+{
+
 #ifndef LLGL_CUSTOM_ALLOCATOR
 
 template < typename Type >
-using llgl_allocator = std::allocator< Type >;
+using allocator = std::allocator< Type >;
 
 #else
 
 // Is up to the user to implement a custom allocator 'llgl_allocator'
 
 #endif
+
+}
 
 } // /namespace LLGL
 

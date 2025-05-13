@@ -69,7 +69,7 @@ class D3D11ConstantsCache
         {
             UINT                        shaderRegister; // Constant buffer binding slot
             long                        stageFlags;
-            vector<ConstantRegister>    constants;
+            STL::vector<ConstantRegister>    constants;
         };
 
     private:

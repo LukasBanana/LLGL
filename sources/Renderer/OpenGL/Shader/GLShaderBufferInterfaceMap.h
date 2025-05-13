@@ -107,7 +107,7 @@ class GLShaderBufferInterfaceMap
 
     private:
 
-        vector<GLBufferInterface>   bufferMap_;                         // Maps a buffer binding to a shader interface type
+        STL::vector<GLBufferInterface>   bufferMap_;                         // Maps a buffer binding to a shader interface type
         std::size_t                 numSSBOs_                   : 15;   // Number of actual SSBOs in this bitmap
         std::size_t                 numHeapEntries_             : 15;
         std::size_t                 hasHeapSSBOEntriesOnly_     : 1;

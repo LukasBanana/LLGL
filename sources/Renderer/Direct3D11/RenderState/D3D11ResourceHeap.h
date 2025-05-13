@@ -271,7 +271,7 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     private:
 
-        static vector<D3DResourceBinding> FilterAndSortD3DBindingSlots(
+        static STL::vector<D3DResourceBinding> FilterAndSortD3DBindingSlots(
             BindingDescriptorIterator&                  bindingIter,
             const std::initializer_list<ResourceType>&  resourceTypes,
             long                                        resourceBindFlags,

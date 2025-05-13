@@ -98,7 +98,7 @@ class D3D12BufferConstantsPool
     private:
 
         D3D12Resource           resource_;
-        vector<ConstantRange>   constants_;
+        STL::vector<ConstantRange>   constants_;
 
 };
 

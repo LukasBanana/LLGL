@@ -129,12 +129,12 @@ class D3D11RenderTarget final : public RenderTarget
 
         Extent2D                            resolution_;
 
-        vector<ComPtr<ID3D11Texture2D>>     internalTextures_;  // Depth-stencil texture or multi-sampled color targets
+        STL::vector<ComPtr<ID3D11Texture2D>>     internalTextures_;  // Depth-stencil texture or multi-sampled color targets
         DXGI_FORMAT                         depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
         D3D11RenderTargetHandles            renderTargetHandles_;
 
         DXGI_SAMPLE_DESC                    sampleDesc_             = { 1u, 0u };
-        vector<ResolveTarget>               resolveTargets_;
+        STL::vector<ResolveTarget>               resolveTargets_;
 
         const D3D11RenderPass*              renderPass_             = nullptr;
 

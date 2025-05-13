@@ -21,7 +21,7 @@ namespace LLGL
 LLGL::ColorRGBAf color{ LLGL::UninitializeTag{} };
 
 // Explicitly uninitialized color elements in a container.
-vector<LLGL::ColorRGBAf> color;
+STL::vector<LLGL::ColorRGBAf> color;
 color.resize(1024, LLGL::ColorRGBAf{ LLGL::UninitializeTag{} });
 \endcode
 */
@@ -31,7 +31,7 @@ struct UninitializeTag{};
 \brief Common move tag.
 \remarks This can be used to explicitly copy a memory object like in the following example:
 \code
-// Allocate dynamic string object
+// Allocate dynamic STL::string object
 char* s0 = new char[12];
 std::strncpy(s0, "Hello World", 12);
 

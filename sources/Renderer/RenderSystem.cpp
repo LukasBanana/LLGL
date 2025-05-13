@@ -48,7 +48,7 @@ namespace LLGL
 struct RenderSystem::Pimpl
 {
     int                     rendererID  = 0;
-    string             name;
+    STL::string             name;
     bool                    hasInfo     = false;
     RendererInfo            info;
     bool                    hasCaps     = false;
@@ -67,7 +67,7 @@ RenderSystem::~RenderSystem()
     delete pimpl_;
 }
 
-vector<string> RenderSystem::FindModules()
+STL::vector<STL::string> RenderSystem::FindModules()
 {
     #if LLGL_BUILD_STATIC_LIB
     return StaticModules::GetStaticModules();
@@ -231,7 +231,7 @@ Report& RenderSystem::GetMutableReport()
 
 void RenderSystem::Errorf(const char* format, ...)
 {
-    string report;
+    STL::string report;
     LLGL_STRING_PRINTF(report, format);
     GetMutableReport().Reset(std::move(report), true);
 }

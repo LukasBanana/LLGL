@@ -52,7 +52,7 @@ SubType* TakeOwnership(std::unordered_set<std::unique_ptr<BaseType>>& objectSet,
 }
 
 template <typename BaseType, typename SubType>
-SubType* TakeOwnership(vector<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
+SubType* TakeOwnership(STL::vector<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
     objectSet.emplace_back(std::forward<std::unique_ptr<SubType>>(object));
@@ -215,7 +215,7 @@ class UnorderedUniquePtrVector
 
     public:
 
-        using container_type    = vector<IndexedUniquePtr<T>>;
+        using container_type    = STL::vector<IndexedUniquePtr<T>>;
         using iterator          = typename container_type::iterator;
         using const_iterator    = typename container_type::const_iterator;
 

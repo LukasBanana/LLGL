@@ -34,7 +34,7 @@ class LLGL_EXPORT Module : public NonCopyable
     public:
 
         // Converts the module name into a specific filename (e.g. "OpenGL" to "LLGL_OpenGL.dll" on Windows).
-        static string GetModuleFilename(const char* moduleName);
+        static STL::string GetModuleFilename(const char* moduleName);
 
         // Returns true if the specified module is available.
         static bool IsAvailable(const char* moduleFilename);

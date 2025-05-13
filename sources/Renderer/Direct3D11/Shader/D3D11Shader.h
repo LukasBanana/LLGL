@@ -26,7 +26,7 @@ namespace LLGL
 
 struct D3D11ConstantReflection
 {
-    string  name;   // Name of the constant buffer field.
+    STL::string  name;   // Name of the constant buffer field.
     UINT    offset; // Offset (in bytes) within the constant buffer.
     UINT    size;   // Size (in bytes) of this uniform.
 };
@@ -35,7 +35,7 @@ struct D3D11ConstantBufferReflection
 {
     UINT                            slot;
     UINT                            size;
-    vector<D3D11ConstantReflection> fields;
+    STL::vector<D3D11ConstantReflection> fields;
 };
 
 class D3D11Shader : public Shader
@@ -54,7 +54,7 @@ class D3D11Shader : public Shader
         D3D11Shader(const ShaderType type);
 
         // Returns a list of all reflected constant buffers including their fields.
-        HRESULT ReflectAndCacheConstantBuffers(const vector<D3D11ConstantBufferReflection>** outConstantBuffers);
+        HRESULT ReflectAndCacheConstantBuffers(const STL::vector<D3D11ConstantBufferReflection>** outConstantBuffers);
 
         // Returns the native D3D shader object.
         inline const ComPtr<ID3D11DeviceChild>& GetNative() const
@@ -99,7 +99,7 @@ class D3D11Shader : public Shader
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
 
-        HRESULT ReflectConstantBuffers(vector<D3D11ConstantBufferReflection>& outConstantBuffers) const;
+        HRESULT ReflectConstantBuffers(STL::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const;
 
     private:
 
@@ -109,7 +109,7 @@ class D3D11Shader : public Shader
         Report                                      report_;
 
         HRESULT                                     cbufferReflectionResult_    = S_FALSE;
-        vector<D3D11ConstantBufferReflection>  cbufferReflections_;
+        STL::vector<D3D11ConstantBufferReflection>  cbufferReflections_;
 
 };
 

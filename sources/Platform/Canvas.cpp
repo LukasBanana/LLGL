@@ -16,7 +16,7 @@ namespace LLGL
 
 struct Canvas::Pimpl
 {
-    vector<std::shared_ptr<EventListener>> eventListeners;
+    STL::vector<std::shared_ptr<EventListener>> eventListeners;
     void*                                       userData        = nullptr;
 };
 

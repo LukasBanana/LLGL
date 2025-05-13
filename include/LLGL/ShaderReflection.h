@@ -127,14 +127,14 @@ This is not a "descriptor", because it is only used as output from an interface 
 struct ShaderReflection
 {
     //! List of all shader reflection resource views.
-    vector<ShaderResourceReflection>   resources;
+    STL::vector<ShaderResourceReflection>   resources;
 
     /**
     \brief List of all uniforms (a.k.a. shader constants).
     \note Only supported with: OpenGL, Vulkan.
     \todo Add support to D3D11 and D3D12 for global constants.
     */
-    vector<UniformDescriptor>          uniforms;
+    STL::vector<UniformDescriptor>          uniforms;
 
     /**
     \brief Reflection data that is specifically for the vertex shader.

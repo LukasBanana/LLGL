@@ -43,7 +43,7 @@ class DbgPipelineState final : public PipelineState
     public:
 
         PipelineState&                  instance;
-        string                          label;
+        STL::string                          label;
         const DbgPipelineLayout* const  pipelineLayout  = nullptr;
         const bool                      isGraphicsPSO   = false;
 

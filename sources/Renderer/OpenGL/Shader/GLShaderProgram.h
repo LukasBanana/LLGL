@@ -32,7 +32,7 @@ class GLShaderProgram final : public GLShaderPipeline
         void Bind(GLStateManager& stateMngr) override;
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr) override;
         void QueryInfoLogs(Report& report) override;
-        void QueryTexBufferNames(set<string>& outSamplerBufferNames, set<string>& outImageBufferNames) const override;
+        void QueryTexBufferNames(STL::set<STL::string>& outSamplerBufferNames, STL::set<STL::string>& outImageBufferNames) const override;
 
     public:
 
@@ -50,7 +50,7 @@ class GLShaderProgram final : public GLShaderPipeline
         static bool GetLinkStatus(GLuint program);
 
         // Returns the native GL shader program log.
-        static string GetGLProgramLog(GLuint program);
+        static STL::string GetGLProgramLog(GLuint program);
 
         // Invokes glBindAttribLocation on the specified program for all vertex attributes.
         static void BindAttribLocations(GLuint program, std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
@@ -68,7 +68,7 @@ class GLShaderProgram final : public GLShaderPipeline
         static void QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection);
 
         // Queries all texture buffer names of the specified program and inserts them into the set.
-        static void QueryTexBufferNames(GLuint program, set<string>& samplerBufferNames, set<string>& imageBufferNames);
+        static void QueryTexBufferNames(GLuint program, STL::set<STL::string>& samplerBufferNames, STL::set<STL::string>& imageBufferNames);
 
     private:
 

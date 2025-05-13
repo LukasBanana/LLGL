@@ -39,7 +39,7 @@ class NullPipelineLayout final : public PipelineLayout
 
     private:
 
-        string label_;
+        STL::string label_;
 
 };
 

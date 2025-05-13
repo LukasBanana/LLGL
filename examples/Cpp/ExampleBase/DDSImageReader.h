@@ -11,11 +11,11 @@
 
 #include <LLGL/ImageFlags.h>
 #include <LLGL/TextureFlags.h>
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 
-using LLGL::vector;
-using LLGL::string;
+using LLGL::STL::vector;
+using LLGL::STL::string;
 
 // Image reader class to load DXT compressed textures from file.
 class DDSImageReader

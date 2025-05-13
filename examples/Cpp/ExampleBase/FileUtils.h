@@ -9,8 +9,8 @@
 #define LLGLEXAMPLES_FILE_UTILS_H
 
 
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 #include <type_traits>
 #include <LLGL/RenderingDebuggerFlags.h>
 
@@ -19,8 +19,8 @@
  * Global helper functions
  */
 
-using LLGL::vector;
-using LLGL::string;
+using LLGL::STL::vector;
+using LLGL::STL::string;
 
 // Helper class to abstract reading assets for multiple platforms.
 class AssetReader

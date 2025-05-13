@@ -38,7 +38,7 @@ class NullSampler final : public Sampler
 
     private:
 
-        string label_;
+        STL::string label_;
 
 };
 

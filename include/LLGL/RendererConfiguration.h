@@ -63,13 +63,13 @@ enum class OpenGLContextProfile
 */
 struct ApplicationDescriptor
 {
-    //! Descriptive string of the application.
+    //! Descriptive STL::string of the application.
     const char*     applicationName     = nullptr;
 
     //! Version number of the application.
     std::uint32_t   applicationVersion  = 0;
 
-    //! Descriptive string of the engine or middleware.
+    //! Descriptive STL::string of the engine or middleware.
     const char*     engineName          = nullptr;
 
     //! Version number of the engine or middleware.

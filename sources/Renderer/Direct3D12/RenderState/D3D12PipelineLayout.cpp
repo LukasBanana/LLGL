@@ -134,14 +134,14 @@ void D3D12PipelineLayout::ReleaseRootSignature()
 
 ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitConstants(
     const ArrayView<D3D12Shader*>&          shaders,
-    vector<D3D12RootConstantLocation>& outRootConstantMap) const
+    STL::vector<D3D12RootConstantLocation>& outRootConstantMap) const
 {
     if (!rootSignature_)
         return nullptr;
 
     /* Reflect all constant buffers from all shaders */
     long cbufferStageFlags = 0;
-    vector<const D3D12ConstantBufferReflection*> cbufferReflections;
+    STL::vector<const D3D12ConstantBufferReflection*> cbufferReflections;
 
     struct D3D12CbufferField
     {
@@ -176,7 +176,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         LLGL_ASSERT_PTR(shader);
 
         /* Get cached cbuffer reflection from shader */
-        const vector<D3D12ConstantBufferReflection>* currentCbufferReflections = nullptr;
+        const STL::vector<D3D12ConstantBufferReflection>* currentCbufferReflections = nullptr;
         HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
         DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D12 shader");
         LLGL_ASSERT_PTR(currentCbufferReflections);

@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-static void InitNullRendererShadingLanguages(vector<ShadingLanguage>& shadingLanguages)
+static void InitNullRendererShadingLanguages(STL::vector<ShadingLanguage>& shadingLanguages)
 {
     shadingLanguages =
     {
@@ -27,7 +27,7 @@ static void InitNullRendererShadingLanguages(vector<ShadingLanguage>& shadingLan
     };
 }
 
-static void InitNullRendererTextureFormats(vector<Format>& textureFormats)
+static void InitNullRendererTextureFormats(STL::vector<Format>& textureFormats)
 {
     constexpr int firstFormatIndex  = static_cast<int>(Format::A8UNorm);
     constexpr int lastFormatIndex   = static_cast<int>(Format::BC5SNorm);

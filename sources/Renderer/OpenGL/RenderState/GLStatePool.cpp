@@ -32,7 +32,7 @@ namespace LLGL
 // Searches a compatible state object with complexity O(log n)
 template <typename T, typename TCompare = T, typename TBase = T>
 std::shared_ptr<T> FindCompatibleStateObject(
-    vector<std::shared_ptr<TBase>>& container,
+    STL::vector<std::shared_ptr<TBase>>& container,
     const TCompare&                 compareObject,
     std::size_t&                    index)
 {
@@ -49,7 +49,7 @@ std::shared_ptr<T> FindCompatibleStateObject(
 }
 
 template <typename T, typename TCompare, typename TBase, typename... Args>
-std::shared_ptr<T> CreateRenderStateObjectExt(vector<std::shared_ptr<TBase>>& container, Args&&... args)
+std::shared_ptr<T> CreateRenderStateObjectExt(STL::vector<std::shared_ptr<TBase>>& container, Args&&... args)
 {
     /* Try to find render state object with same parameter */
     const TCompare stateToCompare{ std::forward<Args>(args)... };
@@ -66,7 +66,7 @@ std::shared_ptr<T> CreateRenderStateObjectExt(vector<std::shared_ptr<TBase>>& co
 }
 
 template <typename T, typename... Args>
-std::shared_ptr<T> CreateRenderStateObject(vector<std::shared_ptr<T>>& container, Args&&... args)
+std::shared_ptr<T> CreateRenderStateObject(STL::vector<std::shared_ptr<T>>& container, Args&&... args)
 {
     /* Try to find render state object with same parameter */
     T stateToCompare{ std::forward<Args>(args)... };
@@ -84,7 +84,7 @@ std::shared_ptr<T> CreateRenderStateObject(vector<std::shared_ptr<T>>& container
 
 template <typename T>
 void ReleaseRenderStateObject(
-    vector<std::shared_ptr<T>>&         container,
+    STL::vector<std::shared_ptr<T>>&         container,
     const std::function<void(T*)>&      callback,
     std::shared_ptr<T>&&                renderState)
 {

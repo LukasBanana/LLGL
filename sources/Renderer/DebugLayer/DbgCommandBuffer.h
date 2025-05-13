@@ -65,15 +65,15 @@ class DbgCommandBuffer final : public CommandBuffer
 
         CommandBuffer&                  instance;
         const CommandBufferDescriptor   desc;
-        string                          label;
+        STL::string                          label;
 
     private:
 
         struct BindingTable
         {
             ResourceHeap*       resourceHeap = nullptr;
-            vector<Resource*>   resources;
-            vector<char>        uniforms;
+            STL::vector<Resource*>   resources;
+            STL::vector<char>        uniforms;
         };
 
         struct Bindings
@@ -121,7 +121,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         struct Records
         {
-            vector<SwapChainFramePair> swapChainFrames;
+            STL::vector<SwapChainFramePair> swapChainFrames;
         };
 
     private:
@@ -158,7 +158,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateTextureRegionForFramebuffer(const TextureRegion& region, const Offset2D& offset);
         void ValidateIndexType(const Format format);
         void ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, std::uint32_t rowStride, std::uint32_t layerStride, const Extent3D& extent);
-        void ValidateMemoryBarrierResourceFlags(ResourceType resourceType, long bindFlags, const string& label, std::uint32_t resourceIndex);
+        void ValidateMemoryBarrierResourceFlags(ResourceType resourceType, long bindFlags, const STL::string& label, std::uint32_t resourceIndex);
 
         void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size, const char* rangeName = nullptr);
@@ -226,7 +226,7 @@ class DbgCommandBuffer final : public CommandBuffer
         const RenderingFeatures&    features_;
         const RenderingLimits&      limits_;
 
-        stack<string>          debugGroups_;
+        STL::stack<STL::string>          debugGroups_;
 
         DbgQueryTimerPool           queryTimerPool_;
         bool                        perfProfilerEnabled_    = false;

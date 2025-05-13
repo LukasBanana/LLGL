@@ -40,7 +40,7 @@ class GLQueryHeap final : public QueryHeap
         }
 
         // Returns the list of hardware query IDs.
-        inline const vector<GLuint>& GetIDs() const
+        inline const STL::vector<GLuint>& GetIDs() const
         {
             return ids_;
         }
@@ -53,7 +53,7 @@ class GLQueryHeap final : public QueryHeap
 
     private:
 
-        vector<GLuint>  ids_;
+        STL::vector<GLuint>  ids_;
         std::uint32_t   groupSize_  = 1;
 
 };

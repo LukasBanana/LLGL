@@ -61,7 +61,7 @@ class GLShader : public Shader
         GLenum GetGLType() const;
 
         // Returns the transform feedback varying names.
-        inline const vector<const char*>& GetTransformFeedbackVaryings() const
+        inline const STL::vector<const char*>& GetTransformFeedbackVaryings() const
         {
             return transformFeedbackVaryings_;
         }
@@ -115,7 +115,7 @@ class GLShader : public Shader
         GLShader(const bool isSeparable, const ShaderDescriptor& desc);
 
         // Resets the report with the specified compile/link status and log.
-        void ReportStatusAndLog(bool status, const string& log);
+        void ReportStatusAndLog(bool status, const STL::string& log);
 
         // Stores the native shader ID.
         inline void SetID(GLuint id, Permutation permutation = PermutationDefault)
@@ -135,9 +135,9 @@ class GLShader : public Shader
         const bool                      isSeparable_;
         GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
         LinearStringContainer           shaderAttribNames_;
-        vector<GLShaderAttribute>       shaderAttribs_;
+        STL::vector<GLShaderAttribute>       shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;
-        vector<const char*>             transformFeedbackVaryings_;
+        STL::vector<const char*>             transformFeedbackVaryings_;
         Report                          report_;
 
 };

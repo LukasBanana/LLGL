@@ -29,10 +29,10 @@ void GLShaderBufferInterfaceMap::BuildMap(const GLPipelineLayout& pipelineLayout
     LLGL_ASSERT(bufferMap_.empty(), "shader buffer interface map should only be built once");
 
     /* Query all active texture buffer names in shader pipeline */
-    set<string> samplerBufferNames, imageBufferNames;
+    STL::set<STL::string> samplerBufferNames, imageBufferNames;
     shaderPipeline.QueryTexBufferNames(samplerBufferNames, imageBufferNames);
 
-    auto MapResourceNameToBufferInterface = [&samplerBufferNames, &imageBufferNames](const string& name) -> GLBufferInterface
+    auto MapResourceNameToBufferInterface = [&samplerBufferNames, &imageBufferNames](const STL::string& name) -> GLBufferInterface
     {
         /* If binding name matches a sampler buffer uniform, interpret binding descriptor as sampler buffer */
         if (samplerBufferNames.find(name) != samplerBufferNames.end())
@@ -59,7 +59,7 @@ void GLShaderBufferInterfaceMap::BuildMap(const GLPipelineLayout& pipelineLayout
     for_range(i, pipelineLayout.GetBindings().size())
     {
         const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
-        const string& name = pipelineLayout.GetBindingNames()[i];
+        const STL::string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty() && binding.IsSSBO())
             AppendDynamicEntry(MapResourceNameToBufferInterface(name));
     }

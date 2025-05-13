@@ -168,7 +168,7 @@ void GLShader::PatchShaderSourceWithOptions(
     }
 }
 
-void GLShader::ReportStatusAndLog(bool status, const string& log)
+void GLShader::ReportStatusAndLog(bool status, const STL::string& log)
 {
     ResetReportWithNewline(report_, log.c_str(), !status);
 }

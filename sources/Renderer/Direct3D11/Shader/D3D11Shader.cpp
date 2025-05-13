@@ -47,7 +47,7 @@ bool D3D11Shader::Reflect(ShaderReflection& reflection) const
         return false;
 }
 
-HRESULT D3D11Shader::ReflectAndCacheConstantBuffers(const vector<D3D11ConstantBufferReflection>** outConstantBuffers)
+HRESULT D3D11Shader::ReflectAndCacheConstantBuffers(const STL::vector<D3D11ConstantBufferReflection>** outConstantBuffers)
 {
     if (cbufferReflectionResult_ == S_FALSE)
     {
@@ -122,7 +122,7 @@ static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttr
 bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
 {
     /* Get source code */
-    string fileContent;
+    STL::string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
     const char* sourceName      = nullptr;
@@ -141,7 +141,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         sourceName      = shaderDesc.debugName;
     }
 
-    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source string */
+    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source STL::string */
     if (sourceLength == 0 && sourceCode != nullptr)
         sourceLength = std::strlen(sourceCode);
 
@@ -248,7 +248,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
             if (streamOutputAttribs != nullptr && numStreamOutputAttribs > 0)
             {
                 /* Initialize output elements for geometry shader with stream-output */
-                vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
+                STL::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
                 outputElements.resize(numStreamOutputAttribs);
 
                 UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
@@ -381,7 +381,7 @@ HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     #endif // /__GNUC__
 }
 
-HRESULT D3D11Shader::ReflectConstantBuffers(vector<D3D11ConstantBufferReflection>& outConstantBuffers) const
+HRESULT D3D11Shader::ReflectConstantBuffers(STL::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const
 {
     // D3D11 shader reflection is currently not supported for MinGW,
     // due to missing reference to '_GUID const& __mingw_uuidof<ID3D11ShaderReflection>()'.
@@ -424,7 +424,7 @@ HRESULT D3D11Shader::ReflectConstantBuffers(vector<D3D11ConstantBufferReflection
             if (FAILED(hr))
                 return hr;
 
-            vector<D3D11ConstantReflection> fieldsInfo;
+            STL::vector<D3D11ConstantReflection> fieldsInfo;
 
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {

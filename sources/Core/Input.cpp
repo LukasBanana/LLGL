@@ -107,10 +107,10 @@ struct Input::Pimpl
     unsigned        anyKeyCount             = 0;
     UTF8String      chars;
 
-    vector<EventListenerSurfacePair<WindowEventListener>>
+    STL::vector<EventListenerSurfacePair<WindowEventListener>>
                     windowEventListeners;
 
-    vector<EventListenerSurfacePair<CanvasEventListener>>
+    STL::vector<EventListenerSurfacePair<CanvasEventListener>>
                     canvasEventListeners;
 
     void Reset()
@@ -361,7 +361,7 @@ Input::~Input()
 
 template <typename T>
 bool HasEventListenerForSurface(
-    vector<EventListenerSurfacePair<T>>&   eventListeners,
+    STL::vector<EventListenerSurfacePair<T>>&   eventListeners,
     const Surface*                              surface)
 {
     return

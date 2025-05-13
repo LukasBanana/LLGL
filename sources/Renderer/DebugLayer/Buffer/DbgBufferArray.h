@@ -23,12 +23,12 @@ class DbgBufferArray final : public BufferArray
 
     public:
 
-        DbgBufferArray(BufferArray& instance, long bindFlags, vector<DbgBuffer*>&& buffers);
+        DbgBufferArray(BufferArray& instance, long bindFlags, STL::vector<DbgBuffer*>&& buffers);
 
     public:
 
         BufferArray&                instance;
-        const vector<DbgBuffer*>    buffers;
+        const STL::vector<DbgBuffer*>    buffers;
 
 };
 

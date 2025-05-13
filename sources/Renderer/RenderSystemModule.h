@@ -37,7 +37,7 @@ class RenderSystemModule
     public:
 
         // Returns a name list of available render system modules.
-        static vector<string> FindModules();
+        static STL::vector<STL::string> FindModules();
 
         // Loads the specified render system module. Returns null on failure.
         static RenderSystemModulePtr Load(const char* name, Report* outReport = nullptr);
@@ -49,13 +49,13 @@ class RenderSystemModule
         }
 
         // Returns the module name, e.g. "Direct3D12".
-        inline const string& GetName() const
+        inline const STL::string& GetName() const
         {
             return name_;
         }
 
         // Returns the module filename, e.g. "LLGL_Direct3D12D.dll".
-        inline const string& GetFilename() const
+        inline const STL::string& GetFilename() const
         {
             return filename_;
         }
@@ -66,7 +66,7 @@ class RenderSystemModule
         // Returns the renderer ID (LLGL::RendererID) or 0 if the procedure could not be loaded.
         int RendererID();
 
-        // Returns the renderer name or an empty string if the procedure could not be loaded.
+        // Returns the renderer name or an empty STL::string if the procedure could not be loaded.
         const char* RendererName();
 
         // Allocates a new RenderSystem interface from this module and returns its managed pointer.
@@ -90,14 +90,14 @@ class RenderSystemModule
 
         RenderSystemModule(
             const char*                 name,
-            string&&                    filename,
+            STL::string&&                    filename,
             std::unique_ptr<Module>&&   module
         );
 
     private:
 
-        string                      name_;
-        string                      filename_;
+        STL::string                      name_;
+        STL::string                      filename_;
         std::unique_ptr<Module>     module_;
         unsigned                    useCount_       = 0;
 

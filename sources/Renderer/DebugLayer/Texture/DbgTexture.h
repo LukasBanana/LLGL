@@ -41,13 +41,13 @@ class DbgTexture final : public Texture
         const TextureDescriptor desc;
         TextureViewDescriptor   viewDesc;
         std::uint32_t           mipLevels           = 1;        // Actual number of MIP-map levels.
-        string                  label;
+        STL::string                  label;
         const bool              isTextureView       = false;
 
     private:
 
         //DbgTexture*             sharedTexture_      = nullptr;  // Reference to the shared texture (only for texture-views)
-        //set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
+        //STL::set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
 
 };
 

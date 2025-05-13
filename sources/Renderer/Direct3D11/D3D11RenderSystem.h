@@ -190,7 +190,7 @@ class D3D11RenderSystem final : public RenderSystem
         bool                                    tearingSupported_       = false;
 
         std::shared_ptr<D3D11StateManager>      stateMngr_;
-        vector<D3D11StateManager*>              deferredStateMngrRefs_;
+        STL::vector<D3D11StateManager*>              deferredStateMngrRefs_;
 
         /* ----- Hardware object containers ----- */
 

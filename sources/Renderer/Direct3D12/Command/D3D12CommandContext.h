@@ -315,11 +315,11 @@ class D3D12CommandContext
         D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];
         UINT                                    numResourceBarriers_                        = 0;
 
-        vector<D3D12_RESOURCE_BARRIER>          uavBarriers_;
+        STL::vector<D3D12_RESOURCE_BARRIER>          uavBarriers_;
         UINT                                    numUAVBarriers_                             = 0;
 
         bool                                    doCacheResourceStates_                      = false;
-        vector<D3D12ResourceTransitionExt>      cachedResourceStates_; // Last recorded resource states for multi-submit command buffers
+        STL::vector<D3D12ResourceTransitionExt>      cachedResourceStates_; // Last recorded resource states for multi-submit command buffers
 
         D3D12StagingDescriptorHeapPool          stagingDescriptorPools_[maxNumAllocators][maxNumDescriptorHeaps];
         D3D12DescriptorHeapSetLayout            stagingDescriptorSetLayout_;

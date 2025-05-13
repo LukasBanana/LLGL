@@ -35,7 +35,7 @@ class NullQueryHeap final : public QueryHeap
 
     private:
 
-        string label_;
+        STL::string label_;
 
 };
 

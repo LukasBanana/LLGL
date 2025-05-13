@@ -27,7 +27,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
     const ArrayView<UniformDescriptor>& uniforms)
 {
     /* Reflect all constant buffers from all shaders */
-    vector<const D3D11ConstantBufferReflection*> cbufferReflections;
+    STL::vector<const D3D11ConstantBufferReflection*> cbufferReflections;
 
     auto FindCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> std::pair<const D3D11ConstantBufferReflection*, const D3D11ConstantReflection*>
     {
@@ -52,7 +52,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
         LLGL_ASSERT_PTR(shader);
 
         /* Get cached cbuffer reflection from shader */
-        const vector<D3D11ConstantBufferReflection>* currentCbufferReflections = nullptr;
+        const STL::vector<D3D11ConstantBufferReflection>* currentCbufferReflections = nullptr;
         HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
         DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D11 shader");
         LLGL_ASSERT_PTR(currentCbufferReflections);

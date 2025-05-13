@@ -58,7 +58,7 @@ class DbgShader final : public Shader
 
         Shader&                 instance;
         const ShaderDescriptor  desc;
-        string                  label;
+        STL::string                  label;
 
     private:
 
@@ -67,8 +67,8 @@ class DbgShader final : public Shader
 
     private:
 
-        string  vertexID_;
-        string  instanceID_;
+        STL::string  vertexID_;
+        STL::string  instanceID_;
         bool    hasAnyOutputAttribs_    = false;
         bool    hasReflectionFailed_    = false;
 

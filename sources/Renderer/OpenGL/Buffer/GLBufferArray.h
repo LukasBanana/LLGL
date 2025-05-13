@@ -29,7 +29,7 @@ class GLBufferArray : public BufferArray
         GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
-        inline const vector<GLuint>& GetIDArray() const
+        inline const STL::vector<GLuint>& GetIDArray() const
         {
             return idArray_;
         }
@@ -40,7 +40,7 @@ class GLBufferArray : public BufferArray
 
     private:
 
-        vector<GLuint> idArray_;
+        STL::vector<GLuint> idArray_;
 
 };
 

@@ -116,11 +116,11 @@ class D3D12StagingBufferPool
 
         ID3D12Device*                       device_                     = nullptr;
 
-        vector<D3D12StagingBuffer>          chunks_;
+        STL::vector<D3D12StagingBuffer>          chunks_;
         std::size_t                         chunkIdx_                   = 0;
         UINT64                              chunkSize_                  = 0;
 
-        vector<D3D12CPUAccessBuffer>        cpuAccessBuffers_;
+        STL::vector<D3D12CPUAccessBuffer>        cpuAccessBuffers_;
         std::size_t                         numReadMappedCPUBuffers_    = 0;
         std::size_t                         numWriteMappedCPUBuffers_   = 0;
 

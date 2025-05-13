@@ -38,7 +38,7 @@ class DbgResourceHeap final : public ResourceHeap
 
         ResourceHeap&                   instance;
         const ResourceHeapDescriptor    desc;
-        string                          label;
+        STL::string                          label;
         const std::uint32_t             numBindings = 1;
 
 };

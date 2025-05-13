@@ -18,9 +18,9 @@
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <random>
-#include <LLGL/Container/Map.h>
+#include <LLGL/STL/Map.h>
 #include <type_traits>
 #include "GeometryUtils.h"
 #include "Stopwatch.h"
@@ -35,8 +35,8 @@
  * Global helper functions
  */
 
-using LLGL::map;
-using LLGL::vector;
+using LLGL::STL::map;
+using LLGL::STL::vector;
 
 // Let the user choose a renderer module (using std::cin).
 string GetSelectedRendererModule(int argc, char* argv[]);

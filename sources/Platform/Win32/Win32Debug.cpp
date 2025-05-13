@@ -203,9 +203,9 @@ LLGL_EXPORT void DebugPuts(const char* text)
     }
 }
 
-static vector<void*> CaptureStackTraceAddresses(DWORD framesToSkip, DWORD framesToCapture)
+static STL::vector<void*> CaptureStackTraceAddresses(DWORD framesToSkip, DWORD framesToCapture)
 {
-    vector<void*> backTrace;
+    STL::vector<void*> backTrace;
     backTrace.resize(framesToCapture);
 
     const WORD capturedFrames = CaptureStackBackTrace(framesToSkip, framesToCapture, backTrace.data(), nullptr);
@@ -223,10 +223,10 @@ LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame, unsigned maxNum
     const       DWORD framesToCapture       = (std::max<DWORD>)(maxNumStackFrames, USHRT_MAX);
     const       DWORD framesToSkip          = (std::max<DWORD>)(0, firstStackFrame) + framesToAlwaysSkip;
 
-    vector<void*> framePointers = CaptureStackTraceAddresses(framesToSkip, framesToCapture);
+    STL::vector<void*> framePointers = CaptureStackTraceAddresses(framesToSkip, framesToCapture);
 
     /* Build chart with columns for stack frames and source information */
-    vector<UTF8String> columns[2];
+    STL::vector<UTF8String> columns[2];
     UTF8String cells[2];
     std::size_t columnWidths[2] = { 0, 0 };
 
@@ -260,7 +260,7 @@ LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame, unsigned maxNum
         }
     }
 
-    /* Build output string from chart */
+    /* Build output STL::string from chart */
     FormattedTableColumn tableColumns[2];
     {
         tableColumns[0].maxWidth        = 80;

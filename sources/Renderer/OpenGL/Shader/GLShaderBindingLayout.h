@@ -57,7 +57,7 @@ class GLShaderBindingLayout
 
         struct NamedResourceBinding
         {
-            string     name;
+            STL::string     name;
             std::uint32_t   slot;
             std::uint32_t   size; // Number of array elements
         };
@@ -68,9 +68,9 @@ class GLShaderBindingLayout
         void BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout);
         void BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout);
 
-        void AppendUniformBinding(const string& name, std::uint32_t slot, std::uint32_t size = 1u);
-        void AppendUniformBlockBinding(const string& name, std::uint32_t slot);
-        void AppendShaderStorageBinding(const string& name, std::uint32_t slot);
+        void AppendUniformBinding(const STL::string& name, std::uint32_t slot, std::uint32_t size = 1u);
+        void AppendUniformBlockBinding(const STL::string& name, std::uint32_t slot);
+        void AppendShaderStorageBinding(const STL::string& name, std::uint32_t slot);
 
     private:
 
@@ -85,7 +85,7 @@ class GLShaderBindingLayout
         std::uint8_t                    numUniformBindings_         = 0;
         std::uint8_t                    numUniformBlockBindings_    = 0;
         std::uint8_t                    numShaderStorageBindings_   = 0;
-        vector<NamedResourceBinding>    bindings_;
+        STL::vector<NamedResourceBinding>    bindings_;
 
 };
 

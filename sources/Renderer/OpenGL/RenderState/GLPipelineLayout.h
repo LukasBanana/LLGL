@@ -28,7 +28,7 @@ class GLStateManager;
 // GL resource binding for heap resources (part of a ResourceHeap).
 struct GLHeapResourceBinding
 {
-    string     name;
+    STL::string     name;
 
     // Interface for BindingIterator<>
     ResourceType    type        = ResourceType::Undefined;
@@ -83,43 +83,43 @@ class GLPipelineLayout final : public PipelineLayout
         void BindStaticSamplers(GLStateManager& stateMngr) const;
 
         // Returns the copied list of heap binding descriptors.
-        inline const vector<GLHeapResourceBinding>& GetHeapBindings() const
+        inline const STL::vector<GLHeapResourceBinding>& GetHeapBindings() const
         {
             return heapBindings_;
         }
 
         // Returns the list of dynamic GL resource bindings.
-        inline const vector<GLPipelineResourceBinding>& GetBindings() const
+        inline const STL::vector<GLPipelineResourceBinding>& GetBindings() const
         {
             return bindings_;
         }
 
         // Returns the list of static sampler binding slots.
-        inline const vector<GLuint>& GetStaticSamplerSlots() const
+        inline const STL::vector<GLuint>& GetStaticSamplerSlots() const
         {
             return staticSamplerSlots_;
         }
 
         // Returns the list of combined texture-sampler binding slots.
-        inline const vector<GLuint>& GetCombinedSamplerSlots() const
+        inline const STL::vector<GLuint>& GetCombinedSamplerSlots() const
         {
             return combinedSamplerSlots_;
         }
 
         // Returns the list of dynamic resource names. Only used by GLShaderBindingLayout.
-        inline ArrayView<string> GetBindingNames() const
+        inline ArrayView<STL::string> GetBindingNames() const
         {
-            return ArrayView<string>{ resourceNames_.data() + (resourceNames_.size() - bindings_.size()), bindings_.size() };
+            return ArrayView<STL::string>{ resourceNames_.data() + (resourceNames_.size() - bindings_.size()), bindings_.size() };
         }
 
         // Returns the list of combined texture-sampler names. Only used by GLShaderBindingLayout.
-        inline ArrayView<string> GetCombinedSamplerNames() const
+        inline ArrayView<STL::string> GetCombinedSamplerNames() const
         {
-            return ArrayView<string>{ resourceNames_.data(), resourceNames_.size() - bindings_.size() };
+            return ArrayView<STL::string>{ resourceNames_.data(), resourceNames_.size() - bindings_.size() };
         }
 
         // Returns the copied list of uniform descriptors.
-        inline const vector<UniformDescriptor>& GetUniforms() const
+        inline const STL::vector<UniformDescriptor>& GetUniforms() const
         {
             return uniforms_;
         }
@@ -156,14 +156,14 @@ class GLPipelineLayout final : public PipelineLayout
 
     private:
 
-        vector<string>                resourceNames_; // Dynamic resource and static sampler names; Used by GLShaderBindingLayout
-        vector<GLHeapResourceBinding>      heapBindings_;
-        vector<GLPipelineResourceBinding>  bindings_;
-        vector<GLuint>                     staticSamplerSlots_;
-        vector<GLSamplerSPtr>              staticSamplers_;
-        vector<GLEmulatedSamplerSPtr>      staticEmulatedSamplers_;
-        vector<UniformDescriptor>          uniforms_;
-        vector<GLuint>                     combinedSamplerSlots_;
+        STL::vector<STL::string>                resourceNames_; // Dynamic resource and static sampler names; Used by GLShaderBindingLayout
+        STL::vector<GLHeapResourceBinding>      heapBindings_;
+        STL::vector<GLPipelineResourceBinding>  bindings_;
+        STL::vector<GLuint>                     staticSamplerSlots_;
+        STL::vector<GLSamplerSPtr>              staticSamplers_;
+        STL::vector<GLEmulatedSamplerSPtr>      staticEmulatedSamplers_;
+        STL::vector<UniformDescriptor>          uniforms_;
+        STL::vector<GLuint>                     combinedSamplerSlots_;
         const GLbitfield                        barriers_               = 0;
         const bool                              hasNamedBindings_       = false;
 

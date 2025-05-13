@@ -52,7 +52,7 @@ class DbgSwapChain final : public SwapChain
 
         SwapChain&                  instance;
         const SwapChainDescriptor   desc;
-        string                      label;
+        STL::string                      label;
 
     private:
 

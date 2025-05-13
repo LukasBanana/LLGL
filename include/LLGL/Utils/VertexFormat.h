@@ -126,7 +126,7 @@ struct VertexFormat
     \brief Specifies the list of vertex attributes.
     \see AppendAttribute
     */
-    vector<VertexAttribute> attributes;
+    STL::vector<VertexAttribute> attributes;
 };
 
 

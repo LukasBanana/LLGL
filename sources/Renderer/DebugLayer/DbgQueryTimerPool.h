@@ -53,8 +53,8 @@ class DbgQueryTimerPool
         CommandQueue&                       commandQueue_;
         CommandBuffer&                      commandBuffer_;
 
-        vector<QueryHeap*>                  queryHeaps_;
-        stack<std::size_t>             pendingRecordStack_;
+        STL::vector<QueryHeap*>                  queryHeaps_;
+        STL::stack<std::size_t>             pendingRecordStack_;
         std::uint32_t                       currentQuery_       = 0;
         std::uint32_t                       currentQueryHeap_   = 0;
 

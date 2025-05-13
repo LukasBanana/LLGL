@@ -20,8 +20,8 @@ namespace LLGL
 // Queries all OpenGL rendering capacilities.
 void GLQueryRenderingCaps(RenderingCapabilities& caps);
 
-// Queries a string used to identify invalidated pipeline caches. This includes the shader binary format.
-void GLQueryPipelineCacheID(vector<char>& cacheID);
+// Queries a STL::string used to identify invalidated pipeline caches. This includes the shader binary format.
+void GLQueryPipelineCacheID(STL::vector<char>& cacheID);
 
 
 } // /namespace LLGL

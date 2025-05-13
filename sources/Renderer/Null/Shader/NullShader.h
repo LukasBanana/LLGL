@@ -38,7 +38,7 @@ class NullShader final : public Shader
 
     public:
 
-        string label_;
+        STL::string label_;
 
 };
 

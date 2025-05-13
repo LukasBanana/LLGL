@@ -28,8 +28,8 @@ class DXManagedComPtrArray
 
     public:
 
-        using iterator          = typename vector<ComPtr<T>>::iterator;
-        using const_iterator    = typename vector<ComPtr<T>>::const_iterator;
+        using iterator          = typename STL::vector<ComPtr<T>>::iterator;
+        using const_iterator    = typename STL::vector<ComPtr<T>>::const_iterator;
 
     public:
 
@@ -127,7 +127,7 @@ class DXManagedComPtrArray
 
     private:
 
-        vector<ComPtr<T>>  container_;
+        STL::vector<ComPtr<T>>  container_;
         std::size_t             lowerFreeBound_ = 0;
 
 };

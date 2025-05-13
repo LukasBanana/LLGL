@@ -42,7 +42,7 @@ class DbgRenderPass final : public RenderPass
         const RenderPass&           instance;
         RenderPass* const           mutableInstance;
         const RenderPassDescriptor  desc;
-        string                      label;
+        STL::string                      label;
 
 };
 

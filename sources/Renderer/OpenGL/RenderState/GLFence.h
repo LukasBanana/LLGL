@@ -42,7 +42,7 @@ class GLFence final : public Fence
 
         #ifdef LLGL_DEBUG
         // Only provide name in debug mode, to keep fence objects as lightweight as possible
-        string name_;
+        STL::string name_;
         #endif
 
 };

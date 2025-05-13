@@ -67,7 +67,7 @@ class D3D11StagingBufferPool
         ID3D11Device*                   device_             = nullptr;
         ID3D11DeviceContext*            context_            = nullptr;
 
-        vector<D3D11StagingBuffer>      chunks_;
+        STL::vector<D3D11StagingBuffer>      chunks_;
         std::size_t                     chunkIdx_           = 0;
         UINT                            chunkSize_          = 0;
         D3D11_USAGE                     usage_              = D3D11_USAGE_STAGING;

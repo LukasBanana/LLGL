@@ -42,8 +42,8 @@ class DbgQueryHeap final : public QueryHeap
 
         QueryHeap&                  instance;
         const QueryHeapDescriptor   desc;
-        string                      label;
-        vector<State>               states;
+        STL::string                      label;
+        STL::vector<State>               states;
 
 };
 

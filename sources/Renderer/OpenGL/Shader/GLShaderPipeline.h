@@ -46,7 +46,7 @@ class GLShaderPipeline
         virtual void QueryInfoLogs(Report& report) = 0;
 
         // Returns the set of all texture buffer names (samplerBuffer/imageBuffer) in the entire shader pipeline.
-        virtual void QueryTexBufferNames(set<string>& outSamplerBufferNames, set<string>& outImageBufferNames) const = 0;
+        virtual void QueryTexBufferNames(STL::set<STL::string>& outSamplerBufferNames, STL::set<STL::string>& outImageBufferNames) const = 0;
 
         // Returns the native pipeline ID. Can be either from glCreateProgramPipelines or glCreateProgram.
         inline GLuint GetID() const

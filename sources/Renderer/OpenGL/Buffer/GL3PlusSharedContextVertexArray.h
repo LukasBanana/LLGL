@@ -57,9 +57,9 @@ class GL3PlusSharedContextVertexArray
 
     private:
 
-        vector<GLVertexAttribute>  attribs_;
-        vector<GLContextVAO>       contextDependentVAOs_;
-        string                     debugName_;
+        STL::vector<GLVertexAttribute>  attribs_;
+        STL::vector<GLContextVAO>       contextDependentVAOs_;
+        STL::string                     debugName_;
 
 };
 

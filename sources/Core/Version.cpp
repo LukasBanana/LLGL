@@ -42,9 +42,9 @@ LLGL_EXPORT unsigned GetID()
     return LLGL_VERSION_ID;
 }
 
-static string BuildVersionString()
+static STL::string BuildVersionString()
 {
-    string s;
+    STL::string s;
 
     s += std::to_string(GetMajor());
     s += '.';
@@ -70,7 +70,7 @@ static string BuildVersionString()
 
 LLGL_EXPORT const char* GetString()
 {
-    static string s = BuildVersionString();
+    static STL::string s = BuildVersionString();
     return s.c_str();
 }
 

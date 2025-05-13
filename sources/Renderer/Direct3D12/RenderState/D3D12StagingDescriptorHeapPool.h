@@ -68,7 +68,7 @@ class D3D12StagingDescriptorHeapPool
         ID3D12Device*                           device_         = nullptr;
         D3D12_DESCRIPTOR_HEAP_TYPE              type_           = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
 
-        vector<D3D12StagingDescriptorHeap>      chunks_;
+        STL::vector<D3D12StagingDescriptorHeap>      chunks_;
         std::size_t                             chunkIdx_       = 0;
         UINT                                    chunkSize_      = 0;
 

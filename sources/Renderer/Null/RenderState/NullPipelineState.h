@@ -39,7 +39,7 @@ class NullPipelineState final : public PipelineState
 
     private:
 
-        string label_;
+        STL::string label_;
 };
 
 

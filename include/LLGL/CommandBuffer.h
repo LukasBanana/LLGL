@@ -987,7 +987,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
 
-        \param[in] name Pointer to a null terminated string that specifies the name. This <b>must not</b> be null!
+        \param[in] name Pointer to a null terminated STL::string that specifies the name. This <b>must not</b> be null!
 
         \remarks
         Here is a usage example:

@@ -11,10 +11,10 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <Gauss/Vector3.h>
 
-using LLGL::vector;
+using LLGL::STL::vector;
 
 // Perlin noise generator class.
 class PerlinNoise

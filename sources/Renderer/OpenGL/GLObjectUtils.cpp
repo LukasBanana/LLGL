@@ -48,7 +48,7 @@ void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label
     if (label != nullptr)
     {
         /* Append subscript to label */
-        string labelWithSubscript = label;
+        STL::string labelWithSubscript = label;
 
         labelWithSubscript += '[';
         labelWithSubscript += subscript;
@@ -65,7 +65,7 @@ void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, 
     if (label != nullptr)
     {
         /* Append subscript to label */
-        string subscript = std::to_string(index);
+        STL::string subscript = std::to_string(index);
         GLSetObjectLabelSubscript(identifier, name, label, subscript.c_str());
     }
     else

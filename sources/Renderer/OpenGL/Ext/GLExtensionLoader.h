@@ -26,10 +26,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure = fal
 bool AreOpenGLExtensionsLoaded();
 
 // Returns the set of OpenGL extensions that are supported by the GL context that was active during the last call to LoadSupportedOpenGLExtensions().
-const set<const char*>& GetSupportedOpenGLExtensions();
+const STL::set<const char*>& GetSupportedOpenGLExtensions();
 
 // Returns the set of OpenGL extensions that were loaded during the last call to LoadSupportedOpenGLExtensions().
-const set<const char*>& GetLoadedOpenGLExtensions();
+const STL::set<const char*>& GetLoadedOpenGLExtensions();
 
 /* --- Common GL extensions --- */
 

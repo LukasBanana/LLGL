@@ -38,14 +38,14 @@ class LLGL_EXPORT RenderingDebugger
 
         /**
         \brief Sets the new source function name.
-        \param[in] source Pointer to a null terminated string that specifies the name. If this is null, the source is disabled.
+        \param[in] source Pointer to a null terminated STL::string that specifies the name. If this is null, the source is disabled.
         \note This function only stores the pointer. Hence, the pointer must be valid until a new pointer or a null pointer is set.
         */
         void SetSource(const char* source);
 
         /**
         \brief Sets the new debug group name.
-        \param[in] name Pointer to a null terminated string that specifies the name. If this is null, the debug group is disabled.
+        \param[in] name Pointer to a null terminated STL::string that specifies the name. If this is null, the debug group is disabled.
         \note This function only stores the pointer. Hence, the pointer must be valid until a new pointer or a null pointer is set.
         */
         void SetDebugGroup(const char* name);
@@ -146,8 +146,8 @@ class LLGL_EXPORT RenderingDebugger
                 void BlockAfter(std::size_t occurrences);
 
                 /**
-                \brief Returns a report string for this message.
-                \return Constructed report string containing all information of this message.
+                \brief Returns a report STL::string for this message.
+                \return Constructed report STL::string containing all information of this message.
                 */
                 UTF8String ToReportString() const;
 

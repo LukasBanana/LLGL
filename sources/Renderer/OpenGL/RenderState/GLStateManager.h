@@ -428,12 +428,12 @@ class GLStateManager
 
         bool                                frontFacingDirtyBit_        = false;
 
-        stack<CapabilityStackEntry>    capabilitiesStack_;
-        stack<BufferStackEntry>        bufferStack_;
-        stack<TextureStackEntry>       textureState_;
-        stack<FramebufferStackEntry>   framebufferStack_;
-        stack<RenderbufferStackEntry>  renderbufferStack_;
-        stack<ShaderProgramStackEntry> shaderProgramStack_;
+        STL::stack<CapabilityStackEntry>    capabilitiesStack_;
+        STL::stack<BufferStackEntry>        bufferStack_;
+        STL::stack<TextureStackEntry>       textureState_;
+        STL::stack<FramebufferStackEntry>   framebufferStack_;
+        STL::stack<RenderbufferStackEntry>  renderbufferStack_;
+        STL::stack<ShaderProgramStackEntry> shaderProgramStack_;
 
 };
 

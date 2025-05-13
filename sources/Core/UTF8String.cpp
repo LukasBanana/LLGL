@@ -25,13 +25,13 @@ static std::size_t GetUTF16CharCount(const StringView& s)
 
 static SmallVector<wchar_t> ConvertToUTF16WCharArray(const StringView& s)
 {
-    /* Allocate buffer for UTF-16 string */
+    /* Allocate buffer for UTF-16 STL::string */
     const std::size_t len = GetUTF16CharCount(s);
 
     SmallVector<wchar_t> utf16;
     utf16.reserve(len + 1);
 
-    /* Encode UTF-16 string */
+    /* Encode UTF-16 STL::string */
     for (auto it = s.begin(); it != s.end();)
     {
         int c = static_cast<unsigned char>(*it++);
@@ -102,7 +102,7 @@ static std::size_t GetUTF8CharCount(const WStringView& s)
     return len;
 }
 
-// Appends a unicode character encoded in UTF-8 to the specified string buffer and returns a pointer to the next character in that buffer.
+// Appends a unicode character encoded in UTF-8 to the specified STL::string buffer and returns a pointer to the next character in that buffer.
 // see https://en.wikipedia.org/wiki/UTF-8
 static void AppendUTF8Character(SmallVector<char>& str, int code)
 {
@@ -139,13 +139,13 @@ static void AppendUTF8Character(SmallVector<char>& str, int code)
 
 LLGL_EXPORT SmallVector<char> ConvertWStringViewToUTF8CharArray(const WStringView& s)
 {
-    /* Allocate buffer for UTF-16 string */
+    /* Allocate buffer for UTF-16 STL::string */
     const auto len = GetUTF8CharCount(s);
 
     SmallVector<char> utf8;
     utf8.reserve(len + 1);
 
-    /* Encode UTF-8 string */
+    /* Encode UTF-8 STL::string */
     for (int c : s)
         AppendUTF8Character(utf8, c);
 
@@ -307,7 +307,7 @@ int UTF8String::compare(size_type pos1, size_type count1, const WStringView& str
 UTF8String UTF8String::substr(size_type pos, size_type count) const
 {
     if (pos > size())
-        LLGL_TRAP("start position for UTF8 string out of range");
+        LLGL_TRAP("start position for UTF8 STL::string out of range");
     count = std::min(count, size() - pos);
     return StringView{ &(data_[pos]), count };
 }
@@ -360,7 +360,7 @@ UTF8String UTF8String::Printf(const char* format, ...)
         const int len = ::vsnprintf(nullptr, 0, format, args1);
         if (len > 0)
         {
-            /* Construct the internal string container and let vsnprintf() write the NUL-terminator */
+            /* Construct the internal STL::string container and let vsnprintf() write the NUL-terminator */
             const std::size_t formatLen = static_cast<std::size_t>(len);
             data.resize(formatLen + 1);
             ::vsnprintf(data.data(), data.size(), format, args2);

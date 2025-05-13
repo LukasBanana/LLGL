@@ -85,9 +85,9 @@ class NullBuffer final : public Buffer
 
     private:
 
-        string              label_;
-        vector<WordType>    data_;
-        vector<WordType>    mappedData_;
+        STL::string              label_;
+        STL::vector<WordType>    data_;
+        STL::vector<WordType>    mappedData_;
         std::size_t         mapOffset_  = 0;
         std::size_t         mapLength_  = 0;
         CPUAccess           mapAccess_  = CPUAccess::ReadOnly;

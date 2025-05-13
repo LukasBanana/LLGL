@@ -45,7 +45,7 @@ class DbgBuffer final : public Buffer
 
         Buffer&                 instance;
         const BufferDescriptor  desc;
-        string                  label;
+        STL::string                  label;
         std::uint64_t           elements    = 0;
         bool                    initialized = false;
 

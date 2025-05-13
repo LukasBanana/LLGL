@@ -60,8 +60,8 @@ class D3D11BufferArray final : public BufferArray
 
     private:
 
-        vector<void*>  buffersAndBindingLocators_;
-        vector<UINT>   stridesAndOffsets_;
+        STL::vector<void*>  buffersAndBindingLocators_;
+        STL::vector<UINT>   stridesAndOffsets_;
 
 };
 

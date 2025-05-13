@@ -839,7 +839,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewports
     */
-    vector<Viewport>   viewports;
+    STL::vector<Viewport>   viewports;
 
     /**
     \brief Specifies an optional list of static scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
@@ -847,7 +847,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
     */
-    vector<Scissor>    scissors;
+    STL::vector<Scissor>    scissors;
 
     //! Specifies the depth state for the depth-stencil stage.
     DepthDescriptor         depth;

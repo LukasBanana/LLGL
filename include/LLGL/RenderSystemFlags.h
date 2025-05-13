@@ -300,17 +300,17 @@ struct RendererInfo
     UTF8String              shadingLanguageName;
 
     //! List of enabled renderer extensions (e.g. "GL_ARB_direct_state_access" or "VK_EXT_conditional_rendering").
-    vector<UTF8String> extensionNames;
+    STL::vector<UTF8String> extensionNames;
 
     /**
-    \brief Arbitrary string used to identify invalidated pipeline caches.
+    \brief Arbitrary STL::string used to identify invalidated pipeline caches.
     \remarks This may include meta data about the driver version, the shader binary format, the GPU identifier etc.
-    Use this string to identify if all instances of PipelineCache must be cleared when creating PSOs.
+    Use this STL::string to identify if all instances of PipelineCache must be cleared when creating PSOs.
     This may also be empty for backends that do not support pipeline caching.
     \see RenderSystem::CreatePipelineCache
     \see RenderingFeatures::hasPipelineCaching
     */
-    vector<char>       pipelineCacheID;
+    STL::vector<char>       pipelineCacheID;
 };
 
 /**
@@ -324,13 +324,13 @@ struct RenderSystemDescriptor
     RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
     RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
 
-    //! Constructor to initialize the descriptor with the module name from an string.
-    inline RenderSystemDescriptor(const string& moduleName) :
+    //! Constructor to initialize the descriptor with the module name from an STL::string.
+    inline RenderSystemDescriptor(const STL::string& moduleName) :
         moduleName { moduleName }
     {
     }
 
-    //! Constructor to initialize the descriptor with the module name from a null terminated string.
+    //! Constructor to initialize the descriptor with the module name from a null terminated STL::string.
     inline RenderSystemDescriptor(const char* moduleName) :
         moduleName { moduleName }
     {
@@ -895,13 +895,13 @@ struct RenderingCapabilities
     \see Shader::Compile
     \see Shader::LoadBinary
     */
-    vector<ShadingLanguage>    shadingLanguages;
+    STL::vector<ShadingLanguage>    shadingLanguages;
 
     /**
     \brief Specifies the list of supported hardware texture formats.
     \see Format
     */
-    vector<Format>             textureFormats;
+    STL::vector<Format>             textureFormats;
 
     /**
     \brief Specifies all supported hardware features.
@@ -927,7 +927,7 @@ struct RenderingCapabilities
 \see ValidateRenderingCaps
 \ingroup group_callbacks
 */
-using ValidateRenderingCapsFunc = std::function<bool(const string& info, const string& attrib)>;
+using ValidateRenderingCapsFunc = std::function<bool(const STL::string& info, const STL::string& attrib)>;
 
 /**
 \brief Validates the presence of the specified required rendering capabilities.
@@ -953,7 +953,7 @@ myRequirements.limits.maxComputeShaderWorkGroupSize[2]  = 8;
 LLGL::ValidateRenderingCaps(
     myRenderer->GetRenderingCaps(),
     myRequirements,
-    [](const string& info, const string& attrib) {
+    [](const STL::string& info, const STL::string& attrib) {
         ::fprintf(stderr, "%s: %s\n", info.c_str(), attrib.c_str());
         return true;
     }

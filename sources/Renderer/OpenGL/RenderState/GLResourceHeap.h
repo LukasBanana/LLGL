@@ -149,7 +149,7 @@ class GLResourceHeap final : public ResourceHeap
         void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewEmulatedSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
 
-        vector<GLResourceBinding> FilterAndSortGLBindingSlots(
+        STL::vector<GLResourceBinding> FilterAndSortGLBindingSlots(
             GLHeapBindingIterator&      bindingIter,
             ResourceType                resourceType,
             long                        resourceBindFlags,

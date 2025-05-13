@@ -37,7 +37,7 @@ class DbgPipelineLayout final : public PipelineLayout
 
         PipelineLayout&                 instance;
         const PipelineLayoutDescriptor  desc;
-        string                          label;
+        STL::string                          label;
 
 };
 

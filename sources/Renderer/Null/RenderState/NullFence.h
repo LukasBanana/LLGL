@@ -36,7 +36,7 @@ class NullFence final : public Fence
 
     private:
 
-        string                  label_;
+        STL::string                  label_;
         std::atomic_uint64_t    signal_;
 
 };

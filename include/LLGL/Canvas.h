@@ -100,10 +100,10 @@ class LLGL_EXPORT Canvas : public Surface
         */
         static std::unique_ptr<Canvas> Create(const CanvasDescriptor& desc);
 
-        //! Sets the canvas title as UTF-8 string.
+        //! Sets the canvas title as UTF-8 STL::string.
         virtual void SetTitle(const UTF8String& title) = 0;
 
-        //! Returns the canvas title as UTF16 string.
+        //! Returns the canvas title as UTF16 STL::string.
         virtual UTF8String GetTitle() const = 0;
 
     public:

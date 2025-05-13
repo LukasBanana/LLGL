@@ -16,8 +16,13 @@
 namespace LLGL
 {
 
+namespace STL
+{
+
 template < typename Key, typename Value, typename Less = std::less< Key > >
-using map = std::map< Key, Value, Less, llgl_allocator< std::pair< Key const, Value > > >;
+using map = std::map< Key, Value, Less, allocator< std::pair< Key const, Value > > >;
+
+}
 
 } // /namespace LLGL
 

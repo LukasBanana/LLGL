@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-//! Concatenates the two UTF-8 string.
+//! Concatenates the two UTF-8 STL::string.
 inline UTF8String operator + (const UTF8String& lhs, const UTF8String& rhs)
 {
     UTF8String result = lhs;

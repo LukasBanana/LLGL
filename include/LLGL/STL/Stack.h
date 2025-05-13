@@ -16,8 +16,13 @@
 namespace LLGL
 {
 
-template < typename Type, typename Container = std::deque< Type, llgl_allocator< Type > > >
+namespace STL
+{
+
+template < typename Type, typename Container = std::deque< Type, allocator< Type > > >
 using stack = std::stack< Type, Container >;
+
+}
 
 } // /namespace LLGL
 

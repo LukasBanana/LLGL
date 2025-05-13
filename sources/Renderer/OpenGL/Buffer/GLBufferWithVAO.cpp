@@ -19,7 +19,7 @@ GLBufferWithVAO::GLBufferWithVAO(long bindFlags, const char* debugName) :
 {
     if (debugName != nullptr)
     {
-        const string vaoLabel = debugName + string(".VAO");
+        const STL::string vaoLabel = debugName + STL::string(".VAO");
         vertexArray_.SetDebugName(vaoLabel.c_str());
     }
 }
@@ -30,7 +30,7 @@ void GLBufferWithVAO::BuildVertexArray(const ArrayView<VertexAttribute>& vertexA
     if (vertexAttribs.empty())
         vertexAttribs_.clear();
     else
-        vertexAttribs_ = vector<VertexAttribute>(vertexAttribs.begin(), vertexAttribs.end());
+        vertexAttribs_ = STL::vector<VertexAttribute>(vertexAttribs.begin(), vertexAttribs.end());
 
     /* Build vertex layout and finalize immediately as it only references a single buffer */
     vertexArray_.BuildVertexLayout(GetID(), vertexAttribs_);

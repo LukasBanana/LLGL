@@ -93,7 +93,7 @@ static D3DResourceType ToD3DResourceType(const BindingDescriptor& desc)
     return D3DResourceType_Invalid;
 }
 
-void D3D11PipelineLayout::BuildDynamicResourceBindings(const vector<BindingDescriptor>& bindingDescs)
+void D3D11PipelineLayout::BuildDynamicResourceBindings(const STL::vector<BindingDescriptor>& bindingDescs)
 {
     bindings_.reserve(bindingDescs.size());
     for (const BindingDescriptor& desc : bindingDescs)
@@ -108,7 +108,7 @@ static ComPtr<ID3D11SamplerState> DXCreateSamplerState(ID3D11Device* device, con
     return nativeSamplerState;
 }
 
-void D3D11PipelineLayout::BuildStaticSamplers(ID3D11Device* device, const vector<StaticSamplerDescriptor>& staticSamplerDescs)
+void D3D11PipelineLayout::BuildStaticSamplers(ID3D11Device* device, const STL::vector<StaticSamplerDescriptor>& staticSamplerDescs)
 {
     D3D11_SAMPLER_DESC nativeDesc;
     staticSamplers_.reserve(staticSamplerDescs.size());

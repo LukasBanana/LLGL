@@ -46,12 +46,12 @@ class NullRenderTarget final : public RenderTarget
 
     private:
 
-        string                                 label_;
-        vector<NullTexture*>                   colorAttachments_;
-        vector<NullTexture*>                   resolveAttachments_;
+        STL::string                                 label_;
+        STL::vector<NullTexture*>                   colorAttachments_;
+        STL::vector<NullTexture*>                   resolveAttachments_;
         NullTexture*                           depthStencilAttachment_     = nullptr;
         Format                                 depthStencilFormat_         = Format::Undefined;
-        vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
+        STL::vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
 
 };
 

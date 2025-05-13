@@ -17,7 +17,7 @@ namespace LLGL
 
 struct Report::Pimpl
 {
-    string text;
+    STL::string text;
     bool        hasErrors;
 };
 
@@ -32,11 +32,11 @@ Report::Report(const char* text, bool hasErrors) :
 }
 
 Report::Report(const StringView& text, bool hasErrors) :
-    pimpl_ { new Report::Pimpl{ string(text.begin(), text.end()), hasErrors } }
+    pimpl_ { new Report::Pimpl{ STL::string(text.begin(), text.end()), hasErrors } }
 {
 }
 
-Report::Report(string&& text, bool hasErrors) :
+Report::Report(STL::string&& text, bool hasErrors) :
     pimpl_ { new Report::Pimpl{ std::move(text), hasErrors } }
 {
 }
@@ -82,14 +82,14 @@ void Report::Reset(const StringView& text, bool hasErrors)
 {
     if (pimpl_ != nullptr)
     {
-        pimpl_->text        = string(text.begin(), text.end());
+        pimpl_->text        = STL::string(text.begin(), text.end());
         pimpl_->hasErrors   = hasErrors;
     }
     else
-        pimpl_ = new Report::Pimpl{ string(text.begin(), text.end()), hasErrors };
+        pimpl_ = new Report::Pimpl{ STL::string(text.begin(), text.end()), hasErrors };
 }
 
-void Report::Reset(string&& text, bool hasErrors)
+void Report::Reset(STL::string&& text, bool hasErrors)
 {
     if (pimpl_ != nullptr)
     {
@@ -106,7 +106,7 @@ void Report::Printf(const char* format, ...)
     if (pimpl_ == nullptr)
         pimpl_ = new Report::Pimpl{};
 
-    /* Forward formatted string with variadic arguments to internal function */
+    /* Forward formatted STL::string with variadic arguments to internal function */
     LLGL_STRING_PRINTF(pimpl_->text, format);
 }
 
@@ -118,7 +118,7 @@ void Report::Errorf(const char* format, ...)
 
     pimpl_->hasErrors = true;
 
-    /* Forward formatted string with variadic arguments to internal function */
+    /* Forward formatted STL::string with variadic arguments to internal function */
     LLGL_STRING_PRINTF(pimpl_->text, format);
 }
 

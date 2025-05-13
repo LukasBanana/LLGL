@@ -56,9 +56,9 @@ class NullTexture final : public Texture
 
     private:
 
-        string         label_;
+        STL::string         label_;
         Extent3D       extent_;
-        vector<Image>  images_; // MIP-map images
+        STL::vector<Image>  images_; // MIP-map images
 
 };
 

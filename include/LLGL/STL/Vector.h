@@ -15,8 +15,13 @@
 namespace LLGL
 {
 
+namespace STL
+{
+
 template < typename Type >
-using vector = std::vector< Type, llgl_allocator< Type > >;
+using vector = std::vector< Type, allocator< Type > >;
+
+}
 
 } // /namespace LLGL
 

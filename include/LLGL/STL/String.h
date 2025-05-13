@@ -15,16 +15,21 @@
 namespace LLGL
 {
 
-template < typename CharType >
-using string_type = std::basic_string< CharType, std::char_traits< CharType >, llgl_allocator< CharType > >;
+namespace STL
+{
 
-typedef string_type< char >     string;
-typedef string_type< wchar_t >  wstring;
-#ifdef __cpp_char8_t
-typedef string_type< char8_t >  u8string;
-#endif
-typedef string_type< char16_t > u16string;
-typedef string_type< char32_t > u32string;
+	template < typename CharType >
+	using string_type = std::basic_string< CharType, std::char_traits< CharType >, allocator< CharType > >;
+
+	typedef string_type< char >     string;
+	typedef string_type< wchar_t >  wstring;
+	#ifdef __cpp_char8_t
+	typedef string_type< char8_t >  u8string;
+	#endif
+	typedef string_type< char16_t > u16string;
+	typedef string_type< char32_t > u32string;
+
+}
 
 } // /namespace LLGL
 

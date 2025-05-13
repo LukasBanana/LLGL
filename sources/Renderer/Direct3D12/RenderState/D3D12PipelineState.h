@@ -52,7 +52,7 @@ class D3D12PipelineState : public PipelineState
         }
 
         // Returns the uniform to root constant map. Index for 'uniforms' -> location of root constant 32-bit value.
-        inline const vector<D3D12RootConstantLocation>& GetRootConstantMap() const
+        inline const STL::vector<D3D12RootConstantLocation>& GetRootConstantMap() const
         {
             return rootConstantMap_;
         }
@@ -70,7 +70,7 @@ class D3D12PipelineState : public PipelineState
         void SetNativeAndUpdateCache(ComPtr<ID3D12PipelineState>&& native, D3D12PipelineCache* pipelineCache);
 
         // Writes the report with the specified message and error bit.
-        void ResetReport(string&& text, bool hasErrors = false);
+        void ResetReport(STL::string&& text, bool hasErrors = false);
 
         // Returns the native PSO object.
         inline ID3D12PipelineState* GetNative() const
@@ -96,7 +96,7 @@ class D3D12PipelineState : public PipelineState
         ComPtr<ID3D12PipelineState>             native_;
         ComPtr<ID3D12RootSignature>             rootSignature_;
         const D3D12PipelineLayout*              pipelineLayout_ = nullptr;
-        vector<D3D12RootConstantLocation>       rootConstantMap_;
+        STL::vector<D3D12RootConstantLocation>       rootConstantMap_;
         Report                                  report_;
 
 };

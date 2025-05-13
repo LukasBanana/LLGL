@@ -114,9 +114,9 @@ class D3D12ResourceHeap final : public ResourceHeap
         UINT                                        numDescriptorSets_          = 0;
 
         SmallVector<D3D12DescriptorHeapLocation>    descriptorMap_;
-        vector<D3D12Resource*>                      resources_;
+        STL::vector<D3D12Resource*>                      resources_;
 
-        vector<ID3D12Resource*>                     uavResourceHeap_;                   // Heap of UAV resources that require a barrier
+        STL::vector<ID3D12Resource*>                     uavResourceHeap_;                   // Heap of UAV resources that require a barrier
         UINT                                        uavResourceSetStride_       = 0;    // Number of (potential) UAV resources per descriptor set
         UINT                                        uavResourceIndexOffset_     = 0;    // Subtracted offset for 'D3D12DescriptorHeapLocation::index'
 

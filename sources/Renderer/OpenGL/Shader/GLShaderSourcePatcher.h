@@ -43,7 +43,7 @@ class GLShaderSourcePatcher
 
     public:
 
-        // Returns the current shader source as null terminated string.
+        // Returns the current shader source as null terminated STL::string.
         inline const char* GetSource() const
         {
             return source_.c_str();
@@ -52,7 +52,7 @@ class GLShaderSourcePatcher
     private:
 
         // Inserts the specified statement after the '#version'-directive and any previously inserted statement.
-        void InsertAfterVersionDirective(const string& statement);
+        void InsertAfterVersionDirective(const STL::string& statement);
 
         // Finds and stores the source location of the entry point, i.e. points to the first character after of the entry point declaration "void main()".
         void CacheEntryPointSourceLocation();
@@ -62,9 +62,9 @@ class GLShaderSourcePatcher
 
     private:
 
-        string source_;
+        STL::string source_;
         std::size_t statementInsertPos_ = 0;
-        std::size_t entryPointStartPos_ = string::npos;
+        std::size_t entryPointStartPos_ = STL::string::npos;
 
 };
 

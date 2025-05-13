@@ -99,7 +99,7 @@ LLGL_EXPORT void DoConcurrentRange(
     else if (threadCount > 1)
     {
         /* Launch worker threads in dynamic array */
-        vector<std::thread> workers(threadCount);
+        STL::vector<std::thread> workers(threadCount);
         DoConcurrentRangeInWorkerContainer(task, count, threadCount, workers.data());
     }
 }

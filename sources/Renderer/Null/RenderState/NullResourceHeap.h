@@ -37,9 +37,9 @@ class NullResourceHeap final : public ResourceHeap
 
     private:
 
-        string                         label_;
+        STL::string                         label_;
         const std::uint32_t            numBindings_    = 1;
-        vector<ResourceViewDescriptor> resourceViews_;
+        STL::vector<ResourceViewDescriptor> resourceViews_;
 
 };
 

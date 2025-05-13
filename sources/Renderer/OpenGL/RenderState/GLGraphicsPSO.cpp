@@ -25,15 +25,15 @@ namespace LLGL
 {
 
 
-static void AddToShaderArray(Shader* shader, vector<Shader*>& shaders)
+static void AddToShaderArray(Shader* shader, STL::vector<Shader*>& shaders)
 {
     if (shader != nullptr)
         shaders.push_back(shader);
 }
 
-static vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescriptor& desc)
+static STL::vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescriptor& desc)
 {
-    vector<Shader*> shaders;
+    STL::vector<Shader*> shaders;
     shaders.reserve(5);
 
     AddToShaderArray(desc.vertexShader,         shaders);

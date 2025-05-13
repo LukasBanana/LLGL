@@ -12,15 +12,15 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Container/ArrayView.h>
 #include <Gauss/Gauss.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 
 
 /*
  * Global helper structures
  */
 
-using LLGL::vector;
-using LLGL::string;
+using LLGL::STL::vector;
+using LLGL::STL::string;
 
 struct TexturedVertex
 {

@@ -148,7 +148,7 @@ class LLGL_EXPORT Display : public Interface
         To get only the currently active display mode, use GetDisplayMode.
         \see GetDisplayMode
         */
-        virtual vector<DisplayMode> GetSupportedDisplayModes() const = 0;
+        virtual STL::vector<DisplayMode> GetSupportedDisplayModes() const = 0;
 
     protected:
 
@@ -156,7 +156,7 @@ class LLGL_EXPORT Display : public Interface
         \brief Sorts the specified list of display modes as described in the GetSupportedDisplayModes function, and removes duplicate entries.
         \see GetSupportedDisplayModes
         */
-        static void FinalizeDisplayModes(vector<DisplayMode>& displayMode);
+        static void FinalizeDisplayModes(STL::vector<DisplayMode>& displayMode);
 
 };
 

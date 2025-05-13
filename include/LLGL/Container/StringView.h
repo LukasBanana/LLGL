@@ -22,9 +22,9 @@ namespace LLGL
 
 
 /**
-\brief Constant string view container template. Keeps pointer to string and its length.
-\remarks This does not provide a null-terminated string.
-\tparam TChar Specifies the string character type.
+\brief Constant STL::string view container template. Keeps pointer to STL::string and its length.
+\remarks This does not provide a null-terminated STL::string.
+\tparam TChar Specifies the STL::string character type.
 \tparam Traits Specifies the character traits. By default std::char_traits<TChar>.
 */
 template <typename TChar, typename Traits = std::char_traits<TChar>>
@@ -61,21 +61,21 @@ class LLGL_EXPORT BasicStringView
         BasicStringView& operator = (const BasicStringView&) = default;
         BasicStringView& operator = (BasicStringView&&) = default;
 
-        //! Initializes the string view with the specified null-terminated string.
+        //! Initializes the STL::string view with the specified null-terminated STL::string.
         BasicStringView(const_pointer str) :
             data_ { str                                },
             size_ { BasicStringView::StringLength(str) }
         {
         }
 
-        //! Initializes the string view with a pointer to the data and size.
+        //! Initializes the STL::string view with a pointer to the data and size.
         BasicStringView(const_pointer str, size_type len) :
             data_ { str },
             size_ { len }
         {
         }
 
-        //! Initializes the string view with another templated string class. This would usually be std::basic_string.
+        //! Initializes the STL::string view with another templated STL::string class. This would usually be std::basic_STL::string.
         template <template <class, class, class> class TString, class Allocator>
         BasicStringView(const TString<TChar, Traits, Allocator>& str) :
             data_ { str.data() },
@@ -86,7 +86,7 @@ class LLGL_EXPORT BasicStringView
     public:
 
         /**
-        \brief Returns true if this string view is empty, i.e. \c size() and \c length() return 0.
+        \brief Returns true if this STL::string view is empty, i.e. \c size() and \c length() return 0.
         \see size
         \see length
         */
@@ -96,7 +96,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns the length of this string. This is equivalent to \c length().
+        \brief Returns the length of this STL::string. This is equivalent to \c length().
         \see length
         */
         size_type size() const noexcept
@@ -105,7 +105,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns the length of this string. This is equivalent to \c size().
+        \brief Returns the length of this STL::string. This is equivalent to \c size().
         */
         size_type length() const noexcept
         {
@@ -113,9 +113,9 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns the raw pointer of this string view.
-        \remarks This does not necessarily point to a NUL-terminated string like \c std::string does.
-        A string view only covers a range from the first to the last character of a string whose memory is managed elsewhere.
+        \brief Returns the raw pointer of this STL::string view.
+        \remarks This does not necessarily point to a NUL-terminated STL::string like \c STL::string does.
+        A STL::string view only covers a range from the first to the last character of a STL::string whose memory is managed elsewhere.
         */
         const_pointer data() const noexcept
         {
@@ -126,7 +126,7 @@ class LLGL_EXPORT BasicStringView
 
         /**
         \brief Returns a constant reference to the character at the specified zero-based position.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference at(size_type pos) const
         {
@@ -134,8 +134,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns a constant reference to the first character of this string.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \brief Returns a constant reference to the first character of this STL::string.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference front() const
         {
@@ -143,8 +143,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns a constant reference to the last character of this string.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \brief Returns a constant reference to the last character of this STL::string.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference back() const
         {
@@ -160,8 +160,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns constant iterator to the beginning of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant iterator to the beginning of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_iterator cbegin() const noexcept
         {
@@ -175,8 +175,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns constant reverse iterator to the end of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant reverse iterator to the end of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_reverse_iterator crbegin() const
         {
@@ -190,8 +190,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns constant iterator to the end of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant iterator to the end of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_iterator cend() const noexcept
         {
@@ -205,8 +205,8 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Returns constant reverse iterator to the beginning of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant reverse iterator to the beginning of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_reverse_iterator crend() const
         {
@@ -216,10 +216,10 @@ class LLGL_EXPORT BasicStringView
     public:
 
         /**
-        \brief Returns a sub-view of this string view.
-        \param[in] pos Optional zero-based position to the beginning of this string. By default 0.
-        \param[in] count Optional length of the sub-view. This will be clamped to the size of this string minus the input position \c pos. By default \c npos.
-        \return Empty string view if \c pos is out of bounds.
+        \brief Returns a sub-view of this STL::string view.
+        \param[in] pos Optional zero-based position to the beginning of this STL::string. By default 0.
+        \param[in] count Optional length of the sub-view. This will be clamped to the size of this STL::string minus the input position \c pos. By default \c npos.
+        \return Empty STL::string view if \c pos is out of bounds.
         */
         BasicStringView substr(size_type pos = 0, size_type count = npos) const
         {
@@ -230,9 +230,9 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Compares this string with the specified string in a strict-weak-order (SWO).
-        \returns -1 if this string is considered to be ordered \e before the other string,
-        +1 if this string is considered to be ordered \e after the other string,
+        \brief Compares this STL::string with the specified STL::string in a strict-weak-order (SWO).
+        \returns -1 if this STL::string is considered to be ordered \e before the other STL::string,
+        +1 if this STL::string is considered to be ordered \e after the other STL::string,
         and 0 otherwise.
         */
         int compare(const BasicStringView& str) const
@@ -251,7 +251,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Compares a sub-view of this string with the specified string.
+        \brief Compares a sub-view of this STL::string with the specified STL::string.
         \see compare(const BasicStringView&)
         */
         int compare(size_type pos1, size_type count1, const BasicStringView& str) const
@@ -260,7 +260,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         /**
-        \brief Compares a sub-view of this string with a sub-view of the specified string.
+        \brief Compares a sub-view of this STL::string with a sub-view of the specified STL::string.
         \see compare(const BasicStringView&)
         */
         int compare(size_type pos1, size_type count1, const BasicStringView& str, size_type pos2, size_type count2 = npos) const
@@ -335,7 +335,7 @@ class LLGL_EXPORT BasicStringView
 
     private:
 
-        // Custom implementation of ::strlen for generic string characters.
+        // Custom implementation of ::strlen for generic STL::string characters.
         static size_type StringLength(const_pointer str)
         {
             if (str != nullptr)
@@ -382,10 +382,10 @@ class LLGL_EXPORT BasicStringView
 };
 
 
-//! ANSI character string view (char).
+//! ANSI character STL::string view (char).
 using StringView = BasicStringView<char>;
 
-//! Wide character string view (wchar_t).
+//! Wide character STL::string view (wchar_t).
 using WStringView = BasicStringView<wchar_t>;
 
 

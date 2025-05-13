@@ -136,7 +136,7 @@ bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor)
 {
     if (s != nullptr)
     {
-        /* Try to parse string with temporary integers */
+        /* Try to parse STL::string with temporary integers */
         GLint n[2];
         if (!GLParseInt(s, n[0]))
             return false;

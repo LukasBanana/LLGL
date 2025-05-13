@@ -85,7 +85,7 @@ class D3D11QueryHeap final : public QueryHeap
 
         D3D11_QUERY                 nativeType_     = D3D11_QUERY_EVENT;
         std::uint32_t               groupSize_      = 1;
-        vector<D3D11NativeQuery>    nativeQueries_;
+        STL::vector<D3D11NativeQuery>    nativeQueries_;
 
 };
 

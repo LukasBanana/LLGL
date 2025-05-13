@@ -32,7 +32,7 @@ void D3D11SetObjectNameSubscript(ID3D11DeviceChild* obj, const char* name, const
 void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::uint32_t index);
 
 // Returns the debug name of the specified D3D device child.
-string D3D11GetObjectName(ID3D11DeviceChild* obj);
+STL::string D3D11GetObjectName(ID3D11DeviceChild* obj);
 
 // Traps the runtime if 'hr' is not S_OK.
 void D3D11ThrowIfFailed(HRESULT hr, const char* info, ID3D11DeviceChild* obj = nullptr);

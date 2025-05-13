@@ -29,7 +29,7 @@ class NullBufferArray final : public BufferArray
 
     public:
 
-        const vector<NullBuffer*> buffers;
+        const STL::vector<NullBuffer*> buffers;
 
 };
 

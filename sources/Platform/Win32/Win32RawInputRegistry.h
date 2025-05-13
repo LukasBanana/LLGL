@@ -41,7 +41,7 @@ class Win32RawInputRegistry
 
     private:
 
-        vector<HWND>   wndHandles_;
+        STL::vector<HWND>   wndHandles_;
         HWND                activeWndForInputDevices_   = nullptr;
 
 };

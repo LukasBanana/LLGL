@@ -16,8 +16,13 @@
 namespace LLGL
 {
 
+namespace STL
+{
+
 template < typename Type, typename Less = std::less< Type > >
-using set = std::set< Type, Less, llgl_allocator< Type > >;
+using set = std::set< Type, Less, allocator< Type > >;
+
+}
 
 } // /namespace LLGL
 

@@ -93,7 +93,7 @@ class GLTextureViewPool
     private:
 
         // Container of all managed texture views.
-        vector<GLTextureView>  textureViews_;
+        STL::vector<GLTextureView>  textureViews_;
 
         // Number of textures that are already freed, but not removed from the texture view array yet.
         std::size_t                 numReusableEntries_ = 0;
