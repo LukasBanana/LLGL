@@ -12,9 +12,9 @@
 #include "ComPtr.h"
 #include "../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <algorithm>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -28,8 +28,8 @@ class DXManagedComPtrArray
 
     public:
 
-        using iterator          = typename std::vector<ComPtr<T>>::iterator;
-        using const_iterator    = typename std::vector<ComPtr<T>>::const_iterator;
+        using iterator          = typename STL::vector<ComPtr<T>>::iterator;
+        using const_iterator    = typename STL::vector<ComPtr<T>>::const_iterator;
 
     public:
 
@@ -127,7 +127,7 @@ class DXManagedComPtrArray
 
     private:
 
-        std::vector<ComPtr<T>>  container_;
+        STL::vector<ComPtr<T>>  container_;
         std::size_t             lowerFreeBound_ = 0;
 
 };

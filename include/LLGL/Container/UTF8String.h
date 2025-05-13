@@ -45,28 +45,28 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        //! Initialize an empty string.
+        //! Initialize an empty STL::string.
         UTF8String();
 
-        //! Initialies the UTF-8 string with a copy of the specified string.
+        //! Initialies the UTF-8 STL::string with a copy of the specified STL::string.
         UTF8String(const UTF8String& rhs);
 
-        //! Takes the ownership of the specified UTF-8 string.
+        //! Takes the ownership of the specified UTF-8 STL::string.
         UTF8String(UTF8String&& rhs);
 
-        //! Initializes the UTF-8 string with a copy of the specified string view.
+        //! Initializes the UTF-8 STL::string with a copy of the specified STL::string view.
         UTF8String(const StringView& str);
 
-        //! Initializes the UTF-8 string with a UTF-8 encoded conversion of the specified wide string view.
+        //! Initializes the UTF-8 STL::string with a UTF-8 encoded conversion of the specified wide STL::string view.
         UTF8String(const WStringView& str);
 
-        //! Initializes the UTF-8 string with a copy of the specified null-terminated string.
+        //! Initializes the UTF-8 STL::string with a copy of the specified null-terminated STL::string.
         UTF8String(const char* str);
 
-        //! Initializes the UTF-8 string with a UTF-8 encoded conversion of the specified null-terminated wide string.
+        //! Initializes the UTF-8 STL::string with a UTF-8 encoded conversion of the specified null-terminated wide STL::string.
         UTF8String(const wchar_t* str);
 
-        //! Initializes the UTF-8 string with a copy of another templated string class. This would usually be std::basic_string.
+        //! Initializes the UTF-8 STL::string with a copy of another templated STL::string class. This would usually be std::basic_STL::string.
         template <template <class, class, class> class TString, class TChar, class Traits, class Allocator>
         UTF8String(const TString<TChar, Traits, Allocator>& str) :
             UTF8String { str.c_str() }
@@ -74,7 +74,7 @@ class LLGL_EXPORT UTF8String
         }
 
         /**
-        \brief Initializes the UTF-8 string by moving the ownership of the internal data container.
+        \brief Initializes the UTF-8 STL::string by moving the ownership of the internal data container.
         \param[in] data The input data must already be in UTF-8 format. This constructor does not perform any checks on this input container!
         */
         explicit UTF8String(SmallVector<char>&& data);
@@ -191,7 +191,7 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        //! Convert this string to a NUL-terminated UTF-16 string.
+        //! Convert this STL::string to a NUL-terminated UTF-16 STL::string.
         SmallVector<wchar_t> to_utf16() const;
 
     public:
@@ -212,13 +212,13 @@ class LLGL_EXPORT UTF8String
             return data_[pos];
         }
 
-        //! Conversion operator to a null-terminated string.
+        //! Conversion operator to a null-terminated STL::string.
         inline operator const_pointer () const
         {
             return c_str();
         }
 
-        //! Conversion operator to a string view.
+        //! Conversion operator to a STL::string view.
         inline operator StringView () const
         {
             return StringView{ data(), size() };
@@ -227,7 +227,7 @@ class LLGL_EXPORT UTF8String
     public:
 
         /**
-        \brief Prints a formatted UTF-8 string with a variable number of arguments.
+        \brief Prints a formatted UTF-8 STL::string with a variable number of arguments.
         \remarks This follows the same formatting syntax as \c std::printf.
         \see Report::Printf
         \see Log::Printf

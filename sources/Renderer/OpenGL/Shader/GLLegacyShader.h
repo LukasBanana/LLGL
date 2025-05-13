@@ -39,7 +39,7 @@ class GLLegacyShader final : public GLShader
         static bool GetCompileStatus(GLuint shader);
 
         // Returns the native GL shader log.
-        static std::string GetGLShaderLog(GLuint shader);
+        static STL::string GetGLShaderLog(GLuint shader);
 
     private:
 

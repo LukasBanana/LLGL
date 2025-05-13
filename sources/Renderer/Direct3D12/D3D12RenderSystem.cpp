@@ -660,7 +660,7 @@ int D3D12RenderSystem::GetMinorVersion() const
 void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
 {
     /* Get D3D version */
-    info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
+    info.rendererName = "Direct3D " + STL::string(DXFeatureLevelToVersion(GetFeatureLevel()));
 
     /* Get shading language support */
     info.shadingLanguageName = "HLSL ";
@@ -674,9 +674,9 @@ void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
 }
 
 // Returns the HLSL version for the specified Direct3D feature level.
-static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureLevel)
+static STL::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureLevel)
 {
-    std::vector<ShadingLanguage> languages;
+    STL::vector<ShadingLanguage> languages;
 
     languages.push_back(ShadingLanguage::HLSL);
     languages.push_back(ShadingLanguage::HLSL_2_0);
@@ -692,9 +692,9 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     return languages;
 }
 
-static std::vector<Format> GetDefaultSupportedDXTextureFormats()
+static STL::vector<Format> GetDefaultSupportedDXTextureFormats()
 {
-    std::vector<Format> formats;
+    STL::vector<Format> formats;
 
     std::size_t numFormats = 0;
     DXGetDefaultSupportedTextureFormats(nullptr, &numFormats);

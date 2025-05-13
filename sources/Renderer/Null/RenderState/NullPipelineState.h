@@ -11,7 +11,7 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -39,7 +39,7 @@ class NullPipelineState final : public PipelineState
 
     private:
 
-        std::string label_;
+        STL::string label_;
 };
 
 

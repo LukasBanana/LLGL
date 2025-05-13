@@ -11,8 +11,8 @@
 
 #include <LLGL/Texture.h>
 #include <LLGL/Utils/Image.h>
-#include <string>
-#include <vector>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL
@@ -56,9 +56,9 @@ class NullTexture final : public Texture
 
     private:
 
-        std::string         label_;
-        Extent3D            extent_;
-        std::vector<Image>  images_; // MIP-map images
+        STL::string         label_;
+        Extent3D       extent_;
+        STL::vector<Image>  images_; // MIP-map images
 
 };
 

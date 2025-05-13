@@ -61,14 +61,14 @@ class LLGL_EXPORT ParseContext
         ParseContext& operator = (ParseContext&&) = default;
 
         /**
-        \brief Constructs the context with a string view.
-        \remarks This will only keep a weak reference to the source string and that string must be kept alive for the lifetime of this context.
+        \brief Constructs the context with a STL::string view.
+        \remarks This will only keep a weak reference to the source STL::string and that STL::string must be kept alive for the lifetime of this context.
         */
         explicit ParseContext(const StringView& source);
 
         /**
-        \brief Constructs the context with a UTF-8 string.
-        \remarks This will take the ownership of the source string.
+        \brief Constructs the context with a UTF-8 STL::string.
+        \remarks This will take the ownership of the source STL::string.
         */
         explicit ParseContext(UTF8String&& source);
 
@@ -256,7 +256,7 @@ class LLGL_EXPORT ParseContext
 
         /**
         \brief Generates a texture swizzle descriptor from this parse context.
-        \remarks This conversion always requires 4 characters from the parse string and the characters are interpreted as follows:
+        \remarks This conversion always requires 4 characters from the parse STL::string and the characters are interpreted as follows:
         - \c '1' translates to TextureSwizzle::One
         - \c '0' translates to TextureSwizzle::One
         - \c 'r' or 'R' translates to TextureSwizzle::Red
@@ -332,9 +332,9 @@ class LLGL_EXPORT ParseContext
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] format Specifies the input string. This is treated just like a \c ::printf input string
+\paramp[in] format Specifies the input STL::string. This is treated just like a \c ::printf input STL::string
 and each token preceeded with a \c '%' character will be substituted with the next variadic argument.
-If no \c '%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
+If no \c '%' character is found in the input STL::string, this parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */
@@ -342,7 +342,7 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...);
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
+\paramp[in] s Specifies the input STL::string as STL::string view. This parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */

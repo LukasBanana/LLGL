@@ -34,7 +34,7 @@ VKDeviceMemory::VKDeviceMemory(VkDevice device, VkDeviceSize size, std::uint32_t
 
     if (result != VK_SUCCESS)
     {
-        std::string info = "failed to allocate Vulkan device memory of " + std::to_string(size) + " bytes";
+        string info = "failed to allocate Vulkan device memory of " + std::to_string(size) + " bytes";
         VKThrowIfFailed(result, info.c_str());
     }
 }
@@ -143,13 +143,13 @@ static void PrintDeviceMemoryRegion(std::ostream& s, VKDeviceMemoryRegion& regio
         auto startOffset    = prevRegion->GetOffsetWithSize();
         auto endOffset      = region.GetOffset();
         if (startOffset < endOffset)
-            s << std::string(static_cast<std::size_t>(endOffset - startOffset), '.');
+            s << string(static_cast<std::size_t>(endOffset - startOffset), '.');
     }
     else
     {
         auto endOffset = region.GetOffset();
         if (endOffset > 0)
-            s << std::string(static_cast<std::size_t>(endOffset), '.');
+            s << string(static_cast<std::size_t>(endOffset), '.');
     }
 
     /* Print new region */
@@ -168,7 +168,7 @@ static void PrintDeviceMemoryRegion(std::ostream& s, VKDeviceMemoryRegion& regio
         }
 
         if (n > 0)
-            s << std::string(n, '+');
+            s << string(n, '+');
 
         s << ']';
     }

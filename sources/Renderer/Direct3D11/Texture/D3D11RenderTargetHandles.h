@@ -13,7 +13,7 @@
 #include <LLGL/Container/DynamicArray.h>
 #include "../RenderState/D3D11BindingLocator.h"
 #include "../../DXCommon/ComPtr.h"
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <d3d11.h>
 
 

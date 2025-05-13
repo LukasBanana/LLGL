@@ -11,9 +11,11 @@
 
 #include <LLGL/ImageFlags.h>
 #include <LLGL/TextureFlags.h>
-#include <string>
-#include <vector>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 
+using LLGL::STL::string;
+using LLGL::STL::vector;
 
 // Image reader class to load common image formats (using STB lib).
 class ImageReader
@@ -22,13 +24,13 @@ class ImageReader
     public:
 
         // Loads the specified image from file.
-        bool LoadFromFile(const std::string& filename, LLGL::Format format = LLGL::Format::RGBA8UNorm);
+        bool LoadFromFile(const string& filename, LLGL::Format format = LLGL::Format::RGBA8UNorm);
 
         // Returns the image view for the first MIP-map that can be passed to RenderSystem::CreateTexture or RenderSystem::WriteTexture.
         LLGL::ImageView GetImageView() const;
 
         // Appends the data of the loaded image to the specified output buffer.
-        void AppendImageDataTo(std::vector<char>& outBuffer);
+        void AppendImageDataTo(vector<char>& outBuffer);
 
         // Returns the texture descriptor.
         inline const LLGL::TextureDescriptor& GetTextureDesc() const
@@ -38,9 +40,9 @@ class ImageReader
 
     private:
 
-        std::string             name_;
+        string                  name_;
         LLGL::TextureDescriptor texDesc_;
-        std::vector<char>       data_;
+        vector<char>            data_;
 
 };
 

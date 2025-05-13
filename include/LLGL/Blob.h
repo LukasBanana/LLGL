@@ -11,8 +11,8 @@
 
 #include <LLGL/NonCopyable.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <vector>
-#include <string>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <memory>
 
 
@@ -85,14 +85,14 @@ class LLGL_EXPORT Blob : public NonCopyable
         \param[in] cont Specifies the container whose data is to be moved into this Blob instance.
         \return New instance of Blob that manages the specified container.
         */
-        static Blob CreateStrongRef(std::vector<char>&& cont);
+        static Blob CreateStrongRef(STL::vector<char>&& cont);
 
         /**
-        \brief Creates a new Blob instance with a strong reference to the specified string container.
+        \brief Creates a new Blob instance with a strong reference to the specified STL::string container.
         \param[in] str Specifies the container whose data is to be moved into this Blob instance.
         \return New instance of Blob that manages the specified container.
         */
-        static Blob CreateStrongRef(std::string&& str);
+        static Blob CreateStrongRef(STL::string&& str);
 
         /**
         \brief Creates a new Blob instance with the data read from the specified binary file.
@@ -106,7 +106,7 @@ class LLGL_EXPORT Blob : public NonCopyable
         \param[in] filename Specifies the file that is to be read.
         \return New instance of Blob that manages the memory of a conent copy from the specified file or null if the file could not be read.
         */
-        static Blob CreateFromFile(const std::string& filename);
+        static Blob CreateFromFile(const STL::string& filename);
 
     public:
 

@@ -169,7 +169,7 @@ GLResourceHeap::GLResourceHeap(
     if (heap_.Stride() > (1u << k_heapSegmentSizeBits))
     {
         /* Error: Segment size is encoded in under 32 bits, so report if we exceeded the limit */
-        const std::string heapLabel = (desc.debugName != nullptr ? '\"' + std::string(desc.debugName) + '\"' : "<unnamed>");
+        const STL::string heapLabel = (desc.debugName != nullptr ? '\"' + STL::string(desc.debugName) + '\"' : "<unnamed>");
         LLGL_TRAP(
             "GLResourceHeap %s exceeded size limit for segment: allocated %zu bytes, but limit is %u (%u bits)",
             heapLabel.c_str(), heap_.Stride(), (1u << k_heapSegmentSizeBits), k_heapSegmentSizeBits
@@ -1014,7 +1014,7 @@ void GLResourceHeap::WriteResourceViewEmulatedSampler(const ResourceViewDescript
     }
 }
 
-std::vector<GLResourceHeap::GLResourceBinding> GLResourceHeap::FilterAndSortGLBindingSlots(
+STL::vector<GLResourceHeap::GLResourceBinding> GLResourceHeap::FilterAndSortGLBindingSlots(
     GLHeapBindingIterator&      bindingIter,
     ResourceType                resourceType,
     long                        resourceBindFlags,
@@ -1023,7 +1023,7 @@ std::vector<GLResourceHeap::GLResourceBinding> GLResourceHeap::FilterAndSortGLBi
     /* Collect all binding points of the specified resource type */
     bindingIter.Reset(resourceType, resourceBindFlags);
 
-    std::vector<GLResourceBinding> resourceBindings;
+    STL::vector<GLResourceBinding> resourceBindings;
     resourceBindings.reserve(bindingIter.GetCount());
 
     for (std::size_t index = 0; const GLHeapResourceBinding* bindingDesc = bindingIter.Next(&index);)

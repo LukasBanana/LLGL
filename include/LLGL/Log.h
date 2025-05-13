@@ -205,7 +205,7 @@ using LogHandle = void*;
 /**
 \brief Report callback function signature.
 \param[in] type Specifies the type of the report message.
-\param[in] text Pointer to a NUL-terminated string of the report text.
+\param[in] text Pointer to a NUL-terminated STL::string of the report text.
 \param[in] userData Specifies the user data that was set in the previous call to SetReportCallback.
 \see ReportType
 \see SetReportCallback

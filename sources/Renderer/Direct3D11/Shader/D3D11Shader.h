@@ -15,8 +15,8 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Report.h>
 #include "../../DXCommon/ComPtr.h"
-#include <vector>
-#include <string>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <d3d11.h>
 
 
@@ -26,16 +26,16 @@ namespace LLGL
 
 struct D3D11ConstantReflection
 {
-    std::string name;   // Name of the constant buffer field.
-    UINT        offset; // Offset (in bytes) within the constant buffer.
-    UINT        size;   // Size (in bytes) of this uniform.
+    STL::string  name;   // Name of the constant buffer field.
+    UINT    offset; // Offset (in bytes) within the constant buffer.
+    UINT    size;   // Size (in bytes) of this uniform.
 };
 
 struct D3D11ConstantBufferReflection
 {
-    UINT                                    slot;
-    UINT                                    size;
-    std::vector<D3D11ConstantReflection>    fields;
+    UINT                            slot;
+    UINT                            size;
+    STL::vector<D3D11ConstantReflection> fields;
 };
 
 class D3D11Shader : public Shader
@@ -54,7 +54,7 @@ class D3D11Shader : public Shader
         D3D11Shader(const ShaderType type);
 
         // Returns a list of all reflected constant buffers including their fields.
-        HRESULT ReflectAndCacheConstantBuffers(const std::vector<D3D11ConstantBufferReflection>** outConstantBuffers);
+        HRESULT ReflectAndCacheConstantBuffers(const STL::vector<D3D11ConstantBufferReflection>** outConstantBuffers);
 
         // Returns the native D3D shader object.
         inline const ComPtr<ID3D11DeviceChild>& GetNative() const
@@ -99,7 +99,7 @@ class D3D11Shader : public Shader
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
 
-        HRESULT ReflectConstantBuffers(std::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const;
+        HRESULT ReflectConstantBuffers(STL::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const;
 
     private:
 
@@ -109,7 +109,7 @@ class D3D11Shader : public Shader
         Report                                      report_;
 
         HRESULT                                     cbufferReflectionResult_    = S_FALSE;
-        std::vector<D3D11ConstantBufferReflection>  cbufferReflections_;
+        STL::vector<D3D11ConstantBufferReflection>  cbufferReflections_;
 
 };
 

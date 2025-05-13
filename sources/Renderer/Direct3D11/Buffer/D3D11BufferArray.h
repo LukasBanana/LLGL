@@ -10,7 +10,7 @@
 
 
 #include <LLGL/BufferArray.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <d3d11.h>
 
 
@@ -60,8 +60,8 @@ class D3D11BufferArray final : public BufferArray
 
     private:
 
-        std::vector<void*>  buffersAndBindingLocators_;
-        std::vector<UINT>   stridesAndOffsets_;
+        STL::vector<void*>  buffersAndBindingLocators_;
+        STL::vector<UINT>   stridesAndOffsets_;
 
 };
 

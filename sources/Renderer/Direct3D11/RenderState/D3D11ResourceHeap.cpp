@@ -319,14 +319,14 @@ void D3D11ResourceHeap::BindForComputePipeline1(ID3D11DeviceContext1* context1, 
         __VA_ARGS__                                             \
     )
 
-std::vector<D3D11ResourceHeap::D3DResourceBinding> D3D11ResourceHeap::FilterAndSortD3DBindingSlots(
+STL::vector<D3D11ResourceHeap::D3DResourceBinding> D3D11ResourceHeap::FilterAndSortD3DBindingSlots(
     BindingDescriptorIterator&                  bindingIter,
     const std::initializer_list<ResourceType>&  resourceTypes,
     long                                        resourceBindFlags,
     long                                        affectedStage)
 {
     /* Collect all binding points of the specified resource types */
-    std::vector<D3DResourceBinding> resourceBindings;
+    STL::vector<D3DResourceBinding> resourceBindings;
     resourceBindings.reserve(bindingIter.GetCount());
 
     for (ResourceType type : resourceTypes)

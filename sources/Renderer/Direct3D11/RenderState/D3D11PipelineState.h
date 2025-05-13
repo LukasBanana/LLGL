@@ -61,7 +61,7 @@ class D3D11PipelineState : public PipelineState
         );
 
         // Writes the report with the specified message and error bit.
-        void ResetReport(std::string&& text, bool hasErrors = false);
+        void ResetReport(STL::string&& text, bool hasErrors = false);
 
         // Returns the mutable report object.
         inline Report& GetMutableReport()

@@ -21,27 +21,27 @@ namespace LLGL
 
 
 // Generates an image buffer with floating-points for RGBA components.
-static std::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const float (&color)[4])
+static STL::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const float (&color)[4])
 {
-    return std::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), ColorRGBAf{ color[0], color[1], color[2], color[3] });
+    return STL::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), ColorRGBAf{ color[0], color[1], color[2], color[3] });
 }
 
 // Generates an image buffer with floating-points for the Red component.
-static std::vector<float> GenImageDataRf(std::uint32_t numPixels, float value)
+static STL::vector<float> GenImageDataRf(std::uint32_t numPixels, float value)
 {
-    return std::vector<float>(static_cast<std::size_t>(numPixels), value);
+    return STL::vector<float>(static_cast<std::size_t>(numPixels), value);
 }
 
 // Generates an image buffer with floating-points for the Red component and unsigned bytes for the Green component.
-static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPixels, float depth, std::uint8_t stencil)
+static STL::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPixels, float depth, std::uint8_t stencil)
 {
-    return std::vector<GLDepthStencilPair>(static_cast<std::size_t>(numPixels), GLDepthStencilPair{ depth, stencil });
+    return STL::vector<GLDepthStencilPair>(static_cast<std::size_t>(numPixels), GLDepthStencilPair{ depth, stencil });
 }
 
 // Generates an image buffer with unsigned bytes for the stencil index.
-static std::vector<std::uint8_t> GenImageDataS8ui(std::uint32_t numPixels, std::uint8_t stencil)
+static STL::vector<std::uint8_t> GenImageDataS8ui(std::uint32_t numPixels, std::uint8_t stencil)
 {
-    return std::vector<std::uint8_t>(static_cast<std::size_t>(numPixels), stencil);
+    return STL::vector<std::uint8_t>(static_cast<std::size_t>(numPixels), stencil);
 }
 
 // Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
@@ -747,7 +747,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
         Format internalFormat = FindSuitableDepthFormat(desc);
 
         #if !LLGL_GL_ENABLE_OPENGL2X
-        std::vector<GLDepthStencilPair> image;
+        STL::vector<GLDepthStencilPair> image;
         const void* initialData = nullptr;
 
         if (IsClearValueEnabled(desc))
@@ -779,7 +779,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     {
         Format internalFormat = FindSuitableDepthFormat(desc);
 
-        std::vector<float> image;
+        STL::vector<float> image;
         const void* initialData = nullptr;
 
         if (IsClearValueEnabled(desc))

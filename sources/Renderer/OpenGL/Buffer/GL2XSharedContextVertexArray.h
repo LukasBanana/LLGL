@@ -13,7 +13,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include "GLVertexAttribute.h"
 #include "GLVertexArrayObject.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -42,7 +42,7 @@ class GL2XSharedContextVertexArray
 
     private:
 
-        std::vector<GLVertexAttribute>  attribs_;
+        vector<GLVertexAttribute>  attribs_;
         GLuint                          attribIndexEnd_ = 0;
 
 };

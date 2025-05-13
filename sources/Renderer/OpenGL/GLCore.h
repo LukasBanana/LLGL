@@ -10,7 +10,7 @@
 
 
 #include "OpenGL.h"
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -20,19 +20,19 @@ namespace LLGL
 // Traps program execution if 'status' is not equal to 'statusRequired'.
 void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info = nullptr);
 
-// Converts the GL debug source into a string.
+// Converts the GL debug source into a STL::string.
 const char* GLDebugSourceToStr(const GLenum source);
 
-// Converts the GL debug type into a string.
+// Converts the GL debug type into a STL::string.
 const char* GLDebugTypeToStr(const GLenum type);
 
-// Converts the GL debug severity into a string.
+// Converts the GL debug severity into a STL::string.
 const char* GLDebugSeverityToStr(const GLenum severity);
 
 // Converts the boolean value into a GLboolean value.
 GLboolean GLBoolean(bool value);
 
-// Reads major/minor version from the string by glGetString(GL_VERSION), used for GL 2.x context creation.
+// Reads major/minor version from the STL::string by glGetString(GL_VERSION), used for GL 2.x context creation.
 bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor);
 
 // Returns the GL profile version as a single number, e.g. 450 for OpenGL 4.5.

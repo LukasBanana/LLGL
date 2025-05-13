@@ -11,7 +11,7 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -43,7 +43,7 @@ class DbgPipelineState final : public PipelineState
     public:
 
         PipelineState&                  instance;
-        std::string                     label;
+        STL::string                          label;
         const DbgPipelineLayout* const  pipelineLayout  = nullptr;
         const bool                      isGraphicsPSO   = false;
 

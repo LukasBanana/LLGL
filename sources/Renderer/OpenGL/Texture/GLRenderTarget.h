@@ -15,7 +15,7 @@
 #include "GLRenderbuffer.h"
 #include "GLTexture.h"
 #include <functional>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <memory>
 
 
@@ -98,7 +98,7 @@ class GLRenderTarget final : public RenderTarget
         For WebGL, we maintain a list of resolve attachments to swap them in and out of GL_COLOR_ATTACHMENT0 binding point,
         since glDrawBuffers() behaves differently than in Desktop GL.
         */
-        std::vector<GLFramebufferAttachment>    resolveAttachments_;
+        STL::vector<GLFramebufferAttachment>    resolveAttachments_;
         #endif
 
         /*
@@ -106,7 +106,7 @@ class GLRenderTarget final : public RenderTarget
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<GLRenderbuffer>             renderbuffers_;
+        STL::vector<GLRenderbuffer>                  renderbuffers_;
 
         SmallVector<GLenum, 2>                  drawBuffers_;                       // Values for glDrawBuffers for the primary FBO
         SmallVector<GLenum, 2>                  drawBuffersResolve_;                // Values for glDrawBuffers for the resolve FBO

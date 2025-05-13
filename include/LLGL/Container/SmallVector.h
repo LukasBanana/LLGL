@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/AlignedArray.h>
+#include <LLGL/STL/STLAllocator.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -113,7 +114,7 @@ template
 <
     typename    T,
     std::size_t LocalCapacity   = 16,
-    typename    Allocator       = std::allocator<T>,
+    typename    Allocator       = STL::allocator<T>,
     typename    GrowStrategy    = GrowStrategyAddHalf
 >
 class LLGL_EXPORT SmallVector

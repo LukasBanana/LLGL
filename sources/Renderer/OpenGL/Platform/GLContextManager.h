@@ -12,7 +12,7 @@
 #include "GLContext.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <memory>
 #include <functional>
 
@@ -98,7 +98,7 @@ class GLContextManager
     private:
 
         RendererConfigurationOpenGL             profile_;
-        std::vector<GLPixelFormatWithContext>   pixelFormats_;
+        STL::vector<GLPixelFormatWithContext>        pixelFormats_;
         DynamicByteArray                        customNativeHandle_;
         NewGLContextCallback                    newContextCallback_;
 

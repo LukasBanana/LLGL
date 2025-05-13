@@ -94,7 +94,7 @@ static std::size_t FindStartOfDirective(const char* source, std::size_t off)
             return off;
     }
     while (off-- > 0);
-    return std::string::npos;
+    return STL::string::npos;
 }
 
 // Returns the source position after the '#version'-directive. This is always at the beginning of a new line.
@@ -134,20 +134,20 @@ static std::size_t FindEndOfVersionDirective(const char* source)
             ++s;
         }
     }
-    return std::string::npos;
+    return STL::string::npos;
 }
 
 GLShaderSourcePatcher::GLShaderSourcePatcher(const char* source) :
     source_ { source }
 {
     const auto posAfterVersion = FindEndOfVersionDirective(source);
-    if (posAfterVersion != std::string::npos)
+    if (posAfterVersion != STL::string::npos)
         statementInsertPos_ = posAfterVersion;
 }
 
-static std::string GenerateGlslVersionDirective(const char* version)
+static STL::string GenerateGlslVersionDirective(const char* version)
 {
-    std::string s = "#version ";
+    STL::string s = "#version ";
     s += version;
     s += '\n';
     return s;
@@ -157,11 +157,11 @@ void GLShaderSourcePatcher::OverrideVersion(const char* version)
 {
     /* First remove current '#version'-directive (in case new one must be at first source line) */
     const std::size_t startOfVersionDirective = FindStartOfDirective(source_.c_str(), statementInsertPos_);
-    if (startOfVersionDirective != std::string::npos)
+    if (startOfVersionDirective != STL::string::npos)
         source_.erase(startOfVersionDirective, statementInsertPos_ - startOfVersionDirective);
 
     /* Generate new '#version'-directive */
-    const std::string newVersionDirective = GenerateGlslVersionDirective(version);
+    const STL::string newVersionDirective = GenerateGlslVersionDirective(version);
     source_.insert(0, newVersionDirective);
 
     /* Replace old insertion point for statements after new directive */
@@ -173,7 +173,7 @@ void GLShaderSourcePatcher::AddDefines(const ShaderMacro* defines)
     if (defines != nullptr)
     {
         /* Generate macro definition code */
-        std::string defineCode;
+        STL::string defineCode;
 
         for (; defines->name != nullptr; ++defines)
         {
@@ -197,7 +197,7 @@ void GLShaderSourcePatcher::AddPragmaDirective(const char* statement)
     if (statement != nullptr && *statement != '\0')
     {
         /* Generate '#pragma'-directive code and insert into source */
-        std::string pragmaCode = "#pragma ";
+        STL::string pragmaCode = "#pragma ";
         pragmaCode += statement;
         pragmaCode += '\n';
         InsertAfterVersionDirective(pragmaCode);
@@ -206,7 +206,7 @@ void GLShaderSourcePatcher::AddPragmaDirective(const char* statement)
 
 struct SourceScanState
 {
-    std::string patched;
+    STL::string patched;
     std::size_t codeBlockDepth          = 0;
     const char* head                    = nullptr;
     const char* lastPatched             = nullptr;
@@ -329,7 +329,7 @@ void GLShaderSourcePatcher::AddFinalVertexTransformStatements(const char* statem
  * ======= Private: =======
  */
 
-void GLShaderSourcePatcher::InsertAfterVersionDirective(const std::string& statement)
+void GLShaderSourcePatcher::InsertAfterVersionDirective(const STL::string& statement)
 {
     /* Insert statement into source after version */
     source_.insert(statementInsertPos_, statement);
@@ -382,12 +382,12 @@ static std::size_t FindEntryPointSourceLocation(const char* source, std::size_t 
             ++s;
         }
     }
-    return std::string::npos;
+    return STL::string::npos;
 }
 
 void GLShaderSourcePatcher::CacheEntryPointSourceLocation()
 {
-    if (entryPointStartPos_ == std::string::npos)
+    if (entryPointStartPos_ == STL::string::npos)
         entryPointStartPos_ = FindEntryPointSourceLocation(GetSource(), statementInsertPos_);
 }
 
@@ -395,13 +395,13 @@ void GLShaderSourcePatcher::ResetInsertionPoints(std::size_t newStatementInsertP
 {
     if (newStatementInsertPos > statementInsertPos_)
     {
-        if (entryPointStartPos_ != std::string::npos)
+        if (entryPointStartPos_ != STL::string::npos)
             entryPointStartPos_ += (newStatementInsertPos - statementInsertPos_);
         statementInsertPos_ = newStatementInsertPos;
     }
     else if (newStatementInsertPos < statementInsertPos_)
     {
-        if (entryPointStartPos_ != std::string::npos)
+        if (entryPointStartPos_ != STL::string::npos)
             entryPointStartPos_ -= (statementInsertPos_ - newStatementInsertPos);
         statementInsertPos_ = newStatementInsertPos;
     }

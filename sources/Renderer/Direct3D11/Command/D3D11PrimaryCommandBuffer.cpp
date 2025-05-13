@@ -1050,7 +1050,7 @@ void D3D11PrimaryCommandBuffer::PushDebugGroup(const char* name)
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
     {
-        const std::wstring nameWStr = ToWideString(name);
+        const STL::wstring nameWStr = ToWideString(name);
         annotation_->BeginEvent(nameWStr.c_str());
     }
     #endif

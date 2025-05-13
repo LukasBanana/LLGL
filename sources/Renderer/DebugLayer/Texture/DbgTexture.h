@@ -10,8 +10,8 @@
 
 
 #include <LLGL/Texture.h>
-#include <string>
-#include <set>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Set.h>
 
 
 namespace LLGL
@@ -41,13 +41,13 @@ class DbgTexture final : public Texture
         const TextureDescriptor desc;
         TextureViewDescriptor   viewDesc;
         std::uint32_t           mipLevels           = 1;        // Actual number of MIP-map levels.
-        std::string             label;
+        STL::string                  label;
         const bool              isTextureView       = false;
 
     private:
 
         //DbgTexture*             sharedTexture_      = nullptr;  // Reference to the shared texture (only for texture-views)
-        //std::set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
+        //STL::set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
 
 };
 

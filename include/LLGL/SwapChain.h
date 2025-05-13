@@ -22,9 +22,9 @@
 #include <LLGL/Sampler.h>
 #include <LLGL/QueryHeap.h>
 
-#include <string>
+#include <LLGL/STL/String.h>
 #include <memory>
-#include <map>
+#include <LLGL/STL/Map.h>
 
 
 namespace LLGL

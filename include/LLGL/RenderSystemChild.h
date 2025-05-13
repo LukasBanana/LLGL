@@ -27,7 +27,7 @@ class LLGL_EXPORT RenderSystemChild : public Interface
 
         /**
         \brief Sets the name of this class instance for debugging purposes.
-        \param[in] name Pointer to a NUL-terminated string that specifies the new name of this instance.
+        \param[in] name Pointer to a NUL-terminated STL::string that specifies the new name of this instance.
         Specifying a null pointer effectively removes the name from the object.
         The implementation of this function may alter the actual name depending on how many internal objects need to be labeled.
         \remarks This is used for debugging purposes only and the implementation is undefined,

@@ -13,7 +13,7 @@
 #include <d3d12.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL
@@ -97,8 +97,8 @@ class D3D12BufferConstantsPool
 
     private:
 
-        D3D12Resource               resource_;
-        std::vector<ConstantRange>  constants_;
+        D3D12Resource           resource_;
+        STL::vector<ConstantRange>   constants_;
 
 };
 

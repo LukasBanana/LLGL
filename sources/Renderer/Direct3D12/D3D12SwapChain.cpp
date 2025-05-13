@@ -77,7 +77,7 @@ void D3D12SwapChain::SetDebugName(const char* name)
         D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
         D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
 
-        std::string subscript;
+        STL::string subscript;
         for_range(i, D3D12SwapChain::maxNumColorBuffers)
         {
             subscript = (".BackBuffer" + std::to_string(i));
@@ -417,7 +417,7 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
     renderSystem_.SyncGPU();
 
     /* Store current debug names */
-    std::string debugNames[D3D12SwapChain::numDebugNames];
+    STL::string debugNames[D3D12SwapChain::numDebugNames];
     if (hasDebugName_)
         StoreDebugNames(debugNames);
 
@@ -599,7 +599,7 @@ void D3D12SwapChain::MoveToNextFrame()
     frameFenceValues_[currentColorBuffer_] = currentFenceValue + 1;
 }
 
-void D3D12SwapChain::StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::numDebugNames])
+void D3D12SwapChain::StoreDebugNames(STL::string (&debugNames)[D3D12SwapChain::numDebugNames])
 {
     for_range(i, D3D12SwapChain::maxNumColorBuffers)
     {
@@ -609,7 +609,7 @@ void D3D12SwapChain::StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::n
     debugNames[D3D12SwapChain::maxNumColorBuffers*2] = D3D12GetObjectName(depthStencil_.Get());
 }
 
-void D3D12SwapChain::RestoreDebugNames(const std::string (&debugNames)[D3D12SwapChain::numDebugNames])
+void D3D12SwapChain::RestoreDebugNames(const STL::string (&debugNames)[D3D12SwapChain::numDebugNames])
 {
     for_range(i, D3D12SwapChain::maxNumColorBuffers)
     {

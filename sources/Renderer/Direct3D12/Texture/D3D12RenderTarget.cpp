@@ -189,7 +189,7 @@ UINT D3D12RenderTarget::GatherAttachmentFormats(D3D12Device& device, const Rende
         depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(formatDXGI);
     }
 
-    /* Pre-allocate containers to avoid dangling pointers after std::vector::push_back() */
+    /* Pre-allocate containers to avoid dangling pointers after vector::push_back() */
     colorBuffers_.reserve(outColorFormats.size());
     internalTextures_.reserve(NumInternalTexturesForAttachments(desc));
 

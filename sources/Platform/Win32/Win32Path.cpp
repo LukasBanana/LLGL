@@ -26,9 +26,9 @@ LLGL_EXPORT UTF8String GetWorkingDir()
     const DWORD pathLen = ::GetCurrentDirectory(0, nullptr);
     if (pathLen > 0)
     {
-        /* Override content of string including the NUL-terminator, which is allowed since C++11 */
+        /* Override content of STL::string including the NUL-terminator, which is allowed since C++11 */
         #ifdef UNICODE
-        std::wstring path;
+        STL::wstring path;
         #else
         std::string path;
         #endif

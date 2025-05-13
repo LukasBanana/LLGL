@@ -41,10 +41,10 @@ namespace LLGL
 // Prints the specified text to the platform specific debug output or the standard error stream (stderr) by default.
 LLGL_EXPORT void DebugPuts(const char* text);
 
-// Prints the specified formatted text to the debug output. Calls DebugPuts with the formatted string.
+// Prints the specified formatted text to the debug output. Calls DebugPuts with the formatted STL::string.
 LLGL_EXPORT void DebugPrintf(const char* format, ...);
 
-// Returns a string containing the callstack. The formatting is platform dependent but each line always ends with a newline character '\n'.
+// Returns a STL::string containing the callstack. The formatting is platform dependent but each line always ends with a newline character '\n'.
 LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
 
 // Breaks the debugger due to an error detected by the debug validation layers.

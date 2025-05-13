@@ -95,8 +95,8 @@ class D3D12SwapChain final : public SwapChain
 
         void MoveToNextFrame();
 
-        void StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
-        void RestoreDebugNames(const std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
+        void StoreDebugNames(STL::string (&debugNames)[D3D12SwapChain::numDebugNames]);
+        void RestoreDebugNames(const STL::string (&debugNames)[D3D12SwapChain::numDebugNames]);
 
     private:
 

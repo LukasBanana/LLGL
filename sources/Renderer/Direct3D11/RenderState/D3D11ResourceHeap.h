@@ -17,7 +17,7 @@
 #include "../../BindingIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../../DXCommon/DXManagedComPtrArray.h"
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <functional>
 #include <initializer_list>
 #include "../Direct3D11.h"
@@ -271,7 +271,7 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     private:
 
-        static std::vector<D3DResourceBinding> FilterAndSortD3DBindingSlots(
+        static STL::vector<D3DResourceBinding> FilterAndSortD3DBindingSlots(
             BindingDescriptorIterator&                  bindingIter,
             const std::initializer_list<ResourceType>&  resourceTypes,
             long                                        resourceBindFlags,

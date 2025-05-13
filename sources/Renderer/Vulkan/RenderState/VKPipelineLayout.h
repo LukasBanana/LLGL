@@ -19,7 +19,7 @@
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include "../../../Core/PackedPermutation.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -50,7 +50,7 @@ class VKPipelineLayout final : public PipelineLayout
         VKPipelineLayoutPermutationSPtr CreatePermutation(
             VkDevice                            device,
             const ArrayView<Shader*>&           shaders,
-            std::vector<VkPushConstantRange>&   outUniformRanges
+            vector<VkPushConstantRange>&   outUniformRanges
         ) const;
 
         // Returns true if a permutation is required for the specified shader.
@@ -166,15 +166,15 @@ class VKPipelineLayout final : public PipelineLayout
         struct DescriptorSetBindingTable
         {
             std::uint32_t               dstSet      = ~0u;
-            std::vector<BindingSlot>    srcSlots;
+            vector<BindingSlot>    srcSlots;
         };
 
     private:
 
         void CreateDescriptorSetLayout(
             VkDevice                                device,
-            const std::vector<BindingDescriptor>&   inBindings,
-            std::vector<VKLayoutBinding>&           outBindings,
+            const vector<BindingDescriptor>&   inBindings,
+            vector<VKLayoutBinding>&           outBindings,
             VKDescriptorSetLayout&                  outDescriptorSetLayout
         );
 
@@ -225,8 +225,8 @@ class VKPipelineLayout final : public PipelineLayout
         VkDescriptorSet                     staticDescriptorSet_                    = VK_NULL_HANDLE;
 
         VKLayoutBindingTable                bindingTable_;
-        std::vector<VKPtr<VkSampler>>       immutableSamplers_;
-        std::vector<UniformDescriptor>      uniformDescs_;
+        vector<VKPtr<VkSampler>>            immutableSamplers_;
+        vector<UniformDescriptor>           uniformDescs_;
 
         VKPipelineBarrierPtr                barrier_;
 

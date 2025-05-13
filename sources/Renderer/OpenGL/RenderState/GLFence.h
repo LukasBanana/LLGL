@@ -11,7 +11,7 @@
 
 #include <LLGL/Fence.h>
 #include "../OpenGL.h"
-#include <string>
+#include <LLGL/STL/String.h>
 #include <cstdint>
 
 
@@ -42,7 +42,7 @@ class GLFence final : public Fence
 
         #ifdef LLGL_DEBUG
         // Only provide name in debug mode, to keep fence objects as lightweight as possible
-        std::string name_;
+        STL::string name_;
         #endif
 
 };

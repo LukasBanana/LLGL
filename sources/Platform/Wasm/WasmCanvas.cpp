@@ -294,7 +294,7 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     //if (!config.hasOwnProperty("canvas_selector"))
     //    return;
     
-    std::string canvasSelector = "#canvas";//config["canvas_selector"].as<std::string>();
+    string canvasSelector = "#canvas";//config["canvas_selector"].as<string>();
     canvas_ = document["body"].call<emscripten::val>("querySelector", canvasSelector);
 
     EM_ASM({

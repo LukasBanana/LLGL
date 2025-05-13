@@ -15,7 +15,7 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Deprecated.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL

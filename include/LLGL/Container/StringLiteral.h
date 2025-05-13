@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
+#include <LLGL/STL/STLAllocator.h>
 #include <LLGL/Tags.h>
 #include <LLGL/Deprecated.h>
 #include <cstring>
@@ -21,16 +22,16 @@ namespace LLGL
 
 
 /**
-\brief Constant string container template to either reference a compile-time string literal (lightweight) or own a dynamic string (non-mutable).
-\remarks This provides a null-terminated string and serves as a lightweight representation for a string that is not meant to change once assigned.
-\tparam TChar Specifies the string character type.
+\brief Constant STL::string container template to either reference a compile-time STL::string literal (lightweight) or own a dynamic STL::string (non-mutable).
+\remarks This provides a null-terminated STL::string and serves as a lightweight representation for a STL::string that is not meant to change once assigned.
+\tparam TChar Specifies the STL::string character type.
 \tparam Traits Specifies the character traits. By default std::char_traits<TChar>.
 */
 template
 <
     typename TChar,
     typename Traits     = std::char_traits<TChar>,
-    typename Allocator  = std::allocator<TChar>
+    typename Allocator  = STL::allocator<TChar>
 >
 class LLGL_EXPORT BasicStringLiteral
 {
@@ -59,15 +60,15 @@ class LLGL_EXPORT BasicStringLiteral
 
     public:
 
-        //! Initializes an empty string literal.
+        //! Initializes an empty STL::string literal.
         BasicStringLiteral() :
             data_ { BasicStringLiteral::GetEmptyString() }
         {
         }
 
         /**
-        \brief Initializes the string with a copy of the input string.
-        \remarks This either makes a lightweight copy of the reference or allocates a new managed string.
+        \brief Initializes the STL::string with a copy of the input STL::string.
+        \remarks This either makes a lightweight copy of the reference or allocates a new managed STL::string.
         */
         BasicStringLiteral(const BasicStringLiteral& rhs)
         {
@@ -77,7 +78,7 @@ class LLGL_EXPORT BasicStringLiteral
                 data_ = rhs.data_;
         }
 
-        //! Moves ownership from the input string literal to the newly constructed string literal.
+        //! Moves ownership from the input STL::string literal to the newly constructed STL::string literal.
         BasicStringLiteral(BasicStringLiteral&& rhs) noexcept :
             data_ { rhs.data_ },
             size_ { rhs.size_ }
@@ -108,7 +109,7 @@ class LLGL_EXPORT BasicStringLiteral
             return *this;
         }
 
-        //! Initializes the string literal as a reference (non-managed).
+        //! Initializes the STL::string literal as a reference (non-managed).
         BasicStringLiteral(const_pointer str) :
             data_ { str }
         {
@@ -124,26 +125,26 @@ class LLGL_EXPORT BasicStringLiteral
                 data_ = str;
         }
 
-        //! Initializes the string literal as a managed copy of the input string.
+        //! Initializes the STL::string literal as a managed copy of the input STL::string.
         explicit BasicStringLiteral(const_pointer str, CopyTag)
         {
             CopyFrom(BasicStringView<TChar, Traits>{ str });
         }
 
-        //! Initializes the string literal with the specified null-terminated string.
+        //! Initializes the STL::string literal with the specified null-terminated STL::string.
         BasicStringLiteral(const BasicStringView<TChar, Traits>& str)
         {
             CopyFrom(str);
         }
 
-        //! Initializes the string literal with another templated string class. This would usually be std::basic_string.
+        //! Initializes the STL::string literal with another templated STL::string class. This would usually be std::basic_STL::string.
         template <template <class, class, class> class TString>
         BasicStringLiteral(const TString<TChar, Traits, Allocator>& str)
         {
             CopyFrom(str);
         }
 
-        //! Destrcuts the string literal. If this is a managed string, it will delete its internal memory.
+        //! Destrcuts the STL::string literal. If this is a managed STL::string, it will delete its internal memory.
         ~BasicStringLiteral()
         {
             clear();
@@ -152,7 +153,7 @@ class LLGL_EXPORT BasicStringLiteral
     public:
 
         /**
-        \brief Returns true if this string literal is empty, i.e. \c size() and \c length() return 0.
+        \brief Returns true if this STL::string literal is empty, i.e. \c size() and \c length() return 0.
         \see size
         \see length
         */
@@ -162,7 +163,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns the length of this string. This is equivalent to \c length().
+        \brief Returns the length of this STL::string. This is equivalent to \c length().
         \see length
         */
         size_type size() const noexcept
@@ -171,7 +172,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns the length of this string. This is equivalent to \c size().
+        \brief Returns the length of this STL::string. This is equivalent to \c size().
         */
         size_type length() const noexcept
         {
@@ -179,7 +180,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns the raw pointer of this string literal.
+        \brief Returns the raw pointer of this STL::string literal.
         \remarks This is equivalent to c_str().
         */
         const_pointer data() const noexcept
@@ -188,8 +189,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns the raw pointer of this string literal.
-        \remarks This points to a NUL-terminated string like \c std::string does.
+        \brief Returns the raw pointer of this STL::string literal.
+        \remarks This points to a NUL-terminated STL::string like \c STL::string does.
         */
         const_pointer c_str() const noexcept
         {
@@ -200,7 +201,7 @@ class LLGL_EXPORT BasicStringLiteral
 
         /**
         \brief Returns a constant reference to the character at the specified zero-based position.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference at(size_type pos) const
         {
@@ -208,8 +209,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns a constant reference to the first character of this string.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \brief Returns a constant reference to the first character of this STL::string.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference front() const
         {
@@ -217,8 +218,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns a constant reference to the last character of this string.
-        \remarks If the string is empty, the behavior of this function is undefined.
+        \brief Returns a constant reference to the last character of this STL::string.
+        \remarks If the STL::string is empty, the behavior of this function is undefined.
         */
         const_reference back() const
         {
@@ -234,8 +235,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns constant iterator to the beginning of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant iterator to the beginning of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_iterator cbegin() const noexcept
         {
@@ -249,8 +250,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns constant reverse iterator to the end of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant reverse iterator to the end of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_reverse_iterator crbegin() const
         {
@@ -264,8 +265,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns constant iterator to the end of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant iterator to the end of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_iterator cend() const noexcept
         {
@@ -279,8 +280,8 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Returns constant reverse iterator to the beginning of this string.
-        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        \brief Returns constant reverse iterator to the beginning of this STL::string.
+        \remarks This can also be used on an empty STL::string as long as it's not dereferenced on such a STL::string.
         */
         const_reverse_iterator crend() const
         {
@@ -290,9 +291,9 @@ class LLGL_EXPORT BasicStringLiteral
     public:
 
         /**
-        \brief Compares this string with the specified string in a strict-weak-order (SWO).
-        \returns -1 if this string is considered to be ordered \e before the other string,
-        +1 if this string is considered to be ordered \e after the other string,
+        \brief Compares this STL::string with the specified STL::string in a strict-weak-order (SWO).
+        \returns -1 if this STL::string is considered to be ordered \e before the other STL::string,
+        +1 if this STL::string is considered to be ordered \e after the other STL::string,
         and 0 otherwise.
         */
         int compare(const BasicStringLiteral& str) const
@@ -301,7 +302,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Compares a sub-view of this string with the specified string.
+        \brief Compares a sub-view of this STL::string with the specified STL::string.
         \see compare(const BasicStringLiteral&)
         */
         int compare(size_type pos1, size_type count1, const BasicStringLiteral& str) const
@@ -310,7 +311,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         /**
-        \brief Compares a sub-view of this string with a sub-view of the specified string.
+        \brief Compares a sub-view of this STL::string with a sub-view of the specified STL::string.
         \see compare(const BasicStringLiteral&)
         */
         int compare(size_type pos1, size_type count1, const BasicStringLiteral& str, size_type pos2, size_type count2 = npos) const
@@ -367,19 +368,19 @@ class LLGL_EXPORT BasicStringLiteral
     public:
 
         /**
-        \brief Clears this string literal by making it a reference to the empty string.
-        \remarks If this was a managed string, its internal memory will be deleted.
+        \brief Clears this STL::string literal by making it a reference to the empty STL::string.
+        \remarks If this was a managed STL::string, its internal memory will be deleted.
         */
         void clear()
         {
             if (IsManaged())
             {
                 /* NOTE:
-                    const_cast is safe here because if this string literal is managed,
+                    const_cast is safe here because if this STL::string literal is managed,
                     it was allocated and this instance owns this memory.
-                    Otherwise, it is referencing a compile-time string literal.
+                    Otherwise, it is referencing a compile-time STL::string literal.
                     To keep things simple and avoid unnecessary union declarations,
-                    this class only holds a const_pointer to its string literal. */
+                    this class only holds a const_pointer to its STL::string literal. */
                 Allocator{}.deallocate(const_cast<pointer>(data_), size_ + 1);
             }
             data_ = BasicStringLiteral::GetEmptyString();
@@ -394,7 +395,7 @@ class LLGL_EXPORT BasicStringLiteral
             return data_[pos];
         }
 
-        //! Implicitly converts this string literal as string view.
+        //! Implicitly converts this STL::string literal as STL::string view.
         operator BasicStringView<TChar, Traits> () const
         {
             return AsView();
@@ -402,22 +403,22 @@ class LLGL_EXPORT BasicStringLiteral
 
     private:
 
-        // Returns true if this is a managed string. Otherwise, it's only a reference to a compile-time string literal.
+        // Returns true if this is a managed STL::string. Otherwise, it's only a reference to a compile-time STL::string literal.
         bool IsManaged() const
         {
             return (size_ != size_type(-1));
         }
 
-        // Returns this string literal as StringView.
+        // Returns this STL::string literal as StringView.
         BasicStringView<TChar, Traits> AsView() const
         {
             return BasicStringView<TChar, Traits>{ data(), size() };
         }
 
-        // Copies the specified string view and makes this a managed string literal.
+        // Copies the specified STL::string view and makes this a managed STL::string literal.
         void CopyFrom(const BasicStringView<TChar, Traits>& str)
         {
-            /* Allocate new string array and copy source into it */
+            /* Allocate new STL::string array and copy source into it */
             size_ = str.size();
             TChar* newData = Allocator{}.allocate(size_ + 1);
             std::memcpy(newData, str.data(), size_*sizeof(TChar));
@@ -436,15 +437,15 @@ class LLGL_EXPORT BasicStringLiteral
     private:
 
         const_pointer   data_ = nullptr;
-        size_type       size_ = size_type(-1); // -1 indicates this is a non-managed string and its size must be determined on demand.
+        size_type       size_ = size_type(-1); // -1 indicates this is a non-managed STL::string and its size must be determined on demand.
 
 };
 
 
-//! ANSI character string literal (char).
+//! ANSI character STL::string literal (char).
 using StringLiteral = BasicStringLiteral<char>;
 
-//! Wide character string literal (wchar_t).
+//! Wide character STL::string literal (wchar_t).
 using WStringLiteral = BasicStringLiteral<wchar_t>;
 
 

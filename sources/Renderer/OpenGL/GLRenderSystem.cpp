@@ -675,26 +675,26 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
     #endif // /LLGL_GLEXT_DEBUG
 }
 
-static std::string GLGetString(GLenum name)
+static STL::string GLGetString(GLenum name)
 {
     const GLubyte* bytes = glGetString(name);
-    return (bytes != nullptr ? std::string(reinterpret_cast<const char*>(bytes)) : "");
+    return (bytes != nullptr ? STL::string(reinterpret_cast<const char*>(bytes)) : "");
 }
 
 static void GLQueryRendererInfo(RendererInfo& info)
 {
-    info.rendererName           = GLProfile::GetAPIName() + std::string(" ") + GLGetString(GL_VERSION);
+    info.rendererName           = GLProfile::GetAPIName() + STL::string(" ") + GLGetString(GL_VERSION);
     info.deviceName             = GLGetString(GL_RENDERER);
     info.vendorName             = GLGetString(GL_VENDOR);
-    info.shadingLanguageName    = GLProfile::GetShadingLanguageName() + std::string(" ") + GLGetString(GL_SHADING_LANGUAGE_VERSION);
+    info.shadingLanguageName    = GLProfile::GetShadingLanguageName() + STL::string(" ") + GLGetString(GL_SHADING_LANGUAGE_VERSION);
 
-    const std::set<const char*>& extensionNames = GetLoadedOpenGLExtensions();
-    info.extensionNames = std::vector<UTF8String>(extensionNames.begin(), extensionNames.end());
+    const STL::set<const char*>& extensionNames = GetLoadedOpenGLExtensions();
+    info.extensionNames = STL::vector<UTF8String>(extensionNames.begin(), extensionNames.end());
 
     GLQueryPipelineCacheID(info.pipelineCacheID);
 }
 
-static void AppendCacheIDBytes(std::vector<char>& cacheID, const void* bytes, std::size_t count)
+static void AppendCacheIDBytes(STL::vector<char>& cacheID, const void* bytes, std::size_t count)
 {
     const std::size_t offset = cacheID.size();
     cacheID.resize(offset + count);
@@ -702,13 +702,13 @@ static void AppendCacheIDBytes(std::vector<char>& cacheID, const void* bytes, st
 }
 
 template <typename T>
-static void AppendCacheIDValue(std::vector<char>& cacheID, const T& val)
+static void AppendCacheIDValue(STL::vector<char>& cacheID, const T& val)
 {
     AppendCacheIDBytes(cacheID, &val, sizeof(val));
 }
 
 // Must not be static to be available in GL module
-void GLQueryPipelineCacheID(std::vector<char>& cacheID)
+void GLQueryPipelineCacheID(STL::vector<char>& cacheID)
 {
     #ifdef GL_ARB_get_program_binary
     if (HasExtension(GLExt::ARB_get_program_binary))
@@ -721,12 +721,12 @@ void GLQueryPipelineCacheID(std::vector<char>& cacheID)
             AppendCacheIDValue(cacheID, numBinaryFormats);
 
             /* Append binary format values themselves */
-            std::vector<GLint> formats;
+            STL::vector<GLint> formats;
             formats.resize(numBinaryFormats);
             glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
             AppendCacheIDBytes(cacheID, formats.data(), sizeof(GLint) * formats.size());
 
-            /* Append GL version string */
+            /* Append GL version STL::string */
             if (const GLubyte* versionStr = glGetString(GL_VERSION))
                 AppendCacheIDBytes(cacheID, versionStr, ::strlen(reinterpret_cast<const char*>(versionStr)));
         }

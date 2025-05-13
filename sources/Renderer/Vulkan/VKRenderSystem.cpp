@@ -831,8 +831,8 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     LLGL_ASSERT(instanceVersion >= VK_API_VERSION_1_0, "vkEnumerateInstanceVersion(instanceVersion = %u)", instanceVersion);
 
     /* Query instance layer properties */
-    const std::vector<VkLayerProperties> layerProperties = VKQueryInstanceLayerProperties();
-    std::vector<const char*> layerNames;
+    const vector<VkLayerProperties> layerProperties = VKQueryInstanceLayerProperties();
+    vector<const char*> layerNames;
 
     for (const VkLayerProperties& prop : layerProperties)
     {
@@ -1117,8 +1117,8 @@ bool VKRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabi
     {
         /* Query rendering information from selected physical device and store Vulkan extension names */
         physicalDevice_.QueryRendererInfo(*outInfo);
-        const std::vector<const char*>& extensions = physicalDevice_.GetExtensionNames();
-        outInfo->extensionNames = std::vector<UTF8String>(extensions.begin(), extensions.end());
+        const vector<const char*>& extensions = physicalDevice_.GetExtensionNames();
+        outInfo->extensionNames = vector<UTF8String>(extensions.begin(), extensions.end());
     }
     if (outCaps != nullptr)
     {

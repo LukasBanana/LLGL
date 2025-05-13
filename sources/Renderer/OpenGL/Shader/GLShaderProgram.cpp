@@ -20,7 +20,7 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Utils/ForRange.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <stdexcept>
 
 
@@ -133,11 +133,11 @@ void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayo
 void GLShaderProgram::QueryInfoLogs(Report& report)
 {
     const bool hasErrors = !GLShaderProgram::GetLinkStatus(GetID());
-    std::string log = GLShaderProgram::GetGLProgramLog(GetID());
+    STL::string log = GLShaderProgram::GetGLProgramLog(GetID());
     report.Reset(std::move(log), hasErrors);
 }
 
-void GLShaderProgram::QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const
+void GLShaderProgram::QueryTexBufferNames(STL::set<STL::string>& outSamplerBufferNames, STL::set<STL::string>& outImageBufferNames) const
 {
     outSamplerBufferNames.clear();
     outImageBufferNames.clear();
@@ -151,7 +151,7 @@ bool GLShaderProgram::GetLinkStatus(GLuint program)
     return (status != GL_FALSE);
 }
 
-std::string GLShaderProgram::GetGLProgramLog(GLuint program)
+STL::string GLShaderProgram::GetGLProgramLog(GLuint program)
 {
     /* Query info log length */
     GLint infoLogLength = 0;
@@ -160,15 +160,15 @@ std::string GLShaderProgram::GetGLProgramLog(GLuint program)
     if (infoLogLength > 0)
     {
         /* Store info log in byte buffer (because GL writes it's own null-terminator character!) */
-        std::vector<char> infoLog;
+        STL::vector<char> infoLog;
         infoLog.resize(infoLogLength, '\0');
 
         /* Query info log output */
         GLsizei charsWritten = 0;
         glGetProgramInfoLog(program, infoLogLength, &charsWritten, infoLog.data());
 
-        /* Convert byte buffer to string */
-        return std::string(infoLog.data(), static_cast<std::size_t>(charsWritten));
+        /* Convert byte buffer to STL::string */
+        return STL::string(infoLog.data(), static_cast<std::size_t>(charsWritten));
     }
 
     return "";
@@ -225,7 +225,7 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVary
         return;
 
     /* Specify transform-feedback varyings by locations */
-    std::vector<GLint> varyingLocations;
+    STL::vector<GLint> varyingLocations;
     varyingLocations.reserve(numVaryings);
 
     for_range(i, numVaryings)
@@ -291,7 +291,7 @@ static bool GLQueryActiveAttribs(
     GLenum              attribNameLengthType,
     GLint&              outNumAttribs,
     GLint&              outMaxNameLength,
-    std::vector<char>&  nameBuffer)
+    STL::vector<char>&  nameBuffer)
 {
     /* Query number of active attributes */
     glGetProgramiv(program, attribCountType, &outNumAttribs);
@@ -313,7 +313,7 @@ static bool GLQueryActiveResources(
     GLenum              programInterface,
     GLint&              outNumResources,
     GLint&              outMaxNameLength,
-    std::vector<char>&  nameBuffer)
+    STL::vector<char>&  nameBuffer)
 {
     #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 
@@ -442,12 +442,12 @@ struct GLReflectVertexAttribute
 static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection)
 {
     /* Query active vertex attributes */
-    std::vector<char> attribName;
+    STL::vector<char> attribName;
     GLint numAttribs = 0, maxNameLength = 0;
     if (!GLQueryActiveAttribs(program, GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
         return;
 
-    std::vector<GLReflectVertexAttribute> attributes;
+    STL::vector<GLReflectVertexAttribute> attributes;
     attributes.reserve(static_cast<std::size_t>(numAttribs));
 
     /* Iterate over all vertex attributes */
@@ -521,7 +521,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
     #endif
     {
         /* Query active varyings */
-        std::vector<char> attribName;
+        STL::vector<char> attribName;
         GLint numVaryings = 0, maxNameLength = 0;
         if (!GLQueryActiveAttribs(program, GL_TRANSFORM_FEEDBACK_VARYINGS, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, numVaryings, maxNameLength, attribName))
             return;
@@ -554,7 +554,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
         /* Query active varyings */
-        std::vector<char> attribName;
+        STL::vector<char> attribName;
         GLint numVaryings = 0, maxNameLength = 0;
         if (!GLQueryActiveAttribs(program, GL_ACTIVE_VARYINGS_NV, GL_ACTIVE_VARYING_MAX_LENGTH_NV, numVaryings, maxNameLength, attribName))
             return;
@@ -678,7 +678,7 @@ static void GLQueryFragmentAttributes(GLuint program, ShaderReflection& reflecti
 
     GLint numFragAttribs = 0;
     GLint maxNameLength = 0;
-    std::vector<char> blockName;
+    STL::vector<char> blockName;
     if (!GLQueryActiveResources(program, GL_PROGRAM_OUTPUT, numFragAttribs, maxNameLength, blockName))
         return;
 
@@ -728,7 +728,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
         return;
 
     /* Query active uniform blocks */
-    std::vector<char> blockName;
+    STL::vector<char> blockName;
     GLint numUniformBlocks = 0, maxNameLength = 0;
     if (!GLQueryActiveAttribs(program, GL_ACTIVE_UNIFORM_BLOCKS, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, numUniformBlocks, maxNameLength, blockName))
         return;
@@ -774,7 +774,7 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
 
     GLint numStorageBlocks = 0;
     GLint maxNameLength = 0;
-    std::vector<char> blockName;
+    STL::vector<char> blockName;
     if (!GLQueryActiveResources(program, GL_SHADER_STORAGE_BLOCK, numStorageBlocks, maxNameLength, blockName))
         return;
 
@@ -813,7 +813,7 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
 static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
 {
     /* Query active uniforms */
-    std::vector<char> uniformName;
+    STL::vector<char> uniformName;
     GLint numUniforms = 0, maxNameLength = 0;
     if (!GLQueryActiveAttribs(program, GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH, numUniforms, maxNameLength, uniformName))
         return;
@@ -936,10 +936,10 @@ void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, Shader
     #endif
 }
 
-void GLShaderProgram::QueryTexBufferNames(GLuint program, std::set<std::string>& samplerBufferNames, std::set<std::string>& imageBufferNames)
+void GLShaderProgram::QueryTexBufferNames(GLuint program, STL::set<STL::string>& samplerBufferNames, STL::set<STL::string>& imageBufferNames)
 {
     /* Query active uniform blocks */
-    std::vector<char> blockName;
+    STL::vector<char> blockName;
     GLint numUniforms = 0, maxNameLength = 0;
     if (!GLQueryActiveAttribs(program, GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH, numUniforms, maxNameLength, blockName))
         return;
@@ -951,7 +951,7 @@ void GLShaderProgram::QueryTexBufferNames(GLuint program, std::set<std::string>&
         GLint size = 0;
         GLenum type = 0;
         glGetActiveUniform(program, i, maxNameLength, &nameLength, &size, &type, blockName.data());
-        std::string uniformName(blockName.data(), static_cast<std::size_t>(nameLength));
+        STL::string uniformName(blockName.data(), static_cast<std::size_t>(nameLength));
 
         /* Map sampler buffer and image buffer names to output sets */
         switch (type)

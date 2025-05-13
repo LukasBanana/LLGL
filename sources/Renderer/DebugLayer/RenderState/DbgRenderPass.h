@@ -11,7 +11,7 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/RenderPassFlags.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -42,7 +42,7 @@ class DbgRenderPass final : public RenderPass
         const RenderPass&           instance;
         RenderPass* const           mutableInstance;
         const RenderPassDescriptor  desc;
-        std::string                 label;
+        STL::string                      label;
 
 };
 

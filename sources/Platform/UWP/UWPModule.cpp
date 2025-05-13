@@ -14,10 +14,10 @@ namespace LLGL
 {
 
 
-std::string Module::GetModuleFilename(const char* moduleName)
+string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to Win32 dynamic link library name (DLL) */
-    std::string s = "LLGL_";
+    string s = "LLGL_";
     s += moduleName;
     #ifdef LLGL_DEBUG
     s += "D";

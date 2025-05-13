@@ -91,11 +91,11 @@ std::uint32_t VKPipelineLayout::GetNumUniforms() const
 static void BuildPushConstantRanges(
     const ArrayView<Shader*>&           shaders,
     const ArrayView<UniformDescriptor>& uniformDescs,
-    std::vector<VkPushConstantRange>&   outStageRanges,
-    std::vector<VkPushConstantRange>&   outUniformRanges)
+    vector<VkPushConstantRange>&        outStageRanges,
+    vector<VkPushConstantRange>&        outUniformRanges)
 {
     /* Reflect all push constant ranges */
-    SmallVector<std::vector<VKUniformRange>, LLGL_VK_MAX_NUM_PSO_SHADER_STAGES> uniformRanges;
+    SmallVector<vector<VKUniformRange>, LLGL_VK_MAX_NUM_PSO_SHADER_STAGES> uniformRanges;
     uniformRanges.resize(shaders.size());
 
     for_range(i, shaders.size())
@@ -195,9 +195,9 @@ bool VKPipelineLayout::CanHaveLayoutPermutations() const
 }
 
 VKPipelineLayoutPermutationSPtr VKPipelineLayout::CreatePermutation(
-    VkDevice                            device,
-    const ArrayView<Shader*>&           shaders,
-    std::vector<VkPushConstantRange>&   outUniformRanges) const
+    VkDevice                        device,
+    const ArrayView<Shader*>&       shaders,
+    vector<VkPushConstantRange>&    outUniformRanges) const
 {
     #if LLGL_VK_ENABLE_SPIRV_REFLECT
 
@@ -231,8 +231,8 @@ VKPipelineLayoutPermutationSPtr VKPipelineLayout::CreatePermutation(
         };
 
         auto UpdateSetLayoutDescriptorTypes = [&GetDescriptorTypeForBinding](
-            const std::vector<BindingSlot>&             inBindingSlots,
-            std::vector<VkDescriptorSetLayoutBinding>&  setLayoutBindings) -> void
+            const vector<BindingSlot>&             inBindingSlots,
+            vector<VkDescriptorSetLayoutBinding>&  setLayoutBindings) -> void
         {
             LLGL_ASSERT(inBindingSlots.size() == setLayoutBindings.size());
             for_range(i, inBindingSlots.size())
@@ -388,14 +388,14 @@ static bool IsNonUniformBufferBinding(const BindingDescriptor& bindingDesc)
 }
 
 void VKPipelineLayout::CreateDescriptorSetLayout(
-    VkDevice                                device,
-    const std::vector<BindingDescriptor>&   inBindings,
-    std::vector<VKLayoutBinding>&           outBindings,
-    VKDescriptorSetLayout&                  outDescriptorSetLayout)
+    VkDevice                           device,
+    const vector<BindingDescriptor>&   inBindings,
+    vector<VKLayoutBinding>&           outBindings,
+    VKDescriptorSetLayout&             outDescriptorSetLayout)
 {
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
     const std::size_t numBindings = inBindings.size();
-    std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
+    vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
     {
@@ -468,7 +468,7 @@ void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<
 
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
     const std::size_t numBindings = staticSamplers.size();
-    std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
+    vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
         ConvertImmutableSamplerDesc(setLayoutBindings[i], staticSamplers[i], immutableSamplers_[i].GetAddressOf());

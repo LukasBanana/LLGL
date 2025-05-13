@@ -71,9 +71,9 @@ void D3D12PipelineState::SetNativeAndUpdateCache(ComPtr<ID3D12PipelineState>&& n
     }
 }
 
-void D3D12PipelineState::ResetReport(std::string&& text, bool hasErrors)
+void D3D12PipelineState::ResetReport(STL::string&& text, bool hasErrors)
 {
-    ResetReportWithNewline(report_, std::forward<std::string&&>(text), hasErrors);
+    ResetReportWithNewline(report_, std::forward<STL::string&&>(text), hasErrors);
 }
 
 

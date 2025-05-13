@@ -11,7 +11,7 @@
 
 #include <LLGL/BufferArray.h>
 #include "../OpenGL.h"
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <cstdint>
 
 
@@ -29,7 +29,7 @@ class GLBufferArray : public BufferArray
         GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
-        inline const std::vector<GLuint>& GetIDArray() const
+        inline const STL::vector<GLuint>& GetIDArray() const
         {
             return idArray_;
         }
@@ -40,7 +40,7 @@ class GLBufferArray : public BufferArray
 
     private:
 
-        std::vector<GLuint> idArray_;
+        STL::vector<GLuint> idArray_;
 
 };
 

@@ -15,8 +15,8 @@
 #include <LLGL/ImageFlags.h>
 #include "ComPtr.h"
 #include <dxgi.h>
-#include <string>
-#include <vector>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 #include <Windows.h>
 #include <d3dcommon.h>
 
@@ -30,7 +30,7 @@ namespace LLGL
 // Returns the DLL instance handle of this module.
 HINSTANCE DXGetDllHandle();
 
-// Returns a string representation for the specified HRESULT error code.
+// Returns a STL::string representation for the specified HRESULT error code.
 const char* DXErrorToStrOrHex(HRESULT hr);
 
 // Traps the runtime if 'hr' is not S_OK.
@@ -48,17 +48,17 @@ void DXThrowIfInvocationFailed(HRESULT hr, const char* funcName, const char* con
 // Returns the specified value as a DirectX BOOL type.
 BOOL DXBoolean(bool value);
 
-// Returns the blob data as string.
-std::string DXGetBlobString(ID3DBlob* blob);
+// Returns the blob data as STL::string.
+STL::string DXGetBlobString(ID3DBlob* blob);
 
 // Returns the blob data as char vector.
-std::vector<char> DXGetBlobData(ID3DBlob* blob);
+STL::vector<char> DXGetBlobData(ID3DBlob* blob);
 
 // Returns a blob and copies the specified data into the blob.
 ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size);
 
 // Returns a blob and copies the specified data into the blob.
-ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data);
+ComPtr<ID3DBlob> DXCreateBlob(const STL::vector<char>& data);
 
 // Returns a blob that was created from a resource (*.rc files).
 ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID);

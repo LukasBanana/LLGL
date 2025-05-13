@@ -25,9 +25,9 @@ inline void EndReportWithNewline(Report& report)
 }
 
 // Resets the specified report and ensures it ends with a newline character.
-inline void ResetReportWithNewline(Report& report, std::string&& text, bool hasErrors)
+inline void ResetReportWithNewline(Report& report, STL::string&& text, bool hasErrors)
 {
-    report.Reset(std::forward<std::string>(text), hasErrors);
+    report.Reset(std::forward<STL::string>(text), hasErrors);
     EndReportWithNewline(report);
 }
 

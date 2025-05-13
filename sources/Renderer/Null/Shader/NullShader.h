@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Shader.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -38,7 +38,7 @@ class NullShader final : public Shader
 
     public:
 
-        std::string label_;
+        STL::string label_;
 
 };
 

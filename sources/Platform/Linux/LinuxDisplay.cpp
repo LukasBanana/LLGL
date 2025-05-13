@@ -15,8 +15,8 @@ namespace LLGL
 {
 
 
-static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
-static std::vector<Display*>                        g_displayRefList;
+static vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
+static vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay    = nullptr;
 
 LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
@@ -269,9 +269,9 @@ DisplayMode LinuxDisplay::GetDisplayMode() const
     return displayMode;
 }
 
-std::vector<DisplayMode> LinuxDisplay::GetSupportedDisplayModes() const
+vector<DisplayMode> LinuxDisplay::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayMode> displayModes;
+    vector<DisplayMode> displayModes;
 
     DisplayMode displayMode;
 

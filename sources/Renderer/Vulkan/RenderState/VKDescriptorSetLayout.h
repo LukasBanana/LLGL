@@ -12,7 +12,7 @@
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <LLGL/Container/ArrayView.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -45,12 +45,12 @@ class VKDescriptorSetLayout
 
     public:
 
-        void Initialize(VkDevice device, std::vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings);
+        void Initialize(VkDevice device, vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings);
 
         void UpdateLayoutBindingType(std::uint32_t descriptorIndex, VkDescriptorType descriptorType);
         void FinalizeUpdateLayoutBindingTypes(VkDevice device);
 
-        void GetLayoutBindings(std::vector<VKLayoutBinding>& outBindings) const;
+        void GetLayoutBindings(vector<VKLayoutBinding>& outBindings) const;
 
         // Returns the native VkPipelineLayout object.
         inline VkDescriptorSetLayout GetVkDescriptorSetLayout() const
@@ -58,7 +58,7 @@ class VKDescriptorSetLayout
             return setLayout_.Get();
         }
 
-        inline const std::vector<VkDescriptorSetLayoutBinding>& GetVkLayoutBindings() const
+        inline const vector<VkDescriptorSetLayoutBinding>& GetVkLayoutBindings() const
         {
             return setLayoutBindings_;
         }
@@ -72,7 +72,7 @@ class VKDescriptorSetLayout
         );
 
         static int CompareSWO(const VKDescriptorSetLayout& lhs, const VKDescriptorSetLayout& rhs);
-        static int CompareSWO(const VKDescriptorSetLayout& lhs, const std::vector<VkDescriptorSetLayoutBinding>& rhs);
+        static int CompareSWO(const VKDescriptorSetLayout& lhs, const vector<VkDescriptorSetLayoutBinding>& rhs);
 
     private:
 
@@ -83,9 +83,9 @@ class VKDescriptorSetLayout
 
     private:
 
-        VKPtr<VkDescriptorSetLayout>                setLayout_;
-        std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings_;
-        bool                                        isAnyDescriptorTypeDirty_   = false;
+        VKPtr<VkDescriptorSetLayout>            setLayout_;
+        vector<VkDescriptorSetLayoutBinding>    setLayoutBindings_;
+        bool                                    isAnyDescriptorTypeDirty_   = false;
 
 };
 

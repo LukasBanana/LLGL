@@ -138,9 +138,9 @@ class D3D12RenderTarget final : public RenderTarget
         D3D12RenderPass                 defaultRenderPass_;
 
         // Containers and references:
-        std::vector<D3D12Resource>      internalTextures_;
-        std::vector<D3D12Resource*>     colorBuffers_;
-        std::vector<ResolveTarget>      resolveTargets_;
+        STL::vector<D3D12Resource>           internalTextures_;
+        STL::vector<D3D12Resource*>          colorBuffers_;
+        STL::vector<ResolveTarget>           resolveTargets_;
         D3D12Resource*                  depthStencil_       = nullptr;
 
 };

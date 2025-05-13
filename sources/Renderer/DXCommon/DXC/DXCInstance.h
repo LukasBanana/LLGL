@@ -11,7 +11,7 @@
 
 #include "../ComPtr.h"
 #include <d3d12shader.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -22,7 +22,7 @@ namespace LLGL
 HRESULT DXLoadDxcompilerInterface();
 
 // Returns the compiler arguments for the 'ShaderCompileFlags' enumeration values for the DirectXShaderCompiler (DXC).
-std::vector<LPCWSTR> DXGetDxcCompilerArgs(int flags);
+vector<LPCWSTR> DXGetDxcCompilerArgs(int flags);
 
 // Compiles the specified shader source to DXIL byte code with the DirectXShaderCompiler (DXC).
 HRESULT DXCompileShaderToDxil(

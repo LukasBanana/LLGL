@@ -15,7 +15,7 @@
 #include <LLGL/FragmentAttribute.h>
 #include <LLGL/Deprecated.h>
 #include <cstddef>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL
@@ -239,7 +239,7 @@ struct VertexShaderAttributes
     In other words, a shader must not declare any vertex attributes that are not contained in the currently bound vertex buffer.
     \see BufferDescriptor::vertexAttribs
     */
-    std::vector<VertexAttribute> inputAttribs;
+    STL::vector<VertexAttribute> inputAttribs;
 
     /**
     \brief Vertex (or geometry or tessellation-evaluation) shader stream-output attributes.
@@ -254,7 +254,7 @@ struct VertexShaderAttributes
     \see RenderingFeatures::hasStreamOutputs
     \see CommandBuffer::BeginStreamOutput
     */
-    std::vector<VertexAttribute> outputAttribs;
+    STL::vector<VertexAttribute> outputAttribs;
 };
 
 /**
@@ -265,7 +265,7 @@ struct VertexShaderAttributes
 struct FragmentShaderAttributes
 {
     //! Fragment shader output attributes.
-    std::vector<FragmentAttribute> outputAttribs;
+    STL::vector<FragmentAttribute> outputAttribs;
 };
 
 /**
@@ -334,9 +334,9 @@ struct ShaderDescriptor
     ShaderType                  type            = ShaderType::Undefined;
 
     /**
-    \brief Pointer to the shader source. This is either a null terminated string or a raw byte buffer (depending on the \c sourceType member).
+    \brief Pointer to the shader source. This is either a null terminated STL::string or a raw byte buffer (depending on the \c sourceType member).
     \remarks This must not be null when passed to the RenderSystem::CreateShader function.
-    If this is raw byte buffer rather than a null terminated string, the \c sourceSize member must not be zero!
+    If this is raw byte buffer rather than a null terminated STL::string, the \c sourceSize member must not be zero!
     \see sourceSize
     \see sourceType
     */
@@ -344,7 +344,7 @@ struct ShaderDescriptor
 
     /**
     \brief Specifies the size of the shader source (excluding the null terminator).
-    \remarks If this is zero, the 'source' member is expected to point to a null terminated string and the size is automatically determined.
+    \remarks If this is zero, the 'source' member is expected to point to a null terminated STL::string and the size is automatically determined.
     For the binary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
     \see source
     */
@@ -361,13 +361,13 @@ struct ShaderDescriptor
     ShaderSourceType            sourceType      = ShaderSourceType::CodeFile;
 
     /**
-    \brief Shader entry point (shader main function). If this is null, the empty string is used. By default null.
+    \brief Shader entry point (shader main function). If this is null, the empty STL::string is used. By default null.
     \note Only supported with: HLSL, SPIR-V, Metal.
     */
     const char*                 entryPoint      = nullptr;
 
     /**
-    \brief Shader target profile. If this is null, the empty string is used. By default null.
+    \brief Shader target profile. If this is null, the empty STL::string is used. By default null.
     \remarks This is renderer API dependent and is forwarded to the respective shader compiler.
     \remarks Here are a few examples:
     - For HLSL: \c "vs_5_0" specifies vertex shader model 5.0.

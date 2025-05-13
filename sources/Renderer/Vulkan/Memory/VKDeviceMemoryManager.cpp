@@ -83,7 +83,7 @@ VKDeviceMemoryDetails VKDeviceMemoryManager::QueryDetails() const
 
 #ifdef LLGL_DEBUG
 
-void VKDeviceMemoryManager::PrintBlocks(std::ostream& s, const std::string& title) const
+void VKDeviceMemoryManager::PrintBlocks(std::ostream& s, const string& title) const
 {
     std::size_t i = 0;
     for (const auto& chunk : chunks_)

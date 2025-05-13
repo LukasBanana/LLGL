@@ -44,9 +44,9 @@
 #include <LLGL/Texture.h>
 #include <LLGL/TextureFlags.h>
 
-#include <string>
+#include <LLGL/STL/String.h>
 #include <memory>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <cstdint>
 
 
@@ -138,7 +138,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Returns the list of all available render system modules for the current platform.
         \remarks For example, on Win32 this might be <code>{ "Direct3D12", "Direct3D11", "OpenGL" }</code>, but on MacOS it might be <code>{ "Metal", "OpenGL" }</code>.
         */
-        static std::vector<std::string> FindModules();
+        static STL::vector<STL::string> FindModules();
 
         /**
         \brief Loads a new render system from the specified module.
@@ -402,7 +402,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         auto myTextureExtent = myTexture->GetMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
-        std::vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
+        STL::vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
 
         // Initialize destination image descriptor
         const MutableImageView myImageView {
@@ -665,7 +665,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         Report& GetMutableReport();
 
         /**
-        \brief Prints a formatted string and \e replaces the current render system report with it as error.
+        \brief Prints a formatted STL::string and \e replaces the current render system report with it as error.
         \remarks This can be used to log non-fatal errors so the client programmer can query the last error message.
         \see Report::Errorf
         */

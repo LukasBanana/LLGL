@@ -10,7 +10,7 @@
 
 
 #include <vulkan/vulkan.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -75,17 +75,17 @@ class VKDescriptorSetWriter
 
     private:
 
-        std::vector<VkDescriptorBufferInfo> bufferInfos_;
-        std::uint32_t                       numBufferInfos_     = 0;
+        vector<VkDescriptorBufferInfo> bufferInfos_;
+        std::uint32_t                  numBufferInfos_     = 0;
 
-        std::vector<VkDescriptorImageInfo>  imageInfos_;
-        std::uint32_t                       numImageInfos_      = 0;
+        vector<VkDescriptorImageInfo>  imageInfos_;
+        std::uint32_t                  numImageInfos_      = 0;
 
-        std::vector<VkBufferView>           bufferViews_;
-        std::uint32_t                       numBufferViews_     = 0;
+        vector<VkBufferView>           bufferViews_;
+        std::uint32_t                  numBufferViews_     = 0;
 
-        std::vector<VkWriteDescriptorSet>   writes_;
-        std::vector<VkCopyDescriptorSet>    copies_;
+        vector<VkWriteDescriptorSet>   writes_;
+        vector<VkCopyDescriptorSet>    copies_;
 
 };
 

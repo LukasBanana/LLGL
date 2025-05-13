@@ -128,7 +128,7 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
     {
         if (error)
         {
-            std::string errorStr = DXGetBlobString(error.Get());
+            STL::string errorStr = DXGetBlobString(error.Get());
             LLGL_TRAP("failed to serialize D3D12 root signature: %s", errorStr.c_str());
         }
         else

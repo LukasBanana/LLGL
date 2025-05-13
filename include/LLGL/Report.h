@@ -11,7 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -41,8 +41,8 @@ class LLGL_EXPORT Report final
         //! Constructs the report with the specified text and flag.
         Report(const StringView& text, bool hasErrors);
 
-        //! Constructs the report by taking the ownersip of the specified string.
-        Report(std::string&& text, bool hasErrors);
+        //! Constructs the report by taking the ownersip of the specified STL::string.
+        Report(STL::string&& text, bool hasErrors);
 
         //! Copy constructor.
         Report(const Report& rhs);
@@ -56,8 +56,8 @@ class LLGL_EXPORT Report final
     public:
 
         /**
-        \brief Returns a NUL-terminated string of the report text. This must never be null.
-        \remarks LLGL backends always append the newline character <tt>'\\n'</tt> at the end of formatted string.
+        \brief Returns a NUL-terminated STL::string of the report text. This must never be null.
+        \remarks LLGL backends always append the newline character <tt>'\\n'</tt> at the end of formatted STL::string.
         This is not required, but makes reports with either a single or multiple lines consistent.
         Therefore, printing such a report to the standard output does not require an additional newline character:
         \code
@@ -82,8 +82,8 @@ class LLGL_EXPORT Report final
         //! Overrides the report with a copy of the specified text and flag.
         void Reset(const StringView& text, bool hasErrors);
 
-        //! Overrides the report by taking the ownership of the specified string.
-        void Reset(std::string&& text, bool hasErrors);
+        //! Overrides the report by taking the ownership of the specified STL::string.
+        void Reset(STL::string&& text, bool hasErrors);
 
         /**
         \brief Appends a formatted message to this report. The previous error flag remains unchanged.

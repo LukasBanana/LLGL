@@ -13,8 +13,8 @@
 #include "VKDevice.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Container/ArrayView.h>
-#include <vector>
-#include <set>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/Set.h>
 #include <cstring>
 
 
@@ -81,7 +81,7 @@ class VKPhysicalDevice
         }
 
         // Returns the list of names of all supported and enabled extensions.
-        inline const std::vector<const char*>& GetExtensionNames() const
+        inline const vector<const char*>& GetExtensionNames() const
         {
             return enabledExtensionNames_;
         }
@@ -110,9 +110,9 @@ class VKPhysicalDevice
 
         // Main device objects
         VkPhysicalDevice                                        physicalDevice_                 = VK_NULL_HANDLE;
-        std::vector<VkExtensionProperties>                      supportedExtensions_;
-        std::set<const char*, CStringSWO>                       supportedExtensionNames_;
-        std::vector<const char*>                                enabledExtensionNames_;
+        vector<VkExtensionProperties>                           supportedExtensions_;
+        set<const char*, CStringSWO>                            supportedExtensionNames_;
+        vector<const char*>                                     enabledExtensionNames_;
 
         // Common device properties and features
         VkPhysicalDeviceFeatures2                               features_                       = {};

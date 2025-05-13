@@ -101,11 +101,11 @@ int VKPipelineLayoutPermutation::CompareSWO(const VKPipelineLayoutPermutation& l
  */
 
 void VKPipelineLayoutPermutation::CreateBindingSetLayout(
-    VkDevice                                    device,
-    const ArrayView<VKLayoutBinding>&           inBindings,
-    std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
-    std::vector<VKLayoutBinding>&               outBindings,
-    VKDescriptorSetLayout&                      outSetLayout)
+    VkDevice                               device,
+    const ArrayView<VKLayoutBinding>&      inBindings,
+    vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
+    vector<VKLayoutBinding>&               outBindings,
+    VKDescriptorSetLayout&                 outSetLayout)
 {
     outSetLayout.Initialize(device, std::move(setLayoutBindings));
     outSetLayout.GetLayoutBindings(outBindings);

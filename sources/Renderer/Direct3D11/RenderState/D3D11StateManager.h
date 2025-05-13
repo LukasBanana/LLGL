@@ -15,7 +15,7 @@
 #include "../Buffer/D3D11StagingBufferPool.h"
 #include "../../DXCommon/ComPtr.h"
 #include <LLGL/PipelineStateFlags.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <cstdint>
 
 

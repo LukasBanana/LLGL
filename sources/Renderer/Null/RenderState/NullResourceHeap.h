@@ -12,8 +12,8 @@
 #include <LLGL/ResourceHeap.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Container/ArrayView.h>
-#include <string>
-#include <vector>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL
@@ -37,9 +37,9 @@ class NullResourceHeap final : public ResourceHeap
 
     private:
 
-        std::string                         label_;
-        const std::uint32_t                 numBindings_    = 1;
-        std::vector<ResourceViewDescriptor> resourceViews_;
+        STL::string                         label_;
+        const std::uint32_t            numBindings_    = 1;
+        STL::vector<ResourceViewDescriptor> resourceViews_;
 
 };
 

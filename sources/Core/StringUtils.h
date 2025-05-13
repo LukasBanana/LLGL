@@ -13,8 +13,8 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/UTF8String.h>
 #include "Exception.h"
-#include <string>
-#include <vector>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 #include <stdarg.h>
 
 
@@ -37,7 +37,7 @@ namespace LLGL
 
 /* ----- Templates ----- */
 
-// Returns the specified integral value as string with leading zeros.
+// Returns the specified integral value as STL::string with leading zeros.
 template <typename T, T Radix = 10>
 const char* IntToStr(T value, const char* prefix = nullptr, bool leadingZeros = false)
 {
@@ -52,7 +52,7 @@ const char* IntToStr(T value, const char* prefix = nullptr, bool leadingZeros = 
     /* Use static thread-local buffer for output to avoid deadling with synchronization */
     static thread_local char str[maxLen + maxPrefixLen + 1];
 
-    /* Copy prefix into beginning of output string first */
+    /* Copy prefix into beginning of output STL::string first */
     std::size_t prefixOffset = 0;
     if (prefix != nullptr)
     {
@@ -64,7 +64,7 @@ const char* IntToStr(T value, const char* prefix = nullptr, bool leadingZeros = 
     constexpr int digitsPerByte[] = { 0, 0, 8, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 2 };
     int numLen = static_cast<int>(sizeof(T)) * digitsPerByte[Radix];
 
-    /* Append NUL-terminator at end of string */
+    /* Append NUL-terminator at end of STL::string */
     str[prefixOffset + numLen] = '\0';
 
     /* Insert hex digits from right-to-left */
@@ -92,14 +92,14 @@ const char* IntToStr(T value, const char* prefix = nullptr, bool leadingZeros = 
     }
 }
 
-// Returns the specified integral value as hexadecimal string.
+// Returns the specified integral value as hexadecimal STL::string.
 template <typename T>
 const char* IntToHex(T value, const char* prefix = "0x")
 {
     return IntToStr<T, 16>(value, prefix, /*leadingZeros:*/ true);
 }
 
-// Returns the length of the specified null-terminated string.
+// Returns the length of the specified null-terminated STL::string.
 template <typename T>
 inline std::size_t StrLength(const T* s)
 {
@@ -112,18 +112,18 @@ inline std::size_t StrLength(const T* s)
 
 /* ----- Functions ----- */
 
-// Reads the specified text file into a string.
-LLGL_EXPORT std::string ReadFileString(const char* filename);
+// Reads the specified text file into a STL::string.
+LLGL_EXPORT STL::string ReadFileString(const char* filename);
 
 // Reads the specified binary file into a buffer.
-LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
+LLGL_EXPORT STL::vector<char> ReadFileBuffer(const char* filename);
 
-// Converts the UTF8 input string to UTF16 string.
-LLGL_EXPORT std::wstring ToWideString(const std::string& str);
-LLGL_EXPORT std::wstring ToWideString(const char* str);
+// Converts the UTF8 input STL::string to UTF16 STL::string.
+LLGL_EXPORT STL::wstring ToWideString(const STL::string& str);
+LLGL_EXPORT STL::wstring ToWideString(const char* str);
 
-// Writes a formatted string into an STL string.
-LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);
+// Writes a formatted STL::string into an STL STL::string.
+LLGL_EXPORT void StringPrintf(STL::string& str, const char* format, va_list args1, va_list args2);
 
 struct FormattedTableColumn
 {
@@ -132,10 +132,10 @@ struct FormattedTableColumn
     ArrayView<UTF8String>   cells;
 };
 
-// Writes the specified table into a formatted string.
+// Writes the specified table into a formatted STL::string.
 LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns, const char* delimiters = ":;., ");
 
-// Returns the input string or "unnamed" if the input string is empty or null.
+// Returns the input STL::string or "unnamed" if the input STL::string is empty or null.
 LLGL_EXPORT const char* GetOptionalDebugName(const char* debugName);
 
 

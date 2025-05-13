@@ -22,7 +22,7 @@ namespace LLGL
  * Global functions
  */
 
-// Returns the specified resource type as string
+// Returns the specified resource type as STL::string
 static const char* ResourceTypeToString(const ResourceType t)
 {
     switch (t)

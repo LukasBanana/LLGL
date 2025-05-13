@@ -210,7 +210,7 @@ void GLPipelineLayout::BuildDynamicResourceBindings(const PipelineLayoutDescript
 
 void GLPipelineLayout::BuildStaticSamplers(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    const std::vector<StaticSamplerDescriptor>& staticSamplerDescs = pipelineLayoutDesc.staticSamplers;
+    const STL::vector<StaticSamplerDescriptor>& staticSamplerDescs = pipelineLayoutDesc.staticSamplers;
     staticSamplerSlots_.reserve(staticSamplerDescs.size());
     if (!HasNativeSamplers())
     {

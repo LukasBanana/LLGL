@@ -138,10 +138,10 @@ class LLGL_EXPORT Window : public Surface
         //! Returns either the window size (including frame and title bar) or the client area size (both in window coordinates). By default the client area size is returned.
         virtual Extent2D GetSize(bool useClientArea = true) const = 0;
 
-        //! Sets the window title as UTF8 string.
+        //! Sets the window title as UTF8 STL::string.
         virtual void SetTitle(const UTF8String& title) = 0;
 
-        //! Returns the window title as UTF8 string.
+        //! Returns the window title as UTF8 STL::string.
         virtual UTF8String GetTitle() const = 0;
 
         //! Shows or hides the window.

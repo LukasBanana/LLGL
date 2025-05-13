@@ -50,9 +50,9 @@ const Report* D3D11PipelineState::GetReport() const
     return (*report_.GetText() != '\0' || report_.HasErrors() ? &report_ : nullptr);
 }
 
-void D3D11PipelineState::ResetReport(std::string&& text, bool hasErrors)
+void D3D11PipelineState::ResetReport(STL::string&& text, bool hasErrors)
 {
-    ResetReportWithNewline(report_, std::forward<std::string&&>(text), hasErrors);
+    ResetReportWithNewline(report_, std::forward<STL::string&&>(text), hasErrors);
 }
 
 

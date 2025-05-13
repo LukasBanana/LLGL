@@ -11,7 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -39,7 +39,7 @@ class NullPipelineLayout final : public PipelineLayout
 
     private:
 
-        std::string label_;
+        STL::string label_;
 
 };
 

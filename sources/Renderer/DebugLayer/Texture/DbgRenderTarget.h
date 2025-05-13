@@ -11,7 +11,7 @@
 
 #include <LLGL/RenderTarget.h>
 #include "../RenderState/DbgRenderPass.h"
-#include <string>
+#include <LLGL/STL/String.h>
 #include <memory>
 
 
@@ -40,7 +40,7 @@ class DbgRenderTarget final : public RenderTarget
 
         RenderTarget&                   instance;
         const RenderTargetDescriptor    desc;
-        std::string                     label;
+        STL::string                          label;
 
     private:
 

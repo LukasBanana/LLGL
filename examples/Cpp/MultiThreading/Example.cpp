@@ -26,7 +26,7 @@ class Measure
     public:
 
         // Interval (in milliseconds) to the next measurement result.
-        Measure(std::uint64_t interval = 1000, const std::string& title = "Average Time") :
+        Measure(std::uint64_t interval = 1000, const string& title = "Average Time") :
             interval_ { interval },
             title_    { title    }
         {
@@ -81,7 +81,7 @@ class Measure
         TimePoint       intervalStartTime_;
         std::uint64_t   samples_            = 0;
         std::uint64_t   elapsed_            = 0;
-        std::string     title_;
+        string          title_;
 
 };
 
@@ -199,7 +199,7 @@ private:
         bundle[1].pipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
-    static void PrintThreadsafe(std::mutex& mtx, const std::string& text)
+    static void PrintThreadsafe(std::mutex& mtx, const string& text)
     {
         std::lock_guard<std::mutex> guard { mtx };
         printf("%s\n", text.c_str());
@@ -209,7 +209,7 @@ private:
         Bundle&         bundle,
         std::uint32_t   numIndices,
         std::mutex&     mtx,
-        std::string     threadName)
+        string          threadName)
     {
         // Print thread start
         PrintThreadsafe(mtx, "Enter thread: " + threadName);
@@ -229,7 +229,7 @@ private:
         PrintThreadsafe(mtx, "Leave thread: " + threadName);
     }
 
-    void EncodePrimaryCommandBuffer(LLGL::CommandBuffer& cmdBuffer, std::uint32_t swapBufferIndex, const std::string& threadName = "")
+    void EncodePrimaryCommandBuffer(LLGL::CommandBuffer& cmdBuffer, std::uint32_t swapBufferIndex, const string& threadName = "")
     {
         // Print thread start
         if (!threadName.empty())

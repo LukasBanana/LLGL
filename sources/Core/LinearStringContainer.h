@@ -11,7 +11,7 @@
 
 #include "StringUtils.h"
 #include <LLGL/Container/StringView.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <string.h>
 
 
@@ -39,25 +39,25 @@ class LinearStringContainerBase
             offset_     = 0;
         }
 
-        // Reserve space for a string with the specified length (excluding the null terminator).
+        // Reserve space for a STL::string with the specified length (excluding the null terminator).
         void Reserve(std::size_t len)
         {
             reserved_ += (len + 1);
         }
 
-        // Copy the specified string into this container and return its pointer.
+        // Copy the specified STL::string into this container and return its pointer.
         const T* CopyString(const T* str)
         {
             return CopyStringPrimary(str, StrLength(str));
         }
 
-        // Copy the specified string into this container and return its pointer.
+        // Copy the specified STL::string into this container and return its pointer.
         const T* CopyString(const StringView& str)
         {
             return CopyStringPrimary(str.data(), str.size());
         }
 
-        // Returns the pointer to the first character of the next string, where <ptr> specifies the pointer from the previous string in the container.
+        // Returns the pointer to the first character of the next STL::string, where <ptr> specifies the pointer from the previous STL::string in the container.
         const T* GetNextString(const T* ptr = nullptr) const
         {
             if (ptr != nullptr)
@@ -75,7 +75,7 @@ class LinearStringContainerBase
             }
             else
             {
-                /* Return pointer to first string */
+                /* Return pointer to first STL::string */
                 return data_.data();
             }
             return nullptr;
@@ -98,11 +98,11 @@ class LinearStringContainerBase
                 reserved_ = 0;
             }
 
-            /* Copy string into container */
+            /* Copy STL::string into container */
             auto dst = &data_[offset_];
             ::memcpy(dst, str, sizeof(T) * grow);
 
-            /* Increase offset and return pointer to destination string */
+            /* Increase offset and return pointer to destination STL::string */
             offset_ += grow;
             return dst;
         }
@@ -115,16 +115,16 @@ class LinearStringContainerBase
 
     private:
 
-        std::vector<T>  data_;
+        STL::vector<T>  data_;
         std::size_t     reserved_   = 0;
         std::size_t     offset_     = 0;
 
 };
 
-// Linear string container type for ANSI strings.
+// Linear STL::string container type for ANSI strings.
 using LinearStringContainer = LinearStringContainerBase<char>;
 
-// Linear string container type for Unicode strings.
+// Linear STL::string container type for Unicode strings.
 using LinearWStringContainer = LinearStringContainerBase<wchar_t>;
 
 

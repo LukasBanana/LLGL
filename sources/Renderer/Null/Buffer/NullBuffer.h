@@ -10,8 +10,8 @@
 
 
 #include <LLGL/Buffer.h>
-#include <vector>
-#include <string>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -85,12 +85,12 @@ class NullBuffer final : public Buffer
 
     private:
 
-        std::string             label_;
-        std::vector<WordType>   data_;
-        std::vector<WordType>   mappedData_;
-        std::size_t             mapOffset_  = 0;
-        std::size_t             mapLength_  = 0;
-        CPUAccess               mapAccess_  = CPUAccess::ReadOnly;
+        STL::string              label_;
+        STL::vector<WordType>    data_;
+        STL::vector<WordType>    mappedData_;
+        std::size_t         mapOffset_  = 0;
+        std::size_t         mapLength_  = 0;
+        CPUAccess           mapAccess_  = CPUAccess::ReadOnly;
 
 };
 

@@ -10,7 +10,7 @@
 
 
 #include <LLGL/SwapChain.h>
-#include <string>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
@@ -42,7 +42,7 @@ class NullSwapChain final : public SwapChain
 
     private:
 
-        std::string         label_;
+        STL::string              label_;
         std::uint32_t       samples_            = 1;
         Format              colorFormat_        = Format::Undefined;
         Format              depthStencilFormat_ = Format::Undefined;

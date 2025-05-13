@@ -54,7 +54,7 @@ class Example_Animation : public ExampleBase
         float                   frameInterpolator   = 0.0f;
     };
 
-    std::vector<Ball>           balls;
+    vector<Ball>                balls;
 
     const Gs::Vector2f          gridPosFrames[15]
     {
@@ -106,7 +106,7 @@ private:
         vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load 3D models
-        std::vector<TexturedVertex> vertices;
+        vector<TexturedVertex> vertices;
         meshStairsTop       = LoadObjModel(vertices, "PenroseStairs-Top.obj");
         meshStairsBottom    = LoadObjModel(vertices, "PenroseStairs-Bottom.obj");
         meshBall            = LoadObjModel(vertices, "IcoSphere.obj");

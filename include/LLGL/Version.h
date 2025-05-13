@@ -35,7 +35,7 @@ LLGL_EXPORT const char* GetStatus();
 //! Returns the full LLGL version as an ID number (e.g. 200317 stands for "2.03 (Rev. 17)").
 LLGL_EXPORT unsigned GetID();
 
-//! Returns the full LLGL version as a string (e.g. "0.01 Beta (Rev. 1)").
+//! Returns the full LLGL version as a STL::string (e.g. "0.01 Beta (Rev. 1)").
 LLGL_EXPORT const char* GetString();
 
 

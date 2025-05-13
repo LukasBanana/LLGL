@@ -13,6 +13,7 @@
 #include <LLGL/Tags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/Memory.h>
+#include <LLGL/STL/STLAllocator.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -34,7 +35,7 @@ it only supports trivially constructible and trivially copyable types.
 template
 <
     typename T,
-    typename Allocator = std::allocator<T>
+    typename Allocator = STL::allocator<T>
 >
 class LLGL_EXPORT DynamicArray
 {
@@ -125,7 +126,7 @@ class LLGL_EXPORT DynamicArray
             return size_;
         }
 
-        //! Convenience function to be partially compatible with \c std::vector<T>. Equivalent to \c size().
+        //! Convenience function to be partially compatible with \c STL::vector<T>. Equivalent to \c size().
         size_type capacity() const noexcept
         {
             return size();

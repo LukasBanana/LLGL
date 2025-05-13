@@ -73,7 +73,7 @@ enum class Exception
 \brief Primary function to trap execution from an unrecoverable state.
 \param[in] exception Specifies what type of exception this function should throw if exceptions are enabled.
 \param[in] origin Specifies the origin where execution is trapped. This can be the special preprocessor macro \c __FUNCTION__ for instance.
-\param[in] format Specifies the formatted string as used with \c printf.
+\param[in] format Specifies the formatted STL::string as used with \c printf.
 \remarks This might either throw an exception, abort execution, or break the debugger depending on the configuration LLGL was built with.
 LLGL does not handle exceptions of any kind but can throw exceptions (if built with \c LLGL_ENABLE_EXCEPTIONS)
 to let the client programmer exit the application gracefully.

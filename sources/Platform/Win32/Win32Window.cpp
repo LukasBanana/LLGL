@@ -247,7 +247,7 @@ void Win32Window::SetTitle(const UTF8String& title)
 
 UTF8String Win32Window::GetTitle() const
 {
-    /* Retrieve window title and return as immutable string */
+    /* Retrieve window title and return as immutable STL::string */
     int len = GetWindowTextLength(wnd_);
     if (len > 0)
     {

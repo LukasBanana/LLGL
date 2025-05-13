@@ -13,7 +13,7 @@
 #include "D3D11RenderTargetHandles.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../../Core/CompilerExtensions.h"
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include <functional>
 #include <d3d11.h>
 
@@ -127,16 +127,16 @@ class D3D11RenderTarget final : public RenderTarget
 
     private:
 
-        Extent2D                                resolution_;
+        Extent2D                            resolution_;
 
-        std::vector<ComPtr<ID3D11Texture2D>>    internalTextures_;  // Depth-stencil texture or multi-sampled color targets
-        DXGI_FORMAT                             depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
-        D3D11RenderTargetHandles                renderTargetHandles_;
+        STL::vector<ComPtr<ID3D11Texture2D>>     internalTextures_;  // Depth-stencil texture or multi-sampled color targets
+        DXGI_FORMAT                         depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
+        D3D11RenderTargetHandles            renderTargetHandles_;
 
-        DXGI_SAMPLE_DESC                        sampleDesc_             = { 1u, 0u };
-        std::vector<ResolveTarget>              resolveTargets_;
+        DXGI_SAMPLE_DESC                    sampleDesc_             = { 1u, 0u };
+        STL::vector<ResolveTarget>               resolveTargets_;
 
-        const D3D11RenderPass*                  renderPass_             = nullptr;
+        const D3D11RenderPass*              renderPass_             = nullptr;
 
 };
 

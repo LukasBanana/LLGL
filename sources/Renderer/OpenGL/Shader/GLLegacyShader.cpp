@@ -58,7 +58,7 @@ bool GLLegacyShader::GetCompileStatus(GLuint shader)
     return (status != GL_FALSE);
 }
 
-std::string GLLegacyShader::GetGLShaderLog(GLuint shader)
+STL::string GLLegacyShader::GetGLShaderLog(GLuint shader)
 {
     /* Query info log length */
     GLint infoLogLength = 0;
@@ -67,15 +67,15 @@ std::string GLLegacyShader::GetGLShaderLog(GLuint shader)
     if (infoLogLength > 0)
     {
         /* Store info log in byte buffer (because GL writes it's own null-terminator character!) */
-        std::vector<char> infoLog;
+        STL::vector<char> infoLog;
         infoLog.resize(infoLogLength, '\0');
 
         /* Query info log output */
         GLsizei charsWritten = 0;
         glGetShaderInfoLog(shader, infoLogLength, &charsWritten, infoLog.data());
 
-        /* Convert byte buffer to string */
-        return std::string(infoLog.data(), static_cast<std::size_t>(charsWritten));
+        /* Convert byte buffer to STL::string */
+        return STL::string(infoLog.data(), static_cast<std::size_t>(charsWritten));
     }
 
     return "";
@@ -118,7 +118,7 @@ void GLLegacyShader::CompileSource(const ShaderDescriptor& shaderDesc)
 
         if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
         {
-            const std::string fileContent = ReadFileString(shaderDesc.source);
+            const STL::string fileContent = ReadFileString(shaderDesc.source);
             GLShader::PatchShaderSource(sourceCallback, fileContent.c_str(), shaderDesc, enabledFlags);
         }
         else
@@ -144,7 +144,7 @@ void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
     {
         /* Get shader binary */
-        std::vector<char>   fileContent;
+        STL::vector<char>   fileContent;
         const void*         binaryBuffer    = nullptr;
         GLsizei             binaryLength    = 0;
 

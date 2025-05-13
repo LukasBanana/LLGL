@@ -11,7 +11,7 @@
 
 #include <LLGL/TextureFlags.h>
 #include <cstdint>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 #include "../OpenGL.h"
 #include "../../TextureUtils.h"
 
@@ -93,7 +93,7 @@ class GLTextureViewPool
     private:
 
         // Container of all managed texture views.
-        std::vector<GLTextureView>  textureViews_;
+        STL::vector<GLTextureView>  textureViews_;
 
         // Number of textures that are already freed, but not removed from the texture view array yet.
         std::size_t                 numReusableEntries_ = 0;

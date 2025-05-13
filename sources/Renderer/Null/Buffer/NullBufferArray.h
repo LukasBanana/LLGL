@@ -10,7 +10,7 @@
 
 
 #include <LLGL/BufferArray.h>
-#include <vector>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL
@@ -29,7 +29,7 @@ class NullBufferArray final : public BufferArray
 
     public:
 
-        const std::vector<NullBuffer*> buffers;
+        const STL::vector<NullBuffer*> buffers;
 
 };
 

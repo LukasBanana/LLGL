@@ -10,8 +10,8 @@
 
 
 #include "Vulkan.h"
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -60,9 +60,9 @@ struct alignas(alignof(std::uint32_t)) VKQueueFamilyIndices
 
 struct VKSurfaceSupportDetails
 {
-    VkSurfaceCapabilitiesKHR        caps            = {};
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR>   presentModes;
+    VkSurfaceCapabilitiesKHR   caps            = {};
+    vector<VkSurfaceFormatKHR> formats;
+    vector<VkPresentModeKHR>   presentModes;
 };
 
 
@@ -75,7 +75,7 @@ void VKThrowIfFailed(const VkResult result, const char* details);
 void VKThrowIfCreateFailed(const VkResult result, const char* interfaceName, const char* contextInfo = nullptr);
 
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
-std::string VKApiVersionToString(std::uint32_t version);
+string VKApiVersionToString(std::uint32_t version);
 
 // Converts the boolean value into a VkBool322 value.
 VkBool32 VKBoolean(bool value);
@@ -88,11 +88,11 @@ void VKSetDebugName(VkDevice device, VkObjectType type, std::uint64_t handle, co
 
 /* ----- Query Functions ----- */
 
-std::vector<VkLayerProperties> VKQueryInstanceLayerProperties();
-std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char* layerName = nullptr);
-std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance);
-std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device);
-std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device);
+vector<VkLayerProperties> VKQueryInstanceLayerProperties();
+vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char* layerName = nullptr);
+vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance);
+vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device);
+vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device);
 
 VKSurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 VKQueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);

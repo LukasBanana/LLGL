@@ -13,7 +13,7 @@
 #include "../Renderer/ContainerTypes.h"
 #include <mutex>
 #include <atomic>
-#include <string>
+#include <LLGL/STL/String.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -117,7 +117,7 @@ LLGL_EXPORT void Printf(const char* format, ...)
     if (!g_logRecursionLock)
     {
         std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
-        std::string str;
+        STL::string str;
         LLGL_STRING_PRINTF(str, format);
         PostReport(ReportType::Default, str.c_str());
     }
@@ -128,7 +128,7 @@ LLGL_EXPORT void Printf(const ColorCodes& colors, const char* format, ...)
     if (!g_logRecursionLock)
     {
         std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
-        std::string str;
+        STL::string str;
         LLGL_STRING_PRINTF(str, format);
         PostReport(ReportType::Default, str.c_str(), colors);
     }
@@ -139,7 +139,7 @@ LLGL_EXPORT void Errorf(const char* format, ...)
     if (!g_logRecursionLock)
     {
         std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
-        std::string str;
+        STL::string str;
         LLGL_STRING_PRINTF(str, format);
         PostReport(ReportType::Error, str.c_str());
     }
@@ -150,7 +150,7 @@ LLGL_EXPORT void Errorf(const ColorCodes& colors, const char* format, ...)
     if (!g_logRecursionLock)
     {
         std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
-        std::string str;
+        STL::string str;
         LLGL_STRING_PRINTF(str, format);
         PostReport(ReportType::Error, str.c_str(), colors);
     }
