@@ -13,7 +13,8 @@
 #include <stack>
 #include <deque>
 
-namespace LLGL{
+namespace LLGL
+{
 
 template < typename Type, typename Container = std::deque< Type, llgl_allocator< Type > > >
 using stack = std::stack< Type, Container >;

@@ -12,7 +12,8 @@
 #include <memory>
 #endif
 
-namespace LLGL{
+namespace LLGL
+{
 
 #ifndef LLGL_CUSTOM_ALLOCATOR
 

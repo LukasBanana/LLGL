@@ -12,7 +12,8 @@
 
 #include <string>
 
-namespace LLGL{
+namespace LLGL
+{
 
 template < typename CharType >
 using string_type = std::basic_string< CharType, std::char_traits< CharType >, llgl_allocator< CharType > >;

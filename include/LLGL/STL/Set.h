@@ -13,7 +13,8 @@
 #include <set>
 #include <utility>
 
-namespace LLGL{
+namespace LLGL
+{
 
 template < typename Type, typename Less = std::less< Type > >
 using set = std::set< Type, Less, llgl_allocator< Type > >;

@@ -12,7 +12,8 @@
 
 #include <vector>
 
-namespace LLGL{
+namespace LLGL
+{
 
 template < typename Type >
 using vector = std::vector< Type, llgl_allocator< Type > >;
