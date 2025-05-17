@@ -677,7 +677,7 @@ void GLDeferredCommandBuffer::SetUniforms(std::uint32_t first, const void* data,
         return /*GL_INVALID_VALUE*/;
 
     auto* boundShaderPipeline = boundPipelineState->GetShaderPipeline();
-    if (boundPipelineState == nullptr)
+    if (boundShaderPipeline == nullptr)
         return /*GL_INVALID_VALUE*/;
 
     const std::uint32_t dataSizeInWords = dataSize / 4;
