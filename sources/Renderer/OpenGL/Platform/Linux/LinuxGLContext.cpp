@@ -79,9 +79,9 @@ LinuxGLContext::LinuxGLContext(
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
 
-    #ifdef LLGL_LINUX_ENABLE_WAYLAND
-
     bool isWayland = nativeWindowHandle.type == NativeHandleType::Wayland;
+
+    #ifdef LLGL_LINUX_ENABLE_WAYLAND
 
     if (customNativeHandle != nullptr)
     {
@@ -100,6 +100,9 @@ LinuxGLContext::LinuxGLContext(
     }
 
     #else
+
+    if (isWayland)
+        LLGL_TRAP("Surface type is Wayland but LLGL was built without LLGL_LINUX_ENABLE_WAYLAND");
 
     if (customNativeHandle != nullptr)
     {
@@ -120,11 +123,11 @@ LinuxGLContext::~LinuxGLContext()
         #ifdef LLGL_LINUX_ENABLE_WAYLAND
         if (IsEGL())
         {
-            DeleteGLXContext();
+            DeleteEGLContext();
         }
         else
         {
-            DeleteEGLContext();
+            DeleteGLXContext();
         }
         #else
         DeleteGLXContext();
@@ -297,6 +300,8 @@ void LinuxGLContext::CreateEGLContext(
     LLGL_ASSERT_PTR(nativeHandle.wayland.display);
     LLGL_ASSERT_PTR(nativeHandle.wayland.window);
 
+    api_.type = LinuxGLAPIType::EGL;
+
     EGLContext glcShared = sharedContext != nullptr ? sharedContext->api_.egl.context : nullptr;
 
     EGLDisplay display = eglGetDisplay(nativeHandle.wayland.display);
@@ -444,6 +449,8 @@ void LinuxGLContext::CreateGLXContext(
     LLGL_ASSERT_PTR(nativeHandle.x11.display);
     LLGL_ASSERT_PTR(nativeHandle.x11.window);
 
+    api_.type = LinuxGLAPIType::GLX;
+
     GLXContext glcShared = sharedContext != nullptr ? sharedContext->api_.glx.context : nullptr;
 
     ::Display* display = nativeHandle.x11.display;
@@ -509,8 +516,8 @@ void LinuxGLContext::DeleteGLXContext()
 #ifdef LLGL_LINUX_ENABLE_WAYLAND
 
 void LinuxGLContext::DeleteEGLContext() {
-    eglMakeCurrent(api_.glx.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
-    eglDestroyContext(api_.glx.display, api_.glx.context);
+    eglMakeCurrent(api_.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
+    eglDestroyContext(api_.egl.display, api_.egl.context);
 }
 
 #endif

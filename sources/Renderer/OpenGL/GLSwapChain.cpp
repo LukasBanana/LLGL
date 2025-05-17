@@ -91,8 +91,7 @@ GLSwapChain::GLSwapChain(
     /* Create platform dependent OpenGL context */
     context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
     swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
-    // GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
-    swapChainContext_->MakeCurrent();
+    GLSwapChainContext::MakeCurrent(swapChainContext_.get());
 
     /* Get state manager and reset current framebuffer height */
     GetStateManager().ResetFramebufferHeight(framebufferHeight_);
@@ -154,8 +153,7 @@ bool GLSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 bool GLSwapChain::MakeCurrent(GLSwapChain& swapChain)
 {
     /* Make OpenGL context of the specified render contex current and notify the state manager */
-    // GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get(), swapChain->wayland);
-    bool result = swapChain.swapChainContext_->MakeCurrent();
+    bool result = GLSwapChainContext::MakeCurrent(swapChain.swapChainContext_.get());
     GLStateManager::Get().ResetFramebufferHeight(swapChain.framebufferHeight_);
     return result;
 }
@@ -180,7 +178,7 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 
 bool GLSwapChain::SetSwapInterval(int swapInterval)
 {
-    swapChainContext_->MakeCurrent();
+    GLSwapChainContext::MakeCurrent(swapChainContext_.get());
     return GLContext::SetCurrentSwapInterval(swapInterval);
 }
 

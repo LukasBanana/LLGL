@@ -14,7 +14,7 @@
 
 #include <LLGL/Deprecated.h>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
 #endif
 
@@ -39,7 +39,7 @@ struct X11NativeHandle
     int             screen;
 };
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 struct WaylandNativeHandle
 {
@@ -49,7 +49,11 @@ struct WaylandNativeHandle
 
 #else
 
-struct WaylandNativeHandle{};
+struct WaylandNativeHandle
+{
+    void* window;
+    void* display;
+};
 
 #endif
 

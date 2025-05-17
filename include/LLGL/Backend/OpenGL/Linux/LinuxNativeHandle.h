@@ -12,7 +12,7 @@
 #include <LLGL/Deprecated.h>
 #include <GL/glx.h>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
     #include <EGL/egl.h>
 #endif
 
@@ -25,9 +25,7 @@ namespace OpenGL
 
 enum class RenderSystemNativeHandleType : char {
     GLX = 0,
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
     EGL
-#endif
 };
 
 /**
@@ -42,9 +40,7 @@ struct RenderSystemNativeHandle
         LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.")
         GLXContext context;
         GLXContext glx;
-    #ifdef LLGL_LINUX_ENABLE_WAYLAND
         EGLContext egl;
-    #endif
     };
 
     RenderSystemNativeHandleType type;

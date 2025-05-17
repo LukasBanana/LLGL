@@ -19,6 +19,10 @@
 namespace LLGL
 {
 
+enum class LinuxGLAPIType : char {
+    GLX,
+    EGL
+};
 
 // Implementation of the <GLContext> interface for GNU/Linux and wrapper for a native GLX context.
 class LinuxGLContext : public GLContext
@@ -51,9 +55,15 @@ class LinuxGLContext : public GLContext
             return api_.glx.context;
         }
 
+        inline bool IsEGL() const
+        {
+            return api_.type == LinuxGLAPIType::EGL;
+        }
+
         #ifdef LLGL_LINUX_ENABLE_WAYLAND
 
-        inline EGLConfig GetEGLConfig() const {
+        inline EGLConfig GetEGLConfig() const
+        {
             return api_.egl.config;
         }
 
@@ -103,50 +113,34 @@ class LinuxGLContext : public GLContext
         );
         #endif
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
-        inline bool IsEGL() const
-        {
-            return api_.type == APIType::EGL;
-        }
-        #endif
-
-
     private:
-        enum class APIType : char {
-            GLX,
-            EGL
-        };
-
-        struct GLXData {
+        struct GLXData
+        {
             ::Display*       display;
             ::GLXContext     context;
         };
 
         #ifdef LLGL_LINUX_ENABLE_WAYLAND
-
-        struct EGLData {
+        struct EGLData
+        {
             EGLDisplay       display;
             EGLContext       context;
             EGLConfig        config;
         };
-
-        struct ApiData {
-            union {
-                GLXData glx;
-                EGLData egl;
-            };
-
-            APIType type;             
-        } api_;
-
-        #else
-        
-        struct ApiData {
-            GLXData glx;
-        } api_;
-
         #endif
 
+        struct ApiData
+        {
+            union
+            {
+                GLXData glx;
+                #ifdef LLGL_LINUX_ENABLE_WAYLAND
+                EGLData egl;
+                #endif
+            };
+
+            LinuxGLAPIType type;
+        } api_;
 
         int        samples_    = 1;
         bool       isProxyGLC_ = false;

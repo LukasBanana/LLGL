@@ -43,6 +43,16 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
 #endif
 }
 
+bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
+{
+    LinuxGLContext& linuxContext = LLGL_CAST(LinuxGLContext&, context->GetGLContext());
+
+    if (linuxContext.IsEGL())
+        return LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(static_cast<LinuxWaylandGLSwapChainContext*>(context));
+    else
+        return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
+}
+
 
 /*
  * LinuxX11GLSwapChainContext class
@@ -79,13 +89,12 @@ void LinuxX11GLSwapChainContext::Resize(const Extent2D& resolution)
     // dummy
 }
 
-bool LinuxX11GLSwapChainContext::MakeCurrentUnchecked()
+bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContext *context)
 {
-    return glXMakeCurrent(dpy_, wnd_, glc_);       
-}
-
-bool LinuxX11GLSwapChainContext::Destroy() {
-    return glXMakeCurrent(nullptr, 0, 0);
+    if (context)
+        return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);
+    else
+        return glXMakeCurrent(nullptr, 0, 0);
 }
 
 /*
@@ -139,13 +148,12 @@ void LinuxWaylandGLSwapChainContext::Resize(const Extent2D& resolution)
     // dummy
 }
 
-bool LinuxWaylandGLSwapChainContext::MakeCurrentUnchecked()
+bool LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext *context)
 {
-    return eglMakeCurrent(dpy_, wnd_, wnd_, glc_);
-}
-
-bool LinuxWaylandGLSwapChainContext::Destroy() {
-    return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
+    if (context)
+        return eglMakeCurrent(context->dpy_, context->wnd_, context->wnd_, context->glc_);
+    else
+        return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
 }
 
 #endif

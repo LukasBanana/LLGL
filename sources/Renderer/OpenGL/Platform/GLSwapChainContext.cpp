@@ -20,14 +20,14 @@ GLSwapChainContext::GLSwapChainContext(GLContext& context) :
 {
 }
 
-bool GLSwapChainContext::MakeCurrent()
+bool GLSwapChainContext::MakeCurrent(GLSwapChainContext* context)
 {
     bool result = true;
-    if (g_currentSwapChainContext != this)
+    if (g_currentSwapChainContext != context)
     {
-        result = MakeCurrentUnchecked();
-        GLContext::SetCurrent(&context_);
-        g_currentSwapChainContext = this;
+        result = MakeCurrentUnchecked(context);
+        GLContext::SetCurrent(context != nullptr ? &(context->context_) : nullptr);
+        g_currentSwapChainContext = context;
     }
     return result;
 }

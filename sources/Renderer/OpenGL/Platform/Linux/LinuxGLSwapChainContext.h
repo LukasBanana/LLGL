@@ -35,8 +35,9 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 
-        bool MakeCurrentUnchecked() override;
-        bool Destroy() override;
+    public:
+
+        static bool MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context);
 
     private:
 
@@ -58,9 +59,6 @@ class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
         bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-
-        bool MakeCurrentUnchecked() override;
-        bool Destroy() override;
     public:
 
         static bool MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext* context);
