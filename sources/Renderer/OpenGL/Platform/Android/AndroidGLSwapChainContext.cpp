@@ -62,14 +62,14 @@ void AndroidGLSwapChainContext::CanvasEventListener::OnInit(Canvas& sender)
 {
     /* Re-initialize the shared EGLSurface when the ANativeWindow is re-initialized */
     context_->InitEGLSurface(sender);
-    context_->MakeCurrentUnchecked();
+    GLSwapChainContext::MakeCurrent(reinterpret_cast<GLSwapChainContext*>(context_));
 }
 
 void AndroidGLSwapChainContext::CanvasEventListener::OnDestroy(Canvas& /*sender*/)
 {
     /* Destroy the shared EGLSurface when the ANativeWindow is destroyed */
     context_->DestroyEGLSurface();
-    context_->Destroy();
+    GLSwapChainContext::MakeCurrent(nullptr);
 }
 
 
