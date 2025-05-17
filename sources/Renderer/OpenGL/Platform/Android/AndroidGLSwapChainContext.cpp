@@ -33,7 +33,6 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return AndroidGLSwapChainContext::MakeCurrentEGLContext(static_cast<AndroidGLSwapChainContext*>(context));
 }
 
-
 /*
  * CanvasEventListener
  */
@@ -63,7 +62,7 @@ void AndroidGLSwapChainContext::CanvasEventListener::OnInit(Canvas& sender)
 {
     /* Re-initialize the shared EGLSurface when the ANativeWindow is re-initialized */
     context_->InitEGLSurface(sender);
-    GLSwapChainContext::MakeCurrent(context_);
+    GLSwapChainContext::MakeCurrent(reinterpret_cast<GLSwapChainContext*>(context_));
 }
 
 void AndroidGLSwapChainContext::CanvasEventListener::OnDestroy(Canvas& /*sender*/)

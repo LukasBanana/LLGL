@@ -57,17 +57,29 @@ GLSwapChain::GLSwapChain(
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
     #ifdef LLGL_OS_LINUX
+        #ifdef LLGL_OPENGL_WAYLAND
+        NativeHandle nativeHandle = {};
+        surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
-    /* Set up surface for the swap-chain and pass native context handle */
-    NativeHandle windowContext = {};
-    ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-    SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
+        if (nativeHandle.type == NativeHandleType::Wayland)
+        {
+            /* Setup surface for the swap-chain */
+            SetOrCreateSurface(surface, UTF8String{}, desc);
+        }
+        else
+        {
+        #endif
+            /* Set up surface for the swap-chain and pass native context handle */
+            NativeHandle windowContext = {};
+            ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
+            SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
+        #ifdef LLGL_OPENGL_WAYLAND
+        }
+        #endif
 
     #else
-
-    /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, UTF8String{}, desc);
-
+        /* Setup surface for the swap-chain */
+        SetOrCreateSurface(surface, UTF8String{}, desc);
     #endif
 
     /*
@@ -138,17 +150,12 @@ bool GLSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
-bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
+bool GLSwapChain::MakeCurrent(GLSwapChain& swapChain)
 {
-    if (swapChain)
-    {
-        /* Make OpenGL context of the specified render contex current and notify the state manager */
-        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
-        GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
-        return result;
-    }
-    else
-        return GLSwapChainContext::MakeCurrent(nullptr);
+    /* Make OpenGL context of the specified render contex current and notify the state manager */
+    bool result = GLSwapChainContext::MakeCurrent(swapChain.swapChainContext_.get());
+    GLStateManager::Get().ResetFramebufferHeight(swapChain.framebufferHeight_);
+    return result;
 }
 
 

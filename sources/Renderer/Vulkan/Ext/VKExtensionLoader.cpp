@@ -73,6 +73,16 @@ static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_xlib_surface)
     return true;
 }
 
+#if LLGL_LINUX_ENABLE_WAYLAND
+
+static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_wayland_surface)
+{
+    LOAD_VKPROC( vkCreateWaylandSurfaceKHR );
+    return true;
+}
+
+#endif
+
 #elif defined LLGL_OS_ANDROID
 
 static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_android_surface)
@@ -177,11 +187,14 @@ bool VKLoadInstanceExtensions(VkInstance instance, const ArrayView<const char*>&
 
     /* Load platform specific extensions */
     #if defined LLGL_OS_WIN32
-    LOAD_VKEXT( KHR_win32_surface );
+        LOAD_VKEXT( KHR_win32_surface );
     #elif defined LLGL_OS_LINUX
-    LOAD_VKEXT( KHR_xlib_surface );
+        LOAD_VKEXT( KHR_xlib_surface );
+        #if LLGL_LINUX_ENABLE_WAYLAND
+        LOAD_VKEXT( KHR_wayland_surface );
+        #endif
     #elif defined LLGL_OS_ANDROID
-    LOAD_VKEXT( KHR_android_surface );
+        LOAD_VKEXT( KHR_android_surface );
     #endif // /LLGL_OS_WIN32
 
     LOAD_VKEXT( EXT_debug_marker );

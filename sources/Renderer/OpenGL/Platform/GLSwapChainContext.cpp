@@ -25,7 +25,7 @@ bool GLSwapChainContext::MakeCurrent(GLSwapChainContext* context)
     bool result = true;
     if (g_currentSwapChainContext != context)
     {
-        result = GLSwapChainContext::MakeCurrentUnchecked(context);
+        result = MakeCurrentUnchecked(context);
         GLContext::SetCurrent(context != nullptr ? &(context->context_) : nullptr);
         g_currentSwapChainContext = context;
     }

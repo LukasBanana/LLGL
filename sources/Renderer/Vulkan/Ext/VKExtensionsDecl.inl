@@ -23,6 +23,10 @@ DECL_VKPROC( vkCreateWin32SurfaceKHR );
 
 DECL_VKPROC( vkCreateXlibSurfaceKHR );
 
+#if LLGL_LINUX_ENABLE_WAYLAND
+DECL_VKPROC( vkCreateWaylandSurfaceKHR );
+#endif
+
 #elif defined LLGL_OS_ANDROID
 
 DECL_VKPROC( vkCreateAndroidSurfaceKHR );
