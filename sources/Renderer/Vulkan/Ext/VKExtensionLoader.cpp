@@ -73,7 +73,7 @@ static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_xlib_surface)
     return true;
 }
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_wayland_surface)
 {
@@ -190,7 +190,7 @@ bool VKLoadInstanceExtensions(VkInstance instance, const ArrayView<const char*>&
         LOAD_VKEXT( KHR_win32_surface );
     #elif defined LLGL_OS_LINUX
         LOAD_VKEXT( KHR_xlib_surface );
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
         LOAD_VKEXT( KHR_wayland_surface );
         #endif
     #elif defined LLGL_OS_ANDROID

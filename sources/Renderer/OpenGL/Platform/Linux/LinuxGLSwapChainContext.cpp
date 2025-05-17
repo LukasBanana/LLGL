@@ -11,7 +11,7 @@
 #include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-egl-core.h>
 #endif
 
@@ -26,7 +26,7 @@ namespace LLGL
 
 std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
@@ -105,7 +105,7 @@ bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContex
  * LinuxWaylandGLSwapChainContext class
  */
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 LinuxWaylandGLSwapChainContext::LinuxWaylandGLSwapChainContext(LinuxGLContext& context, Surface& surface) :
     GLSwapChainContext { context                 },

@@ -60,7 +60,7 @@ class LinuxGLContext : public GLContext
             return api_.type == LinuxGLAPIType::EGL;
         }
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
 
         inline EGLConfig GetEGLConfig() const
         {
@@ -93,7 +93,7 @@ class LinuxGLContext : public GLContext
             const OpenGL::RenderSystemNativeHandle& nativeContextHandle
         );
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
         EGLContext CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config);
         EGLContext CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config);
 
@@ -120,7 +120,7 @@ class LinuxGLContext : public GLContext
             ::GLXContext     context;
         };
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
         struct EGLData
         {
             EGLDisplay       display;
@@ -134,7 +134,7 @@ class LinuxGLContext : public GLContext
             union
             {
                 GLXData glx;
-                #ifdef LLGL_LINUX_ENABLE_WAYLAND
+                #if LLGL_LINUX_ENABLE_WAYLAND
                 EGLData egl;
                 #endif
             };

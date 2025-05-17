@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <set>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
     #include <vulkan/vulkan_wayland.h>
 #endif
 
@@ -387,7 +387,7 @@ void VKSwapChain::CreateGpuSurface()
         VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
     }
-    #ifdef LLGL_LINUX_ENABLE_WAYLAND
+    #if LLGL_LINUX_ENABLE_WAYLAND
     // Create Wayland surface
     else if (nativeHandle.type == NativeHandleType::Wayland)
     {

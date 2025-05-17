@@ -13,7 +13,7 @@
 #include "../../OpenGL.h"
 #include <X11/Xlib.h>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
 #endif
 
@@ -47,7 +47,7 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 
 };
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
 {

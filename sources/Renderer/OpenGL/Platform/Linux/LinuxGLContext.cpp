@@ -19,7 +19,7 @@
 #include <LLGL/Log.h>
 #include <algorithm>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-egl.h>
 #endif
 
@@ -81,7 +81,7 @@ LinuxGLContext::LinuxGLContext(
 
     bool isWayland = nativeWindowHandle.type == NativeHandleType::Wayland;
 
-    #ifdef LLGL_LINUX_ENABLE_WAYLAND
+    #if LLGL_LINUX_ENABLE_WAYLAND
 
     if (customNativeHandle != nullptr)
     {
@@ -120,7 +120,7 @@ LinuxGLContext::~LinuxGLContext()
 {
     if (!isProxyGLC_) {
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
         if (IsEGL())
         {
             DeleteEGLContext();
@@ -146,7 +146,7 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     {
         auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        #if LLGL_LINUX_ENABLE_WAYLAND
 
         if (IsEGL())
         {
@@ -246,7 +246,7 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 bool LinuxGLContext::SetSwapInterval(int interval)
 {
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
     if (IsEGL())
     {
         return (eglSwapInterval(api_.egl.display, interval) == EGL_TRUE);
@@ -280,14 +280,14 @@ bool LinuxGLContext::SetSwapInterval(int interval)
         /* Fallback to SGI extension. This is known to *not* support interval=0 */
         return (glXSwapIntervalSGI(interval) == 0);
     }
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
     }
 #endif
 
     return false;
 }
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 void LinuxGLContext::CreateEGLContext(
     const GLPixelFormat&                pixelFormat,
@@ -513,7 +513,7 @@ void LinuxGLContext::DeleteGLXContext()
     glXDestroyContext(api_.glx.display, api_.glx.context);
 }
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 void LinuxGLContext::DeleteEGLContext() {
     eglMakeCurrent(api_.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
@@ -625,7 +625,7 @@ void LinuxGLContext::CreateProxyGLXContext(
     DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
 }
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_LINUX_ENABLE_WAYLAND
 void LinuxGLContext::CreateProxyEGLContext(
     const GLPixelFormat&                    pixelFormat,
     const NativeHandle&                     nativeWindowHandle,
