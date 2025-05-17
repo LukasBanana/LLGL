@@ -1,38 +1,37 @@
 #if LLGL_LINUX_ENABLE_WAYLAND
 
-#include "LinuxGLContext.h"
+#include "LinuxGLContextWayland.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
+#include <wayland-egl.h>
 
 namespace LLGL
 {
 
-void LinuxGLContext::CreateEGLContext(
+void LinuxGLContextWayland::CreateEGLContext(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     const NativeHandle&                 nativeHandle,
-    LinuxGLContext*                     sharedContext)
+    LinuxGLContextWayland*              sharedContext)
 {
     LLGL_ASSERT(nativeHandle.type == NativeHandleType::Wayland, "Window native handle type must be Wayland");
 
     LLGL_ASSERT_PTR(nativeHandle.wayland.display);
     LLGL_ASSERT_PTR(nativeHandle.wayland.window);
 
-    api_.type = LinuxGLAPIType::EGL;
-
-    EGLContext glcShared = sharedContext != nullptr ? sharedContext->api_.egl.context : nullptr;
+    EGLContext glcShared = sharedContext != nullptr ? sharedContext->context_ : nullptr;
 
     EGLDisplay display = eglGetDisplay(nativeHandle.wayland.display);
     if (display == EGL_NO_DISPLAY)
         LLGL_TRAP("Failed to get EGL display");
 
-    api_.egl.display = display;
+    display_ = display;
 
     if (eglInitialize(display, nullptr, nullptr) != EGL_TRUE)
         LLGL_TRAP("Failed to initialize EGL");
 
     /* Create intermediate GL context OpenGL context with Wayland lib */
-    EGLContext intermediateGlc = CreateEGLContextCompatibilityProfile(nullptr, &api_.egl.config);
+    EGLContext intermediateGlc = CreateEGLContextCompatibilityProfile(nullptr, &config_);
     if (intermediateGlc == EGL_NO_CONTEXT)
         LLGL_TRAP("Failed to create EGL context with compatibility profile");
 
@@ -41,10 +40,10 @@ void LinuxGLContext::CreateEGLContext(
 
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
-        api_.egl.context = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &api_.egl.config);
+        context_ = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &config_);
     }
 
-    if (api_.egl.context)
+    if (context_)
     {
         if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
@@ -59,7 +58,7 @@ void LinuxGLContext::CreateEGLContext(
     else
     {
         /* No core profile created, so we use the intermediate GLX context */
-        api_.egl.context = intermediateGlc;
+        context_ = intermediateGlc;
 
         /* Set fixed color and depth-stencil formats as default values */
         SetDefaultColorFormat();
@@ -67,7 +66,7 @@ void LinuxGLContext::CreateEGLContext(
     }
 }
 
-EGLContext LinuxGLContext::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config) {
+EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config) {
     /* Query supported GL versions */
     if (major == 0 && minor == 0)
     {
@@ -82,8 +81,6 @@ EGLContext LinuxGLContext::CreateEGLContextCoreProfile(EGLContext glcShared, int
         Log::Errorf("cannot create OpenGL core profile with GL version %d.%d\n", major, minor);
         return nullptr;
     }
-
-    EGLDisplay display = api_.egl.display;
 
     /* Create core profile */
     const int fbAttribs[] =
@@ -102,10 +99,10 @@ EGLContext LinuxGLContext::CreateEGLContextCoreProfile(EGLContext glcShared, int
 
     EGLint numConfigs = 0;
     
-    if ((eglGetConfigs(display, nullptr, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0))
+    if ((eglGetConfigs(display_, nullptr, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0))
         LLGL_TRAP("Failed to get EGL configs");
 
-    if ((eglChooseConfig(display, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1))
+    if ((eglChooseConfig(display_, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1))
         LLGL_TRAP("Failed to choose EGL config");
 
     EGLint contextAttribs[] = {
@@ -117,12 +114,10 @@ EGLContext LinuxGLContext::CreateEGLContextCoreProfile(EGLContext glcShared, int
 
     eglBindAPI(EGL_OPENGL_API);
 
-    return eglCreateContext(display, *config, glcShared, contextAttribs);
+    return eglCreateContext(display_, *config, glcShared, contextAttribs);
 }
 
-EGLContext LinuxGLContext::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config) {
-    EGLDisplay display = api_.egl.display;
-
+EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config) {
     const int fbAttribs[] =
     {
         EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
@@ -136,10 +131,10 @@ EGLContext LinuxGLContext::CreateEGLContextCompatibilityProfile(EGLContext glcSh
     };
 
     EGLint numConfigs = 0;
-    if (eglGetConfigs(display, nullptr, 0, &numConfigs) != EGL_TRUE || numConfigs == 0)
+    if (eglGetConfigs(display_, nullptr, 0, &numConfigs) != EGL_TRUE || numConfigs == 0)
         LLGL_TRAP("Failed to get EGL configs");
 
-    if ((eglChooseConfig(display, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || numConfigs != 1)
+    if ((eglChooseConfig(display_, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || numConfigs != 1)
         LLGL_TRAP("Failed to choose EGL config");
 
     EGLint contextAttribs[] = {
@@ -151,21 +146,80 @@ EGLContext LinuxGLContext::CreateEGLContextCompatibilityProfile(EGLContext glcSh
 
     eglBindAPI(EGL_OPENGL_API);
 
-    return eglCreateContext(display, *config, glcShared, contextAttribs);
+    return eglCreateContext(display_, *config, glcShared, contextAttribs);
 }
 
-void LinuxGLContext::DeleteEGLContext() {
-    eglMakeCurrent(api_.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
-    eglDestroyContext(api_.egl.display, api_.egl.context);
+void LinuxGLContextWayland::DeleteEGLContext() {
+    eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
+    eglDestroyContext(display_, context_);
 }
 
-void LinuxGLContext::CreateProxyEGLContext(
+void LinuxGLContextWayland::CreateProxyEGLContext(
     const GLPixelFormat&                    pixelFormat,
     const NativeHandle&                     nativeWindowHandle,
     const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
 {
     LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::Wayland);
     LLGL_TRAP("TODO");
+}
+
+
+/*
+ * LinuxGLContext class
+ */
+
+LinuxGLContextWayland::LinuxGLContextWayland(
+    const GLPixelFormat&                    pixelFormat,
+    const RendererConfigurationOpenGL&      profile,
+    Surface&                                surface,
+    LinuxGLContextWayland*                  sharedContext,
+    const OpenGL::RenderSystemNativeHandle* customNativeHandle)
+:
+    samples_ { pixelFormat.samples }
+{
+    /* Create GLX or proxy context if a custom one is specified */
+    NativeHandle nativeWindowHandle = {};
+    surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
+
+    if (customNativeHandle != nullptr)
+    {
+        isProxyGLC_ = true;
+        CreateProxyEGLContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
+    }
+    else
+    {
+        CreateEGLContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+    }
+}
+
+LinuxGLContextWayland::~LinuxGLContextWayland()
+{
+    if (!isProxyGLC_) {
+        DeleteEGLContext();
+    }
+}
+
+bool LinuxGLContextWayland::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+
+        nativeHandleGL->egl = context_;
+        nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::EGL;
+
+        return true;
+    }
+    return false;
+}
+
+/*
+ * ======= Private: =======
+ */
+
+bool LinuxGLContextWayland::SetSwapInterval(int interval)
+{
+    return (eglSwapInterval(display_, interval) == EGL_TRUE);
 }
 
 }  // /namespace LLGL

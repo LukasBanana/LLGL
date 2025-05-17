@@ -5,7 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "LinuxGLContext.h"
+#include "LinuxGLContextX11.h"
 #include "../../GLSwapChain.h"
 #include "../../../../Platform/Linux/LinuxDisplay.h"
 #include "../../../../Core/Assertion.h"
@@ -34,7 +34,7 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelForm
 
     /* Choose X11 visual for pixel format */
     int samples = 0;
-    windowContext.x11.visual = LinuxGLContext::ChooseVisual(windowContext.x11.display, windowContext.x11.screen, pixelFormat, samples);
+    windowContext.x11.visual = LinuxGLContextX11::ChooseVisual(windowContext.x11.display, windowContext.x11.screen, pixelFormat, samples);
     pixelFormat.samples = samples;
     if (!windowContext.x11.visual)
         LLGL_TRAP("failed to choose X11 visual for OpenGL");
