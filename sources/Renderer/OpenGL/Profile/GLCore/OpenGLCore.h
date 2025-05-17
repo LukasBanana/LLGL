@@ -21,8 +21,11 @@
 #   include <GL/gl.h>
 #   include <GL/glext.h>
 #   include <GL/glx.h>
-#   include <EGL/egl.h>
-#   include <EGL/eglext.h>
+
+#   if LLGL_LINUX_ENABLE_WAYLAND
+#       include <EGL/egl.h>
+#       include <EGL/eglext.h>
+#   endif
 
 #elif defined LLGL_OS_MACOS
 #   include "../../../../Platform/MacOS/MacOSCompatibility.h"

@@ -15,7 +15,9 @@
 #   define VK_USE_PLATFORM_WIN32_KHR
 #elif defined LLGL_OS_LINUX
 #   define VK_USE_PLATFORM_XLIB_KHR
-#   define VK_USE_PLATFORM_WAYLAND_KHR
+#   if LLGL_LINUX_ENABLE_WAYLAND
+#       define VK_USE_PLATFORM_WAYLAND_KHR
+#   endif
 #elif defined LLGL_OS_ANDROID
 #   define VK_USE_PLATFORM_ANDROID_KHR
 #elif defined LLGL_OS_MACOS || defined LLGL_OS_IOS

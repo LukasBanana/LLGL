@@ -401,6 +401,10 @@ void VKSwapChain::CreateGpuSurface()
         VkResult result = vkCreateWaylandSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Wayland surface for Vulkan swap-chain");
     }
+    else
+    {
+        LLGL_TRAP("Invalid native handle type");
+    }
     #endif
 
     #elif defined LLGL_OS_ANDROID
