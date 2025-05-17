@@ -807,6 +807,8 @@ static bool DECL_LOADGLEXT_PROC(ARB_texture_buffer_range)
     return true;
 }
 
+#if LLGL_GL_ENABLE_DSA_EXT
+
 static bool DECL_LOADGLEXT_PROC(ARB_direct_state_access)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -908,6 +910,8 @@ static bool DECL_LOADGLEXT_PROC(ARB_direct_state_access)
     LOAD_GLPROC( glGetQueryBufferObjectui64v                );
     return true;
 }
+
+#endif // /LLGL_GL_ENABLE_DSA_EXT
 
 #undef DECL_LOADGLEXT_PROC
 #undef LOAD_GLPROC_SIMPLE
@@ -1219,7 +1223,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     LOAD_GLEXT( ARB_draw_indirect                );
     LOAD_GLEXT( ARB_multi_draw_indirect          );
     LOAD_GLEXT( ARB_get_texture_sub_image        );
-    #ifdef LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif
 

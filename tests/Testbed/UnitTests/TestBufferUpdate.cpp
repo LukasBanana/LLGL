@@ -53,7 +53,7 @@ DEF_TEST( BufferUpdate )
     const char* bufferNames[] = { buf1_Name, buf2_Name, buf3_Name, buf4_Name };
     const std::uint64_t bufferSizes[] = { buf1Desc.size, buf2Desc.size, buf3Desc.size, buf4Desc.size };
 
-    for (int i = 0; i < sizeof(bufferSizes)/sizeof(bufferSizes[0]); ++i)
+    for_range(i, static_cast<int>(sizeof(bufferSizes)/sizeof(bufferSizes[0])))
     {
         if (buffers[i] == nullptr)
             continue;

@@ -26,7 +26,6 @@ namespace LLGL
 struct LLGL_EXPORT Extent2D
 {
     Extent2D() = default;
-    Extent2D(const Extent2D&) = default;
 
     inline Extent2D(std::uint32_t width, std::uint32_t height) :
         width  { width  },
@@ -45,7 +44,6 @@ struct LLGL_EXPORT Extent2D
 struct LLGL_EXPORT Extent3D
 {
     Extent3D() = default;
-    Extent3D(const Extent3D&) = default;
 
     inline Extent3D(std::uint32_t width, std::uint32_t height, std::uint32_t depth) :
         width  { width  },
@@ -66,7 +64,6 @@ struct LLGL_EXPORT Extent3D
 struct LLGL_EXPORT Offset2D
 {
     Offset2D() = default;
-    Offset2D(const Offset2D&) = default;
 
     inline Offset2D(std::int32_t x, std::int32_t y) :
         x { x },
@@ -85,7 +82,6 @@ struct LLGL_EXPORT Offset2D
 struct LLGL_EXPORT Offset3D
 {
     Offset3D() = default;
-    Offset3D(const Offset3D&) = default;
 
     inline Offset3D(std::int32_t x, std::int32_t y, std::int32_t z) :
         x { x },

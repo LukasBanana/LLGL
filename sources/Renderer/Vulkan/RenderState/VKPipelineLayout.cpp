@@ -87,6 +87,8 @@ std::uint32_t VKPipelineLayout::GetNumUniforms() const
     return static_cast<std::uint32_t>(uniformDescs_.size());
 }
 
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
+
 // Builds one push-constant range for each uniform but with convoluted stage flags.
 static void BuildPushConstantRanges(
     const ArrayView<Shader*>&           shaders,
@@ -168,8 +170,6 @@ static void BuildPushConstantRanges(
         }
     );
 }
-
-#if LLGL_VK_ENABLE_SPIRV_REFLECT
 
 // Returns true if any of the specified shaders has at least one texel buffer,
 // i.e. of type VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER or VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER.

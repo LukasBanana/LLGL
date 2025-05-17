@@ -144,12 +144,6 @@ private:
         fragmentShader  = LoadStandardFragmentShader("PSMain");
 
         // Create pipeline layout
-        constexpr long vertStage    = LLGL::StageFlags::VertexStage;
-        constexpr long fragStage    = LLGL::StageFlags::FragmentStage;
-
-        constexpr auto resBuffer    = LLGL::ResourceType::Buffer;
-        constexpr auto resTexture   = LLGL::ResourceType::Texture;
-
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             #if PSO_LAYOUT_FROM_STRING
@@ -170,6 +164,12 @@ private:
             );
 
             #else
+
+            constexpr long vertStage    = LLGL::StageFlags::VertexStage;
+            constexpr long fragStage    = LLGL::StageFlags::FragmentStage;
+
+            constexpr auto resBuffer    = LLGL::ResourceType::Buffer;
+            constexpr auto resTexture   = LLGL::ResourceType::Texture;
 
             // Declare PSO layout explicitly
             const LLGL::SamplerDescriptor colorMapSamplerDesc = LLGL::Parse("lod.bias=1");

@@ -124,7 +124,6 @@ int main()
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
-        const auto& caps = renderer->GetRenderingCaps();
 
         LLGL::Log::Printf("Renderer:         %s\n", info.rendererName.c_str());
         LLGL::Log::Printf("Device:           %s\n", info.deviceName.c_str());

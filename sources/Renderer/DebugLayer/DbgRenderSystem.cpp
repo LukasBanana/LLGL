@@ -1622,7 +1622,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
         if (attrib.slot < LLGL_MAX_NUM_SO_BUFFERS)
         {
             BufferStrideRef& strideRef = bufferStridesRefs[attrib.slot];
-            if (strideRef.firstAttribIndex == -1)
+            if (strideRef.firstAttribIndex == std::size_t(-1))
             {
                 /* Initialize buffer stride with first attribute that defines it */
                 strideRef.firstAttribIndex = i;

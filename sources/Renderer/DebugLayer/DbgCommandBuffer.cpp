@@ -122,11 +122,6 @@ static const char* GetResourceLabel(const Resource& resource)
     return "LLGL::Resource";
 }
 
-static const char* GetResourceLabel(const Resource* resource)
-{
-    return (resource != nullptr ? GetResourceLabel(*resource) : "null");
-}
-
 DbgCommandBuffer::DbgCommandBuffer(
     RenderSystem&                   renderSystemInstance,
     CommandQueue&                   commandQueueInstance,
@@ -1021,10 +1016,10 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         }
         else
         {
-            if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
+            /*if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
             {
                 //TODO: store bound compute shader
-            }
+            }*/
 
             if (states_.insideRenderPass)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "compute PSO must be bound outside a render pass");
@@ -2081,7 +2076,7 @@ static std::string BindFlagsToStringList(long bindFlags)
 {
     std::string s;
 
-    for (long i = 0; i < sizeof(bindFlags)*8; ++i)
+    for_range(i, static_cast<long>(sizeof(bindFlags)*8))
     {
         if (((bindFlags >> i) & 0x1) != 0)
         {

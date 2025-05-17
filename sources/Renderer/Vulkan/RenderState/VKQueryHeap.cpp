@@ -54,9 +54,9 @@ static VkQueryControlFlags GetQueryControlFlags(const QueryHeapDescriptor& desc)
 
 VKQueryHeap::VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc, bool hasPredicates) :
     QueryHeap      { desc.type                    },
-    hasPredicates_ { hasPredicates                },
     queryPool_     { device, vkDestroyQueryPool   },
     controlFlags_  { GetQueryControlFlags(desc)   },
+    hasPredicates_ { hasPredicates                },
     groupSize_     { GetQueryGroupSize(desc)      },
     numQueries_    { desc.numQueries * groupSize_ }
 {

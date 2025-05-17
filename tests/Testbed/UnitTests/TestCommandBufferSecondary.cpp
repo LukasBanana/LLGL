@@ -25,8 +25,6 @@ struct ModelTransform
 
 DEF_TEST( CommandBufferSecondary )
 {
-    TestResult result = TestResult::Passed;
-
     if (shaders[VSSolid] == nullptr || shaders[PSSolid] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");

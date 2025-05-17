@@ -649,8 +649,7 @@ class Example_HelloGame : public ExampleBase
 
         void Write(LLGL::RenderSystem& renderer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
         {
-            const char* byteAlignedData     = reinterpret_cast<const char*>(data);
-            const char* byteAlignedDataEnd  = byteAlignedData + dataSize;
+            const char* byteAlignedData = reinterpret_cast<const char*>(data);
 
             while (dataSize > 0)
             {
@@ -667,8 +666,7 @@ class Example_HelloGame : public ExampleBase
 
         void Update(LLGL::CommandBuffer& cmdBuffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
         {
-            const char* byteAlignedData     = reinterpret_cast<const char*>(data);
-            const char* byteAlignedDataEnd  = byteAlignedData + dataSize;
+            const char* byteAlignedData = reinterpret_cast<const char*>(data);
 
             while (dataSize > 0)
             {
@@ -692,7 +690,6 @@ class Example_HelloGame : public ExampleBase
             const std::uint32_t numInstancePerSegment = static_cast<std::uint32_t>(sizePerSegment/sizeof(Instance));
             std::uint32_t instanceIndex = firstInstance;
             const std::uint32_t endInstanceIndex = firstInstance + numInstances;
-            const std::uint32_t zeroIndex = 0;
 
             while (instanceIndex < endInstanceIndex)
             {

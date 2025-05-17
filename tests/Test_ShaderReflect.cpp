@@ -28,12 +28,6 @@ int main()
         LLGL::SwapChainDescriptor swapChainDesc;
         swapChainDesc.resolution = { 800, 600 };
 
-        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
-
-        // Create command buffer
-        auto commandQueue = renderer->GetCommandQueue();
-        auto commands = renderer->CreateCommandBuffer();
-
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "Shaders/SpirvReflectTest.comp.spv"));
 

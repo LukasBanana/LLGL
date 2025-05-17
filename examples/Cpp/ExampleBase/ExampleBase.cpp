@@ -143,11 +143,11 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
     LLGL::Log::Printf("selected renderer: %s\n", rendererModule.c_str());
 }
 
-static bool IsModuleAvailable(const char* name)
+/*static bool IsModuleAvailable(const char* name)
 {
     auto modules = LLGL::RenderSystem::FindModules();
     return (std::find(modules.begin(), modules.end(), name) != modules.end());
-}
+}*/
 
 static const char* GetDefaultRendererModule()
 {
@@ -649,7 +649,6 @@ void ExampleBase::MainLoop()
                 "FRAME TIME RECORDS:\n"
                 "-------------------\n"
             );
-            const double invTicksFreqMS = 1000.0 / LLGL::Timer::Frequency();
             for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
                 LLGL::Log::Printf("%s: GPU time: %" PRIu64 " ns\n", rec.annotation.c_str(), rec.elapsedTime);
 

@@ -223,6 +223,11 @@ DEF_RITEST( ParseUtil )
             if (!CompareUniformDescEqual(lhs.uniforms[i], rhs.uniforms[i]))
                 return false;
         }
+        for_range(i, lhs.combinedTextureSamplers.size())
+        {
+            if (!CompareCombinedTextureSamplerDescEqual(lhs.combinedTextureSamplers[i], rhs.combinedTextureSamplers[i]))
+                return false;
+        }
         TEST_ATTRIB(barrierFlags);
         return true;
     };

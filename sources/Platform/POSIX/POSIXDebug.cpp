@@ -28,7 +28,7 @@ LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame, unsigned maxNum
 
     /* Get backtrace addresses */
     int count = ::backtrace(buffer, bufferSize);
-    if (count <= firstStackFrame)
+    if (count <= 0 || static_cast<unsigned>(count) <= firstStackFrame)
         return "";
 
     /* Get backtrace symbols and construct output string */

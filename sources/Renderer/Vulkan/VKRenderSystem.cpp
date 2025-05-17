@@ -502,7 +502,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 
     /* Determine size of image for staging buffer */
     const TextureSubresource&   subresource     = textureRegion.subresource;
-    const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
+  //const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent, subresource.numArrayLayers);
     const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
 
@@ -584,7 +584,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
     /* Determine size of image for staging buffer */
     const TextureSubresource&   subresource     = textureRegion.subresource;
-    const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
+  //const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent, subresource.numArrayLayers);
     const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
     const FormatAttributes&     formatAttribs   = GetFormatAttribs(format);
@@ -1078,7 +1078,6 @@ VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
         {
             const std::uint32_t dstRowStride    = extent.width * bpp;
             const std::uint32_t dstLayerStride  = extent.height * dstRowStride;
-            const std::uint64_t dstSize         = extent.depth * dstLayerStride;
 
             const std::uint32_t srcLayerStride  = extent.height * srcRowStride;
 

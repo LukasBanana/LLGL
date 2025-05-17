@@ -85,9 +85,9 @@ MyRenderer::MyRenderer(
     const LLGL::Extent2D&   subWindowSize,
     const LLGL::ClearValue& background)
 :
+    renderer   { renderer   },
     samples    { 8u         },
-    background { background },
-    renderer   { renderer   }
+    background { background }
 {
     // Get native handle (HWND for Win32) from main window
     LLGL::NativeHandle mainWindowHandle;

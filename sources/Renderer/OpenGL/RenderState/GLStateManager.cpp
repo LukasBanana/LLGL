@@ -989,11 +989,15 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
     }
 }
 
+#if LLGL_PRIMITIVE_RESTART
+
 // Returns the maximum index value for the specified index data type.
 static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 {
     return (indexType16Bits ? 0xFFFF : 0xFFFFFFFF);
 }
+
+#endif // /LLGL_PRIMITIVE_RESTART
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {

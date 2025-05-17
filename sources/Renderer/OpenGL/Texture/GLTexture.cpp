@@ -615,6 +615,8 @@ static void GLCopyTexSubImagePrimary(
     }
 }
 
+#if !LLGL_OPENGL
+
 static void GLReadPixelsFromTexture(
     const MutableImageView& dstImageView,
     GLTexture&              srcTexture,
@@ -622,10 +624,8 @@ static void GLReadPixelsFromTexture(
     const Offset3D&         srcOffset,
     const Extent3D&         extent)
 {
-    const TextureType       textureType = srcTexture.GetType();
-    const GLTextureTarget   target      = GLStateManager::GetTextureTarget(textureType);
+    const TextureType textureType = srcTexture.GetType();
 
-    const GLenum targetGL   = GLTypes::Map(textureType);
     const GLenum formatGL   = GLTypes::Map(dstImageView.format);
     const GLenum dataTypeGL = GLTypes::Map(dstImageView.dataType);
 
@@ -736,6 +736,8 @@ static void GLReadPixelsFromTexture(
         break;
     }
 }
+
+#endif // /!LLGL_OPENGL
 
 static void GLCopyTexSubImage(
     GLTexture&      dstTexture,
@@ -1053,7 +1055,6 @@ static void GLGetTextureImage(
 {
     /* Get texture type and texture unit target */
     const TextureType type = textureGL.GetType();
-    const bool isIntegerFormat = IsIntegerFormat(textureGL.GetFormat());
 
     /* Translate source region into actual texture dimensions */
     const Offset3D offset = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
@@ -1114,6 +1115,7 @@ static void GLGetTextureImage(
         #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
+            const bool isIntegerFormat = IsIntegerFormat(textureGL.GetFormat());
             glGetTextureImage(
                 stagingTextureID,
                 0,
@@ -1141,6 +1143,7 @@ static void GLGetTextureImage(
         #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
+            const bool isIntegerFormat = IsIntegerFormat(textureGL.GetFormat());
             glGetTextureImage(
                 srcTextureID,
                 mipLevel,
@@ -1155,7 +1158,7 @@ static void GLGetTextureImage(
         {
             /* Bind texture and read image data from texture */
             const GLTextureTarget srcTextureTarget = GLStateManager::GetTextureTarget(type);
-            GLGetTexImage(GLStateManager::GetTextureTarget(type), srcTextureID, textureGL.GetGLInternalFormat(), mipLevel, dstImageView, numTexels);
+            GLGetTexImage(srcTextureTarget, srcTextureID, textureGL.GetGLInternalFormat(), mipLevel, dstImageView, numTexels);
         }
     }
 

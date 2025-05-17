@@ -142,6 +142,9 @@ void VKCommandContext::ImageMemoryBarrier(
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             break;
+
+        default:
+            break;
     }
 
     switch (newLayout)
@@ -154,6 +157,9 @@ void VKCommandContext::ImageMemoryBarrier(
         case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
+
+        default:
             break;
     }
 

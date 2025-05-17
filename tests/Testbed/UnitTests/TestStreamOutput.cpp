@@ -205,9 +205,6 @@ DEF_TEST( StreamOutput )
     if (opt.fastTest && (frame % 2 == 0))
         return TestResult::ContinueSkipFrame;
 
-    // Initialize scene constants
-    const float rotation = static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1);
-
     // Initialize scene settings
     const float frameTransition = static_cast<float>(frame) / static_cast<float>(numFrames - 1);
 

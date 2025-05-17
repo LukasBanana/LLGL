@@ -228,12 +228,12 @@ int main(int argc, char* argv[])
             #endif
         }
 
+        #if ENABLE_CACHED_PSO
+
         // Create and cache graphics PSO
         std::uint64_t psoStartTime = LLGL::Timer::Tick();
         pipeline = renderer->CreatePipelineState(pipelineDesc, pipelineCache);
         std::uint64_t psoEndTime = LLGL::Timer::Tick();
-
-        #if ENABLE_CACHED_PSO
 
         const double psoTime = static_cast<double>(psoEndTime - psoStartTime) / static_cast<double>(LLGL::Timer::Frequency()) * 1000.0;
         LLGL::Log::Printf("PSO creation time: %f ms\n", psoTime);
@@ -252,7 +252,11 @@ int main(int argc, char* argv[])
                 );
             }
         }
+        
+        #else
 
+        pipeline = renderer->CreatePipelineState(pipelineDesc, pipelineCache);
+        
         #endif
 
         // Link shader program and check for errors

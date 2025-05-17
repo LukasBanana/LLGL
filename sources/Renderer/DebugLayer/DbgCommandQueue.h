@@ -46,8 +46,8 @@ class DbgCommandQueue final : public CommandQueue
 
     private:
 
-        RenderingDebugger*  debugger_ = nullptr;
         FrameProfile&       profile_;
+        RenderingDebugger*  debugger_ = nullptr;
 
 };
 

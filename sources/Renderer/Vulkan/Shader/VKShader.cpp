@@ -153,12 +153,12 @@ VKPtr<VkShaderModule> VKShader::CreateVkShaderModulePermutation(const Permutatio
     return VK_NULL_HANDLE;
 }
 
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
+
 static const char* GetOptString(const char* s)
 {
     return (s != nullptr ? s : "");
 }
-
-#if LLGL_VK_ENABLE_SPIRV_REFLECT
 
 static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t count)
 {

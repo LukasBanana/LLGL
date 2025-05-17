@@ -25,7 +25,6 @@ DEF_TEST( TextureStrides )
 {
     static TestResult result = TestResult::Passed;
     static PipelineState* pso;
-    static PipelineLayout* psoLayout;
 
     constexpr unsigned numFrames = 2;
 

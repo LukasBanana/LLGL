@@ -39,10 +39,10 @@ static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPix
 }
 
 // Generates an image buffer with unsigned bytes for the stencil index.
-static std::vector<std::uint8_t> GenImageDataS8ui(std::uint32_t numPixels, std::uint8_t stencil)
+/*static std::vector<std::uint8_t> GenImageDataS8ui(std::uint32_t numPixels, std::uint8_t stencil)
 {
     return std::vector<std::uint8_t>(static_cast<std::size_t>(numPixels), stencil);
-}
+}*/
 
 // Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
 static bool IsStrictFloatFormat(const Format format)

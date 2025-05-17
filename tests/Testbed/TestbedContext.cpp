@@ -1492,7 +1492,8 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
         extent.width = static_cast<std::uint32_t>(w);
         extent.height = static_cast<std::uint32_t>(h);
         pixels.resize(extent.width * extent.height);
-        ::memcpy(pixels.data(), imgBuf, pixels.size() * sizeof(ColorRGBub));
+        for_range(i, pixels.size())
+            pixels[i] = ColorRGBub{ imgBuf[i*3], imgBuf[i*3+1], imgBuf[i*3+2] };
         stbi_image_free(imgBuf);
     }
     else

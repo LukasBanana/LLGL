@@ -272,7 +272,7 @@ void GLShaderBindingLayout::AppendShaderStorageBinding(const std::string& name, 
 void GLShaderBindingLayout::GLSetProgramUniformBinding(GLuint program, const NamedResourceBinding& resource)
 {
     GLint location = glGetUniformLocation(program, resource.name.c_str());
-    if (location != GL_INVALID_INDEX)
+    if (location != -1)
     {
         for_range(j, resource.size)
             glProgramUniform1i(program, location + j, static_cast<GLint>(resource.slot + j));
@@ -284,7 +284,7 @@ void GLShaderBindingLayout::GLSetProgramUniformBinding(GLuint program, const Nam
 void GLShaderBindingLayout::GLSetUniformBinding(GLuint program, const NamedResourceBinding& resource)
 {
     GLint location = glGetUniformLocation(program, resource.name.c_str());
-    if (location != GL_INVALID_INDEX)
+    if (location != -1)
     {
         for_range(j, resource.size)
             glUniform1i(location + j, static_cast<GLint>(resource.slot + j));

@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
         window.Show();
         window.SetTitle("LLGL Test Separate Shaders - " + LLGL::UTF8String{ renderer->GetName() });
 
-        const auto& limits = renderer->GetRenderingCaps().limits;
+        //const auto& limits = renderer->GetRenderingCaps().limits;
 
         // Vertex buffer
         const struct Vertex

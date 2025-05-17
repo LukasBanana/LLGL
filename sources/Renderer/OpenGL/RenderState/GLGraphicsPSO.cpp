@@ -151,9 +151,7 @@ void GLGraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& des
 void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of viewports and validate limit */
-    numStaticViewports_ = static_cast<GLsizei>(numViewports);
-
-    if (numStaticViewports_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+    if (numViewports > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
     {
         GetMutableReport().Errorf(
             "too many viewports in graphics pipeline state (%d specified, but limit is %u)\n",
@@ -161,6 +159,8 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
         );
         numStaticViewports_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
     }
+    else
+        numStaticViewports_ = static_cast<GLsizei>(numViewports);
 
     /* Build <GLViewport> entries */
     for_range(i, numViewports)
@@ -188,9 +188,7 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
 void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of scissors and validate limit */
-    numStaticScissors_ = static_cast<GLsizei>(numScissors);
-
-    if (numStaticScissors_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+    if (numScissors > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
     {
         GetMutableReport().Errorf(
             "too many scissors in graphics pipeline state (%d specified, but limit is %u)\n",
@@ -198,6 +196,8 @@ void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* 
         );
         numStaticScissors_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
     }
+    else
+        numStaticScissors_ = static_cast<GLsizei>(numScissors);
 
     /* Build <GLScissor> entries */
     for_range(i, numScissors)
