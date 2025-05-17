@@ -30,6 +30,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return MacOSGLSwapChainContext::MakeCurrentNSGLContext(static_cast<MacOSGLSwapChainContext*>(context));
 }
 
+
 /*
  * MacOSGLSwapChainContext class
  */

@@ -30,6 +30,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return Win32GLSwapChainContext::MakeCurrentWGLContext(static_cast<Win32GLSwapChainContext*>(context));
 }
 
+
 /*
  * Win32GLSwapChainContext class
  */

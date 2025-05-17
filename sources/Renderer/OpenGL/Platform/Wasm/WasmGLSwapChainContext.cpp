@@ -29,6 +29,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return WasmGLSwapChainContext::MakeCurrentEGLContext(static_cast<WasmGLSwapChainContext*>(context));
 }
 
+
 /*
  * WasmGLSwapChainContext class
  */

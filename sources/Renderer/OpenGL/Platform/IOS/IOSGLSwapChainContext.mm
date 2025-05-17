@@ -65,6 +65,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return IOSGLSwapChainContext::MakeCurrentEGLContext(static_cast<IOSGLSwapChainContext*>(context));
 }
 
+
 /*
  * IOSGLSwapChainContext class
  */
@@ -156,6 +157,7 @@ bool IOSGLSwapChainContext::MakeCurrentEGLContext(IOSGLSwapChainContext* context
     EAGLContext* contextEAGL = (context != nullptr ? context->context_ : nil);
     return ([EAGLContext setCurrentContext:contextEAGL] != NO);
 }
+
 
 } // /namespace LLGL
 
