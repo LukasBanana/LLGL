@@ -40,7 +40,11 @@ struct RenderSystemNativeHandle
         LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.")
         GLXContext context;
         GLXContext glx;
+        #if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
         EGLContext egl;
+        #else
+        void*      egl;
+        #endif
     };
 
     RenderSystemNativeHandleType type;
