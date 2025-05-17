@@ -15,29 +15,10 @@
 namespace LLGL
 {
 
-
-// Returns absolute path of program instance
-static std::string GetProgramPath()
-{
-    /* Get filename of running program */
-    char buf[1024] = { 0 };
-    (void)readlink("/proc/self/exe", buf, sizeof(buf));
-
-    /* Get path from program */
-    std::string path = buf;
-
-    std::size_t pathEnd = path.find_last_of('/');
-    if (pathEnd != std::string::npos)
-        path.resize(pathEnd + 1);
-
-    return path;
-}
-
 std::string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to Linux shared library name (SO) */
-    std::string s = GetProgramPath();
-    s += "libLLGL_";
+    std::string s = "libLLGL_";
     s += moduleName;
     #ifdef LLGL_DEBUG
     s += "D";
