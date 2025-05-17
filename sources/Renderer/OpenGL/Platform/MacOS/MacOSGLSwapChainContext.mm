@@ -25,6 +25,10 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<MacOSGLSwapChainContext>(static_cast<MacOSGLContext&>(context), surface);
 }
 
+bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
+{
+    return MacOSGLSwapChainContext::MakeCurrentNSGLContext(static_cast<MacOSGLSwapChainContext*>(context));
+}
 
 /*
  * MacOSGLSwapChainContext class
@@ -61,24 +65,26 @@ void MacOSGLSwapChainContext::Resize(const Extent2D& resolution)
     [ctx_ update];
 }
 
-bool MacOSGLSwapChainContext::MakeCurrentUnchecked()
+bool MacOSGLSwapChainContext::MakeCurrentNSGLContext(MacOSGLSwapChainContext* context)
 {
-    /* Make context current */
-    MacOSGLContext::MakeNSOpenGLContextCurrent(ctx_);
+    if (context != nullptr)
+    {
+        /* Make context current */
+        MacOSGLContext::MakeNSOpenGLContextCurrent(context->ctx_);
 
-    /* We have to flush the previous content or it will be lost */
-    [ctx_ flushBuffer];
+        /* We have to flush the previous content or it will be lost */
+        [context->ctx_ flushBuffer];
 
-    /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-    [ctx_ setView:view_];
+        [context->ctx_ setView:context->view_];
 
-    #pragma clang diagnostic pop
+        #pragma clang diagnostic pop
 
-    [ctx_ update];
-
+        [context->ctx_ update];
+    }
     return true;
 }
 

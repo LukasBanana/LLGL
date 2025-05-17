@@ -25,6 +25,10 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<Win32GLSwapChainContext>(static_cast<Win32GLContext&>(context), surface);
 }
 
+bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
+{
+    return Win32GLSwapChainContext::MakeCurrentWGLContext(static_cast<Win32GLSwapChainContext*>(context));
+}
 
 /*
  * Win32GLSwapChainContext class
@@ -61,13 +65,12 @@ void Win32GLSwapChainContext::Resize(const Extent2D& resolution)
     // do nothing (WGL context does not need to be resized)
 }
 
-bool Win32GLSwapChainContext::MakeCurrentUnchecked()
+bool Win32GLSwapChainContext::MakeCurrentWGLContext(Win32GLSwapChainContext* context)
 {
-    return (wglMakeCurrent(hDC_, hGLRC_) != GL_FALSE);    
-}
-
-bool Win32GLSwapChainContext::Destroy() {
-    return (wglMakeCurrent(nullptr, nullptr) != GL_FALSE);
+    if (context)
+        return (wglMakeCurrent(context->hDC_, context->hGLRC_) != GL_FALSE);
+    else
+        return (wglMakeCurrent(nullptr, nullptr) != GL_FALSE);
 }
 
 

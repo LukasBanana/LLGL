@@ -28,6 +28,10 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<AndroidGLSwapChainContext>(static_cast<AndroidGLContext&>(context), surface);
 }
 
+bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
+{
+    return AndroidGLSwapChainContext::MakeCurrentEGLContext(static_cast<AndroidGLSwapChainContext*>(context));
+}
 
 /*
  * CanvasEventListener
@@ -126,14 +130,15 @@ void AndroidGLSwapChainContext::DestroyEGLSurface()
     sharedSurface_->DestroyEGLSurface();
 }
 
-bool AndroidGLSwapChainContext::MakeCurrentUnchecked()
+bool AndroidGLSwapChainContext::MakeCurrentEGLContext(AndroidGLSwapChainContext* context)
 {
-    EGLSurface nativeSurface = sharedSurface_->GetEGLSurface();
-    return eglMakeCurrent(display_, nativeSurface, nativeSurface, context_);
-}
-
-bool AndroidGLSwapChainContext::Destroy() {
-    return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (context)
+    {
+        EGLSurface nativeSurface = context->sharedSurface_->GetEGLSurface();
+        return eglMakeCurrent(context->display_, nativeSurface, nativeSurface, context->context_);
+    }
+    else
+        return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 

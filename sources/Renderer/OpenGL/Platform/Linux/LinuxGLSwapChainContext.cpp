@@ -45,12 +45,16 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
 
 bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
 {
+#if LLGL_LINUX_ENABLE_WAYLAND
     LinuxGLContext& linuxContext = LLGL_CAST(LinuxGLContext&, context->GetGLContext());
 
     if (linuxContext.IsEGL())
         return LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(static_cast<LinuxWaylandGLSwapChainContext*>(context));
     else
         return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
+#else
+    return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
+#endif
 }
 
 
