@@ -150,9 +150,10 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
         handle->x11.display = display_;
         handle->x11.window  = wnd_;
         handle->x11.visual  = visual_;
-        handle->display = display_;
-        handle->window = wnd_;
-        handle->visual = visual_;
+        handle->type        = NativeType::X11;
+        handle->display     = display_;
+        handle->window      = wnd_;
+        handle->visual      = visual_;
         return true;
     }
     return false;
