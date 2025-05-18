@@ -53,7 +53,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         // Returns the native X11 <GLXContext> object.
         inline void* GetGLXContext() const
         {
-            return context_;
+            return glc_;
         }
 
     private:
@@ -74,7 +74,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
 
-        void CreateProxyGLXContext(
+        void CreateProxyContext(
             const GLPixelFormat&                    pixelFormat,
             const NativeHandle&                     nativeWindowHandle,
             const OpenGL::RenderSystemNativeHandle& nativeContextHandle
@@ -82,7 +82,7 @@ class LinuxGLContextX11 : public LinuxGLContext
 
     private:
         ::Display*       display_;
-        ::GLXContext     context_;
+        ::GLXContext     glc_;
 
         int        samples_    = 1;
         bool       isProxyGLC_ = false;
