@@ -33,6 +33,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     return AndroidGLSwapChainContext::MakeCurrentEGLContext(static_cast<AndroidGLSwapChainContext*>(context));
 }
 
+
 /*
  * CanvasEventListener
  */
