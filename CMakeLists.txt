@@ -445,7 +445,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         ${PROJECT_NAME} PROPERTIES
             DEBUG_POSTFIX               "D"
             RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
-            BUILD_RPATH                 "${LLGL_OUTPUT_DIR}"
+            BUILD_RPATH                 "\$ORIGIN"
     )
 
     # Enable unity build for examples that contain at least 4 source files
@@ -734,7 +734,7 @@ if(LLGL_BUILD_STATIC_LIB)
 else()
     set(SUMMARY_LIBRARY_TYPE "Shared")
     add_library(LLGL SHARED ${FilesLLGL})
-    set_target_properties(LLGL PROPERTIES BUILD_RPATH "${LLGL_OUTPUT_DIR}")
+    set_target_properties(LLGL PROPERTIES BUILD_RPATH "\$ORIGIN")
 endif()
 
 include(GNUInstallDirs)
