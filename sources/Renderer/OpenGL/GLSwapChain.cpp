@@ -57,7 +57,7 @@ GLSwapChain::GLSwapChain(
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
     #ifdef LLGL_OS_LINUX
-        #ifdef LLGL_OPENGL_WAYLAND
+        #if LLGL_OPENGL_WAYLAND
         NativeHandle nativeHandle = {};
         surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
