@@ -1,12 +1,12 @@
 /*
- * LinuxGLSwapChainContext.h
+ * LinuxGLSwapChainContextX11.h
  *
  * Copyright (c) 2025 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_H
-#define LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_H
+#ifndef LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_X11_H
+#define LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_X11_H
 
 
 #include "LinuxGLContextX11.h"
@@ -47,3 +47,7 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 } // /namespace LLGL
 
 #endif
+
+
+
+// ================================================================================
