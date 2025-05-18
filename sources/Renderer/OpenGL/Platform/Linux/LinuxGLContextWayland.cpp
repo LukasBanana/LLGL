@@ -48,7 +48,7 @@ void LinuxGLContextWayland::CreateEGLContext(
         if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
 
-        /* Valid core profile created, so we can delete the intermediate GLX context */
+        /* Valid core profile created, so we can delete the intermediate EGL context */
         eglDestroyContext(display, intermediateGlc);
 
         /* Deduce color and depth-stencil formats */
@@ -57,7 +57,7 @@ void LinuxGLContextWayland::CreateEGLContext(
     }
     else
     {
-        /* No core profile created, so we use the intermediate GLX context */
+        /* No core profile created, so we use the intermediate EGL context */
         context_ = intermediateGlc;
 
         /* Set fixed color and depth-stencil formats as default values */
@@ -177,7 +177,7 @@ LinuxGLContextWayland::LinuxGLContextWayland(
 :
     samples_ { pixelFormat.samples }
 {
-    /* Create GLX or proxy context if a custom one is specified */
+    /* Create EGL or proxy context if a custom one is specified */
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
 

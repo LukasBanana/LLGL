@@ -22,12 +22,7 @@
 namespace LLGL
 {
 
-enum class LinuxGLAPIType : char {
-    GLX,
-    EGL
-};
-
-// Implementation of the <GLContext> interface for GNU/Linux and wrapper for a native GLX context.
+// Implementation of the <LinuxGLContext> interface for GNU/Linux and wrapper for a native EGL context.
 class LinuxGLContextWayland : public LinuxGLContext
 {
 

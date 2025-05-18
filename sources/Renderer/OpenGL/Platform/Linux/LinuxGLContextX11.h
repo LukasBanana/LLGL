@@ -19,7 +19,7 @@
 namespace LLGL
 {
 
-// Implementation of the <GLContext> interface for GNU/Linux and wrapper for a native GLX context.
+// Implementation of the <LinuxGLContext> interface for GNU/Linux and wrapper for a native GLX context.
 class LinuxGLContextX11 : public LinuxGLContext
 {
 
