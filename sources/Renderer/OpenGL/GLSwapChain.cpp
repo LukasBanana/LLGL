@@ -150,12 +150,17 @@ bool GLSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
-bool GLSwapChain::MakeCurrent(GLSwapChain& swapChain)
+bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
 {
-    /* Make OpenGL context of the specified render contex current and notify the state manager */
-    bool result = GLSwapChainContext::MakeCurrent(swapChain.swapChainContext_.get());
-    GLStateManager::Get().ResetFramebufferHeight(swapChain.framebufferHeight_);
-    return result;
+    if (swapChain)
+    {
+        /* Make OpenGL context of the specified render contex current and notify the state manager */
+        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
+        GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
+        return result;
+    }
+    else
+        return GLSwapChainContext::MakeCurrent(nullptr);
 }
 
 

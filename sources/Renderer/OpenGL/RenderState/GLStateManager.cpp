@@ -1738,7 +1738,7 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
         auto& swapChainGL = LLGL_CAST(GLSwapChain&, renderTarget);
 
         /* Make context current and unbind FBO */
-        GLSwapChain::MakeCurrent(swapChainGL);
+        GLSwapChain::MakeCurrent(&swapChainGL);
         GLStateManager::Get().BindGLRenderTarget(nullptr);
 
         if (nextStateManager != nullptr)

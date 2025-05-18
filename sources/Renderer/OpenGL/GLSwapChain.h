@@ -45,7 +45,7 @@ class GLSwapChain final : public SwapChain
         );
 
         // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.
-        static bool MakeCurrent(GLSwapChain& swapChain);
+        static bool MakeCurrent(GLSwapChain* swapChain);
 
         // Returns the state manager of the swap chain's GL context.
         inline GLStateManager& GetStateManager()
