@@ -61,6 +61,7 @@ class GLSwapChainContext
         GLSwapChainContext(GLContext& context);
 
     private:
+
         // Primary function to make the specified swap-chain context link current.
         static bool MakeCurrentUnchecked(GLSwapChainContext* context);
 
