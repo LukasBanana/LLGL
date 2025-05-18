@@ -51,10 +51,10 @@ std::unique_ptr<GLContext> GLContext::Create(
     GLContext*                          sharedContext,
     const ArrayView<char>&              customNativeHandle)
 {
-    LLGL::NativeHandle nativeHandle;
+    LLGL::NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
-    if (nativeHandle.type == NativeHandleType::Wayland)
+    if (nativeHandle.type == NativeType::Wayland)
     {
         #if LLGL_LINUX_ENABLE_WAYLAND
 

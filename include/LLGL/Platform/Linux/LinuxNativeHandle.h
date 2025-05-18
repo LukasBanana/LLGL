@@ -14,7 +14,7 @@
 
 #include <LLGL/Deprecated.h>
 
-#if LLGL_LINUX_ENABLE_WAYLAND
+#if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
 #endif
 
@@ -57,7 +57,7 @@ struct WaylandNativeHandle
 
 #endif
 
-enum class NativeHandleType : char
+enum class NativeType : char
 {
     X11 = 0,
     Wayland = 1
@@ -66,6 +66,8 @@ enum class NativeHandleType : char
 //! Linux native handle structure.
 struct NativeHandle
 {
+    NativeType type;
+
     union {
         struct {
             //! X11 display connection.
@@ -92,8 +94,6 @@ struct NativeHandle
         X11NativeHandle x11;
         WaylandNativeHandle wayland;
     };
-
-    NativeHandleType type = NativeHandleType::X11;
 };
 
 

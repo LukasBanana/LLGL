@@ -375,7 +375,7 @@ void VKSwapChain::CreateGpuSurface()
     #elif defined LLGL_OS_LINUX
 
     // Create Xlib surface
-    if (nativeHandle.type == NativeHandleType::X11)
+    if (nativeHandle.type == NativeType::X11)
     {
         VkXlibSurfaceCreateInfoKHR createInfo;
         createInfo.sType    = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
@@ -389,7 +389,7 @@ void VKSwapChain::CreateGpuSurface()
     }
     #if LLGL_LINUX_ENABLE_WAYLAND
     // Create Wayland surface
-    else if (nativeHandle.type == NativeHandleType::Wayland)
+    else if (nativeHandle.type == NativeType::Wayland)
     {
         VkWaylandSurfaceCreateInfoKHR createInfo;
         createInfo.sType    = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;

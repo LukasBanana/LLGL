@@ -23,7 +23,7 @@ namespace LLGL
 
 void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext)
 {
-    windowContext.type = NativeHandleType::X11;
+    windowContext.type = NativeType::X11;
 
     /* Get X11 display */
     windowContext.x11.display = LinuxSharedX11Display::GetShared()->GetNative();

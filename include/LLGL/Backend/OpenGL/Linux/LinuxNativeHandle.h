@@ -23,7 +23,7 @@ namespace LLGL
 namespace OpenGL
 {
 
-enum class RenderSystemNativeHandleType : char {
+enum class RenderSystemNativeType : char {
     GLX = 0,
     EGL
 };
@@ -35,6 +35,8 @@ enum class RenderSystemNativeHandleType : char {
 */
 struct RenderSystemNativeHandle
 {
+    RenderSystemNativeType type;
+
     union
     {
         LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.")
@@ -46,8 +48,6 @@ struct RenderSystemNativeHandle
         void*      egl;
         #endif
     };
-
-    RenderSystemNativeHandleType type;
 };
 
 

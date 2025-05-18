@@ -1,3 +1,10 @@
+/*
+ * LinuxGLContextWayland.cpp
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxGLContextWayland.h"
@@ -14,7 +21,7 @@ void LinuxGLContextWayland::CreateEGLContext(
     const NativeHandle&                 nativeHandle,
     LinuxGLContextWayland*              sharedContext)
 {
-    LLGL_ASSERT(nativeHandle.type == NativeHandleType::Wayland, "Window native handle type must be Wayland");
+    LLGL_ASSERT(nativeHandle.type == NativeType::Wayland, "Window native handle type must be Wayland");
 
     LLGL_ASSERT_PTR(nativeHandle.wayland.display);
     LLGL_ASSERT_PTR(nativeHandle.wayland.window);
@@ -159,8 +166,8 @@ void LinuxGLContextWayland::CreateProxyEGLContext(
     const NativeHandle&                     nativeWindowHandle,
     const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
 {
-    LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::Wayland);
-    LLGL_TRAP("TODO");
+    LLGL_ASSERT(nativeWindowHandle.type == NativeType::Wayland);
+    LLGL_TRAP_NOT_IMPLEMENTED("Wayland proxy EGL context");
 }
 
 
@@ -206,7 +213,7 @@ bool LinuxGLContextWayland::GetNativeHandle(void* nativeHandle, std::size_t nati
         auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
 
         nativeHandleGL->egl = context_;
-        nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::EGL;
+        nativeHandleGL->type = OpenGL::RenderSystemNativeType::EGL;
 
         return true;
     }

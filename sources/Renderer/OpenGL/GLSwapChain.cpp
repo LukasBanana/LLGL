@@ -64,7 +64,7 @@ GLSwapChain::GLSwapChain(
             surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
         }
 
-        if (nativeHandle.type == NativeHandleType::Wayland)
+        if (nativeHandle.type == NativeType::Wayland)
         {
             /* Setup surface for the swap-chain */
             SetOrCreateSurface(surface, UTF8String{}, desc);
@@ -76,7 +76,7 @@ GLSwapChain::GLSwapChain(
             NativeHandle windowContext = {};
             ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
             SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
-        #ifdef LLGL_OPENGL_WAYLAND
+        #if LLGL_OPENGL_WAYLAND
         }
         #endif
 

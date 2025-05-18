@@ -1,7 +1,7 @@
 /*
  * LinuxGLContextX11.cpp
  *
- * Copyright (c) 2025 Lukas Hermanns. All rights reserved.
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
@@ -77,7 +77,7 @@ bool LinuxGLContextX11::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
 
         nativeHandleGL->context = glc_;
         nativeHandleGL->glx = glc_;
-        nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::GLX;
+        nativeHandleGL->type = OpenGL::RenderSystemNativeType::GLX;
 
         return true;
     }

@@ -1,7 +1,7 @@
 /*
  * LinuxGLSwapChainContext.cpp
  *
- * Copyright (c) 2025 Lukas Hermanns. All rights reserved.
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
@@ -30,7 +30,7 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
-    if (nativeHandle.type == NativeHandleType::Wayland)
+    if (nativeHandle.type == NativeType::Wayland)
     {
         return MakeUnique<LinuxWaylandGLSwapChainContext>(static_cast<LinuxGLContextWayland&>(context), surface);
     }

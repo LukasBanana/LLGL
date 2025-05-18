@@ -1,14 +1,14 @@
 /*
  * LinuxGLSwapChainContextWayland.h
  *
- * Copyright (c) 2025 Lukas Hermanns. All rights reserved.
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #ifndef LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_WAYLAND_H
 #define LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_WAYLAND_H
+
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxGLContextWayland.h"
 #include "../GLSwapChainContext.h"
@@ -42,8 +42,8 @@ class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_WAYLAND_H
-
 #endif // LLGL_LINUX_ENABLE_WAYLAND
+
+#endif // LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_WAYLAND_H
 
 // ================================================================================
