@@ -59,7 +59,10 @@ GLSwapChain::GLSwapChain(
     #ifdef LLGL_OS_LINUX
         #if LLGL_OPENGL_WAYLAND
         NativeHandle nativeHandle = {};
-        surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+        if (surface)
+        {
+            surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+        }
 
         if (nativeHandle.type == NativeHandleType::Wayland)
         {
