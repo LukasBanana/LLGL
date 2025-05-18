@@ -93,7 +93,7 @@ struct NativeHandle
         WaylandNativeHandle wayland;
     };
 
-    NativeHandleType type;
+    NativeHandleType type = NativeHandleType::X11;
 };
 
 
