@@ -15,10 +15,6 @@
 #include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
-#ifdef LLGL_LINUX_ENABLE_WAYLAND
-#include <wayland-egl-core.h>
-#endif
-
 
 namespace LLGL
 {
@@ -71,7 +67,6 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     #endif
 }
 
-#endif
 
 } // /namespace LLGL
 

@@ -14,6 +14,7 @@
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
+
 namespace LLGL
 {
 
@@ -23,7 +24,6 @@ static std::vector<std::unique_ptr<LinuxWaylandDisplay>>   g_waylandDisplayList;
 
 static std::vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay    = nullptr;
-
 
 LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
 {
