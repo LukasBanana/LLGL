@@ -38,7 +38,7 @@ g_example =
 
 void TexturingLoop(double dt);
 
-int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char* argv[])
+int TexturingInit()
 {
     // Initialize example
     if (example_init("Texturing") != 0)
