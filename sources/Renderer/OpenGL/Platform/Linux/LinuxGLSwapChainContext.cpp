@@ -26,37 +26,50 @@ namespace LLGL
 
 std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
-#if LLGL_LINUX_ENABLE_WAYLAND
+    #if LLGL_LINUX_ENABLE_WAYLAND
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     if (nativeHandle.type == NativeType::Wayland)
     {
-        return MakeUnique<LinuxWaylandGLSwapChainContext>(static_cast<LinuxGLContextWayland&>(context), surface);
+        /* Create EGL swap-chain context for Wayland */
+        return MakeUnique<LinuxGLSwapChainContextWayland>(static_cast<LinuxGLContextWayland&>(context), surface);
     }
     else
+    #endif
     {
-        return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContextX11&>(context), surface);
+        /* Create GLX swap-chain context for X11 */
+        return MakeUnique<LinuxGLSwapChainContextX11>(static_cast<LinuxGLContextX11&>(context), surface);
     }
-#else
-    return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContextX11&>(context), surface);
-#endif
 }
 
 bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
 {
-#if LLGL_LINUX_ENABLE_WAYLAND
-    LinuxGLContext& linuxContext = LLGL_CAST(LinuxGLContext&, context->GetGLContext());
-
-    if (linuxContext.IsWayland())
-        return LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(static_cast<LinuxWaylandGLSwapChainContext*>(context));
+    #if LLGL_LINUX_ENABLE_WAYLAND
+    if (context != nullptr)
+    {
+        LinuxGLContext& contextLinuxGL = LLGL_CAST(LinuxGLContext&, context->GetGLContext());
+        if (contextLinuxGL.GetNativeType() == OpenGL::RenderSystemNativeType::EGL)
+            return LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(static_cast<LinuxGLSwapChainContextWayland*>(context));
+        else
+            return LinuxGLSwapChainContextX11::MakeCurrentGLXContext(static_cast<LinuxGLSwapChainContextX11*>(context));
+    }
     else
-        return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
-#else
-    return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
-#endif
+    {
+        /* If there is no active GLX context, unset EGL context instead */
+        if (glXGetCurrentContext() == nullptr)
+            return LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(nullptr);
+        else
+            return LinuxGLSwapChainContextX11::MakeCurrentGLXContext(nullptr);
+    }
+    #else
+    return LinuxGLSwapChainContextX11::MakeCurrentGLXContext(static_cast<LinuxGLSwapChainContextX11*>(context));
+    #endif
 }
 
-}
+
+} // /namespace LLGL
+
+
 
 // ================================================================================

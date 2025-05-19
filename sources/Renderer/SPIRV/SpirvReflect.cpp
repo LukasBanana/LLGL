@@ -649,6 +649,9 @@ void SpirvReflect::OpTypeStruct(const Instr& instr, SpvType& type)
                 case spv::DecorationOffset:
                     type.fields[decoration.member].offset = decoration.literals[0];
                     break;
+
+                default:
+                    break;
             }
         }
     }

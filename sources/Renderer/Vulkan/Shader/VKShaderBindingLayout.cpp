@@ -25,7 +25,7 @@ namespace LLGL
 #if LLGL_VK_ENABLE_SPIRV_REFLECT
 
 // Returns true if the input type is an OpTypeStruct with a single OpTypeRuntimeArray element that is readonly
-static bool IsTypeStructWithReadonlyRuntimeArray(const SpirvReflect::SpvType* type)
+/*static bool IsTypeStructWithReadonlyRuntimeArray(const SpirvReflect::SpvType* type)
 {
     if (type != nullptr)
     {
@@ -37,7 +37,7 @@ static bool IsTypeStructWithReadonlyRuntimeArray(const SpirvReflect::SpvType* ty
         }
     }
     return false;
-}
+}*/
 
 static VkDescriptorType SpirvTypeToVkDescriptorType(const SpirvReflect::SpvType* type, bool isSampledImage = false)
 {

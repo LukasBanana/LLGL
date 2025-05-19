@@ -19,6 +19,7 @@
 namespace LLGL
 {
 
+
 // Implementation of the <LinuxGLContext> interface for GNU/Linux and wrapper for a native GLX context.
 class LinuxGLContextX11 : public LinuxGLContext
 {
@@ -34,15 +35,11 @@ class LinuxGLContextX11 : public LinuxGLContext
         );
         ~LinuxGLContextX11();
 
-        int GetSamples() const override {
-            return samples_;
-        }
-
-        inline bool IsWayland() const override {
-            return false;
-        }
+        int GetSamples() const override;
 
         bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+
+        OpenGL::RenderSystemNativeType GetNativeType() const override;
 
     public:
 
@@ -51,7 +48,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         static ::XVisualInfo* ChooseVisual(::Display* display, int screen, const GLPixelFormat& pixelFormat, int& outSamples);
 
         // Returns the native X11 <GLXContext> object.
-        inline void* GetGLXContext() const
+        inline ::GLXContext GetGLXContext() const
         {
             return glc_;
         }
@@ -81,11 +78,11 @@ class LinuxGLContextX11 : public LinuxGLContext
         );
 
     private:
-        ::Display*       display_;
-        ::GLXContext     glc_;
 
-        int        samples_    = 1;
-        bool       isProxyGLC_ = false;
+        ::Display*      display_    = nullptr;
+        ::GLXContext    glc_        = nullptr;
+        int             samples_    = 1;
+        bool            isProxyGLC_ = false;
 
 };
 

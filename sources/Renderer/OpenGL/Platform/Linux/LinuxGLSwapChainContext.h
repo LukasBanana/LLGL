@@ -14,6 +14,7 @@
 #include "../../OpenGL.h"
 #include <X11/Xlib.h>
 
+
 namespace LLGL
 {
 
@@ -44,6 +45,12 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 
 };
 
+
 } // /namespace LLGL
 
+
 #endif
+
+
+
+// ================================================================================

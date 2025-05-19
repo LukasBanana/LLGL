@@ -21,12 +21,12 @@ namespace LLGL
 class Surface;
 class LinuxGLContext;
 
-class LinuxX11GLSwapChainContext final : public GLSwapChainContext
+class LinuxGLSwapChainContextX11 final : public GLSwapChainContext
 {
 
     public:
 
-        LinuxX11GLSwapChainContext(LinuxGLContextX11& context, Surface& surface);
+        LinuxGLSwapChainContextX11(LinuxGLContextX11& context, Surface& surface);
 
         bool HasDrawable() const override;
         bool SwapBuffers() override;
@@ -34,7 +34,7 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 
     public:
 
-        static bool MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context);
+        static bool MakeCurrentGLXContext(LinuxGLSwapChainContextX11* context);
 
     private:
 

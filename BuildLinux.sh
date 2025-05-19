@@ -11,6 +11,7 @@ ENABLE_D3D12="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 ENABLE_GL2X="OFF"
+ENABLE_WAYLAND="OFF"
 BUILD_TYPE="Release"
 UNITY_BUILD="OFF"
 PROJECT_ONLY=0
@@ -48,6 +49,8 @@ fi
 if [ $PLATFORM_MSYS -eq 1 ]; then
     echo "  --d3d11 ................... Include D3D11 renderer (MSYS only) "
     echo "  --d3d12 ................... Include D3D12 renderer (MSYS only) "
+else
+    echo "  --wayland ................. Include Wayland support"
 fi
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
@@ -97,6 +100,12 @@ for ARG in "$@"; do
             ENABLE_D3D12="ON"
         else
             echo "Warning: D3D12 backend is only supported for MSYS"
+        fi
+    elif [ "$ARG" = "--wayland" ]; then
+        if [ $PLATFORM_MSYS -eq 0 ]; then
+            ENABLE_WAYLAND="ON"
+        else
+            echo "Warning: Wayland is not supported for MSYS"
         fi
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
@@ -158,6 +167,7 @@ OPTIONS=(
     -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_BUILD_RENDERER_DIRECT3D11=$ENABLE_D3D11
     -DLLGL_BUILD_RENDERER_DIRECT3D12=$ENABLE_D3D12
+    -DLLGL_LINUX_ENABLE_WAYLAND=$ENABLE_WAYLAND
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB

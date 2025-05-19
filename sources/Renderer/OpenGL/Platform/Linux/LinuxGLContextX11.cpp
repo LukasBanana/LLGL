@@ -43,7 +43,7 @@ LinuxGLContextX11::LinuxGLContextX11(
     const GLPixelFormat&                    pixelFormat,
     const RendererConfigurationOpenGL&      profile,
     Surface&                                surface,
-    LinuxGLContextX11*                         sharedContext,
+    LinuxGLContextX11*                      sharedContext,
     const OpenGL::RenderSystemNativeHandle* customNativeHandle)
 :
     samples_ { pixelFormat.samples }
@@ -69,19 +69,32 @@ LinuxGLContextX11::~LinuxGLContextX11()
         DeleteGLXContext();
 }
 
+int LinuxGLContextX11::GetSamples() const
+{
+    return samples_;
+}
+
 bool LinuxGLContextX11::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
         auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
 
-        nativeHandleGL->context = glc_;
-        nativeHandleGL->glx = glc_;
-        nativeHandleGL->type = OpenGL::RenderSystemNativeType::GLX;
+        nativeHandleGL->type    = OpenGL::RenderSystemNativeType::GLX;
+        nativeHandleGL->glx     = glc_;
 
+        LLGL_DEPRECATED_IGNORE_PUSH()
+        nativeHandleGL->context = glc_;
+        LLGL_DEPRECATED_IGNORE_POP()
+        
         return true;
     }
     return false;
+}
+
+OpenGL::RenderSystemNativeType LinuxGLContextX11::GetNativeType() const
+{
+    return OpenGL::RenderSystemNativeType::GLX;
 }
 
 ::XVisualInfo* LinuxGLContextX11::ChooseVisual(::Display* display, int screen, const GLPixelFormat& pixelFormat, int& outSamples)
@@ -340,11 +353,11 @@ void LinuxGLContextX11::CreateProxyContext(
     const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
 {
     LLGL_ASSERT_PTR(nativeWindowHandle.x11.display);
-    LLGL_ASSERT_PTR(nativeContextHandle.context);
+    LLGL_ASSERT_PTR(nativeContextHandle.glx);
 
     /* Get X11 display, window, and visual information */
     display_    = nativeWindowHandle.x11.display;
-    glc_        = nativeContextHandle.context;
+    glc_        = nativeContextHandle.glx;
 
     if (glXMakeCurrent(display_, nativeWindowHandle.x11.window, glc_) != True)
         Log::Errorf("glXMakeCurrent failed on custom GLX context\n");

@@ -147,13 +147,15 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
         auto* handle = static_cast<NativeHandle*>(nativeHandle);
+        handle->type        = NativeType::X11;
         handle->x11.display = display_;
         handle->x11.window  = wnd_;
         handle->x11.visual  = visual_;
-        handle->type        = NativeType::X11;
+        LLGL_DEPRECATED_IGNORE_PUSH()
         handle->display     = display_;
         handle->window      = wnd_;
         handle->visual      = visual_;
+        LLGL_DEPRECATED_IGNORE_POP()
         return true;
     }
     return false;

@@ -8,6 +8,7 @@
 #ifndef LLGL_LINUX_GL_CONTEXT_WAYLAND_H
 #define LLGL_LINUX_GL_CONTEXT_WAYLAND_H
 
+
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxGLContext.h"
@@ -35,11 +36,11 @@ class LinuxGLContextWayland : public LinuxGLContext
         );
         ~LinuxGLContextWayland();
 
-        int GetSamples() const override {
-            return samples_;
-        }
+        int GetSamples() const override;
 
         bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+
+        OpenGL::RenderSystemNativeType GetNativeType() const override;
 
     public:
 
@@ -51,10 +52,6 @@ class LinuxGLContextWayland : public LinuxGLContext
         inline EGLContext GetEGLContext() const
         {
             return context_;
-        }
-
-        inline bool IsWayland() const override {
-            return true;
         }
 
     private:
@@ -82,21 +79,23 @@ class LinuxGLContextWayland : public LinuxGLContext
         );
 
     private:
-        EGLDisplay       display_;
-        EGLContext       context_;
-        EGLConfig        config_;
 
-        int        samples_    = 1;
-        bool       isProxyGLC_ = false;
+        EGLDisplay  display_;
+        EGLContext  context_;
+        EGLConfig   config_;
+        int         samples_    = 1;
+        bool        isProxyGLC_ = false;
 
 };
 
 
 } // /namespace LLGL
 
-
 #endif // LLGL_LINUX_ENABLE_WAYLAND
 
-#endif // LLGL_LINUX_GL_CONTEXT_WAYLAND_H
+
+#endif
+
+
 
 // ================================================================================

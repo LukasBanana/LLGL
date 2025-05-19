@@ -9,14 +9,16 @@
 
 #include "LinuxGLContextWayland.h"
 #include "LinuxGLSwapChainContextWayland.h"
-
 #include <wayland-egl-core.h>
 
-namespace LLGL {
 
-LinuxWaylandGLSwapChainContext::LinuxWaylandGLSwapChainContext(LinuxGLContextWayland& context, Surface& surface) :
+namespace LLGL
+{
+
+
+LinuxGLSwapChainContextWayland::LinuxGLSwapChainContextWayland(LinuxGLContextWayland& context, Surface& surface) :
     GLSwapChainContext { context                 },
-    glc_               { static_cast<EGLContext>(context.GetEGLContext()) }
+    context_           { context.GetEGLContext() }
 {
     /* Get native window handle */
     NativeHandle nativeHandle = {};
@@ -24,7 +26,8 @@ LinuxWaylandGLSwapChainContext::LinuxWaylandGLSwapChainContext(LinuxGLContextWay
     {
         EGLDisplay display = eglGetCurrentDisplay();
 
-        EGLAttrib surfaceAttribs[] = {
+        const EGLAttrib surfaceAttribs[] =
+        {
             EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
             EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR,
             EGL_NONE
@@ -40,37 +43,42 @@ LinuxWaylandGLSwapChainContext::LinuxWaylandGLSwapChainContext(LinuxGLContextWay
         if (surface == EGL_NO_SURFACE)
             LLGL_TRAP("failed to create EGL surface");
 
-        dpy_ = display;
-        wnd_ = surface;
+        display_ = display;
+        surface_ = surface;
     }
     else
         LLGL_TRAP("failed to get Wayland display and window from swap-chain surface");
 }
 
-bool LinuxWaylandGLSwapChainContext::HasDrawable() const
+bool LinuxGLSwapChainContextWayland::HasDrawable() const
 {
-    return (wnd_ != 0);
+    return (surface_ != 0);
 }
 
-bool LinuxWaylandGLSwapChainContext::SwapBuffers()
+bool LinuxGLSwapChainContextWayland::SwapBuffers()
 {
-    eglSwapBuffers(dpy_, wnd_);
+    eglSwapBuffers(display_, surface_);
     return true;
 }
 
-void LinuxWaylandGLSwapChainContext::Resize(const Extent2D& resolution)
+void LinuxGLSwapChainContextWayland::Resize(const Extent2D& resolution)
 {
     // dummy
 }
 
-bool LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext *context)
+bool LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(LinuxGLSwapChainContextWayland *context)
 {
     if (context)
-        return eglMakeCurrent(context->dpy_, context->wnd_, context->wnd_, context->glc_);
+        return eglMakeCurrent(context->display_, context->surface_, context->surface_, context->context_);
     else
-        return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
+        return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-}
 
-#endif
+} // /namespace LLGL
+
+#endif // /LLGL_LINUX_ENABLE_WAYLAND
+
+
+
+// ================================================================================

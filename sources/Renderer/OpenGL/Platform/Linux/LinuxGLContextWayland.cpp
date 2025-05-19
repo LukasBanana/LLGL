@@ -12,8 +12,10 @@
 #include <LLGL/Log.h>
 #include <wayland-egl.h>
 
+
 namespace LLGL
 {
+
 
 void LinuxGLContextWayland::CreateEGLContext(
     const GLPixelFormat&                pixelFormat,
@@ -73,7 +75,13 @@ void LinuxGLContextWayland::CreateEGLContext(
     }
 }
 
-EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config) {
+int LinuxGLContextWayland::GetSamples() const
+{
+    return samples_;
+}
+
+EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config)
+{
     /* Query supported GL versions */
     if (major == 0 && minor == 0)
     {
@@ -124,7 +132,8 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShar
     return eglCreateContext(display_, *config, glcShared, contextAttribs);
 }
 
-EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config) {
+EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config)
+{
     const int fbAttribs[] =
     {
         EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
@@ -156,7 +165,8 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContex
     return eglCreateContext(display_, *config, glcShared, contextAttribs);
 }
 
-void LinuxGLContextWayland::DeleteEGLContext() {
+void LinuxGLContextWayland::DeleteEGLContext()
+{
     eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
     eglDestroyContext(display_, context_);
 }
@@ -201,9 +211,8 @@ LinuxGLContextWayland::LinuxGLContextWayland(
 
 LinuxGLContextWayland::~LinuxGLContextWayland()
 {
-    if (!isProxyGLC_) {
+    if (!isProxyGLC_)
         DeleteEGLContext();
-    }
 }
 
 bool LinuxGLContextWayland::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
@@ -220,6 +229,12 @@ bool LinuxGLContextWayland::GetNativeHandle(void* nativeHandle, std::size_t nati
     return false;
 }
 
+OpenGL::RenderSystemNativeType LinuxGLContextWayland::GetNativeType() const
+{
+    return OpenGL::RenderSystemNativeType::EGL;
+}
+
+
 /*
  * ======= Private: =======
  */
@@ -229,8 +244,11 @@ bool LinuxGLContextWayland::SetSwapInterval(int interval)
     return (eglSwapInterval(display_, interval) == EGL_TRUE);
 }
 
+
 }  // /namespace LLGL
 
 #endif // LLGL_LINUX_ENABLE_WAYLAND
+
+
 
 // ================================================================================

@@ -13,7 +13,7 @@
 #include <GL/glx.h>
 
 #if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
-    #include <EGL/egl.h>
+#   include <EGL/egl.h>
 #endif
 
 
@@ -23,8 +23,10 @@ namespace LLGL
 namespace OpenGL
 {
 
-enum class RenderSystemNativeType : char {
-    GLX = 0,
+
+enum class RenderSystemNativeType
+{
+    GLX,
     EGL
 };
 
@@ -35,14 +37,20 @@ enum class RenderSystemNativeType : char {
 */
 struct RenderSystemNativeHandle
 {
+    //! Specifies the native type of this render system handle.
     RenderSystemNativeType type;
 
     union
     {
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.")
+        //! \deprecated Since 0.04b;
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.", "glx")
         GLXContext context;
+
+        //! Native GLX context handle.
         GLXContext glx;
+
         #if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
+        //! Native EGL context handle.
         EGLContext egl;
         #else
         void*      egl;

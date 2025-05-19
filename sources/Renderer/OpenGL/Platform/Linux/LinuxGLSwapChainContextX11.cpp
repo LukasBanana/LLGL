@@ -7,18 +7,18 @@
 
 #include "LinuxGLSwapChainContextX11.h"
 #include "LinuxGLContextX11.h"
-
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
+
 
 namespace LLGL
 {
 
 
-LinuxX11GLSwapChainContext::LinuxX11GLSwapChainContext(LinuxGLContextX11& context, Surface& surface) :
+LinuxGLSwapChainContextX11::LinuxGLSwapChainContextX11(LinuxGLContextX11& context, Surface& surface) :
     GLSwapChainContext { context                 },
-    glc_               { static_cast<GLXContext>(context.GetGLXContext()) }
+    glc_               { context.GetGLXContext() }
 {
     /* Get native window handle */
     NativeHandle nativeHandle = {};
@@ -31,23 +31,23 @@ LinuxX11GLSwapChainContext::LinuxX11GLSwapChainContext(LinuxGLContextX11& contex
         LLGL_TRAP("failed to get X11 Display and Window from swap-chain surface");
 }
 
-bool LinuxX11GLSwapChainContext::HasDrawable() const
+bool LinuxGLSwapChainContextX11::HasDrawable() const
 {
     return (wnd_ != 0);
 }
 
-bool LinuxX11GLSwapChainContext::SwapBuffers()
+bool LinuxGLSwapChainContextX11::SwapBuffers()
 {
     glXSwapBuffers(dpy_, wnd_);
     return true;
 }
 
-void LinuxX11GLSwapChainContext::Resize(const Extent2D& resolution)
+void LinuxGLSwapChainContextX11::Resize(const Extent2D& resolution)
 {
     // dummy
 }
 
-bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContext *context)
+bool LinuxGLSwapChainContextX11::MakeCurrentGLXContext(LinuxGLSwapChainContextX11 *context)
 {
     if (context)
         return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);
@@ -55,4 +55,9 @@ bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContex
         return glXMakeCurrent(nullptr, 0, 0);
 }
 
+
 } // /namespace LLGL
+
+
+
+// ================================================================================
