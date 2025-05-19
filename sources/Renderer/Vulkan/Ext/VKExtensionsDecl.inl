@@ -22,7 +22,6 @@ DECL_VKPROC( vkCreateWin32SurfaceKHR );
 #elif defined LLGL_OS_LINUX
 
 DECL_VKPROC( vkCreateXlibSurfaceKHR );
-DECL_VKPROC( vkCreateWaylandSurfaceKHR );
 
 #if LLGL_LINUX_ENABLE_WAYLAND
 DECL_VKPROC( vkCreateWaylandSurfaceKHR );

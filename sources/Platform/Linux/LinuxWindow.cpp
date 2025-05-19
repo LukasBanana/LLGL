@@ -298,7 +298,7 @@ void LinuxX11Window::Open()
     {
         /* Get X11 display from context handle */
         LLGL_ASSERT(desc_.windowContextSize == sizeof(NativeHandle));
-        LLGL_ASSERT(nativeHandle->type == NativeHandleType::X11, "Window native handle type must be X11");
+        LLGL_ASSERT(nativeHandle->type == NativeType::X11, "Window native handle type must be X11");
         display_    = nativeHandle->x11.display;
         visual_     = nativeHandle->x11.visual;
     }
@@ -677,7 +677,7 @@ bool LinuxWaylandWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeH
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
         auto* handle = static_cast<NativeHandle*>(nativeHandle);
-        handle->type = NativeHandleType::Wayland;
+        handle->type = NativeType::Wayland;
         handle->wayland.display = wl_.display;
         handle->wayland.window  = wl_.surface;
         return true;
