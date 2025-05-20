@@ -60,6 +60,12 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<IOSGLSwapChainContext>(static_cast<IOSGLContext&>(context), surface);
 }
 
+bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
+{
+    return IOSGLSwapChainContext::MakeCurrentEGLContext(static_cast<IOSGLSwapChainContext*>(context));
+}
+
+
 /*
  * IOSGLSwapChainContext class
  */
@@ -146,14 +152,12 @@ void IOSGLSwapChainContext::Resize(const Extent2D& resolution)
     [view_ display];
 }
 
-bool IOSGLSwapChainContext::MakeCurrentUnchecked()
-{;
-    return ([EAGLContext setCurrentContext:context_] != NO);
+bool IOSGLSwapChainContext::MakeCurrentEGLContext(IOSGLSwapChainContext* context)
+{
+    EAGLContext* contextEAGL = (context != nullptr ? context->context_ : nil);
+    return ([EAGLContext setCurrentContext:contextEAGL] != NO);
 }
 
-bool IOSGLSwapChainContext::Destroy() {
-    return ([EAGLContext setCurrentContext:nil] != NO);
-}
 
 } // /namespace LLGL
 

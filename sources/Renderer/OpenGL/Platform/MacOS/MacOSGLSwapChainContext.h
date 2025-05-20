@@ -32,11 +32,10 @@ class MacOSGLSwapChainContext final : public GLSwapChainContext
         bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
+        
+    public:
 
-        bool MakeCurrentUnchecked() override;
-        bool Destroy() override {
-            // Dummy
-        }
+        static bool MakeCurrentNSGLContext(MacOSGLSwapChainContext* context);
 
     private:
 
