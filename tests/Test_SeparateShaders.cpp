@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
         LLGL::Input input{ window };
         std::uint32_t resSet = 0;
 
-        while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
+        while (window.ProcessEvents() && !window.HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {
             if (input.KeyDown(LLGL::Key::Tab))
             {

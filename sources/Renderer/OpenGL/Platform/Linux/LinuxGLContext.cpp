@@ -14,7 +14,7 @@
 #include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Assertion.h"
-#include "../../../../Platform/Linux/LinuxDisplay.h"
+#include "../../../../Platform/Linux/LinuxDisplayX11.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
