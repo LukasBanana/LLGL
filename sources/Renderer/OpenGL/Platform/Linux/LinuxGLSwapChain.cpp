@@ -7,7 +7,7 @@
 
 #include "LinuxGLContextX11.h"
 #include "../../GLSwapChain.h"
-#include "../../../../Platform/Linux/LinuxDisplay.h"
+#include "../../../../Platform/Linux/LinuxDisplayX11.h"
 #include "../../../../Core/Assertion.h"
 #include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -26,7 +26,7 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelForm
     windowContext.type = NativeType::X11;
 
     /* Get X11 display */
-    windowContext.x11.display = LinuxSharedX11Display::GetShared()->GetNative();
+    windowContext.x11.display = LinuxSharedDisplayX11::GetShared()->GetNative();
     LLGL_ASSERT(windowContext.x11.display != nullptr, "failed to obtain shared X11 display");
 
     windowContext.x11.window = DefaultRootWindow(windowContext.x11.display);

@@ -616,6 +616,10 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     find_source_files(FilesRendererDbgTexture       CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Texture")
 endif()
 
+if (LLGL_LINUX_ENABLE_WAYLAND)
+    find_source_files(FilesPlatformLinuxProtocols   CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols")
+endif()
+
 if(EMSCRIPTEN)
     find_source_files(FilesPlatform                 CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Wasm")
     find_source_files(FilesIncludePlatform          CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/Wasm")
@@ -684,6 +688,9 @@ if(LLGL_ANDROID_PLATFORM)
     source_group("native_app_glue" FILES ${FilesAndroidNativeAppGlue})
 endif()
 
+if (LLGL_LINUX_ENABLE_WAYLAND)
+    source_group("Sources\\Platform\\Linux\\protocols" FILES ${FilesPlatformLinuxProtocols})
+endif()
 
 # === Include directories ===
 
@@ -727,6 +734,13 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     )
 endif()
 
+if (LLGL_LINUX_ENABLE_WAYLAND)
+    list(
+        APPEND FilesLLGL
+        ${FilesPlatformLinuxProtocols}
+    )
+endif()
+
 # Wrapper: C99
 if(LLGL_BUILD_WRAPPER_C99)
     find_source_files(FilesWrapperC99 CXX "${PROJECT_SOURCE_DIR}/wrapper/C99")
@@ -767,6 +781,9 @@ elseif(EMSCRIPTEN)
     target_link_libraries(LLGL embind)
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
+    if(LLGL_LINUX_ENABLE_WAYLAND)
+        target_link_libraries(LLGL wayland-client)
+    endif()
 #elseif(LLGL_UWP_PLATFORM)
 #    set_target_properties(LLGL PROPERTIES VS_WINRT_REFERENCES "Windows.Foundation.UniversalApiContract")
 endif()

@@ -314,7 +314,7 @@ int main()
         swapChain->SetVsyncInterval(vsyncInterval);
 
         // Main loop
-        while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !window->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update user input
             if (input.KeyDown(LLGL::Key::F1))
