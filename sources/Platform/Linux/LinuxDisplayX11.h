@@ -70,6 +70,7 @@ class LinuxDisplayX11 : public Display
         std::vector<DisplayMode> GetSupportedDisplayModes() const override;
 
         bool SetCursorPositionInternal(const Offset2D &position) override;
+        Offset2D GetCursorPositionInternal() override;
 
         bool IsWayland() const override {
             return false;
