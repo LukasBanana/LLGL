@@ -158,7 +158,7 @@ bool LinuxDisplayX11::SetCursorPositionInternal(const Offset2D& position)
     return true;
 }
 
-Offset2D Display::GetCursorPosition()
+Offset2D LinuxDisplayX11::GetCursorPositionInternal()
 {
     LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedDisplayX11::GetShared();
     ::Display* dpy = sharedX11Display->GetNative();
