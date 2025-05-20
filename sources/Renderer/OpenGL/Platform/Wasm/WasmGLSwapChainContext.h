@@ -31,11 +31,6 @@ class WasmGLSwapChainContext final : public GLSwapChainContext
         bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        
-        bool MakeCurrentUnchecked() override;
-        bool Destroy() override {
-            // Dummy
-        }
 
     public:
 
