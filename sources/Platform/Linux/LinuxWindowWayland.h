@@ -32,12 +32,12 @@ class LinuxWindowWayland : public Window {
 
         bool ProcessEvents() override;
 
+        void ProcessKeyEvent(Key event, bool down);
         void ProcessMouseKeyEvent(uint32_t button, bool down);
         void ProcessWheelMotionEvent(int motion);
         void ProcessExposeEvent();
         void ProcessMotionEvent(int xpos, int ypos);
-
-        void PostMouseKeyEvent(Key key, bool down);
+        void ProcessFocusEvent(bool focused);
 
         void SetSizeInternal(Extent2D size);
 
