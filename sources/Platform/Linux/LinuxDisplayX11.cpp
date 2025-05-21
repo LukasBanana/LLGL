@@ -89,55 +89,6 @@ static bool UpdateDisplayList()
     return false;
 }
 
-
-/*
- * Display class
- */
-
-std::size_t Display::Count()
-{
-    UpdateDisplayList();
-    return g_displayList.size();
-}
-
-Display* const * Display::GetList()
-{
-    if (UpdateDisplayList() || g_displayRefList.empty())
-    {
-        /* Update reference list and append null terminator to array */
-        g_displayRefList.clear();
-        g_displayRefList.reserve(g_displayList.size() + 1);
-        for (const auto& display : g_displayList)
-            g_displayRefList.push_back(display.get());
-        g_displayRefList.push_back(nullptr);
-    }
-    return g_displayRefList.data();
-}
-
-Display* Display::Get(std::size_t index)
-{
-    UpdateDisplayList();
-    return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
-}
-
-Display* Display::GetPrimary()
-{
-    UpdateDisplayList();
-    return g_primaryDisplay;
-}
-
-bool Display::ShowCursor(bool show)
-{
-    //TODO
-    return false;
-}
-
-bool Display::IsCursorShown()
-{
-    //TODO
-    return true;
-}
-
 bool LinuxDisplayX11::SetCursorPositionInternal(const Offset2D& position)
 {
     LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedDisplayX11::GetShared();
