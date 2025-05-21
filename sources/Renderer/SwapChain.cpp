@@ -204,7 +204,9 @@ void SwapChain::SetOrCreateSurface(
             windowDesc.flags                = GetSwapChainSurfaceFlags(swapChainDesc.fullscreen, swapChainDesc.resizable);
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
+            #if LLGL_LINUX_ENABLE_WAYLAND
             windowDesc.wayland              = true;
+            #endif
         }
         pimpl_->surface = Window::Create(windowDesc);
 
