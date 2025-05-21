@@ -616,10 +616,6 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     find_source_files(FilesRendererDbgTexture       CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Texture")
 endif()
 
-if (LLGL_LINUX_ENABLE_WAYLAND)
-    find_source_files(FilesPlatformLinuxProtocols   CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols")
-endif()
-
 if(EMSCRIPTEN)
     find_source_files(FilesPlatform                 CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Wasm")
     find_source_files(FilesIncludePlatform          CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/Wasm")
@@ -688,10 +684,6 @@ if(LLGL_ANDROID_PLATFORM)
     source_group("native_app_glue" FILES ${FilesAndroidNativeAppGlue})
 endif()
 
-if (LLGL_LINUX_ENABLE_WAYLAND)
-    source_group("Sources\\Platform\\Linux\\protocols" FILES ${FilesPlatformLinuxProtocols})
-endif()
-
 # === Include directories ===
 
 include_directories("${PROJECT_INCLUDE_DIR}")
@@ -734,13 +726,6 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     )
 endif()
 
-if (LLGL_LINUX_ENABLE_WAYLAND)
-    list(
-        APPEND FilesLLGL
-        ${FilesPlatformLinuxProtocols}
-    )
-endif()
-
 # Wrapper: C99
 if(LLGL_BUILD_WRAPPER_C99)
     find_source_files(FilesWrapperC99 CXX "${PROJECT_SOURCE_DIR}/wrapper/C99")
@@ -758,6 +743,31 @@ else()
     set(SUMMARY_LIBRARY_TYPE "Shared")
     add_library(LLGL SHARED ${FilesLLGL})
     set_target_properties(LLGL PROPERTIES BUILD_RPATH "\$ORIGIN")
+endif()
+
+# Generate Wayland protocols
+if(LLGL_LINUX_ENABLE_WAYLAND)
+    file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols)
+
+    add_custom_command(
+        COMMAND wayland-scanner private-code < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-protocol.c
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    add_custom_command(
+        COMMAND wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    target_sources(
+        LLGL
+        PRIVATE ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+    )
 endif()
 
 include(GNUInstallDirs)
