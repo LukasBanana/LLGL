@@ -1,12 +1,12 @@
 /*
- * LinuxDisplay.h
+ * LinuxDisplayX11.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_LINUX_DISPLAY_H
-#define LLGL_LINUX_DISPLAY_H
+#ifndef LLGL_LINUX_DISPLAY_X11_H
+#define LLGL_LINUX_DISPLAY_X11_H
 
 
 #include <LLGL/Display.h>
@@ -18,18 +18,18 @@ namespace LLGL
 {
 
 
-class LinuxSharedX11Display;
+class LinuxSharedDisplayX11;
 
-using LinuxSharedX11DisplaySPtr = std::shared_ptr<LinuxSharedX11Display>;
+using LinuxSharedX11DisplaySPtr = std::shared_ptr<LinuxSharedDisplayX11>;
 
 // Helper class to handle a shared X11 display instance
-class LinuxSharedX11Display
+class LinuxSharedDisplayX11
 {
 
     public:
 
-        LinuxSharedX11Display();
-        ~LinuxSharedX11Display();
+        LinuxSharedDisplayX11();
+        ~LinuxSharedDisplayX11();
 
         // Returns a shared instance of the X11 display.
         static LinuxSharedX11DisplaySPtr GetShared();
@@ -49,12 +49,12 @@ class LinuxSharedX11Display
 
 };
 
-class LinuxDisplay : public Display
+class LinuxDisplayX11 : public Display
 {
 
     public:
 
-        LinuxDisplay(const std::shared_ptr<LinuxSharedX11Display>& sharedX11Display, int screenIndex);
+        LinuxDisplayX11(const std::shared_ptr<LinuxSharedDisplayX11>& sharedX11Display, int screenIndex);
 
         bool IsPrimary() const override;
 
@@ -69,6 +69,13 @@ class LinuxDisplay : public Display
 
         std::vector<DisplayMode> GetSupportedDisplayModes() const override;
 
+        bool SetCursorPositionInternal(const Offset2D &position) override;
+        Offset2D GetCursorPositionInternal() override;
+
+        bool IsWayland() const override {
+            return false;
+        }
+
     private:
 
         // Returns the native X11 display.
@@ -76,11 +83,10 @@ class LinuxDisplay : public Display
 
     private:
 
-        std::shared_ptr<LinuxSharedX11Display>  sharedX11Display_;
+        std::shared_ptr<LinuxSharedDisplayX11>  sharedX11Display_;
         int                                     screen_             = 0;
 
 };
-
 
 } // /namespace LLGL
 

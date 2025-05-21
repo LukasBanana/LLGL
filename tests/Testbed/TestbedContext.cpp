@@ -489,7 +489,7 @@ TestResult TestbedContext::RunTest(const std::function<TestResult(unsigned)>& ca
 {
     TestResult result = TestResult::Continue;
 
-    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && IsContinueTest(result); ++frame)
+    for (unsigned frame = 0; surface->ProcessEvents() && IsContinueTest(result); ++frame)
     {
         result = callback(frame);
         if (result != TestResult::ContinueSkipFrame)

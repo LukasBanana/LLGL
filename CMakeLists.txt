@@ -684,7 +684,6 @@ if(LLGL_ANDROID_PLATFORM)
     source_group("native_app_glue" FILES ${FilesAndroidNativeAppGlue})
 endif()
 
-
 # === Include directories ===
 
 include_directories("${PROJECT_INCLUDE_DIR}")
@@ -746,6 +745,31 @@ else()
     set_target_properties(LLGL PROPERTIES BUILD_RPATH "\$ORIGIN")
 endif()
 
+# Generate Wayland protocols
+if(LLGL_LINUX_ENABLE_WAYLAND)
+    file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols)
+
+    add_custom_command(
+        COMMAND wayland-scanner private-code < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-protocol.c
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    add_custom_command(
+        COMMAND wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    target_sources(
+        LLGL
+        PRIVATE ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+    )
+endif()
+
 include(GNUInstallDirs)
 target_include_directories(LLGL INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
@@ -767,6 +791,9 @@ elseif(EMSCRIPTEN)
     target_link_libraries(LLGL embind)
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
+    if(LLGL_LINUX_ENABLE_WAYLAND)
+        target_link_libraries(LLGL wayland-client xkbcommon)
+    endif()
 #elseif(LLGL_UWP_PLATFORM)
 #    set_target_properties(LLGL PROPERTIES VS_WINRT_REFERENCES "Windows.Foundation.UniversalApiContract")
 endif()

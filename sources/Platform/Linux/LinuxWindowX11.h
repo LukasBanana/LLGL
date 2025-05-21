@@ -1,42 +1,41 @@
 /*
- * LinuxWindow.h
+ * LinuxWindowX11.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_LINUX_WINDOW_H
-#define LLGL_LINUX_WINDOW_H
+#ifndef LLGL_LINUX_WINDOW_X11_H
+#define LLGL_LINUX_WINDOW_X11_H
 
 
 #include <LLGL/Window.h>
-#include "LinuxDisplay.h"
+#include "LinuxDisplayX11.h"
 #include <X11/Xlib.h>
 
 
 namespace LLGL
 {
 
-
-class LinuxWindow : public Window
-{
-
+class LinuxWindowX11 : public Window {
     public:
 
         #include <LLGL/Backend/Window.inl>
 
     public:
 
-        LinuxWindow(const WindowDescriptor& desc);
-        ~LinuxWindow();
+        LinuxWindowX11(const WindowDescriptor& descriptor);
+        ~LinuxWindowX11();
 
     public:
+
+        bool ProcessEvents() override;
 
         void ProcessEvent(XEvent& event);
 
     private:
 
-        void OpenX11Window();
+        void Open();
 
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
@@ -45,10 +44,10 @@ class LinuxWindow : public Window
         void ProcessMotionEvent(XMotionEvent& event);
 
         void PostMouseKeyEvent(Key key, bool down);
-        
+
     private:
-    
         WindowDescriptor            desc_;
+        Offset2D                    prevMousePos_;
 
         LinuxSharedX11DisplaySPtr   sharedX11Display_;
 
@@ -59,11 +58,7 @@ class LinuxWindow : public Window
         ::XVisualInfo*              visual_             = nullptr;
         
         ::Atom                      closeWndAtom_;
-        
-        Offset2D                    prevMousePos_;
-
 };
-
 
 } // /namespace LLGL
 
