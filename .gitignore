@@ -29,3 +29,5 @@ tests/Output
 
 # VS Code folder
 .vscode
+
+sources/Platform/Linux/protocols/
