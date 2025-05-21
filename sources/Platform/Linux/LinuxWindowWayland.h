@@ -32,10 +32,9 @@ class LinuxWindowWayland : public Window {
 
         bool ProcessEvents() override;
 
-        // void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(uint32_t button, bool down);
+        void ProcessWheelMotionEvent(int motion);
         void ProcessExposeEvent();
-        // void ProcessClientMessage(XClientMessageEvent& event);
         void ProcessMotionEvent(int xpos, int ypos);
 
         void PostMouseKeyEvent(Key key, bool down);
