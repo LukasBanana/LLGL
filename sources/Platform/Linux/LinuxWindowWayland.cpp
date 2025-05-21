@@ -60,6 +60,8 @@ struct wayland_state {
         xkb_mod_index_t              numLockIndex;
         unsigned int                 modifiers;
     } xkb;
+    
+    bool initialized = false;
 };
 
 static wayland_state g_waylandState;
@@ -741,32 +743,33 @@ LinuxWindowWayland::LinuxWindowWayland(
 
 void LinuxWindowWayland::Open()
 {
-    // TODO: This chunk of code must be ran only once
-    //////////////////////
-    InitKeyTables();
+    // TODO: This should not be here
+    if (!g_waylandState.initialized) {
+        InitKeyTables();
 
-    g_waylandState.xkb.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-    if (!g_waylandState.xkb.context)
-    {
-        LLGL_TRAP("Failed to initialize xkb context");
+        g_waylandState.xkb.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+        if (!g_waylandState.xkb.context)
+        {
+            LLGL_TRAP("Failed to initialize xkb context");
+        }
+
+        g_waylandState.display = wl_display_connect(nullptr);
+        if (!g_waylandState.display)
+            LLGL_TRAP("Failed to connect to the Wayland display");
+
+        struct wl_registry* registry = wl_display_get_registry(g_waylandState.display);
+
+        wl_registry_add_listener(registry, &registryListener, this);
+
+        wl_display_roundtrip(g_waylandState.display);
+
+        if (!g_waylandState.compositor)
+            LLGL_TRAP("Failed to get Wayland compositor");
+
+        g_waylandState.tag = "LLGL";
+
+        g_waylandState.initialized = true;
     }
-
-    g_waylandState.display = wl_display_connect(nullptr);
-    if (!g_waylandState.display)
-        LLGL_TRAP("Failed to connect to the Wayland display");
-
-    struct wl_registry* registry = wl_display_get_registry(g_waylandState.display);
-
-    wl_registry_add_listener(registry, &registryListener, this);
-
-    wl_display_roundtrip(g_waylandState.display);
-
-    if (!g_waylandState.compositor)
-        LLGL_TRAP("Failed to get Wayland compositor");
-
-    g_waylandState.tag = "LLGL";
-
-    /////////////////////
 
     state_.wl_surface = wl_compositor_create_surface(g_waylandState.compositor);
     if (!state_.wl_surface)
