@@ -14,6 +14,7 @@
 #include "../../Core/Assertion.h"
 
 #include <wayland-client.h>
+#include <linux/input-event-codes.h>
 
 struct wayland_state {
     struct wl_display* display;
@@ -39,19 +40,9 @@ static wayland_state g_waylandState;
 namespace LLGL
 {
 
-
-/*
- * Surface class
- */
-
-bool LinuxWindowWayland::ProcessEvents()
-{
-    return !state_.closed && (wl_display_dispatch(g_waylandState.display) != -1);
-}
-
-/*
- * LinuxWindowWayland class
- */
+// ================================
+// ======== SURFACE EVENTS ========
+// ================================
 
 void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
 {
@@ -67,6 +58,10 @@ const static wl_surface_listener surfaceListener = {
     SurfaceHandleEnter,
     SurfaceHandleLeave
 };
+
+// ================================
+// ======== POINTER EVENTS ========
+// ================================
 
 void PointerHandleEnter(
     void*               userData,
@@ -180,7 +175,12 @@ void PointerHandleAxis(
     if (!window)
         return;
 
-    // TODO
+    // TODO: Handle horizontal scroll?
+    if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL)
+    {
+        int motion = static_cast<int>(-wl_fixed_to_double(value) / 10.0);
+        window->ProcessWheelMotionEvent(motion);
+    }
 }
 
 const static wl_pointer_listener pointerListener = {
@@ -191,6 +191,9 @@ const static wl_pointer_listener pointerListener = {
     PointerHandleAxis
 };
 
+// ===============================
+// ======= KEYBOARD EVENTS =======
+// ===============================
 
 static void KeyboardHandleKeymap(
     void*               userData,
@@ -289,6 +292,10 @@ const static wl_keyboard_listener keyboardListener = {
     KeyboardHandleRepeatInfo
 };
 
+// ===============================
+// ========= SEAT EVENTS =========
+// ===============================
+
 void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
 {
     if ((caps & WL_SEAT_CAPABILITY_POINTER) && !g_waylandState.pointer)
@@ -323,6 +330,10 @@ const static struct wl_seat_listener seatListener = {
     SeatHandleName
 };
 
+// ===============================
+// ======== XDG WM EVENTS ========
+// ===============================
+
 static void xdg_wm_base_ping(void* userData, struct xdg_wm_base* xdg_wm_base, uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
@@ -331,6 +342,10 @@ static void xdg_wm_base_ping(void* userData, struct xdg_wm_base* xdg_wm_base, ui
 static const struct xdg_wm_base_listener xdg_wm_base_listener = {
     .ping = xdg_wm_base_ping,
 };
+
+// ====================================
+// ======== XDG SURFACE EVENTS ========
+// ====================================
 
 static void xdg_surface_configure(
     void *userData,
@@ -343,6 +358,10 @@ static void xdg_surface_configure(
 static const struct xdg_surface_listener xdg_surface_listener = {
     .configure = xdg_surface_configure,
 };
+
+// =====================================
+// ======== XDG TOPLEVEL EVENTS ========
+// =====================================
 
 static void xdg_toplevel_handle_configure(
     void*                userData,
@@ -376,6 +395,10 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 	.configure = xdg_toplevel_handle_configure,
 	.close = xdg_toplevel_handle_close,
 };
+
+// =================================
+// ======== REGISTRY EVENTS ========
+// =================================
 
 void RegistryHandleGlobal(
     void* userData,
@@ -416,6 +439,10 @@ const static wl_registry_listener registryListener = {
     RegistryHandleRemove
 };
 
+/*
+ * LinuxWindowWayland class
+ */
+
 LinuxWindowWayland::LinuxWindowWayland(
     const WindowDescriptor& desc)
 {
@@ -447,9 +474,9 @@ void LinuxWindowWayland::Open()
     if (!state_.wl_surface)
         LLGL_TRAP("Failed to get Wayland surface");
 
-    wl_surface_set_user_data(state_.wl_surface, this);
     wl_proxy_set_tag(reinterpret_cast<struct wl_proxy*>(state_.wl_surface), &g_waylandState.tag);
     wl_surface_add_listener(state_.wl_surface, &surfaceListener, nullptr);
+    wl_surface_set_user_data(state_.wl_surface, this);
 
     state_.xdg_surface = xdg_wm_base_get_xdg_surface(g_waylandState.xdg_wm_base, state_.wl_surface);
     if (!state_.xdg_surface)
@@ -465,6 +492,11 @@ void LinuxWindowWayland::Open()
 
     xdg_toplevel_set_title(state_.xdg_toplevel, state_.title);
     wl_surface_commit(state_.wl_surface);
+}
+
+bool LinuxWindowWayland::ProcessEvents()
+{
+    return !state_.closed && (wl_display_dispatch(g_waylandState.display) != -1);
 }
 
 void LinuxWindowWayland::ProcessMotionEvent(int xpos, int ypos)
@@ -493,10 +525,35 @@ Offset2D LinuxWindowWayland::GetPosition() const
     return state_.position;
 }
 
-void LinuxWindowWayland::ProcessMouseKeyEvent(unsigned int, bool)
+void LinuxWindowWayland::ProcessMouseKeyEvent(uint32_t key, bool pressed)
 {
-
+    switch (key)
+    {
+        case BTN_LEFT:
+            PostMouseKeyEvent(Key::LButton, pressed);
+            break;
+        case BTN_MIDDLE:
+            PostMouseKeyEvent(Key::MButton, pressed);
+            break;
+        case BTN_RIGHT:
+            PostMouseKeyEvent(Key::RButton, pressed);
+            break;
+    }
 }
+
+void LinuxWindowWayland::PostMouseKeyEvent(Key key, bool down)
+{
+    if (down)
+        PostKeyDown(key);
+    else
+        PostKeyUp(key);
+}
+
+void LinuxWindowWayland::ProcessWheelMotionEvent(int motion)
+{
+    PostWheelMotion(motion);
+}
+
 Extent2D LinuxWindowWayland::GetSize(bool useClientArea) const
 {
     // TODO: utilize useClientArea parameter
