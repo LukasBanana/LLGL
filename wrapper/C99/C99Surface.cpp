@@ -39,8 +39,7 @@ LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface)
 
 LLGL_C_EXPORT bool llglProcessSurfaceEvents()
 {
-    // return LLGL::Surface::ProcessEvents();
-    return false;
+    return LLGL::Surface::ProcessEvents();
 }
 
 LLGL_C_EXPORT LLGLDisplay llglFindSurfaceResidentDisplay(LLGLSurface surface)

@@ -77,7 +77,7 @@ int main()
 
         LLGL::Log::Printf("Screen Width = %u, Screen Height = %u\n", desktopSize.width, desktopSize.height);
 
-        while (window->ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {
             if (input.KeyPressed(LLGL::Key::C))
                 LLGL::Display::SetCursorPosition(LLGL::Offset2D{ 150, 150 });
