@@ -20,54 +20,39 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
 
-struct wayland_state {
-    struct wl_display* display;
-    struct wl_registry* registry;
-    struct wl_compositor* compositor;
-    struct wl_seat* seat;
-
-    struct wl_pointer* pointer;
-    LLGL::LinuxWindowWayland* pointerFocus;
-    uint32_t serial;
-    uint32_t pointerEnterSerial;
-
-    struct wl_keyboard* keyboard;
-    LLGL::LinuxWindowWayland* keyboardFocus;
-
-    struct xdg_wm_base *xdg_wm_base;
-
-    const char* tag;
-
-    int32_t keyRepeatRate;
-    int32_t keyRepeatDelay;
-    int keyRepeatScancode;
-
-    LLGL::Key keycodes[256];
-
-    struct {
-        void* handle;
-        struct xkb_context*          context;
-        struct xkb_keymap*           keymap;
-        struct xkb_state*            state;
-
-        struct xkb_compose_state*    composeState;
-
-        xkb_mod_index_t              controlIndex;
-        xkb_mod_index_t              altIndex;
-        xkb_mod_index_t              shiftIndex;
-        xkb_mod_index_t              superIndex;
-        xkb_mod_index_t              capsLockIndex;
-        xkb_mod_index_t              numLockIndex;
-        unsigned int                 modifiers;
-    } xkb;
-    
-    bool initialized = false;
-};
-
-static wayland_state g_waylandState;
+#include "protocols/xdg-shell-client-protocol.h"
 
 namespace LLGL
 {
+
+WaylandState g_waylandState = {};
+
+LinuxWaylandContext& LinuxWaylandContext::Get()
+{
+    static LinuxWaylandContext instance;
+    return instance;
+}
+
+void LinuxWaylandContext::Add(LinuxWindowWayland* window) {
+    LinuxWaylandContext& context = LinuxWaylandContext::Get();
+    context.windows_.push_back(window);
+}
+
+void LinuxWaylandContext::Remove(LinuxWindowWayland* window) {
+    LinuxWaylandContext& context = LinuxWaylandContext::Get();
+
+    for (auto it = context.windows_.begin(); it != context.windows_.end(); ++it) {
+        if ((*it) == window) {
+            context.windows_.erase(it);
+            break;
+        }
+    }
+}
+
+const std::vector<LinuxWindowWayland*>& LinuxWaylandContext::GetWindows() {
+    LinuxWaylandContext& context = LinuxWaylandContext::Get();
+    return context.windows_;
+}
 
 // ================================
 // ======== SURFACE EVENTS ========
@@ -75,12 +60,12 @@ namespace LLGL
 
 void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
 {
-    
+
 }
 
 void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struct wl_output* output)
 {
-    
+
 }
 
 const static wl_surface_listener surfaceListener = {
@@ -318,7 +303,7 @@ static void KeyboardHandleEnter(
 
     if (wl_proxy_get_tag((struct wl_proxy*) surface) != &g_waylandState.tag)
         return;
-    
+
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
     if (!window)
         return;
@@ -544,7 +529,7 @@ static void xdg_toplevel_handle_configure(
 
     LinuxWindowWayland::State& state = window->GetState();
 
-	if ((width == 0 || height == 0) || 
+	if ((width == 0 || height == 0) ||
         (width == state.size.width && height == state.size.height))
     {
 		return;
@@ -599,7 +584,7 @@ void RegistryHandleGlobal(
 
 void RegistryHandleRemove(void* userData, struct wl_registry* registry, uint32_t name)
 {
-    wayland_state* state = static_cast<wayland_state*>(userData);
+    WaylandState* state = static_cast<WaylandState*>(userData);
 }
 
 const static wl_registry_listener registryListener = {
@@ -738,6 +723,8 @@ LinuxWindowWayland::LinuxWindowWayland(
     state_.size = desc.size;
     state_.prevSize = desc.size;
 
+    LinuxWaylandContext::Add(this);
+
     Open();
 }
 
@@ -795,9 +782,9 @@ void LinuxWindowWayland::Open()
     wl_surface_commit(state_.wl_surface);
 }
 
-bool LinuxWindowWayland::ProcessEvents()
-{
-    return !state_.closed && (wl_display_dispatch(g_waylandState.display) != -1);
+void LinuxWindowWayland::ProcessEvents() {
+    if (state_.closed)
+        PostQuit();
 }
 
 void LinuxWindowWayland::ProcessMotionEvent(int xpos, int ypos)
@@ -921,8 +908,8 @@ void LinuxWindowWayland::SetTitle(const LLGL::UTF8String& title)
 void LinuxWindowWayland::SetSizeInternal(Extent2D size)
 {
     state_.size = size;
-    PostResize(size);
     state_.prevSize = size;
+    PostResize(size);
 }
 
 LinuxWindowWayland::State& LinuxWindowWayland::GetState()
@@ -932,6 +919,8 @@ LinuxWindowWayland::State& LinuxWindowWayland::GetState()
 
 LinuxWindowWayland::~LinuxWindowWayland()
 {
+    LinuxWaylandContext::Remove(this);
+
     if (state_.wl_surface)
         wl_surface_destroy(state_.wl_surface);
     if (state_.xdg_surface)

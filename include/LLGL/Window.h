@@ -169,8 +169,6 @@ class LLGL_EXPORT Window : public Surface
         //! Searches the entire list of displays until a display is found where more than the half of this window's client area is visible.
         Display* FindResidentDisplay() const override final;
 
-        virtual bool ProcessEvents() override = 0;
-
     public:
 
         //! Returns true if this window has the keyboard focus.

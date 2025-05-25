@@ -18,21 +18,54 @@
 namespace LLGL
 {
 
+/*
+ * Window class
+ */
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
+    #if LLGL_LINUX_ENABLE_WAYLAND
+    // TODO: Check if the environment supports Wayland
+    return MakeUnique<LinuxWindowWayland>(desc);
+    #else
+    return MakeUnique<LinuxWindowX11>(desc);
+    #endif
+}
 
-    if (desc.wayland)
-    {
-        #if LLGL_LINUX_ENABLE_WAYLAND
-        return MakeUnique<LinuxWindowWayland>(desc);
-        #else
-        LLGL_TRAP("Wayland window is requested but LLGL was not built with LLGL_LINUX_ENABLE_WAYLAND");
-        #endif
+/*
+ * Surface class
+ */
+bool Surface::ProcessEvents()
+{
+#if LLGL_LINUX_ENABLE_WAYLAND
+    // TODO: Check if the environment supports Wayland
+    bool result = (wl_display_dispatch(g_waylandState.display) != -1);
+
+    for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows()) {
+        window->ProcessEvents();
     }
-    else
+
+    return result;
+#else
+    ::Display* display = LinuxSharedDisplayX11::GetShared()->GetNative();
+
+    XEvent event;
+
+    XPending(display);
+
+    while (XQLength(display))
     {
-        return MakeUnique<LinuxWindowX11>(desc);
+        XNextEvent(display, &event);
+        if (void* userData = LinuxX11Context::Find(display, event.xany.window))
+        {
+            LinuxWindowX11* wnd = static_cast<LinuxWindowX11*>(userData);
+            wnd->ProcessEvent(event);
+        }
     }
+
+    XFlush(display);
+
+    return true;
+#endif
 }
 
 } // /namespace LLGL
