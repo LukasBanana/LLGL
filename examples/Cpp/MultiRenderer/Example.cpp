@@ -424,7 +424,7 @@ int main(int argc, char* argv[])
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
-        while (mainWindow->ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update scene transformation
             if (input.KeyPressed(LLGL::Key::LButton))

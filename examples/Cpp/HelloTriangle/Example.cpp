@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
         // Enter main loop
         const float bgColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
 
-        while (window->ProcessEvents() && (window == nullptr || !window->HasQuit()))
+        while (LLGL::Surface::ProcessEvents() && (window == nullptr || !window->HasQuit()))
         {
             // Begin recording commands
             commands->Begin();
