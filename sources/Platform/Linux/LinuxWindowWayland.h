@@ -12,8 +12,13 @@
 
 #include <LLGL/Window.h>
 
-#include "protocols/xdg-shell-client-protocol.h"
+#include <wayland-client.h>
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-compose.h>
 
+struct xdg_toplevel;
+struct xdg_surface;
+struct xdg_wm_base;
 
 namespace LLGL
 {
@@ -30,7 +35,7 @@ class LinuxWindowWayland : public Window {
 
     public:
 
-        bool ProcessEvents() override;
+        void ProcessEvents();
 
         void ProcessKeyEvent(Key event, bool down);
         void ProcessMouseKeyEvent(uint32_t button, bool down);
@@ -68,6 +73,71 @@ class LinuxWindowWayland : public Window {
         WindowDescriptor            desc_;
         State                       state_;
 };
+
+class LinuxWaylandContext
+{
+
+    public:
+
+        static void Add(LinuxWindowWayland* window);
+        static void Remove(LinuxWindowWayland* window);
+        static const std::vector<LinuxWindowWayland*>& GetWindows();
+
+    private:
+
+        static LinuxWaylandContext& Get();
+
+    private:
+
+        std::vector<LinuxWindowWayland*> windows_;
+
+};
+
+struct WaylandState {
+    struct wl_display* display;
+    struct wl_registry* registry;
+    struct wl_compositor* compositor;
+    struct wl_seat* seat;
+
+    struct wl_pointer* pointer;
+    LinuxWindowWayland* pointerFocus;
+    uint32_t serial;
+    uint32_t pointerEnterSerial;
+
+    struct wl_keyboard* keyboard;
+    LinuxWindowWayland* keyboardFocus;
+
+    struct xdg_wm_base *xdg_wm_base;
+
+    const char* tag;
+
+    int32_t keyRepeatRate;
+    int32_t keyRepeatDelay;
+    int keyRepeatScancode;
+
+    Key keycodes[256];
+
+    struct {
+        void* handle;
+        struct xkb_context*          context;
+        struct xkb_keymap*           keymap;
+        struct xkb_state*            state;
+
+        struct xkb_compose_state*    composeState;
+
+        xkb_mod_index_t              controlIndex;
+        xkb_mod_index_t              altIndex;
+        xkb_mod_index_t              shiftIndex;
+        xkb_mod_index_t              superIndex;
+        xkb_mod_index_t              capsLockIndex;
+        xkb_mod_index_t              numLockIndex;
+        unsigned int                 modifiers;
+    } xkb;
+
+    bool initialized = false;
+};
+
+extern WaylandState g_waylandState;
 
 } // /namespace LLGL
 

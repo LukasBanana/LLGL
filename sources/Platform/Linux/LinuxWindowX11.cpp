@@ -17,33 +17,6 @@
 namespace LLGL
 {
 
-
-/*
- * LinuxX11Context class
- */
-
-// Wrapper for XContext singleton.
-class LinuxX11Context
-{
-
-    public:
-        
-        static void Save(::Display* display, XID id, void* userData);
-        static void* Find(::Display* display, XID id);
-        static void Remove(::Display* display, XID id);
-
-    private:
-
-        LinuxX11Context();
-
-        static LinuxX11Context& Get();
-
-    private:
-
-        ::XContext ctx_;
-
-};
-
 LinuxX11Context::LinuxX11Context() :
     ctx_ { XUniqueContext() }
 {
@@ -71,39 +44,6 @@ LinuxX11Context& LinuxX11Context::Get()
     static LinuxX11Context instance;
     return instance;
 }
-
-
-/*
- * Surface class
- */
-
-bool LinuxWindowX11::ProcessEvents()
-{
-    ::Display* display = LinuxSharedDisplayX11::GetShared()->GetNative();
-
-    XEvent event;
-
-    XPending(display);
-
-    while (XQLength(display))
-    {
-        XNextEvent(display, &event);
-        if (void* userData = LinuxX11Context::Find(display, event.xany.window))
-        {
-            LinuxWindowX11* wnd = static_cast<LinuxWindowX11*>(userData);
-            wnd->ProcessEvent(event);
-        }
-    }
-
-    XFlush(display);
-
-    return true;
-}
-
-
-/*
- * Window class
- */
 
 static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {

@@ -17,6 +17,28 @@
 namespace LLGL
 {
 
+// Wrapper for XContext singleton.
+class LinuxX11Context
+{
+
+    public:
+
+        static void Save(::Display* display, XID id, void* userData);
+        static void* Find(::Display* display, XID id);
+        static void Remove(::Display* display, XID id);
+
+    private:
+
+        LinuxX11Context();
+
+        static LinuxX11Context& Get();
+
+    private:
+
+        ::XContext ctx_;
+
+};
+
 class LinuxWindowX11 : public Window {
     public:
 
@@ -28,8 +50,6 @@ class LinuxWindowX11 : public Window {
         ~LinuxWindowX11();
 
     public:
-
-        bool ProcessEvents() override;
 
         void ProcessEvent(XEvent& event);
 
@@ -56,7 +76,7 @@ class LinuxWindowX11 : public Window {
         ::Window                    wnd_;
       //::Cursor                    cursor_;
         ::XVisualInfo*              visual_             = nullptr;
-        
+
         ::Atom                      closeWndAtom_;
 };
 
