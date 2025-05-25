@@ -314,7 +314,7 @@ void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 {
     app_.DrawFrame();
     app_.input.Reset();
-    swapChain_->GetSurface().ProcessEvents();
+    LLGL::Surface::ProcessEvents();
 }
 
 void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
@@ -405,7 +405,7 @@ void ExampleBase::Run()
 
     #else
 
-    while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
+    while (LLGL::Surface::ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
     {
         #ifndef LLGL_MOBILE_PLATFORM
         // On desktop platforms, we also want to quit the app if the close button has been pressed

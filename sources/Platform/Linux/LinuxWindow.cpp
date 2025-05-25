@@ -40,7 +40,8 @@ bool Surface::ProcessEvents()
     // TODO: Check if the environment supports Wayland
     bool result = (wl_display_dispatch(g_waylandState.display) != -1);
 
-    for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows()) {
+    for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
+    {
         window->ProcessEvents();
     }
 

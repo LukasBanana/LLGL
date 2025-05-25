@@ -33,23 +33,28 @@ LinuxWaylandContext& LinuxWaylandContext::Get()
     return instance;
 }
 
-void LinuxWaylandContext::Add(LinuxWindowWayland* window) {
+void LinuxWaylandContext::Add(LinuxWindowWayland* window)
+{
     LinuxWaylandContext& context = LinuxWaylandContext::Get();
     context.windows_.push_back(window);
 }
 
-void LinuxWaylandContext::Remove(LinuxWindowWayland* window) {
+void LinuxWaylandContext::Remove(LinuxWindowWayland* window)
+{
     LinuxWaylandContext& context = LinuxWaylandContext::Get();
 
-    for (auto it = context.windows_.begin(); it != context.windows_.end(); ++it) {
-        if ((*it) == window) {
+    for (auto it = context.windows_.begin(); it != context.windows_.end(); ++it)
+    {
+        if ((*it) == window)
+        {
             context.windows_.erase(it);
             break;
         }
     }
 }
 
-const std::vector<LinuxWindowWayland*>& LinuxWaylandContext::GetWindows() {
+const std::vector<LinuxWindowWayland*>& LinuxWaylandContext::GetWindows()
+{
     LinuxWaylandContext& context = LinuxWaylandContext::Get();
     return context.windows_;
 }
@@ -231,7 +236,8 @@ static void KeyboardHandleKeymap(
     }
 
     mapStr = static_cast<char*>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
-    if (mapStr == MAP_FAILED) {
+    if (mapStr == MAP_FAILED)
+    {
         close(fd);
         return;
     }
@@ -731,7 +737,8 @@ LinuxWindowWayland::LinuxWindowWayland(
 void LinuxWindowWayland::Open()
 {
     // TODO: This should not be here
-    if (!g_waylandState.initialized) {
+    if (!g_waylandState.initialized)
+    {
         InitKeyTables();
 
         g_waylandState.xkb.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
@@ -782,7 +789,8 @@ void LinuxWindowWayland::Open()
     wl_surface_commit(state_.wl_surface);
 }
 
-void LinuxWindowWayland::ProcessEvents() {
+void LinuxWindowWayland::ProcessEvents()
+{
     if (state_.closed)
         PostQuit();
 }

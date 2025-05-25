@@ -93,7 +93,8 @@ class LinuxWaylandContext
 
 };
 
-struct WaylandState {
+struct WaylandState
+{
     struct wl_display* display;
     struct wl_registry* registry;
     struct wl_compositor* compositor;

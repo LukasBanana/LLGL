@@ -246,8 +246,7 @@ int main(int argc, char* argv[])
         while (!(inputs[0].KeyPressed(LLGL::Key::Escape) || inputs[1].KeyPressed(LLGL::Key::Escape)))
         {
             // Process events of both windows and quit when both windows are closed
-            window1.ProcessEvents();
-            window2.ProcessEvents();
+            LLGL::Surface::ProcessEvents();
 
             if (window1.HasQuit() && window2.HasQuit())
                 break;
