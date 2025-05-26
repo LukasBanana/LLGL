@@ -18,16 +18,35 @@
 namespace LLGL
 {
 
+static bool IsWaylandSupported()
+{
+    const char* const session = getenv("XDG_SESSION_TYPE");
+    if (session)
+    {
+        if (strcmp(session, "wayland") == 0 && getenv("WAYLAND_DISPLAY"))
+            return true;
+    }
+    return false;
+}
+
+static bool g_isWaylandSupported = IsWaylandSupported();
+
 /*
  * Window class
  */
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     #if LLGL_LINUX_ENABLE_WAYLAND
-    // TODO: Check if the environment supports Wayland
-    return MakeUnique<LinuxWindowWayland>(desc);
-    #else
-    return MakeUnique<LinuxWindowX11>(desc);
+    if (g_isWaylandSupported)
+    {
+        return MakeUnique<LinuxWindowWayland>(desc);
+    }
+    else
+    {
+    #endif
+        return MakeUnique<LinuxWindowX11>(desc);
+    #if LLGL_LINUX_ENABLE_WAYLAND
+    }
     #endif
 }
 
@@ -37,35 +56,41 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 bool Surface::ProcessEvents()
 {
 #if LLGL_LINUX_ENABLE_WAYLAND
-    // TODO: Check if the environment supports Wayland
-    bool result = (wl_display_dispatch(g_waylandState.display) != -1);
-
-    for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
+    if (g_isWaylandSupported)
     {
-        window->ProcessEvents();
-    }
+        bool result = (wl_display_dispatch(g_waylandState.display) != -1);
 
-    return result;
-#else
-    ::Display* display = LinuxSharedDisplayX11::GetShared()->GetNative();
-
-    XEvent event;
-
-    XPending(display);
-
-    while (XQLength(display))
-    {
-        XNextEvent(display, &event);
-        if (void* userData = LinuxX11Context::Find(display, event.xany.window))
+        for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
         {
-            LinuxWindowX11* wnd = static_cast<LinuxWindowX11*>(userData);
-            wnd->ProcessEvent(event);
+            window->ProcessEvents();
         }
+
+        return result;
     }
+    else
+    {
+#endif
+        ::Display* display = LinuxSharedDisplayX11::GetShared()->GetNative();
 
-    XFlush(display);
+        XEvent event;
 
-    return true;
+        XPending(display);
+
+        while (XQLength(display))
+        {
+            XNextEvent(display, &event);
+            if (void* userData = LinuxX11Context::Find(display, event.xany.window))
+            {
+                LinuxWindowX11* wnd = static_cast<LinuxWindowX11*>(userData);
+                wnd->ProcessEvent(event);
+            }
+        }
+
+        XFlush(display);
+
+        return true;
+#if LLGL_LINUX_ENABLE_WAYLAND
+    }
 #endif
 }
 
