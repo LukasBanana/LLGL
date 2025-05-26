@@ -17,6 +17,7 @@
 
 #include <wayland-client.h>
 
+#include "LinuxSharedEGLSurface.h"
 
 namespace LLGL
 {
@@ -39,8 +40,8 @@ class LinuxGLSwapChainContextWayland final : public GLSwapChainContext
 
     private:
 
+        LinuxSharedEGLSurfacePtr sharedSurface_;
         EGLDisplay display_ = nullptr;
-        EGLSurface surface_ = nullptr;
         EGLContext context_ = nullptr;
 
 };
