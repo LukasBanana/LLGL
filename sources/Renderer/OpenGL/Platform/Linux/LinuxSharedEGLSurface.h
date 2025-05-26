@@ -8,6 +8,7 @@
 #ifndef LLGL_LINUX_SHARED_EGL_SURFACE_H
 #define LLGL_LINUX_SHARED_EGL_SURFACE_H
 
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 #include <EGL/egl.h>
 #include <memory>
@@ -69,8 +70,9 @@ using LinuxSharedEGLSurfacePtr = std::shared_ptr<LinuxSharedEGLSurface>;
 
 } // /namespace LLGL
 
+#endif // LLGL_LINUX_ENABLE_WAYLAND
 
-#endif
+#endif // LLGL_LINUX_SHARED_EGL_SURFACE_H
 
 
 
