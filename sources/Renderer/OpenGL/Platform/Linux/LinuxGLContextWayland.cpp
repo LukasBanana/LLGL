@@ -55,14 +55,6 @@ void LinuxGLContextWayland::CreateEGLContext(
     if (intermediateGlc == EGL_NO_CONTEXT)
         LLGL_TRAP("Failed to create EGL context with compatibility profile", EGLErrorToString());
 
-    if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
-        Log::Errorf("eglMakeCurrent failed on EGL compatibility profile\n");
-
-    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
-    {
-        context_ = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &config_);
-    }
-
     if (sharedContext != nullptr)
     {
         /* Share EGLSurface with shared context */
@@ -73,10 +65,19 @@ void LinuxGLContextWayland::CreateEGLContext(
         sharedSurface_ = std::make_shared<LinuxSharedEGLSurface>(display_, config_, nullptr);
     }
 
+    EGLSurface nativeSurface = sharedSurface_->GetEGLSurface();
+
+    if (eglMakeCurrent(display, nativeSurface, nativeSurface, intermediateGlc) != EGL_TRUE)
+        Log::Errorf("eglMakeCurrent failed on EGL compatibility profile\n");
+
+    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
+    {
+        context_ = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &config_);
+    }
+
     if (context_)
     {
-        EGLSurface nativeSurface = sharedSurface_->GetEGLSurface();
-        if (eglMakeCurrent(display, nativeSurface, nativeSurface, intermediateGlc) != True)
+        if (eglMakeCurrent(display, nativeSurface, nativeSurface, intermediateGlc) != EGL_TRUE)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
 
         /* Valid core profile created, so we can delete the intermediate EGL context */
@@ -192,6 +193,7 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContex
 
 void LinuxGLContextWayland::DeleteEGLContext()
 {
+    sharedSurface_.reset();
     eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
     eglDestroyContext(display_, context_);
 }
