@@ -40,8 +40,15 @@ void LinuxSharedEGLSurface::InitEGLSurface(wl_egl_window* window)
         window_ = window;
         if (window != nullptr)
         {
+            const EGLAttrib surfaceAttribs[] =
+            {
+                EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
+                EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR,
+                EGL_NONE
+            };
+
             /* Create an EGLSurface with a native window */
-            surface_ = eglCreatePlatformWindowSurface(display_, config_, window_, nullptr);
+            surface_ = eglCreatePlatformWindowSurface(display_, config_, window_, surfaceAttribs);
             if (!surface_)
                 LLGL_TRAP("eglCreateWindowSurface failed (%s)", EGLErrorToString());
         }
