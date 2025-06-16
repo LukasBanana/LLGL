@@ -430,6 +430,12 @@ void D3D11Buffer::WriteWithSubresourceCopyWithCpuAccess(
     WriteWithStagingBuffer(context, stagingBuffer.Get(), data, dataSize, dstOffset);
 }
 
+void D3D11Buffer::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
+{
+    if (!desc.vertexAttribs.empty())
+        stride_ = desc.vertexAttribs.front().stride;
+}
+
 
 } // /namespace LLGL
 

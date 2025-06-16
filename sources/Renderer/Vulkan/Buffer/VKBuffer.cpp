@@ -103,10 +103,10 @@ static VkAccessFlags GetBufferVkAccessFlags(long bindFlags)
     return accessFlags;
 }
 
-static std::uint32_t GetVKBufferStride(const BufferDescriptor& desc)
+static std::uint32_t GetVKBufferStride(const ArrayView<VertexAttribute>& vertexAttribs)
 {
     /* Just return first vertex attribute stride, since all attributes must have equal strides within the same buffer */
-    return (desc.vertexAttribs.empty() ? 1 : std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride));
+    return (vertexAttribs.empty() ? 1 : std::max<std::uint32_t>(1u, vertexAttribs[0].stride));
 }
 
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
@@ -118,7 +118,7 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     size_             { desc.size                              },
     accessFlags_      { GetBufferVkAccessFlags(desc.bindFlags) },
     format_           { VKTypes::Map(desc.format)              },
-    stride_           { GetVKBufferStride(desc)                }
+    stride_           { GetVKBufferStride(desc.vertexAttribs)                }
 {
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
         indexType_ = VKTypes::ToVkIndexType(desc.format);
@@ -190,6 +190,14 @@ BufferDescriptor VKBuffer::GetDesc() const
     #endif
 
     return bufferDesc;
+}
+
+void VKBuffer::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
+{
+    if ((GetBindFlags() & BindFlags::VertexBuffer) != 0)
+    {
+        stride_ = GetVKBufferStride(vertexAttribs);
+    }
 }
 
 void VKBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)

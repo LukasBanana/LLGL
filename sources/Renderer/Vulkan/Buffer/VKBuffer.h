@@ -117,6 +117,8 @@ class VKBuffer : public Buffer
             return bufferView_.Get();
         }
 
+        void SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs) override;
+
     private:
 
         VkDevice            device_                 = VK_NULL_HANDLE;

@@ -40,6 +40,8 @@ class GLBufferWithVAO : public GLBuffer
             return &vertexArray_;
         }
 
+        void SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs) override;
+
     private:
 
         std::vector<VertexAttribute>    vertexAttribs_;

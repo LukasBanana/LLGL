@@ -58,6 +58,15 @@ class LLGL_EXPORT Buffer : public Resource
         */
         virtual BufferDescriptor GetDesc() const = 0;
 
+        /**
+        \brief Sets the vertex attributes of this buffer.
+        \param[in] vertexAttribs Array view of vertex attributes to set.
+        \remarks This function is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
+        \see BindFlags::VertexBuffer
+        \see VertexShaderAttributes::inputAttribs
+        */
+        virtual void SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs) {};
+
     protected:
 
         Buffer(long bindFlags);

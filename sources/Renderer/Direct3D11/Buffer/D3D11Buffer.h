@@ -76,6 +76,8 @@ class D3D11Buffer : public Buffer
             return &bindingLocator_;
         }
 
+        void SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs) override;
+
     private:
 
         void CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
