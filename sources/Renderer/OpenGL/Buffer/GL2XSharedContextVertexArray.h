@@ -40,6 +40,12 @@ class GL2XSharedContextVertexArray
         // Sets the debug label for all VAOs.
         void SetDebugName(const char* name);
 
+        void Reset()
+        {
+            attribs_.clear();
+            attribIndexEnd_ = 0;
+        }
+
     private:
 
         std::vector<GLVertexAttribute>  attribs_;
