@@ -432,8 +432,8 @@ void D3D11Buffer::WriteWithSubresourceCopyWithCpuAccess(
 
 void D3D11Buffer::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
 {
-    if (!desc.vertexAttribs.empty())
-        stride_ = desc.vertexAttribs.front().stride;
+    if (!vertexAttribs.empty())
+        stride_ = vertexAttribs.front().stride;
 }
 
 
