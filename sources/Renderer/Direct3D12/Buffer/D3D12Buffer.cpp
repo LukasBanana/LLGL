@@ -549,6 +549,12 @@ UINT D3D12Buffer::GetStrideForView(const Format format) const
     return stride_;
 }
 
+void D3D12Buffer::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
+{
+    vertexBufferView_.StrideInBytes = (vertexAttribs.empty() ? 0 : vertexAttribs.front().stride);
+    stride_ = (!vertexAttribs.empty() ? vertexAttribs[0].stride : 0);
+}
+
 
 } // /namespace LLGL
 

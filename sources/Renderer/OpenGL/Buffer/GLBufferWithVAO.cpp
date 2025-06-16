@@ -37,6 +37,12 @@ void GLBufferWithVAO::BuildVertexArray(const ArrayView<VertexAttribute>& vertexA
     vertexArray_.Finalize();
 }
 
+void GLBufferWithVAO::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
+{
+    vertexArray_.Reset();
+    BuildVertexArray(vertexAttribs);
+}
+
 
 } // /namespace LLGL
 
