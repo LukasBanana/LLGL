@@ -39,6 +39,7 @@ void GLBufferWithVAO::BuildVertexArray(const ArrayView<VertexAttribute>& vertexA
 
 void GLBufferWithVAO::SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
 {
+    vertexArray_ = GLSharedContextVertexArray();
     BuildVertexArray(vertexAttribs);
 }
 
