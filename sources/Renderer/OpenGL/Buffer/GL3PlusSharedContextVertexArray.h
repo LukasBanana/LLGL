@@ -43,6 +43,11 @@ class GL3PlusSharedContextVertexArray
         void Reset()
         {
             attribs_.clear();
+            for (auto& contextVAO : contextDependentVAOs_)
+            {
+                contextVAO.vao.Release();
+                contextVAO.isObjectLabelDirty = false;
+            }
             contextDependentVAOs_.clear();
             debugName_.clear();
         }
