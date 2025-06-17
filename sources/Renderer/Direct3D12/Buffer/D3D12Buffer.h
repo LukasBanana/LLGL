@@ -153,6 +153,8 @@ class D3D12Buffer : public Buffer
             return format_;
         }
 
+        void SetVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs) override;
+
     private:
 
         void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
