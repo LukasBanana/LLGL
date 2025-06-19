@@ -321,8 +321,6 @@ struct RendererInfo
 struct RenderSystemDescriptor
 {
     RenderSystemDescriptor() = default;
-    RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
-    RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
 
     //! Constructor to initialize the descriptor with the module name from an std::string.
     inline RenderSystemDescriptor(const std::string& moduleName) :

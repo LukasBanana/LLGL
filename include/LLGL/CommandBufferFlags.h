@@ -138,8 +138,6 @@ struct ClearFlags
 struct ClearValue
 {
     ClearValue() = default;
-    ClearValue(const ClearValue&) = default;
-    ClearValue& operator = (const ClearValue&) = default;
 
     //! Constructor for color, depth, and stencil values.
     inline ClearValue(const float color[4], float depth = 1.0f, std::uint32_t stencil = 0) :
@@ -193,8 +191,6 @@ struct ClearValue
 struct AttachmentClear
 {
     AttachmentClear() = default;
-    AttachmentClear(const AttachmentClear&) = default;
-    AttachmentClear& operator = (const AttachmentClear&) = default;
 
     //! Constructor for a color attachment clear command.
     inline AttachmentClear(const float color[4], std::uint32_t colorAttachment) :
@@ -252,8 +248,6 @@ struct AttachmentClear
 struct CommandBufferDescriptor
 {
     CommandBufferDescriptor() = default;
-    CommandBufferDescriptor(const CommandBufferDescriptor&) = default;
-    CommandBufferDescriptor& operator = (const CommandBufferDescriptor&) = default;
 
     //! Constructs the command buffer descriptor with the specified flags.
     inline CommandBufferDescriptor(long flags) :

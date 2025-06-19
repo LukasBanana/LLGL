@@ -29,9 +29,6 @@ class D3D12RootParameter
         D3D12RootParameter() = default;
         D3D12RootParameter(D3D12_ROOT_PARAMETER* managedRootParam);
 
-        D3D12RootParameter(const D3D12RootParameter&) = default;
-        D3D12RootParameter& operator = (const D3D12RootParameter&) = default;
-
         void InitAsConstants(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
         void InitAsConstants(UINT shaderRegister, UINT num32BitValues, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
         void InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, UINT registerSpace = 0, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);

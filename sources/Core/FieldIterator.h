@@ -32,8 +32,6 @@ class BasicFieldRangeIterator
     public:
 
         BasicFieldRangeIterator() = default;
-        BasicFieldRangeIterator(const BasicFieldRangeIterator&) = default;
-        BasicFieldRangeIterator& operator = (const BasicFieldRangeIterator&) = default;
 
         BasicFieldRangeIterator(pointer first, size_type count) :
             ptr_    { first         },

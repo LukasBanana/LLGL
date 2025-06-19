@@ -32,8 +32,6 @@ class SpirvModule
     public:
 
         SpirvModule() = default;
-        SpirvModule(SpirvModule&&) = default;
-        SpirvModule& operator = (SpirvModule&&) = default;
 
         SpirvModule(std::vector<value_type>&& data);
         SpirvModule(const void* data, size_type size);
@@ -110,10 +108,6 @@ class SpirvModuleView
     public:
 
         SpirvModuleView() = default;
-        SpirvModuleView(const SpirvModuleView&) = default;
-        SpirvModuleView& operator = (const SpirvModuleView&) = default;
-        SpirvModuleView(SpirvModuleView&&) = default;
-        SpirvModuleView& operator = (SpirvModuleView&&) = default;
 
         SpirvModuleView(const ArrayView<value_type>& words);
         SpirvModuleView(const void* data, std::size_t size);

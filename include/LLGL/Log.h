@@ -163,8 +163,6 @@ struct ColorFlags
 struct ColorCodes
 {
     ColorCodes() = default;
-    ColorCodes(const ColorCodes&) = default;
-    ColorCodes& operator = (const ColorCodes&) = default;
 
     //! Initializes only the text flags.
     inline ColorCodes(long textFlags) :
