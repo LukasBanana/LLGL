@@ -301,7 +301,6 @@ struct ColorMaskFlags
 struct Viewport
 {
     Viewport() = default;
-    Viewport(const Viewport&) = default;
 
     //! Viewport constructor with default depth range of [0, 1].
     inline Viewport(float x, float y, float width, float height) :
@@ -400,7 +399,6 @@ struct Viewport
 struct Scissor
 {
     Scissor() = default;
-    Scissor(const Scissor&) = default;
 
     //! Scissor constructor with parameters for all attributes.
     inline Scissor(std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) :

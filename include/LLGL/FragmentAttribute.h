@@ -32,8 +32,6 @@ namespace LLGL
 struct FragmentAttribute
 {
     FragmentAttribute() = default;
-    FragmentAttribute(const FragmentAttribute&) = default;
-    FragmentAttribute& operator = (const FragmentAttribute&) = default;
 
     //! Constructor for minimal fragment attribute information.
     inline FragmentAttribute(StringLiteral name, std::uint32_t location = 0) :

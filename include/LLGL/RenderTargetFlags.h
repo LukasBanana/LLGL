@@ -29,7 +29,6 @@ namespace LLGL
 struct AttachmentDescriptor
 {
     AttachmentDescriptor() = default;
-    AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
     //! Constructor for the specified depth-, or stencil attachment.
     inline AttachmentDescriptor(Format format) :

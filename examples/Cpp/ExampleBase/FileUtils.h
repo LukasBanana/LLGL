@@ -27,9 +27,6 @@ class AssetReader
 
         AssetReader() = default;
 
-        AssetReader(AssetReader&&) = default;
-        AssetReader& operator = (AssetReader&&) = default;
-
         // Take ownership of the specified content to read an asset.
         AssetReader(std::vector<char>&& content);
 

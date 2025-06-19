@@ -280,8 +280,6 @@ class TestbedContext
         struct DiffResult
         {
             DiffResult() = default;
-            DiffResult(const DiffResult&) = default;
-            DiffResult& operator = (const DiffResult&) = default;
 
             DiffResult(DiffErrors error);
             explicit DiffResult(int threshold, unsigned tolerance = 0);

@@ -37,7 +37,6 @@ namespace LLGL
 struct MutableImageView
 {
     MutableImageView() = default;
-    MutableImageView(const MutableImageView&) = default;
 
     //! Constructor to initialize all attributes.
     inline MutableImageView(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
@@ -73,7 +72,6 @@ The counterpart for reading a MIP-map from a hardware texture by writing to a de
 struct ImageView
 {
     ImageView() = default;
-    ImageView(const ImageView&) = default;
 
     //! Constructor to initialize all attributes.
     inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0, std::uint32_t layerStride = 0) :
@@ -125,7 +123,6 @@ struct ImageView
 struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor
 {
     SrcImageDescriptor() = default;
-    SrcImageDescriptor(const SrcImageDescriptor&) = default;
 
     inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
@@ -164,7 +161,6 @@ struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use 
 struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use LLGL::MutableImageView instead!", "MutableImageView") DstImageDescriptor
 {
     DstImageDescriptor() = default;
-    DstImageDescriptor(const DstImageDescriptor&) = default;
 
     inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
         format   { format   },

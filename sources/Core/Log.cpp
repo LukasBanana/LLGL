@@ -32,8 +32,6 @@ namespace Log
 struct LogListener
 {
     LogListener() = default;
-    LogListener(const LogListener&) = default;
-    LogListener& operator = (const LogListener&) = default;
 
     inline LogListener(const ReportCallback& callback, void* userData = nullptr) :
         callback { callback },

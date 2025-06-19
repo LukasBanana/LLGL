@@ -98,9 +98,6 @@ class VKResourceHeap final : public ResourceHeap
             }
             #endif // /VK_USE_64_BIT_PTR_DEFINES
 
-            VKBarrierResource(const VKBarrierResource&) = default;
-            VKBarrierResource& operator = (VKBarrierResource&&) = default;
-
             VkBuffer    buffer;
             VkImage     image;
         };
