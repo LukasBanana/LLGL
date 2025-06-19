@@ -133,7 +133,6 @@ enum class UniformType
 struct BindingSlot
 {
     BindingSlot() = default;
-    BindingSlot(const BindingSlot&) = default;
 
     //! Constructs the binding slot with an index and an optional set (for Vulkan).
     inline BindingSlot(std::uint32_t index, std::uint32_t set = 0) :
@@ -175,7 +174,6 @@ struct BindingSlot
 struct BindingDescriptor
 {
     BindingDescriptor() = default;
-    BindingDescriptor(const BindingDescriptor&) = default;
 
     //! Constructors with all primary attributes and a default value for a uniform array.
     inline BindingDescriptor(
@@ -263,7 +261,6 @@ This is the equivalent of a static sampler in a root signature in Direct3D 12.
 struct StaticSamplerDescriptor
 {
     StaticSamplerDescriptor() = default;
-    StaticSamplerDescriptor(const StaticSamplerDescriptor&) = default;
 
     //! Initializes the static sampler with stage flags, binding slot, and sampler state.
     inline StaticSamplerDescriptor(
@@ -332,7 +329,6 @@ struct StaticSamplerDescriptor
 struct UniformDescriptor
 {
     UniformDescriptor() = default;
-    UniformDescriptor(const UniformDescriptor&) = default;
 
     //! Initializes the uniform descriptor with a name, type, and optional array size.
     inline UniformDescriptor(

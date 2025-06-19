@@ -21,7 +21,6 @@ namespace LLGL
 struct SpirvInstruction
 {
     SpirvInstruction() = default;
-    SpirvInstruction(const SpirvInstruction&) = default;
 
     SpirvInstruction(spv::Op opcode, spv::Id type = 0, spv::Id result = 0);
     SpirvInstruction(spv::Op opcode, spv::Id type, spv::Id result, std::uint32_t numOperands, const spv::Id* operands);
