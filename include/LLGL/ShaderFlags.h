@@ -208,8 +208,6 @@ struct StageFlags
 struct ShaderMacro
 {
     ShaderMacro() = default;
-    ShaderMacro(const ShaderMacro&) = default;
-    ShaderMacro& operator = (const ShaderMacro&) = default;
 
     //! Constructor to initialize the shader macro with a name and an optional body definition.
     inline ShaderMacro(const char* name, const char* definition = nullptr) :
@@ -295,9 +293,6 @@ LLGL_DEPRECATED_IGNORE_PUSH()
 struct ShaderDescriptor
 {
     ShaderDescriptor() = default;
-
-    ShaderDescriptor(const ShaderDescriptor&) = default;
-    ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
 
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :

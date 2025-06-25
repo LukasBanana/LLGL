@@ -26,9 +26,6 @@ class D3D12RootSignature
 
         D3D12RootSignature() = default;
 
-        D3D12RootSignature(const D3D12RootSignature&) = default;
-        D3D12RootSignature& operator = (const D3D12RootSignature&) = default;
-
         void Clear();
         void Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers);
         void ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers);

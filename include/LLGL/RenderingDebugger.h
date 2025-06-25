@@ -133,8 +133,6 @@ class LLGL_EXPORT RenderingDebugger
             public:
 
                 Message() = default;
-                Message(const Message&) = default;
-                Message& operator = (const Message&) = default;
 
                 //! Initializes the message with text, source, and group name information.
                 Message(const StringView& text, const StringView& source, const StringView& groupName);

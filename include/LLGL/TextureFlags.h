@@ -120,7 +120,6 @@ struct TextureSwizzleRGBA
 struct TextureSubresource
 {
     TextureSubresource() = default;
-    TextureSubresource(const TextureSubresource&) = default;
 
     //! Constructor to initialize base MIP-map level and base array layer only.
     inline TextureSubresource(std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel) :
@@ -176,7 +175,6 @@ struct TextureSubresource
 struct TextureLocation
 {
     TextureLocation() = default;
-    TextureLocation(const TextureLocation&) = default;
 
     //! Constructor to initialize all attributes.
     inline TextureLocation(const Offset3D& offset, std::uint32_t arrayLayer = 0, std::uint32_t mipLevel = 0) :
@@ -220,7 +218,6 @@ struct TextureLocation
 struct TextureRegion
 {
     TextureRegion() = default;
-    TextureRegion(const TextureRegion&) = default;
 
     //! Constructor to initialize offset and extent only.
     inline TextureRegion(const Offset3D& offset, const Extent3D& extent) :

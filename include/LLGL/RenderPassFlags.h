@@ -66,7 +66,6 @@ enum class AttachmentStoreOp
 struct AttachmentFormatDescriptor
 {
     AttachmentFormatDescriptor() = default;
-    AttachmentFormatDescriptor(const AttachmentFormatDescriptor&) = default;
 
     //! Constructor to initialize the format and optionally the load and store operations.
     inline AttachmentFormatDescriptor(

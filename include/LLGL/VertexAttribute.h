@@ -37,8 +37,6 @@ namespace LLGL
 struct LLGL_EXPORT VertexAttribute
 {
     VertexAttribute() = default;
-    VertexAttribute(const VertexAttribute&) = default;
-    VertexAttribute& operator = (const VertexAttribute&) = default;
 
     //! Constructor for minimal vertex attribute information and system value semantics, e.g. \c SV_VertexID (HLSL) or \c gl_VertexID (GLSL).
     VertexAttribute(

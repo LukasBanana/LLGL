@@ -30,8 +30,6 @@ class GLDepthStencilState
     public:
 
         GLDepthStencilState() = default;
-        GLDepthStencilState(const GLDepthStencilState&) = default;
-        GLDepthStencilState& operator = (const GLDepthStencilState&) = default;
 
         GLDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
 

@@ -57,8 +57,6 @@ class BasicSpirvForwardIterator
     public:
 
         BasicSpirvForwardIterator() = default;
-        BasicSpirvForwardIterator(const BasicSpirvForwardIterator&) = default;
-        BasicSpirvForwardIterator& operator = (const BasicSpirvForwardIterator&) = default;
 
         BasicSpirvForwardIterator(pointer ptr) :
             ptr_ { ptr }
