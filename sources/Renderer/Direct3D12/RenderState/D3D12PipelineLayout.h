@@ -31,10 +31,10 @@ class D3D12RootSignature;
 struct D3D12DescriptorHeapLocation
 {
     D3D12_DESCRIPTOR_RANGE_TYPE type            :  4;
-    UINT                        heap            :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
+    UINT                        heap            :  1;   // Descriptor heap index (0 = CBV/SRV/UAV, 1 = Sampler)
     UINT                        uavBarrierIndex : 13;
-    UINT                        descriptorIndex : 14; // Descriptor index within its descriptor heap
-    D3D12_RESOURCE_STATES       state;      // Target resource state
+    UINT                        descriptorIndex : 14;   // Descriptor index within its descriptor heap
+    D3D12_RESOURCE_STATES       state;                  // Target resource state
 };
 
 // Resource descriptor to root parameter/ descriptor table range mapping structure.

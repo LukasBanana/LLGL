@@ -24,6 +24,10 @@ namespace OpenGL
 {
 
 
+/**
+\brief Native type enumeration for the OpenGL render system to distinguish between GLX (X11) and EGL (Wayland).
+\see RenderSystemNativeHandle::type
+*/
 enum class RenderSystemNativeType
 {
     GLX,

@@ -23,9 +23,9 @@ namespace LLGL
 /**
 \brief The Surface interface is the base interface for Window (on Desktop platforms) and Canvas (on mobile platforms).
 \remarks Surface provides the minimal required interface for a graphics rendering context,
-such as the access to the native handle, information about the content size (i.e. the client area size),
-and the ability to adapt for a new video mode or an updated pixel format
-(which is required for multi-sampled framebuffers on a WGL context for instance).
+such as the access to the native handle, information about the content size (i.e. the size of the drawable area),
+and the ability to adapt for a new video mode.
+\remarks This is the class custom windowing systems must inherit from either directly or indirectly through the Window or Canvas interface.
 \see Window
 \see Canvas
 */
