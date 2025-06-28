@@ -40,6 +40,18 @@ class GL3PlusSharedContextVertexArray
         // Sets the debug label for all VAOs.
         void SetDebugName(const char* name);
 
+        void Reset()
+        {
+            attribs_.clear();
+            for (auto& contextVAO : contextDependentVAOs_)
+            {
+                contextVAO.vao.Release();
+                contextVAO.isObjectLabelDirty = false;
+            }
+            contextDependentVAOs_.clear();
+            debugName_.clear();
+        }
+
     private:
 
         struct GLContextVAO
