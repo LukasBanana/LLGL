@@ -172,6 +172,11 @@ int main(int argc, char* argv[])
             vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
             fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
         }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL_3_0) != languages.end())
+        {
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.SM3.hlsl", "VS", "vs_3_0" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.SM3.hlsl", "PS", "ps_3_0" };
+        }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" };

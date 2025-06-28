@@ -104,6 +104,8 @@ static const char* GetRendererModuleFromCommandArgs(int argc, char* argv[])
             return "Direct3D12";
         else if (arg == "Direct3D11" || arg == "D3D11" || arg == "d3d11" || arg == "DX11" || arg == "dx11")
             return "Direct3D11";
+        else if (arg == "Direct3D9" || arg == "D3D9" || arg == "d3d9" || arg == "DX9" || arg == "dx9")
+            return "Direct3D9";
         else if (arg == "OpenGL" || arg == "GL" || arg == "gl")
             return "OpenGL";
         else if (arg == "OpenGLES3" || arg == "GLES3" || arg == "gles3")

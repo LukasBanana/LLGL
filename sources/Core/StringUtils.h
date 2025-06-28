@@ -125,6 +125,9 @@ LLGL_EXPORT std::wstring ToWideString(const char* str);
 // Writes a formatted string into an STL string.
 LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);
 
+// Performs a case-insenticis string comparison.
+LLGL_EXPORT int StrcmpCi(const char* lhs, const char* rhs);
+
 struct FormattedTableColumn
 {
     unsigned                maxWidth        = static_cast<unsigned>(-1);

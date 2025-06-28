@@ -162,6 +162,18 @@ void StringPrintf(std::string& str, const char* format, va_list args1, va_list a
     }
 }
 
+LLGL_EXPORT int StrcmpCi(const char* lhs, const char* rhs)
+{
+    for (int c1, c2; *lhs != '\0' && *rhs != '\0'; ++lhs, ++rhs)
+    {
+        c1 = ::tolower(static_cast<unsigned char>(*lhs));
+        c2 = ::tolower(static_cast<unsigned char>(*rhs));
+        if (c1 != c2)
+            return c1 - c2;
+    }
+    return 0;
+}
+
 LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns, const char* delimiters)
 {
     UTF8String s;

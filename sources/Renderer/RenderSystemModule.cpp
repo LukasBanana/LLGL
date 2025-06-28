@@ -42,6 +42,7 @@ std::vector<std::string> RenderSystemModule::FindModules()
         #if defined(LLGL_OS_WIN32) || defined(LLGL_OS_UWP)
         "Direct3D12",
         "Direct3D11",
+        "Direct3D9",
         #endif
 
         #if defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS)

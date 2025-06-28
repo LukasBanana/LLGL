@@ -176,6 +176,7 @@ if(NOT LLGL_UWP_PLATFORM)
 endif()
 
 if(WIN32)
+    option(LLGL_BUILD_RENDERER_DIRECT3D9 "Include Direct3D9 renderer project (experimental)" OFF)
     option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
@@ -887,6 +888,10 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
     add_subdirectory(sources/Renderer/DXCommon)
 endif()
 
+if(LLGL_BUILD_RENDERER_DIRECT3D9)
+    add_subdirectory(sources/Renderer/Direct3D9)
+endif()
+
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
     add_subdirectory(sources/Renderer/Direct3D11)
 endif()
@@ -976,6 +981,10 @@ endif()
 
 if(LLGL_BUILD_RENDERER_METAL)
     message(STATUS "Build Renderer: Metal")
+endif()
+
+if(LLGL_BUILD_RENDERER_DIRECT3D9)
+    message(STATUS "Build Renderer: Direct3D 9.0c")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
