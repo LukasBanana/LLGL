@@ -108,8 +108,8 @@ class VKSwapChain final : public SwapChain
         void CreateSwapChainImageViews();
         void CreateSwapChainFramebuffers();
 
-        void CreateDepthStencilBuffer(const Extent2D& resolution);
-        void CreateColorBuffers(const Extent2D& resolution);
+        void CreateDepthStencilBuffer();
+        void CreateColorBuffers();
         void ReleaseRenderBuffers();
 
         void CreateResolutionDependentResources(const Extent2D& resolution);

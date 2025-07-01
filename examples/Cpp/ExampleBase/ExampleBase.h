@@ -85,6 +85,12 @@ public:
     // Draws a frame and presents the result on the screen.
     void DrawFrame();
 
+    // Resizes the swap-chain and notifies the app about the resize.
+    void Resize(const LLGL::Extent2D& clientAreaSize);
+
+    // Returns true if the app can currently draw a frame. Otherwise, the window is resized too small for instance.
+    bool IsDrawable() const;
+
 protected:
 
     struct ShaderDescWrapper
@@ -160,6 +166,8 @@ private:
     LLGL::Extent2D                              initialResolution_;
     bool                                        showTimeRecords_    = false;
     bool                                        fullscreen_         = false;
+
+    LLGL::Extent2D                              drawableSize_;
 
 protected:
 
