@@ -10,6 +10,7 @@
 
 
 #include "../OpenGL.h"
+#include "GLVertexInputLayout.h"
 #include <LLGL/Container/ArrayView.h>
 
 
@@ -30,12 +31,18 @@ class GLVertexArrayObject
         void Release();
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
+        void BuildVertexLayout(const GLVertexInputLayout& inputLayout);
 
         // Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const
         {
             return id_;
+        }
+
+        // Returns the input layout hash from the last time BuildVertexLayout was called.
+        inline std::size_t GetInputLayoutHash() const
+        {
+            return inputLayoutHash_;
         }
 
     private:
@@ -44,7 +51,9 @@ class GLVertexArrayObject
 
     private:
 
-        GLuint id_ = 0; //!< Vertex array object ID.
+        GLuint          id_                 = 0; // Vertex array object ID.
+        GLuint          attribIndexEnd_     = 0; // Last VAO attribute index; This is needed when the input layout changes.
+        std::size_t     inputLayoutHash_    = 0;
 
 };
 

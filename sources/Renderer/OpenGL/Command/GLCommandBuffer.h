@@ -21,6 +21,7 @@ namespace LLGL
 
 
 struct GLRenderState;
+class GLBufferWithVAO;
 class GLBufferWithXFB;
 
 class GLCommandBuffer : public CommandBuffer
@@ -48,6 +49,7 @@ class GLCommandBuffer : public CommandBuffer
 
         // Sets the transform-feedback object for the next DrawStreamOutput() invocation.
         void SetTransformFeedback(GLBufferWithXFB& bufferWithXfbGL);
+        void SetTransformFeedbackChecked(GLBufferWithVAO& bufferWithVaoGL);
 
         // Invalidates the specified memory barrier bits.
         void InvalidateMemoryBarriers(GLbitfield barriers);

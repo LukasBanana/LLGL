@@ -51,6 +51,9 @@ class VKBuffer : public Buffer
         // Creates a VkBufferView for this buffer. If this buffer was not created with a valid format, the return value is false.
         bool CreateBufferView(VkDevice device, VKPtr<VkBufferView>& outBufferView, VkDeviceSize offset = 0, VkDeviceSize length = VK_WHOLE_SIZE);
 
+        // Sets the buffer stride and clamps it to \c max(1, stride). This should only be called by VKCommandBuffer::SetVertexBuffer().
+        void SetStride(std::uint32_t stride);
+
         // Returns the device buffer object.
         inline VKDeviceBuffer& GetDeviceBuffer()
         {

@@ -57,7 +57,7 @@ class D3D11CommandContext
             UINT                depthStencilClearFlags
         );
 
-        void SetVertexBuffer(D3D11Buffer& bufferD3D);
+        void SetVertexBuffer(D3D11Buffer& bufferD3D, UINT stride);
         void SetVertexBufferArray(D3D11BufferArray& bufferArrayD3D);
 
         void SetIndexBuffer(D3D11Buffer& bufferD3D, DXGI_FORMAT format, UINT offset);

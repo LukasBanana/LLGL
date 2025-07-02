@@ -6,7 +6,9 @@
  */
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
+using static LLGL.NativeLLGL;
 
 namespace LLGL
 {
@@ -142,6 +144,25 @@ namespace LLGL
         public void SetVertexBuffer(Buffer buffer)
         {
             NativeLLGL.SetVertexBuffer(buffer.Native);
+        }
+
+        public void SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)
+        {
+            if (vertexAttribs.Length > 0)
+            {
+                var nativeVertexAttribs = new NativeLLGL.VertexAttribute[vertexAttribs.Length];
+                for (int i = 0; i < vertexAttribs.Length; ++i)
+                {
+                    nativeVertexAttribs[i] = vertexAttribs[i].Native;
+                }
+                unsafe
+                {
+                    fixed (NativeLLGL.VertexAttribute* nativeVertexAttribsPtr = nativeVertexAttribs)
+                    {
+                        NativeLLGL.SetVertexBufferExt(buffer.Native, nativeVertexAttribs.Length, nativeVertexAttribsPtr);
+                    }
+                }
+            }
         }
 
         public void SetVertexBufferArray(BufferArray bufferArray)

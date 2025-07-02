@@ -407,6 +407,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( DepthBuffer                 );
     RUN_TEST( StencilBuffer               );
     RUN_TEST( SceneUpdate                 );
+    RUN_TEST( VertexBuffer                );
     RUN_TEST( BlendStates                 );
     RUN_TEST( DualSourceBlending          );
     //RUN_TEST( CommandBufferMultiThreading ); //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
@@ -964,6 +965,12 @@ bool TestbedContext::LoadShaders()
         ShaderMacro{ nullptr, nullptr }
     };
 
+    const ShaderMacro definesVerexFormat1[] =
+    {
+        ShaderMacro{ "VERTEX_FORMAT", "1" },
+        ShaderMacro{ nullptr, nullptr }
+    };
+
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0");
@@ -1000,6 +1007,11 @@ bool TestbedContext::LoadShaders()
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.hlsl",         ShaderType::Compute,         "CSMain",  "cs_5_0");
         shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.hlsl",        ShaderType::Compute,         "CSMain",  "cs_5_0");
+        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout0);
+        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout1);
+        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", definesVerexFormat1, VertFmtLayout2);
+        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout3);
+        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Fragment,        "PSMain",  "ps_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -1048,6 +1060,11 @@ bool TestbedContext::LoadShaders()
         }
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.vert",      ShaderType::Vertex);
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.frag",      ShaderType::Fragment);
+        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout0);
+        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout1);
+        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, definesVerexFormat1, VertFmtLayout2);
+        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout3);
+        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.330core.frag",         ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
@@ -1105,6 +1122,11 @@ bool TestbedContext::LoadShaders()
         shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.frag.spv",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp.spv",         ShaderType::Compute);
         shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp.spv",        ShaderType::Compute);
+        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout0);
+        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout1);
+        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.Format1.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout2);
+        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout3);
+        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.450core.frag.spv",         ShaderType::Fragment);
     }
     else
     {
@@ -1240,6 +1262,27 @@ void TestbedContext::CreateTriangleMeshes()
     {
         VertexAttribute{ "position", Format::RG32Float,  0, offsetof(UnprojectedVertex, position), sizeof(UnprojectedVertex) },
         VertexAttribute{ "color",    Format::RGBA8UNorm, 1, offsetof(UnprojectedVertex, color   ), sizeof(UnprojectedVertex) },
+    };
+
+    vertexFormats[VertFmtLayout0].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float, 0, offsetof(InterleavedVertex, posA), sizeof(InterleavedVertex) },
+    };
+
+    vertexFormats[VertFmtLayout1].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float, 0, offsetof(InterleavedVertex, posB), sizeof(InterleavedVertex) },
+    };
+
+    vertexFormats[VertFmtLayout2].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float,  0, offsetof(InterleavedVertex, posA),  sizeof(InterleavedVertex) },
+        VertexAttribute{ "color",    Format::RGBA8UNorm, 1, offsetof(InterleavedVertex, color), sizeof(InterleavedVertex) },
+    };
+
+    vertexFormats[VertFmtLayout3].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float, 0, offsetof(Simple2DVertex, position), sizeof(Simple2DVertex) },
     };
 
     // Create models

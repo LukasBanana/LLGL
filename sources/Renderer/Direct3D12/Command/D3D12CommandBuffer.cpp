@@ -538,14 +538,30 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 
 /* ----- Buffers ------ */
 
-void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
+//private
+void D3D12CommandBuffer::SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D)
 {
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     SubmitTransitionResource(bufferD3D.GetResource(), bufferD3D.GetResource().usageState);
     GetNative()->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
 
     if ((bufferD3D.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
         soBufferIASlot0_ = &bufferD3D;
+}
+
+void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    SetVertexBufferAndTransitionResource(bufferD3D);
+}
+
+void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
+    {
+        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+        bufferD3D.UpdateVertexBufferStride(vertexAttribs[0].stride);
+        SetVertexBufferAndTransitionResource(bufferD3D);
+    }
 }
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

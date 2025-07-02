@@ -30,6 +30,9 @@ glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=1 -o StreamOutput\StreamOutput
 glslangValidator -V -DENABLE_SPIRV=1 -o StreamOutput\StreamOutput.450core.frag.spv StreamOutput\StreamOutput.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o SamplerBuffer\SamplerBuffer.450core.comp.spv SamplerBuffer\SamplerBuffer.450core.comp
 glslangValidator -V -DENABLE_SPIRV=1 -o ReadAfterWrite\ReadAfterWrite.450core.comp.spv ReadAfterWrite\ReadAfterWrite.450core.comp
+glslangValidator -V -o VertexFormats\VertexFormats.Format0.450core.vert.spv VertexFormats\VertexFormats.450core.vert
+glslangValidator -V -DVERTEX_FORMAT=1 -o VertexFormats\VertexFormats.Format1.450core.vert.spv VertexFormats\VertexFormats.450core.vert
+glslangValidator -V -o VertexFormats\VertexFormats.450core.frag.spv VertexFormats\VertexFormats.450core.frag
 
 echo DONE
 pause

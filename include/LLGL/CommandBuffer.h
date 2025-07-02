@@ -403,6 +403,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void SetVertexBuffer(Buffer& buffer) = 0;
 
         /**
+        \brief Sets the specified vertex buffer for subsequent drawing operations and re-formats its vertex attributes.
+        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
+        \param[in] numVertexAttribs Specifies the number of new vertex attributes to associate this buffer with. This \b must be greater than zero.
+        \param[in] vertexAttribs Pointer to an array of new vertex attributes to associate this buffer with. This \b must pointer to an array of at least \c numVertexAttribs elements.
+        \remarks Note that this function changes the vertex format of the specified buffer as opposed to binding it as a temporary re-interpretation.
+        The extended SetIndexBuffer(Buffer&, const Format, std::uint64_t) function on the other hand does not modify the buffer and only binds it with a temporary re-interpretation of its index format.
+        Subsequent calls to the primary version of SetVertexBuffer(Buffer&) will use the new format.
+        \remarks Also note that this does \e not effect any BufferArray that has been created with the specified buffer.
+        Buffer arrays must be re-formatted independently of their sub-buffers (which is not supported yet) or must be re-created.
+        \see SetIndexBuffer(Buffer&, const Format, std::uint64_t)
+        */
+        virtual void SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs) = 0;
+
+        /**
         \brief Sets the specified array of vertex buffers for subsequent drawing operations.
         \param[in] bufferArray Specifies the vertex buffer array to set.
         \see RenderSystem::CreateBufferArray
@@ -419,7 +433,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see RenderSystem::WriteBuffer
         \see DrawIndexed
         \see DrawIndexedInstanced
-        \see BufferDescriptor::indexFormat
+        \see BufferDescriptor::format
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
 
@@ -430,7 +444,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] offset Specifies an optional offset (in bytes) where to start reading the index buffer. By default 0.
         This has the same effect as setting the \c firstIndex argument in any \c DrawIndexed or \c DrawIndexedInstanced function, except that this offset is byte aligned.
         \remarks The alternative version of this function uses merely the index format that was specified when the buffer was created.
-        \see BufferDescriptor::IndexBuffer::format
+        \see BufferDescriptor::format
         \see SetIndexBuffer(Buffer&)
         */
         virtual void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) = 0;

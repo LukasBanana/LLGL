@@ -426,10 +426,21 @@ void MTDirectCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor
 
 /* ----- Input Assembly ------ */
 
-void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer)
+//private
+void MTDirectCommandBuffer::SetVertexBufferInternal(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     context_.SetVertexBuffer(bufferMT.GetNative(), 0);
+}
+
+void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer)
+{
+    SetVertexBufferInternal(buffer);
+}
+
+void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
+{
+    SetVertexBufferInternal(buffer);
 }
 
 void MTDirectCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

@@ -278,6 +278,13 @@ void NullCommandBuffer::SetVertexBuffer(Buffer& buffer)
     renderState_.vertexBuffers = { &bufferNull };
 }
 
+void NullCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    //TODO: update format
+    renderState_.vertexBuffers = { &bufferNull };
+}
+
 void NullCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayNull = LLGL_CAST(NullBufferArray&, bufferArray);

@@ -118,6 +118,10 @@ class TestbedContext
             VertFmtColoredSO,
             VertFmtUnprojected,
             VertFmtEmpty,
+            VertFmtLayout0,
+            VertFmtLayout1,
+            VertFmtLayout2,
+            VertFmtLayout3,
 
             VertFmtCount,
         };
@@ -175,6 +179,12 @@ class TestbedContext
             CSSamplerBuffer,
 
             CSReadAfterWrite,
+
+            VSVertexFormat0,
+            VSVertexFormat1,
+            VSVertexFormat2,
+            VSVertexFormat3,
+            PSVertexFormat,
 
             ShaderCount,
         };
@@ -244,6 +254,18 @@ class TestbedContext
         struct UnprojectedVertex
         {
             float           position[2];
+            std::uint8_t    color[4];
+        };
+
+        struct Simple2DVertex
+        {
+            float position[2];
+        };
+
+        struct InterleavedVertex
+        {
+            float           posA[2];
+            float           posB[2];
             std::uint8_t    color[4];
         };
 

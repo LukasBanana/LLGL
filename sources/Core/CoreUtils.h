@@ -253,6 +253,14 @@ T* GetTypedNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
         return nullptr;
 }
 
+// Applies a new hash for value to the existing seed.
+template <typename T>
+void HashCombine(std::size_t& seed, const T& value)
+{
+    constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
+    seed ^= std::hash<T>{}(value) + approxGoldenRatio + (seed << 6) + (seed >> 2);
+}
+
 
 } // /namespace LLGL
 

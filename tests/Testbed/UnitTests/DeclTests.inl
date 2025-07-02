@@ -72,6 +72,7 @@ DECL_TEST( BarrierReadAfterWrite );
 DECL_TEST( DepthBuffer );
 DECL_TEST( StencilBuffer );
 DECL_TEST( SceneUpdate );
+DECL_TEST( VertexBuffer );
 DECL_TEST( BlendStates );
 DECL_TEST( DualSourceBlending );
 DECL_TEST( TriangleStripCutOff );

@@ -525,10 +525,9 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 /* ----- Input Assembly ------ */
 
-void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
+//private
+void VKCommandBuffer::BindVertexBuffer(VKBuffer& bufferVK)
 {
-    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-
     VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
     VkDeviceSize offsets[] = { 0 };
 
@@ -540,6 +539,22 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
         iaState_.ia0VertexStride            = bufferVK.GetStride();
         iaState_.ia0XfbCounterBuffer        = bufferVK.GetVkBuffer();
         iaState_.ia0XfbCounterBufferOffset  = bufferVK.GetXfbCounterOffset();
+    }
+}
+
+void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    BindVertexBuffer(bufferVK);
+}
+
+void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
+    {
+        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+        bufferVK.SetStride(vertexAttribs[0].stride);
+        BindVertexBuffer(bufferVK);
     }
 }
 

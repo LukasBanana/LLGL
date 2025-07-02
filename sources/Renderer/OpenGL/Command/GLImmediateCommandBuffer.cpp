@@ -292,12 +292,22 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
         vertexBufferGL.GetVertexArray()->Bind(*stateMngr_);
 
         #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
-        /* Store ID to transform feedback object */
-        if ((buffer.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
-        {
-            auto& streamOutputBufferGL = LLGL_CAST(GLBufferWithXFB&, vertexBufferGL);
-            SetTransformFeedback(streamOutputBufferGL);
-        }
+        SetTransformFeedbackChecked(vertexBufferGL);
+        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    }
+}
+
+void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
+    {
+        /* Bind vertex buffer and update vertex array */
+        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
+        vertexBufferGL.BuildVertexArray(ArrayView<VertexAttribute>{ vertexAttribs, numVertexAttribs });
+        vertexBufferGL.GetVertexArray()->Bind(*stateMngr_);
+
+        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        SetTransformFeedbackChecked(vertexBufferGL);
         #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
     }
 }

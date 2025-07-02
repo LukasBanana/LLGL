@@ -28,7 +28,11 @@ class GL2XSharedContextVertexArray
 
     public:
 
+        // Resets the vertex layout.
+        void Reset();
+
         // Stores the vertex attributes for later use via glVertexAttrib*Pointer() functions.
+        void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
         void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
 
         // Finalize the vertex array.

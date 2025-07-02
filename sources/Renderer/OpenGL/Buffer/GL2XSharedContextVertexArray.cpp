@@ -20,6 +20,28 @@ namespace LLGL
 {
 
 
+void GL2XSharedContextVertexArray::Reset()
+{
+    attribs_.clear();
+    attribIndexEnd_ = 0;
+}
+
+void GL2XSharedContextVertexArray::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
+{
+    /* Validate attributes are supported */
+    for (const GLVertexAttribute& attrib : attributes)
+    {
+        /* Check if instance divisor is used */
+        if (attrib.divisor > 0)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("per-instance vertex attributes");
+
+        /* Check if integral vertex attribute is used */
+        if (!attrib.normalized && attrib.isInteger)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("integral vertex attributes");
+    }
+    attribs_.insert(attribs_.end(), attributes.begin(), attributes.end());
+}
+
 void GL2XSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
 {
     /* Convert vertex attributes into GL attributes and verify parameters for GL 2.x */

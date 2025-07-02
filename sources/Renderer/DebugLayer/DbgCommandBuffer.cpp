@@ -559,23 +559,44 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
 
 /* ----- Buffers ------ */
 
+//private
+void DbgCommandBuffer::BindVertexBuffer(DbgBuffer& bufferDbg)
+{
+    AssertRecording();
+    ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
+
+    bindings_.vertexBufferStore[0]  = (&bufferDbg);
+    bindings_.vertexBuffers         = bindings_.vertexBufferStore;
+    bindings_.numVertexBuffers      = 1;
+}
+
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
 
     if (LLGL_DBG_SOURCE())
-    {
-        AssertRecording();
-        ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
-
-        bindings_.vertexBufferStore[0]  = (&bufferDbg);
-        bindings_.vertexBuffers         = bindings_.vertexBufferStore;
-        bindings_.numVertexBuffers      = 1;
-    }
+        BindVertexBuffer(bufferDbg);
 
     LLGL_DBG_COMMAND_EXT(
         instance.SetVertexBuffer(bufferDbg.instance),
         "SetVertexBuffer(%s)", GetResourceLabel(buffer)
+    );
+
+    profile_.commandBufferRecord.vertexBufferBindings++;
+}
+
+void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
+
+    bufferDbg.SetDebugVertexAttribs(ArrayView<VertexAttribute>{ vertexAttribs, numVertexAttribs });
+
+    if (LLGL_DBG_SOURCE())
+        BindVertexBuffer(bufferDbg);
+
+    LLGL_DBG_COMMAND_EXT(
+        instance.SetVertexBuffer(bufferDbg.instance, numVertexAttribs, vertexAttribs),
+        "SetVertexBuffer(%s, %u, %p)", GetResourceLabel(buffer), numVertexAttribs, vertexAttribs
     );
 
     profile_.commandBufferRecord.vertexBufferBindings++;

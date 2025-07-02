@@ -906,6 +906,7 @@ namespace LLGL
         CombinedSampler        = (1 << 9),
         CopySrc                = (1 << 10),
         CopyDst                = (1 << 11),
+        TexelBuffer            = (1 << 12),
     }
 
     [Flags]
@@ -4525,6 +4526,9 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglSetVertexBuffer", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBuffer(Buffer buffer);
+
+        [DllImport(DllName, EntryPoint="llglSetVertexBufferExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetVertexBufferExt(Buffer buffer, int numVertexAttribs, VertexAttribute* vertexAttribs);
 
         [DllImport(DllName, EntryPoint="llglSetVertexBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBufferArray(BufferArray bufferArray);

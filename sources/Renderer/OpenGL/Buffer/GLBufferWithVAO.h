@@ -26,10 +26,11 @@ class GLBufferWithVAO : public GLBuffer
 
         GLBufferWithVAO(long bindFlags, const char* debugName = nullptr);
 
+        void BuildVertexArray(const ArrayView<GLVertexAttribute>& vertexAttribs);
         void BuildVertexArray(const ArrayView<VertexAttribute>& vertexAttribs);
 
         // Returns the list of vertex attributes.
-        inline const std::vector<VertexAttribute>& GetVertexAttribs() const
+        inline const std::vector<GLVertexAttribute>& GetVertexAttribs() const
         {
             return vertexAttribs_;
         }
@@ -42,7 +43,7 @@ class GLBufferWithVAO : public GLBuffer
 
     private:
 
-        std::vector<VertexAttribute>    vertexAttribs_;
+        std::vector<GLVertexAttribute>  vertexAttribs_;
         GLSharedContextVertexArray      vertexArray_;
 
 };

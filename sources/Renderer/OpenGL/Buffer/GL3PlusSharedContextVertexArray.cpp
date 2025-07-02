@@ -21,21 +21,24 @@ namespace LLGL
 {
 
 
+void GL3PlusSharedContextVertexArray::Reset()
+{
+    inputLayout_.Reset();
+}
+
+void GL3PlusSharedContextVertexArray::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
+{
+    inputLayout_.Append(attributes);
+}
+
 void GL3PlusSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
 {
-    const std::size_t startOffset = attribs_.size();
-    attribs_.resize(startOffset + attributes.size());
-
-    for_range(i, attributes.size())
-    {
-        /* Convert to GLVertexAttribute */
-        GLConvertVertexAttrib(attribs_[startOffset + i], attributes[i], bufferID);
-    }
+    inputLayout_.Append(bufferID, attributes);
 }
 
 void GL3PlusSharedContextVertexArray::Finalize()
 {
-    // dummy (only implemented for GL 2.x)
+    inputLayout_.Finalize();
 }
 
 void GL3PlusSharedContextVertexArray::Bind(GLStateManager& stateMngr)
@@ -53,7 +56,7 @@ void GL3PlusSharedContextVertexArray::SetDebugName(const char* name)
         contextVAO.isObjectLabelDirty = true;
 
     /* If this vertex array already has its attributes set, get the current VAO to cause invaldiated labels to be updated */
-    if (!attribs_.empty())
+    if (!inputLayout_.GetAttribs().empty())
         (void)GetVAOForCurrentContext();
 }
 
@@ -73,16 +76,21 @@ GLVertexArrayObject& GL3PlusSharedContextVertexArray::GetVAOForCurrentContext()
     {
         /* Resize container and fill new entry */
         contextDependentVAOs_.resize(vaoIndex + 1);
-        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(attribs_);
+        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
         if (!debugName_.empty())
             contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
     }
     else if (contextDependentVAOs_[vaoIndex].vao.GetID() == 0)
     {
         /* Fill empty entry in container */
-        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(attribs_);
+        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
         if (!debugName_.empty())
             contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
+    }
+    else if (inputLayout_.GetHash() != contextDependentVAOs_[vaoIndex].vao.GetInputLayoutHash())
+    {
+        /* Update vertex attributes if the input layout has changed (i.e. hashes don't match anymore) */
+        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
     }
     else if (contextDependentVAOs_[vaoIndex].isObjectLabelDirty)
     {

@@ -900,6 +900,7 @@ const (
     BindCombinedSampler        = (1 << 9)
     BindCopySrc                = (1 << 10)
     BindCopyDst                = (1 << 11)
+    BindTexelBuffer            = (1 << 12)
 )
 
 type CPUAccessFlags int

@@ -216,6 +216,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void SetAndValidateScissorRects(std::uint32_t numScissors, const Scissor* scissors);
 
+        void BindVertexBuffer(DbgBuffer& bufferDbg);
+
     private:
 
         /* ----- Common objects ----- */

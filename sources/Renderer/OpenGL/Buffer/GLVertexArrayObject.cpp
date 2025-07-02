@@ -14,6 +14,7 @@
 #include "../GLCore.h"
 #include "../../../Core/Exception.h"
 #include <LLGL/Utils/TypeNames.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -32,12 +33,20 @@ void GLVertexArrayObject::Release()
         id_ = 0;
     }
 
+    /* Reset input layout information */
+    attribIndexEnd_ = 0;
+    inputLayoutHash_ = 0;
+
     #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
-void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
+void GLVertexArrayObject::BuildVertexLayout(const GLVertexInputLayout& inputLayout)
 {
     #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
+
+    /* Skip call if input layout hasn't changed */
+    if (inputLayoutHash_ == inputLayout.GetHash())
+        return;
 
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
 
@@ -46,12 +55,25 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
         glGenVertexArrays(1, &id_);
 
     /* Build vertex attributes for this VAO */
+    GLuint newAttribsLastIndex = 0;
+
     GLStateManager::Get().BindVertexArray(id_);
     {
-        for (const GLVertexAttribute& attrib : attributes)
+        for (const GLVertexAttribute& attrib : inputLayout.GetAttribs())
+        {
             BuildVertexAttribute(attrib);
+            newAttribsLastIndex = std::max<GLuint>(newAttribsLastIndex, attrib.index);
+        }
+
+        /* Disable all previously enabled vertex attribute slots */
+        for (GLuint i = newAttribsLastIndex + 1; i <= attribIndexEnd_; ++i)
+            glDisableVertexAttribArray(i);
     }
     GLStateManager::Get().BindVertexArray(0);
+
+    /* Store input layout hash */
+    inputLayoutHash_    = inputLayout.GetHash();
+    attribIndexEnd_     = newAttribsLastIndex;
 
     #else // LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 

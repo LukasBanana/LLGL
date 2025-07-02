@@ -201,6 +201,12 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             cmd->vertexArray->Bind(*stateMngr);
             return sizeof(*cmd);
         }
+        case GLOpcodeBuildVertexArray:
+        {
+            auto cmd = static_cast<const GLCmdBuildVertexArray*>(pc);
+            cmd->bufferWithVAO->BuildVertexArray(ArrayView<GLVertexAttribute>{ reinterpret_cast<const GLVertexAttribute*>(cmd + 1), cmd->numVertexAttribs });
+            return (sizeof(*cmd) + sizeof(GLVertexAttribute)*cmd->numVertexAttribs);
+        }
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = static_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
