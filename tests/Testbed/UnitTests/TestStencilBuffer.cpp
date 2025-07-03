@@ -105,7 +105,7 @@ DEF_TEST( StencilBuffer )
     }
     cmdBuffer->End();
 
-    // Readback depth buffer and compare with expected result
+    // Readback stencil buffer and compare with expected result
     const Offset3D readbackTexPosition
     {
         static_cast<std::int32_t>(opt.resolution.width/2),
@@ -129,7 +129,7 @@ DEF_TEST( StencilBuffer )
 
     const int deltaStencilValue = std::abs(static_cast<int>(readbackStencilValue) - static_cast<int>(stencilRef));
 
-    // Match entire depth and create delta heat map
+    // Match entire stencil and create delta heat map
     std::vector<std::uint8_t> readbackStencilBuffer;
     readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, 0);
     {
