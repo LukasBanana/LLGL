@@ -49,7 +49,7 @@ void GL3PlusSharedContextVertexArray::Bind(GLStateManager& stateMngr)
 void GL3PlusSharedContextVertexArray::SetDebugName(const char* name)
 {
     /* Store debug name */
-    debugName_ = (name != nullptr ? name : "");
+    debugName_ = StringLiteral{ (name != nullptr ? name : ""), CopyTag{} };
 
     /* Invalidate debug name for all context dependent VAOs */
     for (GLContextVAO& contextVAO : contextDependentVAOs_)

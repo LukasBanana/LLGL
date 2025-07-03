@@ -51,9 +51,9 @@ class GLVertexArrayObject
 
     private:
 
-        GLuint          id_                 = 0; // Vertex array object ID.
-        GLuint          attribIndexEnd_     = 0; // Last VAO attribute index; This is needed when the input layout changes.
-        std::size_t     inputLayoutHash_    = 0;
+        GLuint      id_                 = 0; // Vertex array object ID.
+        GLuint      attribIndexEnd_     = 0; // Last VAO attribute index; This is needed when the input layout changes.
+        std::size_t inputLayoutHash_    = 0;
 
 };
 

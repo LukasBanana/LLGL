@@ -11,6 +11,8 @@
 
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/StringLiteral.h>
 #include "GLVertexInputLayout.h"
 #include "GLVertexArrayObject.h"
 #include <vector>
@@ -61,9 +63,9 @@ class GL3PlusSharedContextVertexArray
 
     private:
 
-        GLVertexInputLayout         inputLayout_;
-        std::vector<GLContextVAO>   contextDependentVAOs_;
-        std::string                 debugName_;
+        GLVertexInputLayout             inputLayout_;
+        SmallVector<GLContextVAO, 1>    contextDependentVAOs_;
+        StringLiteral                   debugName_;
 
 };
 
