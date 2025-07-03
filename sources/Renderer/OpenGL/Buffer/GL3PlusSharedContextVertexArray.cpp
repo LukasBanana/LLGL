@@ -87,16 +87,19 @@ GLVertexArrayObject& GL3PlusSharedContextVertexArray::GetVAOForCurrentContext()
         if (!debugName_.empty())
             contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
     }
-    else if (inputLayout_.GetHash() != contextDependentVAOs_[vaoIndex].vao.GetInputLayoutHash())
+    else
     {
-        /* Update vertex attributes if the input layout has changed (i.e. hashes don't match anymore) */
-        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
-    }
-    else if (contextDependentVAOs_[vaoIndex].isObjectLabelDirty)
-    {
-        /* Udpate debug label if it has been invalidated */
-        if (!debugName_.empty())
-            contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
+        if (inputLayout_.GetHash() != contextDependentVAOs_[vaoIndex].vao.GetInputLayoutHash())
+        {
+            /* Update vertex attributes if the input layout has changed (i.e. hashes don't match anymore) */
+            contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
+        }
+        if (contextDependentVAOs_[vaoIndex].isObjectLabelDirty)
+        {
+            /* Udpate debug label if it has been invalidated */
+            if (!debugName_.empty())
+                contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
+        }
     }
 
     /* Return VAO for current context */
