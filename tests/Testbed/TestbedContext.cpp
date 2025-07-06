@@ -1090,6 +1090,11 @@ bool TestbedContext::LoadShaders()
         {
             shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.metal",   ShaderType::Compute,  "CSMain",  "1.2"); // access::read_write requires Metal 1.2
         }
+        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout0);
+        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout1);
+        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout2);
+        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout3);
+        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Fragment, "PSMain",  "1.1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
