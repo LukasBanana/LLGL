@@ -139,6 +139,7 @@ typedef enum LLGLFormat
     LLGLFormatRGB10A2UInt,
     LLGLFormatRG11B10Float,
     LLGLFormatRGB9E5Float,
+    LLGLFormatBGR5A1UNorm,
     LLGLFormatD16UNorm,
     LLGLFormatD24UNormS8UInt,
     LLGLFormatD32Float,
@@ -948,6 +949,7 @@ typedef enum LLGLBindFlags
     LLGLBindCombinedSampler        = (1 << 9),
     LLGLBindCopySrc                = (1 << 10),
     LLGLBindCopyDst                = (1 << 11),
+    LLGLBindTexelBuffer            = (1 << 12),
 }
 LLGLBindFlags;
 

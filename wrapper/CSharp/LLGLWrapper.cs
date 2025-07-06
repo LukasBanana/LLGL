@@ -130,6 +130,7 @@ namespace LLGL
         RGB10A2UInt,
         RG11B10Float,
         RGB9E5Float,
+        BGR5A1UNorm,
         D16UNorm,
         D24UNormS8UInt,
         D32Float,

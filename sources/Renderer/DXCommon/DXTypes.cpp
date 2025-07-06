@@ -130,6 +130,7 @@ DXGI_FORMAT ToDXGIFormat(const Format format)
         case Format::RGB10A2UInt:       return DXGI_FORMAT_R10G10B10A2_UINT;
         case Format::RG11B10Float:      return DXGI_FORMAT_R11G11B10_FLOAT;
         case Format::RGB9E5Float:       return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
+        case Format::BGR5A1UNorm:       return DXGI_FORMAT_B5G5R5A1_UNORM;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;
@@ -305,6 +306,7 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R10G10B10A2_UINT:          return Format::RGB10A2UInt;
         case DXGI_FORMAT_R11G11B10_FLOAT:           return Format::RG11B10Float;
         case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:        return Format::RGB9E5Float;
+        case DXGI_FORMAT_B5G5R5A1_UNORM:            return Format::BGR5A1UNorm;
 
         /* --- Depth-stencil formats --- */
         case DXGI_FORMAT_R16_TYPELESS:              /* pass */

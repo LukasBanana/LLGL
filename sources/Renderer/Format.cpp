@@ -148,6 +148,7 @@ static const FormatAttributes g_formatAttribs[] =
     {  32, 1, 1, 4, ImageFormat::RGBA,         DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UInt   | Packed          }, // RGB10A2UInt
     {  32, 1, 1, 3, ImageFormat::RGB,          DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UFloat | Packed          }, // RG11B10Float
     {  32, 1, 1, 3, ImageFormat::RGB,          DataType::Undefined, Mips    | Dim1D_2D_3D | DimCube | UFloat | Packed          }, // RGB9E5Float
+    {  16, 1, 1, 4, ImageFormat::BGRA,         DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UNorm  | Packed          }, // BGR5A1UNorm
 
     /* --- Depth-stencil formats --- */
 //   bits  w  h  c  format                     dataType

@@ -133,6 +133,7 @@ const (
     FormatRGB10A2UInt
     FormatRG11B10Float
     FormatRGB9E5Float
+    FormatBGR5A1UNorm
     FormatD16UNorm
     FormatD24UNormS8UInt
     FormatD32Float
