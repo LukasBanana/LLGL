@@ -93,6 +93,18 @@ using namespace LLGL;
     LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;    \
     CREATE_COMPUTE_PSO_EXT(OBJ, DESC, NAME)
 
+#define CREATE_MESH_PSO_EXT(OBJ, DESC, NAME)                    \
+    {                                                           \
+        TestResult result = CreateMeshPSO(DESC, NAME, &OBJ);    \
+        if (result != TestResult::Passed)                       \
+            return result;                                      \
+    }
+
+#define CREATE_MESH_PSO(OBJ, DESC, NAME)                \
+    LLGL_MAYBE_UNUSED PipelineState* OBJ = nullptr;     \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;    \
+    CREATE_MESH_PSO_EXT(OBJ, DESC, NAME)
+
 #define SAFE_RELEASE(OBJ)           \
     if (OBJ != nullptr)             \
     {                               \

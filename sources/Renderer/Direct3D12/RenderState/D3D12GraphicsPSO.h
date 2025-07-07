@@ -9,23 +9,14 @@
 #define LLGL_D3D12_GRAPHICS_PIPELINE_H
 
 
-#include "D3D12PipelineState.h"
-#include <LLGL/Container/DynamicArray.h>
+#include "D3D12RenderPSOBase.h"
 
 
 namespace LLGL
 {
 
 
-class ByteBufferIterator;
-class PipelineCache;
-class D3D12Device;
-class D3D12RenderPass;
-class D3D12PipelineLayout;
-class D3D12CommandContext;
-class D3D12PipelineCache;
-
-class D3D12GraphicsPSO final : public D3D12PipelineState
+class D3D12GraphicsPSO final : public D3D12RenderPSOBase
 {
 
     public:
@@ -42,15 +33,6 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
         // Binds this graphics PSO to the specified command context.
         void Bind(D3D12CommandContext& commandContext) override;
 
-        // Returns the number of required default scissor rectangles.
-        UINT NumDefaultScissorRects() const;
-
-        // Returns true if scissors are enabled.
-        inline bool IsScissorEnabled() const
-        {
-            return scissorEnabled_;
-        }
-
     private:
 
         void CreateNativePSO(
@@ -63,12 +45,6 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
 
         ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName);
 
-        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
-
-        void SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList);
-
     private:
 
         /*
@@ -79,17 +55,6 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
         ComPtr<ID3D12PipelineState> secondaryPSO_;
 
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        bool                        scissorEnabled_     = false;
-
-        bool                        stencilRefEnabled_  = false;
-        UINT                        stencilRef_         = 0;
-
-        bool                        blendFactorEnabled_ = false;
-        FLOAT                       blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-        DynamicByteArray            staticStateBuffer_;
-        UINT                        numStaticViewports_ = 0;
-        UINT                        numStaticScissors_  = 0;
 
 };
 

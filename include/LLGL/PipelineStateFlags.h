@@ -14,6 +14,7 @@
 #include <LLGL/Format.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Constants.h>
+#include <LLGL/Container/DynamicVector.h>
 #include <vector>
 #include <cstdint>
 
@@ -748,7 +749,7 @@ struct TessellationDescriptor
 \brief Graphics pipeline state descriptor structure.
 \remarks This structure describes the entire graphics pipeline:
 shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
-\see RenderSystem::CreatePipelineState
+\see RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor&)
 */
 struct GraphicsPipelineDescriptor
 {
@@ -870,7 +871,7 @@ struct GraphicsPipelineDescriptor
 
 /**
 \brief Compute pipeline state descriptor structure.
-\see RenderSystem::CreatePipelineState
+\see RenderSystem::CreatePipelineState(const ComputePipelineDescriptor&)
 */
 struct ComputePipelineDescriptor
 {
@@ -893,6 +894,90 @@ struct ComputePipelineDescriptor
     \remarks This must never be null when a compute PSO is created.
     */
     Shader*                 computeShader   = nullptr;
+};
+
+/**
+\brief Mesh pipeline state descriptor structure.
+\remarks This structure describes the entire mesh-based graphics pipeline.
+Unlike the traditional graphics pipeline, the mesh pipeline provides two new shader stages: amplification and mesh shaders.
+These replace the traditional shader and fixed-function stages for vertex processing.
+Only the fragment shader remains from the traditional PSO.
+\see RenderSystem::CreatePipelineState(const MeshPipelineDescriptor&)
+\note Only supported with: Direct3D 12.
+*/
+struct MeshPipelineDescriptor
+{
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*             debugName               = nullptr;
+
+    /**
+    \brief Specifies an optional pipeline layout for the graphics pipeline. By default null.
+    \remarks This layout determines at which slots buffer resources will be bound.
+    If this is null, a default layout will be used that is only compatible with graphics pipelines that have no binding points, i.e. no input/output buffers or textures.
+    \see RenderSystem::CreatePipelineLayout
+    */
+    const PipelineLayout*   pipelineLayout          = nullptr;
+
+    /**
+    \brief Specifies an optional render pass. By default null.
+    \remarks If this is null, the render pass of the SwapChain that was first created is used.
+    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
+    \see CommandBuffer::BeginRenderPass
+    \see RenderSystem::CreateRenderPass
+    */
+    const RenderPass*       renderPass              = nullptr;
+
+    /**
+    \brief Specifies an optional amplification shader.
+    \remarks This is optional to further optimize the PSO.
+    */
+    Shader*                 amplificationShader     = nullptr;
+
+    /**
+    \brief Specifies the mesh shader.
+    \remarks This is mandatory for mesh PSOs.
+    */
+    Shader*                 meshShader              = nullptr;
+
+    /**
+    \brief Specifies an optional fragment shader (also referred to as "Pixel Shader").
+    \remarks If no fragment shader is specified, generated fragments are discarded by the output merger
+    and only the stream-output functionality as well as depth writes are used by either the vertex or geometry shader.
+    If a depth buffer is attached to the current render target, omitting the fragment shader can be utilized to render a standard shadow map.
+    */
+    Shader*                 fragmentShader          = nullptr;
+
+    /**
+    \brief Specifies an optional list of static viewports. If empty, the viewports must be set dynamically with the command buffer.
+    \remarks This list must have the same number of entries as \c scissors, unless one of the lists is empty.
+    \see CommandBuffer::SetViewport
+    \see CommandBuffer::SetViewports
+    */
+    DynamicVector<Viewport> viewports;
+
+    /**
+    \brief Specifies an optional list of static scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
+    \remarks This list must have the same number of entries as \c viewports, unless one of the lists is empty.
+    \see CommandBuffer::SetScissor
+    \see CommandBuffer::SetScissors
+    */
+    DynamicVector<Scissor>  scissors;
+
+    //! Specifies the depth state for the depth-stencil stage.
+    DepthDescriptor         depth;
+
+    //! Specifies the stencil state for the depth-stencil stage.
+    StencilDescriptor       stencil;
+
+    //! Specifies the state for the rasterizer stage.
+    RasterizerDescriptor    rasterizer;
+
+    //! Specifies the state descriptor for the blend stage.
+    BlendDescriptor         blend;
 };
 
 

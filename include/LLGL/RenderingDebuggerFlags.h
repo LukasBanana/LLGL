@@ -201,6 +201,12 @@ struct ProfileCommandBufferRecord
     std::uint32_t computePipelineBindings   = 0;
 
     /**
+    \brief Counter for all mesh pipeline state bindings.
+    \see CommandBuffer::SetPipelineState
+    */
+    std::uint32_t meshPipelineBindings      = 0;
+
+    /**
     \brief Counter for all framebuffer attachment clear operations.
     \see CommandBuffer::Clear
     \see CommandBuffer::ClearAttachments
@@ -265,14 +271,25 @@ struct ProfileCommandBufferRecord
     \see CommandBuffer::DrawIndexed
     \see CommandBuffer::DrawInstanced
     \see CommandBuffer::DrawIndexedInstanced
+    \see CommandBuffer::DrawIndirect
+    \see CommandBuffer::DrawIndexedIndirect
+    \see CommandBuffer::DrawStreamOutput
     */
     std::uint32_t drawCommands              = 0;
 
     /**
     \brief Counter for dispatch compute commands.
     \see CommandBuffer::Dispatch
+    \see CommandBuffer::DispatchIndirect
     */
     std::uint32_t dispatchCommands          = 0;
+
+    /**
+    \brief Counter for mesh draw commands.
+    \see CommandBufferTier1::DrawMesh
+    \see CommandBufferTier1::DrawMeshIndirect
+    */
+    std::uint32_t meshCommands              = 0;
 };
 
 LLGL_DEPRECATED_IGNORE_PUSH()

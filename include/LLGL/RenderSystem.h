@@ -14,6 +14,7 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/BufferArray.h>
 #include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferTier1.h>
 #include <LLGL/CommandQueue.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Fence.h>
@@ -577,7 +578,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[out] pipelineCache Optional pointer to pipeline cache.
 
         \see GraphicsPipelineDescriptor
-        \see CreatePipelineState(const Blob&)
+        \see CreatePipelineCache
         */
         virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache = nullptr) = 0;
 
@@ -590,9 +591,25 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[out] pipelineCache Optional pointer to pipeline cache.
 
         \see ComputePipelineDescriptor
-        \see CreatePipelineState(const Blob&)
+        \see CreatePipelineCache
         */
         virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache = nullptr) = 0;
+
+        /**
+        \brief Creates a new mesh pipeline state object (PSO) if supported.
+
+        \return Pointer to the new mesh pipeline or null if mesh shaders are not supported.
+
+        \param[in] pipelineStateDesc Specifies the mesh PSO descriptor.
+        The \c meshShader member of the descriptor must never be null!
+
+        \param[out] pipelineCache Optional pointer to pipeline cache.
+
+        \see MeshPipelineDescriptor
+        \see CreatePipelineCache
+        \see RenderingFeatures::hasMeshShaders
+        */
+        virtual PipelineState* CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache = nullptr) = 0;
 
         //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineState& pipelineState) = 0;

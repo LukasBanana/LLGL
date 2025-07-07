@@ -74,12 +74,24 @@ namespace LLGL
         StartTimer(StringLiteral{ annotation.c_str(), CopyTag{} });             \
     }
 
-#define LLGL_DBG_END_TIMER()   \
+#define LLGL_DBG_END_TIMER()    \
     if (perfProfilerEnabled_)   \
         EndTimer()
 
 #define LLGL_DBG_ASSERT_PTR(NAME) \
     AssertNullPointer(NAME, #NAME)
+
+#define LLGL_DBG_GET_TIER1()                                                        \
+    CastTo<CommandBufferTier1>(&instance);                                          \
+    if (!LLGL::IsInstanceOf<CommandBufferTier1>(instance))                          \
+    {                                                                               \
+        LLGL_DBG_ERROR(                                                             \
+            ErrorType::InvalidState,                                                \
+            "cannot record '%s' command on CommandBuffer that is not in tier-1",    \
+            __FUNCTION__                                                            \
+        );                                                                          \
+        return;                                                                     \
+    }
 
 #define LLGL_DBG_ASSERT_REF(OBJ) \
     LLGL_ASSERT(&OBJ != nullptr, #OBJ " reference must not be null")
@@ -1035,6 +1047,22 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             if (!pipelineStateDbg.graphicsDesc.viewports.empty())
                 bindings_.numViewports = static_cast<std::uint32_t>(pipelineStateDbg.graphicsDesc.viewports.size());
         }
+        else if (pipelineStateDbg.isMeshPSO)
+        {
+            if (auto* fragmentShader = pipelineStateDbg.meshDesc.fragmentShader)
+            {
+                auto fragmentShaderDbg = LLGL_CAST(const DbgShader*, fragmentShader);
+                bindings_.anyFragmentOutput = fragmentShaderDbg->HasAnyOutputAttributes();
+            }
+
+            /* Store dynamic states */
+            bindings_.blendFactorSet = !pipelineStateDbg.HasDynamicBlendFactor();
+            bindings_.stencilRefSet = !pipelineStateDbg.HasDynamicStencilRef();
+
+            /* If the PSO was created with static viewports, this PSO dictates the number of bound viewports */
+            if (!pipelineStateDbg.meshDesc.viewports.empty())
+                bindings_.numViewports = static_cast<std::uint32_t>(pipelineStateDbg.meshDesc.viewports.size());
+        }
         else
         {
             /*if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
@@ -1061,6 +1089,8 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
     if (pipelineStateDbg.isGraphicsPSO)
         profile_.commandBufferRecord.graphicsPipelineBindings++;
+    else if (pipelineStateDbg.isMeshPSO)
+        profile_.commandBufferRecord.meshCommands++;
     else
         profile_.commandBufferRecord.computePipelineBindings++;
 }
@@ -1590,6 +1620,90 @@ void DbgCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t na
 bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     return instance.GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
+/* ----- Mesh pipeline ----- */
+
+void DbgCommandBuffer::DrawMesh(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
+{
+    CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    if (LLGL_DBG_SOURCE())
+    {
+        ValidateBindingTable();
+
+        //TODO: validate mesh shader support
+    }
+
+    LLGL_DBG_COMMAND_EXT(
+        instanceTier1->DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ),
+        "DrawMesh(%u, %u, %u)", numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ
+    );
+
+    profile_.commandBufferRecord.meshCommands++;
+}
+
+void DbgCommandBuffer::DrawMeshIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
+
+    if (LLGL_DBG_SOURCE())
+    {
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
+        ValidateBufferRange(bufferDbg, offset, sizeof(DrawMeshIndirectArguments));
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+
+        ValidateBindingTable();
+
+        //TODO: validate mesh shader support
+    }
+
+    LLGL_DBG_COMMAND_EXT(
+        instanceTier1->DrawMeshIndirect(bufferDbg.instance, offset, numCommands, stride),
+        "DrawMeshIndirect(%s, %" PRIu64 ", %u, %u)",
+        GetResourceLabel(buffer), offset, numCommands, stride
+    );
+
+    profile_.commandBufferRecord.meshCommands++;
+}
+
+void DbgCommandBuffer::DrawMeshIndirect(
+    Buffer&         argumentsBuffer,
+    std::uint64_t   argumentsOffset,
+    Buffer&         countBuffer,
+    std::uint64_t   countOffset,
+    std::uint32_t   maxNumCommands,
+    std::uint32_t   stride)
+{
+    CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    auto& argumentsBufferDbg = LLGL_DBG_CAST(DbgBuffer&, argumentsBuffer);
+    auto& countBufferDbg = LLGL_DBG_CAST(DbgBuffer&, countBuffer);
+
+    if (LLGL_DBG_SOURCE())
+    {
+        ValidateBindBufferFlags(argumentsBufferDbg, BindFlags::IndirectBuffer);
+        ValidateBufferRange(argumentsBufferDbg, argumentsOffset, sizeof(DrawMeshIndirectArguments));
+        ValidateAddressAlignment(argumentsOffset, 4, "<argumentsOffset> parameter");
+
+        ValidateBindBufferFlags(countBufferDbg, BindFlags::IndirectBuffer);
+        ValidateBufferRange(countBufferDbg, countOffset, sizeof(std::uint64_t));
+        ValidateAddressAlignment(countOffset, 4, "<countOffset> parameter");
+
+        ValidateBindingTable();
+
+        //TODO: validate mesh shader support
+    }
+
+    LLGL_DBG_COMMAND_EXT(
+        instanceTier1->DrawMeshIndirect(argumentsBufferDbg.instance, argumentsOffset, countBufferDbg.instance, countOffset, maxNumCommands, stride),
+        "DrawMeshIndirect(%s, %" PRIu64 ", %s, %" PRIu64 ", %u, %u)",
+        GetResourceLabel(argumentsBuffer), argumentsOffset, GetResourceLabel(countBuffer), countOffset, maxNumCommands, stride
+    );
+
+    profile_.commandBufferRecord.meshCommands++;
 }
 
 /* ----- Internal ----- */

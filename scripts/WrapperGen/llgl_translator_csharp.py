@@ -86,6 +86,7 @@ class CsharpTranslator(Translator):
             'FragmentShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'FrameProfile': CsharpProperties(setter = True),
             'GraphicsPipelineDescriptor': CsharpProperties(getter = True),
+            'MeshPipelineDescriptor': CsharpProperties(getter = True),
             'PipelineLayoutDescriptor': CsharpProperties(getter = True),
             'ProfileCommandBufferRecord': CsharpProperties(setter = True),
             'ProfileCommandQueueRecord': CsharpProperties(setter = True),

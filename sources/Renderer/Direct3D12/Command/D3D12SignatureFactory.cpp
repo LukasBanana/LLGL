@@ -33,9 +33,10 @@ static void DXCreateCommandSignature(ID3D12Device* device, ComPtr<ID3D12CommandS
 
 void D3D12SignatureFactory::CreateDefaultSignatures(ID3D12Device* device)
 {
-    DXCreateCommandSignature(device, signatureDrawIndirect_,        D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,         sizeof(D3D12_DRAW_ARGUMENTS        ));
-    DXCreateCommandSignature(device, signatureDrawIndexedIndirect_, D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
-    DXCreateCommandSignature(device, signatureDispatchIndirect_,    D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH,     sizeof(D3D12_DISPATCH_ARGUMENTS    ));
+    DXCreateCommandSignature(device, signatureDrawIndirect_,        D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,          sizeof(D3D12_DRAW_ARGUMENTS         ));
+    DXCreateCommandSignature(device, signatureDrawIndexedIndirect_, D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,  sizeof(D3D12_DRAW_INDEXED_ARGUMENTS ));
+    DXCreateCommandSignature(device, signatureDispatchIndirect_,    D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH,      sizeof(D3D12_DISPATCH_ARGUMENTS     ));
+    DXCreateCommandSignature(device, signatureDrawMeshIndirect_,    D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH, sizeof(D3D12_DISPATCH_MESH_ARGUMENTS));
 }
 
 

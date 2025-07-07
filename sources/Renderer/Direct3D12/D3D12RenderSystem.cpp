@@ -32,6 +32,7 @@
 
 #include "RenderState/D3D12GraphicsPSO.h"
 #include "RenderState/D3D12ComputePSO.h"
+#include "RenderState/D3D12MeshPSO.h"
 
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 
@@ -65,7 +66,7 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     }
 
     /* Query and cache DXGI factory feature support */
-    tearingSupported_ = CheckFactoryFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING);
+    deviceCaps_.isTearingSupported = CheckFactoryFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING);
 
     /* Create command queue interface */
     commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
@@ -396,6 +397,16 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
 PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
     return pipelineStates_.emplace<D3D12ComputePSO>(device_.GetNative(), defaultPipelineLayout_, pipelineStateDesc, pipelineCache);
+}
+
+PipelineState* D3D12RenderSystem::CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
+{
+    if (deviceCaps_.meshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
+        return nullptr;
+    ComPtr<ID3D12Device2> device2;
+    if (FAILED(device_.GetNative()->QueryInterface(IID_PPV_ARGS(&device2))))
+        return nullptr;
+    return pipelineStates_.emplace<D3D12MeshPSO>(device2.Get(), defaultPipelineLayout_, pipelineStateDesc, GetDefaultRenderPass(), pipelineCache);
 }
 
 void D3D12RenderSystem::Release(PipelineState& pipelineState)
@@ -747,6 +758,10 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 
     const std::uint32_t maxThreadGroups = 65535u;
 
+    D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
+    deviceCaps_.meshShaderTier = options7.MeshShaderTier;
+
     /* Query common attributes */
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
     caps.clippingRange                              = ClippingRange::ZeroToOne;
@@ -769,6 +784,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasTessellatorStage               = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.features.hasMeshShaders                    = (deviceCaps_.meshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED);
     caps.features.hasInstancing                     = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???

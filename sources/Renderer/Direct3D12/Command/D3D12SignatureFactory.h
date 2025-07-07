@@ -39,11 +39,17 @@ class D3D12SignatureFactory
             return signatureDispatchIndirect_.Get();
         }
 
+        inline ID3D12CommandSignature* GetSignatureDrawMeshIndirect() const
+        {
+            return signatureDrawMeshIndirect_.Get();
+        }
+
     private:
 
         ComPtr<ID3D12CommandSignature> signatureDrawIndirect_;
         ComPtr<ID3D12CommandSignature> signatureDrawIndexedIndirect_;
         ComPtr<ID3D12CommandSignature> signatureDispatchIndirect_;
+        ComPtr<ID3D12CommandSignature> signatureDrawMeshIndirect_;
 
 };
 

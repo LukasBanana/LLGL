@@ -361,6 +361,19 @@ namespace LLGL
             }
         }
 
+        public PipelineState CreatePipelineState(MeshPipelineDescriptor pipelineStateDesc, PipelineCache pipelineCache = null)
+        {
+            var nativePipelineStateDesc = pipelineStateDesc.Native;
+            if (pipelineCache != null)
+            {
+                return new PipelineState(NativeLLGL.CreateMeshPipelineStateExt(ref nativePipelineStateDesc, pipelineCache.Native));
+            }
+            else
+            {
+                return new PipelineState(NativeLLGL.CreateMeshPipelineState(ref nativePipelineStateDesc));
+            }
+        }
+
         public Shader CreateShader(ShaderDescriptor shaderDesc)
         {
             var nativeShaderDesc = shaderDesc.Native;

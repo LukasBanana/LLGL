@@ -22,12 +22,12 @@ namespace LLGL
 
 
 D3D12PipelineState::D3D12PipelineState(
-    bool                        isGraphicsPSO,
+    D3D12PipelineType           type,
     const PipelineLayout*       pipelineLayout,
     const ArrayView<Shader*>&   shaders,
     D3D12PipelineLayout&        defaultPipelineLayout)
 :
-    isGraphicsPSO_ { isGraphicsPSO }
+    type_ { type }
 {
     if (pipelineLayout != nullptr)
     {

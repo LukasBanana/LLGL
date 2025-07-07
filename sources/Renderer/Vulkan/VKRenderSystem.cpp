@@ -742,6 +742,11 @@ PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescript
     return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc, pipelineCache);
 }
 
+PipelineState* VKRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+{
+    return nullptr; // TODO
+}
+
 void VKRenderSystem::Release(PipelineState& pipelineState)
 {
     pipelineStates_.erase(&pipelineState);

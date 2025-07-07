@@ -48,6 +48,7 @@ void ConvertCombinedTextureSamplerDesc(LLGL::CombinedTextureSamplerDescriptor& d
 void ConvertPipelineLayoutDesc(LLGL::PipelineLayoutDescriptor& dst, const LLGLPipelineLayoutDescriptor& src);
 void ConvertGraphicsPipelineDesc(LLGL::GraphicsPipelineDescriptor& dst, const LLGLGraphicsPipelineDescriptor& src);
 void ConvertComputePipelineDesc(LLGL::ComputePipelineDescriptor& dst, const LLGLComputePipelineDescriptor& src);
+void ConvertMeshPipelineDesc(LLGL::MeshPipelineDescriptor& dst, const LLGLMeshPipelineDescriptor& src);
 
 
 // } /namespace LLGL

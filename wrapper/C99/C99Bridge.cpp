@@ -232,6 +232,27 @@ void ConvertComputePipelineDesc(ComputePipelineDescriptor& dst, const LLGLComput
     dst.computeShader   = LLGL_PTR(Shader, src.computeShader);
 }
 
+void ConvertMeshPipelineDesc(LLGL::MeshPipelineDescriptor& dst, const LLGLMeshPipelineDescriptor& src)
+{
+    dst.debugName               = src.debugName;
+    dst.pipelineLayout          = LLGL_PTR(PipelineLayout, src.pipelineLayout);
+    dst.renderPass              = LLGL_PTR(RenderPass, src.renderPass);
+    dst.amplificationShader     = LLGL_PTR(Shader, src.amplificationShader);
+    dst.meshShader              = LLGL_PTR(Shader, src.meshShader);
+    dst.fragmentShader          = LLGL_PTR(Shader, src.fragmentShader);
+
+    dst.viewports.resize(src.numViewports);
+    ::memcpy(dst.viewports.data(), src.viewports, src.numViewports * sizeof(LLGLViewport));
+
+    dst.scissors.resize(src.numScissors);
+    ::memcpy(dst.scissors.data(), src.scissors, src.numScissors * sizeof(LLGLScissor));
+
+    ::memcpy(&(dst.depth), &(src.depth), sizeof(LLGLDepthDescriptor));
+    ::memcpy(&(dst.stencil), &(src.stencil), sizeof(LLGLStencilDescriptor));
+    ::memcpy(&(dst.rasterizer), &(src.rasterizer), sizeof(LLGLRasterizerDescriptor));
+    ::memcpy(&(dst.blend), &(src.blend), sizeof(LLGLBlendDescriptor));
+}
+
 
 // } /namespace LLGL
 

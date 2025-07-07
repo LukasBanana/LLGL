@@ -375,6 +375,20 @@ LLGL_C_EXPORT LLGLPipelineState llglCreateComputePipelineStateExt(const LLGLComp
     return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc, LLGL_PTR(PipelineCache, pipelineCache)) };
 }
 
+LLGL_C_EXPORT LLGLPipelineState llglCreateMeshPipelineState(const LLGLMeshPipelineDescriptor* pipelineStateDesc)
+{
+    return llglCreateMeshPipelineStateExt(pipelineStateDesc, LLGL_NULL_OBJECT);
+}
+
+LLGL_C_EXPORT LLGLPipelineState llglCreateMeshPipelineStateExt(const LLGLMeshPipelineDescriptor* pipelineStateDesc, LLGLPipelineCache pipelineCache)
+{
+    LLGL_ASSERT_RENDER_SYSTEM();
+    LLGL_ASSERT_PTR(pipelineStateDesc);
+    MeshPipelineDescriptor internalPipelineStateDesc;
+    ConvertMeshPipelineDesc(internalPipelineStateDesc, *pipelineStateDesc);
+    return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc, LLGL_PTR(PipelineCache, pipelineCache)) };
+}
+
 LLGL_C_EXPORT void llglReleasePipelineState(LLGLPipelineState pipelineState)
 {
     LLGL_RELEASE(PipelineState, pipelineState);

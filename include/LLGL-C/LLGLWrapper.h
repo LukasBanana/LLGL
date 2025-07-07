@@ -748,6 +748,8 @@ typedef enum LLGLShaderType
     LLGLShaderTypeGeometry,
     LLGLShaderTypeFragment,
     LLGLShaderTypeCompute,
+    LLGLShaderTypeAmplification,
+    LLGLShaderTypeMesh,
 }
 LLGLShaderType;
 
@@ -1081,6 +1083,12 @@ typedef struct LLGLDispatchIndirectArguments
 }
 LLGLDispatchIndirectArguments;
 
+typedef struct LLGLDrawMeshIndirectArguments
+{
+    uint32_t numThreadGroups[3];
+}
+LLGLDrawMeshIndirectArguments;
+
 typedef struct LLGLColorCodes
 {
     long textFlags;       /* = 0 */
@@ -1183,6 +1191,7 @@ typedef struct LLGLProfileCommandBufferRecord
     uint32_t resourceHeapBindings;     /* = 0 */
     uint32_t graphicsPipelineBindings; /* = 0 */
     uint32_t computePipelineBindings;  /* = 0 */
+    uint32_t meshPipelineBindings;     /* = 0 */
     uint32_t attachmentClears;         /* = 0 */
     uint32_t bufferUpdates;            /* = 0 */
     uint32_t bufferCopies;             /* = 0 */
@@ -1194,6 +1203,7 @@ typedef struct LLGLProfileCommandBufferRecord
     uint32_t renderConditionSections;  /* = 0 */
     uint32_t drawCommands;             /* = 0 */
     uint32_t dispatchCommands;         /* = 0 */
+    uint32_t meshCommands;             /* = 0 */
 }
 LLGLProfileCommandBufferRecord;
 
@@ -1231,6 +1241,7 @@ typedef struct LLGLRenderingFeatures
     bool hasTessellationShaders;       /* = false */
     bool hasTessellatorStage;          /* = false */
     bool hasComputeShaders;            /* = false */
+    bool hasMeshShaders;               /* = false */
     bool hasInstancing;                /* = false */
     bool hasOffsetInstancing;          /* = false */
     bool hasIndirectDrawing;           /* = false */
@@ -1798,6 +1809,25 @@ typedef struct LLGLGraphicsPipelineDescriptor
     LLGLTessellationDescriptor tessellation;
 }
 LLGLGraphicsPipelineDescriptor;
+
+typedef struct LLGLMeshPipelineDescriptor
+{
+    const char*              debugName;           /* = NULL */
+    LLGLPipelineLayout       pipelineLayout;      /* = LLGL_NULL_OBJECT */
+    LLGLRenderPass           renderPass;          /* = LLGL_NULL_OBJECT */
+    LLGLShader               amplificationShader; /* = LLGL_NULL_OBJECT */
+    LLGLShader               meshShader;          /* = LLGL_NULL_OBJECT */
+    LLGLShader               fragmentShader;      /* = LLGL_NULL_OBJECT */
+    size_t                   numViewports;        /* = 0 */
+    const LLGLViewport*      viewports;           /* = NULL */
+    size_t                   numScissors;         /* = 0 */
+    const LLGLScissor*       scissors;            /* = NULL */
+    LLGLDepthDescriptor      depth;
+    LLGLStencilDescriptor    stencil;
+    LLGLRasterizerDescriptor rasterizer;
+    LLGLBlendDescriptor      blend;
+}
+LLGLMeshPipelineDescriptor;
 
 typedef struct LLGLResourceViewDescriptor
 {

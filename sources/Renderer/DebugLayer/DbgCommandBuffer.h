@@ -9,7 +9,7 @@
 #define LLGL_DBG_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferTier1.h>
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
@@ -32,12 +32,12 @@ class DbgPipelineState;
 class DbgPipelineLayout;
 class DbgShader;
 
-class DbgCommandBuffer final : public CommandBuffer
+class DbgCommandBuffer final : public CommandBufferTier1
 {
 
     public:
 
-        #include <LLGL/Backend/CommandBuffer.inl>
+        #include <LLGL/Backend/CommandBufferTier1.inl>
 
     public:
 

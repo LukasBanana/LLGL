@@ -27,7 +27,7 @@ D3D12ComputePSO::D3D12ComputePSO(
     const ComputePipelineDescriptor&    desc,
     PipelineCache*                      pipelineCache)
 :
-    D3D12PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, GetShadersAsArray(desc), defaultPipelineLayout }
+    D3D12PipelineState { D3D12PipelineType::Compute, desc.pipelineLayout, GetShadersAsArray(desc), defaultPipelineLayout }
 {
     auto* computeShaderD3D = LLGL_CAST(const D3D12Shader*, desc.computeShader);
     if (computeShaderD3D == nullptr)

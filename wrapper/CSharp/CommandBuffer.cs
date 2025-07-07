@@ -464,6 +464,23 @@ namespace LLGL
         {
             NativeLLGL.PopDebugGroup();
         }
+
+        /* ----- CommandBufferTier1 ----- */
+
+        public void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ)
+        {
+            NativeLLGL.DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+        }
+
+        public void DrawMeshIndirect(Buffer buffer, long offset, int numCommands, int stride)
+        {
+            NativeLLGL.DrawMeshIndirect(buffer.Native, offset, numCommands, stride);
+        }
+
+        public void DrawMeshIndirect(Buffer argumentsBuffer, long argumentsOffset, Buffer countBuffer, long countOffset, int maxNumCommands, int stride)
+        {
+            NativeLLGL.DrawMeshIndirectExt(argumentsBuffer.Native, argumentsOffset, countBuffer.Native, countOffset, maxNumCommands, stride);
+        }
     }
 }
 

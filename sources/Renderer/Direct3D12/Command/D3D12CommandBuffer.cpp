@@ -30,6 +30,7 @@
 #include "../RenderState/D3D12QueryHeap.h"
 #include "../RenderState/D3D12GraphicsPSO.h"
 #include "../RenderState/D3D12ComputePSO.h"
+#include "../RenderState/D3D12MeshPSO.h"
 
 #include "../Shader/D3D12BuiltinShaderFactory.h"
 
@@ -626,10 +627,10 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
 
             /* Bind descriptor table to root parameter */
             const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
-            if (boundPipelineState_->IsGraphicsPSO())
-                GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
-            else
+            if (boundPipelineState_->GetType() == D3D12PipelineType::Compute)
                 GetNative()->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
+            else
+                GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
         }
     }
 
@@ -674,10 +675,10 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
         if (gpuVirtualAddr != 0)
         {
             /* Root parameter can only be raw or structured buffers, so only handle CBV, SRV, and UAV */
-            if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
-                commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
-            else
+            if (boundPipelineState_ != nullptr && boundPipelineState_->GetType() == D3D12PipelineType::Compute)
                 commandContext_.SetComputeRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
+            else
+                commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
         }
     }
     else
@@ -764,32 +765,47 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Bind pipeline state to command context */
     auto& pipelineStateD3D = LLGL_CAST(D3D12PipelineState&, pipelineState);
-    if (pipelineStateD3D.IsGraphicsPSO())
+    switch (pipelineStateD3D.GetType())
     {
-        /* Bind graphics PSO */
-        auto& graphicsPSO = LLGL_CAST(D3D12GraphicsPSO&, pipelineState);
-        graphicsPSO.Bind(commandContext_);
-        boundPipelineState_ = &graphicsPSO;
+        case D3D12PipelineType::Graphics:
+        {
+            /* Bind graphics PSO */
+            auto& graphicsPSO = LLGL_CAST(D3D12GraphicsPSO&, pipelineState);
+            graphicsPSO.Bind(commandContext_);
+            boundPipelineState_ = &graphicsPSO;
 
-        /* Scissor rectangle must be updated (if scissor test is disabled) */
-        scissorEnabled_ = graphicsPSO.IsScissorEnabled();
-        if (scissorEnabled_)
-        {
-            /* Invalidate previously bound default scissor rectangles */
-            numDefaultScissorRects_ = 0;
+            /* Scissor rectangle must be updated (if scissor test is disabled) */
+            scissorEnabled_ = graphicsPSO.IsScissorEnabled();
+            if (scissorEnabled_)
+            {
+                /* Invalidate previously bound default scissor rectangles */
+                numDefaultScissorRects_ = 0;
+            }
+            else
+            {
+                if (GetNative()->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
+                    SetDefaultScissorRects(graphicsPSO.NumDefaultScissorRects());
+            }
         }
-        else
+        break;
+
+        case D3D12PipelineType::Compute:
         {
-            if (GetNative()->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
-                SetDefaultScissorRects(graphicsPSO.NumDefaultScissorRects());
+            /* Bind compute PSO */
+            auto& computePSO = LLGL_CAST(D3D12ComputePSO&, pipelineState);
+            computePSO.Bind(commandContext_);
+            boundPipelineState_ = &computePSO;
         }
-    }
-    else
-    {
-        /* Bind compute PSO */
-        auto& computePSO = LLGL_CAST(D3D12ComputePSO&, pipelineState);
-        computePSO.Bind(commandContext_);
-        boundPipelineState_ = &computePSO;
+        break;
+
+        case D3D12PipelineType::Mesh:
+        {
+            /* Bind mesh PSO */
+            auto& meshPSO = LLGL_CAST(D3D12MeshPSO&, pipelineState);
+            meshPSO.Bind(commandContext_);
+            boundPipelineState_ = &meshPSO;
+        }
+        break;
     }
 
     /* Keep reference to pipeline layout */
@@ -846,10 +862,10 @@ void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std:
         for_range(i, rootConstantLocation.num32BitValues)
         {
             const D3D12Constant value{ words[i] };
-            if (boundPipelineState_->IsGraphicsPSO())
-                commandContext_.SetGraphicsConstant(rootConstantLocation.index, value, wordOffset);
-            else
+            if (boundPipelineState_->GetType() == D3D12PipelineType::Compute)
                 commandContext_.SetComputeConstant(rootConstantLocation.index, value, wordOffset);
+            else
+                commandContext_.SetGraphicsConstant(rootConstantLocation.index, value, wordOffset);
             ++wordOffset;
         }
         words += rootConstantLocation.num32BitValues;
@@ -1141,6 +1157,64 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
         return true;
     }
     return false;
+}
+
+/* ----- Mesh pipeline ----- */
+
+void D3D12CommandBuffer::DrawMesh(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
+{
+    commandContext_.DispatchMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+}
+
+void D3D12CommandBuffer::DrawMeshIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+    if likely(stride == sizeof(D3D12_DISPATCH_MESH_ARGUMENTS))
+    {
+        /* Encode indirect draw with pre-defined command stride */
+        commandContext_.DispatchMeshIndirect(cmdSignatureFactory_->GetSignatureDrawMeshIndirect(), numCommands, bufferD3D.GetNative(), offset);
+    }
+    else
+    {
+        /* Encode indirect draw individually with custom stride */
+        while (numCommands-- > 0)
+        {
+            commandContext_.DispatchMeshIndirect(cmdSignatureFactory_->GetSignatureDrawMeshIndirect(), 1, bufferD3D.GetNative(), offset);
+            offset += stride;
+        }
+    }
+}
+
+void D3D12CommandBuffer::DrawMeshIndirect(
+    Buffer&         argumentsBuffer,
+    std::uint64_t   argumentsOffset,
+    Buffer&         countBuffer,
+    std::uint64_t   countOffset,
+    std::uint32_t   maxNumCommands,
+    std::uint32_t   stride)
+{
+    auto& argumentsBufferD3D = LLGL_CAST(D3D12Buffer&, argumentsBuffer);
+    auto& countBufferD3D = LLGL_CAST(D3D12Buffer&, countBuffer);
+
+    commandContext_.TransitionResource(argumentsBufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+    commandContext_.TransitionResource(countBufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+
+    ID3D12CommandSignature* cmdSignature = cmdSignatureFactory_->GetSignatureDrawMeshIndirect();
+    if likely(stride == sizeof(D3D12_DISPATCH_MESH_ARGUMENTS))
+    {
+        /* Encode indirect draw with pre-defined command stride */
+        commandContext_.DispatchMeshIndirect(cmdSignature, maxNumCommands, argumentsBufferD3D.GetNative(), argumentsOffset, countBufferD3D.GetNative(), countOffset);
+    }
+    else
+    {
+        //TODO: handle custom strides here
+        UTF8String reason = UTF8String::Printf(
+            "cannot use custom stride with indirect count buffer; stride must be equal to %zu, but got",
+            sizeof(D3D12_DISPATCH_MESH_ARGUMENTS), stride
+        );
+        LLGL_TRAP_NOT_IMPLEMENTED(reason.c_str());
+    }
 }
 
 /* ----- Internal ----- */

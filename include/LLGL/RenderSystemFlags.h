@@ -617,6 +617,16 @@ struct RenderingFeatures
     bool hasComputeShaders              = false;
 
     /**
+    \brief Specifies whether mesh and amplification shaders are supported.
+    \remarks Mesh and amplification shaders belong to the same mesh pipeline but amplification shaders are optional to use in such a pipeline,
+    so amplification shader support is implied if mesh shaders are supported.
+    \see ShaderType::Amplification
+    \see ShaderType::Mesh
+    \see RenderSystem::CreatePipelineState(const MeshPipelineDescriptor&)
+    */
+    bool hasMeshShaders                 = false;
+
+    /**
     \brief Specifies whether hardware instancing is supported.
     \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
     \see CommandBuffer::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)

@@ -7,7 +7,10 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <LLGL-C/CommandBuffer.h>
+#include <LLGL/CommandBufferTier1.h>
+#include <LLGL-C/CommandBufferTier1.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/TypeInfo.h>
 #include "C99Internal.h"
 #include "C99Bridge.h"
 #include "../../sources/Core/Assertion.h"
@@ -19,12 +22,14 @@
 using namespace LLGL;
 
 static thread_local CommandBuffer* g_CurrentCmdBuf = NULL;
+static thread_local CommandBufferTier1* g_CurrentCmdBufTier1 = NULL;
 
 
 LLGL_C_EXPORT void llglBegin(LLGLCommandBuffer commandBuffer)
 {
     LLGL_ASSERT(g_CurrentCmdBuf == NULL);
     g_CurrentCmdBuf = LLGL_PTR(CommandBuffer, commandBuffer);
+    g_CurrentCmdBufTier1 = LLGL::CastTo<LLGL::CommandBufferTier1>(g_CurrentCmdBuf);
     g_CurrentCmdBuf->Begin();
 }
 
@@ -33,6 +38,7 @@ LLGL_C_EXPORT void llglEnd()
     LLGL_ASSERT(g_CurrentCmdBuf != NULL);
     g_CurrentCmdBuf->End();
     g_CurrentCmdBuf = NULL;
+    g_CurrentCmdBufTier1 = NULL;
 }
 
 LLGL_C_EXPORT void llglExecute(LLGLCommandBuffer secondaryCommandBuffer)
@@ -349,6 +355,24 @@ LLGL_C_EXPORT void llglDoNativeCommand(const void* nativeCommand, size_t nativeC
 LLGL_C_EXPORT bool llglGetNativeHandle(void* nativeHandle, size_t nativeHandleSize)
 {
     return g_CurrentCmdBuf->GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
+LLGL_C_EXPORT void llglDrawMesh(uint32_t numWorkGroupsX, uint32_t numWorkGroupsY, uint32_t numWorkGroupsZ)
+{
+    if (g_CurrentCmdBufTier1)
+        g_CurrentCmdBufTier1->DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+}
+
+LLGL_C_EXPORT void llglDrawMeshIndirect(LLGLBuffer buffer, uint64_t offset, uint32_t numCommands, uint32_t stride)
+{
+    if (g_CurrentCmdBufTier1)
+        g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, buffer), offset, numCommands, stride);
+}
+
+LLGL_C_EXPORT void llglDrawMeshIndirectExt(LLGLBuffer argumentsBuffer, uint64_t argumentsOffset, LLGLBuffer countBuffer, uint64_t countOffset, uint32_t maxNumCommands, uint32_t stride)
+{
+    if (g_CurrentCmdBufTier1)
+        g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, argumentsBuffer), argumentsOffset, LLGL_REF(Buffer, countBuffer), countOffset, maxNumCommands, stride);
 }
 
 

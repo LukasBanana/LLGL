@@ -551,6 +551,11 @@ PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescript
     );
 }
 
+PipelineState* GLRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+{
+    return nullptr; // not supported
+}
+
 void GLRenderSystem::Release(PipelineState& pipelineState)
 {
     pipelineStates_.erase(&pipelineState);

@@ -86,13 +86,15 @@ class LLGLMeta:
         'vector',
         'ArrayView',
         'SmallVector',
-        'DynamicVector'
+        'DynamicVector',
+        'DynamicArray'
     ]
     interfaces = [
         'Buffer',
         'BufferArray',
         'Canvas',
         'CommandBuffer',
+        'CommandBufferTier1',
         'CommandQueue',
         'Display',
         'Fence',

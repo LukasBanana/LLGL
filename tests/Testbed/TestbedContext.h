@@ -95,11 +95,20 @@ class TestbedContext
             LLGL::PipelineState**                   output
         );
 
+        TestResult CreateMeshPSO(
+            const LLGL::MeshPipelineDescriptor& desc,
+            const char*                         name,
+            LLGL::PipelineState**               output
+        );
+
         // Returns true if the current renderer requires combined texture samplers (OpenGL only).
         bool HasCombinedSamplers() const;
 
         // Returns true if the current renderer requires unique bindings slots (Vulkan only).
         bool HasUniqueBindingSlots() const;
+
+        // Returns the aspect ratio of the main viewport.
+        float GetAspectRatio() const;
 
     protected:
 
@@ -130,6 +139,7 @@ class TestbedContext
         {
             PipelineSolid,
             PipelineTextured,
+            PipelineMeshlet,
 
             PipelineCount,
         };
@@ -185,6 +195,9 @@ class TestbedContext
             VSVertexFormat2,
             VSVertexFormat3,
             PSVertexFormat,
+
+            MSMeshlet,
+            PSMeshlet,
 
             ShaderCount,
         };

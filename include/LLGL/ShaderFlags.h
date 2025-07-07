@@ -31,12 +31,20 @@ namespace LLGL
 enum class ShaderType
 {
     Undefined,      //!< Undefined shader type.
+
+    // Traditional graphics pipeline.
     Vertex,         //!< Vertex shader type.
     TessControl,    //!< Tessellation control shader type (also "Hull Shader").
     TessEvaluation, //!< Tessellation evaluation shader type (also "Domain Shader").
     Geometry,       //!< Geometry shader type.
     Fragment,       //!< Fragment shader type (also "Pixel Shader").
+
+    // Compute pipeline.
     Compute,        //!< Compute shader type.
+
+    // Mesh pipeline.
+    Amplification,  //!< Amplification shader
+    Mesh,           //!< Mesh shader
 };
 
 /**

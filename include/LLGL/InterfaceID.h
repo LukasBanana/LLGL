@@ -36,9 +36,9 @@ struct InterfaceID
         Input,                  //!< Extends Interface. \see Input
         RenderSystem,           //!< Extends Interface. \see RenderSystem
         RenderSystemChild,      //!< Extends Interface. \see RenderSystemChild
-        Buffer,                 //!< Extends RenderSystemChild. \see Buffer
         BufferArray,            //!< Extends RenderSystemChild. \see BufferArray
         CommandBuffer,          //!< Extends RenderSystemChild. \see CommandBuffer
+        CommandBufferTier1,     //!< Extends CommandBuffer. \see CommandBufferTier1
         CommandQueue,           //!< Extends RenderSystemChild. \see CommandQueue
         Fence,                  //!< Extends RenderSystemChild. \see Fence
         PipelineCache,          //!< Extends RenderSystemChild. \see PipelineCache
@@ -47,10 +47,11 @@ struct InterfaceID
         QueryHeap,              //!< Extends RenderSystemChild. \see QueryHeap
         RenderPass,             //!< Extends RenderSystemChild. \see RenderPass
         Resource,               //!< Extends RenderSystemChild. \see Resource
+        Buffer,                 //!< Extends Resource. \see Buffer
+        Sampler,                //!< Extends Resource. \see Sampler
+        Texture,                //!< Extends Resource. \see Texture
         ResourceHeap,           //!< Extends RenderSystemChild. \see ResourceHeap
-        Sampler,                //!< Extends RenderSystemChild. \see Sampler
         Shader,                 //!< Extends RenderSystemChild. \see Shader
-        Texture,                //!< Extends RenderSystemChild. \see Texture
         RenderTarget,           //!< Extends RenderSystemChild. \see RenderTarget
         SwapChain,              //!< Extends RenderTarget. \see SwapChain
 

@@ -21,6 +21,7 @@ DbgPipelineState::DbgPipelineState(PipelineState& instance, const GraphicsPipeli
     label          { LLGL_DBG_LABEL(desc)                                     },
     pipelineLayout { LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout) },
     isGraphicsPSO  { true                                                     },
+    isMeshPSO      { false                                                    },
     graphicsDesc   { desc                                                     }
 {
 }
@@ -30,7 +31,18 @@ DbgPipelineState::DbgPipelineState(PipelineState& instance, const ComputePipelin
     label          { LLGL_DBG_LABEL(desc)                                     },
     pipelineLayout { LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout) },
     isGraphicsPSO  { false                                                    },
+    isMeshPSO      { false                                                    },
     computeDesc    { desc                                                     }
+{
+}
+
+DbgPipelineState::DbgPipelineState(PipelineState& instance, const MeshPipelineDescriptor& desc) :
+    instance       { instance                                                 },
+    label          { LLGL_DBG_LABEL(desc)                                     },
+    pipelineLayout { LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout) },
+    isGraphicsPSO  { false                                                    },
+    isMeshPSO      { true                                                     },
+    meshDesc       { desc                                                     }
 {
 }
 
@@ -41,12 +53,20 @@ DbgPipelineState::~DbgPipelineState()
 
 bool DbgPipelineState::HasDynamicBlendFactor() const
 {
-    return (isGraphicsPSO && graphicsDesc.blend.blendFactorDynamic && IsBlendFactorEnabled(graphicsDesc.blend));
+    return
+    (
+        (isGraphicsPSO && graphicsDesc.blend.blendFactorDynamic && IsBlendFactorEnabled(graphicsDesc.blend)) ||
+        (    isMeshPSO &&     meshDesc.blend.blendFactorDynamic && IsBlendFactorEnabled(    meshDesc.blend))
+    );
 }
 
 bool DbgPipelineState::HasDynamicStencilRef() const
 {
-    return (isGraphicsPSO && graphicsDesc.stencil.referenceDynamic && IsStencilRefEnabled(graphicsDesc.stencil));
+    return
+    (
+        (isGraphicsPSO && graphicsDesc.stencil.referenceDynamic && IsStencilRefEnabled(graphicsDesc.stencil)) ||
+        (    isMeshPSO &&     meshDesc.stencil.referenceDynamic && IsStencilRefEnabled(    meshDesc.stencil))
+    );
 }
 
 void DbgPipelineState::SetDebugName(const char* name)

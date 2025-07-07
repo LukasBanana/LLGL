@@ -17,6 +17,11 @@ virtual LLGL::PipelineState* CreatePipelineState(
     LLGL::PipelineCache*                    pipelineCache       = nullptr
 ) override final;
 
+virtual PipelineState* CreatePipelineState(
+    const LLGL::MeshPipelineDescriptor&     pipelineStateDesc,
+    LLGL::PipelineCache*                    pipelineCache       = nullptr
+) override final;
+
 virtual void Release(
     LLGL::PipelineState&                    pipelineState
 ) override final;

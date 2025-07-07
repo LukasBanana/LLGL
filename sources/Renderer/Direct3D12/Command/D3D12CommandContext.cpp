@@ -88,6 +88,9 @@ void D3D12CommandContext::Create(
     if (initialClose)
         commandList_->Close();
 
+    /* Check if newer version of command list is available */
+    commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+
     /* Clear cache alongside device object initialization */
     ClearCache();
 }
@@ -697,6 +700,35 @@ void D3D12CommandContext::DispatchIndirect(
     FlushResourceBarriers();
     FlushComputeStagingDescriptorTables();
     commandList_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
+}
+
+void D3D12CommandContext::DispatchMesh(
+    UINT threadGroupCountX,
+    UINT threadGroupCountY,
+    UINT threadGroupCountZ)
+{
+    if (commandList6_)
+    {
+        FlushResourceBarriers();
+        FlushGraphicsStagingDescriptorTables();
+        commandList6_->DispatchMesh(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+    }
+}
+
+void D3D12CommandContext::DispatchMeshIndirect(
+    ID3D12CommandSignature* commandSignature,
+    UINT                    maxCommandCount,
+    ID3D12Resource*         argumentBuffer,
+    UINT64                  argumentBufferOffset,
+    ID3D12Resource*         countBuffer,
+    UINT64                  countBufferOffset)
+{
+    if (commandList6_)
+    {
+        FlushResourceBarriers();
+        FlushGraphicsStagingDescriptorTables();
+        commandList6_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
+    }
 }
 
 

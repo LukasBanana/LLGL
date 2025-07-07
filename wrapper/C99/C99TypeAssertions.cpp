@@ -1131,6 +1131,7 @@ LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, samplerBindings);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, resourceHeapBindings);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, graphicsPipelineBindings);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, computePipelineBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, meshPipelineBindings);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, attachmentClears);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, bufferUpdates);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, bufferCopies);
@@ -1142,6 +1143,7 @@ LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, querySections);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, renderConditionSections);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, drawCommands);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, dispatchCommands);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, meshCommands);
 
 LLGL_STATIC_ASSERT_SIZE(ColorCodes);
 LLGL_STATIC_ASSERT_OFFSET(ColorCodes, textFlags);

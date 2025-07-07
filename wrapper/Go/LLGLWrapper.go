@@ -715,6 +715,8 @@ const (
     ShaderTypeGeometry
     ShaderTypeFragment
     ShaderTypeCompute
+    ShaderTypeAmplification
+    ShaderTypeMesh
 )
 
 type ShaderSourceType int
@@ -1012,6 +1014,10 @@ type DispatchIndirectArguments struct {
     NumThreadGroups [3]uint32
 }
 
+type DrawMeshIndirectArguments struct {
+    NumThreadGroups [3]uint32
+}
+
 type ColorCodes struct {
     TextFlags       uint /* = 0 */
     BackgroundFlags uint /* = 0 */
@@ -1095,6 +1101,7 @@ type ProfileCommandBufferRecord struct {
     ResourceHeapBindings     uint32 /* = 0 */
     GraphicsPipelineBindings uint32 /* = 0 */
     ComputePipelineBindings  uint32 /* = 0 */
+    MeshPipelineBindings     uint32 /* = 0 */
     AttachmentClears         uint32 /* = 0 */
     BufferUpdates            uint32 /* = 0 */
     BufferCopies             uint32 /* = 0 */
@@ -1106,6 +1113,7 @@ type ProfileCommandBufferRecord struct {
     RenderConditionSections  uint32 /* = 0 */
     DrawCommands             uint32 /* = 0 */
     DispatchCommands         uint32 /* = 0 */
+    MeshCommands             uint32 /* = 0 */
 }
 
 type RendererInfo struct {
@@ -1137,6 +1145,7 @@ type RenderingFeatures struct {
     HasTessellationShaders       bool /* = false */
     HasTessellatorStage          bool /* = false */
     HasComputeShaders            bool /* = false */
+    HasMeshShaders               bool /* = false */
     HasInstancing                bool /* = false */
     HasOffsetInstancing          bool /* = false */
     HasIndirectDrawing           bool /* = false */
@@ -1583,6 +1592,21 @@ type GraphicsPipelineDescriptor struct {
     Rasterizer           RasterizerDescriptor
     Blend                BlendDescriptor
     Tessellation         TessellationDescriptor
+}
+
+type MeshPipelineDescriptor struct {
+    DebugName           string               /* = "" */
+    PipelineLayout      *PipelineLayout      /* = nil */
+    RenderPass          *RenderPass          /* = nil */
+    AmplificationShader *Shader              /* = nil */
+    MeshShader          *Shader              /* = nil */
+    FragmentShader      *Shader              /* = nil */
+    Viewports           []Viewport           /* = nil */
+    Scissors            []Scissor            /* = nil */
+    Depth               DepthDescriptor
+    Stencil             StencilDescriptor
+    Rasterizer          RasterizerDescriptor
+    Blend               BlendDescriptor
 }
 
 type ResourceViewDescriptor struct {

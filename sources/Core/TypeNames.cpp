@@ -20,12 +20,17 @@ LLGL_EXPORT const char* ToString(const ShaderType val)
     switch (val)
     {
         case T::Undefined:      return "undefined";
+
         case T::Vertex:         return "vertex";
         case T::TessControl:    return "tessellation control";
         case T::TessEvaluation: return "tessellation evaluation";
         case T::Geometry:       return "geometry";
         case T::Fragment:       return "fragment";
+
         case T::Compute:        return "compute";
+
+        case T::Amplification:  return "amplification";
+        case T::Mesh:           return "mesh";
     }
 
     return nullptr;

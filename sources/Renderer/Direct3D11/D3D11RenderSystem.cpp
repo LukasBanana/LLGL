@@ -510,6 +510,11 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescr
     return pipelineStates_.emplace<D3D11ComputePSO>(pipelineStateDesc);
 }
 
+PipelineState* D3D11RenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+{
+    return nullptr; // not supported
+}
+
 void D3D11RenderSystem::Release(PipelineState& pipelineState)
 {
     pipelineStates_.erase(&pipelineState);
