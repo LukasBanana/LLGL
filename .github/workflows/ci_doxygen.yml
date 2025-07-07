@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Generate Docs
       uses: mattnotmitt/doxygen-action@v1.9.5
@@ -21,7 +21,7 @@ jobs:
         doxyfile-path: docu/Doxyfile
     
     - name: Upload Docs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: LLGL-Docs-v${{ env.VERSION }}
         path: |

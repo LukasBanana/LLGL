@@ -2,7 +2,7 @@ name: Apple macOS
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "release-0.04b" ]
   pull_request:
     branches: [ "master" ]
 
