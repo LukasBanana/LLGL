@@ -2,7 +2,7 @@ name: MS Windows
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "release-0.04b" ]
   pull_request:
     branches: [ "master" ]
 
@@ -56,9 +56,9 @@ jobs:
         name: LLGL-Windows-${{ matrix.config }}-${{ matrix.arch == 'x64' && 'x86_64' || 'x86' }}
         path: |
           ${{ env.README }}
-          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/LLGL*.dll
-          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/Example_*.exe
-          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/Testbed*.exe
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ env.CONFIG }}/LLGL*.dll
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ env.CONFIG }}/Example_*.exe
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ env.CONFIG }}/Testbed*.exe
       
     - name: Testbed
       working-directory: tests/Testbed
