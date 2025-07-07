@@ -58,14 +58,15 @@ bool Surface::ProcessEvents()
 #if LLGL_LINUX_ENABLE_WAYLAND
     if (g_isWaylandSupported)
     {
-        bool result = (wl_display_dispatch(g_waylandState.display) != -1);
+        double timeout = 0.0;
+        HandleWaylandEvents(&timeout);
 
         for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
         {
             window->ProcessEvents();
         }
 
-        return result;
+        return true;
     }
     else
     {

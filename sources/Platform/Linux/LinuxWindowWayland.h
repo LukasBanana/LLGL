@@ -15,10 +15,21 @@
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
+#include <libdecor-0/libdecor.h>
 
 struct xdg_toplevel;
 struct xdg_surface;
 struct xdg_wm_base;
+struct wp_viewporter;
+struct zxdg_toplevel_decoration_v1;
+struct zxdg_decoration_manager_v1;
+
+struct FallbackEdge
+{
+    struct wl_surface*          surface = nullptr;
+    struct wl_subsurface*       subsurface = nullptr;
+    struct wp_viewport*         viewport = nullptr;
+};
 
 namespace LLGL
 {
@@ -52,15 +63,40 @@ class LinuxWindowWayland : public Window {
             Offset2D                    prevMousePos;
             Offset2D                    position;
             Extent2D                    size;
-            Extent2D                    prevSize;
-            UTF8String                  title;
+            Extent2D                    framebufferSize;
 
-            struct wl_surface*          wl_surface = nullptr;
-            struct xdg_toplevel*        xdg_toplevel = nullptr;
-            struct xdg_surface*         xdg_surface = nullptr;
+            struct {
+                struct wl_surface*   surface = nullptr;
+            } wl;
 
-            bool                        hovered = false;
-            bool                        closed  = false;
+            struct {
+                struct xdg_toplevel* toplevel = nullptr;
+                struct xdg_surface*  surface  = nullptr;
+                struct zxdg_toplevel_decoration_v1* decoration = nullptr;
+                int decorationMode;
+            } xdg;
+
+            struct {
+                struct libdecor_frame* frame = nullptr;
+            } libdecor;
+
+            struct {
+                struct wl_buffer*           buffer = nullptr;
+                struct wl_surface*          focus = nullptr;
+                FallbackEdge                top, left, right, bottom;
+                bool                        decorations = false;
+            } fallback;
+
+            float framebufferScale = 1.0f;
+
+            bool                        hovered     = false;
+            bool                        shouldClose = false;
+            bool                        visible     = false;
+            bool                        maximized   = false;
+            bool                        activated   = false;
+            bool                        fullscreen  = false;
+            bool                        resizable   = true;
+            bool                        decorated   = true;
         };
 
         State& GetState();
@@ -98,7 +134,12 @@ struct WaylandState
     struct wl_display* display;
     struct wl_registry* registry;
     struct wl_compositor* compositor;
+    struct wl_subcompositor* subcompositor;
     struct wl_seat* seat;
+    struct wp_viewporter* viewporter;
+    struct wl_shm* shm;
+
+    struct zxdg_decoration_manager_v1* decorationManager;
 
     struct wl_pointer* pointer;
     LinuxWindowWayland* pointerFocus;
@@ -112,8 +153,9 @@ struct WaylandState
 
     const char* tag;
 
-    int32_t keyRepeatRate;
-    int32_t keyRepeatDelay;
+    int keyRepeatTimerfd;
+    int keyRepeatRate;
+    int keyRepeatDelay;
     int keyRepeatScancode;
 
     Key keycodes[256];
@@ -135,10 +177,18 @@ struct WaylandState
         unsigned int                 modifiers;
     } xkb;
 
+    struct {
+        struct libdecor* context;
+        struct wl_callback* callback;
+        bool ready = false;
+    } libdecor;
+
     bool initialized = false;
 };
 
 extern WaylandState g_waylandState;
+
+void HandleWaylandEvents(double* timeout);
 
 } // /namespace LLGL
 

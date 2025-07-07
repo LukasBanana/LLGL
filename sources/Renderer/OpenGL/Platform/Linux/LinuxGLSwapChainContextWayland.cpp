@@ -34,7 +34,7 @@ LinuxGLSwapChainContextWayland::LinuxGLSwapChainContextWayland(LinuxGLContextWay
     }
     else
     {
-        LLGL::Extent2D size = surface.GetContentSize();
+        Extent2D size = surface.GetContentSize();
 
         wl_egl_window* win = wl_egl_window_create(nativeHandle.wayland.window, size.width, size.height);
         if (!win)
@@ -58,7 +58,7 @@ bool LinuxGLSwapChainContextWayland::SwapBuffers()
 
 void LinuxGLSwapChainContextWayland::Resize(const Extent2D& resolution)
 {
-    // dummy
+    wl_egl_window_resize(sharedSurface_->GetNativeWindow(), resolution.width, resolution.height, 0, 0);
 }
 
 bool LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(LinuxGLSwapChainContextWayland *context)
