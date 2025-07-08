@@ -14,7 +14,6 @@
 #include <LLGL/ImageFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/Utils/ColorRGBA.h>
-#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -245,20 +244,6 @@ class LLGL_EXPORT Image
 
         //! Returns true if the specified sub-image region is inside the image.
         bool IsRegionInside(const Offset3D& offset, const Extent3D& extent) const;
-
-        LLGL_DEPRECATED("LLGL::Image::GetSrcDesc is deprecated since 0.04b; Use LLGL::Image::GetView instead!", "GetView")
-        //! \deprecated Since 0.04b; use Image::GetView instead.
-        inline ImageView GetSrcDesc() const
-        {
-            return GetView();
-        }
-
-        LLGL_DEPRECATED("LLGL::Image::GetDstDesc is deprecated since 0.04b; Use LLGL::Image::GetMutableView instead!", "GetMutableView")
-        //! \deprecated Since 0.04b; use Image::GetMutableView instead.
-        inline MutableImageView GetDstDesc()
-        {
-            return GetMutableView();
-        }
 
     private:
 

@@ -104,14 +104,6 @@ class LLGL_EXPORT RenderingDebugger
         */
         void RecordProfile(const FrameProfile& profile);
 
-        //! \deprecated Since 0.04b; Use Errorf instead!
-        LLGL_DEPRECATED("LLGL::RenderingDebugger::PostError is deprecated since 0.04b; Use LLGL::RenderingDebugger::Errorf instead!", "Errorf")
-        void PostError(const ErrorType type, const StringView& message);
-
-        //! \deprecated Since 0.04b; Use Warningf instead!
-        LLGL_DEPRECATED("LLGL::RenderingDebugger::PostWarning is deprecated since 0.04b; Use LLGL::RenderingDebugger::Warningf instead!", "Warningf")
-        void PostWarning(const WarningType type, const StringView& message);
-
     public:
 
         /**
@@ -133,8 +125,6 @@ class LLGL_EXPORT RenderingDebugger
             public:
 
                 Message() = default;
-                Message(const Message&) = default;
-                Message& operator = (const Message&) = default;
 
                 //! Initializes the message with text, source, and group name information.
                 Message(const StringView& text, const StringView& source, const StringView& groupName);
@@ -232,12 +222,6 @@ class LLGL_EXPORT RenderingDebugger
         Pimpl* pimpl_;
 
 };
-
-
-inline void FrameProfile::Accumulate(const FrameProfile& rhs)
-{
-    RenderingDebugger::MergeProfiles(*this, rhs);
-}
 
 
 } // /namespace LLGL

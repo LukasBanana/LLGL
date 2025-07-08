@@ -529,6 +529,24 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescrip
     return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, pipelineCache), pipelineStateDesc);
 }
 
+PipelineState* DbgRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
+{
+    if (LLGL_DBG_SOURCE())
+        ValidateMeshPipelineDesc(pipelineStateDesc);
+
+    MeshPipelineDescriptor instanceDesc = pipelineStateDesc;
+    {
+        if (pipelineStateDesc.pipelineLayout != nullptr)
+            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
+
+        instanceDesc.renderPass             = DbgGetInstance<DbgRenderPass>(pipelineStateDesc.renderPass);
+        instanceDesc.amplificationShader    = DbgGetInstance<DbgShader>(pipelineStateDesc.amplificationShader);
+        instanceDesc.meshShader             = DbgGetInstance<DbgShader>(pipelineStateDesc.meshShader);
+        instanceDesc.fragmentShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.fragmentShader);
+    }
+    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, pipelineCache), pipelineStateDesc);
+}
+
 void DbgRenderSystem::Release(PipelineState& pipelineState)
 {
     ReleaseDbg(pipelineStates_, pipelineState);
@@ -2022,6 +2040,12 @@ static bool IsDualSourceBlendingEnabled(const BlendTargetDescriptor& blendTarget
     );
 }
 
+struct ShaderTypePair
+{
+    Shader*     shader;
+    ShaderType  expectedType;
+};
+
 void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc)
 {
     const RenderingFeatures& features = GetRenderingCaps().features;
@@ -2035,16 +2059,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
 
-    const bool hasFragmentShader = (pipelineStateDesc.fragmentShader != nullptr);
-
     if ((pipelineStateDesc.tessControlShader != nullptr) != (pipelineStateDesc.tessEvaluationShader != nullptr))
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO with incomplete tessellation shader stages");
-
-    struct ShaderTypePair
-    {
-        Shader*     shader;
-        ShaderType  expectedType;
-    };
 
     SmallVector<DbgShader*, 5> shadersDbg;
 
@@ -2093,6 +2109,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
+    const bool hasFragmentShader = (pipelineStateDesc.fragmentShader != nullptr);
     const bool hasDualSourceBlend = IsDualSourceBlendingEnabled(pipelineStateDesc.blend.targets[0]);
 
     if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
@@ -2140,6 +2157,101 @@ void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescripto
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create compute PSO without compute shader");
+}
+
+//TODO: generalize this from ValidateGraphicsPipelineDesc()
+void DbgRenderSystem::ValidateMeshPipelineDesc(const MeshPipelineDescriptor& pipelineStateDesc)
+{
+    const RenderingFeatures& features = GetRenderingCaps().features;
+    if (!features.hasMeshShaders)
+    {
+        LLGL_DBG_ERROR_NOT_SUPPORTED("mesh shaders");
+        return;
+    }
+    if (pipelineStateDesc.rasterizer.conservativeRasterization && !features.hasConservativeRasterization)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization");
+
+    /* Validate shader pipeline stages */
+    bool hasSeparableShaders = false;
+    if (DbgShader* meshShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.meshShader))
+        hasSeparableShaders = ((meshShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create mesh PSO without mesh shader");
+
+    SmallVector<DbgShader*, 5> shadersDbg;
+
+    bool hasShadersWithFailedReflection = false;
+
+    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.amplificationShader, ShaderType::Amplification },
+                                 ShaderTypePair{ pipelineStateDesc.meshShader,          ShaderType::Mesh          },
+                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,      ShaderType::Fragment      } })
+    {
+        if (Shader* shader = pair.shader)
+        {
+            auto* shaderDbg = LLGL_CAST(DbgShader*, shader);
+
+            if (shaderDbg->HasReflectionFailed())
+                hasShadersWithFailedReflection = true;
+
+            const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
+            if (isSeparableShaders && !hasSeparableShaders)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot mix and match separable %s shader with non-separable shaders in mesh PSO; see LLGL::ShaderCompileFlags::SeparateShader",
+                    ToString(shader->GetType())
+                );
+            }
+            else if (!isSeparableShaders && hasSeparableShaders)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot mix and match non-separable %s shader with separable shaders in mesh PSO; see LLGL::ShaderCompileFlags::SeparateShader",
+                    ToString(shader->GetType())
+                );
+            }
+            if (shader != nullptr && shader->GetType() != pair.expectedType)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot create mesh PSO with %s shader being assigned to %s stage",
+                    ToString(shader->GetType()), ToString(pair.expectedType)
+                );
+            }
+
+            shadersDbg.push_back(shaderDbg);
+        }
+    }
+
+    const bool hasFragmentShader = (pipelineStateDesc.fragmentShader != nullptr);
+    const bool hasDualSourceBlend = IsDualSourceBlendingEnabled(pipelineStateDesc.blend.targets[0]);
+
+    if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
+        ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass, hasDualSourceBlend);
+
+    ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
+
+    if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
+    {
+        ValidatePipelineStateUniforms(*pipelineLayoutDbg, shadersDbg, pipelineStateDesc.debugName);
+
+        /* If shader reflection failed, report error if PSO layout requires it (Vulkan specific) */
+        if (hasShadersWithFailedReflection && IsVulkan())
+        {
+            if (!pipelineLayoutDbg->desc.bindings.empty() &&
+                !pipelineLayoutDbg->desc.heapBindings.empty())
+            {
+                const char* psoDebugName = pipelineStateDesc.debugName;
+                const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+                LLGL_DBG_ERROR(
+                    ErrorType::UndefinedBehavior,
+                    "failed to reflect shader code in PSO%s with mix of heap- and individual bindings; "
+                    "perhaps LLGL was built without LLGL_VK_ENABLE_SPIRV_REFLECT",
+                    psoLabel.c_str()
+                );
+            }
+        }
+    }
 }
 
 void DbgRenderSystem::ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg, const RenderPass* renderPass, bool hasDualSourceBlend)

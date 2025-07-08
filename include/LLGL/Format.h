@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Export.h>
-#include <LLGL/Deprecated.h>
 #include <cstdint>
 #include <cstddef>
 
@@ -103,6 +102,7 @@ i.e. for the Format::RGB10A2UNorm the bit pattern is <code>A[31:30], B[29:20], G
 | Format::RGB10A2UInt     | <b>\c  32</b> | \c u10 | \c u10 | \c u10 | \c  u2 |        |
 | Format::RG11B10Float    | <b>\c  32</b> | \c f11 | \c f11 | \c f10 |        |        |
 | Format::RGB9E5Float     | <b>\c  32</b> | \c   9 | \c   9 | \c   9 |        | \c   5 |
+| Format::BGR5A1UNorm     | <b>\c  16</b> | \c  n5 | \c  n5 | \c  n5 | \c  n1 |        |
 
 \see TextureDescriptor::format
 \see VertexAttribute::format
@@ -206,6 +206,7 @@ enum class Format
     RGB10A2UInt,        //!< Packed color format: red, green, blue 10-bit and alpha 2-bit unsigned integer components.
     RG11B10Float,       //!< Packed color format: red, green 11-bit and blue 10-bit unsigned floating point, i.e. 6-bit mantissa for red and green, 5-bit mantissa for blue, and 5-bit exponent for all components.
     RGB9E5Float,        //!< Packed color format: red, green, blue 9-bit unsigned floating-point with shared 5-bit exponent, i.e. 9-bit mantissa for each component and one 5-bit exponent for all components.
+    BGR5A1UNorm,        //!< Packed color format: blue, green, red 5-bit and alpha 1-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan, Direct3D 11.1, Direct3D 12, Metal.
 
     /* --- Depth-stencil formats --- */
     D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.
@@ -289,14 +290,6 @@ enum class ImageFormat
 
     /* Compressed formats */
     Compressed,     //!< Compressed image format. The actual compression format must be specified with \c Format.
-
-    // DEPRECATED
-    BC1,            //!< Block compression BC1. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
-    BC2,            //!< Block compression BC2. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
-    BC3,            //!< Block compression BC3. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
-    BC4,            //!< Block compression BC4. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
-    BC5,            //!< Block compression BC5. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
-    // /DEPRECATED
 };
 
 /**
@@ -512,13 +505,6 @@ e.g. Format::BC1UNorm, Format::BC2UNorm_sRGB, Format::BC4SNorm, etc.
 LLGL_EXPORT bool IsCompressedFormat(const Format format);
 
 /**
-\brief Returns true if the specified color format is a compressed format,
-i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat);
-
-/**
 \brief Returns true if the specified hardware format is a depth or depth-stencil format,
 i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
 \see Format
@@ -572,16 +558,6 @@ LLGL_EXPORT bool IsColorFormat(const Format format);
 LLGL_EXPORT bool IsNormalizedFormat(const Format format);
 
 /**
-\brief Returns true if the specified hardware format is an integral format (like Format::RGBA8UInt, Format::RGBA8UNorm, Format::R8SInt etc.).
-\remarks This also includes all normalized formats.
-\deprecated Since 0.04b; Use a combination of IsIntegerFormat(), IsFloatFormat(), and IsNormalizedFormat() instead!
-\see IsNormalizedFormat
-\see Format
-*/
-LLGL_DEPRECATED("IsIntegralFormat() is deprecated since 0.04b; Use a combination of IsIntegerFormat(), IsFloatFormat(), and IsNormalizedFormat() instead!")
-LLGL_EXPORT bool IsIntegralFormat(const Format format);
-
-/**
 \brief Returns true if the specified hardware format is an integer format (like Format::RGBA8UInt, Format::R8SInt etc.).
 \remarks This does not include normalized formats such as Format::RGBA8UNorm.
 While these types use an integer type as input, they are normalized to a fractional number in the closed range [0, 1].
@@ -621,13 +597,6 @@ LLGL_EXPORT bool IsSIntDataType(const DataType dataType);
 \return True if the specified data type equals one of the following enumeration entries: DataType::UInt8, DataType::UInt16, DataType::UInt32.
 */
 LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
-
-//! \deprecated Since 0.04b; Use IsSIntDataType() instead.
-LLGL_DEPRECATED("LLGL::IsIntDataType() is deprecated since 0.04b; Use IsSIntDataType() instead.", "IsSIntDataType")
-inline bool IsIntDataType(const DataType dataType)
-{
-    return IsSIntDataType(dataType);
-}
 
 /**
 \brief Determines if the argument refers to a floating-pointer data type.

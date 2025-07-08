@@ -20,6 +20,7 @@
 #include <LLGL-C/RenderSystem.h>
 #include <LLGL-C/RenderSystemChild.h>
 #include <LLGL-C/CommandBuffer.h>
+#include <LLGL-C/CommandBufferTier1.h>
 #include <LLGL-C/SwapChain.h>
 #include <LLGL-C/Resource.h>
 #include <LLGL-C/ResourceHeap.h>

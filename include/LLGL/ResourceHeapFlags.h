@@ -14,7 +14,6 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Buffer.h>
 #include <LLGL/BufferFlags.h>
-#include <LLGL/Deprecated.h>
 #include <vector>
 
 
@@ -99,8 +98,6 @@ struct ResourceViewDescriptor
     std::uint32_t           initialCount    = 0;
 };
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
 /**
 \brief Resource heap descriptor structure.
 \remarks For the render systems of modern graphics APIs (i.e. Vulkan and Direct3D 12), a resource heap is the only way to bind hardware resources to a shader pipeline.
@@ -115,15 +112,6 @@ struct ResourceHeapDescriptor
     inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews = 0) :
         pipelineLayout   { pipelineLayout   },
         numResourceViews { numResourceViews }
-    {
-    }
-
-    //! \deprecated Since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!
-    LLGL_DEPRECATED("ResourceHeapDescriptor::barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!")
-    inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews, long barrierFlags) :
-        pipelineLayout   { pipelineLayout   },
-        numResourceViews { numResourceViews },
-        barrierFlags     { barrierFlags     }
     {
     }
 
@@ -146,13 +134,7 @@ struct ResourceHeapDescriptor
     \see RenderSystem::CreateResourceHeap
     */
     std::uint32_t   numResourceViews    = 0;
-
-    //! \deprecated Since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!
-    LLGL_DEPRECATED("ResourceHeapDescriptor::barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!")
-    long            barrierFlags        = 0;
 };
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 
 } // /namespace LLGL

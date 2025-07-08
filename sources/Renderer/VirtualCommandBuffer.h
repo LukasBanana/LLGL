@@ -79,8 +79,6 @@ class VirtualCommandBuffer
             public:
 
                 ChunkIterator() = default;
-                ChunkIterator(const ChunkIterator&) = default;
-                ChunkIterator& operator = (const ChunkIterator&) = default;
 
             public:
 

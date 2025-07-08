@@ -29,7 +29,7 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
         case D3D11OpcodeSetVertexBuffer:
         {
             auto cmd = static_cast<const D3D11CmdSetVertexBuffer*>(pc);
-            context.SetVertexBuffer(*(cmd->buffer));
+            context.SetVertexBuffer(*(cmd->buffer), cmd->stride);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetVertexBufferArray:

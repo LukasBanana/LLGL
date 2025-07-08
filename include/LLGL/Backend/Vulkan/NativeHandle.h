@@ -42,12 +42,6 @@ struct RenderSystemNativeHandle
 
     //! Family index to the native command queue.
     std::uint32_t       queueFamily;
-
-    LLGL_DEPRECATED("RenderSystemNativeHandle::queueGraphicsFamily is deprecated since 0.04b; Use 'queueFamily' instead!")
-    std::uint32_t       queueGraphicsFamily;
-
-    LLGL_DEPRECATED("RenderSystemNativeHandle::queuePresentFamily is deprecated since 0.04b; Use vkGetPhysicalDeviceQueueFamilyProperties on the physical device instead!")
-    std::uint32_t       queuePresentFamily;
 };
 
 /**

@@ -13,7 +13,6 @@
 #include <LLGL/Types.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Display.h>
-#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -23,9 +22,9 @@ namespace LLGL
 /**
 \brief The Surface interface is the base interface for Window (on Desktop platforms) and Canvas (on mobile platforms).
 \remarks Surface provides the minimal required interface for a graphics rendering context,
-such as the access to the native handle, information about the content size (i.e. the client area size),
-and the ability to adapt for a new video mode or an updated pixel format
-(which is required for multi-sampled framebuffers on a WGL context for instance).
+such as the access to the native handle, information about the content size (i.e. the size of the drawable area),
+and the ability to adapt for a new video mode.
+\remarks This is the class custom windowing systems must inherit from either directly or indirectly through the Window or Canvas interface.
 \see Window
 \see Canvas
 */
@@ -83,10 +82,6 @@ class LLGL_EXPORT Surface : public Interface
         \return Pointer to the Display in which this surface is resident or null if this surface is not resident in any display.
         */
         virtual Display* FindResidentDisplay() const = 0;
-
-        //! \deprecated Since 0.04b; No need to reset pixel format anymore!
-        LLGL_DEPRECATED("Surface::ResetPixelFormat is deprecated since 0.04b; No need to reset pixel format anymore!")
-        virtual void ResetPixelFormat();
 
     public:
 

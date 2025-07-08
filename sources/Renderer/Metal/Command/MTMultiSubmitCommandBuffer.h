@@ -50,6 +50,7 @@ class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
 
         void GenerateMipmapsForTexture(id<MTLTexture> texture);
 
+        void SetVertexBufferInternal(Buffer& buffer);
         void SetNativeVertexBuffers(NSUInteger count, const id<MTLBuffer>* buffers, const NSUInteger* offsets);
         void SetNativeIndexBuffer(id<MTLBuffer> buffer, NSUInteger offset, bool indexType16Bits);
 

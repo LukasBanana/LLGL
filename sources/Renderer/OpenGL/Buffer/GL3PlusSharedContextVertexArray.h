@@ -11,7 +11,9 @@
 
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/ArrayView.h>
-#include "GLVertexAttribute.h"
+#include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/StringLiteral.h>
+#include "GLVertexInputLayout.h"
 #include "GLVertexArrayObject.h"
 #include <vector>
 
@@ -28,7 +30,11 @@ class GL3PlusSharedContextVertexArray
 
     public:
 
+        // Resets the vertex layout.
+        void Reset();
+
         // Stores the vertex attributes for later use via glVertexAttrib*Pointer() functions.
+        void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
         void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
 
         // Finalize the vertex array.
@@ -57,9 +63,9 @@ class GL3PlusSharedContextVertexArray
 
     private:
 
-        std::vector<GLVertexAttribute>  attribs_;
-        std::vector<GLContextVAO>       contextDependentVAOs_;
-        std::string                     debugName_;
+        GLVertexInputLayout             inputLayout_;
+        SmallVector<GLContextVAO, 1>    contextDependentVAOs_;
+        StringLiteral                   debugName_;
 
 };
 

@@ -32,6 +32,7 @@ class DbgPipelineState final : public PipelineState
 
         DbgPipelineState(PipelineState& instance, const GraphicsPipelineDescriptor& desc);
         DbgPipelineState(PipelineState& instance, const ComputePipelineDescriptor& desc);
+        DbgPipelineState(PipelineState& instance, const MeshPipelineDescriptor& desc);
         ~DbgPipelineState();
 
         // Returns true if this PSO has a dynamic blend factor, i.e. BlendDescriptor::blendFactorDynamic is effectively enabled.
@@ -46,11 +47,13 @@ class DbgPipelineState final : public PipelineState
         std::string                     label;
         const DbgPipelineLayout* const  pipelineLayout  = nullptr;
         const bool                      isGraphicsPSO   = false;
+        const bool                      isMeshPSO       = false;
 
         union
         {
             const GraphicsPipelineDescriptor    graphicsDesc;
             const ComputePipelineDescriptor     computeDesc;
+            const MeshPipelineDescriptor        meshDesc;
         };
 
 };

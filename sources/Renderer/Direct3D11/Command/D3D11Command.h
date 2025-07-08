@@ -26,7 +26,8 @@ class D3D11PipelineState;
 
 struct D3D11CmdSetVertexBuffer
 {
-    D3D11Buffer* buffer;
+    D3D11Buffer*    buffer;
+    UINT            stride;
 };
 
 struct D3D11CmdSetVertexBufferArray

@@ -31,8 +31,6 @@ class GLBlendState
     public:
 
         GLBlendState() = default;
-        GLBlendState(const GLBlendState&) = default;
-        GLBlendState& operator = (const GLBlendState&) = default;
 
         GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
 

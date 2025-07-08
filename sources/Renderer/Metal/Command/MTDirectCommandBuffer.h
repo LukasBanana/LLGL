@@ -61,6 +61,8 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
         void FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
         void FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
 
+        void SetVertexBufferInternal(Buffer& buffer);
+
     private:
 
         id<MTLCommandBuffer>            cmdBuffer_          = nil;

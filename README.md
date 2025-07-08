@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt"><img alt="License" src="https://img.shields.io/badge/license-BSD--3%20clause-blue.svg" /></a>
-    <a href="https://discord.com/channels/1257440130021457941"><img alt="Discord" src="https://img.shields.io/discord/1257440130021457941?logo=discord&logoColor=white"></a?>
+    <a href="https://discord.gg/JT4dZ3CgJZ"><img alt="Discord" src="https://img.shields.io/discord/1257440130021457941?logo=discord&logoColor=white"></a?>
 </p>
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
@@ -17,7 +17,7 @@ The library is written mostly in C++11 with the addition of a C99, C# 6.0, and G
 
 ## Documentation
 
-- **Version**: 0.04 Beta (see [ChangeLog](docu/ChangeLog))
+- **Version**: 0.05 Beta (see [ChangeLog](docu/ChangeLog))
 - [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)

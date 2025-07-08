@@ -67,6 +67,16 @@ void GLCommandBuffer::SetTransformFeedback(GLBufferWithXFB& bufferWithXfbGL)
     renderState_.boundBufferWithFxb = &bufferWithXfbGL;
 }
 
+void GLCommandBuffer::SetTransformFeedbackChecked(GLBufferWithVAO& bufferWithVaoGL)
+{
+    /* Store ID to transform feedback object */
+    if ((bufferWithVaoGL.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+    {
+        auto& streamOutputBufferGL = LLGL_CAST(GLBufferWithXFB&, bufferWithVaoGL);
+        SetTransformFeedback(streamOutputBufferGL);
+    }
+}
+
 void GLCommandBuffer::InvalidateMemoryBarriers(GLbitfield barriers)
 {
     renderState_.dirtyBarriers |= (renderState_.implicitBarriers & barriers);

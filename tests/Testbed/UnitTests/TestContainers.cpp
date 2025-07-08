@@ -231,6 +231,14 @@ DEF_RITEST( ContainerSmallVector )
     TEST_SMALL_VECTOR_EXT(iv5_4a, cmpInt16, 4);
     TEST_SMALL_VECTOR_EXT(iv5_4b, cmpInt0,  0);
 
+    // Test reallocations
+    SmallVector<int, 2> iv2_2;
+    iv2_2 = { 1, 2, 3 };
+    iv2_2.pop_back();
+    iv2_2.pop_back();
+    iv2_2.shrink_to_fit();
+    iv2_2.insert(iv2_2.end(), { 4, 5 });
+
     return TestResult::Passed;
 }
 

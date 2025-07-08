@@ -16,8 +16,6 @@
 #include <wayland-client.h>
 #endif
 
-#include <LLGL/Deprecated.h>
-
 
 namespace LLGL
 {
@@ -70,29 +68,6 @@ struct NativeHandle
 
     union
     {
-        struct
-        {
-            //! \deprecated Since 0.04b
-            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.display instead.", "x11.display")
-            ::Display*      display;
-
-            //! \deprecated Since 0.04b
-            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.window instead.")
-            ::Window        window;
-
-            //! \deprecated Since 0.04b
-            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.visual instead.")
-            ::XVisualInfo*  visual;
-
-            //! \deprecated Since 0.04b
-            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.colorMap instead.")
-            ::Colormap      colorMap;
-
-            //! \deprecated Since 0.04b
-            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.screen instead.")
-            int             screen;
-        };
-
         //! Native handle for X11 protocol.
         NativeHandleX11     x11;
 

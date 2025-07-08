@@ -34,8 +34,6 @@ class GLShaderBindingLayout
     public:
 
         GLShaderBindingLayout() = default;
-        GLShaderBindingLayout(const GLShaderBindingLayout&) = default;
-        GLShaderBindingLayout& operator = (const GLShaderBindingLayout&) = default;
 
         GLShaderBindingLayout(const GLPipelineLayout& pipelineLayout);
 

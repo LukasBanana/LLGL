@@ -141,6 +141,18 @@ struct DispatchIndirectArguments
     std::uint32_t numThreadGroups[3];
 };
 
+/**
+\brief Format structure for the arguments of an indirect mesh draw command.
+\see CommandBufferTier1::DrawMeshIndirect
+\see Vulkan counterpart \c VkDrawMeshTasksIndirectCommandEXT: https://registry.khronos.org/vulkan/specs/latest/man/html/VkDrawMeshTasksIndirectCommandEXT.html
+\see Direct3D12 counterpart \c D3D12_DISPATCH_MESH_ARGUMENTS: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_dispatch_mesh_arguments
+*/
+struct DrawMeshIndirectArguments
+{
+    //! Number of thread groups in X, Y, and Z dimension.
+    std::uint32_t numThreadGroups[3];
+};
+
 /** @} */
 
 

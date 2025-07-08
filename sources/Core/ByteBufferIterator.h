@@ -20,8 +20,6 @@ class ByteBufferIterator
     public:
 
         ByteBufferIterator() = default;
-        ByteBufferIterator(const ByteBufferIterator&) = default;
-        ByteBufferIterator& operator = (const ByteBufferIterator&) = default;
 
         // Initializes the byte buffer.
         inline ByteBufferIterator(char* byteBuffer) :
@@ -66,8 +64,6 @@ class ByteBufferConstIterator
     public:
 
         ByteBufferConstIterator() = default;
-        ByteBufferConstIterator(const ByteBufferConstIterator&) = default;
-        ByteBufferConstIterator& operator = (const ByteBufferConstIterator&) = default;
 
         // Initializes the byte buffer.
         inline ByteBufferConstIterator(const char* byteBuffer) :

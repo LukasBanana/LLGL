@@ -13,7 +13,6 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
-#include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
 
@@ -31,12 +30,20 @@ namespace LLGL
 enum class ShaderType
 {
     Undefined,      //!< Undefined shader type.
+
+    // Traditional graphics pipeline.
     Vertex,         //!< Vertex shader type.
     TessControl,    //!< Tessellation control shader type (also "Hull Shader").
     TessEvaluation, //!< Tessellation evaluation shader type (also "Domain Shader").
     Geometry,       //!< Geometry shader type.
     Fragment,       //!< Fragment shader type (also "Pixel Shader").
+
+    // Compute pipeline.
     Compute,        //!< Compute shader type.
+
+    // Mesh pipeline.
+    Amplification,  //!< Amplification shader
+    Mesh,           //!< Mesh shader
 };
 
 /**
@@ -187,6 +194,12 @@ struct StageFlags
         //! Specifies the compute shader stage.
         ComputeStage        = (1 << 5),
 
+        //! Specifies the amplification shader stage (used in conjunction with a mesh shader).
+        AmplificationStage  = (1 << 6),
+
+        //! Specifies the mesh shader stage.
+        MeshStage           = (1 << 7),
+
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),
 
@@ -208,8 +221,6 @@ struct StageFlags
 struct ShaderMacro
 {
     ShaderMacro() = default;
-    ShaderMacro(const ShaderMacro&) = default;
-    ShaderMacro& operator = (const ShaderMacro&) = default;
 
     //! Constructor to initialize the shader macro with a name and an optional body definition.
     inline ShaderMacro(const char* name, const char* definition = nullptr) :
@@ -286,8 +297,6 @@ struct ComputeShaderAttributes
     Extent3D workGroupSize = { 1, 1, 1 };
 };
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
 /**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
@@ -295,9 +304,6 @@ LLGL_DEPRECATED_IGNORE_PUSH()
 struct ShaderDescriptor
 {
     ShaderDescriptor() = default;
-
-    ShaderDescriptor(const ShaderDescriptor&) = default;
-    ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
 
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
@@ -401,10 +407,6 @@ struct ShaderDescriptor
     */
     long                        flags           = 0;
 
-    //! \deprecated Since 0.04b; Use ShaderDescriptor::debugName instead.
-    LLGL_DEPRECATED("ShaderDescriptor::name is deprecated since 0.04b; Use ShaderDescriptor::debugName instead!", "debugName")
-    const char*                 name            = nullptr;
-
     //! Vertex (or geometry) shader specific attributes.
     VertexShaderAttributes      vertex;
 
@@ -418,8 +420,6 @@ struct ShaderDescriptor
     */
     ComputeShaderAttributes     compute;
 };
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 
 /* ----- Functions ----- */

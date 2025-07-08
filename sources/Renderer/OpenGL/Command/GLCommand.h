@@ -25,6 +25,7 @@ namespace LLGL
 
 class RenderTarget;
 class GLBuffer;
+class GLBufferWithVAO;
 class GLBufferWithXFB;
 class GLTexture;
 class GLResourceHeap;
@@ -187,6 +188,13 @@ struct GLCmdResolveRenderTarget
 struct GLCmdBindVertexArray
 {
     GLSharedContextVertexArray* vertexArray;
+};
+
+struct GLCmdBuildVertexArray
+{
+    GLBufferWithVAO*    bufferWithVAO;
+    std::uint32_t       numVertexAttribs;
+//  GLVertexAttribute   vertexAttribs[numVertexAttribs];
 };
 
 struct GLCmdBindElementArrayBufferToVAO

@@ -31,8 +31,6 @@ class GLRasterizerState
     public:
 
         GLRasterizerState() = default;
-        GLRasterizerState(const GLRasterizerState&) = default;
-        GLRasterizerState& operator = (const GLRasterizerState&) = default;
 
         GLRasterizerState(const RasterizerDescriptor& desc);
 

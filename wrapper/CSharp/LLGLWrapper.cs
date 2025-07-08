@@ -29,9 +29,6 @@ namespace LLGL
         Direct3D12  = 0x00000009,
         Vulkan      = 0x0000000A,
         Metal       = 0x0000000B,
-        OpenGLES1   = OpenGLES,
-        OpenGLES2   = OpenGLES,
-        OpenGLES3   = OpenGLES,
         Reserved    = 0x000000FF,
     }
 
@@ -130,6 +127,7 @@ namespace LLGL
         RGB10A2UInt,
         RG11B10Float,
         RGB9E5Float,
+        BGR5A1UNorm,
         D16UNorm,
         D24UNormS8UInt,
         D32Float,
@@ -711,6 +709,8 @@ namespace LLGL
         Geometry,
         Fragment,
         Compute,
+        Amplification,
+        Mesh,
     }
 
     public enum ShaderSourceType
@@ -906,6 +906,7 @@ namespace LLGL
         CombinedSampler        = (1 << 9),
         CopySrc                = (1 << 10),
         CopyDst                = (1 << 11),
+        TexelBuffer            = (1 << 12),
     }
 
     [Flags]
@@ -950,6 +951,8 @@ namespace LLGL
         GeometryStage       = (1 << 3),
         FragmentStage       = (1 << 4),
         ComputeStage        = (1 << 5),
+        AmplificationStage  = (1 << 6),
+        MeshStage           = (1 << 7),
         AllTessStages       = (TessControlStage | TessEvaluationStage),
         AllGraphicsStages   = (VertexStage | AllTessStages | GeometryStage | FragmentStage),
         AllStages           = (AllGraphicsStages | ComputeStage),
@@ -1372,6 +1375,7 @@ namespace LLGL
         public int ResourceHeapBindings { get; set; }     = 0;
         public int GraphicsPipelineBindings { get; set; } = 0;
         public int ComputePipelineBindings { get; set; }  = 0;
+        public int MeshPipelineBindings { get; set; }     = 0;
         public int AttachmentClears { get; set; }         = 0;
         public int BufferUpdates { get; set; }            = 0;
         public int BufferCopies { get; set; }             = 0;
@@ -1383,6 +1387,7 @@ namespace LLGL
         public int RenderConditionSections { get; set; }  = 0;
         public int DrawCommands { get; set; }             = 0;
         public int DispatchCommands { get; set; }         = 0;
+        public int MeshCommands { get; set; }             = 0;
 
         public ProfileCommandBufferRecord() { }
 
@@ -1408,6 +1413,7 @@ namespace LLGL
                 ResourceHeapBindings     = value.resourceHeapBindings;
                 GraphicsPipelineBindings = value.graphicsPipelineBindings;
                 ComputePipelineBindings  = value.computePipelineBindings;
+                MeshPipelineBindings     = value.meshPipelineBindings;
                 AttachmentClears         = value.attachmentClears;
                 BufferUpdates            = value.bufferUpdates;
                 BufferCopies             = value.bufferCopies;
@@ -1419,6 +1425,7 @@ namespace LLGL
                 RenderConditionSections  = value.renderConditionSections;
                 DrawCommands             = value.drawCommands;
                 DispatchCommands         = value.dispatchCommands;
+                MeshCommands             = value.meshCommands;
             }
         }
     }
@@ -1436,16 +1443,13 @@ namespace LLGL
         public bool HasTextureViewSwizzle { get; set; }        = false;
         public bool HasTextureViewFormatSwizzle { get; set; }  = false;
         public bool HasBufferViews { get; set; }               = false;
-        [Obsolete("LLGL.RenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.")]
-        public bool HasSamplers { get; set; }                  = true;
         public bool HasConstantBuffers { get; set; }           = false;
         public bool HasStorageBuffers { get; set; }            = false;
-        [Obsolete("LLGL.RenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.")]
-        public bool HasUniforms { get; set; }                  = true;
         public bool HasGeometryShaders { get; set; }           = false;
         public bool HasTessellationShaders { get; set; }       = false;
         public bool HasTessellatorStage { get; set; }          = false;
         public bool HasComputeShaders { get; set; }            = false;
+        public bool HasMeshShaders { get; set; }               = false;
         public bool HasInstancing { get; set; }                = false;
         public bool HasOffsetInstancing { get; set; }          = false;
         public bool HasIndirectDrawing { get; set; }           = false;
@@ -1485,6 +1489,7 @@ namespace LLGL
                 HasTessellationShaders       = value.hasTessellationShaders;
                 HasTessellatorStage          = value.hasTessellatorStage;
                 HasComputeShaders            = value.hasComputeShaders;
+                HasMeshShaders               = value.hasMeshShaders;
                 HasInstancing                = value.hasInstancing;
                 HasOffsetInstancing          = value.hasOffsetInstancing;
                 HasIndirectDrawing           = value.hasIndirectDrawing;
@@ -1581,8 +1586,6 @@ namespace LLGL
         public AnsiString     DebugName { get; set; }        = null;
         public PipelineLayout PipelineLayout { get; set; }   = null;
         public int            NumResourceViews { get; set; } = 0;
-        [Obsolete("ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead!")]
-        public BarrierFlags   BarrierFlags { get; set; }     = 0;
 
         internal NativeLLGL.ResourceHeapDescriptor Native
         {
@@ -3250,6 +3253,90 @@ namespace LLGL
         }
     }
 
+    public class MeshPipelineDescriptor
+    {
+        public AnsiString           DebugName { get; set; }           = null;
+        public PipelineLayout       PipelineLayout { get; set; }      = null;
+        public RenderPass           RenderPass { get; set; }          = null;
+        public Shader               AmplificationShader { get; set; } = null;
+        public Shader               MeshShader { get; set; }          = null;
+        public Shader               FragmentShader { get; set; }      = null;
+        public Viewport[]           Viewports { get; set; }
+        public Scissor[]            Scissors { get; set; }
+        public DepthDescriptor      Depth { get; set; }               = new DepthDescriptor();
+        public StencilDescriptor    Stencil { get; set; }             = new StencilDescriptor();
+        public RasterizerDescriptor Rasterizer { get; set; }          = new RasterizerDescriptor();
+        public BlendDescriptor      Blend { get; set; }               = new BlendDescriptor();
+
+        internal NativeLLGL.MeshPipelineDescriptor Native
+        {
+            get
+            {
+                var native = new NativeLLGL.MeshPipelineDescriptor();
+                unsafe
+                {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    if (PipelineLayout != null)
+                    {
+                        native.pipelineLayout = PipelineLayout.Native;
+                    }
+                    if (RenderPass != null)
+                    {
+                        native.renderPass = RenderPass.Native;
+                    }
+                    if (AmplificationShader != null)
+                    {
+                        native.amplificationShader = AmplificationShader.Native;
+                    }
+                    if (MeshShader != null)
+                    {
+                        native.meshShader = MeshShader.Native;
+                    }
+                    if (FragmentShader != null)
+                    {
+                        native.fragmentShader = FragmentShader.Native;
+                    }
+                    if (Viewports != null)
+                    {
+                        native.numViewports = (IntPtr)Viewports.Length;
+                        fixed (Viewport* viewportsPtr = Viewports)
+                        {
+                            native.viewports = viewportsPtr;
+                        }
+                    }
+                    if (Scissors != null)
+                    {
+                        native.numScissors = (IntPtr)Scissors.Length;
+                        fixed (Scissor* scissorsPtr = Scissors)
+                        {
+                            native.scissors = scissorsPtr;
+                        }
+                    }
+                    if (Depth != null)
+                    {
+                        native.depth = Depth.Native;
+                    }
+                    if (Stencil != null)
+                    {
+                        native.stencil = Stencil.Native;
+                    }
+                    if (Rasterizer != null)
+                    {
+                        native.rasterizer = Rasterizer.Native;
+                    }
+                    if (Blend != null)
+                    {
+                        native.blend = Blend.Native;
+                    }
+                }
+                return native;
+            }
+        }
+    }
+
     public class ResourceViewDescriptor
     {
         public Resource              Resource { get; set; }     = null;
@@ -3421,6 +3508,11 @@ namespace LLGL
         }
 
         public unsafe struct CommandBuffer
+        {
+            internal unsafe void* ptr;
+        }
+
+        public unsafe struct CommandBufferTier1
         {
             internal unsafe void* ptr;
         }
@@ -3644,6 +3736,11 @@ namespace LLGL
             public fixed int numThreadGroups[3];
         }
 
+        public unsafe struct DrawMeshIndirectArguments
+        {
+            public fixed int numThreadGroups[3];
+        }
+
         public unsafe struct ColorCodes
         {
             public int textFlags;       /* = 0 */
@@ -3698,6 +3795,7 @@ namespace LLGL
             public int resourceHeapBindings;     /* = 0 */
             public int graphicsPipelineBindings; /* = 0 */
             public int computePipelineBindings;  /* = 0 */
+            public int meshPipelineBindings;     /* = 0 */
             public int attachmentClears;         /* = 0 */
             public int bufferUpdates;            /* = 0 */
             public int bufferCopies;             /* = 0 */
@@ -3709,6 +3807,7 @@ namespace LLGL
             public int renderConditionSections;  /* = 0 */
             public int drawCommands;             /* = 0 */
             public int dispatchCommands;         /* = 0 */
+            public int meshCommands;             /* = 0 */
         }
 
         public unsafe struct RendererInfo
@@ -3747,16 +3846,10 @@ namespace LLGL
             public bool hasTextureViewFormatSwizzle;  /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasBufferViews;               /* = false */
-            [Obsolete("LLGL.RenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.")]
-            [MarshalAs(UnmanagedType.I1)]
-            public bool hasSamplers;
             [MarshalAs(UnmanagedType.I1)]
             public bool hasConstantBuffers;           /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasStorageBuffers;            /* = false */
-            [Obsolete("LLGL.RenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.")]
-            [MarshalAs(UnmanagedType.I1)]
-            public bool hasUniforms;
             [MarshalAs(UnmanagedType.I1)]
             public bool hasGeometryShaders;           /* = false */
             [MarshalAs(UnmanagedType.I1)]
@@ -3765,6 +3858,8 @@ namespace LLGL
             public bool hasTessellatorStage;          /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasComputeShaders;            /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool hasMeshShaders;               /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasInstancing;                /* = false */
             [MarshalAs(UnmanagedType.I1)]
@@ -3821,8 +3916,6 @@ namespace LLGL
             public byte*          debugName;        /* = null */
             public PipelineLayout pipelineLayout;   /* = null */
             public int            numResourceViews; /* = 0 */
-            [Obsolete("ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead!")]
-            public int            barrierFlags;
         }
 
         public unsafe struct ShaderMacro
@@ -3834,7 +3927,6 @@ namespace LLGL
         public unsafe struct CanvasEventListener
         {
             public IntPtr onProcessEvents;
-            public IntPtr onQuit;
             public IntPtr onInit;
             public IntPtr onDestroy;
             public IntPtr onDraw;
@@ -4291,6 +4383,24 @@ namespace LLGL
             public TessellationDescriptor tessellation;
         }
 
+        public unsafe struct MeshPipelineDescriptor
+        {
+            public byte*                debugName;           /* = null */
+            public PipelineLayout       pipelineLayout;      /* = null */
+            public RenderPass           renderPass;          /* = null */
+            public Shader               amplificationShader; /* = null */
+            public Shader               meshShader;          /* = null */
+            public Shader               fragmentShader;      /* = null */
+            public IntPtr               numViewports;
+            public Viewport*            viewports;
+            public IntPtr               numScissors;
+            public Scissor*             scissors;
+            public DepthDescriptor      depth;
+            public StencilDescriptor    stencil;
+            public RasterizerDescriptor rasterizer;
+            public BlendDescriptor      blend;
+        }
+
         public unsafe struct ResourceViewDescriptor
         {
             public Resource              resource;     /* = null */
@@ -4310,8 +4420,6 @@ namespace LLGL
             public byte*                    profile;    /* = null */
             public ShaderMacro*             defines;    /* = null */
             public int                      flags;      /* = 0 */
-            [Obsolete("ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead!")]
-            public byte*                    name;
             public VertexShaderAttributes   vertex;
             public FragmentShaderAttributes fragment;
             public ComputeShaderAttributes  compute;
@@ -4332,9 +4440,6 @@ namespace LLGL
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasProcessEventsDelegate(Canvas sender);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public unsafe delegate void OnCanvasQuitDelegate(Canvas sender, bool* veto);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasInitDelegate(Canvas sender);
@@ -4432,10 +4537,6 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglGetCanvasTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr GetCanvasTitleUTF8(Canvas canvas, IntPtr outTitleLength, byte* outTitle);
 
-        [DllImport(DllName, EntryPoint="llglHasCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        public static extern unsafe bool HasCanvasQuit(Canvas canvas);
-
         [DllImport(DllName, EntryPoint="llglSetCanvasUserData", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetCanvasUserData(Canvas canvas, void* userData);
 
@@ -4447,9 +4548,6 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglRemoveCanvasEventListener", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void RemoveCanvasEventListener(Canvas canvas, int eventListenerID);
-
-        [DllImport(DllName, EntryPoint="llglPostCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostCanvasQuit(Canvas canvas);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasInit", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasInit(Canvas sender);
@@ -4526,6 +4624,9 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglSetVertexBuffer", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBuffer(Buffer buffer);
 
+        [DllImport(DllName, EntryPoint="llglSetVertexBufferExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetVertexBufferExt(Buffer buffer, int numVertexAttribs, VertexAttribute* vertexAttribs);
+
         [DllImport(DllName, EntryPoint="llglSetVertexBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBufferArray(BufferArray bufferArray);
 
@@ -4543,9 +4644,6 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglResourceBarrier", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ResourceBarrier(int numBuffers, Buffer* buffers, int numTextures, Texture* textures);
-
-        [DllImport(DllName, EntryPoint="llglResetResourceSlots", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, int bindFlags, int stageFlags);
 
         [DllImport(DllName, EntryPoint="llglBeginRenderPass", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void BeginRenderPass(RenderTarget renderTarget);
@@ -4646,6 +4744,15 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglGetNativeHandle", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
         public static extern unsafe bool GetNativeHandle(void* nativeHandle, IntPtr nativeHandleSize);
+
+        [DllImport(DllName, EntryPoint="llglDrawMesh", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ);
+
+        [DllImport(DllName, EntryPoint="llglDrawMeshIndirect", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void DrawMeshIndirect(Buffer buffer, long offset, int numCommands, int stride);
+
+        [DllImport(DllName, EntryPoint="llglDrawMeshIndirectExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void DrawMeshIndirectExt(Buffer argumentsBuffer, long argumentsOffset, Buffer countBuffer, long countOffset, int maxNumCommands, int stride);
 
         [DllImport(DllName, EntryPoint="llglSubmitCommandBuffer", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SubmitCommandBuffer(CommandBuffer commandBuffer);
@@ -4908,6 +5015,12 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglCreateComputePipelineStateExt", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe PipelineState CreateComputePipelineStateExt(ref ComputePipelineDescriptor pipelineStateDesc, PipelineCache pipelineCache);
+
+        [DllImport(DllName, EntryPoint="llglCreateMeshPipelineState", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe PipelineState CreateMeshPipelineState(ref MeshPipelineDescriptor pipelineStateDesc);
+
+        [DllImport(DllName, EntryPoint="llglCreateMeshPipelineStateExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe PipelineState CreateMeshPipelineStateExt(ref MeshPipelineDescriptor pipelineStateDesc, PipelineCache pipelineCache);
 
         [DllImport(DllName, EntryPoint="llglReleasePipelineState", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ReleasePipelineState(PipelineState pipelineState);

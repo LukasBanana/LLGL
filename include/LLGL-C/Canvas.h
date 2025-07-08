@@ -15,7 +15,6 @@
 
 
 typedef void (*LLGL_PFN_OnCanvasProcessEvents)(LLGLCanvas sender);
-typedef void (*LLGL_PFN_OnCanvasQuit)(LLGLCanvas sender, bool* veto); //LLGL_DEPRECATED("LLGL_PFN_OnCanvasQuit is deprecated since 0.04b; Use custom state instead!")
 typedef void (*LLGL_PFN_OnCanvasInit)(LLGLCanvas sender);
 typedef void (*LLGL_PFN_OnCanvasDestroy)(LLGLCanvas sender);
 typedef void (*LLGL_PFN_OnCanvasDraw)(LLGLCanvas sender);
@@ -28,7 +27,6 @@ typedef void (*LLGL_PFN_OnCanvasKeyUp)(LLGLCanvas sender, LLGLKey keyCode);
 typedef struct LLGLCanvasEventListener
 {
     LLGL_PFN_OnCanvasProcessEvents  onProcessEvents;
-    LLGL_PFN_OnCanvasQuit           onQuit; //LLGL_DEPRECATED("onQuit is deprecated since 0.04b; Use custom state instead!")
     LLGL_PFN_OnCanvasInit           onInit;
     LLGL_PFN_OnCanvasDestroy        onDestroy;
     LLGL_PFN_OnCanvasDraw           onDraw;
@@ -46,14 +44,10 @@ LLGL_C_EXPORT void llglSetCanvasTitle(LLGLCanvas canvas, const wchar_t* title);
 LLGL_C_EXPORT void llglSetCanvasTitleUTF8(LLGLCanvas canvas, const char* title);
 LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength, wchar_t* outTitle LLGL_ANNOTATE(NULL));
 LLGL_C_EXPORT size_t llglGetCanvasTitleUTF8(LLGLCanvas canvas, size_t outTitleLength, char* outTitle LLGL_ANNOTATE(NULL));
-//LLGL_DEPRECATED("llglHasCanvasQuit is deprecated since 0.04b; Use custom state instead!")
-LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglSetCanvasUserData(LLGLCanvas canvas, void* userData);
 LLGL_C_EXPORT void* llglGetCanvasUserData(LLGLCanvas canvas);
 LLGL_C_EXPORT int llglAddCanvasEventListener(LLGLCanvas canvas, const LLGLCanvasEventListener* eventListener);
 LLGL_C_EXPORT void llglRemoveCanvasEventListener(LLGLCanvas canvas, int eventListenerID);
-//LLGL_DEPRECATED("llglPostCanvasQuit is deprecated since 0.04b; Use custom state instead!")
-LLGL_C_EXPORT void llglPostCanvasQuit(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglPostCanvasInit(LLGLCanvas sender);
 LLGL_C_EXPORT void llglPostCanvasDestroy(LLGLCanvas sender);
 LLGL_C_EXPORT void llglPostCanvasDraw(LLGLCanvas sender);

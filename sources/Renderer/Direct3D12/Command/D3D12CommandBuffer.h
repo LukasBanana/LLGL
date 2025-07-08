@@ -9,7 +9,7 @@
 #define LLGL_D3D12_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferTier1.h>
 #include <LLGL/Constants.h>
 #include <cstddef>
 #include "D3D12CommandContext.h"
@@ -37,12 +37,12 @@ class D3D12PipelineLayout;
 class D3D12PipelineState;
 class D3D12SignatureFactory;
 
-class D3D12CommandBuffer final : public CommandBuffer
+class D3D12CommandBuffer final : public CommandBufferTier1
 {
 
     public:
 
-        #include <LLGL/Backend/CommandBuffer.inl>
+        #include <LLGL/Backend/CommandBufferTier1.inl>
 
     public:
 
@@ -123,6 +123,8 @@ class D3D12CommandBuffer final : public CommandBuffer
         // Submits a resource transition. This is either scheduled with this command context or scheduled for later if this is a bundle.
         void SubmitTransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState);
         void SubmitTransitionResource(Resource& resource, D3D12_RESOURCE_STATES newState);
+
+        void SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D);
 
     private:
 

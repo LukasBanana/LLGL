@@ -148,6 +148,7 @@ static const FormatAttributes g_formatAttribs[] =
     {  32, 1, 1, 4, ImageFormat::RGBA,         DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UInt   | Packed          }, // RGB10A2UInt
     {  32, 1, 1, 3, ImageFormat::RGB,          DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UFloat | Packed          }, // RG11B10Float
     {  32, 1, 1, 3, ImageFormat::RGB,          DataType::Undefined, Mips    | Dim1D_2D_3D | DimCube | UFloat | Packed          }, // RGB9E5Float
+    {  16, 1, 1, 4, ImageFormat::BGRA,         DataType::Undefined, GenMips | Dim1D_2D_3D | DimCube | UNorm  | Packed          }, // BGR5A1UNorm
 
     /* --- Depth-stencil formats --- */
 //   bits  w  h  c  format                     dataType
@@ -274,15 +275,6 @@ LLGL_EXPORT bool IsCompressedFormat(const Format format)
     return ((GetFormatAttribs(format).flags & FormatFlags::IsCompressed) != 0);
 }
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
-{
-    return (imageFormat >= ImageFormat::Compressed && imageFormat <= ImageFormat::BC5);
-}
-
-LLGL_DEPRECATED_IGNORE_POP()
-
 LLGL_EXPORT bool IsDepthOrStencilFormat(const Format format)
 {
     const auto& formatAttribs = GetFormatAttribs(format);
@@ -319,17 +311,6 @@ LLGL_EXPORT bool IsColorFormat(const Format format)
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 {
     return ((GetFormatAttribs(format).flags & FormatFlags::IsNormalized) != 0);
-}
-
-//deprecated
-LLGL_EXPORT bool IsIntegralFormat(const Format format)
-{
-    const auto& formatAttribs = GetFormatAttribs(format);
-    return
-    (
-        (formatAttribs.flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) != 0 &&
-        (formatAttribs.flags & (FormatFlags::HasDepthStencil | FormatFlags::IsCompressed)) == 0
-    );
 }
 
 LLGL_EXPORT bool IsIntegerFormat(const Format format)

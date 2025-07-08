@@ -299,6 +299,11 @@ PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescript
     return pipelineStates_.emplace<MTComputePSO>(device_, pipelineStateDesc);
 }
 
+PipelineState* MTRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+{
+    return nullptr; // not supported
+}
+
 void MTRenderSystem::Release(PipelineState& pipelineState)
 {
     pipelineStates_.erase(&pipelineState);

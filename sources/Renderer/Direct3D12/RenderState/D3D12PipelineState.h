@@ -26,6 +26,13 @@ namespace LLGL
 class D3D12CommandContext;
 class D3D12PipelineCache;
 
+enum class D3D12PipelineType
+{
+    Graphics,
+    Compute,
+    Mesh,
+};
+
 class D3D12PipelineState : public PipelineState
 {
 
@@ -40,9 +47,9 @@ class D3D12PipelineState : public PipelineState
         virtual void Bind(D3D12CommandContext& commandContext) = 0;
 
         // Returns true if this is a graphics PSO.
-        inline bool IsGraphicsPSO() const
+        inline D3D12PipelineType GetType() const
         {
-            return isGraphicsPSO_;
+            return type_;
         }
 
         // Returns the pipeline layout this PSO was created with.
@@ -60,7 +67,7 @@ class D3D12PipelineState : public PipelineState
     protected:
 
         D3D12PipelineState(
-            bool                        isGraphicsPSO,
+            D3D12PipelineType           type,
             const PipelineLayout*       pipelineLayout,
             const ArrayView<Shader*>&   shaders,
             D3D12PipelineLayout&        defaultPipelineLayout
@@ -92,7 +99,7 @@ class D3D12PipelineState : public PipelineState
 
     private:
 
-        const bool                              isGraphicsPSO_  = false;
+        const D3D12PipelineType                 type_           = D3D12PipelineType::Graphics;
         ComPtr<ID3D12PipelineState>             native_;
         ComPtr<ID3D12RootSignature>             rootSignature_;
         const D3D12PipelineLayout*              pipelineLayout_ = nullptr;

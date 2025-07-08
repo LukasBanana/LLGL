@@ -12,7 +12,6 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Tags.h>
-#include <LLGL/Deprecated.h>
 #include <cstring>
 
 
@@ -112,16 +111,6 @@ class LLGL_EXPORT BasicStringLiteral
         BasicStringLiteral(const_pointer str) :
             data_ { str }
         {
-        }
-
-        //! \deprecated Since 0.04b; Use BasicStringLiteral(const_pointer str, CopyTag) instead!
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use BasicStringLiteral(const_pointer str, CopyTag) instead!")
-        BasicStringLiteral(const_pointer str, bool isManaged)
-        {
-            if (isManaged)
-                CopyFrom(BasicStringView<TChar, Traits>{ str });
-            else
-                data_ = str;
         }
 
         //! Initializes the string literal as a managed copy of the input string.

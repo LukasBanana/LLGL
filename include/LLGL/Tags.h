@@ -28,7 +28,7 @@ color.resize(1024, LLGL::ColorRGBAf{ LLGL::UninitializeTag{} });
 struct UninitializeTag{};
 
 /**
-\brief Common move tag.
+\brief Common copy tag.
 \remarks This can be used to explicitly copy a memory object like in the following example:
 \code
 // Allocate dynamic string object

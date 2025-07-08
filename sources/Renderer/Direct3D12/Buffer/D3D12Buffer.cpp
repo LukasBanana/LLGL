@@ -179,6 +179,11 @@ void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESC
     CreateUnorderedAccessViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, DXTypes::ToDXGIFormat(bufferViewDesc.format));
 }
 
+void D3D12Buffer::UpdateVertexBufferStride(UINT stride)
+{
+    vertexBufferView_.StrideInBytes = stride;
+}
+
 //private
 //TODO: support counter resource
 void D3D12Buffer::CreateUnorderedAccessViewPrimary(

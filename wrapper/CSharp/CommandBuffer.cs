@@ -6,7 +6,9 @@
  */
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
+using static LLGL.NativeLLGL;
 
 namespace LLGL
 {
@@ -144,6 +146,25 @@ namespace LLGL
             NativeLLGL.SetVertexBuffer(buffer.Native);
         }
 
+        public void SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)
+        {
+            if (vertexAttribs.Length > 0)
+            {
+                var nativeVertexAttribs = new NativeLLGL.VertexAttribute[vertexAttribs.Length];
+                for (int i = 0; i < vertexAttribs.Length; ++i)
+                {
+                    nativeVertexAttribs[i] = vertexAttribs[i].Native;
+                }
+                unsafe
+                {
+                    fixed (NativeLLGL.VertexAttribute* nativeVertexAttribsPtr = nativeVertexAttribs)
+                    {
+                        NativeLLGL.SetVertexBufferExt(buffer.Native, nativeVertexAttribs.Length, nativeVertexAttribsPtr);
+                    }
+                }
+            }
+        }
+
         public void SetVertexBufferArray(BufferArray bufferArray)
         {
             NativeLLGL.SetVertexBufferArray(bufferArray.Native);
@@ -230,12 +251,6 @@ namespace LLGL
                     }
                 }
             }
-        }
-
-        [Obsolete("LLGL.CommandBuffer.ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")]
-        public void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, BindFlags bindFlags, StageFlags stageFlags)
-        {
-            NativeLLGL.ResetResourceSlots(resourceType, firstSlot, numSlots, (int)bindFlags, (int)stageFlags);
         }
 
         public void BeginRenderPass(RenderTarget renderTarget)
@@ -442,6 +457,23 @@ namespace LLGL
         public void PopDebugGroup()
         {
             NativeLLGL.PopDebugGroup();
+        }
+
+        /* ----- CommandBufferTier1 ----- */
+
+        public void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ)
+        {
+            NativeLLGL.DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+        }
+
+        public void DrawMeshIndirect(Buffer buffer, long offset, int numCommands, int stride)
+        {
+            NativeLLGL.DrawMeshIndirect(buffer.Native, offset, numCommands, stride);
+        }
+
+        public void DrawMeshIndirect(Buffer argumentsBuffer, long argumentsOffset, Buffer countBuffer, long countOffset, int maxNumCommands, int stride)
+        {
+            NativeLLGL.DrawMeshIndirectExt(argumentsBuffer.Native, argumentsOffset, countBuffer.Native, countOffset, maxNumCommands, stride);
         }
     }
 }

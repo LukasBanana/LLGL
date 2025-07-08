@@ -46,6 +46,9 @@ LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDesc
 // Returns the set of compute PSO shaders as array.
 LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc);
 
+// Returns the set of mesh PSO shaders as array.
+LLGL_EXPORT SmallVector<Shader*, 3> GetShadersAsArray(const MeshPipelineDescriptor& desc);
+
 // Returns the size (in bytes) of the specified uniform with optional array size. This includes padding between array elements.
 LLGL_EXPORT std::uint32_t GetUniformTypeSize(UniformType type, std::uint32_t arraySize = 0);
 

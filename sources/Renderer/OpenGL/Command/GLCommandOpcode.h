@@ -41,6 +41,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeClearBuffers,
     GLOpcodeResolveRenderTarget,
     GLOpcodeBindVertexArray,
+    GLOpcodeBuildVertexArray,
     GLOpcodeBindElementArrayBufferToVAO,
     GLOpcodeBindBufferBase,
     GLOpcodeBindBuffersBase,

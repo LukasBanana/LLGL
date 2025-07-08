@@ -32,9 +32,6 @@ const (
     RendererIDDirect3D12  = 0x00000009
     RendererIDVulkan      = 0x0000000A
     RendererIDMetal       = 0x0000000B
-    RendererIDOpenGLES1   = RendererIDOpenGLES
-    RendererIDOpenGLES2   = RendererIDOpenGLES
-    RendererIDOpenGLES3   = RendererIDOpenGLES
     RendererIDReserved    = 0x000000FF
 )
 
@@ -133,6 +130,7 @@ const (
     FormatRGB10A2UInt
     FormatRG11B10Float
     FormatRGB9E5Float
+    FormatBGR5A1UNorm
     FormatD16UNorm
     FormatD24UNormS8UInt
     FormatD32Float
@@ -714,6 +712,8 @@ const (
     ShaderTypeGeometry
     ShaderTypeFragment
     ShaderTypeCompute
+    ShaderTypeAmplification
+    ShaderTypeMesh
 )
 
 type ShaderSourceType int
@@ -900,6 +900,7 @@ const (
     BindCombinedSampler        = (1 << 9)
     BindCopySrc                = (1 << 10)
     BindCopyDst                = (1 << 11)
+    BindTexelBuffer            = (1 << 12)
 )
 
 type CPUAccessFlags int
@@ -939,6 +940,8 @@ const (
     StageGeometryStage       = (1 << 3)
     StageFragmentStage       = (1 << 4)
     StageComputeStage        = (1 << 5)
+    StageAmplificationStage  = (1 << 6)
+    StageMeshStage           = (1 << 7)
     StageAllTessStages       = (StageTessControlStage | StageTessEvaluationStage)
     StageAllGraphicsStages   = (StageVertexStage | StageAllTessStages | StageGeometryStage | StageFragmentStage)
     StageAllStages           = (StageAllGraphicsStages | StageComputeStage)
@@ -1007,6 +1010,10 @@ type DrawPatchIndirectArguments struct {
 }
 
 type DispatchIndirectArguments struct {
+    NumThreadGroups [3]uint32
+}
+
+type DrawMeshIndirectArguments struct {
     NumThreadGroups [3]uint32
 }
 
@@ -1093,6 +1100,7 @@ type ProfileCommandBufferRecord struct {
     ResourceHeapBindings     uint32 /* = 0 */
     GraphicsPipelineBindings uint32 /* = 0 */
     ComputePipelineBindings  uint32 /* = 0 */
+    MeshPipelineBindings     uint32 /* = 0 */
     AttachmentClears         uint32 /* = 0 */
     BufferUpdates            uint32 /* = 0 */
     BufferCopies             uint32 /* = 0 */
@@ -1104,6 +1112,7 @@ type ProfileCommandBufferRecord struct {
     RenderConditionSections  uint32 /* = 0 */
     DrawCommands             uint32 /* = 0 */
     DispatchCommands         uint32 /* = 0 */
+    MeshCommands             uint32 /* = 0 */
 }
 
 type RendererInfo struct {
@@ -1127,14 +1136,13 @@ type RenderingFeatures struct {
     HasTextureViewSwizzle        bool /* = false */
     HasTextureViewFormatSwizzle  bool /* = false */
     HasBufferViews               bool /* = false */
-    HasSamplers                  bool /* LLGLRenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated. */
     HasConstantBuffers           bool /* = false */
     HasStorageBuffers            bool /* = false */
-    HasUniforms                  bool /* LLGLRenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated. */
     HasGeometryShaders           bool /* = false */
     HasTessellationShaders       bool /* = false */
     HasTessellatorStage          bool /* = false */
     HasComputeShaders            bool /* = false */
+    HasMeshShaders               bool /* = false */
     HasInstancing                bool /* = false */
     HasOffsetInstancing          bool /* = false */
     HasIndirectDrawing           bool /* = false */
@@ -1179,7 +1187,6 @@ type ResourceHeapDescriptor struct {
     DebugName        string          /* = "" */
     PipelineLayout   *PipelineLayout /* = nil */
     NumResourceViews uint32          /* = 0 */
-    BarrierFlags     uint            /* ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead! */
 }
 
 type ShaderMacro struct {
@@ -1583,6 +1590,21 @@ type GraphicsPipelineDescriptor struct {
     Tessellation         TessellationDescriptor
 }
 
+type MeshPipelineDescriptor struct {
+    DebugName           string               /* = "" */
+    PipelineLayout      *PipelineLayout      /* = nil */
+    RenderPass          *RenderPass          /* = nil */
+    AmplificationShader *Shader              /* = nil */
+    MeshShader          *Shader              /* = nil */
+    FragmentShader      *Shader              /* = nil */
+    Viewports           []Viewport           /* = nil */
+    Scissors            []Scissor            /* = nil */
+    Depth               DepthDescriptor
+    Stencil             StencilDescriptor
+    Rasterizer          RasterizerDescriptor
+    Blend               BlendDescriptor
+}
+
 type ResourceViewDescriptor struct {
     Resource     *Resource             /* = nil */
     TextureView  TextureViewDescriptor
@@ -1600,7 +1622,6 @@ type ShaderDescriptor struct {
     Profile    string                   /* = "" */
     Defines    *ShaderMacro             /* = nil */
     Flags      uint                     /* = 0 */
-    Name       string                   /* ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead! */
     Vertex     VertexShaderAttributes
     Fragment   FragmentShaderAttributes
     Compute    ComputeShaderAttributes

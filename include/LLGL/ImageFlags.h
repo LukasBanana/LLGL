@@ -15,7 +15,6 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <LLGL/Deprecated.h>
 #include <memory>
 #include <cstdint>
 #include <cstddef>
@@ -37,7 +36,6 @@ namespace LLGL
 struct MutableImageView
 {
     MutableImageView() = default;
-    MutableImageView(const MutableImageView&) = default;
 
     //! Constructor to initialize all attributes.
     inline MutableImageView(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
@@ -73,7 +71,6 @@ The counterpart for reading a MIP-map from a hardware texture by writing to a de
 struct ImageView
 {
     ImageView() = default;
-    ImageView(const ImageView&) = default;
 
     //! Constructor to initialize all attributes.
     inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0, std::uint32_t layerStride = 0) :
@@ -120,84 +117,6 @@ struct ImageView
     \note Only supported with image conversion functions.
     */
     std::uint32_t   layerStride = 0;
-};
-
-struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor
-{
-    SrcImageDescriptor() = default;
-    SrcImageDescriptor(const SrcImageDescriptor&) = default;
-
-    inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    inline SrcImageDescriptor(const ImageView& view) :
-        format   { view.format   },
-        dataType { view.dataType },
-        data     { view.data     },
-        dataSize { view.dataSize }
-    {
-    }
-
-    inline operator ImageView() const
-    {
-        #ifdef _MSC_VER
-        #pragma warning(push)
-        #pragma warning(disable : 4996)
-        #endif
-        return ImageView{ format, dataType, data, dataSize };
-        #ifdef _MSC_VER
-        #pragma warning(pop)
-        #endif
-    }
-
-    ImageFormat format      = ImageFormat::RGBA;
-    DataType    dataType    = DataType::UInt8;
-    const void* data        = nullptr;
-    std::size_t dataSize    = 0;
-};
-
-struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use LLGL::MutableImageView instead!", "MutableImageView") DstImageDescriptor
-{
-    DstImageDescriptor() = default;
-    DstImageDescriptor(const DstImageDescriptor&) = default;
-
-    inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    inline DstImageDescriptor(const MutableImageView& view) :
-        format   { view.format   },
-        dataType { view.dataType },
-        data     { view.data     },
-        dataSize { view.dataSize }
-    {
-    }
-
-    inline operator MutableImageView() const
-    {
-        #ifdef _MSC_VER
-        #pragma warning(push)
-        #pragma warning(disable : 4996)
-        #endif
-        return MutableImageView{ format, dataType, data, dataSize };
-        #ifdef _MSC_VER
-        #pragma warning(pop)
-        #endif
-    }
-
-    ImageFormat format      = ImageFormat::RGBA;
-    DataType    dataType    = DataType::UInt8;
-    void*       data        = nullptr;
-    std::size_t dataSize    = 0;
 };
 
 
@@ -300,14 +219,6 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const ImageView&    srcImageView,
     ImageFormat         dstFormat,
     DataType            dstDataType,
-    unsigned            threadCount = 0
-);
-
-//! \deprecated Since 0.04b; Use second version with explicit compression format instead!
-LLGL_DEPRECATED("This version of DecompressImageBufferToRGBA8UNorm() is deprecated since 0.04b; Use second version with explicit compression format instead!")
-LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
-    const ImageView&    srcImageView,
-    const Extent2D&     extent,
     unsigned            threadCount = 0
 );
 

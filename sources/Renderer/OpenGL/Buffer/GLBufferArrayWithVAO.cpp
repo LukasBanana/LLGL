@@ -28,7 +28,7 @@ GLBufferArrayWithVAO::GLBufferArrayWithVAO(std::uint32_t numBuffers, Buffer* con
             /* Bind VBO and build vertex layout */
             auto* vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, bufferGL);
             GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, vertexBufferGL->GetID());
-            vertexArray_.BuildVertexLayout(vertexBufferGL->GetID(), vertexBufferGL->GetVertexAttribs());
+            vertexArray_.BuildVertexLayout(vertexBufferGL->GetVertexAttribs());
         }
         else
         {

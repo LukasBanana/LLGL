@@ -710,7 +710,7 @@ static void ValidateImageConversionParams(
     ImageFormat         dstFormat,
     DataType            dstDataType)
 {
-    if (IsCompressedFormat(srcImageView.format) || IsCompressedFormat(dstFormat))
+    if (srcImageView.format == ImageFormat::Compressed || dstFormat == ImageFormat::Compressed)
         LLGL_TRAP("cannot convert compressed image formats");
     if (IsDepthOrStencilFormat(srcImageView.format) != IsDepthOrStencilFormat(dstFormat))
         LLGL_TRAP("cannot convert between depth-stencil and non-depth-stencil image formats");
@@ -886,24 +886,6 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     return ConvertImageBuffer(srcImageView, dstFormat, dstDataType, extent1D, threadCount);
 }
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
-LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
-    const ImageView&    srcImageView,
-    const Extent2D&     extent,
-    unsigned            threadCount)
-{
-    switch (srcImageView.format)
-    {
-        case ImageFormat::BC1:
-            return DecompressImageBufferToRGBA8UNorm(Format::BC1UNorm, srcImageView, extent, threadCount);
-        default:
-            return nullptr;
-    }
-}
-
-LLGL_DEPRECATED_IGNORE_POP()
-
 LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     Format              compressedFormat,
     const ImageView&    srcImageView,
@@ -1015,7 +997,7 @@ LLGL_EXPORT DynamicByteArray GenerateImageBuffer(
     std::size_t imageSize,
     const float fillColor[4])
 {
-    LLGL_ASSERT(!IsCompressedFormat(format));
+    LLGL_ASSERT(format != ImageFormat::Compressed);
 
     /* Convert fill color data type */
     VariantColor fillColor0{ UninitializeTag{} };

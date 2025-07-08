@@ -72,6 +72,7 @@ DECL_TEST( BarrierReadAfterWrite );
 DECL_TEST( DepthBuffer );
 DECL_TEST( StencilBuffer );
 DECL_TEST( SceneUpdate );
+DECL_TEST( VertexBuffer );
 DECL_TEST( BlendStates );
 DECL_TEST( DualSourceBlending );
 DECL_TEST( TriangleStripCutOff );
@@ -85,6 +86,7 @@ DECL_TEST( ResourceArrays );
 DECL_TEST( StreamOutput );
 DECL_TEST( ResourceCopy );
 DECL_TEST( CombinedTexSamplers );
+DECL_TEST( MeshShaders );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );

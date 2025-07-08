@@ -20,12 +20,17 @@ LLGL_EXPORT const char* ToString(const ShaderType val)
     switch (val)
     {
         case T::Undefined:      return "undefined";
+
         case T::Vertex:         return "vertex";
         case T::TessControl:    return "tessellation control";
         case T::TessEvaluation: return "tessellation evaluation";
         case T::Geometry:       return "geometry";
         case T::Fragment:       return "fragment";
+
         case T::Compute:        return "compute";
+
+        case T::Amplification:  return "amplification";
+        case T::Mesh:           return "mesh";
     }
 
     return nullptr;
@@ -305,12 +310,6 @@ LLGL_EXPORT const char* ToString(const ImageFormat val)
 
         /* Compressed formats */
         case T::Compressed:     return "Compressed";
-
-        case T::BC1:            return "BC1 (DEPRECATED)";
-        case T::BC2:            return "BC2 (DEPRECATED)";
-        case T::BC3:            return "BC3 (DEPRECATED)";
-        case T::BC4:            return "BC4 (DEPRECATED)";
-        case T::BC5:            return "BC5 (DEPRECATED)";
     }
 
     return nullptr;

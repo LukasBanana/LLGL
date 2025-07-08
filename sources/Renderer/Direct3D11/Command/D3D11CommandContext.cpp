@@ -193,12 +193,12 @@ void D3D11CommandContext::ClearFramebufferViewsOrdered(
 
 /* ----- Input Assembly ------ */
 
-void D3D11CommandContext::SetVertexBuffer(D3D11Buffer& bufferD3D)
+void D3D11CommandContext::SetVertexBuffer(D3D11Buffer& bufferD3D, UINT stride)
 {
     bindingTable_->SetVertexBuffer(
         0,
         bufferD3D.GetNative(),
-        bufferD3D.GetStride(),
+        stride,
         0,
         bufferD3D.GetBindingLocator()
     );

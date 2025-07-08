@@ -331,6 +331,11 @@ PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescri
     return pipelineStates_.emplace<NullPipelineState>(pipelineStateDesc);
 }
 
+PipelineState* NullRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+{
+    return nullptr; // not supported
+}
+
 void NullRenderSystem::Release(PipelineState& pipelineState)
 {
     pipelineStates_.erase(&pipelineState);

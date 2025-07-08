@@ -634,15 +634,17 @@ void VKSwapChain::CreateSwapChainFramebuffers()
     }
 }
 
-void VKSwapChain::CreateDepthStencilBuffer(const Extent2D& resolution)
+void VKSwapChain::CreateDepthStencilBuffer()
 {
+    const Extent2D resolution{ swapChainExtent_.width, swapChainExtent_.height };
     const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     depthStencilBuffer_.Create(deviceMemoryMngr_, resolution, depthStencilFormat_, sampleCountBits);
 }
 
-void VKSwapChain::CreateColorBuffers(const Extent2D& resolution)
+void VKSwapChain::CreateColorBuffers()
 {
     /* Create VkImage objects for each swap-chain buffer */
+    const Extent2D& resolution{ swapChainExtent_.width, swapChainExtent_.height };
     const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     colorBuffers_.resize(numColorBuffers_);
     for_range(i, numColorBuffers_)
@@ -668,10 +670,10 @@ void VKSwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
     CreateSwapChain(resolution, vsyncInterval_);
 
     if (HasMultiSampling())
-        CreateColorBuffers(resolution);
+        CreateColorBuffers();
 
     if (depthStencilFormat_ != VK_FORMAT_UNDEFINED)
-        CreateDepthStencilBuffer(resolution);
+        CreateDepthStencilBuffer();
 
     CreateSwapChainFramebuffers();
 }

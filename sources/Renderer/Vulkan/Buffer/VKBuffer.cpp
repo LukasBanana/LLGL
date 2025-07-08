@@ -138,6 +138,11 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     bufferObj_.CreateVkBuffer(device, createInfo);
 }
 
+void VKBuffer::SetStride(std::uint32_t stride)
+{
+    stride_ = std::max<std::uint32_t>(1u, stride);
+}
+
 void VKBuffer::SetDebugName(const char* name)
 {
     #if VK_EXT_debug_marker

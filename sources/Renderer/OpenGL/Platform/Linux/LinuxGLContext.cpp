@@ -23,6 +23,7 @@
 #include "LinuxGLContextWayland.h"
 #include "LinuxGLContextX11.h"
 
+
 namespace LLGL
 {
 

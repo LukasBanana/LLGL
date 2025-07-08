@@ -209,6 +209,21 @@ class D3D12CommandContext
             UINT64                  countBufferOffset       = 0
         );
 
+        void DispatchMesh(
+            UINT threadGroupCountX,
+            UINT threadGroupCountY,
+            UINT threadGroupCountZ
+        );
+
+        void DispatchMeshIndirect(
+            ID3D12CommandSignature* commandSignature,
+            UINT                    maxCommandCount,
+            ID3D12Resource*         argumentBuffer,
+            UINT64                  argumentBufferOffset,
+            ID3D12Resource*         countBuffer             = nullptr,
+            UINT64                  countBufferOffset       = 0
+        );
+
     public:
 
         // Returns the native D3D12 device this command context was created with.
@@ -311,6 +326,9 @@ class D3D12CommandContext
         D3D12NativeFence                        allocatorFence_;
 
         ComPtr<ID3D12GraphicsCommandList>       commandList_;
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        ComPtr<ID3D12GraphicsCommandList6>      commandList6_;
+        #endif
 
         D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];
         UINT                                    numResourceBarriers_                        = 0;

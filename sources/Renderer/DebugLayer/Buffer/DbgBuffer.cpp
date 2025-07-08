@@ -13,20 +13,15 @@ namespace LLGL
 {
 
 
-static BufferDescriptor CopyBufferDescWithNewVertexAttribs(const BufferDescriptor& inDesc, const ArrayView<VertexAttribute>& inVertexAttribs)
-{
-    auto outDesc = inDesc;
-    outDesc.vertexAttribs = inVertexAttribs;
-    return outDesc;
-}
-
 DbgBuffer::DbgBuffer(Buffer& instance, const BufferDescriptor& desc) :
-    Buffer         { desc.bindFlags                                           },
-    vertexAttribs_ { desc.vertexAttribs.begin(), desc.vertexAttribs.end()     },
-    instance       { instance                                                 },
-    desc           { CopyBufferDescWithNewVertexAttribs(desc, vertexAttribs_) },
-    label          { LLGL_DBG_LABEL(desc)                                     }
+    Buffer         { desc.bindFlags                                       },
+    vertexAttribs_ { desc.vertexAttribs.begin(), desc.vertexAttribs.end() },
+    debugDesc_     { desc                                                 },
+    desc           { debugDesc_                                           },
+    instance       { instance                                             },
+    label          { LLGL_DBG_LABEL(desc)                                 }
 {
+    debugDesc_.vertexAttribs = vertexAttribs_;
 }
 
 bool DbgBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
@@ -68,6 +63,12 @@ void DbgBuffer::OnUnmap()
 bool DbgBuffer::IsMappedForCPUAccess() const
 {
     return (mappedRange_[0] < mappedRange_[1]);
+}
+
+void DbgBuffer::SetDebugVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs)
+{
+    vertexAttribs_ = std::vector<VertexAttribute>(vertexAttribs.begin(), vertexAttribs.end());
+    debugDesc_.vertexAttribs = vertexAttribs_;
 }
 
 

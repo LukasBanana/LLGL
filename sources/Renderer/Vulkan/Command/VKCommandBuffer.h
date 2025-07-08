@@ -133,6 +133,8 @@ class VKCommandBuffer final : public CommandBuffer
         void AppendQueryPoolInFlight(VKQueryHeap* queryHeap);
         #endif
 
+        void BindVertexBuffer(VKBuffer& bufferVK);
+
     private:
 
         // Returns the number of native Vulkan command buffers used for the specified descriptor.

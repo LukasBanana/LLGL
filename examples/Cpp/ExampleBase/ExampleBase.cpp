@@ -282,24 +282,14 @@ ExampleBase::WindowEventHandler::WindowEventHandler(ExampleBase& app, LLGL::Swap
 
 void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize)
 {
-    if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
-    {
-        const auto& resolution = clientAreaSize;
+    const auto& resolution = clientAreaSize;
 
-        // Update swap buffers
-        swapChain_->ResizeBuffers(resolution);
+    // Update projection matrix
+    auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
+    projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
-        // Update projection matrix
-        auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
-        projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
-        // Notify application about resize event
-        app_.OnResize(resolution);
-
-        // Re-draw frame
-        if (app_.IsLoadingDone())
-            app_.DrawFrame();
-    }
+    // Notify application about resize event
+    app_.Resize(resolution);
 }
 
 void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
@@ -329,15 +319,12 @@ void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 
 void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
 {
-    // Update swap buffers
-    swapChain_->ResizeBuffers(clientAreaSize);
-
     // Update projection matrix
     auto aspectRatio = static_cast<float>(clientAreaSize.width) / static_cast<float>(clientAreaSize.height);
     projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
     // Notify application about resize event
-    app_.OnResize(clientAreaSize);
+    app_.Resize(clientAreaSize);
 }
 
 
@@ -446,13 +433,36 @@ void ExampleBase::Run()
 
 void ExampleBase::DrawFrame()
 {
-    // Draw frame in respective example project
-    OnDrawFrame();
+    if (IsDrawable())
+    {
+        // Draw frame in respective example project
+        OnDrawFrame();
 
-    #ifndef LLGL_OS_IOS
-    // Present the result on the screen - cannot be explicitly invoked on mobile platforms
-    swapChain->Present();
-    #endif
+        #ifndef LLGL_OS_IOS
+        // Present the result on the screen - cannot be explicitly invoked on mobile platforms
+        swapChain->Present();
+        #endif
+    }
+}
+
+void ExampleBase::Resize(const LLGL::Extent2D& clientAreaSize)
+{
+    drawableSize_ = clientAreaSize;
+
+    if (IsDrawable())
+    {
+        // Update swap buffers
+        swapChain->ResizeBuffers(drawableSize_);
+
+        // Re-draw frame
+        if (IsLoadingDone())
+            DrawFrame();
+    }
+}
+
+bool ExampleBase::IsDrawable() const
+{
+    return (drawableSize_.width >= 4 && drawableSize_.height >= 4);
 }
 
 static LLGL::Extent2D ScaleResolution(const LLGL::Extent2D& res, float scale)
@@ -543,7 +553,8 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
 
-    samples_ = swapChain->GetSamples();
+    samples_        = swapChain->GetSamples();
+    drawableSize_   = swapChain->GetResolution();
 
     // Create command buffer
     LLGL::CommandBufferDescriptor cmdBufferDesc;

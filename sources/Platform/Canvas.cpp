@@ -33,11 +33,6 @@ Canvas::~Canvas()
 
 /* ----- Canvas EventListener class ----- */
 
-void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
-{
-    // deprecated
-}
-
 void Canvas::EventListener::OnInit(Canvas& sender)
 {
     // dummy
@@ -63,20 +58,10 @@ void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& positio
     // dummy
 }
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
-//deprecated
-void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
+void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
 {
     // dummy
 }
-
-void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
-{
-    OnPanGesture(sender, position, numTouches, dx, dy); // forward call to deprecated function until it's removed
-}
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 void Canvas::EventListener::OnKeyDown(Canvas& sender, Key keyCode)
 {
@@ -103,11 +88,6 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 }
 
 #endif
-
-bool Canvas::HasQuit() const
-{
-    return false; // deprecated
-}
 
 bool Canvas::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 {
@@ -140,11 +120,6 @@ void Canvas::RemoveEventListener(const EventListener* eventListener)
     RemoveFromSharedList(pimpl_->eventListeners, eventListener);
 }
 
-void Canvas::PostQuit()
-{
-    // deprecated
-}
-
 void Canvas::PostInit()
 {
     FOREACH_LISTENER_CALL( OnInit(*this) );
@@ -168,12 +143,6 @@ void Canvas::PostResize(const Extent2D& clientAreaSize)
 void Canvas::PostTapGesture(const Offset2D& position, std::uint32_t numTouches)
 {
     FOREACH_LISTENER_CALL( OnTapGesture(*this, position, numTouches) );
-}
-
-//deprecated
-void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
-{
-    PostPanGesture(position, numTouches, dx, dy, EventAction::Changed); // forward call to new version until this version is removed
 }
 
 void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
