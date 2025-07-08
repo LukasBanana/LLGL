@@ -27,7 +27,7 @@ static void GLTextureSubImage1DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTextureSubImage1D(
             texID,
@@ -64,7 +64,7 @@ static void GLTextureSubImage2DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTextureSubImage2D(
             texID,
@@ -107,7 +107,7 @@ static void GLTextureSubImage3DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTextureSubImage3D(
             texID,

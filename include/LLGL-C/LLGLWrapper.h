@@ -35,9 +35,6 @@
 #define LLGL_RENDERERID_DIRECT3D12  ( 0x00000009 )
 #define LLGL_RENDERERID_VULKAN      ( 0x0000000A )
 #define LLGL_RENDERERID_METAL       ( 0x0000000B )
-#define LLGL_RENDERERID_OPENGLES1   ( LLGL_RENDERERID_OPENGLES )
-#define LLGL_RENDERERID_OPENGLES2   ( LLGL_RENDERERID_OPENGLES )
-#define LLGL_RENDERERID_OPENGLES3   ( LLGL_RENDERERID_OPENGLES )
 #define LLGL_RENDERERID_RESERVED    ( 0x000000FF )
 
 
@@ -995,6 +992,8 @@ typedef enum LLGLStageFlags
     LLGLStageGeometryStage       = (1 << 3),
     LLGLStageFragmentStage       = (1 << 4),
     LLGLStageComputeStage        = (1 << 5),
+    LLGLStageAmplificationStage  = (1 << 6),
+    LLGLStageMeshStage           = (1 << 7),
     LLGLStageAllTessStages       = (LLGLStageTessControlStage | LLGLStageTessEvaluationStage),
     LLGLStageAllGraphicsStages   = (LLGLStageVertexStage | LLGLStageAllTessStages | LLGLStageGeometryStage | LLGLStageFragmentStage),
     LLGLStageAllStages           = (LLGLStageAllGraphicsStages | LLGLStageComputeStage),
@@ -1233,10 +1232,8 @@ typedef struct LLGLRenderingFeatures
     bool hasTextureViewSwizzle;        /* = false */
     bool hasTextureViewFormatSwizzle;  /* = false */
     bool hasBufferViews;               /* = false */
-    bool hasSamplers;                  /* LLGLRenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated. */
     bool hasConstantBuffers;           /* = false */
     bool hasStorageBuffers;            /* = false */
-    bool hasUniforms;                  /* LLGLRenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated. */
     bool hasGeometryShaders;           /* = false */
     bool hasTessellationShaders;       /* = false */
     bool hasTessellatorStage;          /* = false */
@@ -1290,7 +1287,6 @@ typedef struct LLGLResourceHeapDescriptor
     const char*        debugName;        /* = NULL */
     LLGLPipelineLayout pipelineLayout;   /* = LLGL_NULL_OBJECT */
     uint32_t           numResourceViews; /* = 0 */
-    long               barrierFlags;     /* ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead! */
 }
 LLGLResourceHeapDescriptor;
 
@@ -1849,7 +1845,6 @@ typedef struct LLGLShaderDescriptor
     const char*                  profile;    /* = NULL */
     const LLGLShaderMacro*       defines;    /* = NULL */
     long                         flags;      /* = 0 */
-    const char*                  name;       /* ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead! */
     LLGLVertexShaderAttributes   vertex;
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;

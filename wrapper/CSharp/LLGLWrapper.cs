@@ -29,9 +29,6 @@ namespace LLGL
         Direct3D12  = 0x00000009,
         Vulkan      = 0x0000000A,
         Metal       = 0x0000000B,
-        OpenGLES1   = OpenGLES,
-        OpenGLES2   = OpenGLES,
-        OpenGLES3   = OpenGLES,
         Reserved    = 0x000000FF,
     }
 
@@ -954,6 +951,8 @@ namespace LLGL
         GeometryStage       = (1 << 3),
         FragmentStage       = (1 << 4),
         ComputeStage        = (1 << 5),
+        AmplificationStage  = (1 << 6),
+        MeshStage           = (1 << 7),
         AllTessStages       = (TessControlStage | TessEvaluationStage),
         AllGraphicsStages   = (VertexStage | AllTessStages | GeometryStage | FragmentStage),
         AllStages           = (AllGraphicsStages | ComputeStage),
@@ -1444,12 +1443,8 @@ namespace LLGL
         public bool HasTextureViewSwizzle { get; set; }        = false;
         public bool HasTextureViewFormatSwizzle { get; set; }  = false;
         public bool HasBufferViews { get; set; }               = false;
-        [Obsolete("LLGL.RenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.")]
-        public bool HasSamplers { get; set; }                  = true;
         public bool HasConstantBuffers { get; set; }           = false;
         public bool HasStorageBuffers { get; set; }            = false;
-        [Obsolete("LLGL.RenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.")]
-        public bool HasUniforms { get; set; }                  = true;
         public bool HasGeometryShaders { get; set; }           = false;
         public bool HasTessellationShaders { get; set; }       = false;
         public bool HasTessellatorStage { get; set; }          = false;
@@ -1591,8 +1586,6 @@ namespace LLGL
         public AnsiString     DebugName { get; set; }        = null;
         public PipelineLayout PipelineLayout { get; set; }   = null;
         public int            NumResourceViews { get; set; } = 0;
-        [Obsolete("ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead!")]
-        public BarrierFlags   BarrierFlags { get; set; }     = 0;
 
         internal NativeLLGL.ResourceHeapDescriptor Native
         {
@@ -3853,16 +3846,10 @@ namespace LLGL
             public bool hasTextureViewFormatSwizzle;  /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasBufferViews;               /* = false */
-            [Obsolete("LLGL.RenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.")]
-            [MarshalAs(UnmanagedType.I1)]
-            public bool hasSamplers;
             [MarshalAs(UnmanagedType.I1)]
             public bool hasConstantBuffers;           /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasStorageBuffers;            /* = false */
-            [Obsolete("LLGL.RenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.")]
-            [MarshalAs(UnmanagedType.I1)]
-            public bool hasUniforms;
             [MarshalAs(UnmanagedType.I1)]
             public bool hasGeometryShaders;           /* = false */
             [MarshalAs(UnmanagedType.I1)]
@@ -3929,8 +3916,6 @@ namespace LLGL
             public byte*          debugName;        /* = null */
             public PipelineLayout pipelineLayout;   /* = null */
             public int            numResourceViews; /* = 0 */
-            [Obsolete("ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead!")]
-            public int            barrierFlags;
         }
 
         public unsafe struct ShaderMacro
@@ -3942,7 +3927,6 @@ namespace LLGL
         public unsafe struct CanvasEventListener
         {
             public IntPtr onProcessEvents;
-            public IntPtr onQuit;
             public IntPtr onInit;
             public IntPtr onDestroy;
             public IntPtr onDraw;
@@ -4436,8 +4420,6 @@ namespace LLGL
             public byte*                    profile;    /* = null */
             public ShaderMacro*             defines;    /* = null */
             public int                      flags;      /* = 0 */
-            [Obsolete("ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead!")]
-            public byte*                    name;
             public VertexShaderAttributes   vertex;
             public FragmentShaderAttributes fragment;
             public ComputeShaderAttributes  compute;
@@ -4458,9 +4440,6 @@ namespace LLGL
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasProcessEventsDelegate(Canvas sender);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public unsafe delegate void OnCanvasQuitDelegate(Canvas sender, bool* veto);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasInitDelegate(Canvas sender);
@@ -4558,10 +4537,6 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglGetCanvasTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr GetCanvasTitleUTF8(Canvas canvas, IntPtr outTitleLength, byte* outTitle);
 
-        [DllImport(DllName, EntryPoint="llglHasCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        public static extern unsafe bool HasCanvasQuit(Canvas canvas);
-
         [DllImport(DllName, EntryPoint="llglSetCanvasUserData", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetCanvasUserData(Canvas canvas, void* userData);
 
@@ -4573,9 +4548,6 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglRemoveCanvasEventListener", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void RemoveCanvasEventListener(Canvas canvas, int eventListenerID);
-
-        [DllImport(DllName, EntryPoint="llglPostCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostCanvasQuit(Canvas canvas);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasInit", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasInit(Canvas sender);
@@ -4672,9 +4644,6 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglResourceBarrier", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ResourceBarrier(int numBuffers, Buffer* buffers, int numTextures, Texture* textures);
-
-        [DllImport(DllName, EntryPoint="llglResetResourceSlots", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, int bindFlags, int stageFlags);
 
         [DllImport(DllName, EntryPoint="llglBeginRenderPass", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void BeginRenderPass(RenderTarget renderTarget);

@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Container/ArrayView.h>
-#include <LLGL/Deprecated.h>
 #include <LLGL/Platform/Platform.h>
 #include <cstdint>
 
@@ -144,10 +143,6 @@ struct RendererConfigurationOpenGL
     */
     bool                    suppressFailedExtensions    = false;
 };
-
-//! \deprecated Since 0.04b; Use RendererConfigurationOpenGL instead!
-LLGL_DEPRECATED("LLGL::RendererConfigurationOpenGLES3 is deprecated since 0.04b; Use LLGL::RendererConfigurationOpenGL instead!", "RendererConfigurationOpenGL")
-typedef RendererConfigurationOpenGL RendererConfigurationOpenGLES3;
 
 
 } // /namespace LLGL

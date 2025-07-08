@@ -310,12 +310,6 @@ LLGL_EXPORT const char* ToString(const ImageFormat val)
 
         /* Compressed formats */
         case T::Compressed:     return "Compressed";
-
-        case T::BC1:            return "BC1 (DEPRECATED)";
-        case T::BC2:            return "BC2 (DEPRECATED)";
-        case T::BC3:            return "BC3 (DEPRECATED)";
-        case T::BC4:            return "BC4 (DEPRECATED)";
-        case T::BC5:            return "BC5 (DEPRECATED)";
     }
 
     return nullptr;

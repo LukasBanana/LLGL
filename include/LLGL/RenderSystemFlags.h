@@ -14,7 +14,6 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Constants.h>
 #include <LLGL/RendererConfiguration.h>
-#include <LLGL/Deprecated.h>
 #include <LLGL/Container/UTF8String.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <LLGL/Container/DynamicVector.h>
@@ -274,16 +273,6 @@ struct RendererID
     static constexpr int Direct3D12 = 0x00000009; //!< ID number for a Direct3D 12 renderer.
     static constexpr int Vulkan     = 0x0000000A; //!< ID number for a Vulkan renderer.
     static constexpr int Metal      = 0x0000000B; //!< ID number for a Metal renderer.
-
-    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES1 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
-    static constexpr int OpenGLES1  = RendererID::OpenGLES;
-
-    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES2 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
-    static constexpr int OpenGLES2  = RendererID::OpenGLES;
-
-    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES3 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
-    static constexpr int OpenGLES3  = RendererID::OpenGLES;
-
     static constexpr int Reserved   = 0x000000FF; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
 
@@ -477,8 +466,6 @@ struct RenderSystemDescriptor
     #endif // /LLGL_OS_ANDROID
 };
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
 /**
 \brief Contains the attributes for all supported rendering features.
 \see RenderingCapabilities::features
@@ -563,10 +550,6 @@ struct RenderingFeatures
     */
     bool hasBufferViews                 = false;
 
-    //! \deprecated Since 0.04b; Can be substituted with \c true.
-    LLGL_DEPRECATED("LLGL::RenderingFeatures::hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.", "true")
-    bool hasSamplers                    = true;
-
     /**
     \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.
     \see BindFlags::ConstantBuffer
@@ -579,10 +562,6 @@ struct RenderingFeatures
     \see BindFlags::Storage
     */
     bool hasStorageBuffers              = false;
-
-    //! \deprecated Since 0.04b; Can be substituted with \c true.
-    LLGL_DEPRECATED("LLGL::RenderingFeatures::hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.", "true")
-    bool hasUniforms                    = true;
 
     /**
     \brief Specifies whether geometry shaders are supported.
@@ -698,8 +677,6 @@ struct RenderingFeatures
     */
     bool hasRenderCondition             = false;
 };
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 /**
 \brief Contains all rendering limitations such as maximum buffer size, maximum texture resolution etc.

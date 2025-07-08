@@ -9,7 +9,6 @@
 #define LLGL_DBG_CORE_H
 
 
-#include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/Container/Strings.h>
 #include "../CheckedCast.h"

@@ -32,9 +32,6 @@ const (
     RendererIDDirect3D12  = 0x00000009
     RendererIDVulkan      = 0x0000000A
     RendererIDMetal       = 0x0000000B
-    RendererIDOpenGLES1   = RendererIDOpenGLES
-    RendererIDOpenGLES2   = RendererIDOpenGLES
-    RendererIDOpenGLES3   = RendererIDOpenGLES
     RendererIDReserved    = 0x000000FF
 )
 
@@ -943,6 +940,8 @@ const (
     StageGeometryStage       = (1 << 3)
     StageFragmentStage       = (1 << 4)
     StageComputeStage        = (1 << 5)
+    StageAmplificationStage  = (1 << 6)
+    StageMeshStage           = (1 << 7)
     StageAllTessStages       = (StageTessControlStage | StageTessEvaluationStage)
     StageAllGraphicsStages   = (StageVertexStage | StageAllTessStages | StageGeometryStage | StageFragmentStage)
     StageAllStages           = (StageAllGraphicsStages | StageComputeStage)
@@ -1137,10 +1136,8 @@ type RenderingFeatures struct {
     HasTextureViewSwizzle        bool /* = false */
     HasTextureViewFormatSwizzle  bool /* = false */
     HasBufferViews               bool /* = false */
-    HasSamplers                  bool /* LLGLRenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated. */
     HasConstantBuffers           bool /* = false */
     HasStorageBuffers            bool /* = false */
-    HasUniforms                  bool /* LLGLRenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated. */
     HasGeometryShaders           bool /* = false */
     HasTessellationShaders       bool /* = false */
     HasTessellatorStage          bool /* = false */
@@ -1190,7 +1187,6 @@ type ResourceHeapDescriptor struct {
     DebugName        string          /* = "" */
     PipelineLayout   *PipelineLayout /* = nil */
     NumResourceViews uint32          /* = 0 */
-    BarrierFlags     uint            /* ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead! */
 }
 
 type ShaderMacro struct {
@@ -1626,7 +1622,6 @@ type ShaderDescriptor struct {
     Profile    string                   /* = "" */
     Defines    *ShaderMacro             /* = nil */
     Flags      uint                     /* = 0 */
-    Name       string                   /* ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead! */
     Vertex     VertexShaderAttributes
     Fragment   FragmentShaderAttributes
     Compute    ComputeShaderAttributes

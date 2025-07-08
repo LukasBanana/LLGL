@@ -154,18 +154,6 @@ void RenderingDebugger::RecordProfile(const FrameProfile& profile)
     RenderingDebugger::MergeProfiles(pimpl_->frameProfile, profile);
 }
 
-void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
-{
-    const std::string str(message.begin(), message.end());
-    Errorf(type, "%s", str.c_str());
-}
-
-void RenderingDebugger::PostWarning(const WarningType type, const StringView& message)
-{
-    const std::string str(message.begin(), message.end());
-    Warningf(type, "%s", str.c_str());
-}
-
 #define LLGL_ASSERT_STRUCT_FIELDS(TYPE, FIELDS) \
     static_assert(sizeof(TYPE) == alignof(TYPE)*(FIELDS), "unexpected number of fields in struct 'LLGL::" #TYPE "'");
 

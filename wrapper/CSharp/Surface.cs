@@ -44,12 +44,6 @@ namespace LLGL
             }
         }
 
-        [Obsolete("LLGL.Surface.ResetPixelFormat() is deprecated since 0.04b; No need to reset pixel format anymore!")]
-        public void ResetPixelFormat()
-        {
-            // dummy
-        }
-
         public Window AsWindow()
         {
             return new Window(NativeBase.AsWindow());

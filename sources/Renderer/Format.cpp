@@ -275,15 +275,6 @@ LLGL_EXPORT bool IsCompressedFormat(const Format format)
     return ((GetFormatAttribs(format).flags & FormatFlags::IsCompressed) != 0);
 }
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
-{
-    return (imageFormat >= ImageFormat::Compressed && imageFormat <= ImageFormat::BC5);
-}
-
-LLGL_DEPRECATED_IGNORE_POP()
-
 LLGL_EXPORT bool IsDepthOrStencilFormat(const Format format)
 {
     const auto& formatAttribs = GetFormatAttribs(format);
@@ -320,17 +311,6 @@ LLGL_EXPORT bool IsColorFormat(const Format format)
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 {
     return ((GetFormatAttribs(format).flags & FormatFlags::IsNormalized) != 0);
-}
-
-//deprecated
-LLGL_EXPORT bool IsIntegralFormat(const Format format)
-{
-    const auto& formatAttribs = GetFormatAttribs(format);
-    return
-    (
-        (formatAttribs.flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) != 0 &&
-        (formatAttribs.flags & (FormatFlags::HasDepthStencil | FormatFlags::IsCompressed)) == 0
-    );
 }
 
 LLGL_EXPORT bool IsIntegerFormat(const Format format)

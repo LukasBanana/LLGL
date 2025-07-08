@@ -35,19 +35,6 @@ namespace LLGL
                 NativeLLGL.SetDebugName(NativeChild, debugName);
             }
         }
-
-        [Obsolete("RenderSystemChild.Name is deprecated since 0.04b; Use RenderSystemChild.DebugName instead!")]
-        public string Name
-        {
-            get
-            {
-                return DebugName;
-            }
-            set
-            {
-                DebugName = value;
-            }
-        }
     }
 }
 

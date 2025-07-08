@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Export.h>
-#include <LLGL/Deprecated.h>
 #include <LLGL/Container/DynamicVector.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <cstdint>
@@ -292,159 +291,12 @@ struct ProfileCommandBufferRecord
     std::uint32_t meshCommands              = 0;
 };
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
 /**
 \brief Profile of a rendered frame.
 \see RenderingDebugger::NextFrame
 */
 struct FrameProfile
 {
-    //! \deprecated Since 0.04b; Use global assignment operator '+=' instead!
-    LLGL_DEPRECATED("FrameProfile::Clear is deprecated since 0.04b; Use default initializer instead", "=LLGL::FrameProfile{}")
-    inline void Clear()
-    {
-        *this = {};
-    }
-
-    //! \deprecated Since 0.04b; Use LLGL::RenderingDebugger::MergeProfiles instead!
-    LLGL_DEPRECATED("FrameProfile::Accumulate is deprecated since 0.04b; Use LLGL::RenderingDebugger::MergeProfiles instead!", "LLGL::RenderingDebugger::MergeProfiles")
-    inline void Accumulate(const FrameProfile& rhs);
-
-    union
-    {
-        struct
-        {
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::mipMapsGenerations instead!
-            LLGL_DEPRECATED("FrameProfile::mipMapsGenerations is deprecated since 0.04b; Use ProfileCommandBufferRecord::mipMapsGenerations instead!", "commandBufferRecord.mipMapsGenerations")
-            std::uint32_t mipMapsGenerations;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::vertexBufferBindings instead!
-            LLGL_DEPRECATED("FrameProfile::vertexBufferBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::vertexBufferBindings instead!", "commandBufferRecord.vertexBufferBindings")
-            std::uint32_t vertexBufferBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::indexBufferBindings instead!
-            LLGL_DEPRECATED("FrameProfile::indexBufferBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::indexBufferBindings instead!", "commandBufferRecord.indexBufferBindings")
-            std::uint32_t indexBufferBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::constantBufferBindings instead!
-            LLGL_DEPRECATED("FrameProfile::constantBufferBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::constantBufferBindings instead!", "commandBufferRecord.constantBufferBindings")
-            std::uint32_t constantBufferBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::sampledBufferBindings instead!
-            LLGL_DEPRECATED("FrameProfile::sampledBufferBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::sampledBufferBindings instead!", "commandBufferRecord.sampledBufferBindings")
-            std::uint32_t sampledBufferBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::storageBufferBindings instead!
-            LLGL_DEPRECATED("FrameProfile::storageBufferBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::storageBufferBindings instead!", "commandBufferRecord.storageBufferBindings")
-            std::uint32_t storageBufferBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::sampledTextureBindings instead!
-            LLGL_DEPRECATED("FrameProfile::sampledTextureBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::sampledTextureBindings instead!", "commandBufferRecord.sampledTextureBindings")
-            std::uint32_t sampledTextureBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::storageTextureBindings instead!
-            LLGL_DEPRECATED("FrameProfile::storageTextureBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::storageTextureBindings instead!", "commandBufferRecord.storageTextureBindings")
-            std::uint32_t storageTextureBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::samplerBindings instead!
-            LLGL_DEPRECATED("FrameProfile::samplerBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::samplerBindings instead!", "commandBufferRecord.samplerBindings")
-            std::uint32_t samplerBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::resourceHeapBindings instead!
-            LLGL_DEPRECATED("FrameProfile::resourceHeapBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::resourceHeapBindings instead!", "commandBufferRecord.resourceHeapBindings")
-            std::uint32_t resourceHeapBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::graphicsPipelineBindings instead!
-            LLGL_DEPRECATED("FrameProfile::graphicsPipelineBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::graphicsPipelineBindings instead!", "commandBufferRecord.graphicsPipelineBindings")
-            std::uint32_t graphicsPipelineBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::computePipelineBindings instead!
-            LLGL_DEPRECATED("FrameProfile::computePipelineBindings is deprecated since 0.04b; Use ProfileCommandBufferRecord::computePipelineBindings instead!", "commandBufferRecord.computePipelineBindings")
-            std::uint32_t computePipelineBindings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::attachmentClears instead!
-            LLGL_DEPRECATED("FrameProfile::attachmentClears is deprecated since 0.04b; Use ProfileCommandBufferRecord::attachmentClears instead!", "commandBufferRecord.attachmentClears")
-            std::uint32_t attachmentClears;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::bufferUpdates instead!
-            LLGL_DEPRECATED("FrameProfile::bufferUpdates is deprecated since 0.04b; Use ProfileCommandBufferRecord::bufferUpdates instead!", "commandBufferRecord.bufferUpdates")
-            std::uint32_t bufferUpdates;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::bufferCopies instead!
-            LLGL_DEPRECATED("FrameProfile::bufferCopies is deprecated since 0.04b; Use ProfileCommandBufferRecord::bufferCopies instead!", "commandBufferRecord.bufferCopies")
-            std::uint32_t bufferCopies;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::bufferFills instead!
-            LLGL_DEPRECATED("FrameProfile::bufferFills is deprecated since 0.04b; Use ProfileCommandBufferRecord::bufferFills instead!", "commandBufferRecord.bufferFills")
-            std::uint32_t bufferFills;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::bufferWrites instead!
-            LLGL_DEPRECATED("FrameProfile::bufferWrites is deprecated since 0.04b; Use ProfileCommandQueueRecord::bufferWrites instead!", "commandQueueRecord.bufferWrites")
-            std::uint32_t bufferWrites;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::bufferReads instead!
-            LLGL_DEPRECATED("FrameProfile::bufferReads is deprecated since 0.04b; Use ProfileCommandQueueRecord::bufferReads instead!", "commandQueueRecord.bufferReads")
-            std::uint32_t bufferReads;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::bufferMappings instead!
-            LLGL_DEPRECATED("FrameProfile::bufferMappings is deprecated since 0.04b; Use ProfileCommandQueueRecord::bufferMappings instead!", "commandQueueRecord.bufferMappings")
-            std::uint32_t bufferMappings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::textureCopies instead!
-            LLGL_DEPRECATED("FrameProfile::textureCopies is deprecated since 0.04b; Use ProfileCommandBufferRecord::textureCopies instead!", "commandBufferRecord.textureCopies")
-            std::uint32_t textureCopies;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::textureWrites instead!
-            LLGL_DEPRECATED("FrameProfile::textureWrites is deprecated since 0.04b; Use ProfileCommandQueueRecord::textureWrites instead!", "commandQueueRecord.textureWrites")
-            std::uint32_t textureWrites;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::textureReads instead!
-            LLGL_DEPRECATED("FrameProfile::textureReads is deprecated since 0.04b; Use ProfileCommandQueueRecord::textureReads instead!", "commandQueueRecord.textureReads")
-            std::uint32_t textureReads;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::renderPassSections instead!
-            LLGL_DEPRECATED("FrameProfile::renderPassSections is deprecated since 0.04b; Use ProfileCommandBufferRecord::renderPassSections instead!", "commandBufferRecord.renderPassSections")
-            std::uint32_t renderPassSections;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::streamOutputSections instead!
-            LLGL_DEPRECATED("FrameProfile::streamOutputSections is deprecated since 0.04b; Use ProfileCommandBufferRecord::streamOutputSections instead!", "commandBufferRecord.streamOutputSections")
-            std::uint32_t streamOutputSections;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::querySections instead!
-            LLGL_DEPRECATED("FrameProfile::querySections is deprecated since 0.04b; Use ProfileCommandBufferRecord::querySections instead!", "commandBufferRecord.querySections")
-            std::uint32_t querySections;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::renderConditionSections instead!
-            LLGL_DEPRECATED("FrameProfile::renderConditionSections is deprecated since 0.04b; Use ProfileCommandBufferRecord::renderConditionSections instead!", "commandBufferRecord.renderConditionSections")
-            std::uint32_t renderConditionSections;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::drawCommands instead!
-            LLGL_DEPRECATED("FrameProfile::drawCommands is deprecated since 0.04b; Use ProfileCommandBufferRecord::drawCommands instead!", "commandBufferRecord.drawCommands")
-            std::uint32_t drawCommands;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::dispatchCommands instead!
-            LLGL_DEPRECATED("FrameProfile::dispatchCommands is deprecated since 0.04b; Use ProfileCommandBufferRecord::dispatchCommands instead!", "commandBufferRecord.dispatchCommands")
-            std::uint32_t dispatchCommands;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::commandBufferSubmittions instead!
-            LLGL_DEPRECATED("FrameProfile::commandBufferSubmittions is deprecated since 0.04b; Use ProfileCommandQueueRecord::commandBufferSubmittions instead!", "commandQueueRecord.commandBufferSubmittions")
-            std::uint32_t commandBufferSubmittions;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord::encodings instead!
-            LLGL_DEPRECATED("FrameProfile::commandBufferEncodings is deprecated since 0.04b; Use ProfileCommandBufferRecord::encodings instead!", "commandBufferRecord.encodings")
-            std::uint32_t commandBufferEncodings;
-
-            //! \deprecated Since 0.04b; Use ProfileCommandQueueRecord::fenceSubmissions instead!
-            LLGL_DEPRECATED("FrameProfile::fenceSubmissions is deprecated since 0.04b; Use ProfileCommandQueueRecord::fenceSubmissions instead!", "commandQueueRecord.fenceSubmissions")
-            std::uint32_t fenceSubmissions;
-        };
-
-        //! \deprecated Since 0.04b; Use ProfileCommandBufferRecord and ProfileCommandQueueRecord instead!
-        LLGL_DEPRECATED("FrameProfile::values is deprecated since 0.04b; Use FrameProfile::commandQueueRecord and FrameProfile::commandBufferRecord instead!")
-        std::uint32_t values[33];
-    };
-
     /**
     \brief Structure for all command queue recordings of this frame profile.
     \remarks This also includes internal queue submissions from the RenderSystem.
@@ -464,8 +316,6 @@ struct FrameProfile
     */
     DynamicVector<ProfileTimeRecord>    timeRecords;
 };
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 
 } // /namespace LLGL

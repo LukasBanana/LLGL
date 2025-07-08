@@ -44,10 +44,6 @@ class LLGL_EXPORT Canvas : public Surface
 
                 friend class Canvas;
 
-                //! \deprecated Since 0.04b; Use OnDestroy instead to detect when the canvas is about to be destroyed!
-                LLGL_DEPRECATED("Deprecated since 0.04b; Use OnDestroy instead!", "OnDestroy")
-                virtual void OnQuit(Canvas& sender, bool& veto);
-
                 //! Sent when the canvas is initialized or re-initialized.
                 virtual void OnInit(Canvas& sender);
 
@@ -68,10 +64,6 @@ class LLGL_EXPORT Canvas : public Surface
 
                 //! Sent when a tap gesture has been recognized only including the location within the canvas.
                 virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
-
-                //! \deprecated Since 0.04b; Use the second version of OnPanGesture() with the EventAction parameter instead!
-                LLGL_DEPRECATED("This version of OnPanGesture() is deprecated since 0.04b; Use the second version with the EventAction parameter instead!")
-                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
 
                 //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
                 virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
@@ -108,10 +100,6 @@ class LLGL_EXPORT Canvas : public Surface
 
     public:
 
-        //! \deprecated Since 0.04b; Write a custom 'quit' state for your app instead!
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use a custom state instead!")
-        virtual bool HasQuit() const;
-
         //! This default implementation ignores the video mode descriptor completely and always return false.
         bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) override;
 
@@ -137,10 +125,6 @@ class LLGL_EXPORT Canvas : public Surface
 
         //! Removes the specified event listener from this canvas.
         void RemoveEventListener(const EventListener* eventListener);
-
-        //! \deprecated Since 0.04b; Use PostDestroy instead.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use PostDestroy instead to signal the canvas is about to be destroyed.", "PostDestroy")
-        void PostQuit();
 
         /**
         \brief Posts a signal that the canvas is initialized or re-initialized.
@@ -175,10 +159,6 @@ class LLGL_EXPORT Canvas : public Surface
         \see EventListener::OnTapGesture
         */
         void PostTapGesture(const Offset2D& position, std::uint32_t numTouches);
-
-        //! \deprecated Since 0.04b; Use the second version of PostPanGesture() with the EventAction parameter instead!
-        LLGL_DEPRECATED("This version of PostPanGesture() is deprecated since 0.04b; Use the second version with the EventAction parameter instead!")
-        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
 
         /**
         \brief Posts a pan gesture event to all event listeners.

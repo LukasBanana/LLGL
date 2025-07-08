@@ -184,11 +184,6 @@ LLGL_C_EXPORT void llglResourceBarrier(uint32_t numBuffers, const LLGLBuffer* bu
     }
 }
 
-LLGL_C_EXPORT void llglResetResourceSlots(LLGLResourceType resourceType, uint32_t firstSlot, uint32_t numSlots, long bindFlags, long stageFlags)
-{
-    // deprecated
-}
-
 LLGL_C_EXPORT void llglBeginRenderPass(LLGLRenderTarget renderTarget)
 {
     g_CurrentCmdBuf->BeginRenderPass(LLGL_REF(RenderTarget, renderTarget));

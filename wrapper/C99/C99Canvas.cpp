@@ -145,11 +145,6 @@ LLGL_C_EXPORT size_t llglGetCanvasTitleUTF8(LLGLCanvas canvas, size_t outTitleLe
     return title.size() + 1;
 }
 
-LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas)
-{
-    return false; // deprecated
-}
-
 LLGL_C_EXPORT void llglSetCanvasUserData(LLGLCanvas canvas, void* userData)
 {
     LLGL_PTR(Canvas, canvas)->SetUserData(userData);
@@ -171,11 +166,6 @@ LLGL_C_EXPORT void llglRemoveCanvasEventListener(LLGLCanvas canvas, int eventLis
 {
     if (auto eventListener = g_CanvasEventListenerContainer.Release(eventListenerID))
         LLGL_PTR(Canvas, canvas)->RemoveEventListener(eventListener.get());
-}
-
-LLGL_C_EXPORT void llglPostCanvasQuit(LLGLCanvas canvas)
-{
-    // deprecated
 }
 
 LLGL_C_EXPORT void llglPostCanvasInit(LLGLCanvas sender)

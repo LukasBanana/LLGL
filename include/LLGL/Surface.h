@@ -13,7 +13,6 @@
 #include <LLGL/Types.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Display.h>
-#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -83,10 +82,6 @@ class LLGL_EXPORT Surface : public Interface
         \return Pointer to the Display in which this surface is resident or null if this surface is not resident in any display.
         */
         virtual Display* FindResidentDisplay() const = 0;
-
-        //! \deprecated Since 0.04b; No need to reset pixel format anymore!
-        LLGL_DEPRECATED("Surface::ResetPixelFormat is deprecated since 0.04b; No need to reset pixel format anymore!")
-        virtual void ResetPixelFormat();
 
     public:
 

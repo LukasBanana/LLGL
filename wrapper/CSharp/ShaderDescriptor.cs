@@ -178,18 +178,6 @@ namespace LLGL
         }
 
         public ShaderCompileFlags Flags { get; set; } = 0;
-        [Obsolete("ShaderDescriptor.Name is deprecated since 0.04b; Use ShaderDescriptor.DebugName instead.")]
-        public string Name
-        {
-            get
-            {
-                return DebugName;
-            }
-            set
-            {
-                DebugName = value;
-            }
-        }
         public VertexShaderAttributes Vertex { get; set; } = new VertexShaderAttributes();
         public FragmentShaderAttributes Fragment { get; set; } = new FragmentShaderAttributes();
         public ComputeShaderAttributes Compute { get; set; } = new ComputeShaderAttributes();

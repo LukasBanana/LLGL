@@ -9,7 +9,6 @@
 #define LLGL_OPENGL_LINUX_NATIVE_HANDLE_H
 
 
-#include <LLGL/Deprecated.h>
 #include <GL/glx.h>
 
 #if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
@@ -46,10 +45,6 @@ struct RenderSystemNativeHandle
 
     union
     {
-        //! \deprecated Since 0.04b;
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.", "glx")
-        GLXContext context;
-
         //! Native GLX context handle.
         GLXContext glx;
 

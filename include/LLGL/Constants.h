@@ -10,7 +10,6 @@
 
 
 #include <cstdint>
-#include <LLGL/Deprecated.h>
 
 
 //! Maximum number of color attachments allowed for render targets.
@@ -56,31 +55,6 @@
 \see SwapChain::GetCurrentSwapIndex
 */
 #define LLGL_CURRENT_SWAP_INDEX             ( static_cast<std::uint32_t>(-1) )
-
-
-namespace LLGL
-{
-
-namespace Constants
-{
-
-
-LLGL_DEPRECATED("LLGL::Constants::maxThreadCount is deprecated since 0.04b; Use LLGL_MAX_THREAD_COUNT instead!", "LLGL_MAX_THREAD_COUNT")
-constexpr unsigned      maxThreadCount      = LLGL_MAX_THREAD_COUNT;
-
-LLGL_DEPRECATED("LLGL::Constants::invalidSlot is deprecated since 0.04b; Use LLGL_INVALID_SLOT instead!", "LLGL_INVALID_SLOT")
-constexpr std::uint32_t invalidSlot         = LLGL_INVALID_SLOT;
-
-LLGL_DEPRECATED("LLGL::Constants::wholeSize is deprecated since 0.04b; Use LLGL_WHOLE_SIZE instead!", "LLGL_WHOLE_SIZE")
-constexpr std::uint64_t wholeSize           = LLGL_WHOLE_SIZE;
-
-LLGL_DEPRECATED("LLGL::Constants::currentSwapIndex is deprecated since 0.04b; Use LLGL_CURRENT_SWAP_INDEX instead!", "LLGL_CURRENT_SWAP_INDEX")
-constexpr std::uint32_t currentSwapIndex    = LLGL_CURRENT_SWAP_INDEX;
-
-
-} // /namespace Constants
-
-} // /namespace LLGL
 
 
 #endif

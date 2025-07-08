@@ -82,11 +82,6 @@ bool LinuxGLContextX11::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
 
         nativeHandleGL->type    = OpenGL::RenderSystemNativeType::GLX;
         nativeHandleGL->glx     = glc_;
-
-        LLGL_DEPRECATED_IGNORE_PUSH()
-        nativeHandleGL->context = glc_;
-        LLGL_DEPRECATED_IGNORE_POP()
-        
         return true;
     }
     return false;

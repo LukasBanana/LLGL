@@ -29,7 +29,7 @@ static void GLTexSubImage1DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTexSubImage1D(
             target,
@@ -68,7 +68,7 @@ static void GLTexSubImage2DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTexSubImage2D(
             target,
@@ -111,7 +111,7 @@ static void GLTexSubImage3DBase(
     GLenum              internalFormat)
 {
     LLGL_ASSERT(internalFormat != 0);
-    if (IsCompressedFormat(imageView.format))
+    if (imageView.format == ImageFormat::Compressed)
     {
         glCompressedTexSubImage3D(
             target,
@@ -425,7 +425,7 @@ bool GLTexSubImage(
 {
     //TODO: on-the-fly decompression would be awesome (if GL_ARB_texture_compression is unsupported), but a lot of work :-/
     /* If compressed format is requested, GL_ARB_texture_compression must be supported */
-    if (IsCompressedFormat(imageView.format) && !HasExtension(GLExt::ARB_texture_compression))
+    if (imageView.format == ImageFormat::Compressed && !HasExtension(GLExt::ARB_texture_compression))
         return false;
 
     switch (type)

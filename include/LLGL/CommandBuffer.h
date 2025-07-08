@@ -516,16 +516,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             Texture* const *    textures
         ) = 0;
 
-        //! \deprecated Since 0.04b; No need to reset resource slots manually anymore!
-        LLGL_DEPRECATED("CommandBuffer::ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")
-        virtual void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        );
-
         /* ----- Render Passes ----- */
 
         /**

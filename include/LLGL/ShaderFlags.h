@@ -13,7 +13,6 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
-#include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
 
@@ -298,8 +297,6 @@ struct ComputeShaderAttributes
     Extent3D workGroupSize = { 1, 1, 1 };
 };
 
-LLGL_DEPRECATED_IGNORE_PUSH()
-
 /**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
@@ -410,10 +407,6 @@ struct ShaderDescriptor
     */
     long                        flags           = 0;
 
-    //! \deprecated Since 0.04b; Use ShaderDescriptor::debugName instead.
-    LLGL_DEPRECATED("ShaderDescriptor::name is deprecated since 0.04b; Use ShaderDescriptor::debugName instead!", "debugName")
-    const char*                 name            = nullptr;
-
     //! Vertex (or geometry) shader specific attributes.
     VertexShaderAttributes      vertex;
 
@@ -427,8 +420,6 @@ struct ShaderDescriptor
     */
     ComputeShaderAttributes     compute;
 };
-
-LLGL_DEPRECATED_IGNORE_POP()
 
 
 /* ----- Functions ----- */

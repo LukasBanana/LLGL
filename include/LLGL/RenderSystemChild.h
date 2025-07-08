@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Interface.h>
-#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -50,13 +49,6 @@ class LLGL_EXPORT RenderSystemChild : public Interface
         \see TextureDescriptor::debugName
         */
         virtual void SetDebugName(const char* name);
-
-        //! \deprecated Since 0.04b; Use RenderSystemChild::SetDebugName instead!
-        LLGL_DEPRECATED("RenderSystemChild::SetDebugName is deprecated since 0.04b; Use RenderSystemChild::SetDebugName instead!", "SetDebugName")
-        inline void SetName(const char* name)
-        {
-            SetDebugName(name);
-        }
 
 };
 

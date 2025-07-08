@@ -13,12 +13,6 @@ namespace LLGL
 {
 
 
-void Surface::ResetPixelFormat()
-{
-    // dummy
-}
-
-
 /*
  * Window::EventListener class
  */

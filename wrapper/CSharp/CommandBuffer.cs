@@ -253,12 +253,6 @@ namespace LLGL
             }
         }
 
-        [Obsolete("LLGL.CommandBuffer.ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")]
-        public void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, BindFlags bindFlags, StageFlags stageFlags)
-        {
-            NativeLLGL.ResetResourceSlots(resourceType, firstSlot, numSlots, (int)bindFlags, (int)stageFlags);
-        }
-
         public void BeginRenderPass(RenderTarget renderTarget)
         {
             NativeLLGL.BeginRenderPass(renderTarget.Native);

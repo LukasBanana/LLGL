@@ -32,7 +32,6 @@
 #include <LLGL/RenderTarget.h>
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/RenderSystemFlags.h>
-#include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/ResourceHeap.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -688,14 +687,6 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         void Errorf(const char* format, ...);
 
-        //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
-        LLGL_DEPRECATED("RenderSystem::SetRendererInfo() is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
-        void SetRendererInfo(const RendererInfo& info);
-
-        //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
-        LLGL_DEPRECATED("RenderSystem::SetRendererInfo() is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
-        void SetRenderingCaps(const RenderingCapabilities& caps);
-
     protected:
 
         /**
@@ -717,18 +708,6 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         //! Validates the specified shader descriptor.
         static void AssertCreateShader(const ShaderDescriptor& shaderDesc);
-
-        LLGL_DEPRECATED("RenderSystem::AssertImageDataSize() is deprecated since 0.04b; Use LLGL_VERIFY() macro instead!")
-        static void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
-
-        LLGL_DEPRECATED("RenderSystem::CopyTextureImageData() is deprecated since 0.04b; Use ConvertOrCopyImageBuffer() instead!")
-        static std::size_t CopyTextureImageData(
-            const MutableImageView& dstImageView,
-            const ImageView&        srcImageView,
-            std::uint32_t           numTexels,
-            std::uint32_t           numTexelsInRow,
-            std::uint32_t           rowStride       = 0
-        );
 
     private:
 

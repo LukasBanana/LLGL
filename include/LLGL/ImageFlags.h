@@ -15,7 +15,6 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <LLGL/Deprecated.h>
 #include <memory>
 #include <cstdint>
 #include <cstddef>
@@ -120,82 +119,6 @@ struct ImageView
     std::uint32_t   layerStride = 0;
 };
 
-struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor
-{
-    SrcImageDescriptor() = default;
-
-    inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    inline SrcImageDescriptor(const ImageView& view) :
-        format   { view.format   },
-        dataType { view.dataType },
-        data     { view.data     },
-        dataSize { view.dataSize }
-    {
-    }
-
-    inline operator ImageView() const
-    {
-        #ifdef _MSC_VER
-        #pragma warning(push)
-        #pragma warning(disable : 4996)
-        #endif
-        return ImageView{ format, dataType, data, dataSize };
-        #ifdef _MSC_VER
-        #pragma warning(pop)
-        #endif
-    }
-
-    ImageFormat format      = ImageFormat::RGBA;
-    DataType    dataType    = DataType::UInt8;
-    const void* data        = nullptr;
-    std::size_t dataSize    = 0;
-};
-
-struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use LLGL::MutableImageView instead!", "MutableImageView") DstImageDescriptor
-{
-    DstImageDescriptor() = default;
-
-    inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    inline DstImageDescriptor(const MutableImageView& view) :
-        format   { view.format   },
-        dataType { view.dataType },
-        data     { view.data     },
-        dataSize { view.dataSize }
-    {
-    }
-
-    inline operator MutableImageView() const
-    {
-        #ifdef _MSC_VER
-        #pragma warning(push)
-        #pragma warning(disable : 4996)
-        #endif
-        return MutableImageView{ format, dataType, data, dataSize };
-        #ifdef _MSC_VER
-        #pragma warning(pop)
-        #endif
-    }
-
-    ImageFormat format      = ImageFormat::RGBA;
-    DataType    dataType    = DataType::UInt8;
-    void*       data        = nullptr;
-    std::size_t dataSize    = 0;
-};
-
 
 /* ----- Functions ----- */
 
@@ -296,14 +219,6 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const ImageView&    srcImageView,
     ImageFormat         dstFormat,
     DataType            dstDataType,
-    unsigned            threadCount = 0
-);
-
-//! \deprecated Since 0.04b; Use second version with explicit compression format instead!
-LLGL_DEPRECATED("This version of DecompressImageBufferToRGBA8UNorm() is deprecated since 0.04b; Use second version with explicit compression format instead!")
-LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
-    const ImageView&    srcImageView,
-    const Extent2D&     extent,
     unsigned            threadCount = 0
 );
 
