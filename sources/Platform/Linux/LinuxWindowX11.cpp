@@ -86,11 +86,6 @@ bool LinuxWindowX11::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
         handle->x11.display = display_;
         handle->x11.window  = wnd_;
         handle->x11.visual  = visual_;
-        LLGL_DEPRECATED_IGNORE_PUSH()
-        handle->display     = display_;
-        handle->window      = wnd_;
-        handle->visual      = visual_;
-        LLGL_DEPRECATED_IGNORE_POP()
         return true;
     }
     return false;
