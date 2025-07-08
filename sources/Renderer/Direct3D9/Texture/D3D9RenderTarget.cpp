@@ -16,10 +16,10 @@ namespace LLGL
 {
 
 
-D3D9RenderTarget::D3D9RenderTarget(const RenderTargetDescriptor& desc) :
+D3D9RenderTarget::D3D9RenderTarget(IDirect3DDevice9* device, const RenderTargetDescriptor& desc) :
     desc { desc }
 {
-    BuildAttachmentArray();
+    BuildAttachmentArray(device);
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
 }
@@ -67,7 +67,7 @@ const RenderPass* D3D9RenderTarget::GetRenderPass() const
  * ======= Private: =======
  */
 
-void D3D9RenderTarget::BuildAttachmentArray()
+void D3D9RenderTarget::BuildAttachmentArray(IDirect3DDevice9* device)
 {
     /* Cache color attachments */
     for (const auto& attachment : desc.colorAttachments)
@@ -80,7 +80,7 @@ void D3D9RenderTarget::BuildAttachmentArray()
                 colorAttachments_.push_back(textureD3D9);
             }
             else
-                colorAttachments_.push_back(MakeIntermediateAttachment(attachment.format, desc.samples));
+                colorAttachments_.push_back(MakeIntermediateAttachment(device, attachment.format, desc.samples));
         }
     }
 
@@ -95,7 +95,7 @@ void D3D9RenderTarget::BuildAttachmentArray()
                 resolveAttachments_.push_back(textureD3D9);
             }
             else
-                resolveAttachments_.push_back(MakeIntermediateAttachment(attachment.format));
+                resolveAttachments_.push_back(MakeIntermediateAttachment(device, attachment.format));
         }
     }
 
@@ -106,14 +106,14 @@ void D3D9RenderTarget::BuildAttachmentArray()
         {
             auto* textureD3D9 = LLGL_CAST(D3D9Texture*, texture);
             depthStencilAttachment_ = textureD3D9;
-            depthStencilFormat_     = textureD3D9->desc.format;
+            depthStencilFormat_     = textureD3D9->GetFormat();
         }
         else
             depthStencilFormat_ = desc.depthStencilAttachment.format;
     }
 }
 
-D3D9Texture* D3D9RenderTarget::MakeIntermediateAttachment(const Format format, std::uint32_t samples)
+D3D9Texture* D3D9RenderTarget::MakeIntermediateAttachment(IDirect3DDevice9* device, const Format format, std::uint32_t samples)
 {
     TextureDescriptor textureDesc;
     {
@@ -126,7 +126,7 @@ D3D9Texture* D3D9RenderTarget::MakeIntermediateAttachment(const Format format, s
         textureDesc.mipLevels       = 1;
         textureDesc.samples         = samples;
     };
-    intermediateAttachments_.push_back(MakeUnique<D3D9Texture>(textureDesc));
+    intermediateAttachments_.push_back(MakeUnique<D3D9Texture>(device, textureDesc));
     return intermediateAttachments_.back().get();
 }
 

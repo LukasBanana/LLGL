@@ -22,6 +22,7 @@ namespace D3D9Types
 
 
 D3DFORMAT ToD3DFormat( const Format format );
+D3DFORMAT ToD3DIndexFormat( const Format format );
 D3DDECLTYPE ToD3DDeclType( const Format format );
 
 Format ToFormat(const D3DFORMAT format);

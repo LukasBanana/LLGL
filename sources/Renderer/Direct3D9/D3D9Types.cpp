@@ -175,6 +175,17 @@ D3DFORMAT ToD3DFormat(const Format format)
     LLGL_TRAP_D3D_MAP(Format, format, D3DFORMAT);
 }
 
+D3DFORMAT ToD3DIndexFormat(const Format format)
+{
+    switch (format)
+    {
+        case Format::R16UInt:   return D3DFMT_INDEX16;
+        case Format::R32UInt:   return D3DFMT_INDEX32;
+        default:                break;
+    }
+    LLGL_TRAP_D3D_MAP(Format, format, D3DFORMAT);
+}
+
 D3DDECLTYPE ToD3DDeclType(const Format format)
 {
     switch (format)
@@ -242,6 +253,10 @@ Format ToFormat(const D3DFORMAT format)
         case D3DFMT_DXT3:           return Format::BC3UNorm;
         case D3DFMT_DXT4:           return Format::BC4UNorm;
         case D3DFMT_DXT5:           return Format::BC5UNorm;
+
+        /* --- Index formats --- */
+        case D3DFMT_INDEX16:        return Format::R16UInt;
+        case D3DFMT_INDEX32:        return Format::R32UInt;
     }
     return Format::Undefined;
 }

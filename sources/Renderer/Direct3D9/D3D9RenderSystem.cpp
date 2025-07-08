@@ -240,9 +240,9 @@ void D3D9RenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* D3D9RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
-    return textures_.emplace<D3D9Texture>(textureDesc, initialImage);
+    return textures_.emplace<D3D9Texture>(device_.Get(), textureDesc, initialImage);
 }
-
+    
 void D3D9RenderSystem::Release(Texture& texture)
 {
     textures_.erase(&texture);
@@ -306,7 +306,7 @@ void D3D9RenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* D3D9RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return renderTargets_.emplace<D3D9RenderTarget>(renderTargetDesc);
+    return renderTargets_.emplace<D3D9RenderTarget>(device_.Get(), renderTargetDesc);
 }
 
 void D3D9RenderSystem::Release(RenderTarget& renderTarget)

@@ -13,6 +13,8 @@
 #include <LLGL/Utils/Image.h>
 #include <string>
 #include <vector>
+#include "../Direct3D9.h"
+#include "../../DXCommon/ComPtr.h"
 
 
 namespace LLGL
@@ -32,33 +34,25 @@ class D3D9Texture final : public Texture
 
     public:
 
-        D3D9Texture(const TextureDescriptor& desc, const ImageView* initialImage = nullptr);
+        D3D9Texture(IDirect3DDevice9* device, const TextureDescriptor& desc, const ImageView* initialImage = nullptr);
 
-        // Returns the MIP-map level clamped to the number of MIP-map levels in this texture.
-        std::uint32_t ClampMipLevel(std::uint32_t mipLevel) const;
+        HRESULT Write(const TextureRegion& textureRegion, const ImageView& srcImageView);
+        HRESULT Read(const TextureRegion& textureRegion, const MutableImageView& dstImageView);
 
-        void Write(const TextureRegion& textureRegion, const ImageView& srcImageView);
-        void Read(const TextureRegion& textureRegion, const MutableImageView& dstImageView);
-
-        // Generates the MIP-map images for either the entire resource or a rubresource.
-        void GenerateMips(const TextureSubresource* subresource = nullptr);
-
-        std::uint32_t PackSubresourceIndex(std::uint32_t mipLevel, std::uint32_t arrayLayer) const;
-        void UnpackSubresourceIndex(std::uint32_t subresource, std::uint32_t& outMipLevel, std::uint32_t& outArrayLayer) const;
-
-    public:
-
-        const TextureDescriptor desc;
+        inline IDirect3DBaseTexture9* GetNative() const
+        {
+            return baseTexture_.Get();
+        }
 
     private:
 
-        void AllocImages();
+        void CreateD3DTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
+        void CreateD3DVolumeTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
+        void CreateD3DCubeTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
 
     private:
 
-        std::string         label_;
-        Extent3D            extent_;
-        std::vector<Image>  images_; // MIP-map images
+        ComPtr<IDirect3DBaseTexture9> baseTexture_;
 
 };
 

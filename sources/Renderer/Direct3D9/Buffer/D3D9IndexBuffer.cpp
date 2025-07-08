@@ -24,7 +24,7 @@ D3D9IndexBuffer::D3D9IndexBuffer(IDirect3DDevice9* device, const BufferDescripto
     HRESULT hr = device->CreateIndexBuffer(
         bufferLength,
         0, // Usage
-        D3D9Types::ToD3DFormat(desc.format),
+        D3D9Types::ToD3DIndexFormat(desc.format),
         D3DPOOL_DEFAULT,
         d3dBuffer_.GetAddressOf(),
         nullptr // Shared handle (must be null)

@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderTarget.h>
 #include "D3D9Texture.h"
+#include "../Direct3D9.h"
 #include <string>
 #include <vector>
 
@@ -32,7 +33,7 @@ class D3D9RenderTarget final : public RenderTarget
 
     public:
 
-        D3D9RenderTarget(const RenderTargetDescriptor& desc);
+        D3D9RenderTarget(IDirect3DDevice9* device, const RenderTargetDescriptor& desc);
 
     public:
 
@@ -40,9 +41,9 @@ class D3D9RenderTarget final : public RenderTarget
 
     private:
 
-        void BuildAttachmentArray();
+        void BuildAttachmentArray(IDirect3DDevice9* device);
 
-        D3D9Texture* MakeIntermediateAttachment(const Format format, std::uint32_t samples = 1);
+        D3D9Texture* MakeIntermediateAttachment(IDirect3DDevice9* device, const Format format, std::uint32_t samples = 1);
 
     private:
 
