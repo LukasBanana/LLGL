@@ -55,6 +55,8 @@ if %INPUT% LEQ %NUM_EXAMPLES% (
     pushd %~dp0\examples\Cpp\!SELECTION!
     if exist "%~dp0\%BUILD_DIR%\Debug\Example_!SELECTION!D.exe" (
         %~dp0\%BUILD_DIR%\Debug\Example_!SELECTION!D.exe
+    ) else if exist "%~dp0\%BUILD_DIR%\RelWithDebInfo\Example_!SELECTION!.exe" (
+        %~dp0\%BUILD_DIR%\RelWithDebInfo\Example_!SELECTION!.exe
     ) else (
         %~dp0\%BUILD_DIR%\Release\Example_!SELECTION!.exe
     )
