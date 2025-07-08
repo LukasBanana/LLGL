@@ -850,11 +850,7 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     std::vector<ShadingLanguage> languages;
 
     languages.push_back(ShadingLanguage::HLSL);
-    languages.push_back(ShadingLanguage::HLSL_2_0);
 
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_1 ) { languages.push_back(ShadingLanguage::HLSL_2_0a); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) { languages.push_back(ShadingLanguage::HLSL_2_0b); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) { languages.push_back(ShadingLanguage::HLSL_3_0);  }
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) { languages.push_back(ShadingLanguage::HLSL_4_0);  }
     if (featureLevel >= D3D_FEATURE_LEVEL_10_1) { languages.push_back(ShadingLanguage::HLSL_4_1);  }
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) { languages.push_back(ShadingLanguage::HLSL_5_0);  }
