@@ -77,7 +77,7 @@ void LinuxGLContextWayland::CreateEGLContext(
 
     if (context_)
     {
-        if (eglMakeCurrent(display, nativeSurface, nativeSurface, intermediateGlc) != EGL_TRUE)
+        if (eglMakeCurrent(display, nativeSurface, nativeSurface, context_) != EGL_TRUE)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
 
         /* Valid core profile created, so we can delete the intermediate EGL context */
