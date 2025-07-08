@@ -60,7 +60,9 @@ class D3D12RenderSystem final : public RenderSystem
 
         struct D3DDeviceCaps
         {
+            #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
             D3D12_MESH_SHADER_TIER  meshShaderTier      = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
+            #endif
             bool                    isTearingSupported  = false;
         };
 

@@ -195,6 +195,12 @@ struct StageFlags
         //! Specifies the compute shader stage.
         ComputeStage        = (1 << 5),
 
+        //! Specifies the amplification shader stage (used in conjunction with a mesh shader).
+        AmplificationStage  = (1 << 6),
+
+        //! Specifies the mesh shader stage.
+        MeshStage           = (1 << 7),
+
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),
 

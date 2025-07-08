@@ -36,14 +36,6 @@ static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
     return (enabled ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
 }
 
-static D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
-{
-    if (shader != nullptr)
-        return LLGL_CAST(const D3D12Shader*, shader)->GetByteCode();
-    else
-        return D3D12_SHADER_BYTECODE{ nullptr, 0 };
-}
-
 static UINT8 GetColorWriteMask(std::uint8_t colorMask)
 {
     UINT8 mask = 0;
@@ -236,6 +228,14 @@ void D3DConvertRasterizerDesc(D3D12_RASTERIZER_DESC& dst, const RasterizerDescri
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
     dst.ForcedSampleCount       = 0; // no forced sample count
     dst.ConservativeRaster      = GetConservativeRaster(src.conservativeRasterization);
+}
+
+D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
+{
+    if (shader != nullptr)
+        return LLGL_CAST(const D3D12Shader*, shader)->GetByteCode();
+    else
+        return D3D12_SHADER_BYTECODE{ nullptr, 0 };
 }
 
 

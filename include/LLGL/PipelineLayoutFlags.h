@@ -525,12 +525,12 @@ struct PipelineLayoutDescriptor
     std::vector<CombinedTextureSamplerDescriptor>   combinedTextureSamplers;
 
     /**
-    \brief Specifies optional resource barrier flags. By default 0.
+    \brief Specifies optional resource barrier flags. This can be a bitwise-OR combination of BarrierFlags entries. By default 0.
     \remarks If the barrier flags are non-zero, they will be applied to all affected resources before each draw and compute command.
     This should be used when a resource is bound to the pipeline that was previously written to.
-    A more fine-grained alternative is to explicitly insert barriers via the CommandBuffer::ResourceBarier command.
+    A more fine-grained alternative is to explicitly insert barriers via the CommandBuffer::ResourceBarrier command.
     \see BarrierFlags
-    \see CommandBuffer::ResourceBarier
+    \see CommandBuffer::ResourceBarrier
     */
     long                                            barrierFlags            = 0;
 };

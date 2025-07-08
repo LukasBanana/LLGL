@@ -326,7 +326,9 @@ class D3D12CommandContext
         D3D12NativeFence                        allocatorFence_;
 
         ComPtr<ID3D12GraphicsCommandList>       commandList_;
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3D12GraphicsCommandList6>      commandList6_;
+        #endif
 
         D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];
         UINT                                    numResourceBarriers_                        = 0;

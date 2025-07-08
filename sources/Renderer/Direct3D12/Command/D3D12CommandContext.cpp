@@ -88,8 +88,10 @@ void D3D12CommandContext::Create(
     if (initialClose)
         commandList_->Close();
 
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Check if newer version of command list is available */
     commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+    #endif
 
     /* Clear cache alongside device object initialization */
     ClearCache();
@@ -697,9 +699,11 @@ void D3D12CommandContext::DispatchIndirect(
     ID3D12Resource*         countBuffer,
     UINT64                  countBufferOffset)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     FlushResourceBarriers();
     FlushComputeStagingDescriptorTables();
     commandList_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
+    #endif
 }
 
 void D3D12CommandContext::DispatchMesh(
@@ -707,12 +711,14 @@ void D3D12CommandContext::DispatchMesh(
     UINT threadGroupCountY,
     UINT threadGroupCountZ)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (commandList6_)
     {
         FlushResourceBarriers();
         FlushGraphicsStagingDescriptorTables();
         commandList6_->DispatchMesh(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
     }
+    #endif
 }
 
 void D3D12CommandContext::DispatchMeshIndirect(
@@ -723,12 +729,14 @@ void D3D12CommandContext::DispatchMeshIndirect(
     ID3D12Resource*         countBuffer,
     UINT64                  countBufferOffset)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (commandList6_)
     {
         FlushResourceBarriers();
         FlushGraphicsStagingDescriptorTables();
         commandList6_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
     }
+    #endif
 }
 
 

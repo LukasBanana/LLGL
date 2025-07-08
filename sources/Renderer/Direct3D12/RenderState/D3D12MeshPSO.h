@@ -9,6 +9,8 @@
 #define LLGL_D3D12_MESH_PIPELINE_H
 
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
 #include "D3D12RenderPSOBase.h"
 
 
@@ -49,6 +51,8 @@ class D3D12MeshPSO final : public D3D12RenderPSOBase
 
 
 } // /namespace LLGL
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
 
 #endif

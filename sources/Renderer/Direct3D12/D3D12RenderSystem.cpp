@@ -401,12 +401,16 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescr
 
 PipelineState* D3D12RenderSystem::CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (deviceCaps_.meshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
         return nullptr;
     ComPtr<ID3D12Device2> device2;
     if (FAILED(device_.GetNative()->QueryInterface(IID_PPV_ARGS(&device2))))
         return nullptr;
     return pipelineStates_.emplace<D3D12MeshPSO>(device2.Get(), defaultPipelineLayout_, pipelineStateDesc, GetDefaultRenderPass(), pipelineCache);
+    #else
+    return nullptr; // not supported
+    #endif
 }
 
 void D3D12RenderSystem::Release(PipelineState& pipelineState)
@@ -758,9 +762,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 
     const std::uint32_t maxThreadGroups = 65535u;
 
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
     deviceCaps_.meshShaderTier = options7.MeshShaderTier;
+    #endif
 
     /* Query common attributes */
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
@@ -784,7 +790,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasTessellatorStage               = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     caps.features.hasMeshShaders                    = (deviceCaps_.meshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED);
+    #else
+    caps.features.hasMeshShaders                    = false;
+    #endif
     caps.features.hasInstancing                     = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???

@@ -800,10 +800,14 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         case D3D12PipelineType::Mesh:
         {
+            #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
             /* Bind mesh PSO */
             auto& meshPSO = LLGL_CAST(D3D12MeshPSO&, pipelineState);
             meshPSO.Bind(commandContext_);
             boundPipelineState_ = &meshPSO;
+            #else
+            return /*E_INVALIDARG*/;
+            #endif
         }
         break;
     }
@@ -1163,11 +1167,17 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
 
 void D3D12CommandBuffer::DrawMesh(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
     commandContext_.DispatchMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+
+    #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 }
 
 void D3D12CommandBuffer::DrawMeshIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     if likely(stride == sizeof(D3D12_DISPATCH_MESH_ARGUMENTS))
@@ -1184,6 +1194,8 @@ void D3D12CommandBuffer::DrawMeshIndirect(Buffer& buffer, std::uint64_t offset, 
             offset += stride;
         }
     }
+
+    #endif // LLGL_D3D12_ENABLE_FEATURELEVEL
 }
 
 void D3D12CommandBuffer::DrawMeshIndirect(
@@ -1194,6 +1206,8 @@ void D3D12CommandBuffer::DrawMeshIndirect(
     std::uint32_t   maxNumCommands,
     std::uint32_t   stride)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
     auto& argumentsBufferD3D = LLGL_CAST(D3D12Buffer&, argumentsBuffer);
     auto& countBufferD3D = LLGL_CAST(D3D12Buffer&, countBuffer);
 
@@ -1215,6 +1229,8 @@ void D3D12CommandBuffer::DrawMeshIndirect(
         );
         LLGL_TRAP_NOT_IMPLEMENTED(reason.c_str());
     }
+
+    #endif // LLGL_D3D12_ENABLE_FEATURELEVEL
 }
 
 /* ----- Internal ----- */

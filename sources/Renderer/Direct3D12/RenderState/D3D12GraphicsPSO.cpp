@@ -101,14 +101,6 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
     BindOutputMergerAndStaticStates(commandList);
 }
 
-static D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
-{
-    if (shader != nullptr)
-        return LLGL_CAST(const D3D12Shader*, shader)->GetByteCode();
-    else
-        return D3D12_SHADER_BYTECODE{ nullptr, 0 };
-}
-
 static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopology topology)
 {
     switch (topology)

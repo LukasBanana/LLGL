@@ -38,6 +38,8 @@ void D3DConvertBlendDesc(
 
 void D3DConvertRasterizerDesc(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src);
 
+D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader);
+
 
 } // /namespace LLGL
 

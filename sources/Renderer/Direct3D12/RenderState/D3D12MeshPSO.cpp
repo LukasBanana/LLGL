@@ -5,6 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
 #include "D3D12MeshPSO.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
@@ -88,14 +90,6 @@ void D3D12MeshPSO::Bind(D3D12CommandContext& commandContext)
 
     /* Set dynamic pipeline states */
     BindOutputMergerAndStaticStates(commandContext.GetCommandList());
-}
-
-static D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
-{
-    if (shader != nullptr)
-        return LLGL_CAST(const D3D12Shader*, shader)->GetByteCode();
-    else
-        return D3D12_SHADER_BYTECODE{ nullptr, 0 };
 }
 
 template <D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TType, typename TObject>
@@ -222,6 +216,8 @@ ComPtr<ID3D12PipelineState> D3D12MeshPSO::CreateNativePSOWithDesc(ID3D12Device2*
 
 
 } // /namespace LLGL
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
 
 
