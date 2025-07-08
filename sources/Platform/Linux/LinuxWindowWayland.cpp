@@ -33,12 +33,6 @@
 namespace LLGL
 {
 
-struct Image {
-    int width;
-    int height;
-    uint8_t* pixels;
-};
-
 static constexpr int DECORATION_BORDER_SIZE    = 4;
 static constexpr int DECORATION_CAPTION_HEIGHT = 24;
 
@@ -80,12 +74,12 @@ const std::vector<LinuxWindowWayland*>& LinuxWaylandContext::GetWindows()
 // ======== SURFACE EVENTS ========
 // ================================
 
-void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
+static void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
 {
 
 }
 
-void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struct wl_output* output)
+static void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struct wl_output* output)
 {
 
 }
@@ -99,7 +93,7 @@ const static wl_surface_listener SURFACE_LISTENER = {
 // ======== POINTER EVENTS ========
 // ================================
 
-void PointerHandleEnter(
+static void PointerHandleEnter(
     void*               userData,
     struct wl_pointer*  pointer,
     uint32_t            serial,
@@ -129,7 +123,7 @@ void PointerHandleEnter(
     }
 }
 
-void PointerHandleLeave(
+static void PointerHandleLeave(
     void*              userData,
     struct wl_pointer* pointer,
     uint32_t           serial,
@@ -156,7 +150,7 @@ void PointerHandleLeave(
     }
 }
 
-void PointerHandleMotion(
+static void PointerHandleMotion(
     void*               userData,
     struct wl_pointer*  pointer,
     uint32_t            time,
@@ -178,7 +172,7 @@ void PointerHandleMotion(
     window->ProcessMotionEvent(xpos, ypos);
 }
 
-void PointerHandleButton(
+static void PointerHandleButton(
     void*               userData,
     struct wl_pointer*  pointer,
     uint32_t            serial,
@@ -200,7 +194,7 @@ void PointerHandleButton(
     window->ProcessMouseKeyEvent(button, state == WL_POINTER_BUTTON_STATE_PRESSED);
 }
 
-void PointerHandleAxis(
+static void PointerHandleAxis(
     void*               userData,
     struct wl_pointer*  pointer,
     uint32_t            time,
@@ -459,7 +453,7 @@ static void KeyboardHandleRepeatInfo(void* userData,
     g_waylandState.keyRepeatDelay = delay;
 }
 
-const static wl_keyboard_listener keyboardListener = {
+const static wl_keyboard_listener KEYBOARD_LISTENER = {
     KeyboardHandleKeymap,
     KeyboardHandleEnter,
     KeyboardHandleLeave,
@@ -472,7 +466,7 @@ const static wl_keyboard_listener keyboardListener = {
 // ========= SEAT EVENTS =========
 // ===============================
 
-void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
+static void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
 {
     if ((caps & WL_SEAT_CAPABILITY_POINTER) && !g_waylandState.pointer)
     {
@@ -488,7 +482,7 @@ void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
     if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !g_waylandState.keyboard)
     {
         g_waylandState.keyboard = wl_seat_get_keyboard(seat);
-        wl_keyboard_add_listener(g_waylandState.keyboard, &keyboardListener, nullptr);
+        wl_keyboard_add_listener(g_waylandState.keyboard, &KEYBOARD_LISTENER, nullptr);
     }
     else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && g_waylandState.keyboard)
     {
@@ -497,7 +491,7 @@ void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
     }
 }
 
-void SeatHandleName(void* userData, struct wl_seat* seat, const char* name)
+static void SeatHandleName(void* userData, struct wl_seat* seat, const char* name)
 {
 }
 
@@ -515,7 +509,7 @@ static void xdg_wm_base_ping(void* userData, struct xdg_wm_base* xdg_wm_base, ui
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
 
-static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+static const struct xdg_wm_base_listener XDG_WM_BASE_LISTENER = {
     .ping = xdg_wm_base_ping,
 };
 
@@ -611,7 +605,7 @@ void RegistryHandleGlobal(
         g_waylandState.xdg_wm_base = static_cast<struct xdg_wm_base*>(
             wl_registry_bind(registry, name, &xdg_wm_base_interface, 1)
         );
-        xdg_wm_base_add_listener(g_waylandState.xdg_wm_base, &xdg_wm_base_listener, nullptr);
+        xdg_wm_base_add_listener(g_waylandState.xdg_wm_base, &XDG_WM_BASE_LISTENER, nullptr);
     }
     else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
     {
@@ -723,7 +717,8 @@ void HandleWaylandEvents(double* timeout)
         {
             wl_display_cancel_read(g_waylandState.display);
 
-            for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows()) {
+            for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
+            {
                 window->GetState().shouldClose = true;
             }
 
@@ -768,9 +763,24 @@ void HandleWaylandEvents(double* timeout)
     }
 }
 
-static void ResizeFrameBuffer(LinuxWindowWayland::State& state) {
+static void SetContentAreaOpaque(LinuxWindowWayland::State& state)
+{
+    struct wl_region* region;
+
+    region = wl_compositor_create_region(g_waylandState.compositor);
+    if (!region)
+        return;
+
+    wl_region_add(region, 0, 0, state.size.width, state.size.height);
+    wl_surface_set_opaque_region(state.wl.surface, region);
+    wl_region_destroy(region);
+}
+
+static void ResizeFrameBuffer(LinuxWindowWayland::State& state)
+{
     state.framebufferSize.width = state.size.width * state.framebufferScale;
     state.framebufferSize.height = state.size.height * state.framebufferScale;
+    SetContentAreaOpaque(state);
 }
 
 static bool ResizeWindow(LinuxWindowWayland& window, int width, int height)
@@ -1124,7 +1134,8 @@ static void RandName(char *buf)
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
 	long r = ts.tv_nsec;
-	for (int i = 0; i < 6; ++i) {
+	for (int i = 0; i < 6; ++i)
+    {
 		buf[i] = 'A'+(r&15)+(r&16)*2;
 		r >>= 5;
 	}
@@ -1138,7 +1149,8 @@ static int CreateShmFile()
 		RandName(name + sizeof(name) - 7);
 		--retries;
 		int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
-		if (fd >= 0) {
+		if (fd >= 0)
+        {
 			shm_unlink(name);
 			return fd;
 		}
@@ -1146,7 +1158,7 @@ static int CreateShmFile()
 	return -1;
 }
 
-int AllocateShmFile(size_t size)
+static int AllocateShmFile(size_t size)
 {
 	int fd = CreateShmFile();
 	if (fd < 0)
@@ -1155,17 +1167,18 @@ int AllocateShmFile(size_t size)
 	do {
 		ret = ftruncate(fd, size);
 	} while (ret < 0 && errno == EINTR);
-	if (ret < 0) {
+	if (ret < 0)
+    {
 		close(fd);
 		return -1;
 	}
 	return fd;
 }
 
-static struct wl_buffer* CreateShmBuffer(const Image& image)
+static struct wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* pixels)
 {
-    const int stride = image.width * 4;
-    const int length = image.width * image.height * 4;
+    const int stride = width * 4;
+    const int length = width * height * 4;
 
     const int fd = AllocateShmFile(length);
     if (fd < 0)
@@ -1186,9 +1199,9 @@ static struct wl_buffer* CreateShmBuffer(const Image& image)
 
     close(fd);
 
-    uint8_t* source = image.pixels;
+    const uint8_t* source = pixels;
     uint8_t* target = static_cast<uint8_t*>(data);
-    for (int i = 0;  i < image.width * image.height;  i++, source += 4)
+    for (int i = 0;  i < width * height;  i++, source += 4)
     {
         uint32_t alpha = source[3];
 
@@ -1198,11 +1211,7 @@ static struct wl_buffer* CreateShmBuffer(const Image& image)
         *target++ = (uint8_t) alpha;
     }
 
-    struct wl_buffer* buffer =
-        wl_shm_pool_create_buffer(pool, 0,
-                                  image.width,
-                                  image.height,
-                                  stride, WL_SHM_FORMAT_ARGB8888);
+    struct wl_buffer* buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
     munmap(data, length);
     wl_shm_pool_destroy(pool);
 
@@ -1214,13 +1223,12 @@ static void CreateFallbackDecorations(LinuxWindowWayland& window)
     LinuxWindowWayland::State& state = window.GetState();
 
     unsigned char data[] = { 224, 224, 224, 255 };
-    const Image image = { 1, 1, data };
 
     if (!g_waylandState.viewporter)
         return;
 
     if (!state.fallback.buffer)
-        state.fallback.buffer = CreateShmBuffer(image);
+        state.fallback.buffer = CreateShmBuffer(1, 1, data);
     if (!state.fallback.buffer)
         return;
 
@@ -1356,7 +1364,8 @@ static bool CreateXdgShellObjects(LinuxWindowWayland& window)
 
 static bool CreateShellObjects(LinuxWindowWayland& window)
 {
-    if (g_waylandState.libdecor.context) {
+    if (g_waylandState.libdecor.context)
+    {
         if (CreateLibdecorFrame(window))
             return true;
     }
@@ -1416,20 +1425,8 @@ static const struct wl_callback_listener LIBDECOR_READY_LISTENER =
     LibdecorReadyCallback
 };
 
-static void SetContentAreaOpaque(LinuxWindowWayland::State& state)
+static void SetWindowDecorated(LinuxWindowWayland& window, bool decorated)
 {
-    struct wl_region* region;
-
-    region = wl_compositor_create_region(g_waylandState.compositor);
-    if (!region)
-        return;
-
-    wl_region_add(region, 0, 0, state.size.width, state.size.height);
-    wl_surface_set_opaque_region(state.wl.surface, region);
-    wl_region_destroy(region);
-}
-
-static void SetWindowDecorated(LinuxWindowWayland& window, bool decorated) {
     LinuxWindowWayland::State& state = window.GetState();
 
     if (state.libdecor.frame)
