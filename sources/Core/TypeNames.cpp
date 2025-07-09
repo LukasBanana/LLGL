@@ -228,6 +228,7 @@ LLGL_EXPORT const char* ToString(const Format val)
         LLGL_CASE_TO_STR_TYPED( Format, RGB10A2UInt       );
         LLGL_CASE_TO_STR_TYPED( Format, RG11B10Float      );
         LLGL_CASE_TO_STR_TYPED( Format, RGB9E5Float       );
+        LLGL_CASE_TO_STR_TYPED( Format, BGR5A1UNorm       );
 
         /* --- Depth-stencil formats --- */
         LLGL_CASE_TO_STR_TYPED( Format, D16UNorm          );
