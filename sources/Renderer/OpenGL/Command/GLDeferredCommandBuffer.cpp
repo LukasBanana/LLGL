@@ -711,7 +711,7 @@ void GLDeferredCommandBuffer::SetUniforms(std::uint32_t first, const void* data,
 
         /* Allocate GL command and copy data buffer */
         const auto& uniform = uniformMap[first];
-        const std::uint32_t uniformSize = uniform.wordSize * 4;
+        const std::uint32_t uniformSize = uniform.count * uniform.wordSize * 4;
         auto cmd = AllocCommand<GLCmdSetUniform>(GLOpcodeSetUniform, uniformSize);
         {
             cmd->program    = boundShaderPipeline->GetID(); //TODO: must distinguish between GLShaderProgram and GLProgramPipeline
@@ -721,7 +721,7 @@ void GLDeferredCommandBuffer::SetUniforms(std::uint32_t first, const void* data,
             cmd->size       = static_cast<GLsizeiptr>(uniformSize);
             ::memcpy(cmd + 1, words, uniformSize);
         }
-        words += uniform.wordSize;
+        words += uniform.count * uniform.wordSize;
     }
 }
 
