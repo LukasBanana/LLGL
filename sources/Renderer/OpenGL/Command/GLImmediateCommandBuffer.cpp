@@ -616,7 +616,7 @@ void GLImmediateCommandBuffer::SetUniforms(std::uint32_t first, const void* data
         const auto& uniform = uniformMap[first];
         GLSetUniform(uniform.type, uniform.location, uniform.count, words);
 
-        words += uniform.wordSize;
+        words += uniform.count * uniform.wordSize;
     }
 }
 
