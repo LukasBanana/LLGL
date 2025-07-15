@@ -252,7 +252,7 @@ int main()
         auto sampler = renderer->CreateSampler(samplerDesc);
 
         // Create texture
-        std::string texFilename = "../examples/Media/Textures/Logo_Vulkan.png";
+        std::string texFilename = "../examples/Shared/Assets/Textures/Logo_Vulkan.png";
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
         auto imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 4);
