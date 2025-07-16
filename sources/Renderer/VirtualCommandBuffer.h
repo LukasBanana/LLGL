@@ -397,38 +397,41 @@ class VirtualCommandBuffer
         // @param headerSize: Specifies extra data to be allocated in front of the returned data block, excluded from the memory alignment.
         char* AllocData(std::size_t size, std::size_t alignment = 0, std::size_t headerSize = 0)
         {
-            /* Allocate one extra byte to store offset for alignment */
-            size += sizeof(AlignOffsetType) + headerSize;
+            LLGL_ASSERT((alignment & (alignment - 1)) == 0, "alignment must be a power-of-two, but %uz was specified", alignment);
 
-            /* Check if new data fits into current chunk */
-            const std::size_t estimatedPadding = (alignment > 0 ? alignment - 1 : 0);
-            const std::size_t sizeWithEstimatedPadding = size + estimatedPadding;
+            /* Reserve space to store alignment offset and optional header */
+            const std::size_t sizeWithOffsetAndHeader = size + sizeof(AlignOffsetType) + headerSize;
+
+            /* Check if new data fits into current chunk (Only alignment > 1 offsets the allocated pointer) */
+            const std::size_t estimatedPadding = (alignment > 1 ? alignment - 1 : 0);
+            const std::size_t sizeWithEstimatedPadding = sizeWithOffsetAndHeader + estimatedPadding;
 
             if (!FitsIntoCurrentChunk(sizeWithEstimatedPadding))
                 AllocNextChunk(std::max(NextCapacity(), sizeWithEstimatedPadding));
 
             /* Allocate new data block within current chunk and apply memory alignment */
-            char* data = VirtualCommandBuffer::GetChunkData(current_) + current_->size;
-            data += sizeof(AlignOffsetType);
+            char* basePtr = VirtualCommandBuffer::GetChunkData(current_) + current_->size;
+            char* payloadPtr = basePtr + sizeof(AlignOffsetType);
 
-            const std::uintptr_t basePtr = reinterpret_cast<std::uintptr_t>(data);
-            const std::uintptr_t offset = GetAlignedSize(basePtr + headerSize, static_cast<std::uintptr_t>(alignment)) - basePtr;
+            const std::uintptr_t baseAddr = reinterpret_cast<std::uintptr_t>(payloadPtr);
+            const std::uintptr_t alignOffset = GetAlignedSize(baseAddr + headerSize, static_cast<std::uintptr_t>(alignment)) - baseAddr;
 
-            /* Write offset for alignment at first byte in new data block */
+            /* Write alignment offset at first byte in new data block */
             constexpr std::uintptr_t maxAlignmentOffset = std::numeric_limits<AlignOffsetType>::max();
-            LLGL_ASSERT(offset <= maxAlignmentOffset);
+            LLGL_ASSERT(alignOffset <= maxAlignmentOffset);
 
-            *reinterpret_cast<AlignOffsetType*>(data - sizeof(AlignOffsetType)) = static_cast<AlignOffsetType>(offset);
+            *reinterpret_cast<AlignOffsetType*>(basePtr) = static_cast<AlignOffsetType>(alignOffset);
 
-            /* Now shift return pointer to aligned offset minus the input alignment shift (for opcode) */
-            data += offset;
-            size += offset - headerSize;
+            /* Now shift return pointer to aligned offset and determine final allocation size */
+            char* alignedPtr = payloadPtr + alignOffset;
+            const std::size_t finalAllocSize = sizeWithOffsetAndHeader + alignOffset - headerSize;
 
             /* Keep track of chunk size */
-            current_->size += size;
+            current_->size += finalAllocSize;
             LLGL_ASSERT(current_->size <= current_->capacity);
-            size_ += size;
-            return data;
+            size_ += finalAllocSize;
+
+            return alignedPtr;
         }
 
         // Allocates a data block with alignment and adds the opcode *before* the aligned payload,
