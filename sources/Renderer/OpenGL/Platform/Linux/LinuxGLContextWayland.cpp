@@ -4,7 +4,6 @@
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
-
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxGLContextWayland.h"
@@ -12,6 +11,8 @@
 #include <LLGL/Log.h>
 #include <wayland-egl.h>
 
+#include "LinuxGLCore.h"
+#include "LinuxSharedEGLSurface.h"
 
 namespace LLGL
 {
@@ -39,12 +40,34 @@ void LinuxGLContextWayland::CreateEGLContext(
     if (eglInitialize(display, nullptr, nullptr) != EGL_TRUE)
         LLGL_TRAP("Failed to initialize EGL");
 
+    /* Select EGL context configuration for pixel format */
+    if (!SelectConfig(pixelFormat))
+    {
+        LLGL_TRAP(
+            "eglChooseConfig [colorBits = %d, depthBits = %d, stencilBits = %d, samples = %d] failed (%s)",
+            pixelFormat.colorBits, pixelFormat.depthBits, pixelFormat.stencilBits, pixelFormat.samples,
+            EGLErrorToString()
+        );
+    }
+
     /* Create intermediate GL context OpenGL context with Wayland lib */
     EGLContext intermediateGlc = CreateEGLContextCompatibilityProfile(nullptr, &config_);
     if (intermediateGlc == EGL_NO_CONTEXT)
-        LLGL_TRAP("Failed to create EGL context with compatibility profile");
+        LLGL_TRAP("Failed to create EGL context with compatibility profile", EGLErrorToString());
 
-    if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
+    if (sharedContext != nullptr)
+    {
+        /* Share EGLSurface with shared context */
+        sharedSurface_ = sharedContext->GetSharedEGLSurface();
+    }
+    else
+    {
+        sharedSurface_ = std::make_shared<LinuxSharedEGLSurface>(display_, config_, nullptr);
+    }
+
+    EGLSurface nativeSurface = sharedSurface_->GetEGLSurface();
+
+    if (eglMakeCurrent(display, nativeSurface, nativeSurface, intermediateGlc) != EGL_TRUE)
         Log::Errorf("eglMakeCurrent failed on EGL compatibility profile\n");
 
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
@@ -54,7 +77,7 @@ void LinuxGLContextWayland::CreateEGLContext(
 
     if (context_)
     {
-        if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
+        if (eglMakeCurrent(display, nativeSurface, nativeSurface, context_) != EGL_TRUE)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
 
         /* Valid core profile created, so we can delete the intermediate EGL context */
@@ -80,6 +103,51 @@ int LinuxGLContextWayland::GetSamples() const
     return samples_;
 }
 
+bool LinuxGLContextWayland::SelectConfig(const GLPixelFormat& pixelFormat)
+{
+    /* Look for a framebuffer configuration; reduce samples if necessary */
+    for (samples_ = std::max(1, pixelFormat.samples); samples_ > 0; --samples_)
+    {
+        /* Initialize framebuffer configuration */
+        EGLint attribs[] =
+        {
+            EGL_SURFACE_TYPE,   EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
+            EGL_RED_SIZE,       8,
+            EGL_GREEN_SIZE,     8,
+            EGL_BLUE_SIZE,      8,
+            EGL_ALPHA_SIZE,     (pixelFormat.colorBits == 32 ? 8 : 0),
+            EGL_DEPTH_SIZE,     pixelFormat.depthBits,
+            EGL_STENCIL_SIZE,   pixelFormat.stencilBits,
+            EGL_SAMPLE_BUFFERS, 1,
+            EGL_SAMPLES,        samples_,
+            EGL_NONE
+        };
+
+        if (samples_ <= 1)
+        {
+            /* Cut off EGL_SAMPLE* entries in case EGL context doesn't support them at all */
+            constexpr int sampleBuffersArrayIndex = 14;
+            LLGL_ASSERT(attribs[sampleBuffersArrayIndex] == EGL_SAMPLE_BUFFERS);
+            attribs[sampleBuffersArrayIndex] = EGL_NONE;
+        }
+
+        /* Choose configuration */
+        EGLint numConfigs = 0;
+        EGLBoolean success = eglChooseConfig(display_, attribs, &config_, 1, &numConfigs);
+
+        /* Reduce number of sample if configuration failed */
+        if (success == EGL_TRUE && numConfigs > 0)
+        {
+            SetDefaultColorFormat();
+            DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
+            return true;
+        }
+    }
+
+    /* No suitable configuration found */
+    return false;
+}
+
 EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config)
 {
     /* Query supported GL versions */
@@ -97,29 +165,6 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShar
         return nullptr;
     }
 
-    /* Create core profile */
-    const int fbAttribs[] =
-    {
-        EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
-        EGL_RED_SIZE,          8,
-        EGL_GREEN_SIZE,        8,
-        EGL_BLUE_SIZE,         8,
-        EGL_ALPHA_SIZE,        8,
-        EGL_DEPTH_SIZE,        depthBits,
-        EGL_STENCIL_SIZE,      stencilBits,
-        EGL_NONE
-    };
-
-    EGLint numConfigs = 0;
-    
-    if ((eglGetConfigs(display_, nullptr, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0))
-        LLGL_TRAP("Failed to get EGL configs");
-
-    if ((eglChooseConfig(display_, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1))
-        LLGL_TRAP("Failed to choose EGL config");
-
     EGLint contextAttribs[] = {
         EGL_CONTEXT_MAJOR_VERSION, major,
         EGL_CONTEXT_MINOR_VERSION, minor,
@@ -134,25 +179,6 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCoreProfile(EGLContext glcShar
 
 EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config)
 {
-    const int fbAttribs[] =
-    {
-        EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
-        EGL_RED_SIZE,          8,
-        EGL_GREEN_SIZE,        8,
-        EGL_BLUE_SIZE,         8,
-        EGL_ALPHA_SIZE,        8,
-        EGL_NONE
-    };
-
-    EGLint numConfigs = 0;
-    if (eglGetConfigs(display_, nullptr, 0, &numConfigs) != EGL_TRUE || numConfigs == 0)
-        LLGL_TRAP("Failed to get EGL configs");
-
-    if ((eglChooseConfig(display_, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || numConfigs != 1)
-        LLGL_TRAP("Failed to choose EGL config");
-
     EGLint contextAttribs[] = {
         EGL_CONTEXT_MAJOR_VERSION, 3,
         EGL_CONTEXT_MINOR_VERSION, 3,
@@ -167,6 +193,7 @@ EGLContext LinuxGLContextWayland::CreateEGLContextCompatibilityProfile(EGLContex
 
 void LinuxGLContextWayland::DeleteEGLContext()
 {
+    sharedSurface_.reset();
     eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
     eglDestroyContext(display_, context_);
 }
