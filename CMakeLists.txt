@@ -913,10 +913,6 @@ if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     message(STATUS "Including Submodule: SPIRV-Headers")
 endif()
 
-if(LLGL_VK_ENABLE_GPU_ASSISTED_VALIDATION)
-    message(STATUS "Enable Vulkan GPU assisted validation")
-endif()
-
 if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
     message(STATUS "Options: ${SUMMARY_FLAGS}")
 endif()
