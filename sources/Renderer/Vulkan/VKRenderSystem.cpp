@@ -892,6 +892,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 
     #if VK_EXT_validation_features
 
+    #if LLGL_VK_ENABLE_GPU_ASSISTED_VALIDATION
     const VkValidationFeatureEnableEXT validationFeaturesEnabled[] =
     {
         VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
@@ -909,6 +910,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
         validationFeatures.pEnabledValidationFeatures       = validationFeaturesEnabled;
         instanceInfo.pNext = &validationFeatures;
     }
+    #endif
 
     #endif // /VK_EXT_validation_features
 
