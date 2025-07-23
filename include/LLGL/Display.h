@@ -150,6 +150,14 @@ class LLGL_EXPORT Display : public Interface
         */
         virtual std::vector<DisplayMode> GetSupportedDisplayModes() const = 0;
 
+        virtual bool IsWayland() const = 0;
+
+    protected:
+
+        virtual bool SetCursorPositionInternal(const Offset2D& position) = 0;
+
+        virtual Offset2D GetCursorPositionInternal() = 0;
+
     protected:
 
         /**

@@ -18,58 +18,56 @@ namespace LLGL
 
 LinuxGLSwapChainContextWayland::LinuxGLSwapChainContextWayland(LinuxGLContextWayland& context, Surface& surface) :
     GLSwapChainContext { context                 },
+    display_           { context.GetEGLDisplay() },
     context_           { context.GetEGLContext() }
 {
-    /* Get native window handle */
+    /* Get native surface handle */
     NativeHandle nativeHandle = {};
-    if (surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
+    if (!surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
+        LLGL_TRAP("failed to get Wayland display and window from swap-chain surface");
+
+    /* Get or create drawable surface */
+    if (context.GetSharedEGLSurface() && context.GetSharedEGLSurface()->GetNativeWindow() != nullptr)
     {
-        EGLDisplay display = eglGetCurrentDisplay();
-
-        const EGLAttrib surfaceAttribs[] =
-        {
-            EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
-            EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR,
-            EGL_NONE
-        };
-
-        LLGL::Extent2D size = surface.GetContentSize();
+        /* Share surface with main context */
+        sharedSurface_ = context.GetSharedEGLSurface();
+    }
+    else
+    {
+        Extent2D size = surface.GetContentSize();
 
         wl_egl_window* win = wl_egl_window_create(nativeHandle.wayland.window, size.width, size.height);
         if (!win)
             LLGL_TRAP("failed to create EGL window");
 
-        EGLSurface surface = eglCreatePlatformWindowSurface(display, context.GetEGLConfig(), win, surfaceAttribs);
-        if (surface == EGL_NO_SURFACE)
-            LLGL_TRAP("failed to create EGL surface");
-
-        display_ = display;
-        surface_ = surface;
+        /* Create custom surface if different native window is specified */
+        sharedSurface_ = std::make_shared<LinuxSharedEGLSurface>(display_, context.GetEGLConfig(), win);
     }
-    else
-        LLGL_TRAP("failed to get Wayland display and window from swap-chain surface");
 }
 
 bool LinuxGLSwapChainContextWayland::HasDrawable() const
 {
-    return (surface_ != 0);
+    return (sharedSurface_ != 0);
 }
 
 bool LinuxGLSwapChainContextWayland::SwapBuffers()
 {
-    eglSwapBuffers(display_, surface_);
+    eglSwapBuffers(display_, sharedSurface_->GetEGLSurface());
     return true;
 }
 
 void LinuxGLSwapChainContextWayland::Resize(const Extent2D& resolution)
 {
-    // dummy
+    wl_egl_window_resize(sharedSurface_->GetNativeWindow(), resolution.width, resolution.height, 0, 0);
 }
 
 bool LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(LinuxGLSwapChainContextWayland *context)
 {
     if (context)
-        return eglMakeCurrent(context->display_, context->surface_, context->surface_, context->context_);
+    {
+        EGLSurface nativeSurface = context->sharedSurface_->GetEGLSurface();
+        return eglMakeCurrent(context->display_, nativeSurface, nativeSurface, context->context_);
+    }
     else
         return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
