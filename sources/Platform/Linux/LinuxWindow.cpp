@@ -221,7 +221,12 @@ void LinuxWindow::Show(bool show)
 
 bool LinuxWindow::IsShown() const
 {
-    return false;
+    if (!display_ || !wnd_) return false;
+    XWindowAttributes attr;
+    if (XGetWindowAttributes(display_, wnd_, &attr) == 0) {
+        return false;
+    }
+    return (attr.map_state == IsViewable);
 }
 
 void LinuxWindow::SetDesc(const WindowDescriptor& desc)
