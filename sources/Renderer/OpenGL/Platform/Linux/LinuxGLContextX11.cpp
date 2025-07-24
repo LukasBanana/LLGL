@@ -61,6 +61,8 @@ LinuxGLContextX11::LinuxGLContextX11(
     }
     else
         CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+
+    surface_ = &surface;
 }
 
 LinuxGLContextX11::~LinuxGLContextX11()
@@ -322,7 +324,7 @@ GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, 
                 None
             };
 
-            GLXContext glc = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
+            GLXContext glc = glXCreateContextAttribsARB(display_, fbcList[0], glcShared, True, contextAttribs);
 
             XFree(fbcList);
 

@@ -53,6 +53,10 @@ class LinuxGLContextX11 : public LinuxGLContext
             return glc_;
         }
 
+        Surface *getSurface() {
+            return surface_;
+        }
+
     private:
 
         bool SetSwapInterval(int interval) override;
@@ -83,7 +87,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         ::GLXContext    glc_        = nullptr;
         int             samples_    = 1;
         bool            isProxyGLC_ = false;
-
+        Surface *       surface_    = nullptr;
 };
 
 

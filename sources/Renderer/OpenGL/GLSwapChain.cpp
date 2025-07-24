@@ -115,6 +115,7 @@ bool GLSwapChain::IsPresentable() const
 
 void GLSwapChain::Present()
 {
+    GLSwapChainContext::MakeCurrent(swapChainContext_.get());
     swapChainContext_->SwapBuffers();
 }
 
