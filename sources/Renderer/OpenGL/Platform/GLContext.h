@@ -54,6 +54,8 @@ class GLContext
         // Returns the native handle of the GL context.
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const = 0;
 
+        virtual bool IsSharableForSurface(Surface *surface) {return true;}
+
     public:
 
         // Returns the color format for this GL context.

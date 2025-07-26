@@ -144,7 +144,12 @@ std::shared_ptr<GLContext> GLContextManager::FindOrMakeContextWithPixelFormat(co
     for (const GLPixelFormatWithContext& formatWithContext : pixelFormats_)
     {
         if (formatWithContext.pixelFormat == pixelFormat)
-            return formatWithContext.context;
+        {
+            if(formatWithContext.context->IsSharableForSurface(surface))
+            {
+                return formatWithContext.context;
+            }
+        }
     }
 
     /* Try to find suitable pixel format that is considered compatible next */
@@ -153,7 +158,12 @@ std::shared_ptr<GLContext> GLContextManager::FindOrMakeContextWithPixelFormat(co
         for (const GLPixelFormatWithContext& formatWithContext : pixelFormats_)
         {
             if (IsGLPixelFormatCompatibleWith(formatWithContext.pixelFormat, pixelFormat))
-                return formatWithContext.context;
+            {
+                if(formatWithContext.context->IsSharableForSurface(surface))
+                {
+                    return formatWithContext.context;
+                }
+            }
         }
     }
 
