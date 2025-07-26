@@ -223,7 +223,8 @@ bool LinuxWindow::IsShown() const
 {
     if (!display_ || !wnd_) return false;
     XWindowAttributes attr;
-    if (XGetWindowAttributes(display_, wnd_, &attr) == 0) {
+    if (XGetWindowAttributes(display_, wnd_, &attr) == 0)
+    {
         return false;
     }
     return (attr.map_state == IsViewable);

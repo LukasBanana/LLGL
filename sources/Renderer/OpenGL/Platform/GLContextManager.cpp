@@ -15,9 +15,6 @@
 #include <LLGL/Canvas.h>
 #include <cstring>
 
-#if defined(LLGL_OS_LINUX)
-#include "Linux/LinuxGLContextX11.h"
-#endif
 
 namespace LLGL
 {
@@ -146,14 +143,12 @@ std::shared_ptr<GLContext> GLContextManager::FindOrMakeContextWithPixelFormat(co
     /* Try to find pixel format with an exact match first */
     for (const GLPixelFormatWithContext& formatWithContext : pixelFormats_)
     {
-        if (formatWithContext.pixelFormat == pixelFormat) {
-            #if defined(LLGL_OS_LINUX)
-            if(auto contextX11 = dynamic_cast<LinuxGLContextX11*>(formatWithContext.context.get())) {
-                if(contextX11->getSurface() != surface)
-                    continue;
+        if (formatWithContext.pixelFormat == pixelFormat)
+        {
+            if(formatWithContext.context->IsSharableForSurface(surface))
+            {
+                return formatWithContext.context;
             }
-            #endif
-            return formatWithContext.context;
         }
     }
 
@@ -162,14 +157,12 @@ std::shared_ptr<GLContext> GLContextManager::FindOrMakeContextWithPixelFormat(co
     {
         for (const GLPixelFormatWithContext& formatWithContext : pixelFormats_)
         {
-            if (IsGLPixelFormatCompatibleWith(formatWithContext.pixelFormat, pixelFormat)){
-                #if defined(LLGL_OS_LINUX)
-                if(auto contextX11 = dynamic_cast<LinuxGLContextX11*>(formatWithContext.context.get())) {
-                    if(contextX11->getSurface() != surface)
-                        continue;
+            if (IsGLPixelFormatCompatibleWith(formatWithContext.pixelFormat, pixelFormat))
+            {
+                if(formatWithContext.context->IsSharableForSurface(surface))
+                {
+                    return formatWithContext.context;
                 }
-                #endif
-                return formatWithContext.context;
             }
         }
     }

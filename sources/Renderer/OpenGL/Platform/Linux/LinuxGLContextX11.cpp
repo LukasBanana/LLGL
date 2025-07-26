@@ -338,6 +338,11 @@ GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, 
     return nullptr;
 }
 
+bool LinuxGLContextX11::IsSharableForSurface(Surface *surface)
+{
+    return surface_ == surface;
+}
+
 GLXContext LinuxGLContextX11::CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared)
 {
     /* Create compatibility profile */
