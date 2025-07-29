@@ -54,7 +54,8 @@ class GLContext
         // Returns the native handle of the GL context.
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const = 0;
 
-        virtual bool IsSharableForSurface(Surface *surface) {return true;}
+        // Returns true if we should share the same GL context across the surfaces.
+        virtual bool IsSharableForSurface(const Surface *surface) const;
 
     public:
 

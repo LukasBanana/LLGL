@@ -38,7 +38,7 @@ bool LinuxGLSwapChainContextX11::HasDrawable() const
 
 bool LinuxGLSwapChainContextX11::SwapBuffers()
 {
-    MakeCurrentGLXContext(this);
+    GLSwapChainContext::MakeCurrent(this);
     glXSwapBuffers(dpy_, wnd_);
     return true;
 }
