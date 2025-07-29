@@ -41,6 +41,8 @@ class LinuxGLContextX11 : public LinuxGLContext
 
         OpenGL::RenderSystemNativeType GetNativeType() const override;
 
+        bool IsSharableForSurface(const Surface *surface) const override;
+
     public:
 
         // Tries to find an X11 visual configuration for the specified pixel format and
@@ -83,7 +85,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         ::GLXContext    glc_        = nullptr;
         int             samples_    = 1;
         bool            isProxyGLC_ = false;
-
+        Surface *       surface_    = nullptr;
 };
 
 
