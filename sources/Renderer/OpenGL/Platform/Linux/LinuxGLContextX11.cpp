@@ -338,7 +338,7 @@ GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, 
     return nullptr;
 }
 
-bool LinuxGLContextX11::IsSharableForSurface(Surface *surface)
+bool LinuxGLContextX11::IsSharableForSurface(const Surface *surface) const
 {
     return surface_ == surface;
 }

@@ -41,7 +41,7 @@ class LinuxGLContextX11 : public LinuxGLContext
 
         OpenGL::RenderSystemNativeType GetNativeType() const override;
 
-        bool IsSharableForSurface(Surface *surface) override;
+        bool IsSharableForSurface(const Surface *surface) const override;
 
     public:
 
