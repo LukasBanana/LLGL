@@ -156,7 +156,12 @@ void LinuxWindowX11::Show(bool show)
 
 bool LinuxWindowX11::IsShown() const
 {
-    return false;
+    XWindowAttributes attr;
+    if (XGetWindowAttributes(display_, wnd_, &attr) == 0)
+    {
+        return false;
+    }
+    return attr.map_state == IsViewable;
 }
 
 void LinuxWindowX11::SetDesc(const WindowDescriptor& desc)
