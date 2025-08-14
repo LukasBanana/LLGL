@@ -8,11 +8,10 @@
 #ifndef LLGL_LINUX_DISPLAY_X11_H
 #define LLGL_LINUX_DISPLAY_X11_H
 
-
-#include <LLGL/Display.h>
 #include <memory>
 #include <X11/Xlib.h>
 
+#include "LinuxDisplay.h"
 
 namespace LLGL
 {
@@ -49,7 +48,7 @@ class LinuxSharedDisplayX11
 
 };
 
-class LinuxDisplayX11 : public Display
+class LinuxDisplayX11 : public LinuxDisplay
 {
 
     public:
@@ -69,10 +68,10 @@ class LinuxDisplayX11 : public Display
 
         std::vector<DisplayMode> GetSupportedDisplayModes() const override;
 
-        bool SetCursorPositionInternal(const Offset2D &position) override;
-        Offset2D GetCursorPositionInternal() override;
-
     private:
+
+        virtual bool SetCursorPositionInternal(const Offset2D& position) override;
+        virtual Offset2D GetCursorPositionInternal() override;
 
         // Returns the native X11 display.
         ::Display* GetNative() const;

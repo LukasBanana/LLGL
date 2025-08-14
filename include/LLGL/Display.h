@@ -152,12 +152,6 @@ class LLGL_EXPORT Display : public Interface
 
     protected:
 
-        virtual bool SetCursorPositionInternal(const Offset2D& position) = 0;
-
-        virtual Offset2D GetCursorPositionInternal() = 0;
-
-    protected:
-
         /**
         \brief Sorts the specified list of display modes as described in the GetSupportedDisplayModes function, and removes duplicate entries.
         \see GetSupportedDisplayModes

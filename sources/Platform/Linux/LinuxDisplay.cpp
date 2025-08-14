@@ -5,19 +5,22 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include <LLGL/Display.h>
-#include "LinuxDisplayWayland.h"
+#include "LinuxDisplay.h"
+
+#if !LLGL_LINUX_ENABLE_WAYLAND
+
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
-#if !LLGL_LINUX_ENABLE_WAYLAND
+#include "../../Core/CoreUtils.h"
+#include "LinuxDisplayX11.h"
 
 namespace LLGL
 {
 
 static std::vector<std::unique_ptr<LinuxDisplayX11>>   g_displayList;
-static std::vector<Display*>                        g_displayRefList;
-static Display*                                     g_primaryDisplay    = nullptr;
+static std::vector<Display*>                           g_displayRefList;
+static LinuxDisplay*                                   g_primaryDisplay    = nullptr;
 
 static bool UpdateDisplayList()
 {

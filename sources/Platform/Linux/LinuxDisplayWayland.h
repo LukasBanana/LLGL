@@ -10,10 +10,11 @@
 
 #if LLGL_LINUX_ENABLE_WAYLAND
 
-#include <LLGL/Display.h>
 #include <LLGL/Container/DynamicVector.h>
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
+
+#include "LinuxDisplay.h"
 
 struct wl_output;
 
@@ -44,7 +45,7 @@ struct WaylandDisplayData {
     int scale;
 };
 
-class LinuxDisplayWayland : public Display
+class LinuxDisplayWayland : public LinuxDisplay
 {
 
     public:
