@@ -5,21 +5,15 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-
-
 #include "LinuxDisplayX11.h"
-#include "../../Core/CoreUtils.h"
+
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
+#include "../../Core/Assertion.h"
 
 namespace LLGL
 {
-
-
-static std::vector<std::unique_ptr<LinuxDisplayX11>>   g_displayList;
-static std::vector<Display*>                        g_displayRefList;
-static Display*                                     g_primaryDisplay    = nullptr;
 
 LinuxSharedX11DisplaySPtr LinuxSharedDisplayX11::GetShared()
 {
@@ -65,28 +59,6 @@ void LinuxSharedDisplayX11::RetainLibGL()
     if (!g_retainedLibGL)
         g_retainedLibGL = dlopen("libGL.so", RTLD_LAZY);
     #endif
-}
-
-#if !LLGL_LINUX_ENABLE_WAYLAND
-
-static bool UpdateDisplayList()
-{
-    LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedDisplayX11::GetShared();
-
-    const int screenCount = ScreenCount(sharedX11Display->GetNative());
-    if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
-    {
-        g_displayList.resize(static_cast<std::size_t>(screenCount));
-        for (int i = 0; i < screenCount; ++i)
-        {
-            g_displayList[i] = MakeUnique<LinuxDisplayX11>(sharedX11Display, i);
-            if (i == DefaultScreen(sharedX11Display->GetNative()))
-                g_primaryDisplay = g_displayList[i].get();
-        }
-        return true;
-    }
-
-    return false;
 }
 
 bool LinuxDisplayX11::SetCursorPositionInternal(const Offset2D& position)
@@ -269,9 +241,6 @@ std::vector<DisplayMode> LinuxDisplayX11::GetSupportedDisplayModes() const
     return sharedX11Display_->GetNative();
 }
 
-#endif
-
 } // /namespace LLGL
-
 
 // ================================================================================

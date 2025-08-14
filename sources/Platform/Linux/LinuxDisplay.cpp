@@ -6,62 +6,68 @@
  */
 
 #include <LLGL/Display.h>
-#include "../../Core/CoreUtils.h"
+#include "LinuxDisplayWayland.h"
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
+#if !LLGL_LINUX_ENABLE_WAYLAND
 
 namespace LLGL
 {
 
+static std::vector<std::unique_ptr<LinuxDisplayX11>>   g_displayList;
 static std::vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay    = nullptr;
 
-/*
- * LinuxSharedX11Display class
- */
+static bool UpdateDisplayList()
+{
+    LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedDisplayX11::GetShared();
 
-#if !LLGL_BUILD_STATIC_LIB
-static void* g_retainedLibGL = nullptr;
-#endif
+    const int screenCount = ScreenCount(sharedX11Display->GetNative());
+    if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
+    {
+        g_displayList.resize(static_cast<std::size_t>(screenCount));
+        for (int i = 0; i < screenCount; ++i)
+        {
+            g_displayList[i] = MakeUnique<LinuxDisplayX11>(sharedX11Display, i);
+            if (i == DefaultScreen(sharedX11Display->GetNative()))
+                g_primaryDisplay = g_displayList[i].get();
+        }
+        return true;
+    }
 
-/*
- * Display class
- */
+    return false;
+}
 
 std::size_t Display::Count()
 {
-    // TODO
-    // UpdateX11DisplayList();
-    return g_displayRefList.size();
+    UpdateDisplayList();
+    return g_displayList.size();
 }
 
 Display* const * Display::GetList()
 {
-    // TODO
-    // if (UpdateX11DisplayList() || g_displayRefList.empty())
-    // {
-    //     /* Update reference list and append null terminator to array */
-    //     g_displayRefList.clear();
-    //     g_displayRefList.reserve(g_x11DisplayList.size() + 1);
-    //     for (const auto& display : g_x11DisplayList)
-    //         g_displayRefList.push_back(display.get());
-    //     g_displayRefList.push_back(nullptr);
-    // }
+    if (UpdateDisplayList() || g_displayRefList.empty())
+    {
+        /* Update reference list and append null terminator to array */
+        g_displayRefList.clear();
+        g_displayRefList.reserve(g_displayList.size() + 1);
+        for (const auto& display : g_displayList)
+            g_displayRefList.push_back(display.get());
+        g_displayRefList.push_back(nullptr);
+    }
     return g_displayRefList.data();
 }
 
 Display* Display::Get(std::size_t index)
 {
-    // TODO
-    // UpdateX11DisplayList();
-    return (index < g_displayRefList.size() ? g_displayRefList[index] : nullptr);
+    UpdateDisplayList();
+    return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    // TODO
-    // UpdateX11DisplayList();
+    UpdateDisplayList();
     return g_primaryDisplay;
 }
 
@@ -87,9 +93,65 @@ Offset2D Display::GetCursorPosition()
     return g_primaryDisplay->GetCursorPosition();
 }
 
+} // /namespace LLGL
+
+#else
+
+#include "LinuxWaylandState.h"
+
+namespace LLGL {
+
+std::size_t Display::Count()
+{
+    return LinuxWaylandState::GetDisplayList().size();
+}
+
+Display* const * Display::GetList()
+{
+    // TODO
+    return nullptr;
+}
+
+
+Display* Display::Get(std::size_t index)
+{
+    const LLGL::DynamicVector<LinuxDisplayWayland*>& displayList = LinuxWaylandState::GetDisplayList();
+    return (index < displayList.size() ? displayList[index] : nullptr);
+}
+
+Display* Display::GetPrimary()
+{
+    return LinuxWaylandState::GetDisplayList()[0];
+}
+
+bool Display::ShowCursor(bool show)
+{
+    //TODO
+    return false;
+}
+
+bool Display::IsCursorShown()
+{
+    //TODO
+    return true;
+}
+
+bool Display::SetCursorPosition(const Offset2D& position)
+{
+    // Wayland clients can't set cursor position.
+    return false;
+}
+
+Offset2D Display::GetCursorPosition()
+{
+    // There is no an easy way to obtain the global cursor position in Wayland.
+    return Offset2D(0, 0);
+}
+
 
 } // /namespace LLGL
 
+#endif
 
 
 // ================================================================================

@@ -11,6 +11,7 @@
 #include "../../Core/CoreUtils.h"
 #include <X11/Xresource.h>
 
+#include "LinuxWaylandState.h"
 #include "LinuxWindowWayland.h"
 #include "LinuxWindowX11.h"
 
@@ -59,7 +60,7 @@ bool Surface::ProcessEvents()
     if (g_isWaylandSupported)
     {
         double timeout = 0.0;
-        HandleWaylandEvents(&timeout);
+        LinuxWaylandState::HandleWaylandEvents(&timeout);
 
         for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
         {

@@ -12,7 +12,6 @@
 #include <LLGL/Timer.h>
 #include <LLGL/Log.h>
 
-#include "LinuxWindowWayland.h"
 #include "../../Core/Exception.h"
 #include "../../Core/Assertion.h"
 
@@ -30,13 +29,14 @@
 #include "protocols/xdg-decoration-client-protocol.h"
 #include "protocols/viewporter-client-protocol.h"
 
+#include "LinuxWindowWayland.h"
+#include "LinuxWaylandState.h"
+
 namespace LLGL
 {
 
 static constexpr int DECORATION_BORDER_SIZE    = 4;
 static constexpr int DECORATION_CAPTION_HEIGHT = 24;
-
-WaylandState g_waylandState = {};
 
 LinuxWaylandContext& LinuxWaylandContext::Get()
 {
@@ -87,430 +87,6 @@ static void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struc
 const static wl_surface_listener SURFACE_LISTENER = {
     SurfaceHandleEnter,
     SurfaceHandleLeave
-};
-
-// ================================
-// ======== POINTER EVENTS ========
-// ================================
-
-static void PointerHandleEnter(
-    void*               userData,
-    struct wl_pointer*  pointer,
-    uint32_t            serial,
-    struct wl_surface*  surface,
-    wl_fixed_t          surface_x,
-    wl_fixed_t          surface_y)
-{
-    if (!surface)
-        return;
-
-    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != &g_waylandState.tag)
-        return;
-
-    LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
-    if (!window)
-        return;
-
-    g_waylandState.serial = serial;
-    g_waylandState.pointerEnterSerial = serial;
-    g_waylandState.pointerFocus = window;
-
-    LinuxWindowWayland::State& state = window->GetState();
-
-    if (surface == state.wl.surface)
-    {
-        state.hovered = true;
-    }
-}
-
-static void PointerHandleLeave(
-    void*              userData,
-    struct wl_pointer* pointer,
-    uint32_t           serial,
-    struct wl_surface* surface)
-{
-    if (!surface)
-        return;
-
-    LinuxWindowWayland* window = g_waylandState.pointerFocus;
-    if (!window)
-        return;
-
-    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != &g_waylandState.tag)
-        return;
-
-    g_waylandState.serial = serial;
-    g_waylandState.pointerFocus = nullptr;
-
-    LinuxWindowWayland::State& state = window->GetState();
-
-    if (state.hovered)
-    {
-        state.hovered = false;
-    }
-}
-
-static void PointerHandleMotion(
-    void*               userData,
-    struct wl_pointer*  pointer,
-    uint32_t            time,
-    wl_fixed_t          surface_x,
-    wl_fixed_t          surface_y)
-{
-    LinuxWindowWayland* window = g_waylandState.pointerFocus;
-    if (!window)
-        return;
-
-    LinuxWindowWayland::State& state = window->GetState();
-
-    if (!state.hovered)
-        return;
-
-    const int xpos = wl_fixed_to_int(surface_x);
-    const int ypos = wl_fixed_to_int(surface_y);
-
-    window->ProcessMotionEvent(xpos, ypos);
-}
-
-static void PointerHandleButton(
-    void*               userData,
-    struct wl_pointer*  pointer,
-    uint32_t            serial,
-    uint32_t            time,
-    uint32_t            button,
-    uint32_t            state)
-{
-    LinuxWindowWayland* window = g_waylandState.pointerFocus;
-    if (!window)
-        return;
-
-    LinuxWindowWayland::State& windowState = window->GetState();
-
-    if (!windowState.hovered)
-        return;
-
-    g_waylandState.serial = serial;
-
-    window->ProcessMouseKeyEvent(button, state == WL_POINTER_BUTTON_STATE_PRESSED);
-}
-
-static void PointerHandleAxis(
-    void*               userData,
-    struct wl_pointer*  pointer,
-    uint32_t            time,
-    uint32_t            axis,
-    wl_fixed_t          value)
-{
-    LinuxWindowWayland* window = g_waylandState.pointerFocus;
-    if (!window)
-        return;
-
-    // TODO: Handle horizontal scroll?
-    if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL)
-    {
-        int motion = static_cast<int>(-wl_fixed_to_double(value) / 10.0);
-        window->ProcessWheelMotionEvent(motion);
-    }
-}
-
-const static wl_pointer_listener POINTER_LISTENER = {
-    PointerHandleEnter,
-    PointerHandleLeave,
-    PointerHandleMotion,
-    PointerHandleButton,
-    PointerHandleAxis
-};
-
-// ===============================
-// ======= KEYBOARD EVENTS =======
-// ===============================
-
-static void KeyboardHandleKeymap(
-    void*               userData,
-    struct wl_keyboard* keyboard,
-    uint32_t            format,
-    int                 fd,
-    uint32_t            size)
-{
-    struct xkb_keymap* keymap;
-    struct xkb_state* state;
-    struct xkb_compose_table* composeTable;
-    struct xkb_compose_state* composeState;
-
-    char* mapStr;
-    const char* locale;
-
-    if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1)
-    {
-        close(fd);
-        return;
-    }
-
-    mapStr = static_cast<char*>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
-    if (mapStr == MAP_FAILED)
-    {
-        close(fd);
-        return;
-    }
-
-    keymap = xkb_keymap_new_from_string(g_waylandState.xkb.context,
-                                        mapStr,
-                                        XKB_KEYMAP_FORMAT_TEXT_V1,
-                                        XKB_KEYMAP_COMPILE_NO_FLAGS);
-    munmap(mapStr, size);
-    close(fd);
-
-    if (!keymap)
-        LLGL_TRAP("Failed to compile keymap");
-
-    state = xkb_state_new(keymap);
-    if (!state)
-    {
-        xkb_keymap_unref(keymap);
-        LLGL_TRAP("Failed to create XKB state");
-    }
-
-    // Look up the preferred locale, falling back to "C" as default.
-    locale = getenv("LC_ALL");
-    if (!locale)
-        locale = getenv("LC_CTYPE");
-    if (!locale)
-        locale = getenv("LANG");
-    if (!locale)
-        locale = "C";
-
-    composeTable = xkb_compose_table_new_from_locale(g_waylandState.xkb.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
-    if (composeTable)
-    {
-        composeState = xkb_compose_state_new(composeTable, XKB_COMPOSE_STATE_NO_FLAGS);
-        xkb_compose_table_unref(composeTable);
-        if (composeState)
-            g_waylandState.xkb.composeState = composeState;
-        else
-            LLGL_TRAP("Failed to create XKB compose state");
-    }
-    else
-    {
-        LLGL_TRAP("Failed to create XKB compose table");
-    }
-
-    xkb_keymap_unref(g_waylandState.xkb.keymap);
-    xkb_state_unref(g_waylandState.xkb.state);
-    g_waylandState.xkb.keymap = keymap;
-    g_waylandState.xkb.state = state;
-
-    g_waylandState.xkb.controlIndex  = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Control");
-    g_waylandState.xkb.altIndex      = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Mod1");
-    g_waylandState.xkb.shiftIndex    = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Shift");
-    g_waylandState.xkb.superIndex    = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Mod4");
-    g_waylandState.xkb.capsLockIndex = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Lock");
-    g_waylandState.xkb.numLockIndex  = xkb_keymap_mod_get_index(g_waylandState.xkb.keymap, "Mod2");
-}
-
-static void KeyboardHandleEnter(
-    void*               userData,
-    struct wl_keyboard* keyboard,
-    uint32_t            serial,
-    struct wl_surface*  surface,
-    struct wl_array*    keys)
-{
-    // Happens in the case we just destroyed the surface.
-    if (!surface)
-        return;
-
-    if (wl_proxy_get_tag((struct wl_proxy*) surface) != &g_waylandState.tag)
-        return;
-
-    LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
-    if (!window)
-        return;
-
-    if (surface != window->GetState().wl.surface)
-        return;
-
-    g_waylandState.serial = serial;
-    g_waylandState.keyboardFocus = window;
-
-    window->ProcessFocusEvent(true);
-}
-
-static void KeyboardHandleLeave(void* userData,
-                                struct wl_keyboard* keyboard,
-                                uint32_t serial,
-                                struct wl_surface* surface)
-{
-    LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
-
-    if (!window)
-        return;
-
-    g_waylandState.serial = serial;
-    g_waylandState.keyboardFocus = nullptr;
-
-    window->ProcessFocusEvent(false);
-}
-
-static Key translateKey(uint32_t scancode)
-{
-    if (scancode < sizeof(g_waylandState.keycodes) / sizeof(g_waylandState.keycodes[0]))
-        return g_waylandState.keycodes[scancode];
-
-    return Key::Any;
-}
-
-static void KeyboardHandleKey(void* userData,
-                              struct wl_keyboard* keyboard,
-                              uint32_t serial,
-                              uint32_t time,
-                              uint32_t scancode,
-                              uint32_t state)
-{
-    LinuxWindowWayland* window = g_waylandState.keyboardFocus;
-    if (!window)
-        return;
-
-    g_waylandState.serial = serial;
-
-    struct itimerspec timer = {0};
-
-    const bool down = state == WL_KEYBOARD_KEY_STATE_PRESSED;
-
-    if (down)
-    {
-        const xkb_keycode_t keycode = scancode + 8;
-
-        if (xkb_keymap_key_repeats(g_waylandState.xkb.keymap, keycode) && g_waylandState.keyRepeatRate > 0)
-        {
-            g_waylandState.keyRepeatScancode = scancode;
-            if (g_waylandState.keyRepeatRate > 1)
-                timer.it_interval.tv_nsec = 1000000000 / g_waylandState.keyRepeatRate;
-            else
-                timer.it_interval.tv_sec = 1;
-
-            timer.it_value.tv_sec = g_waylandState.keyRepeatDelay / 1000;
-            timer.it_value.tv_nsec = (g_waylandState.keyRepeatDelay % 1000) * 1000000;
-        }
-    }
-
-    const Key key = translateKey(scancode);
-
-    window->ProcessKeyEvent(key, down);
-}
-
-static void KeyboardHandleModifiers(void* userData,
-                                    struct wl_keyboard* keyboard,
-                                    uint32_t serial,
-                                    uint32_t modsDepressed,
-                                    uint32_t modsLatched,
-                                    uint32_t modsLocked,
-                                    uint32_t group)
-{
-    g_waylandState.serial = serial;
-
-    if (!g_waylandState.xkb.keymap)
-        return;
-
-    xkb_state_update_mask(g_waylandState.xkb.state, modsDepressed, modsLatched, modsLocked, 0, 0, group);
-
-    // TODO: LLGL doesn't support modifiers?
-
-    // g_waylandState.xkb.modifiers = 0;
-
-    // struct
-    // {
-    //     xkb_mod_index_t index;
-    //     LLGL::Key bit;
-    // } modifiers[] =
-    // {
-    //     { g_waylandState.xkb.controlIndex,  Key::Control },
-    //     // { g_waylandState.xkb.altIndex,      Key::Alt },
-    //     { g_waylandState.xkb.shiftIndex,    Key::Shift },
-    //     // { g_waylandState.xkb.superIndex,    Key::Win },
-    //     // { g_waylandState.xkb.capsLockIndex, Key::CapsLock },
-    //     { g_waylandState.xkb.numLockIndex,  Key::NumLock }
-    // };
-
-    // for (size_t i = 0; i < sizeof(modifiers) / sizeof(modifiers[0]); i++)
-    // {
-    //     if (xkb_state_mod_index_is_active(g_waylandState.xkb.state,
-    //                                       modifiers[i].index,
-    //                                       XKB_STATE_MODS_EFFECTIVE) == 1)
-    //     {
-    //         g_waylandState.xkb.modifiers |= modifiers[i].bit;
-    //     }
-    // }
-}
-
-static void KeyboardHandleRepeatInfo(void* userData,
-                                     struct wl_keyboard* keyboard,
-                                     int32_t rate,
-                                     int32_t delay)
-{
-    if (keyboard != g_waylandState.keyboard)
-        return;
-
-    g_waylandState.keyRepeatRate = rate;
-    g_waylandState.keyRepeatDelay = delay;
-}
-
-const static wl_keyboard_listener KEYBOARD_LISTENER = {
-    KeyboardHandleKeymap,
-    KeyboardHandleEnter,
-    KeyboardHandleLeave,
-    KeyboardHandleKey,
-    KeyboardHandleModifiers,
-    KeyboardHandleRepeatInfo
-};
-
-// ===============================
-// ========= SEAT EVENTS =========
-// ===============================
-
-static void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
-{
-    if ((caps & WL_SEAT_CAPABILITY_POINTER) && !g_waylandState.pointer)
-    {
-        g_waylandState.pointer = wl_seat_get_pointer(seat);
-        wl_pointer_add_listener(g_waylandState.pointer, &POINTER_LISTENER, nullptr);
-    }
-    else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && g_waylandState.pointer)
-    {
-        wl_pointer_destroy(g_waylandState.pointer);
-        g_waylandState.pointer = nullptr;
-    }
-
-    if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !g_waylandState.keyboard)
-    {
-        g_waylandState.keyboard = wl_seat_get_keyboard(seat);
-        wl_keyboard_add_listener(g_waylandState.keyboard, &KEYBOARD_LISTENER, nullptr);
-    }
-    else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && g_waylandState.keyboard)
-    {
-        wl_keyboard_destroy(g_waylandState.keyboard);
-        g_waylandState.keyboard = nullptr;
-    }
-}
-
-static void SeatHandleName(void* userData, struct wl_seat* seat, const char* name)
-{
-}
-
-const static struct wl_seat_listener SEAT_LISTENER = {
-    SeatHandleCapabilities,
-    SeatHandleName
-};
-
-// ===============================
-// ======== XDG WM EVENTS ========
-// ===============================
-
-static void xdg_wm_base_ping(void* userData, struct xdg_wm_base* xdg_wm_base, uint32_t serial)
-{
-    xdg_wm_base_pong(xdg_wm_base, serial);
-}
-
-static const struct xdg_wm_base_listener XDG_WM_BASE_LISTENER = {
-    .ping = xdg_wm_base_ping,
 };
 
 // ====================================
@@ -566,208 +142,11 @@ static const struct xdg_toplevel_listener XDG_TOPLEVEL_LISTENER = {
 	.close = xdg_toplevel_handle_close,
 };
 
-// =================================
-// ======== REGISTRY EVENTS ========
-// =================================
-
-void RegistryHandleGlobal(
-    void* userData,
-    struct wl_registry* registry,
-    uint32_t name,
-    const char* interface,
-    uint32_t version)
-{
-    if (strcmp(interface, wl_compositor_interface.name) == 0)
-    {
-        g_waylandState.compositor = static_cast<struct wl_compositor*>(
-            wl_registry_bind(registry, name, &wl_compositor_interface, std::min(3u, version))
-        );
-    }
-    else if (strcmp(interface, wl_subcompositor_interface.name) == 0)
-    {
-        g_waylandState.subcompositor = static_cast<struct wl_subcompositor*>(wl_registry_bind(registry, name, &wl_subcompositor_interface, 1));
-    }
-    else if ((strcmp(interface, wl_seat_interface.name) == 0))
-    {
-        g_waylandState.seat = static_cast<struct wl_seat*>(
-            wl_registry_bind(registry, name, &wl_seat_interface, std::min(4u, version))
-        );
-
-        wl_seat_add_listener(g_waylandState.seat, &SEAT_LISTENER, nullptr);
-
-        if (wl_seat_get_version(g_waylandState.seat) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
-        {
-            g_waylandState.keyRepeatTimerfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
-        }
-    }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
-    {
-        g_waylandState.xdg_wm_base = static_cast<struct xdg_wm_base*>(
-            wl_registry_bind(registry, name, &xdg_wm_base_interface, 1)
-        );
-        xdg_wm_base_add_listener(g_waylandState.xdg_wm_base, &XDG_WM_BASE_LISTENER, nullptr);
-    }
-    else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
-    {
-        g_waylandState.decorationManager = static_cast<struct zxdg_decoration_manager_v1*>(wl_registry_bind(registry, name, &zxdg_decoration_manager_v1_interface, 1));
-    }
-    else if (strcmp(interface, wp_viewporter_interface.name) == 0)
-    {
-        g_waylandState.viewporter = static_cast<struct wp_viewporter*>(wl_registry_bind(registry, name, &wp_viewporter_interface, 1));
-    }
-}
-
-void RegistryHandleRemove(void* userData, struct wl_registry* registry, uint32_t name)
-{
-    WaylandState* state = static_cast<WaylandState*>(userData);
-}
-
-const static wl_registry_listener REGISTRY_LISTENER = {
-    RegistryHandleGlobal,
-    RegistryHandleRemove
-};
-
-static bool FlushDisplay()
-{
-    while (wl_display_flush(g_waylandState.display) == -1)
-    {
-        if (errno != EAGAIN)
-            return false;
-
-        struct pollfd fd = { wl_display_get_fd(g_waylandState.display), POLLOUT };
-
-        while (poll(&fd, 1, -1) == -1)
-        {
-            if (errno != EINTR && errno != EAGAIN)
-                return false;
-        }
-    }
-    return true;
-}
-
-static bool PollPosix(struct pollfd* fds, nfds_t count, double* timeout)
-{
-    for (;;)
-    {
-        if (timeout)
-        {
-            const uint64_t base = Timer::Tick();
-
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__CYGWIN__)
-            const time_t seconds = (time_t) *timeout;
-            const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
-            const int result = ppoll(fds, count, &ts, NULL);
-#elif defined(__NetBSD__)
-            const time_t seconds = (time_t) *timeout;
-            const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
-            const int result = pollts(fds, count, &ts, NULL);
-#else
-            const int milliseconds = (int) (*timeout * 1e3);
-            const int result = poll(fds, count, milliseconds);
-#endif
-            const int error = errno; // clock_gettime may overwrite our error
-
-            *timeout -= (Timer::Tick() - base) /
-                (double) Timer::Frequency();
-
-            if (result > 0)
-                return true;
-            else if (result == -1 && error != EINTR && error != EAGAIN)
-                return false;
-            else if (*timeout <= 0.0)
-                return false;
-        }
-        else
-        {
-            const int result = poll(fds, count, -1);
-            if (result > 0)
-                return true;
-            else if (result == -1 && errno != EINTR && errno != EAGAIN)
-                return false;
-        }
-    }
-}
-
-void HandleWaylandEvents(double* timeout)
-{
-    bool event = false;
-
-    enum { DISPLAY_FD, KEYREPEAT_FD, LIBDECOR_FD };
-    struct pollfd fds[3];
-    fds[DISPLAY_FD] = { wl_display_get_fd(g_waylandState.display), POLLIN };
-    fds[KEYREPEAT_FD] = { g_waylandState.keyRepeatTimerfd, POLLIN };
-    fds[LIBDECOR_FD] = { -1, POLLIN };
-
-    if (g_waylandState.libdecor.context)
-        fds[LIBDECOR_FD].fd = libdecor_get_fd(g_waylandState.libdecor.context);
-
-    while (!event)
-    {
-        while (wl_display_prepare_read(g_waylandState.display) != 0)
-        {
-            if (wl_display_dispatch_pending(g_waylandState.display) > 0)
-                return;
-        }
-
-        // If an error other than EAGAIN happens, we have likely been disconnected
-        // from the Wayland session; try to handle that the best we can.
-        if (!FlushDisplay())
-        {
-            wl_display_cancel_read(g_waylandState.display);
-
-            for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
-            {
-                window->GetState().shouldClose = true;
-            }
-
-            return;
-        }
-
-        if (!PollPosix(fds, sizeof(fds) / sizeof(fds[0]), timeout))
-        {
-            wl_display_cancel_read(g_waylandState.display);
-            return;
-        }
-
-        if (fds[DISPLAY_FD].revents & POLLIN)
-        {
-            wl_display_read_events(g_waylandState.display);
-            if (wl_display_dispatch_pending(g_waylandState.display) > 0)
-                event = true;
-        }
-        else
-            wl_display_cancel_read(g_waylandState.display);
-
-        if (fds[KEYREPEAT_FD].revents & POLLIN)
-        {
-            uint64_t repeats;
-
-            if (read(g_waylandState.keyRepeatTimerfd, &repeats, sizeof(repeats)) == 8)
-            {
-                for (uint64_t i = 0; i < repeats; i++)
-                {
-                    g_waylandState.keyboardFocus->ProcessKeyEvent(translateKey(g_waylandState.keyRepeatScancode), true);
-                }
-
-                event = true;
-            }
-        }
-
-        if (fds[LIBDECOR_FD].revents & POLLIN)
-        {
-            if (libdecor_dispatch(g_waylandState.libdecor.context, 0) > 0)
-                event = true;
-        }
-    }
-}
-
 static void SetContentAreaOpaque(LinuxWindowWayland::State& state)
 {
     struct wl_region* region;
 
-    region = wl_compositor_create_region(g_waylandState.compositor);
+    region = wl_compositor_create_region(LinuxWaylandState::GetCompositor());
     if (!region)
         return;
 
@@ -938,12 +317,12 @@ static struct libdecor_frame_interface libdecorFrameInterface =
 static bool CreateLibdecorFrame(LinuxWindowWayland& window)
 {
     // Allow libdecor to finish initialization of itself and its plugin
-    while (!g_waylandState.libdecor.ready)
-        HandleWaylandEvents(nullptr);
+    while (!LinuxWaylandState::GetLibdecor().ready)
+        LinuxWaylandState::HandleWaylandEvents(nullptr);
 
     LinuxWindowWayland::State& state = window.GetState();
 
-    state.libdecor.frame = libdecor_decorate(g_waylandState.libdecor.context, state.wl.surface, &libdecorFrameInterface, &window);
+    state.libdecor.frame = libdecor_decorate(LinuxWaylandState::GetLibdecor().context, state.wl.surface, &libdecorFrameInterface, &window);
 
     if (!state.libdecor.frame)
     {
@@ -980,128 +359,8 @@ static bool CreateLibdecorFrame(LinuxWindowWayland& window)
     // }
 
     libdecor_frame_map(state.libdecor.frame);
-    wl_display_roundtrip(g_waylandState.display);
+    wl_display_roundtrip(LinuxWaylandState::GetDisplay());
     return true;
-}
-
-static void InitKeyTables()
-{
-    memset(g_waylandState.keycodes, static_cast<int>(Key::Any), sizeof(g_waylandState.keycodes));
-
-    g_waylandState.keycodes[KEY_1]          = Key::D1;
-    g_waylandState.keycodes[KEY_2]          = Key::D2;
-    g_waylandState.keycodes[KEY_3]          = Key::D3;
-    g_waylandState.keycodes[KEY_4]          = Key::D4;
-    g_waylandState.keycodes[KEY_5]          = Key::D5;
-    g_waylandState.keycodes[KEY_6]          = Key::D6;
-    g_waylandState.keycodes[KEY_7]          = Key::D7;
-    g_waylandState.keycodes[KEY_8]          = Key::D8;
-    g_waylandState.keycodes[KEY_9]          = Key::D9;
-    g_waylandState.keycodes[KEY_0]          = Key::D0;
-    g_waylandState.keycodes[KEY_SPACE]      = Key::Space;
-    g_waylandState.keycodes[KEY_MINUS]      = Key::Minus;
-    g_waylandState.keycodes[KEY_Q]          = Key::Q;
-    g_waylandState.keycodes[KEY_W]          = Key::W;
-    g_waylandState.keycodes[KEY_E]          = Key::E;
-    g_waylandState.keycodes[KEY_R]          = Key::R;
-    g_waylandState.keycodes[KEY_T]          = Key::T;
-    g_waylandState.keycodes[KEY_Y]          = Key::Y;
-    g_waylandState.keycodes[KEY_U]          = Key::U;
-    g_waylandState.keycodes[KEY_I]          = Key::I;
-    g_waylandState.keycodes[KEY_O]          = Key::O;
-    g_waylandState.keycodes[KEY_P]          = Key::P;
-    // g_waylandState.keycodes[KEY_LEFTBRACE]  = Key::LeftBracket;
-    // g_waylandState.keycodes[KEY_RIGHTBRACE] = Key::RightBracket;
-    g_waylandState.keycodes[KEY_A]          = Key::A;
-    g_waylandState.keycodes[KEY_S]          = Key::S;
-    g_waylandState.keycodes[KEY_D]          = Key::D;
-    g_waylandState.keycodes[KEY_F]          = Key::F;
-    g_waylandState.keycodes[KEY_G]          = Key::G;
-    g_waylandState.keycodes[KEY_H]          = Key::H;
-    g_waylandState.keycodes[KEY_J]          = Key::J;
-    g_waylandState.keycodes[KEY_K]          = Key::K;
-    g_waylandState.keycodes[KEY_L]          = Key::L;
-    // g_waylandState.keycodes[KEY_SEMICOLON]  = Key::Semicolon;
-    // g_waylandState.keycodes[KEY_APOSTROPHE] = Key::Apostrophe;
-    g_waylandState.keycodes[KEY_Z]          = Key::Z;
-    g_waylandState.keycodes[KEY_X]          = Key::X;
-    g_waylandState.keycodes[KEY_C]          = Key::C;
-    g_waylandState.keycodes[KEY_V]          = Key::V;
-    g_waylandState.keycodes[KEY_B]          = Key::B;
-    g_waylandState.keycodes[KEY_N]          = Key::N;
-    g_waylandState.keycodes[KEY_M]          = Key::M;
-    g_waylandState.keycodes[KEY_COMMA]      = Key::Comma;
-    g_waylandState.keycodes[KEY_DOT]        = Key::Period;
-    // g_waylandState.keycodes[KEY_SLASH]      = Key::Slash;
-    // g_waylandState.keycodes[KEY_BACKSLASH]  = Key::Backslash;
-    g_waylandState.keycodes[KEY_ESC]        = Key::Escape;
-    g_waylandState.keycodes[KEY_TAB]        = Key::Tab;
-    g_waylandState.keycodes[KEY_LEFTSHIFT]  = Key::LShift;
-    g_waylandState.keycodes[KEY_RIGHTSHIFT] = Key::RShift;
-    g_waylandState.keycodes[KEY_LEFTCTRL]   = Key::LControl;
-    g_waylandState.keycodes[KEY_RIGHTCTRL]  = Key::RControl;
-    // g_waylandState.keycodes[KEY_LEFTALT]    = Key::LAlt;
-    // g_waylandState.keycodes[KEY_RIGHTALT]   = Key::RAlt;
-    g_waylandState.keycodes[KEY_LEFTMETA]   = Key::LWin;
-    g_waylandState.keycodes[KEY_RIGHTMETA]  = Key::RWin;
-    g_waylandState.keycodes[KEY_NUMLOCK]    = Key::NumLock;
-    // g_waylandState.keycodes[KEY_CAPSLOCK]   = Key::CapsLock;
-    g_waylandState.keycodes[KEY_PRINT]      = Key::Print;
-    g_waylandState.keycodes[KEY_SCROLLLOCK] = Key::ScrollLock;
-    g_waylandState.keycodes[KEY_PAUSE]      = Key::Pause;
-    g_waylandState.keycodes[KEY_DELETE]     = Key::Delete;
-    g_waylandState.keycodes[KEY_BACKSPACE]  = Key::Back;
-    g_waylandState.keycodes[KEY_ENTER]      = Key::Return;
-    g_waylandState.keycodes[KEY_HOME]       = Key::Home;
-    g_waylandState.keycodes[KEY_END]        = Key::End;
-    g_waylandState.keycodes[KEY_PAGEUP]     = Key::PageUp;
-    g_waylandState.keycodes[KEY_PAGEDOWN]   = Key::PageDown;
-    g_waylandState.keycodes[KEY_INSERT]     = Key::Insert;
-    g_waylandState.keycodes[KEY_LEFT]       = Key::Left;
-    g_waylandState.keycodes[KEY_RIGHT]      = Key::Right;
-    g_waylandState.keycodes[KEY_DOWN]       = Key::Down;
-    g_waylandState.keycodes[KEY_UP]         = Key::Up;
-    g_waylandState.keycodes[KEY_F1]         = Key::F1;
-    g_waylandState.keycodes[KEY_F2]         = Key::F2;
-    g_waylandState.keycodes[KEY_F3]         = Key::F3;
-    g_waylandState.keycodes[KEY_F4]         = Key::F4;
-    g_waylandState.keycodes[KEY_F5]         = Key::F5;
-    g_waylandState.keycodes[KEY_F6]         = Key::F6;
-    g_waylandState.keycodes[KEY_F7]         = Key::F7;
-    g_waylandState.keycodes[KEY_F8]         = Key::F8;
-    g_waylandState.keycodes[KEY_F9]         = Key::F9;
-    g_waylandState.keycodes[KEY_F10]        = Key::F10;
-    g_waylandState.keycodes[KEY_F11]        = Key::F11;
-    g_waylandState.keycodes[KEY_F12]        = Key::F12;
-    g_waylandState.keycodes[KEY_F13]        = Key::F13;
-    g_waylandState.keycodes[KEY_F14]        = Key::F14;
-    g_waylandState.keycodes[KEY_F15]        = Key::F15;
-    g_waylandState.keycodes[KEY_F16]        = Key::F16;
-    g_waylandState.keycodes[KEY_F17]        = Key::F17;
-    g_waylandState.keycodes[KEY_F18]        = Key::F18;
-    g_waylandState.keycodes[KEY_F19]        = Key::F19;
-    g_waylandState.keycodes[KEY_F20]        = Key::F20;
-    g_waylandState.keycodes[KEY_F21]        = Key::F21;
-    g_waylandState.keycodes[KEY_F22]        = Key::F22;
-    g_waylandState.keycodes[KEY_F23]        = Key::F23;
-    g_waylandState.keycodes[KEY_F24]        = Key::F24;
-    g_waylandState.keycodes[KEY_KPSLASH]    = Key::KeypadDivide;
-    g_waylandState.keycodes[KEY_KPASTERISK] = Key::KeypadMultiply;
-    g_waylandState.keycodes[KEY_KPMINUS]    = Key::KeypadMinus;
-    g_waylandState.keycodes[KEY_KPPLUS]     = Key::KeypadPlus;
-    g_waylandState.keycodes[KEY_KP0]        = Key::Keypad0;
-    g_waylandState.keycodes[KEY_KP1]        = Key::Keypad1;
-    g_waylandState.keycodes[KEY_KP2]        = Key::Keypad2;
-    g_waylandState.keycodes[KEY_KP3]        = Key::Keypad3;
-    g_waylandState.keycodes[KEY_KP4]        = Key::Keypad4;
-    g_waylandState.keycodes[KEY_KP5]        = Key::Keypad5;
-    g_waylandState.keycodes[KEY_KP6]        = Key::Keypad6;
-    g_waylandState.keycodes[KEY_KP7]        = Key::Keypad7;
-    g_waylandState.keycodes[KEY_KP8]        = Key::Keypad8;
-    g_waylandState.keycodes[KEY_KP9]        = Key::Keypad9;
-    g_waylandState.keycodes[KEY_KPDOT]      = Key::KeypadDecimal;
-    // g_waylandState.keycodes[KEY_KPEQUAL]    = Key::KeypadEqual;
-    // g_waylandState.keycodes[KEY_KPENTER]    = Key::KeypadEnter;
 }
 
 static void CreateFallbackEdge(LinuxWindowWayland& window,
@@ -1111,18 +370,18 @@ static void CreateFallbackEdge(LinuxWindowWayland& window,
                                int x, int y,
                                int width, int height)
 {
-    edge->surface = wl_compositor_create_surface(g_waylandState.compositor);
+    edge->surface = wl_compositor_create_surface(LinuxWaylandState::GetCompositor());
     wl_surface_set_user_data(edge->surface, &window);
-    wl_proxy_set_tag((struct wl_proxy*) edge->surface, &g_waylandState.tag);
-    edge->subsurface = wl_subcompositor_get_subsurface(g_waylandState.subcompositor,
+    wl_proxy_set_tag((struct wl_proxy*) edge->surface, LinuxWaylandState::GetTag());
+    edge->subsurface = wl_subcompositor_get_subsurface(LinuxWaylandState::GetSubcompositor(),
                                                        edge->surface, parent);
     wl_subsurface_set_position(edge->subsurface, x, y);
-    edge->viewport = wp_viewporter_get_viewport(g_waylandState.viewporter,
+    edge->viewport = wp_viewporter_get_viewport(LinuxWaylandState::GetViewporter(),
                                                 edge->surface);
     wp_viewport_set_destination(edge->viewport, width, height);
     wl_surface_attach(edge->surface, buffer, 0, 0);
 
-    struct wl_region* region = wl_compositor_create_region(g_waylandState.compositor);
+    struct wl_region* region = wl_compositor_create_region(LinuxWaylandState::GetCompositor());
     wl_region_add(region, 0, 0, width, height);
     wl_surface_set_opaque_region(edge->surface, region);
     wl_surface_commit(edge->surface);
@@ -1195,7 +454,7 @@ static struct wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* p
         return NULL;
     }
 
-    struct wl_shm_pool* pool = wl_shm_create_pool(g_waylandState.shm, fd, length);
+    struct wl_shm_pool* pool = wl_shm_create_pool(LinuxWaylandState::GetShm(), fd, length);
 
     close(fd);
 
@@ -1224,7 +483,7 @@ static void CreateFallbackDecorations(LinuxWindowWayland& window)
 
     unsigned char data[] = { 224, 224, 224, 255 };
 
-    if (!g_waylandState.viewporter)
+    if (!LinuxWaylandState::GetViewporter())
         return;
 
     if (!state.fallback.buffer)
@@ -1304,7 +563,7 @@ static bool CreateXdgShellObjects(LinuxWindowWayland& window)
 {
     LinuxWindowWayland::State& state = window.GetState();
 
-    state.xdg.surface = xdg_wm_base_get_xdg_surface(g_waylandState.xdg_wm_base, state.wl.surface);
+    state.xdg.surface = xdg_wm_base_get_xdg_surface(LinuxWaylandState::GetXdgWmBase(), state.wl.surface);
     if (!state.xdg.surface)
     {
         LLGL::Log::Errorf("Wayland: Failed to create xdg-surface for window");
@@ -1338,9 +597,9 @@ static bool CreateXdgShellObjects(LinuxWindowWayland& window)
     //     setIdleInhibitor(window, false);
     // }
 
-    if (g_waylandState.decorationManager)
+    if (LinuxWaylandState::GetDecorationManager())
     {
-        state.xdg.decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(g_waylandState.decorationManager, state.xdg.toplevel);
+        state.xdg.decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(LinuxWaylandState::GetDecorationManager(), state.xdg.toplevel);
         zxdg_toplevel_decoration_v1_add_listener(state.xdg.decoration, &XDG_DECORATION_LISTENER, &window);
 
 
@@ -1358,13 +617,13 @@ static bool CreateXdgShellObjects(LinuxWindowWayland& window)
     // UpdateXdgSizeLimits(window);
 
     wl_surface_commit(state.wl.surface);
-    wl_display_roundtrip(g_waylandState.display);
+    wl_display_roundtrip(LinuxWaylandState::GetDisplay());
     return true;
 }
 
 static bool CreateShellObjects(LinuxWindowWayland& window)
 {
-    if (g_waylandState.libdecor.context)
+    if (LinuxWaylandState::GetLibdecor().context)
     {
         if (CreateLibdecorFrame(window))
             return true;
@@ -1397,33 +656,6 @@ static void DestroyShellObjects(LinuxWindowWayland& window)
     state.xdg.toplevel = NULL;
     state.xdg.surface = NULL;
 }
-
-void LibdecorHandleError(struct libdecor* context,
-                         enum libdecor_error error,
-                         const char* message)
-{
-    LLGL::Log::Errorf("Wayland: libdecor error %u: %s", error, message);
-}
-
-static struct libdecor_interface LIBDECOR_INTERFACE =
-{
-    LibdecorHandleError
-};
-
-static void LibdecorReadyCallback(void* userData,
-                                  struct wl_callback* callback,
-                                  uint32_t time)
-{
-    g_waylandState.libdecor.ready = true;
-    LLGL_ASSERT(g_waylandState.libdecor.callback == callback);
-    wl_callback_destroy(g_waylandState.libdecor.callback);
-    g_waylandState.libdecor.callback = NULL;
-}
-
-static const struct wl_callback_listener LIBDECOR_READY_LISTENER =
-{
-    LibdecorReadyCallback
-};
 
 static void SetWindowDecorated(LinuxWindowWayland& window, bool decorated)
 {
@@ -1466,57 +698,16 @@ LinuxWindowWayland::LinuxWindowWayland(const WindowDescriptor& desc)
 
 void LinuxWindowWayland::Open()
 {
-    // TODO: This should not be here
-    if (!g_waylandState.initialized)
-    {
-        InitKeyTables();
-
-        g_waylandState.xkb.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-        if (!g_waylandState.xkb.context)
-        {
-            LLGL_TRAP("Failed to initialize xkb context");
-        }
-
-        g_waylandState.display = wl_display_connect(nullptr);
-        if (!g_waylandState.display)
-            LLGL_TRAP("Failed to connect to the Wayland display");
-
-        struct wl_registry* registry = wl_display_get_registry(g_waylandState.display);
-
-        wl_registry_add_listener(registry, &REGISTRY_LISTENER, this);
-
-        wl_display_roundtrip(g_waylandState.display);
-        wl_display_roundtrip(g_waylandState.display);
-
-        g_waylandState.libdecor.context = libdecor_new(g_waylandState.display, &LIBDECOR_INTERFACE);
-        if (g_waylandState.libdecor.context)
-        {
-            // Perform an initial dispatch and flush to get the init started
-            libdecor_dispatch(g_waylandState.libdecor.context, 0);
-
-            // Create sync point to "know" when libdecor is ready for use
-            g_waylandState.libdecor.callback = wl_display_sync(g_waylandState.display);
-            wl_callback_add_listener(g_waylandState.libdecor.callback, &LIBDECOR_READY_LISTENER, nullptr);
-        }
-
-        if (!g_waylandState.compositor)
-            LLGL_TRAP("Failed to get Wayland compositor");
-
-        g_waylandState.tag = "LLGL";
-
-        g_waylandState.initialized = true;
-    }
-
-    state_.wl.surface = wl_compositor_create_surface(g_waylandState.compositor);
+    state_.wl.surface = wl_compositor_create_surface(LinuxWaylandState::GetCompositor());
     if (!state_.wl.surface)
         LLGL_TRAP("Failed to get Wayland surface");
 
-    wl_proxy_set_tag(reinterpret_cast<struct wl_proxy*>(state_.wl.surface), &g_waylandState.tag);
+    wl_proxy_set_tag(reinterpret_cast<struct wl_proxy*>(state_.wl.surface), LinuxWaylandState::GetTag());
     wl_surface_add_listener(state_.wl.surface, &SURFACE_LISTENER, nullptr);
     wl_surface_set_user_data(state_.wl.surface, this);
 
     wl_surface_commit(state_.wl.surface);
-    wl_display_roundtrip(g_waylandState.display);
+    wl_display_roundtrip(LinuxWaylandState::GetDisplay());
 
     ResizeWindow(*this, desc_.size.width, desc_.size.height);
 
@@ -1548,7 +739,7 @@ bool LinuxWindowWayland::GetNativeHandle(void* nativeHandle, std::size_t nativeH
     {
         auto* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->type = NativeType::Wayland;
-        handle->wayland.display = g_waylandState.display;
+        handle->wayland.display = LinuxWaylandState::GetDisplay();
         handle->wayland.window  = state_.wl.surface;
         return true;
     }

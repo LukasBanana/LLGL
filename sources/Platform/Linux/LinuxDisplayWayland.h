@@ -11,40 +11,37 @@
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include <LLGL/Display.h>
-#include <memory>
+#include <LLGL/Container/DynamicVector.h>
 #include <wayland-client.h>
+#include <wayland-client-protocol.h>
 
+struct wl_output;
 
 namespace LLGL
 {
 
 
-class LinuxSharedWaylandDisplay;
-using LinuxSharedWaylandDisplaySPtr = std::shared_ptr<LinuxSharedWaylandDisplay>;
+struct WaylandDisplayData {
+    char name[128];
 
+    std::vector<DisplayMode> displayModes;
 
-// Helper class to handle a shared Wayland display instance
-class LinuxSharedWaylandDisplay
-{
+    wl_output* output;
 
-    public:
+    uint32_t currentdisplayMode;
 
-        LinuxSharedWaylandDisplay();
-        ~LinuxSharedWaylandDisplay();
+    uint32_t index;
 
-        // Returns a shared instance of the X11 display.
-        static LinuxSharedWaylandDisplaySPtr GetShared();
+    // Physical width in millimeters
+    int widthMM;
 
-        // Returns the native X11 display.
-        inline struct wl_display* GetNative() const
-        {
-            return native_;
-        }
+    // Physical height in millimeters
+    int heightMM;
 
-    private:
+    int x;
+    int y;
 
-        struct wl_display* native_ = nullptr;
-
+    int scale;
 };
 
 class LinuxDisplayWayland : public Display
@@ -52,7 +49,7 @@ class LinuxDisplayWayland : public Display
 
     public:
 
-        LinuxDisplayWayland(const std::shared_ptr<LinuxSharedWaylandDisplay>& sharedWaylandDisplay, int screenIndex);
+        LinuxDisplayWayland(const WaylandDisplayData& data);
 
         bool IsPrimary() const override;
 
@@ -67,19 +64,21 @@ class LinuxDisplayWayland : public Display
 
         std::vector<DisplayMode> GetSupportedDisplayModes() const override;
 
-        bool IsWayland() const override {
-            return true;
+        WaylandDisplayData& GetData()
+        {
+            return data_;
         }
 
     private:
 
+        bool SetCursorPositionInternal(const Offset2D &position) override;
+        Offset2D GetCursorPositionInternal() override;
+
         // Returns the native Wayland display.
-        struct wl_display* GetNative() const;
+        wl_output* GetNative() const;
 
     private:
-
-        std::shared_ptr<LinuxSharedWaylandDisplay>  sharedWaylandDisplay_;
-        int                                         screen_             = 0;
+        WaylandDisplayData data_;
 
 };
 

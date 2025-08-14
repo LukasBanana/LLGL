@@ -8,40 +8,65 @@
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxDisplayWayland.h"
-#include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
 namespace LLGL
 {
 
+LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
+    data_(data)
+{
+}
 
-static std::vector<std::unique_ptr<LinuxDisplayWayland>>   g_waylandDisplayList;
-
-static std::vector<Display*>                        g_displayRefList;
-static Display*                                     g_primaryDisplay    = nullptr;
-
-
-static bool UpdateWaylandDisplayList()
+bool LinuxDisplayWayland::IsPrimary() const
 {
     // TODO
     return true;
 }
 
-
-/*
- * LinuxSharedWaylandDisplay class
- */
-
-LinuxSharedWaylandDisplay::LinuxSharedWaylandDisplay() :
-    native_ { wl_display_connect(nullptr) }
-{
-    LLGL_ASSERT(native_, "failed to connect to Wayland compositor");
+UTF8String LinuxDisplayWayland::GetDeviceName() const {
+    return data_.name;
 }
 
-LinuxSharedWaylandDisplay::~LinuxSharedWaylandDisplay()
-{
-    wl_display_disconnect(native_);
+Offset2D LinuxDisplayWayland::GetOffset() const {
+    return Offset2D(data_.x, data_.y);
+}
+
+float LinuxDisplayWayland::GetScale() const {
+    return data_.scale;
+}
+
+bool LinuxDisplayWayland::ResetDisplayMode() {
+    // TODO
+    return true;
+}
+
+bool LinuxDisplayWayland::SetDisplayMode(const DisplayMode& displayMode) {
+    // TODO
+    return true;
+}
+
+DisplayMode LinuxDisplayWayland::GetDisplayMode() const {
+    return data_.displayModes[data_.currentdisplayMode];
+}
+
+std::vector<DisplayMode> LinuxDisplayWayland::GetSupportedDisplayModes() const {
+    return data_.displayModes;
+}
+
+bool LinuxDisplayWayland::SetCursorPositionInternal(const Offset2D &position) {
+    // TODO
+    return true;
+}
+
+Offset2D LinuxDisplayWayland::GetCursorPositionInternal() {
+    // TODO
+    return Offset2D(0, 0);
+}
+
+struct wl_output* LinuxDisplayWayland::GetNative() const {
+    return data_.output;
 }
 
 } // /namespace LLGL

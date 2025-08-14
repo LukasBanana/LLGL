@@ -19,10 +19,7 @@
 
 struct xdg_toplevel;
 struct xdg_surface;
-struct xdg_wm_base;
-struct wp_viewporter;
 struct zxdg_toplevel_decoration_v1;
-struct zxdg_decoration_manager_v1;
 
 struct FallbackEdge
 {
@@ -128,67 +125,6 @@ class LinuxWaylandContext
         std::vector<LinuxWindowWayland*> windows_;
 
 };
-
-struct WaylandState
-{
-    struct wl_display* display;
-    struct wl_registry* registry;
-    struct wl_compositor* compositor;
-    struct wl_subcompositor* subcompositor;
-    struct wl_seat* seat;
-    struct wp_viewporter* viewporter;
-    struct wl_shm* shm;
-
-    struct zxdg_decoration_manager_v1* decorationManager;
-
-    struct wl_pointer* pointer;
-    LinuxWindowWayland* pointerFocus;
-    uint32_t serial;
-    uint32_t pointerEnterSerial;
-
-    struct wl_keyboard* keyboard;
-    LinuxWindowWayland* keyboardFocus;
-
-    struct xdg_wm_base *xdg_wm_base;
-
-    const char* tag;
-
-    int keyRepeatTimerfd;
-    int keyRepeatRate;
-    int keyRepeatDelay;
-    int keyRepeatScancode;
-
-    Key keycodes[256];
-
-    struct {
-        void* handle;
-        struct xkb_context*          context;
-        struct xkb_keymap*           keymap;
-        struct xkb_state*            state;
-
-        struct xkb_compose_state*    composeState;
-
-        xkb_mod_index_t              controlIndex;
-        xkb_mod_index_t              altIndex;
-        xkb_mod_index_t              shiftIndex;
-        xkb_mod_index_t              superIndex;
-        xkb_mod_index_t              capsLockIndex;
-        xkb_mod_index_t              numLockIndex;
-        unsigned int                 modifiers;
-    } xkb;
-
-    struct {
-        struct libdecor* context;
-        struct wl_callback* callback;
-        bool ready = false;
-    } libdecor;
-
-    bool initialized = false;
-};
-
-extern WaylandState g_waylandState;
-
-void HandleWaylandEvents(double* timeout);
 
 } // /namespace LLGL
 
