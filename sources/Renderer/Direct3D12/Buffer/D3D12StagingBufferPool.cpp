@@ -11,6 +11,7 @@
 #include "../D3D12Resource.h"
 #include "../../../Core/CoreUtils.h"
 #include <algorithm>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -114,20 +115,17 @@ D3D12StagingBufferPool::MapBufferTicket D3D12StagingBufferPool::MapFeedbackBuffe
     void**                  mappedData)
 {
     MapBufferTicket ticket;
-    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read);
+    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read, &(ticket.cpuAccessBufferIndex));
     HRESULT hr = cpuAccessBuffer.MapFeedbackBuffer(commandContext, commandQueue, srcBuffer, readRange, mappedData);
     if (SUCCEEDED(hr))
-    {
-        ticket.cpuAccessBuffer = &cpuAccessBuffer;
         ++numReadMappedCPUBuffers_;
-    }
     ticket.hr = hr;
     return ticket;
 }
 
 void D3D12StagingBufferPool::UnmapFeedbackBuffer(MapBufferTicket ticket)
 {
-    if (D3D12CPUAccessBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
+    if (D3D12CPUAccessBuffer* cpuAccessBuffer = GetCPUAccessBuffer(ticket.cpuAccessBufferIndex))
     {
         cpuAccessBuffer->UnmapFeedbackBuffer();
         --numReadMappedCPUBuffers_;
@@ -139,13 +137,10 @@ D3D12StagingBufferPool::MapBufferTicket D3D12StagingBufferPool::MapUploadBuffer(
     void**                  mappedData)
 {
     MapBufferTicket ticket;
-    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Write);
+    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Write, &(ticket.cpuAccessBufferIndex));
     HRESULT hr = cpuAccessBuffer.MapUploadBuffer(size, mappedData);
     if (SUCCEEDED(hr))
-    {
-        ticket.cpuAccessBuffer = &cpuAccessBuffer;
         ++numWriteMappedCPUBuffers_;
-    }
     ticket.hr = hr;
     return ticket;
 }
@@ -157,7 +152,7 @@ void D3D12StagingBufferPool::UnmapUploadBuffer(
     const D3D12_RANGE&      writtenRange,
     MapBufferTicket         ticket)
 {
-    if (D3D12CPUAccessBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
+    if (D3D12CPUAccessBuffer* cpuAccessBuffer = GetCPUAccessBuffer(ticket.cpuAccessBufferIndex))
     {
         cpuAccessBuffer->UnmapUploadBuffer(commandContext, commandQueue, dstBuffer, writtenRange);
         --numWriteMappedCPUBuffers_;
@@ -175,22 +170,34 @@ void D3D12StagingBufferPool::AllocChunk(UINT64 minChunkSize)
     chunkIdx_ = chunks_.size() - 1;
 }
 
-D3D12CPUAccessBuffer& D3D12StagingBufferPool::GetOrCreateCPUAccessBuffer(long cpuAccessFlags)
+D3D12CPUAccessBuffer& D3D12StagingBufferPool::GetOrCreateCPUAccessBuffer(long cpuAccessFlags, std::size_t* outIndex)
 {
     if (((cpuAccessFlags & CPUAccessFlags::Read ) == 0 || numReadMappedCPUBuffers_  < cpuAccessBuffers_.size()) &&
         ((cpuAccessFlags & CPUAccessFlags::Write) == 0 || numWriteMappedCPUBuffers_ < cpuAccessBuffers_.size()))
     {
         /* Try to find available CPU access buffer */
-        for (D3D12CPUAccessBuffer& cpuAccessBuffer : cpuAccessBuffers_)
+        for_range(i, cpuAccessBuffers_.size())
         {
+            D3D12CPUAccessBuffer& cpuAccessBuffer = cpuAccessBuffers_[i];
             if ((cpuAccessBuffer.GetCurrentCPUAccessFlags() & cpuAccessFlags) == 0)
+            {
+                if (outIndex != nullptr)
+                    *outIndex = i;
                 return cpuAccessBuffer;
+            }
         }
     }
 
     /* If all CPU access buffers are already mapped, create a new one */
+    if (outIndex != nullptr)
+        *outIndex = cpuAccessBuffers_.size();
     cpuAccessBuffers_.emplace_back(device_);
     return cpuAccessBuffers_.back();
+}
+
+D3D12CPUAccessBuffer* D3D12StagingBufferPool::GetCPUAccessBuffer(std::size_t index)
+{
+    return (index < cpuAccessBuffers_.size() ? &(cpuAccessBuffers_[index]) : nullptr);
 }
 
 

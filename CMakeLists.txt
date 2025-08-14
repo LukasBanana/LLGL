@@ -266,9 +266,9 @@ function(bundle_project_files OUTPUT_LIST SRC_FILES)
 endfunction()
 
 # Main function to find and bundle project source files.
-# @param SRC_FILES: can either be a directory or a list of specific source files if it sends with ".cpp", ".c", ".h", ".m", or ".mm".
+# @param SRC_FILES: can either be a directory or a list of specific source files if it ends with ".cpp", ".c", ".h", ".m", or ".mm".
 function(find_project_source_files OUTPUT_LIST SRC_FILES)
-    if("${SRC_FILES}" MATCHES ".+\\.(cpp|c|h|m|mm|cs)")
+    if("${SRC_FILES}" MATCHES ".+\\.(cpp|c|h|m|mm|cs)$")
         set(ProjectFiles "${SRC_FILES}")
     else()
         # Find all source files for project
@@ -278,7 +278,7 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
             find_source_files(ProjectFiles CXX ${SRC_FILES})
         endif()
     endif()
-    
+
     # Bundle source files and write to output variable
     bundle_project_files(OutputProjectFiles "${ProjectFiles}")
 

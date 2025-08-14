@@ -533,6 +533,11 @@ MTKView* MTCommandContext::GetCurrentDrawableView() const
  * ======= Private: =======
  */
 
+static MTLStoreAction PromoteMTStoreAction(MTLStoreAction action)
+{
+    return (action == MTLStoreActionMultisampleResolve ? MTLStoreActionStoreAndMultisampleResolve : MTLStoreActionStore);
+}
+
 void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT)
 {
     LLGL_ASSERT_PTR(renderPassDesc);
@@ -540,6 +545,21 @@ void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* re
     if (!contextState_.isInsideRenderPass)
     {
         renderPassDesc_ = (MTLRenderPassDescriptor*)[renderPassDesc copy];
+
+        /* Update store actions for swap-chains since render passes can be interrupted at any time to update buffers */
+        if (swapChainMT != nullptr)
+        {
+            const Format depthStencilFormat = swapChainMT->GetDepthStencilFormat();
+
+            if (IsDepthFormat(depthStencilFormat))
+                renderPassDesc_.depthAttachment.storeAction = PromoteMTStoreAction(renderPassDesc_.depthAttachment.storeAction);
+
+            if (IsStencilFormat(depthStencilFormat))
+                renderPassDesc_.stencilAttachment.storeAction = PromoteMTStoreAction(renderPassDesc_.stencilAttachment.storeAction);
+
+            renderPassDesc_.colorAttachments[0].storeAction = PromoteMTStoreAction(renderPassDesc_.colorAttachments[0].storeAction);
+        }
+
         contextState_.isInsideRenderPass = true;
         boundSwapChain_ = swapChainMT;
     }

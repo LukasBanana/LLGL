@@ -32,7 +32,7 @@ class D3D12StagingBufferPool
         {
 
                 friend class D3D12StagingBufferPool;
-                D3D12CPUAccessBuffer* cpuAccessBuffer = nullptr;
+                std::size_t cpuAccessBufferIndex = std::size_t(-1);
 
             public:
 
@@ -110,7 +110,10 @@ class D3D12StagingBufferPool
         void AllocChunk(UINT64 minChunkSize);
 
         // Returns the first available CPU access buffer or creates a new one.
-        D3D12CPUAccessBuffer& GetOrCreateCPUAccessBuffer(long cpuAccessFlags);
+        D3D12CPUAccessBuffer& GetOrCreateCPUAccessBuffer(long cpuAccessFlags, std::size_t* outIndex = nullptr);
+
+        // Returns the CPU access buffer the specified index.
+        D3D12CPUAccessBuffer* GetCPUAccessBuffer(std::size_t index);
 
     private:
 

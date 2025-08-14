@@ -113,6 +113,10 @@ void GLContext::SetDefaultDepthStencilFormat()
     depthStencilFormat_ = Format::D24UNormS8UInt;
 }
 
+bool GLContext::IsSharableForSurface(const Surface *surface) const
+{
+    return true;
+}
 
 } // /namespace LLGL
 
