@@ -63,28 +63,33 @@ class LinuxWindowWayland : public Window {
             Extent2D                    framebufferSize;
 
             struct {
-                struct wl_surface*   surface = nullptr;
+                wl_surface*   surface = nullptr;
             } wl;
 
             struct {
-                struct xdg_toplevel* toplevel = nullptr;
-                struct xdg_surface*  surface  = nullptr;
-                struct zxdg_toplevel_decoration_v1* decoration = nullptr;
+                xdg_toplevel* toplevel = nullptr;
+                xdg_surface*  surface  = nullptr;
+                zxdg_toplevel_decoration_v1* decoration = nullptr;
                 int decorationMode;
             } xdg;
 
             struct {
-                struct libdecor_frame* frame = nullptr;
+                libdecor_frame* frame = nullptr;
             } libdecor;
 
             struct {
-                struct wl_buffer*           buffer = nullptr;
-                struct wl_surface*          focus = nullptr;
-                FallbackEdge                top, left, right, bottom;
-                bool                        decorations = false;
+                wl_buffer*           buffer = nullptr;
+                wl_surface*          focus = nullptr;
+                FallbackEdge         top;
+                FallbackEdge         left;
+                FallbackEdge         right;
+                FallbackEdge         bottom;
+                bool                 decorations = false;
             } fallback;
 
-            float framebufferScale = 1.0f;
+            wl_output*                  monitor = nullptr;
+
+            float                       framebufferScale = 1.0f;
 
             bool                        hovered     = false;
             bool                        shouldClose = false;
@@ -105,25 +110,6 @@ class LinuxWindowWayland : public Window {
     private:
         WindowDescriptor            desc_;
         State                       state_;
-};
-
-class LinuxWaylandContext
-{
-
-    public:
-
-        static void Add(LinuxWindowWayland* window);
-        static void Remove(LinuxWindowWayland* window);
-        static const std::vector<LinuxWindowWayland*>& GetWindows();
-
-    private:
-
-        static LinuxWaylandContext& Get();
-
-    private:
-
-        std::vector<LinuxWindowWayland*> windows_;
-
 };
 
 } // /namespace LLGL

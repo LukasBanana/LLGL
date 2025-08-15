@@ -8,6 +8,7 @@
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxDisplayWayland.h"
+#include "LinuxWaylandState.h"
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
@@ -21,12 +22,11 @@ LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
 
 bool LinuxDisplayWayland::IsPrimary() const
 {
-    // TODO
-    return true;
+    return (this == LinuxWaylandState::GetDisplayList()[0]);
 }
 
 UTF8String LinuxDisplayWayland::GetDeviceName() const {
-    return data_.name;
+    return data_.deviceName;
 }
 
 Offset2D LinuxDisplayWayland::GetOffset() const {

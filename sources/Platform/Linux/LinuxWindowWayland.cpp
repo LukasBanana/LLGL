@@ -30,6 +30,7 @@
 #include "protocols/viewporter-client-protocol.h"
 
 #include "LinuxWindowWayland.h"
+#include "LinuxDisplayWayland.h"
 #include "LinuxWaylandState.h"
 
 namespace LLGL
@@ -38,50 +39,16 @@ namespace LLGL
 static constexpr int DECORATION_BORDER_SIZE    = 4;
 static constexpr int DECORATION_CAPTION_HEIGHT = 24;
 
-LinuxWaylandContext& LinuxWaylandContext::Get()
-{
-    static LinuxWaylandContext instance;
-    return instance;
-}
-
-void LinuxWaylandContext::Add(LinuxWindowWayland* window)
-{
-    LinuxWaylandContext& context = LinuxWaylandContext::Get();
-    context.windows_.push_back(window);
-}
-
-void LinuxWaylandContext::Remove(LinuxWindowWayland* window)
-{
-    LinuxWaylandContext& context = LinuxWaylandContext::Get();
-
-    for (auto it = context.windows_.begin(); it != context.windows_.end(); ++it)
-    {
-        if ((*it) == window)
-        {
-            context.windows_.erase(it);
-            break;
-        }
-    }
-}
-
-const std::vector<LinuxWindowWayland*>& LinuxWaylandContext::GetWindows()
-{
-    LinuxWaylandContext& context = LinuxWaylandContext::Get();
-    return context.windows_;
-}
-
 // ================================
 // ======== SURFACE EVENTS ========
 // ================================
 
-static void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
+static void SurfaceHandleEnter(void* userData, wl_surface* surface, wl_output* output)
 {
-
 }
 
-static void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struct wl_output* output)
+static void SurfaceHandleLeave(void* userData, wl_surface* surface, wl_output* output)
 {
-
 }
 
 const static wl_surface_listener SURFACE_LISTENER = {
@@ -95,13 +62,13 @@ const static wl_surface_listener SURFACE_LISTENER = {
 
 static void xdg_surface_configure(
     void *userData,
-    struct xdg_surface* xdg_surface,
+    xdg_surface* xdg_surface,
     uint32_t serial)
 {
     xdg_surface_ack_configure(xdg_surface, serial);
 }
 
-static const struct xdg_surface_listener XDG_SURFACE_LISTENER = {
+static const xdg_surface_listener XDG_SURFACE_LISTENER = {
     .configure = xdg_surface_configure,
 };
 
@@ -111,10 +78,10 @@ static const struct xdg_surface_listener XDG_SURFACE_LISTENER = {
 
 static void xdg_toplevel_handle_configure(
     void*                userData,
-    struct xdg_toplevel* xdg_toplevel,
+    xdg_toplevel* xdg_toplevel,
     int32_t              width,
     int32_t              height,
-    struct wl_array*     states)
+    wl_array*     states)
 {
 	LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
     LLGL_ASSERT(width >= 0, "Width is zero");
@@ -131,20 +98,20 @@ static void xdg_toplevel_handle_configure(
     window->SetSizeInternal(Extent2D(width, height));
 }
 
-static void xdg_toplevel_handle_close(void* userData, struct xdg_toplevel* toplevel)
+static void xdg_toplevel_handle_close(void* userData, xdg_toplevel* toplevel)
 {
 	LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
     window->GetState().shouldClose = true;
 }
 
-static const struct xdg_toplevel_listener XDG_TOPLEVEL_LISTENER = {
+static const xdg_toplevel_listener XDG_TOPLEVEL_LISTENER = {
 	.configure = xdg_toplevel_handle_configure,
 	.close = xdg_toplevel_handle_close,
 };
 
 static void SetContentAreaOpaque(LinuxWindowWayland::State& state)
 {
-    struct wl_region* region;
+    wl_region* region;
 
     region = wl_compositor_create_region(LinuxWaylandState::GetCompositor());
     if (!region)
@@ -214,9 +181,9 @@ static bool ResizeWindow(LinuxWindowWayland& window, int width, int height)
 }
 
 static void LibdecorFrameHandleConfigure(
-                        struct libdecor_frame* frame,
-                        struct libdecor_configuration* config,
-                        void* userData)
+    libdecor_frame* frame,
+    libdecor_configuration* config,
+    void* userData)
 {
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
     LinuxWindowWayland::State& state = window->GetState();
@@ -247,7 +214,7 @@ static void LibdecorFrameHandleConfigure(
         height = state.size.height;
     }
 
-    struct libdecor_state* frameState = libdecor_state_new(width, height);
+    libdecor_state* frameState = libdecor_state_new(width, height);
     libdecor_frame_commit(frame, frameState, config);
     libdecor_state_free(frameState);
 
@@ -288,25 +255,25 @@ static void LibdecorFrameHandleConfigure(
         wl_surface_commit(state.wl.surface);
 }
 
-static void LibdecorFrameHandleClose(struct libdecor_frame* frame, void* userData)
+static void LibdecorFrameHandleClose(libdecor_frame* frame, void* userData)
 {
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
     LinuxWindowWayland::State& state = window->GetState();
     state.shouldClose = true;
 }
 
-static void LibdecorFrameHandleCommit(struct libdecor_frame* frame, void* userData)
+static void LibdecorFrameHandleCommit(libdecor_frame* frame, void* userData)
 {
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
     LinuxWindowWayland::State& state = window->GetState();
     wl_surface_commit(state.wl.surface);
 }
 
-static void LibdecorFrameHandleDismissPopup(struct libdecor_frame* frame, const char* seatName, void* userData)
+static void LibdecorFrameHandleDismissPopup(libdecor_frame* frame, const char* seatName, void* userData)
 {
 }
 
-static struct libdecor_frame_interface libdecorFrameInterface =
+static libdecor_frame_interface libdecorFrameInterface =
 {
     LibdecorFrameHandleConfigure,
     LibdecorFrameHandleClose,
@@ -330,7 +297,7 @@ static bool CreateLibdecorFrame(LinuxWindowWayland& window)
         return false;
     }
 
-    struct libdecor_state* frameState = libdecor_state_new(state.size.width, state.size.height);
+    libdecor_state* frameState = libdecor_state_new(state.size.width, state.size.height);
     libdecor_frame_commit(state.libdecor.frame, frameState, NULL);
     libdecor_state_free(frameState);
 
@@ -365,14 +332,14 @@ static bool CreateLibdecorFrame(LinuxWindowWayland& window)
 
 static void CreateFallbackEdge(LinuxWindowWayland& window,
                                FallbackEdge* edge,
-                               struct wl_surface* parent,
-                               struct wl_buffer* buffer,
+                               wl_surface* parent,
+                               wl_buffer* buffer,
                                int x, int y,
                                int width, int height)
 {
     edge->surface = wl_compositor_create_surface(LinuxWaylandState::GetCompositor());
     wl_surface_set_user_data(edge->surface, &window);
-    wl_proxy_set_tag((struct wl_proxy*) edge->surface, LinuxWaylandState::GetTag());
+    wl_proxy_set_tag((wl_proxy*) edge->surface, LinuxWaylandState::GetTag());
     edge->subsurface = wl_subcompositor_get_subsurface(LinuxWaylandState::GetSubcompositor(),
                                                        edge->surface, parent);
     wl_subsurface_set_position(edge->subsurface, x, y);
@@ -381,7 +348,7 @@ static void CreateFallbackEdge(LinuxWindowWayland& window,
     wp_viewport_set_destination(edge->viewport, width, height);
     wl_surface_attach(edge->surface, buffer, 0, 0);
 
-    struct wl_region* region = wl_compositor_create_region(LinuxWaylandState::GetCompositor());
+    wl_region* region = wl_compositor_create_region(LinuxWaylandState::GetCompositor());
     wl_region_add(region, 0, 0, width, height);
     wl_surface_set_opaque_region(edge->surface, region);
     wl_surface_commit(edge->surface);
@@ -390,7 +357,7 @@ static void CreateFallbackEdge(LinuxWindowWayland& window,
 
 static void RandName(char *buf)
 {
-	struct timespec ts;
+	timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
 	long r = ts.tv_nsec;
 	for (int i = 0; i < 6; ++i)
@@ -434,7 +401,7 @@ static int AllocateShmFile(size_t size)
 	return fd;
 }
 
-static struct wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* pixels)
+static wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* pixels)
 {
     const int stride = width * 4;
     const int length = width * height * 4;
@@ -454,7 +421,7 @@ static struct wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* p
         return NULL;
     }
 
-    struct wl_shm_pool* pool = wl_shm_create_pool(LinuxWaylandState::GetShm(), fd, length);
+    wl_shm_pool* pool = wl_shm_create_pool(LinuxWaylandState::GetShm(), fd, length);
 
     close(fd);
 
@@ -470,7 +437,7 @@ static struct wl_buffer* CreateShmBuffer(int width, int height, const uint8_t* p
         *target++ = (uint8_t) alpha;
     }
 
-    struct wl_buffer* buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
+    wl_buffer* buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
     munmap(data, length);
     wl_shm_pool_destroy(pool);
 
@@ -536,7 +503,7 @@ static void DestroyFallbackDecorations(LinuxWindowWayland::State& state)
 }
 
 static void XdgDecorationHandleConfigure(void* userData,
-                                         struct zxdg_toplevel_decoration_v1* decoration,
+                                         zxdg_toplevel_decoration_v1* decoration,
                                          uint32_t mode)
 {
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
@@ -554,7 +521,7 @@ static void XdgDecorationHandleConfigure(void* userData,
         DestroyFallbackDecorations(state);
 }
 
-static const struct zxdg_toplevel_decoration_v1_listener XDG_DECORATION_LISTENER =
+static const zxdg_toplevel_decoration_v1_listener XDG_DECORATION_LISTENER =
 {
     XdgDecorationHandleConfigure,
 };
@@ -691,7 +658,7 @@ static void SetWindowDecorated(LinuxWindowWayland& window, bool decorated)
 
 LinuxWindowWayland::LinuxWindowWayland(const WindowDescriptor& desc)
 {
-    LinuxWaylandContext::Add(this);
+    LinuxWaylandState::AddWindow(this);
     SetDesc(desc);
     Open();
 }
@@ -702,7 +669,7 @@ void LinuxWindowWayland::Open()
     if (!state_.wl.surface)
         LLGL_TRAP("Failed to get Wayland surface");
 
-    wl_proxy_set_tag(reinterpret_cast<struct wl_proxy*>(state_.wl.surface), LinuxWaylandState::GetTag());
+    wl_proxy_set_tag(reinterpret_cast<wl_proxy*>(state_.wl.surface), LinuxWaylandState::GetTag());
     wl_surface_add_listener(state_.wl.surface, &SURFACE_LISTENER, nullptr);
     wl_surface_set_user_data(state_.wl.surface, this);
 
@@ -839,7 +806,7 @@ void LinuxWindowWayland::SetSize(const LLGL::Extent2D& size, bool useClientArea)
 
     if (state_.libdecor.frame)
     {
-        struct libdecor_state* frameState = libdecor_state_new(size.width, size.height);
+        libdecor_state* frameState = libdecor_state_new(size.width, size.height);
         libdecor_frame_commit(state_.libdecor.frame, frameState, NULL);
         libdecor_state_free(frameState);
     }
@@ -889,7 +856,7 @@ LinuxWindowWayland::State& LinuxWindowWayland::GetState()
 
 LinuxWindowWayland::~LinuxWindowWayland()
 {
-    LinuxWaylandContext::Remove(this);
+    LinuxWaylandState::RemoveWindow(this);
 
     DestroyShellObjects(*this);
 

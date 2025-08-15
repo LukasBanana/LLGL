@@ -33,27 +33,26 @@ namespace LLGL {
 
 struct XkbContext
 {
-    void* handle;
-    struct xkb_context*          context;
-    struct xkb_keymap*           keymap;
-    struct xkb_state*            state;
+    xkb_context*          context = nullptr;
+    xkb_keymap*           keymap = nullptr;
+    xkb_state*            state = nullptr;
 
-    struct xkb_compose_state*    composeState;
+    xkb_compose_state*    composeState = nullptr;
 
-    xkb_mod_index_t              controlIndex;
-    xkb_mod_index_t              altIndex;
-    xkb_mod_index_t              shiftIndex;
-    xkb_mod_index_t              superIndex;
-    xkb_mod_index_t              capsLockIndex;
-    xkb_mod_index_t              numLockIndex;
-    unsigned int                 modifiers;
+    xkb_mod_index_t       controlIndex = 0;
+    xkb_mod_index_t       altIndex = 0;
+    xkb_mod_index_t       shiftIndex = 0;
+    xkb_mod_index_t       superIndex = 0;
+    xkb_mod_index_t       capsLockIndex = 0;
+    xkb_mod_index_t       numLockIndex = 0;
+    unsigned int          modifiers = 0;
 };
 
 struct LibdecorContext
 {
-    struct libdecor* context;
-    struct wl_callback* callback;
-    bool ready = false;
+    libdecor*       context  = nullptr;
+    wl_callback*    callback = nullptr;
+    bool            ready    = false;
 };
 
 class LinuxWaylandState
@@ -61,7 +60,6 @@ class LinuxWaylandState
 
     public:
 
-        LinuxWaylandState();
         ~LinuxWaylandState();
 
         static void HandleWaylandEvents(double* timeout);
@@ -78,20 +76,10 @@ class LinuxWaylandState
         static const LibdecorContext& GetLibdecor() noexcept;
         static LLGL::ArrayView<Key> GetKeycodes() noexcept;
         static const LLGL::DynamicVector<LinuxDisplayWayland*>& GetDisplayList() noexcept;
+        static const LLGL::DynamicVector<LinuxWindowWayland*>& GetWindowList() noexcept;
 
-        void BindPointerListener(const wl_pointer_listener& listener) noexcept
-        {
-            pointerListener_ = listener;
-        }
-
-        void BindKeyboardListener(const wl_keyboard_listener& listener) noexcept
-        {
-            keyboardListener_.enter = listener.enter;
-            keyboardListener_.leave = listener.leave;
-            keyboardListener_.key = listener.key;
-            keyboardListener_.modifiers = listener.modifiers;
-            keyboardListener_.repeat_info = listener.repeat_info;
-        }
+        static void AddWindow(LinuxWindowWayland* window);
+        static void RemoveWindow(LinuxWindowWayland* window);
 
     private:
 
@@ -132,45 +120,47 @@ class LinuxWaylandState
         static void HandleOutputDone(void* userData, wl_output* output);
         static void HandleOutputScale(void* userData, wl_output* output, int32_t factor);
         static void HandleOutputName(void* userData, wl_output* wl_output, const char* name);
-        static void HandleOutputDescription(void* userData, struct wl_output* wl_output, const char* description);
+        static void HandleOutputDescription(void* userData, wl_output* wl_output, const char* description);
 
         static void HandleLibdecorReady(void* userData, wl_callback* callback, uint32_t time);
 
     private:
 
-        wl_display* display_;
-        wl_compositor* compositor_;
-        wl_subcompositor* subcompositor_;
-        wl_seat* seat_;
-        wp_viewporter* viewporter_;
-        wl_shm* shm_;
+        wl_registry*         registry_      = nullptr;
+        wl_display*          display_       = nullptr;
+        wl_compositor*       compositor_    = nullptr;
+        wl_subcompositor*    subcompositor_ = nullptr;
+        wl_seat*             seat_          = nullptr;
+        wp_viewporter*       viewporter_    = nullptr;
+        wl_shm*              shm_           = nullptr;
 
-        zxdg_decoration_manager_v1* decorationManager_;
+        zxdg_decoration_manager_v1* decorationManager_ = nullptr;
 
-        wl_pointer* pointer_;
-        LinuxWindowWayland* pointerFocus_;
-        uint32_t serial_;
-        uint32_t pointerEnterSerial_;
+        wl_pointer*            pointer_            = nullptr;
+        LinuxWindowWayland*    pointerFocus_       = nullptr;
+        uint32_t               serial_             = 0;
+        uint32_t               pointerEnterSerial_ = 0;
 
-        wl_keyboard* keyboard_;
-        LinuxWindowWayland* keyboardFocus_;
+        wl_keyboard*        keyboard_      = nullptr;
+        LinuxWindowWayland* keyboardFocus_ = nullptr;
 
-        struct xdg_wm_base *xdg_wm_base_;
+        xdg_wm_base *xdgWmBase_ = nullptr;
 
-        const char* tag_;
+        const char* tag_ = nullptr;
 
-        int keyRepeatTimerfd_;
-        int keyRepeatRate_;
-        int keyRepeatDelay_;
-        int keyRepeatScancode_;
+        int keyRepeatTimerfd_ = 0;
+        int keyRepeatRate_ = 0;
+        int keyRepeatDelay_ = 0;
+        int keyRepeatScancode_ = 0;
 
-        Key keycodes_[256];
+        Key keycodes_[256] = {};
 
         XkbContext xkb_;
 
         LibdecorContext libdecor_;
 
-        LLGL::DynamicVector<LLGL::LinuxDisplayWayland*> displayList_;
+        DynamicVector<LinuxDisplayWayland*> displayList_;
+        DynamicVector<LinuxWindowWayland*> windowList_;
 
         bool initialized_ = false;
 

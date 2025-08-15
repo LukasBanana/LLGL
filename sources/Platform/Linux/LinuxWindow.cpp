@@ -62,7 +62,7 @@ bool Surface::ProcessEvents()
         double timeout = 0.0;
         LinuxWaylandState::HandleWaylandEvents(&timeout);
 
-        for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
+        for (LinuxWindowWayland* window : LinuxWaylandState::GetWindowList())
         {
             window->ProcessEvents();
         }

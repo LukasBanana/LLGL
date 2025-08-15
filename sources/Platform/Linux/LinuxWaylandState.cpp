@@ -80,7 +80,7 @@ xdg_wm_base_listener LinuxWaylandState::xdgWmBaseListener_ = {
 
 void LinuxWaylandState::HandleRegistryGlobal(
     void* userData,
-    struct wl_registry* registry,
+    wl_registry* registry,
     uint32_t name,
     const char* interface,
     uint32_t version)
@@ -110,10 +110,10 @@ void LinuxWaylandState::HandleRegistryGlobal(
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
-        GetInstance().xdg_wm_base_ = static_cast<xdg_wm_base*>(
+        GetInstance().xdgWmBase_ = static_cast<xdg_wm_base*>(
             wl_registry_bind(registry, name, &xdg_wm_base_interface, 1)
         );
-        xdg_wm_base_add_listener(GetInstance().xdg_wm_base_, &xdgWmBaseListener_, nullptr);
+        xdg_wm_base_add_listener(GetInstance().xdgWmBase_, &xdgWmBaseListener_, nullptr);
     }
     else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
     {
@@ -192,7 +192,7 @@ void LibdecorHandleError(libdecor* context,
     LLGL::Log::Errorf("Wayland: libdecor error %u: %s", error, message);
 }
 
-static struct libdecor_interface LIBDECOR_INTERFACE =
+static libdecor_interface LIBDECOR_INTERFACE =
 {
     LibdecorHandleError
 };
@@ -203,25 +203,25 @@ static struct libdecor_interface LIBDECOR_INTERFACE =
 
 void LinuxWaylandState::HandlePointerEnter(
     void*               userData,
-    struct wl_pointer*  pointer,
+    wl_pointer*  pointer,
     uint32_t            serial,
-    struct wl_surface*  surface,
+    wl_surface*  surface,
     wl_fixed_t          surface_x,
     wl_fixed_t          surface_y)
 {
     if (!surface)
         return;
 
-    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != LinuxWaylandState::GetInstance().GetTag())
+    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != GetInstance().GetTag())
         return;
 
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
     if (!window)
         return;
 
-    LinuxWaylandState::GetInstance().serial_ = serial;
-    LinuxWaylandState::GetInstance().pointerEnterSerial_ = serial;
-    LinuxWaylandState::GetInstance().pointerFocus_ = window;
+    GetInstance().serial_ = serial;
+    GetInstance().pointerEnterSerial_ = serial;
+    GetInstance().pointerFocus_ = window;
 
     LinuxWindowWayland::State& state = window->GetState();
 
@@ -233,9 +233,9 @@ void LinuxWaylandState::HandlePointerEnter(
 
 void LinuxWaylandState::HandlePointerLeave(
     void*              userData,
-    struct wl_pointer* pointer,
+    wl_pointer* pointer,
     uint32_t           serial,
-    struct wl_surface* surface)
+    wl_surface* surface)
 {
     if (!surface)
         return;
@@ -244,11 +244,11 @@ void LinuxWaylandState::HandlePointerLeave(
     if (!window)
         return;
 
-    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != LinuxWaylandState::GetInstance().GetTag())
+    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != GetInstance().GetTag())
         return;
 
-    LinuxWaylandState::GetInstance().serial_ = serial;
-    LinuxWaylandState::GetInstance().pointerFocus_ = nullptr;
+    GetInstance().serial_ = serial;
+    GetInstance().pointerFocus_ = nullptr;
 
     LinuxWindowWayland::State& state = window->GetState();
 
@@ -260,12 +260,12 @@ void LinuxWaylandState::HandlePointerLeave(
 
 void LinuxWaylandState::HandlePointerMotion(
     void*               userData,
-    struct wl_pointer*  pointer,
+    wl_pointer*  pointer,
     uint32_t            time,
     wl_fixed_t          surface_x,
     wl_fixed_t          surface_y)
 {
-    LinuxWindowWayland* window = LinuxWaylandState::GetInstance().pointerFocus_;
+    LinuxWindowWayland* window = GetInstance().pointerFocus_;
     if (!window)
         return;
 
@@ -282,13 +282,13 @@ void LinuxWaylandState::HandlePointerMotion(
 
 void LinuxWaylandState::HandlePointerButton(
     void*               userData,
-    struct wl_pointer*  pointer,
+    wl_pointer*  pointer,
     uint32_t            serial,
     uint32_t            time,
     uint32_t            button,
     uint32_t            state)
 {
-    LinuxWindowWayland* window = LinuxWaylandState::GetInstance().pointerFocus_;
+    LinuxWindowWayland* window = GetInstance().pointerFocus_;
     if (!window)
         return;
 
@@ -297,19 +297,19 @@ void LinuxWaylandState::HandlePointerButton(
     if (!windowState.hovered)
         return;
 
-    LinuxWaylandState::GetInstance().serial_ = serial;
+    GetInstance().serial_ = serial;
 
     window->ProcessMouseKeyEvent(button, state == WL_POINTER_BUTTON_STATE_PRESSED);
 }
 
 void LinuxWaylandState::HandlePointerAxis(
     void*               userData,
-    struct wl_pointer*  pointer,
+    wl_pointer*  pointer,
     uint32_t            time,
     uint32_t            axis,
     wl_fixed_t          value)
 {
-    LinuxWindowWayland* window = LinuxWaylandState::GetInstance().pointerFocus_;
+    LinuxWindowWayland* window = GetInstance().pointerFocus_;
     if (!window)
         return;
 
@@ -323,16 +323,16 @@ void LinuxWaylandState::HandlePointerAxis(
 
 void LinuxWaylandState::HandleKeyboardEnter(
     void*               userData,
-    struct wl_keyboard* keyboard,
+    wl_keyboard* keyboard,
     uint32_t            serial,
-    struct wl_surface*  surface,
-    struct wl_array*    keys)
+    wl_surface*  surface,
+    wl_array*    keys)
 {
     // Happens in the case we just destroyed the surface.
     if (!surface)
         return;
 
-    if (wl_proxy_get_tag((struct wl_proxy*) surface) != LinuxWaylandState().GetTag())
+    if (wl_proxy_get_tag((wl_proxy*) surface) != GetTag())
         return;
 
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
@@ -350,32 +350,32 @@ void LinuxWaylandState::HandleKeyboardEnter(
 
 void LinuxWaylandState::HandleKeyboardLeave(
     void* userData,
-    struct wl_keyboard* keyboard,
+    wl_keyboard* keyboard,
     uint32_t serial,
-    struct wl_surface* surface)
+    wl_surface* surface)
 {
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(userData);
 
     if (!window)
         return;
 
-    LinuxWaylandState::GetInstance().serial_ = serial;
-    LinuxWaylandState::GetInstance().keyboardFocus_ = nullptr;
+    GetInstance().serial_ = serial;
+    GetInstance().keyboardFocus_ = nullptr;
 
     window->ProcessFocusEvent(false);
 }
 
 Key LinuxWaylandState::TranslateKey(uint32_t scancode)
 {
-    if (scancode < LinuxWaylandState::GetInstance().GetKeycodes().size())
-        return LinuxWaylandState::GetInstance().GetKeycodes()[scancode];
+    if (scancode < GetInstance().GetKeycodes().size())
+        return GetInstance().GetKeycodes()[scancode];
 
     return Key::Any;
 }
 
 void LinuxWaylandState::HandleKeyboardKey(
     void* userData,
-    struct wl_keyboard* keyboard,
+    wl_keyboard* keyboard,
     uint32_t serial,
     uint32_t time,
     uint32_t scancode,
@@ -387,7 +387,7 @@ void LinuxWaylandState::HandleKeyboardKey(
 
     GetInstance().serial_ = serial;
 
-    struct itimerspec timer = {0};
+    itimerspec timer = {0};
 
     const bool down = state == WL_KEYBOARD_KEY_STATE_PRESSED;
 
@@ -413,7 +413,7 @@ void LinuxWaylandState::HandleKeyboardKey(
 
 void LinuxWaylandState::HandleKeyboardModifiers(
     void* userData,
-    struct wl_keyboard* keyboard,
+    wl_keyboard* keyboard,
     uint32_t serial,
     uint32_t modsDepressed,
     uint32_t modsLatched,
@@ -458,7 +458,7 @@ void LinuxWaylandState::HandleKeyboardModifiers(
 
 void LinuxWaylandState::HandleKeyboardRepeatInfo(
     void* userData,
-    struct wl_keyboard* keyboard,
+    wl_keyboard* keyboard,
     int32_t rate,
     int32_t delay)
 {
@@ -470,16 +470,16 @@ void LinuxWaylandState::HandleKeyboardRepeatInfo(
 }
 
 void LinuxWaylandState::HandleKeyboardKeymap(
-    void*               userData,
-    struct wl_keyboard* keyboard,
-    uint32_t            format,
-    int                 fd,
-    uint32_t            size)
+    void*           userData,
+    wl_keyboard*    keyboard,
+    uint32_t        format,
+    int             fd,
+    uint32_t        size)
 {
-    struct xkb_keymap* keymap;
-    struct xkb_state* state;
-    struct xkb_compose_table* composeTable;
-    struct xkb_compose_state* composeState;
+    xkb_keymap* keymap;
+    xkb_state* state;
+    xkb_compose_table* composeTable;
+    xkb_compose_state* composeState;
 
     char* mapStr;
     const char* locale;
@@ -497,7 +497,7 @@ void LinuxWaylandState::HandleKeyboardKeymap(
         return;
     }
 
-    keymap = xkb_keymap_new_from_string(LinuxWaylandState::GetInstance().xkb_.context,
+    keymap = xkb_keymap_new_from_string(GetInstance().xkb_.context,
                                         mapStr,
                                         XKB_KEYMAP_FORMAT_TEXT_V1,
                                         XKB_KEYMAP_COMPILE_NO_FLAGS);
@@ -553,7 +553,7 @@ void LinuxWaylandState::HandleKeyboardKeymap(
 
 void LinuxWaylandState::HandleOutputGeometry(
     void* userData,
-    struct wl_output* output,
+    wl_output* output,
     int32_t x,
     int32_t y,
     int32_t physicalWidth,
@@ -570,16 +570,17 @@ void LinuxWaylandState::HandleOutputGeometry(
     display->widthMM = physicalWidth;
     display->heightMM = physicalHeight;
 
-    if (strlen(display->name) == 0)
-        snprintf(display->name, sizeof(display->name), "%s %s", make, model);
+    if (strlen(display->deviceName) == 0)
+        snprintf(display->deviceName, sizeof(display->deviceName), "%s %s", make, model);
 }
 
-void LinuxWaylandState::HandleOutputMode(void* userData,
-                             struct wl_output* output,
-                             uint32_t flags,
-                             int32_t width,
-                             int32_t height,
-                             int32_t refresh)
+void LinuxWaylandState::HandleOutputMode(
+    void* userData,
+    wl_output* output,
+    uint32_t flags,
+    int32_t width,
+    int32_t height,
+    int32_t refresh)
 {
     WaylandDisplayData* display = static_cast<WaylandDisplayData*>(userData);
 
@@ -593,7 +594,7 @@ void LinuxWaylandState::HandleOutputMode(void* userData,
         display->currentdisplayMode = display->displayModes.size() - 1;
 }
 
-void LinuxWaylandState::HandleOutputDone(void* userData, struct wl_output* output)
+void LinuxWaylandState::HandleOutputDone(void* userData, wl_output* output)
 {
     WaylandDisplayData* monitor = static_cast<WaylandDisplayData*>(userData);
 
@@ -606,23 +607,24 @@ void LinuxWaylandState::HandleOutputDone(void* userData, struct wl_output* outpu
     }
 }
 
-void LinuxWaylandState::HandleOutputScale(void* userData,
-                              struct wl_output* output,
-                              int32_t factor)
+void LinuxWaylandState::HandleOutputScale(
+    void*         userData,
+    wl_output*    output,
+    int32_t       factor)
 {
     WaylandDisplayData* monitor = static_cast<WaylandDisplayData*>(userData);
 
     monitor->scale = factor;
 }
 
-void LinuxWaylandState::HandleOutputName(void* userData, struct wl_output* wl_output, const char* name)
+void LinuxWaylandState::HandleOutputName(void* userData, wl_output* wl_output, const char* name)
 {
     WaylandDisplayData* monitor = static_cast<WaylandDisplayData*>(userData);
 
-    strncpy(monitor->name, name, sizeof(monitor->name) - 1);
+    strncpy(monitor->deviceName, name, sizeof(monitor->deviceName) - 1);
 }
 
-void LinuxWaylandState::HandleOutputDescription(void* userData, struct wl_output* wl_output, const char* description)
+void LinuxWaylandState::HandleOutputDescription(void* userData, wl_output* wl_output, const char* description)
 {
 }
 
@@ -634,14 +636,78 @@ LinuxWaylandState& LinuxWaylandState::GetInstance()
     return instance;
 }
 
-LinuxWaylandState::LinuxWaylandState()
+void LinuxWaylandState::AddWindow(LinuxWindowWayland *window)
 {
-    
+    GetInstance().windowList_.push_back(window);
+}
+
+void LinuxWaylandState::RemoveWindow(LinuxWindowWayland *window)
+{
+    LinuxWaylandState& instance = GetInstance();
+
+    for (auto it = instance.windowList_.begin(); it != instance.windowList_.end(); ++it)
+    {
+        if ((*it) == window)
+        {
+            instance.windowList_.erase(it);
+            break;
+        }
+    }
 }
 
 LinuxWaylandState::~LinuxWaylandState()
 {
-    
+    for (LinuxDisplayWayland* display : displayList_) {
+        wl_output_destroy(display->GetData().output);
+    }
+
+    displayList_.clear();
+
+    if (libdecor_.context)
+    {
+        // Allow libdecor to finish receiving all its requested globals
+        // and ensure the associated sync callback object is destroyed
+        while (!libdecor_.ready)
+            LinuxWaylandState::HandleWaylandEvents(nullptr);
+
+        libdecor_unref(libdecor_.context);
+    }
+
+    if (xkb_.keymap)
+        xkb_keymap_unref(xkb_.keymap);
+    if (xkb_.state)
+        xkb_state_unref(xkb_.state);
+    if (xkb_.context)
+        xkb_context_unref(xkb_.context);
+
+    if (subcompositor_)
+        wl_subcompositor_destroy(subcompositor_);
+    if (compositor_)
+        wl_compositor_destroy(compositor_);
+    if (shm_)
+        wl_shm_destroy(shm_);
+    if (viewporter_)
+        wp_viewporter_destroy(viewporter_);
+    if (decorationManager_)
+        zxdg_decoration_manager_v1_destroy(decorationManager_);
+    if (xdgWmBase_)
+        xdg_wm_base_destroy(xdgWmBase_);
+    if (pointer_)
+        wl_pointer_destroy(pointer_);
+    if (keyboard_)
+        wl_keyboard_destroy(keyboard_);
+    if (seat_)
+        wl_seat_destroy(seat_);
+    if (registry_)
+        wl_registry_destroy(registry_);
+    if (display_)
+    {
+        wl_display_flush(display_);
+        wl_display_disconnect(display_);
+    }
+
+    if (keyRepeatTimerfd_ >= 0)
+        close(keyRepeatTimerfd_);
 }
 
 void LinuxWaylandState::Init()
@@ -660,9 +726,9 @@ void LinuxWaylandState::Init()
     if (!display_)
         LLGL_TRAP("Failed to connect to the Wayland display");
 
-    struct wl_registry* registry = wl_display_get_registry(display_);
+    registry_ = wl_display_get_registry(display_);
 
-    wl_registry_add_listener(registry, &registryListener_, this);
+    wl_registry_add_listener(registry_, &registryListener_, this);
 
     wl_display_roundtrip(display_);
     wl_display_roundtrip(display_);
@@ -690,7 +756,7 @@ void LinuxWaylandState::AddWaylandOutput(wl_output* output, uint32_t name, uint3
 
     WaylandDisplayData data;
     data.output = output;
-    data.index = name;
+    data.name = name;
 
     LinuxDisplayWayland* display = new LinuxDisplayWayland(data);
     displayList_.push_back(display);
@@ -705,7 +771,7 @@ static bool FlushDisplay()
         if (errno != EAGAIN)
             return false;
 
-        struct pollfd fd = { wl_display_get_fd(LinuxWaylandState::GetDisplay()), POLLOUT };
+        pollfd fd = { wl_display_get_fd(LinuxWaylandState::GetDisplay()), POLLOUT };
 
         while (poll(&fd, 1, -1) == -1)
         {
@@ -716,7 +782,7 @@ static bool FlushDisplay()
     return true;
 }
 
-static bool PollPosix(struct pollfd* fds, nfds_t count, double* timeout)
+static bool PollPosix(pollfd* fds, nfds_t count, double* timeout)
 {
     for (;;)
     {
@@ -727,12 +793,12 @@ static bool PollPosix(struct pollfd* fds, nfds_t count, double* timeout)
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__CYGWIN__)
             const time_t seconds = (time_t) *timeout;
             const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
+            const timespec ts = { seconds, nanoseconds };
             const int result = ppoll(fds, count, &ts, NULL);
 #elif defined(__NetBSD__)
             const time_t seconds = (time_t) *timeout;
             const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
+            const timespec ts = { seconds, nanoseconds };
             const int result = pollts(fds, count, &ts, NULL);
 #else
             const int milliseconds = (int) (*timeout * 1e3);
@@ -766,7 +832,7 @@ void LinuxWaylandState::HandleWaylandEventsInternal(double* timeout)
     bool event = false;
 
     enum { DISPLAY_FD, KEYREPEAT_FD, LIBDECOR_FD };
-    struct pollfd fds[3];
+    pollfd fds[3];
     fds[DISPLAY_FD] = { wl_display_get_fd(display_), POLLIN };
     fds[KEYREPEAT_FD] = { keyRepeatTimerfd_, POLLIN };
     fds[LIBDECOR_FD] = { -1, POLLIN };
@@ -788,7 +854,7 @@ void LinuxWaylandState::HandleWaylandEventsInternal(double* timeout)
         {
             wl_display_cancel_read(display_);
 
-            for (LinuxWindowWayland* window : LinuxWaylandContext::GetWindows())
+            for (LinuxWindowWayland* window : GetWindowList())
             {
                 window->GetState().shouldClose = true;
             }
@@ -990,7 +1056,7 @@ wl_shm* LinuxWaylandState::GetShm() noexcept
 
 xdg_wm_base* LinuxWaylandState::GetXdgWmBase() noexcept
 {
-    return GetInstance().xdg_wm_base_;
+    return GetInstance().xdgWmBase_;
 }
 
 zxdg_decoration_manager_v1* LinuxWaylandState::GetDecorationManager() noexcept
@@ -1021,6 +1087,11 @@ LLGL::ArrayView<Key> LinuxWaylandState::GetKeycodes() noexcept
 const LLGL::DynamicVector<LinuxDisplayWayland*>& LinuxWaylandState::GetDisplayList() noexcept
 {
     return GetInstance().displayList_;
+}
+
+const LLGL::DynamicVector<LinuxWindowWayland*>& LinuxWaylandState::GetWindowList() noexcept
+{
+    return GetInstance().windowList_;
 }
 
 }

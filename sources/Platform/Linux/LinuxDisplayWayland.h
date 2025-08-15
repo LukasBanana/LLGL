@@ -23,26 +23,26 @@ namespace LLGL
 
 
 struct WaylandDisplayData {
-    char name[128];
+    char deviceName[128] = {};
 
     std::vector<DisplayMode> displayModes;
 
-    wl_output* output;
+    wl_output* output = nullptr;
 
-    uint32_t currentdisplayMode;
+    uint32_t currentdisplayMode = 0;
 
-    uint32_t index;
+    uint32_t name = 0;
 
     // Physical width in millimeters
-    int widthMM;
+    int widthMM = 0;
 
     // Physical height in millimeters
-    int heightMM;
+    int heightMM = 0;
 
-    int x;
-    int y;
+    int x = 0;
+    int y = 0;
 
-    int scale;
+    int scale = 1;
 };
 
 class LinuxDisplayWayland : public LinuxDisplay
