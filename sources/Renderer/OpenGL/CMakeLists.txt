@@ -255,7 +255,11 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         
         add_llgl_module(LLGL_OpenGL LLGL_BUILD_RENDERER_OPENGL "${FilesGL}")
         
-        target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})      
+        if(LLGL_LINUX_ENABLE_WAYLAND)
+            target_link_libraries(LLGL_OpenGL LLGL EGL ${OPENGL_LIBRARIES})
+        else()
+            target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
+        endif()
 
         if(APPLE)
             ADD_PROJECT_DEFINE(LLGL_OpenGL GL_SILENCE_DEPRECATION)
