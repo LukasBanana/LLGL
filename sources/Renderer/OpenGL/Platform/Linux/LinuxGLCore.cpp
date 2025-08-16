@@ -8,6 +8,12 @@
 #include "LinuxGLCore.h"
 #include "../../../../Core/MacroUtils.h"
 
+// Unity build on Linux fails to include this macro from MacroUtils.h,
+// possibly due to this file being outside the LLGL_OpenGL backend.
+#ifndef LLGL_CASE_TO_STR
+#   define LLGL_CASE_TO_STR(VALUE) \
+        case VALUE: return #VALUE
+#endif
 
 namespace LLGL
 {
