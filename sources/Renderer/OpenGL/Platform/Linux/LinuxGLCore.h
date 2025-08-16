@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_ANDROID_GL_CORE_H
-#define LLGL_ANDROID_GL_CORE_H
+#ifndef LLGL_LINUX_GL_CORE_H
+#define LLGL_LINUX_GL_CORE_H
 
 
 #include <EGL/egl.h>
