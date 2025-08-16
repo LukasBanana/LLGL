@@ -8,6 +8,7 @@
 #ifndef LLGL_LINUX_GL_CORE_H
 #define LLGL_LINUX_GL_CORE_H
 
+#if LLGL_LINUX_ENABLE_WAYLAND
 
 #include <EGL/egl.h>
 
@@ -25,8 +26,9 @@ const char* EGLErrorToString();
 
 } // /namespace LLGL
 
+#endif // LLGL_LINUX_ENABLE_WAYLAND
 
-#endif
+#endif // LLGL_LINUX_GL_CORE_H
 
 
 

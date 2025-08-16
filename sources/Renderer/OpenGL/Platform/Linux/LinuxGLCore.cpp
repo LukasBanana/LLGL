@@ -5,6 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#if LLGL_LINUX_ENABLE_WAYLAND
+
 #include "LinuxGLCore.h"
 #include "../../../../Core/MacroUtils.h"
 
@@ -50,6 +52,6 @@ const char* EGLErrorToString()
 
 } // /namespace LLGL
 
-
+#endif
 
 // ================================================================================
