@@ -264,11 +264,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         ADD_PROJECT_DEFINE(LLGL_OpenGL LLGL_OPENGL)
 
         if(LLGL_LINUX_ENABLE_WAYLAND)
-            message("OpenGL LLGL_LINUX_ENABLE_WAYLAND is true")
-
             if(OpenGL_EGL_FOUND)
-                message("OpenGL OpenGL_EGL_FOUND is true")
-
                 include_directories(${OPENGL_EGL_INCLUDE_DIRS})
             
                 target_link_libraries(LLGL_OpenGL LLGL OpenGL::EGL wayland-egl)
