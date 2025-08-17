@@ -221,10 +221,10 @@ function(find_source_files OUTPUT_LIST FILTERS)
             list(APPEND FilteredProjectDirs "${ProjectSubdir}/${Filter}")
         endforeach()
     endforeach()
-    
+
     # Find all source files
     file(GLOB FilteredProjectFiles ${FilteredProjectDirs})
-    
+
     # Write filtered files to output variable
     set(${OUTPUT_LIST} ${${OUTPUT_LIST}} ${FilteredProjectFiles} PARENT_SCOPE)
 endfunction()
@@ -245,7 +245,7 @@ function(add_project_resource_files OUTPUT_LIST SRC_FOLDER)
             list(APPEND ResourceFiles "${SharedResourceFiles}" "${ProjectResourceFiles}")
         endif()
     endforeach()
-    
+
     # Write expanded resource filenames to output variable
     set(${OUTPUT_LIST} ${${OUTPUT_LIST}} ${ResourceFiles} PARENT_SCOPE)
 endfunction()
@@ -346,13 +346,13 @@ function(add_llgl_module MODULE_NAME DEFINE_NAME SRC_FILES)
     else()
         add_library(${MODULE_NAME} SHARED ${SRC_FILES})
     endif()
-    
+
     # Keep track of all active module names
     append_global_property(LLGL_GLOBAL_MODULE_LIST None ${MODULE_NAME})
-    
+
     # Add basic link libraries and properties
     set_llgl_module_properties(${MODULE_NAME})
-    
+
     ADD_PROJECT_DEFINE(LLGL ${DEFINE_NAME})
 endfunction()
 
@@ -467,7 +467,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     else()
         set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG})
     endif()
-    
+
     # Configure working directory and project solution folder
     if(${PROJECT_NAME} MATCHES "Example_C99_+")
         string(SUBSTRING ${PROJECT_NAME} 12 -1 PROJECT_BASE_NAME)
@@ -684,7 +684,6 @@ if(LLGL_ANDROID_PLATFORM)
     source_group("native_app_glue" FILES ${FilesAndroidNativeAppGlue})
 endif()
 
-
 # === Include directories ===
 
 include_directories("${PROJECT_INCLUDE_DIR}")
@@ -746,6 +745,71 @@ else()
     set_target_properties(LLGL PROPERTIES BUILD_RPATH "\$ORIGIN")
 endif()
 
+# Generate Wayland protocols
+if(LLGL_LINUX_ENABLE_WAYLAND)
+    find_program(WAYLAND_SCANNER_EXECUTABLE NAMES wayland-scanner)
+    if (NOT WAYLAND_SCANNER_EXECUTABLE)
+        message(FATAL_ERROR "Failed to find wayland-scanner")
+    endif()
+
+    file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols)
+
+    # xdg-shell.xml
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-protocol.c
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    # xdg-decoration-unstable-v1.xml
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header < /usr/share/wayland-protocols/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml > xdg-decoration-client-protocol.h
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-decoration-client-protocol.h
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code < /usr/share/wayland-protocols/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml > xdg-decoration-protocol.c
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-decoration-protocol.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    # viewporter.xml
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header < /usr/share/wayland-protocols/stable/viewporter/viewporter.xml > viewporter-client-protocol.h
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/viewporter-client-protocol.h
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    add_custom_command(
+        COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code < /usr/share/wayland-protocols/stable/viewporter/viewporter.xml > viewporter-protocol.c
+        OUTPUT ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/viewporter-protocol.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols
+        VERBATIM
+    )
+
+    target_sources(
+        LLGL
+        PRIVATE ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-client-protocol.h
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-shell-protocol.c
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-decoration-client-protocol.h
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/xdg-decoration-protocol.c
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/viewporter-client-protocol.h
+                ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/protocols/viewporter-protocol.c
+    )
+endif()
+
 include(GNUInstallDirs)
 target_include_directories(LLGL INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
@@ -767,6 +831,16 @@ elseif(EMSCRIPTEN)
     target_link_libraries(LLGL embind)
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
+    if(LLGL_LINUX_ENABLE_WAYLAND)
+        find_library(LIBDECOR_LIBRARY NAMES libdecor-0.so)
+        find_path(LIBDECOR_INCLUDE_DIR NAMES libdecor-0)
+
+        if (NOT LIBDECOR_LIBRARY OR NOT LIBDECOR_INCLUDE_DIR)
+            message(FATAL_ERROR "libdecor not found. Please install it.")
+        endif()
+
+        target_link_libraries(LLGL wayland-client xkbcommon ${LIBDECOR_LIBRARY})
+    endif()
 #elseif(LLGL_UWP_PLATFORM)
 #    set_target_properties(LLGL PROPERTIES VS_WINRT_REFERENCES "Windows.Foundation.UniversalApiContract")
 endif()
