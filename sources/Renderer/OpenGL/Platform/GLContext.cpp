@@ -118,6 +118,7 @@ bool GLContext::IsSharableForSurface(const Surface *surface) const
     return true;
 }
 
+
 } // /namespace LLGL
 
 

@@ -8,6 +8,7 @@
 #ifndef LLGL_LINUX_DISPLAY_WAYLAND_H
 #define LLGL_LINUX_DISPLAY_WAYLAND_H
 
+
 #if LLGL_LINUX_ENABLE_WAYLAND
 
 #include <LLGL/Container/DynamicVector.h>
@@ -18,34 +19,32 @@
 
 struct wl_output;
 
+
 namespace LLGL
 {
 
 
-struct WaylandDisplayData {
-    char deviceName[128] = {};
+struct WaylandDisplayData
+{
+    char                        deviceName[128]     = {};
 
-    std::vector<DisplayMode> displayModes;
+    std::vector<DisplayMode>    displayModes;
 
-    wl_output* output = nullptr;
+    wl_output*                  output              = nullptr;
 
-    uint32_t currentdisplayMode = 0;
+    std::uint32_t               currentdisplayMode  = 0;
+    std::uint32_t               name                = 0;
 
-    uint32_t name = 0;
+    int                         widthMM             = 0; // Physical width in millimeters
+    int                         heightMM            = 0; // Physical height in millimeters
 
-    // Physical width in millimeters
-    int widthMM = 0;
+    int                         x                   = 0;
+    int                         y                   = 0;
 
-    // Physical height in millimeters
-    int heightMM = 0;
-
-    int x = 0;
-    int y = 0;
-
-    int scale = 1;
+    int                         scale               = 1;
 };
 
-class LinuxDisplayWayland : public LinuxDisplay
+class LinuxDisplayWayland final : public LinuxDisplay
 {
 
     public:
@@ -79,13 +78,16 @@ class LinuxDisplayWayland : public LinuxDisplay
         wl_output* GetNative() const;
 
     private:
+
         WaylandDisplayData data_;
 
 };
 
+
 } // /namespace LLGL
 
 #endif // LLGL_LINUX_ENABLE_WAYLAND
+
 
 #endif // LLGL_LINUX_DISPLAY_WAYLAND_H
 

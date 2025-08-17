@@ -19,6 +19,7 @@
 namespace LLGL
 {
 
+
 static bool IsWaylandSupported()
 {
     const char* const session = getenv("XDG_SESSION_TYPE");
@@ -32,9 +33,11 @@ static bool IsWaylandSupported()
 
 static bool g_isWaylandSupported = IsWaylandSupported();
 
+
 /*
  * Window class
  */
+
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     #if LLGL_LINUX_ENABLE_WAYLAND
@@ -43,35 +46,33 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
         return MakeUnique<LinuxWindowWayland>(desc);
     }
     else
+    #endif // /LLGL_LINUX_ENABLE_WAYLAND
     {
-    #endif
         return MakeUnique<LinuxWindowX11>(desc);
-    #if LLGL_LINUX_ENABLE_WAYLAND
     }
-    #endif
 }
+
 
 /*
  * Surface class
  */
+
 bool Surface::ProcessEvents()
 {
-#if LLGL_LINUX_ENABLE_WAYLAND
+    #if LLGL_LINUX_ENABLE_WAYLAND
     if (g_isWaylandSupported)
     {
         double timeout = 0.0;
         LinuxWaylandState::HandleWaylandEvents(&timeout);
 
         for (LinuxWindowWayland* window : LinuxWaylandState::GetWindowList())
-        {
-            window->ProcessEvents();
-        }
+            window->ProcessEventsInternal();
 
         return true;
     }
     else
+    #endif // /LLGL_LINUX_ENABLE_WAYLAND
     {
-#endif
         ::Display* display = LinuxSharedDisplayX11::GetShared()->GetNative();
 
         XEvent event;
@@ -84,16 +85,14 @@ bool Surface::ProcessEvents()
             if (void* userData = LinuxX11Context::Find(display, event.xany.window))
             {
                 LinuxWindowX11* wnd = static_cast<LinuxWindowX11*>(userData);
-                wnd->ProcessEvent(event);
+                wnd->ProcessEventInternal(event);
             }
         }
 
         XFlush(display);
 
         return true;
-#if LLGL_LINUX_ENABLE_WAYLAND
     }
-#endif
 }
 
 } // /namespace LLGL

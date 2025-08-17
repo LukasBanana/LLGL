@@ -86,6 +86,7 @@ class LinuxGLContextX11 : public LinuxGLContext
         int             samples_    = 1;
         bool            isProxyGLC_ = false;
         Surface *       surface_    = nullptr;
+
 };
 
 

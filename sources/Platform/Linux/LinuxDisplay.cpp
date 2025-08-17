@@ -15,8 +15,10 @@
 #include "../../Core/CoreUtils.h"
 #include "LinuxDisplayX11.h"
 
+
 namespace LLGL
 {
+
 
 static std::vector<std::unique_ptr<LinuxDisplayX11>>   g_displayList;
 static std::vector<Display*>                           g_displayRefList;
@@ -93,16 +95,19 @@ bool Display::SetCursorPosition(const Offset2D& position)
 
 Offset2D Display::GetCursorPosition()
 {
-    return g_primaryDisplay->GetCursorPosition();
+    return g_primaryDisplay->GetCursorPositionInternal();
 }
 
 } // /namespace LLGL
 
-#else
+#else // LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxWaylandState.h"
 
-namespace LLGL {
+
+namespace LLGL
+{
+
 
 std::size_t Display::Count()
 {
@@ -114,7 +119,6 @@ Display* const * Display::GetList()
     // TODO
     return nullptr;
 }
-
 
 Display* Display::Get(std::size_t index)
 {
@@ -141,20 +145,21 @@ bool Display::IsCursorShown()
 
 bool Display::SetCursorPosition(const Offset2D& position)
 {
-    // Wayland clients can't set cursor position.
+    /* Wayland clients can't set cursor position. */
     return false;
 }
 
 Offset2D Display::GetCursorPosition()
 {
-    // There is no an easy way to obtain the global cursor position in Wayland.
-    return Offset2D(0, 0);
+    /* There is no an easy way to obtain the global cursor position in Wayland. */
+    return Offset2D{ 0, 0 };
 }
 
 
 } // /namespace LLGL
 
-#endif
+#endif // /LLGL_LINUX_ENABLE_WAYLAND
+
 
 
 // ================================================================================

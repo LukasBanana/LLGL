@@ -17,6 +17,7 @@
 namespace LLGL
 {
 
+
 // Wrapper for XContext singleton.
 class LinuxX11Context
 {
@@ -39,7 +40,9 @@ class LinuxX11Context
 
 };
 
-class LinuxWindowX11 : public Window {
+class LinuxWindowX11 final : public Window
+{
+
     public:
 
         #include <LLGL/Backend/Window.inl>
@@ -51,11 +54,11 @@ class LinuxWindowX11 : public Window {
 
     public:
 
-        void ProcessEvent(XEvent& event);
+        void ProcessEventInternal(XEvent& event);
 
     private:
 
-        void Open();
+        void OpenNativeWindow();
 
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
@@ -66,6 +69,7 @@ class LinuxWindowX11 : public Window {
         void PostMouseKeyEvent(Key key, bool down);
 
     private:
+
         WindowDescriptor            desc_;
         Offset2D                    prevMousePos_;
 
@@ -78,7 +82,9 @@ class LinuxWindowX11 : public Window {
         ::XVisualInfo*              visual_             = nullptr;
 
         ::Atom                      closeWndAtom_;
+
 };
+
 
 } // /namespace LLGL
 

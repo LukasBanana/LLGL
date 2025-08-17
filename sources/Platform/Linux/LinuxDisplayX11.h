@@ -8,10 +8,12 @@
 #ifndef LLGL_LINUX_DISPLAY_X11_H
 #define LLGL_LINUX_DISPLAY_X11_H
 
+
 #include <memory>
 #include <X11/Xlib.h>
 
 #include "LinuxDisplay.h"
+
 
 namespace LLGL
 {
@@ -48,7 +50,7 @@ class LinuxSharedDisplayX11
 
 };
 
-class LinuxDisplayX11 : public LinuxDisplay
+class LinuxDisplayX11 final : public LinuxDisplay
 {
 
     public:
@@ -82,6 +84,7 @@ class LinuxDisplayX11 : public LinuxDisplay
         int                                     screen_             = 0;
 
 };
+
 
 } // /namespace LLGL
 

@@ -17,6 +17,7 @@
 namespace LLGL
 {
 
+
 LinuxX11Context::LinuxX11Context() :
     ctx_ { XUniqueContext() }
 {
@@ -67,7 +68,7 @@ static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 LinuxWindowX11::LinuxWindowX11(const WindowDescriptor& desc) :
     desc_ { desc }
 {
-    Open();
+    OpenNativeWindow();
     LinuxX11Context::Save(display_, wnd_, this);
 }
 
@@ -156,12 +157,8 @@ void LinuxWindowX11::Show(bool show)
 
 bool LinuxWindowX11::IsShown() const
 {
-    XWindowAttributes attr;
-    if (XGetWindowAttributes(display_, wnd_, &attr) == 0)
-    {
-        return false;
-    }
-    return attr.map_state == IsViewable;
+    XWindowAttributes attr = {};
+    return (XGetWindowAttributes(display_, wnd_, &attr) != 0 && attr.map_state == IsViewable);
 }
 
 void LinuxWindowX11::SetDesc(const WindowDescriptor& desc)
@@ -174,7 +171,7 @@ WindowDescriptor LinuxWindowX11::GetDesc() const
     return desc_; //todo...
 }
 
-void LinuxWindowX11::ProcessEvent(XEvent& event)
+void LinuxWindowX11::ProcessEventInternal(XEvent& event)
 {
     switch (event.type)
     {
@@ -217,7 +214,7 @@ void LinuxWindowX11::ProcessEvent(XEvent& event)
  * ======= Private: =======
  */
 
-void LinuxWindowX11::Open()
+void LinuxWindowX11::OpenNativeWindow()
 {
     /* Get native context handle */
     const NativeHandle* nativeHandle = static_cast<const NativeHandle*>(desc_.windowContext);
