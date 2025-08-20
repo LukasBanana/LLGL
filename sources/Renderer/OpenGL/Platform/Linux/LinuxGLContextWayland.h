@@ -9,8 +9,6 @@
 #define LLGL_LINUX_GL_CONTEXT_WAYLAND_H
 
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include "LinuxGLContext.h"
 #include "../../OpenGL.h"
 #include <LLGL/RendererConfiguration.h>
@@ -112,7 +110,6 @@ class LinuxGLContextWayland : public LinuxGLContext
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
 
 
 #endif

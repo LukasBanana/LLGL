@@ -116,6 +116,16 @@ elseif(UNIX)
     endif()
 endif()
 
+if(NOT LLGL_LINUX_ENABLE_WAYLAND)
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLContextWayland.h")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLContextWayland.cpp")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLSwapChainContextWayland.h")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLSwapChainContextWayland.cpp")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxSharedEGLSurface.h")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxSharedEGLSurface.cpp")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLCore.cpp")
+    list(REMOVE_ITEM FilesRendererGLPlatform "${PROJECT_SOURCE_DIR}/Platform/Linux/LinuxGLCore.h")
+endif()
 
 # === Source group folders ===
 

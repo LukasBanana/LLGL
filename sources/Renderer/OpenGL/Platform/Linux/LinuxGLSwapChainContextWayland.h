@@ -9,8 +9,6 @@
 #define LLGL_LINUX_GL_SWAP_CHAIN_CONTEXT_WAYLAND_H
 
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include "LinuxGLContextWayland.h"
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
@@ -49,7 +47,6 @@ class LinuxGLSwapChainContextWayland final : public GLSwapChainContext
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
 
 
 #endif

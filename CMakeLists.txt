@@ -549,7 +549,7 @@ if(LLGL_UNITY_BUILD)
     ADD_DEFINE(LLGL_UNITY_BUILD)
 endif()
 
-if (LLGL_LINUX_ENABLE_WAYLAND)
+if(LLGL_LINUX_ENABLE_WAYLAND)
     ADD_DEFINE(LLGL_LINUX_ENABLE_WAYLAND)
     set(SUMMARY_FLAGS ${SUMMARY_FLAGS} "Wayland")
 endif()
@@ -655,6 +655,13 @@ if(LLGL_ANDROID_PLATFORM)
         "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c"
         "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h"
     )
+endif()
+
+if(NOT LLGL_LINUX_ENABLE_WAYLAND)
+    list(REMOVE_ITEM FilesPlatform "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/LinuxWindowWayland.h")
+    list(REMOVE_ITEM FilesPlatform "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/LinuxWindowWayland.cpp")
+    list(REMOVE_ITEM FilesPlatform "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/LinuxWaylandState.h")
+    list(REMOVE_ITEM FilesPlatform "${PROJECT_SOURCE_DIR}/sources/Platform/Linux/LinuxWaylandState.cpp")
 endif()
 
 
