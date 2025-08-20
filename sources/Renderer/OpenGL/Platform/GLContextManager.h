@@ -80,8 +80,12 @@ class GLContextManager
 
     private:
 
+        #if LLGL_WINDOWING_ENABLED
+
         // Creates an invisible surface as placeholder for a GL context.
         std::unique_ptr<Surface> CreatePlaceholderSurface();
+
+        #endif
 
         // Makes a new GL context with the specified pixel format and creates a placeholder surface is none was specified.
         std::shared_ptr<GLContext> MakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, Surface* surface = nullptr);

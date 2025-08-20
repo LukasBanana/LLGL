@@ -58,6 +58,8 @@ std::shared_ptr<GLContext> GLContextManager::AllocContext(
  * ======= Private: =======
  */
 
+#if LLGL_WINDOWING_ENABLED
+
 std::unique_ptr<Surface> GLContextManager::CreatePlaceholderSurface()
 {
     #ifdef LLGL_MOBILE_PLATFORM
@@ -65,7 +67,7 @@ std::unique_ptr<Surface> GLContextManager::CreatePlaceholderSurface()
     /* Create new canvas as placeholder surface */
     return Canvas::Create(CanvasDescriptor{});
 
-    #elif LLGL_WINDOWING_ENABLED
+    #endif
 
     /* Create new window as placeholder surface */
     WindowDescriptor windowDesc;
@@ -73,23 +75,31 @@ std::unique_ptr<Surface> GLContextManager::CreatePlaceholderSurface()
         windowDesc.size = { 256, 256 };
     }
     return Window::Create(windowDesc);
-
-    #else
-
-    LLGL_TRAP("Unable to create placeholder surface: LLGL windowing is disabled.");
-
-    #endif
 }
+
+#endif
 
 std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, Surface* surface)
 {
     /* Create placeholder surface is none was specified */
     std::unique_ptr<Surface> placeholderSurface;
+    
+    #if LLGL_WINDOWING_ENABLED
+
     if (surface == nullptr)
     {
         placeholderSurface = CreatePlaceholderSurface();
         surface = placeholderSurface.get();
     }
+
+    #else
+
+    if (surface == nullptr)
+    {
+        LLGL_TRAP("LLGL windowing is disabled. You can enable it with the \"LLGL_ENABLE_WINDOWING\" CMake option.");
+    }
+
+    #endif
 
     /* Use shared GL context if there already is one */
     GLContext* sharedContext = (pixelFormats_.empty() ? nullptr : pixelFormats_.front().context.get());
