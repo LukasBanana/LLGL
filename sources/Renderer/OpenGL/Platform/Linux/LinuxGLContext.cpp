@@ -20,8 +20,11 @@
 #include <LLGL/Log.h>
 #include <algorithm>
 
-#include "LinuxGLContextWayland.h"
 #include "LinuxGLContextX11.h"
+
+#if LLGL_LINUX_ENABLE_WAYLAND
+#   include "LinuxGLContextWayland.h"
+#endif
 
 
 namespace LLGL
