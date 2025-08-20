@@ -33,6 +33,8 @@ struct zxdg_decoration_manager_v1;
 
 namespace LLGL {
 
+#if LLGL_WINDOWING_ENABLED
+
 struct XkbContext
 {
     xkb_context*          context = nullptr;
@@ -57,6 +59,8 @@ struct LibdecorContext
     bool            ready    = false;
 };
 
+#endif
+
 class LinuxWaylandState
 {
 
@@ -64,18 +68,12 @@ class LinuxWaylandState
 
         ~LinuxWaylandState();
 
+        static wl_display* GetDisplay() noexcept;
+
         #if LLGL_WINDOWING_ENABLED
 
-        static void HandleWaylandEvents(double* timeout);
-
-        #endif
-
-        static wl_display* GetDisplay() noexcept;
         static wl_compositor* GetCompositor() noexcept;
         static wl_subcompositor* GetSubcompositor() noexcept;
-
-        #if LLGL_WINDOWING_ENABLED
-
         static wl_seat* GetSeat() noexcept;
         static wp_viewporter* GetViewporter() noexcept;
         static wl_shm* GetShm() noexcept;
@@ -90,6 +88,8 @@ class LinuxWaylandState
         static void AddWindow(LinuxWindowWayland* window);
         static void RemoveWindow(LinuxWindowWayland* window);
 
+        static void HandleWaylandEvents(double* timeout);
+
         #endif
 
         static const char *const * GetTag() noexcept;
@@ -99,8 +99,6 @@ class LinuxWaylandState
     private:
 
         static LinuxWaylandState& GetInstance();
-
-        void HandleWaylandEventsInternal(double* timeout);
 
         void Init();
 
@@ -112,14 +110,16 @@ class LinuxWaylandState
 
         void InitKeyTables();
 
+        void HandleWaylandEventsInternal(double* timeout);
+
         #endif
 
         static void HandleRegistryGlobal(void* userData, wl_registry* registry, uint32_t name, const char* interface, uint32_t version);
         static void HandleRegistryRemove(void* userData, wl_registry* registry, uint32_t name);
 
-        static void HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial);
-
         #if LLGL_WINDOWING_ENABLED
+        
+        static void HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial);
 
         static void HandleSeatCapabilities(void* userData, wl_seat* seat, uint32_t caps);
         static void HandleSeatName(void* userData, wl_seat* seat, const char* name);
@@ -137,6 +137,8 @@ class LinuxWaylandState
         static void HandleKeyboardModifiers(void* userData, wl_keyboard* keyboard, uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked, uint32_t group);
         static void HandleKeyboardRepeatInfo(void* userData, wl_keyboard* keyboard, int32_t rate, int32_t delay);
 
+        static void HandleLibdecorReady(void* userData, wl_callback* callback, uint32_t time);
+
         #endif
 
         static void HandleOutputGeometry(void* userData, wl_output* output, int32_t x, int32_t y, int32_t physicalWidth, int32_t physicalHeight, int32_t subpixel, const char* make, const char* model, int32_t transform);
@@ -146,19 +148,17 @@ class LinuxWaylandState
         static void HandleOutputName(void* userData, wl_output* wl_output, const char* name);
         static void HandleOutputDescription(void* userData, wl_output* wl_output, const char* description);
 
-        static void HandleLibdecorReady(void* userData, wl_callback* callback, uint32_t time);
-
     private:
 
         const char*          tag_           = nullptr;
 
         wl_registry*         registry_      = nullptr;
         wl_display*          display_       = nullptr;
-        wl_compositor*       compositor_    = nullptr;
-        wl_subcompositor*    subcompositor_ = nullptr;
 
         #if LLGL_WINDOWING_ENABLED
 
+        wl_compositor*       compositor_    = nullptr;
+        wl_subcompositor*    subcompositor_ = nullptr;
         wl_seat*             seat_          = nullptr;
         wp_viewporter*       viewporter_    = nullptr;
         wl_shm*              shm_           = nullptr;
@@ -201,11 +201,13 @@ class LinuxWaylandState
         static wl_registry_listener registryListener_;
 
         #if LLGL_WINDOWING_ENABLED
+
         static wl_seat_listener seatListener_;
         static wl_pointer_listener pointerListener_;
         static wl_keyboard_listener keyboardListener_;
         static wl_callback_listener libdecorReadyListener_;
         static xdg_wm_base_listener xdgWmBaseListener_;
+
         #endif
 
         static wl_output_listener outputListener_;

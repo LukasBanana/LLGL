@@ -153,12 +153,12 @@ void LinuxWaylandState::HandleRegistryRemove(void* userData, wl_registry* regist
 {
 }
 
+#if LLGL_WINDOWING_ENABLED
+
 void LinuxWaylandState::HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
-
-#if LLGL_WINDOWING_ENABLED
 
 void LinuxWaylandState::HandleSeatCapabilities(void* userData, wl_seat* seat, uint32_t caps)
 {
