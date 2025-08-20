@@ -8,8 +8,9 @@
 #ifndef LLGL_GL_SWAP_CHAIN_H
 #define LLGL_GL_SWAP_CHAIN_H
 
-
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/SwapChain.h>
 #include <LLGL/RendererConfiguration.h>
 #include "OpenGL.h"

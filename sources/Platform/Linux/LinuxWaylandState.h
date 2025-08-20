@@ -20,12 +20,14 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/DynamicVector.h>
 
-#include "LinuxWindowWayland.h"
+#if LLGL_WINDOWING_ENABLED
+#   include "LinuxWindowWayland.h"
+#endif
+
 #include "LinuxDisplayWayland.h"
 
 #include "protocols/xdg-shell-client-protocol.h"
 
-struct xdg_wm_base;
 struct wp_viewporter;
 struct zxdg_decoration_manager_v1;
 
@@ -62,24 +64,37 @@ class LinuxWaylandState
 
         ~LinuxWaylandState();
 
+        #if LLGL_WINDOWING_ENABLED
+
         static void HandleWaylandEvents(double* timeout);
+
+        #endif
+
         static wl_display* GetDisplay() noexcept;
         static wl_compositor* GetCompositor() noexcept;
         static wl_subcompositor* GetSubcompositor() noexcept;
+
+        #if LLGL_WINDOWING_ENABLED
+
         static wl_seat* GetSeat() noexcept;
         static wp_viewporter* GetViewporter() noexcept;
         static wl_shm* GetShm() noexcept;
         static xdg_wm_base* GetXdgWmBase() noexcept;
         static zxdg_decoration_manager_v1* GetDecorationManager() noexcept;
-        static const char *const * GetTag() noexcept;
         static const XkbContext& GetXkb() noexcept;
         static const LibdecorContext& GetLibdecor() noexcept;
         static LLGL::ArrayView<Key> GetKeycodes() noexcept;
-        static const LLGL::DynamicVector<LinuxDisplayWayland*>& GetDisplayList() noexcept;
+
         static const LLGL::DynamicVector<LinuxWindowWayland*>& GetWindowList() noexcept;
 
         static void AddWindow(LinuxWindowWayland* window);
         static void RemoveWindow(LinuxWindowWayland* window);
+
+        #endif
+
+        static const char *const * GetTag() noexcept;
+
+        static const LLGL::DynamicVector<LinuxDisplayWayland*>& GetDisplayList() noexcept;
 
     private:
 
@@ -89,15 +104,22 @@ class LinuxWaylandState
 
         void Init();
 
-        void InitKeyTables();
         void AddWaylandOutput(wl_output* output, uint32_t name, uint32_t version);
 
+        #if LLGL_WINDOWING_ENABLED
+
         static Key TranslateKey(uint32_t scancode);
+
+        void InitKeyTables();
+
+        #endif
 
         static void HandleRegistryGlobal(void* userData, wl_registry* registry, uint32_t name, const char* interface, uint32_t version);
         static void HandleRegistryRemove(void* userData, wl_registry* registry, uint32_t name);
 
         static void HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial);
+
+        #if LLGL_WINDOWING_ENABLED
 
         static void HandleSeatCapabilities(void* userData, wl_seat* seat, uint32_t caps);
         static void HandleSeatName(void* userData, wl_seat* seat, const char* name);
@@ -115,6 +137,8 @@ class LinuxWaylandState
         static void HandleKeyboardModifiers(void* userData, wl_keyboard* keyboard, uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked, uint32_t group);
         static void HandleKeyboardRepeatInfo(void* userData, wl_keyboard* keyboard, int32_t rate, int32_t delay);
 
+        #endif
+
         static void HandleOutputGeometry(void* userData, wl_output* output, int32_t x, int32_t y, int32_t physicalWidth, int32_t physicalHeight, int32_t subpixel, const char* make, const char* model, int32_t transform);
         static void HandleOutputMode(void* userData, wl_output* output, uint32_t flags, int32_t width, int32_t height, int32_t refresh);
         static void HandleOutputDone(void* userData, wl_output* output);
@@ -126,10 +150,15 @@ class LinuxWaylandState
 
     private:
 
+        const char*          tag_           = nullptr;
+
         wl_registry*         registry_      = nullptr;
         wl_display*          display_       = nullptr;
         wl_compositor*       compositor_    = nullptr;
         wl_subcompositor*    subcompositor_ = nullptr;
+
+        #if LLGL_WINDOWING_ENABLED
+
         wl_seat*             seat_          = nullptr;
         wp_viewporter*       viewporter_    = nullptr;
         wl_shm*              shm_           = nullptr;
@@ -146,7 +175,6 @@ class LinuxWaylandState
 
         xdg_wm_base *xdgWmBase_ = nullptr;
 
-        const char* tag_ = nullptr;
 
         int keyRepeatTimerfd_ = 0;
         int keyRepeatRate_ = 0;
@@ -159,20 +187,28 @@ class LinuxWaylandState
 
         LibdecorContext libdecor_;
 
-        DynamicVector<LinuxDisplayWayland*> displayList_;
         DynamicVector<LinuxWindowWayland*> windowList_;
+
+        #endif
+
+        DynamicVector<LinuxDisplayWayland*> displayList_;
+
 
         bool initialized_ = false;
 
     private:
 
         static wl_registry_listener registryListener_;
+
+        #if LLGL_WINDOWING_ENABLED
         static wl_seat_listener seatListener_;
         static wl_pointer_listener pointerListener_;
         static wl_keyboard_listener keyboardListener_;
         static wl_callback_listener libdecorReadyListener_;
-        static wl_output_listener outputListener_;
         static xdg_wm_base_listener xdgWmBaseListener_;
+        #endif
+
+        static wl_output_listener outputListener_;
 
         static LinuxWaylandState* instance_;
 };

@@ -11,7 +11,9 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../Profile/GLProfile.h"
 #include "../../../Core/CoreUtils.h"
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/Canvas.h>
 #include <cstring>
 
@@ -63,7 +65,7 @@ std::unique_ptr<Surface> GLContextManager::CreatePlaceholderSurface()
     /* Create new canvas as placeholder surface */
     return Canvas::Create(CanvasDescriptor{});
 
-    #else
+    #elif LLGL_WINDOWING_ENABLED
 
     /* Create new window as placeholder surface */
     WindowDescriptor windowDesc;
@@ -71,6 +73,10 @@ std::unique_ptr<Surface> GLContextManager::CreatePlaceholderSurface()
         windowDesc.size = { 256, 256 };
     }
     return Window::Create(windowDesc);
+
+    #else
+
+    LLGL_TRAP("Unable to create placeholder surface: LLGL windowing is disabled.");
 
     #endif
 }

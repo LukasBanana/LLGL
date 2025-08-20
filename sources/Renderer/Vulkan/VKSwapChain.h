@@ -9,7 +9,9 @@
 #define LLGL_VK_SWAP_CHAIN_H
 
 
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/SwapChain.h>
 #include <LLGL/RenderPassFlags.h>
 #include "VKCore.h"

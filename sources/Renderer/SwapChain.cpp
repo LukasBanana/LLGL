@@ -6,7 +6,9 @@
  */
 
 #include <LLGL/SwapChain.h>
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/Canvas.h>
 #include <LLGL/Display.h>
 #include "CheckedCast.h"
@@ -144,6 +146,8 @@ Surface& SwapChain::GetSurface() const
  * ======= Protected: =======
  */
 
+#if LLGL_WINDOWING_ENABLED
+
 static long GetSwapChainSurfaceFlags(bool fullscreen, bool resizable)
 {
     long flags = 0;
@@ -170,6 +174,8 @@ static long GetSwapChainSurfaceFlags(bool fullscreen, bool resizable)
     return flags;
 }
 
+#endif
+
 void SwapChain::SetOrCreateSurface(
     const std::shared_ptr<Surface>& surface,
     const UTF8String&               title,
@@ -177,6 +183,10 @@ void SwapChain::SetOrCreateSurface(
     const void*                     windowContext,
     std::size_t                     windowContextSize)
 {
+    #if !LLGL_WINDOWING_ENABLED
+        LLGL_ASSERT(surface, "Surface must be a valid pointer when LLGL windowing is disabled.")
+    #endif
+
     if (surface)
     {
         /* Get and output resolution from specified window */
@@ -196,6 +206,7 @@ void SwapChain::SetOrCreateSurface(
 
         #else // LLGL_MOBILE_PLATFORM
 
+        #if LLGL_WINDOWING_ENABLED
         /* Create new window for this swap-chain */
         WindowDescriptor windowDesc;
         {
@@ -206,6 +217,7 @@ void SwapChain::SetOrCreateSurface(
             windowDesc.windowContextSize    = windowContextSize;
         }
         pimpl_->surface = Window::Create(windowDesc);
+        #endif
 
         #endif // /LLGL_MOBILE_PLATFORM
     }
@@ -221,7 +233,9 @@ void SwapChain::SetOrCreateSurface(
 void SwapChain::ShowSurface()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    static_cast<Window&>(GetSurface()).Show();
+    #   if LLGL_WINDOWING_ENABLED
+        static_cast<Window&>(GetSurface()).Show();
+    #   endif
     #endif
 }
 
@@ -290,24 +304,28 @@ UTF8String SwapChain::BuildDefaultSurfaceTitle(const RendererInfo& info)
 void SwapChain::StoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    if (!pimpl_->normalModeSurfacePosStored)
-    {
-        auto& window = static_cast<Window&>(GetSurface());
-        pimpl_->normalModeSurfacePos        = window.GetPosition();
-        pimpl_->normalModeSurfacePosStored  = true;
-    }
+    #   if LLGL_WINDOWING_ENABLED
+        if (!pimpl_->normalModeSurfacePosStored)
+        {
+            auto& window = static_cast<Window&>(GetSurface());
+            pimpl_->normalModeSurfacePos        = window.GetPosition();
+            pimpl_->normalModeSurfacePosStored  = true;
+        }
+    #   endif
     #endif
 }
 
 void SwapChain::RestoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    if (pimpl_->normalModeSurfacePosStored)
-    {
-        auto& window = static_cast<Window&>(GetSurface());
-        window.SetPosition(pimpl_->normalModeSurfacePos);
-        pimpl_->normalModeSurfacePosStored = false;
-    }
+    #   if LLGL_WINDOWING_ENABLED
+        if (pimpl_->normalModeSurfacePosStored)
+        {
+            auto& window = static_cast<Window&>(GetSurface());
+            window.SetPosition(pimpl_->normalModeSurfacePos);
+            pimpl_->normalModeSurfacePosStored = false;
+        }
+    #endif
     #endif
 }
 

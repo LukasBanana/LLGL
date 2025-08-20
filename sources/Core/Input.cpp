@@ -7,7 +7,9 @@
 
 #include <LLGL/Utils/Input.h>
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/Canvas.h>
 #include <LLGL/Container/Strings.h>
 #include <string.h>
@@ -198,6 +200,8 @@ struct Input::Pimpl
  * WindowEventListener class
  */
 
+#if LLGL_WINDOWING_ENABLED
+
 class Input::WindowEventListener final : public Window::EventListener
 {
 
@@ -270,6 +274,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
 };
 
+#endif
 
 /*
  * CanvasEventListener class
@@ -352,8 +357,10 @@ Input::Input(Surface& surface) :
 
 Input::~Input()
 {
+    #if LLGL_WINDOWING_ENABLED
     for (const auto& windowEventListener : pimpl_->windowEventListeners)
         CastTo<Window>(windowEventListener.surface)->RemoveEventListener(windowEventListener.eventListener.get());
+    #endif
     for (const auto& canvasEventListener : pimpl_->canvasEventListeners)
         CastTo<Canvas>(canvasEventListener.surface)->RemoveEventListener(canvasEventListener.eventListener.get());
     delete pimpl_;
@@ -384,6 +391,7 @@ void Input::Reset()
 
 void Input::Listen(Surface& surface)
 {
+    #if LLGL_WINDOWING_ENABLED
     if (LLGL::IsInstanceOf<Window>(surface))
     {
         if (HasEventListenerForSurface(pimpl_->windowEventListeners, &surface))
@@ -393,6 +401,7 @@ void Input::Listen(Surface& surface)
             CastTo<Window>(surface).AddEventListener(eventListener);
         }
     }
+    #endif
     if (LLGL::IsInstanceOf<Canvas>(surface))
     {
         if (HasEventListenerForSurface(pimpl_->canvasEventListeners, &surface))
@@ -406,6 +415,7 @@ void Input::Listen(Surface& surface)
 
 void Input::Drop(Surface& surface)
 {
+    #if LLGL_WINDOWING_ENABLED
     if (LLGL::IsInstanceOf<Window>(surface))
     {
         for (auto it = pimpl_->windowEventListeners.begin(); it != pimpl_->windowEventListeners.end(); ++it)
@@ -418,6 +428,7 @@ void Input::Drop(Surface& surface)
             }
         }
     }
+    #endif
     if (LLGL::IsInstanceOf<Canvas>(surface))
     {
         for (auto it = pimpl_->canvasEventListeners.begin(); it != pimpl_->canvasEventListeners.end(); ++it)

@@ -7,7 +7,9 @@
 
 #include <LLGL/Interface.h>
 #include <LLGL/RenderSystem.h>
-#include <LLGL/Window.h>
+#if LLGL_WINDOWING_ENABLED
+#   include <LLGL/Window.h>
+#endif
 #include <LLGL/Canvas.h>
 #include <LLGL/Utils/Input.h>
 #include <LLGL/Display.h>
@@ -32,8 +34,12 @@ void RenderSystemChild::SetDebugName(const char* /*name*/)
 LLGL_IMPLEMENT_INTERFACE( RenderSystem,             Interface         )
 LLGL_IMPLEMENT_INTERFACE( RenderSystemChild,        Interface         )
 LLGL_IMPLEMENT_INTERFACE( Surface,                  Interface         )
+
+#if LLGL_WINDOWING_ENABLED
 LLGL_IMPLEMENT_INTERFACE( Window,                   Surface           )
 LLGL_IMPLEMENT_INTERFACE( Window::EventListener,    Interface         )
+#endif
+
 LLGL_IMPLEMENT_INTERFACE( Input,                    Interface         )
 LLGL_IMPLEMENT_INTERFACE( Canvas,                   Surface           )
 LLGL_IMPLEMENT_INTERFACE( Canvas::EventListener,    Interface         )

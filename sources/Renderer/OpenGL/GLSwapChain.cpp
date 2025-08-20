@@ -16,7 +16,9 @@
 #ifdef LLGL_MOBILE_PLATFORM
 #   include <LLGL/Canvas.h>
 #else
-#   include <LLGL/Window.h>
+#   if LLGL_WINDOWING_ENABLED
+#       include <LLGL/Window.h>
+#   endif
 #endif
 
 #ifdef LLGL_OS_LINUX
@@ -199,8 +201,12 @@ void GLSwapChain::BuildAndSetDefaultSurfaceTitle(const RendererInfo& info)
 
     #else // LLGL_MOBILE_PLATFORM
 
+    #if LLGL_WINDOWING_ENABLED
+
     /* Set Window title for desktop platforms */
     CastTo<Window>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
+
+    #endif
 
     #endif // /LLGL_MOBILE_PLATFORM
 }

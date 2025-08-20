@@ -35,7 +35,9 @@ class Shader;
 class Surface;
 class SwapChain;
 class Texture;
+#if LLGL_WINDOWING_ENABLED
 class Window;
+#endif
 
 struct ApplicationDescriptor;
 struct AttachmentClear;

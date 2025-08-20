@@ -15,16 +15,19 @@
 #include <sys/poll.h>
 
 #include <LLGL/Log.h>
+#include <LLGL/DisplayFlags.h>
+#include <LLGL/Timer.h>
 
 #include "../../Core/Exception.h"
 #include "../../Core/Assertion.h"
 
-#include "LLGL/DisplayFlags.h"
-#include "LLGL/Timer.h"
 #include "LinuxDisplayWayland.h"
-#include "protocols/viewporter-client-protocol.h"
-#include "protocols/xdg-decoration-client-protocol.h"
 #include "protocols/xdg-shell-client-protocol.h"
+
+#if LLGL_WINDOWING_ENABLED
+#   include "protocols/viewporter-client-protocol.h"
+#   include "protocols/xdg-decoration-client-protocol.h"
+#endif
 
 #include "LinuxWaylandState.h"
 
@@ -37,6 +40,8 @@ wl_registry_listener LinuxWaylandState::registryListener_ = {
     HandleRegistryGlobal,
     HandleRegistryRemove
 };
+
+#if LLGL_WINDOWING_ENABLED
 
 wl_seat_listener LinuxWaylandState::seatListener_ = {
     HandleSeatCapabilities,
@@ -65,6 +70,12 @@ wl_callback_listener LinuxWaylandState::libdecorReadyListener_ =
     HandleLibdecorReady
 };
 
+xdg_wm_base_listener LinuxWaylandState::xdgWmBaseListener_ = {
+    HandleXdgWmBasePing
+};
+
+#endif
+
 wl_output_listener LinuxWaylandState::outputListener_ = {
     HandleOutputGeometry,
     HandleOutputMode,
@@ -74,9 +85,6 @@ wl_output_listener LinuxWaylandState::outputListener_ = {
     HandleOutputDescription
 };
 
-xdg_wm_base_listener LinuxWaylandState::xdgWmBaseListener_ = {
-    HandleXdgWmBasePing
-};
 
 void LinuxWaylandState::HandleRegistryGlobal(
     void* userData,
@@ -85,7 +93,22 @@ void LinuxWaylandState::HandleRegistryGlobal(
     const char* interface,
     uint32_t version)
 {
-    if (strcmp(interface, wl_compositor_interface.name) == 0)
+    if (strcmp(interface, wl_output_interface.name) == 0)
+    {
+        if (version < 2) {
+            LLGL::Log::Errorf("Wayland: Unsupported output interface version");
+            return;
+        }
+
+        version = std::min(version, static_cast<uint32_t>(WL_OUTPUT_NAME_SINCE_VERSION));
+
+        wl_output* output = static_cast<wl_output*>(wl_registry_bind(registry, name, &wl_output_interface, version));
+
+        if (output)
+            GetInstance().AddWaylandOutput(output, name, version);
+    }
+    #if LLGL_WINDOWING_ENABLED
+    else if (strcmp(interface, wl_compositor_interface.name) == 0)
     {
         GetInstance().compositor_ = static_cast<wl_compositor*>(
             wl_registry_bind(registry, name, &wl_compositor_interface, std::min(3u, version))
@@ -123,20 +146,7 @@ void LinuxWaylandState::HandleRegistryGlobal(
     {
         GetInstance().viewporter_ = static_cast<wp_viewporter*>(wl_registry_bind(registry, name, &wp_viewporter_interface, 1));
     }
-    else if (strcmp(interface, wl_output_interface.name) == 0)
-    {
-        if (version < 2) {
-            LLGL::Log::Errorf("Wayland: Unsupported output interface version");
-            return;
-        }
-
-        version = std::min(version, static_cast<uint32_t>(WL_OUTPUT_NAME_SINCE_VERSION));
-
-        wl_output* output = static_cast<wl_output*>(wl_registry_bind(registry, name, &wl_output_interface, version));
-
-        if (output)
-            GetInstance().AddWaylandOutput(output, name, version);
-    }
+    #endif
 }
 
 void LinuxWaylandState::HandleRegistryRemove(void* userData, wl_registry* registry, uint32_t name)
@@ -147,6 +157,8 @@ void LinuxWaylandState::HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
+
+#if LLGL_WINDOWING_ENABLED
 
 void LinuxWaylandState::HandleSeatCapabilities(void* userData, wl_seat* seat, uint32_t caps)
 {
@@ -551,6 +563,8 @@ void LinuxWaylandState::HandleKeyboardKeymap(
     GetInstance().xkb_.numLockIndex  = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Mod2");
 }
 
+#endif
+
 void LinuxWaylandState::HandleOutputGeometry(
     void* userData,
     wl_output* output,
@@ -636,6 +650,8 @@ LinuxWaylandState& LinuxWaylandState::GetInstance()
     return instance;
 }
 
+#if LLGL_WINDOWING_ENABLED
+
 void LinuxWaylandState::AddWindow(LinuxWindowWayland *window)
 {
     GetInstance().windowList_.push_back(window);
@@ -655,6 +671,8 @@ void LinuxWaylandState::RemoveWindow(LinuxWindowWayland *window)
     }
 }
 
+#endif
+
 LinuxWaylandState::~LinuxWaylandState()
 {
     for (LinuxDisplayWayland* display : displayList_) {
@@ -662,6 +680,8 @@ LinuxWaylandState::~LinuxWaylandState()
     }
 
     displayList_.clear();
+
+    #if LLGL_WINDOWING_ENABLED
 
     if (libdecor_.context)
     {
@@ -672,6 +692,10 @@ LinuxWaylandState::~LinuxWaylandState()
 
         libdecor_unref(libdecor_.context);
     }
+
+    #endif
+
+    #if LLGL_WINDOWING_ENABLED
 
     if (xkb_.keymap)
         xkb_keymap_unref(xkb_.keymap);
@@ -698,6 +722,9 @@ LinuxWaylandState::~LinuxWaylandState()
         wl_keyboard_destroy(keyboard_);
     if (seat_)
         wl_seat_destroy(seat_);
+
+    #endif
+
     if (registry_)
         wl_registry_destroy(registry_);
     if (display_)
@@ -706,13 +733,19 @@ LinuxWaylandState::~LinuxWaylandState()
         wl_display_disconnect(display_);
     }
 
+    #if LLGL_WINDOWING_ENABLED
+
     if (keyRepeatTimerfd_ >= 0)
         close(keyRepeatTimerfd_);
+
+    #endif
 }
 
 void LinuxWaylandState::Init()
 {
     initialized_ = true;
+
+    #if LLGL_WINDOWING_ENABLED
 
     InitKeyTables();
 
@@ -721,6 +754,8 @@ void LinuxWaylandState::Init()
     {
         LLGL_TRAP("Failed to initialize xkb context");
     }
+
+    #endif
 
     display_ = wl_display_connect(nullptr);
     if (!display_)
@@ -732,6 +767,8 @@ void LinuxWaylandState::Init()
 
     wl_display_roundtrip(display_);
     wl_display_roundtrip(display_);
+
+    #if LLGL_WINDOWING_ENABLED
 
     libdecor_.context = libdecor_new(display_, &LIBDECOR_INTERFACE);
     if (libdecor_.context)
@@ -746,6 +783,8 @@ void LinuxWaylandState::Init()
 
     if (!compositor_)
         LLGL_TRAP("Failed to get Wayland compositor");
+    
+    #endif
 
     tag_ = "LLGL";
 }
@@ -763,6 +802,13 @@ void LinuxWaylandState::AddWaylandOutput(wl_output* output, uint32_t name, uint3
 
     wl_output_add_listener(output, &outputListener_, &display->GetData());
 }
+
+wl_display* LinuxWaylandState::GetDisplay() noexcept
+{
+    return GetInstance().display_;
+}
+
+#if LLGL_WINDOWING_ENABLED
 
 static bool FlushDisplay()
 {
@@ -1024,11 +1070,6 @@ void LinuxWaylandState::HandleWaylandEvents(double* timeout) {
     return GetInstance().HandleWaylandEventsInternal(timeout);
 }
 
-wl_display* LinuxWaylandState::GetDisplay() noexcept
-{
-    return GetInstance().display_;
-}
-
 wl_compositor* LinuxWaylandState::GetCompositor() noexcept
 {
     return GetInstance().compositor_;
@@ -1084,14 +1125,16 @@ LLGL::ArrayView<Key> LinuxWaylandState::GetKeycodes() noexcept
     return GetInstance().keycodes_;
 }
 
-const LLGL::DynamicVector<LinuxDisplayWayland*>& LinuxWaylandState::GetDisplayList() noexcept
-{
-    return GetInstance().displayList_;
-}
-
 const LLGL::DynamicVector<LinuxWindowWayland*>& LinuxWaylandState::GetWindowList() noexcept
 {
     return GetInstance().windowList_;
+}
+
+#endif
+
+const LLGL::DynamicVector<LinuxDisplayWayland*>& LinuxWaylandState::GetDisplayList() noexcept
+{
+    return GetInstance().displayList_;
 }
 
 }

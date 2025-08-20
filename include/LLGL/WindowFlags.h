@@ -8,6 +8,9 @@
 #ifndef LLGL_WINDOW_FLAGS_H
 #define LLGL_WINDOW_FLAGS_H
 
+#if !LLGL_WINDOWING_ENABLED
+    #error "LLGL windowing is disabled. You can enable it with LLGL_ENABLE_WINDOWING CMake option."
+#else
 
 #include <LLGL/Types.h>
 #include <LLGL/Constants.h>
@@ -140,8 +143,11 @@ struct WindowDescriptor
 
 } // /namespace LLGL
 
+#endif // !LLGL_WINDOWING_ENABLED
 
-#endif
+
+
+#endif // LLGL_WINDOW_FLAGS_H
 
 
 
