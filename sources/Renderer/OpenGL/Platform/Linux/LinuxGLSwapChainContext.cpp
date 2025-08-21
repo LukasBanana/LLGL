@@ -6,10 +6,10 @@
  */
 
 #include "../GLSwapChainContext.h"
-#include "LinuxGLSwapChainContextX11.h"
+#include "X11/LinuxGLSwapChainContextX11.h"
 
 #if LLGL_LINUX_ENABLE_WAYLAND
-#include "LinuxGLSwapChainContextWayland.h"
+#   include "Wayland/LinuxGLSwapChainContextWayland.h"
 #endif
 
 #include "../../../../Core/CoreUtils.h"

@@ -5,9 +5,9 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "LinuxGLContextX11.h"
+#include "X11/LinuxGLContextX11.h"
 #include "../../GLSwapChain.h"
-#include "../../../../Platform/Linux/LinuxDisplayX11.h"
+#include "../../../../Platform/Linux/X11/LinuxDisplayX11.h"
 #include "../../../../Core/Assertion.h"
 #include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>

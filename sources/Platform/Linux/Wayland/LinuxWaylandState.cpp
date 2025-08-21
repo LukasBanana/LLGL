@@ -16,8 +16,8 @@
 
 #include <LLGL/Log.h>
 
-#include "../../Core/Exception.h"
-#include "../../Core/Assertion.h"
+#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 
 #include "LLGL/DisplayFlags.h"
 #include "LLGL/Timer.h"

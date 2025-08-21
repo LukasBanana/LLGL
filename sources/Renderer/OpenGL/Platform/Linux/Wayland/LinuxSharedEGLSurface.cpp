@@ -7,7 +7,7 @@
 
 #include "LinuxSharedEGLSurface.h"
 #include "LinuxGLCore.h"
-#include "../../../../Core/Exception.h"
+#include "../../../../../Core/Exception.h"
 
 
 namespace LLGL

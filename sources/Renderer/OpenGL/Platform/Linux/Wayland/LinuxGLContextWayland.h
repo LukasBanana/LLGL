@@ -9,8 +9,7 @@
 #define LLGL_LINUX_GL_CONTEXT_WAYLAND_H
 
 
-#include "LinuxGLContext.h"
-#include "../../OpenGL.h"
+#include "../LinuxGLContext.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <X11/Xlib.h>

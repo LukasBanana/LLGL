@@ -10,8 +10,7 @@
 
 
 #include "LinuxGLContextWayland.h"
-#include "../GLSwapChainContext.h"
-#include "../../OpenGL.h"
+#include "../../GLSwapChainContext.h"
 
 #include <wayland-client.h>
 

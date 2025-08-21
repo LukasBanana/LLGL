@@ -7,8 +7,8 @@
 
 #include "LinuxGLSwapChainContextX11.h"
 #include "LinuxGLContextX11.h"
-#include "../../../../Core/CoreUtils.h"
-#include "../../../../Core/Exception.h"
+#include "../../../../../Core/CoreUtils.h"
+#include "../../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 

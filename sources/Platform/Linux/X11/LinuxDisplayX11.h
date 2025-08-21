@@ -12,7 +12,7 @@
 #include <memory>
 #include <X11/Xlib.h>
 
-#include "LinuxDisplay.h"
+#include "../LinuxDisplay.h"
 
 
 namespace LLGL
