@@ -30,4 +30,4 @@ tests/Output
 # VS Code folder
 .vscode
 
-sources/Platform/Linux/protocols/
+sources/Platform/Linux/Wayland/protocols/
