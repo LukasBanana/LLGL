@@ -5,16 +5,14 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Display.h>
 #include <LLGL/Timer.h>
 #include <LLGL/Log.h>
 #include <LLGL/Utils/ForRange.h>
 
-#include "../../Core/Exception.h"
-#include "../../Core/Assertion.h"
+#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -925,8 +923,6 @@ LinuxWindowWayland::~LinuxWindowWayland()
 
 
 } // /namespace LLGL
-
-#endif // /LLGL_LINUX_ENABLE_WAYLAND
 
 
 

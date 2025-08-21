@@ -8,9 +8,9 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Display.h>
 #include "LinuxWindowX11.h"
-#include "MapKey.h"
-#include "../../Core/CoreUtils.h"
-#include "../../Core/Exception.h"
+#include "../MapKey.h"
+#include "../../../Core/CoreUtils.h"
+#include "../../../Core/Exception.h"
 #include <X11/Xresource.h>
 
 

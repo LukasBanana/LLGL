@@ -9,15 +9,11 @@
 #define LLGL_LINUX_DISPLAY_WAYLAND_H
 
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include <LLGL/Container/DynamicVector.h>
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
 
-#include "LinuxDisplay.h"
-
-struct wl_output;
+#include "../LinuxDisplay.h"
 
 
 namespace LLGL
@@ -86,7 +82,6 @@ class LinuxDisplayWayland final : public LinuxDisplay
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
 
 
 #endif // LLGL_LINUX_DISPLAY_WAYLAND_H

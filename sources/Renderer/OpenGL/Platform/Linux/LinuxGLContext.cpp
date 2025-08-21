@@ -14,14 +14,17 @@
 #include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Assertion.h"
-#include "../../../../Platform/Linux/LinuxDisplayX11.h"
+#include "../../../../Platform/Linux/X11/LinuxDisplayX11.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
 
-#include "LinuxGLContextWayland.h"
-#include "LinuxGLContextX11.h"
+#include "X11/LinuxGLContextX11.h"
+
+#if LLGL_LINUX_ENABLE_WAYLAND
+#   include "Wayland/LinuxGLContextWayland.h"
+#endif
 
 
 namespace LLGL

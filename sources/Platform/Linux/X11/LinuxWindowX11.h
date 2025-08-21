@@ -10,8 +10,8 @@
 
 
 #include <LLGL/Window.h>
-#include "LinuxDisplayX11.h"
 #include <X11/Xlib.h>
+#include "LinuxDisplayX11.h"
 
 
 namespace LLGL

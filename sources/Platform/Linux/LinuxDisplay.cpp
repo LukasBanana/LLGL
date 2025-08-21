@@ -13,7 +13,7 @@
 #include <dlfcn.h>
 
 #include "../../Core/CoreUtils.h"
-#include "LinuxDisplayX11.h"
+#include "X11/LinuxDisplayX11.h"
 
 
 namespace LLGL
@@ -102,7 +102,7 @@ Offset2D Display::GetCursorPosition()
 
 #else // LLGL_LINUX_ENABLE_WAYLAND
 
-#include "LinuxWaylandState.h"
+#include "Wayland/LinuxWaylandState.h"
 
 
 namespace LLGL

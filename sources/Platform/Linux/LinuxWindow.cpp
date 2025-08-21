@@ -11,9 +11,12 @@
 #include "../../Core/CoreUtils.h"
 #include <X11/Xresource.h>
 
-#include "LinuxWaylandState.h"
-#include "LinuxWindowWayland.h"
-#include "LinuxWindowX11.h"
+#if LLGL_LINUX_ENABLE_WAYLAND
+#   include "Wayland/LinuxWaylandState.h"
+#   include "Wayland/LinuxWindowWayland.h"
+#endif
+
+#include "X11/LinuxWindowX11.h"
 
 
 namespace LLGL

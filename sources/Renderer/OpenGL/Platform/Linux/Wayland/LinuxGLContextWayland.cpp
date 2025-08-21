@@ -4,7 +4,6 @@
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
-#if LLGL_LINUX_ENABLE_WAYLAND
 
 #include "LinuxGLContextWayland.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
@@ -274,7 +273,6 @@ bool LinuxGLContextWayland::SetSwapInterval(int interval)
 
 }  // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
 
 
 

@@ -5,10 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include "LinuxGLCore.h"
-#include "../../../../Core/MacroUtils.h"
+#include "../../../../../Core/MacroUtils.h"
 
 // Unity build on Linux fails to include this macro from MacroUtils.h,
 // possibly due to this file being outside the LLGL_OpenGL backend.
@@ -52,6 +50,6 @@ const char* EGLErrorToString()
 
 } // /namespace LLGL
 
-#endif
+
 
 // ================================================================================

@@ -10,7 +10,7 @@
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
-#include "../../Core/Assertion.h"
+#include "../../../Core/Assertion.h"
 
 namespace LLGL
 {

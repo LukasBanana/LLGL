@@ -111,11 +111,15 @@ elseif(UNIX)
         find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Wasm)
         find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Wasm)        
     else()
-        find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Linux)
+        if(LLGL_LINUX_ENABLE_WAYLAND)
+            find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Linux ${PROJECT_SOURCE_DIR}/Platform/Linux/X11 ${PROJECT_SOURCE_DIR}/Platform/Linux/Wayland)
+        else()
+            find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Linux ${PROJECT_SOURCE_DIR}/Platform/Linux/X11)
+        endif()
+    
         find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Linux)
     endif()
 endif()
-
 
 # === Source group folders ===
 

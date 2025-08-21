@@ -10,8 +10,7 @@
 
 
 #include "LinuxGLContextX11.h"
-#include "../GLSwapChainContext.h"
-#include "../../OpenGL.h"
+#include "../../GLSwapChainContext.h"
 #include <X11/Xlib.h>
 
 namespace LLGL

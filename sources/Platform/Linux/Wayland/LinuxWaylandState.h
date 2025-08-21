@@ -8,7 +8,6 @@
 #ifndef LLGL_LINUX_WAYLAND_STATE_H
 #define LLGL_LINUX_WAYLAND_STATE_H
 
-#if LLGL_LINUX_ENABLE_WAYLAND
 
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
@@ -179,6 +178,6 @@ class LinuxWaylandState
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
+
 
 #endif // LLGL_LINUX_WAYLAND_STATE_H

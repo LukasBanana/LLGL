@@ -9,8 +9,6 @@
 #define LLGL_LINUX_WINDOW_WAYLAND_H
 
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include <LLGL/Window.h>
 
 #include <wayland-client.h>
@@ -132,7 +130,6 @@ class LinuxWindowWayland final : public Window
 
 } // /namespace LLGL
 
-#endif // LLGL_LINUX_ENABLE_WAYLAND
 
 
 #endif // LLGL_LINUX_WINDOW_WAYLAND_H

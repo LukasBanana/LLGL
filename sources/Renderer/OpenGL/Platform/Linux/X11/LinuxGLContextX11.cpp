@@ -6,15 +6,15 @@
  */
 
 #include "LinuxGLContextX11.h"
-#include "../../Ext/GLExtensions.h"
-#include "../../Ext/GLExtensionLoader.h"
-#include "../../GLCore.h"
-#include "../../../CheckedCast.h"
-#include "../../../StaticAssertions.h"
-#include "../../../RenderSystemUtils.h"
-#include "../../../../Core/CoreUtils.h"
-#include "../../../../Core/Assertion.h"
-#include "../../../../Platform/Linux/LinuxDisplayX11.h"
+#include "../../../Ext/GLExtensions.h"
+#include "../../../Ext/GLExtensionLoader.h"
+#include "../../../GLCore.h"
+#include "../../../../CheckedCast.h"
+#include "../../../../StaticAssertions.h"
+#include "../../../../RenderSystemUtils.h"
+#include "../../../../../Core/CoreUtils.h"
+#include "../../../../../Core/Assertion.h"
+#include "../../../../../Platform/Linux/X11/LinuxDisplayX11.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>

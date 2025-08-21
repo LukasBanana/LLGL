@@ -5,8 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include "LinuxGLContextWayland.h"
 #include "LinuxGLSwapChainContextWayland.h"
 #include <wayland-egl-core.h>
@@ -74,8 +72,6 @@ bool LinuxGLSwapChainContextWayland::MakeCurrentEGLContext(LinuxGLSwapChainConte
 
 
 } // /namespace LLGL
-
-#endif // /LLGL_LINUX_ENABLE_WAYLAND
 
 
 

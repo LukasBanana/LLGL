@@ -5,8 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include <cstring>
 #include <linux/input-event-codes.h>
 #include <unistd.h>
@@ -16,8 +14,8 @@
 
 #include <LLGL/Log.h>
 
-#include "../../Core/Exception.h"
-#include "../../Core/Assertion.h"
+#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 
 #include "LLGL/DisplayFlags.h"
 #include "LLGL/Timer.h"
@@ -1095,5 +1093,3 @@ const LLGL::DynamicVector<LinuxWindowWayland*>& LinuxWaylandState::GetWindowList
 }
 
 }
-
-#endif
