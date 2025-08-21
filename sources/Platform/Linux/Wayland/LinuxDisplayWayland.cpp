@@ -5,8 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_LINUX_ENABLE_WAYLAND
-
 #include "LinuxDisplayWayland.h"
 #include "LinuxWaylandState.h"
 #include <X11/extensions/Xrandr.h>
@@ -83,8 +81,6 @@ struct wl_output* LinuxDisplayWayland::GetNative() const
 
 
 } // /namespace LLGL
-
-#endif // /LLGL_LINUX_ENABLE_WAYLAND
 
 
 
