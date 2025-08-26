@@ -97,8 +97,10 @@ static void XDGTopLevelHandleConfigureCallback(
 
     LinuxWindowWayland::State& state = window->GetState();
 
-	if (width != 0 && height != 0 && (width != state.size.width || height != state.size.height))
-        window->SetSizeInternal(Extent2D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) });
+    const Extent2D newSize = Extent2D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+
+	if (width != 0 && height != 0 && newSize != state.size)
+        window->SetSizeInternal(newSize);
 }
 
 static void XDGTopLevelHandleCloseCallback(void* userData, xdg_toplevel* toplevel)
