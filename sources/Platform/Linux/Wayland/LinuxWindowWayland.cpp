@@ -30,7 +30,6 @@
 #include "protocols/viewporter-client-protocol.h"
 
 #include "LinuxWindowWayland.h"
-#include "LinuxDisplayWayland.h"
 #include "LinuxWaylandState.h"
 
 
