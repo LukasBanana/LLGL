@@ -123,7 +123,7 @@ LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescr
 LLGL_EXPORT SmallVector<Shader*, 3> GetShadersAsArray(const MeshPipelineDescriptor& desc)
 {
     SmallVector<Shader*, 3> shaders;
-    AddShaderIfSet(shaders, desc.amplificationShader);
+    AddShaderIfSet(shaders, desc.taskShader);
     AddShaderIfSet(shaders, desc.meshShader);
     AddShaderIfSet(shaders, desc.fragmentShader);
     return shaders;

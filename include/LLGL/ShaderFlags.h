@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
+#include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
 
@@ -42,8 +43,11 @@ enum class ShaderType
     Compute,        //!< Compute shader type.
 
     // Mesh pipeline.
-    Amplification,  //!< Amplification shader
+    Task,           //!< Task shader (also "Amplification Shader").
     Mesh,           //!< Mesh shader
+
+    //! \deprecated Since 0.05b; Use Task instead!
+    Amplification LLGL_DEPRECATED_ENUMCASE("Identifier `Amplification` is deprecated since 0.05b; Use `Task` instead!", "Task") = Task,
 };
 
 /**
@@ -194,8 +198,8 @@ struct StageFlags
         //! Specifies the compute shader stage.
         ComputeStage        = (1 << 5),
 
-        //! Specifies the amplification shader stage (used in conjunction with a mesh shader).
-        AmplificationStage  = (1 << 6),
+        //! Specifies the task shader stage (used in conjunction with a mesh shader).
+        TaskStage           = (1 << 6),
 
         //! Specifies the mesh shader stage.
         MeshStage           = (1 << 7),
@@ -208,6 +212,9 @@ struct StageFlags
 
         //! Specifies all shader stages.
         AllStages           = (AllGraphicsStages | ComputeStage),
+
+        //! \deprecated Since 0.05b; Use TaskStage instead!
+        AmplificationStage LLGL_DEPRECATED_ENUMCASE("Identifier `AmplificationStage` is deprecated since 0.05b; Use `TaskStage` instead!", "TaskStage") = TaskStage,
     };
 };
 

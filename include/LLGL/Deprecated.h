@@ -69,6 +69,28 @@
 
 #endif
 
+#if defined __clang__ // Prefer Clang deprecation attribute as it provides better diagnostics than the C++14 attribute
+
+#   define LLGL_DEPRECATED_ENUMCASE(MESSAGE, ...) \
+        __attribute__((deprecated(MESSAGE LLGL_DEPRECATED_VA_ARGS(__VA_ARGS__))))
+
+#elif defined __GNUC__
+
+#   define LLGL_DEPRECATED_ENUMCASE(MESSAGE, ...) \
+        __attribute__((deprecated(MESSAGE)))
+
+#elif __cplusplus >= 201703L // C++17
+
+#   define LLGL_DEPRECATED_ENUMCASE(MESSAGE, ...) \
+        [[deprecated(MESSAGE)]]
+
+#else
+
+#   define LLGL_DEPRECATED_ENUMCASE(MESSAGE, ...)
+
+#endif
+
+
 
 #endif
 

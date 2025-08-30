@@ -5,6 +5,7 @@
 # Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
 #
 
+import re
 from llgl_translator import *
 
 class C99Translator(Translator):
@@ -128,7 +129,9 @@ class C99Translator(Translator):
 
                 for decl in declList.decls:
                     if decl.init:
-                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {decl.init},')
+                        isInitValueMemberOfEnum = any(decl.init in otherDecl.name for otherDecl in declList.decls)
+                        initValue = f'LLGL{enum.name}{decl.init}' if isInitValueMemberOfEnum else decl.init
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {initValue},')
                     else:
                         self.statement(f'{decl.name},')
 

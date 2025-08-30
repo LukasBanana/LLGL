@@ -32,7 +32,7 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         /* ----- Mesh pipeline ----- */
 
         /**
-        \brief Draws a mesh by dispatching mesh and amplification shader work groups.
+        \brief Draws a mesh by dispatching shader work groups for mesh tasks.
         \param[in] numWorkGroupsX Specifies the number of worker thread groups in the X-dimension.
         \param[in] numWorkGroupsY Specifies the number of worker thread groups in the Y-dimension.
         \param[in] numWorkGroupsZ Specifies the number of worker thread groups in the Z-dimension.

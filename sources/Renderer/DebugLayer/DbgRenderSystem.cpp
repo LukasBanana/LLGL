@@ -539,10 +539,10 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const MeshPipelineDescriptor
         if (pipelineStateDesc.pipelineLayout != nullptr)
             instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
-        instanceDesc.renderPass             = DbgGetInstance<DbgRenderPass>(pipelineStateDesc.renderPass);
-        instanceDesc.amplificationShader    = DbgGetInstance<DbgShader>(pipelineStateDesc.amplificationShader);
-        instanceDesc.meshShader             = DbgGetInstance<DbgShader>(pipelineStateDesc.meshShader);
-        instanceDesc.fragmentShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.fragmentShader);
+        instanceDesc.renderPass     = DbgGetInstance<DbgRenderPass>(pipelineStateDesc.renderPass);
+        instanceDesc.taskShader     = DbgGetInstance<DbgShader>(pipelineStateDesc.taskShader);
+        instanceDesc.meshShader     = DbgGetInstance<DbgShader>(pipelineStateDesc.meshShader);
+        instanceDesc.fragmentShader = DbgGetInstance<DbgShader>(pipelineStateDesc.fragmentShader);
     }
     return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, pipelineCache), pipelineStateDesc);
 }
@@ -2182,9 +2182,9 @@ void DbgRenderSystem::ValidateMeshPipelineDesc(const MeshPipelineDescriptor& pip
 
     bool hasShadersWithFailedReflection = false;
 
-    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.amplificationShader, ShaderType::Amplification },
-                                 ShaderTypePair{ pipelineStateDesc.meshShader,          ShaderType::Mesh          },
-                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,      ShaderType::Fragment      } })
+    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.amplificationShader, ShaderType::Task     },
+                                 ShaderTypePair{ pipelineStateDesc.meshShader,          ShaderType::Mesh     },
+                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,      ShaderType::Fragment } })
     {
         if (Shader* shader = pair.shader)
         {

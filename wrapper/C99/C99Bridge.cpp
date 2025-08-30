@@ -234,12 +234,12 @@ void ConvertComputePipelineDesc(ComputePipelineDescriptor& dst, const LLGLComput
 
 void ConvertMeshPipelineDesc(LLGL::MeshPipelineDescriptor& dst, const LLGLMeshPipelineDescriptor& src)
 {
-    dst.debugName               = src.debugName;
-    dst.pipelineLayout          = LLGL_PTR(PipelineLayout, src.pipelineLayout);
-    dst.renderPass              = LLGL_PTR(RenderPass, src.renderPass);
-    dst.amplificationShader     = LLGL_PTR(Shader, src.amplificationShader);
-    dst.meshShader              = LLGL_PTR(Shader, src.meshShader);
-    dst.fragmentShader          = LLGL_PTR(Shader, src.fragmentShader);
+    dst.debugName       = src.debugName;
+    dst.pipelineLayout  = LLGL_PTR(PipelineLayout, src.pipelineLayout);
+    dst.renderPass      = LLGL_PTR(RenderPass, src.renderPass);
+    dst.taskShader      = LLGL_PTR(Shader, src.taskShader);
+    dst.meshShader      = LLGL_PTR(Shader, src.meshShader);
+    dst.fragmentShader  = LLGL_PTR(Shader, src.fragmentShader);
 
     dst.viewports.resize(src.numViewports);
     ::memcpy(dst.viewports.data(), src.viewports, src.numViewports * sizeof(LLGLViewport));

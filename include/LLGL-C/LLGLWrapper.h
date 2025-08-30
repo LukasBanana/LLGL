@@ -200,11 +200,6 @@ typedef enum LLGLImageFormat
     LLGLImageFormatDepthStencil,
     LLGLImageFormatStencil,
     LLGLImageFormatCompressed,
-    LLGLImageFormatBC1,
-    LLGLImageFormatBC2,
-    LLGLImageFormatBC3,
-    LLGLImageFormatBC4,
-    LLGLImageFormatBC5,
 }
 LLGLImageFormat;
 
@@ -745,8 +740,9 @@ typedef enum LLGLShaderType
     LLGLShaderTypeGeometry,
     LLGLShaderTypeFragment,
     LLGLShaderTypeCompute,
-    LLGLShaderTypeAmplification,
+    LLGLShaderTypeTask,
     LLGLShaderTypeMesh,
+    LLGLShaderTypeAmplification  = LLGLShaderTypeTask,
 }
 LLGLShaderType;
 
@@ -992,11 +988,12 @@ typedef enum LLGLStageFlags
     LLGLStageGeometryStage       = (1 << 3),
     LLGLStageFragmentStage       = (1 << 4),
     LLGLStageComputeStage        = (1 << 5),
-    LLGLStageAmplificationStage  = (1 << 6),
+    LLGLStageTaskStage           = (1 << 6),
     LLGLStageMeshStage           = (1 << 7),
     LLGLStageAllTessStages       = (LLGLStageTessControlStage | LLGLStageTessEvaluationStage),
     LLGLStageAllGraphicsStages   = (LLGLStageVertexStage | LLGLStageAllTessStages | LLGLStageGeometryStage | LLGLStageFragmentStage),
     LLGLStageAllStages           = (LLGLStageAllGraphicsStages | LLGLStageComputeStage),
+    LLGLStageAmplificationStage  = LLGLStageTaskStage,
 }
 LLGLStageFlags;
 
@@ -1811,7 +1808,8 @@ typedef struct LLGLMeshPipelineDescriptor
     const char*              debugName;           /* = NULL */
     LLGLPipelineLayout       pipelineLayout;      /* = LLGL_NULL_OBJECT */
     LLGLRenderPass           renderPass;          /* = LLGL_NULL_OBJECT */
-    LLGLShader               amplificationShader; /* = LLGL_NULL_OBJECT */
+    LLGLShader               taskShader;          /* = LLGL_NULL_OBJECT */
+    LLGLShader               amplificationShader; /* Identifier `amplificationShader` is deprecated since 0.05b; Use `taskShader` instead! */
     LLGLShader               meshShader;          /* = LLGL_NULL_OBJECT */
     LLGLShader               fragmentShader;      /* = LLGL_NULL_OBJECT */
     size_t                   numViewports;        /* = 0 */

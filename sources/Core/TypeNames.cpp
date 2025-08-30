@@ -29,7 +29,7 @@ LLGL_EXPORT const char* ToString(const ShaderType val)
 
         case T::Compute:        return "compute";
 
-        case T::Amplification:  return "amplification";
+        case T::Task:           return "task";
         case T::Mesh:           return "mesh";
     }
 

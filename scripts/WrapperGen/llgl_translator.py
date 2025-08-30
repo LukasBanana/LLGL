@@ -35,7 +35,7 @@ class Translator:
             self.fixedArray = inFixedArray
 
     class DeclarationList:
-        decls = []
+        decls = [] # [Translator.Declaration]
         maxLen = [0, 0, 0]
 
         def __init__(self):

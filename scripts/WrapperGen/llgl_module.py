@@ -261,7 +261,7 @@ class LLGLField:
 class LLGLRecord:
     name = ''
     base = None
-    fields = []
+    fields = [] # [LLGLField]
     deps = set() # Set of record names this record depends on
 
     def __init__(self, name):
@@ -300,11 +300,11 @@ class LLGLFunction:
 
 class LLGLModule:
     name = ''
-    enums = [] # Array of LLGLRecord
-    flags = [] # Array of LLGLRecord
-    structs = [] # Array of LLGLRecord
-    funcs = [] # Array of LLGLFunction
-    delegates = [] # Array of LLGLFunction
+    enums = [] # [LLGLRecord]
+    flags = [] # [LLGLRecord]
+    structs = [] # [LLGLRecord]
+    funcs = [] # [LLGLFunction]
+    delegates = [] # [LLGLFunction]
     typeDeps = set() # Set of types used in this header
 
     def __init__(self):

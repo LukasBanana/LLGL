@@ -15,6 +15,7 @@
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/DynamicVector.h>
+#include <LLGL/Deprecated.h>
 #include <vector>
 #include <cstdint>
 
@@ -932,9 +933,13 @@ struct MeshPipelineDescriptor
     const RenderPass*       renderPass              = nullptr;
 
     /**
-    \brief Specifies an optional amplification shader.
+    \brief Specifies an optional task shader.
     \remarks This is optional to further optimize the PSO.
     */
+    Shader*                 taskShader              = nullptr;
+
+    //! \deprecated Since 0.05b; Use taskShader instead!
+    LLGL_DEPRECATED("Identifier `amplificationShader` is deprecated since 0.05b; Use `taskShader` instead!", "taskShader")
     Shader*                 amplificationShader     = nullptr;
 
     /**

@@ -233,7 +233,7 @@ class Parser:
         while self.scanner.acceptIfAny(['LLGL_DEPRECATED_IGNORE_PUSH', 'LLGL_DEPRECATED_IGNORE_POP']):
             self.scanner.acceptOrFail('(')
             self.scanner.ignoreUntil(')')
-        if self.scanner.acceptIf('LLGL_DEPRECATED'):
+        if self.scanner.acceptIfAny(['LLGL_DEPRECATED', 'LLGL_DEPRECATED_ENUMCASE']):
             self.scanner.acceptOrFail('(')
             msg = self.scanner.accept()
             self.scanner.ignoreUntil(')')
@@ -261,6 +261,7 @@ class Parser:
         entries = []
         while self.scanner.tok() != '}':
             entry = LLGLField(self.scanner.accept())
+            entry.deprecated = self.tryParseDeprecated()
             if self.scanner.acceptIf('='):
                 entry.init = self.parseInitializer()
             entries.append(entry)

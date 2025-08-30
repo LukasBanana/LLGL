@@ -159,9 +159,9 @@ void D3D12MeshPSO::CreateNativePSO(
     stateDesc.rootSignature = GetRootSignature();
 
     /* Get shader byte codes */
-    stateDesc.amplificationShader = GetD3DShaderByteCode(desc.amplificationShader);
-    stateDesc.meshShader = GetD3DShaderByteCode(desc.meshShader);
-    stateDesc.pixelShader = GetD3DShaderByteCode(desc.fragmentShader);
+    stateDesc.amplificationShader   = GetD3DShaderByteCode(desc.taskShader);
+    stateDesc.meshShader            = GetD3DShaderByteCode(desc.meshShader);
+    stateDesc.pixelShader           = GetD3DShaderByteCode(desc.fragmentShader);
 
     /* Convert blend state and depth-stencil format */
     if (renderPass != nullptr)

@@ -85,7 +85,7 @@ static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageF
     if ((convolutedStageFlags & StageFlags::FragmentStage) == 0)
         signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-    if ((convolutedStageFlags & StageFlags::AmplificationStage) == 0)
+    if ((convolutedStageFlags & StageFlags::TaskStage) == 0)
         signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS;
     if ((convolutedStageFlags & StageFlags::MeshStage) == 0)
         signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;

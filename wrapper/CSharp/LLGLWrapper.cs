@@ -190,11 +190,6 @@ namespace LLGL
         DepthStencil,
         Stencil,
         Compressed,
-        BC1,
-        BC2,
-        BC3,
-        BC4,
-        BC5,
     }
 
     public enum DataType
@@ -709,8 +704,9 @@ namespace LLGL
         Geometry,
         Fragment,
         Compute,
-        Amplification,
+        Task,
         Mesh,
+        Amplification  = Task,
     }
 
     public enum ShaderSourceType
@@ -951,11 +947,12 @@ namespace LLGL
         GeometryStage       = (1 << 3),
         FragmentStage       = (1 << 4),
         ComputeStage        = (1 << 5),
-        AmplificationStage  = (1 << 6),
+        TaskStage           = (1 << 6),
         MeshStage           = (1 << 7),
         AllTessStages       = (TessControlStage | TessEvaluationStage),
         AllGraphicsStages   = (VertexStage | AllTessStages | GeometryStage | FragmentStage),
         AllStages           = (AllGraphicsStages | ComputeStage),
+        AmplificationStage  = TaskStage,
     }
 
     [Flags]
@@ -3258,6 +3255,8 @@ namespace LLGL
         public AnsiString           DebugName { get; set; }           = null;
         public PipelineLayout       PipelineLayout { get; set; }      = null;
         public RenderPass           RenderPass { get; set; }          = null;
+        public Shader               TaskShader { get; set; }          = null;
+        [Obsolete("Identifier `amplificationShader` is deprecated since 0.05b; Use `taskShader` instead!")]
         public Shader               AmplificationShader { get; set; } = null;
         public Shader               MeshShader { get; set; }          = null;
         public Shader               FragmentShader { get; set; }      = null;
@@ -3287,9 +3286,9 @@ namespace LLGL
                     {
                         native.renderPass = RenderPass.Native;
                     }
-                    if (AmplificationShader != null)
+                    if (TaskShader != null)
                     {
-                        native.amplificationShader = AmplificationShader.Native;
+                        native.taskShader = TaskShader.Native;
                     }
                     if (MeshShader != null)
                     {
@@ -4388,7 +4387,9 @@ namespace LLGL
             public byte*                debugName;           /* = null */
             public PipelineLayout       pipelineLayout;      /* = null */
             public RenderPass           renderPass;          /* = null */
-            public Shader               amplificationShader; /* = null */
+            public Shader               taskShader;          /* = null */
+            [Obsolete("Identifier `amplificationShader` is deprecated since 0.05b; Use `taskShader` instead!")]
+            public Shader               amplificationShader;
             public Shader               meshShader;          /* = null */
             public Shader               fragmentShader;      /* = null */
             public IntPtr               numViewports;
