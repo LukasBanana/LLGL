@@ -186,10 +186,14 @@ endif()
 
 option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
 option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C# (requires LLGL_BUILD_WRAPPER_C99)" OFF)
+option(LLGL_BUILD_WRAPPER_GO "Include wrapper for Go (requires LLGL_BUILD_WRAPPER_C99)" OFF)
 
 if(NOT LLGL_BUILD_WRAPPER_C99)
     if(LLGL_BUILD_WRAPPER_CSHARP)
         message(SEND_ERROR "LLGL_BUILD_WRAPPER_CSHARP is enabled but not LLGL_BUILD_WRAPPER_C99; The C# wrapper depends on the C99 wrapper!")
+    endif()
+    if(LLGL_BUILD_WRAPPER_GO)
+        message(SEND_ERROR "LLGL_BUILD_WRAPPER_GO is enabled but not LLGL_BUILD_WRAPPER_C99; The Go wrapper depends on the C99 wrapper!")
     endif()
 endif()
 
@@ -915,6 +919,11 @@ if(LLGL_BUILD_WRAPPER_CSHARP)
     add_subdirectory(wrapper/CSharp)
 endif()
 
+# Wrapper: Go
+if(LLGL_BUILD_WRAPPER_GO)
+    configure_file("wrapper/Go/LLGL.pc.in" "${LLGL_OUTPUT_DIR}/LLGL.pc" @ONLY)
+endif()
+
 # Install targets, headers, and CMake config files
 get_property(LLGL_ALL_TARGETS GLOBAL PROPERTY LLGL_GLOBAL_MODULE_LIST)
 if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
@@ -977,6 +986,10 @@ endif()
 
 if(LLGL_BUILD_WRAPPER_CSHARP)
     message(STATUS "Build Wrapper: C#")
+endif()
+
+if(LLGL_BUILD_WRAPPER_GO)
+    message(STATUS "Bulid Wrapper: Go")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)

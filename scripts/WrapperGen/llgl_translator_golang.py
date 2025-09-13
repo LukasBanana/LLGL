@@ -44,8 +44,7 @@ class GolangTranslator(Translator):
         # Write C-include boilerplate code
         self.statement('package llgl')
         self.statement()
-        self.statement('// #cgo LDFLAGS: libLLGL.dll.a') #TODO: this is for experimentation only
-        self.statement('// #cgo CFLAGS: -I ../../include') #TODO: this is for experimentation only
+        self.statement('// #cgo pkg-config: LLGL')
         self.statement('// #include <LLGL-C/LLGL.h>')
         self.statement('import "C"')
         self.statement()

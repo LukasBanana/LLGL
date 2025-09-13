@@ -35,14 +35,14 @@ func main() {
 	}
 
 	vertices := [3]Vertex{
-		Vertex{ x:  0.0, y: +0.5, color: 0xFF0000FF }, // Red
-		Vertex{ x: +0.5, y: -0.5, color: 0xFF00FF00 }, // Green
-		Vertex{ x: -0.5, y: -0.5, color: 0xFFFF0000 }, // Blue
+		{ x:  0.0, y: +0.5, color: 0xFF0000FF }, // Red
+		{ x: +0.5, y: -0.5, color: 0xFF00FF00 }, // Green
+		{ x: -0.5, y: -0.5, color: 0xFFFF0000 }, // Blue
 	}
 
 	vertexLayout := []llgl.VertexAttribute{
-		llgl.VertexAttribute{ Name: "position", Format: llgl.FormatRG32Float,  Location: 0, Offset: uint32(unsafe.Offsetof(vertices[0].x    )), Stride: uint32(unsafe.Sizeof(vertices[0])) },
-		llgl.VertexAttribute{ Name: "color",    Format: llgl.FormatRGBA8UNorm, Location: 1, Offset: uint32(unsafe.Offsetof(vertices[0].color)), Stride: uint32(unsafe.Sizeof(vertices[0])) },
+		{ Name: "position", Format: llgl.FormatRG32Float,  Location: 0, Offset: uint32(unsafe.Offsetof(vertices[0].x    )), Stride: uint32(unsafe.Sizeof(vertices[0])) },
+		{ Name: "color",    Format: llgl.FormatRGBA8UNorm, Location: 1, Offset: uint32(unsafe.Offsetof(vertices[0].color)), Stride: uint32(unsafe.Sizeof(vertices[0])) },
 	}
 	
 	vertexBuffer := renderer.CreateBuffer(

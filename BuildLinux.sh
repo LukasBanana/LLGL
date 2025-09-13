@@ -13,6 +13,7 @@ ENABLE_TESTS="ON"
 ENABLE_GL2X="OFF"
 ENABLE_SPIRV_REFLECT="OFF"
 ENABLE_WAYLAND="OFF"
+ENABLE_GOLANG="OFF"
 BUILD_TYPE="Release"
 UNITY_BUILD="OFF"
 PROJECT_ONLY=0
@@ -53,6 +54,7 @@ if [ $PLATFORM_MSYS -eq 1 ]; then
 else
     echo "  --wayland ................. Include Wayland support"
 fi
+    echo "  --golang .................. Include Go wrapper (aka. Golang)"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
     echo "NOTES:"
@@ -112,6 +114,8 @@ for ARG in "$@"; do
         else
             echo "Warning: Wayland is not supported for MSYS"
         fi
+    elif [ "$ARG" = "--golang" ]; then
+        ENABLE_GOLANG="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
     elif [ "$ARG" = "--no-tests" ]; then
@@ -166,6 +170,7 @@ fi
 # Build into output directory (this syntax requires CMake 3.13+)
 OPTIONS=(
     -DLLGL_BUILD_WRAPPER_C99=ON
+    -DLLGL_BUILD_WRAPPER_GO=$ENABLE_GOLANG
     -DLLGL_BUILD_RENDERER_OPENGL=ON
     -DLLGL_GL_ENABLE_OPENGL2X=$ENABLE_GL2X
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL

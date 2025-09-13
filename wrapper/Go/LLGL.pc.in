@@ -1,0 +1,10 @@
+# LLGL pkg-config file
+
+includedir=@PROJECT_SOURCE_DIR@/include
+libdir=@LLGL_OUTPUT_DIR@
+
+Name: LLGL
+Description: Low Level Graphics Library
+Version: 0.05
+Cflags: -I${includedir}
+Libs: -L${libdir} -lLLGL

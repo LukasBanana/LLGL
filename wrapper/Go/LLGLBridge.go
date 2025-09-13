@@ -7,7 +7,7 @@
 
 package llgl
 
-// #cgo CFLAGS: -I ../../include
+// #cgo pkg-config: LLGL
 // #include <stdlib.h>
 // #include <string.h>
 // #include <LLGL-C/LLGL.h>
@@ -175,7 +175,6 @@ func convertShaderDescriptor(dst *C.LLGLShaderDescriptor, src *ShaderDescriptor)
 	dst.profile		= C.CString(src.Profile)
 	dst.defines		= nil //(src.defines) //todo
 	dst.flags		= C.long(src.Flags)
-	dst.name		= nil // deprecated
 	convertVertexShaderAttributes(&dst.vertex, &src.Vertex)
 	convertFragmentShaderAttributes(&dst.fragment, &src.Fragment)
 	convertComputeShaderAttributes(&dst.compute, &src.Compute)

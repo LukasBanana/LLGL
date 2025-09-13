@@ -24,6 +24,9 @@ tests/Output
 *.dll
 *.dll.a
 
+# Intermediate configuration files for Go wrapper
+LLGL.pc
+
 # RenderDoc .cap capture files
 *.cap
 

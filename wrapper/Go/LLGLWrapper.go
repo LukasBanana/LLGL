@@ -9,8 +9,7 @@
 
 package llgl
 
-// #cgo LDFLAGS: libLLGL.dll.a
-// #cgo CFLAGS: -I ../../include
+// #cgo pkg-config: LLGL
 // #include <LLGL-C/LLGL.h>
 import "C"
 
