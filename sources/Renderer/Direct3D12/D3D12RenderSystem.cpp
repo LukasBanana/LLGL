@@ -533,7 +533,20 @@ void D3D12RenderSystem::CreateFactory(bool debugDevice)
 
 void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
 {
-    videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
+    if ((flags & RenderSystemFlags::SoftwareDevice) != 0)
+    {
+        ComPtr<IDXGIAdapter> adapter;
+        HRESULT hr = factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
+        DXThrowIfFailed(hr, "failed to enumerate D3D12 WARP adapters");
+
+        DXGI_ADAPTER_DESC desc;
+        hr = adapter->GetDesc(&desc);
+        DXThrowIfFailed(hr, "failed to get DXGI_ADAPTER_DESC from DXGI adapter");
+
+        DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdatperInfo_);
+    }
+    else
+        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
 }
 
 HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long flags)
@@ -557,21 +570,24 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
     };
     HRESULT hr = S_OK;
 
-    if (preferredAdapter != nullptr)
+    if ((flags & RenderSystemFlags::SoftwareDevice) == 0)
     {
-        /* Try to create device with perferred adatper */
-        hr = device_.CreateDXDevice(featureLevels, flags, preferredAdapter);
-        if (SUCCEEDED(hr))
-            return hr;
-    }
+        if (preferredAdapter != nullptr)
+        {
+            /* Try to create device with perferred adatper */
+            hr = device_.CreateDXDevice(featureLevels, flags, preferredAdapter);
+            if (SUCCEEDED(hr))
+                return hr;
+        }
 
-    /* Try to create device with default adapter */
-    hr = device_.CreateDXDevice(featureLevels, flags);
-    if (SUCCEEDED(hr))
-    {
-        /* Update video adapter info with default adapter */
-        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
-        return hr;
+        /* Try to create device with default adapter */
+        hr = device_.CreateDXDevice(featureLevels, flags);
+        if (SUCCEEDED(hr))
+        {
+            /* Update video adapter info with default adapter */
+            videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+            return hr;
+        }
     }
 
     /* Use software adapter as fallback */

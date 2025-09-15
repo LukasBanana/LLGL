@@ -200,6 +200,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             rendererDesc.rendererConfigSize = sizeof(cfgGL);
         }
     }
+    renderSystemFlags = rendererDesc.flags;
 
     Report report;
     if ((renderer = RenderSystem::Load(rendererDesc, &report)) != nullptr)
@@ -976,7 +977,23 @@ double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
 void TestbedContext::LogRendererInfo()
 {
     const RendererInfo& info = rendererInfo;
-    Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
+    if (opt.verbose)
+    {
+        Log::Printf(
+            "--------------------\n"
+            "Renderer:          %s\n"
+            "Device:            %s\n"
+            "Vendor:            %s\n"
+            "Shading Language:  %s\n"
+            "--------------------\n",
+            info.rendererName.c_str(),
+            info.deviceName.c_str(),
+            info.vendorName.c_str(),
+            info.shadingLanguageName.c_str()
+        );
+    }
+    else
+        Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
 
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
     {

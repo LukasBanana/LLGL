@@ -32,6 +32,7 @@ DEF_TEST( OffscreenC99 )
     LLGLRenderSystemDescriptor renderSysDesc = {};
     renderSysDesc.moduleName    = moduleName.c_str();
     renderSysDesc.debugger      = debugger;
+    renderSysDesc.flags         = renderSystemFlags;
 
     if (llglLoadRenderSystemExt(&renderSysDesc, report) == 0)
     {

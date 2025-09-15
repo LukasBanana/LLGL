@@ -396,7 +396,9 @@ static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags
     {
         /* Get adapter descriptor and check if this is either the preferred or the default adapter */
         DXGI_ADAPTER_DESC desc;
-        adapter->GetDesc(&desc);
+        HRESULT hr = adapter->GetDesc(&desc);
+        DXThrowIfFailed(hr, "failed to get DXGI_ADAPTER_DESC from DXGI adapter");
+
         const DeviceVendor vendor = GetVendorByID(desc.VendorId);
 
         const bool isPreferredAdapter = MatchPreferredVendor(vendor, preferredAdapterFlags);

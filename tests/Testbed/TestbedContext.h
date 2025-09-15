@@ -374,6 +374,7 @@ class TestbedContext
         LLGL::Texture*                  textures[TextureCount]  = {};
         LLGL::Sampler*                  samplers[SamplerCount]  = {};
         Gs::Matrix4f                    projection;
+        long                            renderSystemFlags       = 0;
 
     private:
 
