@@ -21,12 +21,22 @@ jobs:
     env:
       README: ${{ github.workspace }}/README.txt
       CONFIG: ${{ matrix.config == 'Debug' && 'Debug' || 'RelWithDebInfo' }}
+      DXC_URL: 'https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2505.1/dxc_2025_07_14.zip'
+      DXC_ARCH: ${{ matrix.arch == 'Win32' && 'x86' || 'x64' }}
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Install Dependencies
+      if: matrix.ext == 'Full'
+      run: |
+        echo "-------------- Install DirectXShaderCompiler (DXC) --------------"
+        curl -s -L -o dxc.zip ${{ env.DXC_URL }}
+        tar -xf dxc.zip
+        echo "$PWD\bin\${{ env.DXC_ARCH }}" >> "$env:GITHUB_PATH"
 
     - name: Configure CMake
       run: >

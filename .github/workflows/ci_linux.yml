@@ -29,6 +29,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
+        echo "-------------- Install Vulkan SDK --------------"
         sudo wget -O /etc/apt/trusted.gpg.d/lunarg-signing-key-pub.asc http://packages.lunarg.com/lunarg-signing-key-pub.asc
         sudo wget -O /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
         sudo apt update
