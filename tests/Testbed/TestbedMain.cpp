@@ -13,6 +13,7 @@
 
 #if _WIN32
 #   include <Windows.h>
+#   include <winapifamily.h>
 #endif
 
 
@@ -261,7 +262,7 @@ static LONG WINAPI TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
 
 int main(int argc, char* argv[])
 {
-    #ifdef _MSC_VER
+    #if defined _MSC_VER && WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
 
     AddVectoredExceptionHandler(1, TestbedVectoredExceptionHandler);
     __try

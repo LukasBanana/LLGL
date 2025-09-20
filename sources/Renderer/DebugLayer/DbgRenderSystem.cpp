@@ -2182,9 +2182,9 @@ void DbgRenderSystem::ValidateMeshPipelineDesc(const MeshPipelineDescriptor& pip
 
     bool hasShadersWithFailedReflection = false;
 
-    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.amplificationShader, ShaderType::Task     },
-                                 ShaderTypePair{ pipelineStateDesc.meshShader,          ShaderType::Mesh     },
-                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,      ShaderType::Fragment } })
+    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.taskShader,      ShaderType::Task     },
+                                 ShaderTypePair{ pipelineStateDesc.meshShader,      ShaderType::Mesh     },
+                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,  ShaderType::Fragment } })
     {
         if (Shader* shader = pair.shader)
         {

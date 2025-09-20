@@ -5,6 +5,10 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#if _MSC_VER
+#pragma warning(disable: 4996)
+#endif
+
 #include "Testbed.h"
 #include <LLGL/Container/DynamicArray.h>
 #include <LLGL/Container/SmallVector.h>
