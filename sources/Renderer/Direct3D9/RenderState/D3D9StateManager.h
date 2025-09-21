@@ -17,6 +17,9 @@ namespace LLGL
 {
 
 
+class D3D9EmulatedSampler;
+struct D3D9SamplerState;
+
 class D3D9StateManager
 {
 
@@ -31,15 +34,29 @@ class D3D9StateManager
 
         void SetRenderState(D3DRENDERSTATETYPE state, DWORD value);
         void SetTextureStageState(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value);
+        void SetSamplerState(DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value);
+        void SetSamplerStates(DWORD stage, const D3D9SamplerState& d3dState);
+
+        void BindSampler(DWORD stage, const D3D9EmulatedSampler* sampler);
 
     private:
 
         struct D3DTextureStage
         {
             static constexpr DWORD numTextureStageStates = static_cast<DWORD>(D3DTSS_CONSTANT);
-            static_assert(numTextureStageStates == 32, "D3DRS_BLENDOPALPHA is expected to be equal to 209");
+            static_assert(numTextureStageStates == 32, "D3DRS_BLENDOPALPHA is expected to be equal to 32");
             DWORD stageStates[numTextureStageStates] = {};
+
+            static constexpr DWORD numSamplerStates = static_cast<DWORD>(D3DSAMP_DMAPOFFSET);
+            static_assert(numSamplerStates == 13, "D3DSAMP_DMAPOFFSET is expected to be equal to 13");
+            DWORD samplerStates[numSamplerStates] = {};
+
+            const D3D9EmulatedSampler* boundSampler = nullptr;
         };
+
+    private:
+
+        void SetSamplerStateInternal(DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value);
 
     private:
 

@@ -1,4 +1,4 @@
-// HLSL shader version 4.0 (for Direct3D 11/ 12)
+// HLSL shader version 3.0 (for Direct3D 9)
 
 struct InputVS
 {

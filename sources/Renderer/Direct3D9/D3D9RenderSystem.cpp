@@ -264,7 +264,7 @@ void D3D9RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textur
 
 Sampler* D3D9RenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return samplers_.emplace<D3D9Sampler>(samplerDesc);
+    return samplers_.emplace<D3D9EmulatedSampler>(samplerDesc);
 }
 
 void D3D9RenderSystem::Release(Sampler& sampler)

@@ -211,6 +211,34 @@ D3DDECLTYPE ToD3DDeclType(const Format format)
     LLGL_TRAP_D3D_MAP(Format, format, D3DFORMAT);
 }
 
+D3DTEXTUREADDRESS ToD3DTextureAddress(const SamplerAddressMode mode)
+{
+    switch (mode)
+    {
+        case SamplerAddressMode::Repeat:        return D3DTADDRESS_WRAP;
+        case SamplerAddressMode::Mirror:        return D3DTADDRESS_MIRROR;
+        case SamplerAddressMode::Clamp:         return D3DTADDRESS_CLAMP;
+        case SamplerAddressMode::Border:        return D3DTADDRESS_BORDER;
+        case SamplerAddressMode::MirrorOnce:    return D3DTADDRESS_MIRRORONCE;
+    }
+    LLGL_TRAP_D3D_MAP(SamplerAddressMode, mode, D3DTEXTUREADDRESS);
+}
+
+D3DCOLOR ToD3DColor(const float color[4])
+{
+    return D3DCOLOR_COLORVALUE(color[0], color[1], color[2], color[3]);
+}
+
+D3DTEXTUREFILTERTYPE ToD3DTextureFilter(const SamplerFilter type)
+{
+    switch (type)
+    {
+        case SamplerFilter::Nearest:    return D3DTEXF_POINT;
+        case SamplerFilter::Linear:     return D3DTEXF_LINEAR;
+    }
+    LLGL_TRAP_D3D_MAP(SamplerFilter, type, D3DTEXTUREFILTERTYPE);
+}
+
 Format ToFormat(const D3DFORMAT format)
 {
     switch (format)

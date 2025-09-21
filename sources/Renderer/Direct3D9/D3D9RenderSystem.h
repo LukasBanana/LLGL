@@ -25,7 +25,7 @@
 #include "Shader/D3D9Shader.h"
 #include "Texture/D3D9Texture.h"
 #include "Texture/D3D9RenderTarget.h"
-#include "Texture/D3D9Sampler.h"
+#include "Texture/D3D9EmulatedSampler.h"
 #include "../ProxyPipelineCache.h"
 
 #include "../ContainerTypes.h"
@@ -87,7 +87,7 @@ class D3D9RenderSystem final : public RenderSystem
         HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
         HWObjectContainer<D3D9PipelineState>    pipelineStates_;
         HWObjectContainer<D3D9ResourceHeap>     resourceHeaps_;
-        HWObjectContainer<D3D9Sampler>          samplers_;
+        HWObjectContainer<D3D9EmulatedSampler>  samplers_;
         HWObjectContainer<D3D9QueryHeap>        queryHeaps_;
         HWObjectContainer<D3D9Fence>            fences_;
 

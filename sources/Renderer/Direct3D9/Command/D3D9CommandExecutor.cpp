@@ -9,7 +9,7 @@
 #include "D3D9Command.h"
 
 #include "../Texture/D3D9Texture.h"
-#include "../Texture/D3D9Sampler.h"
+#include "../Texture/D3D9EmulatedSampler.h"
 #include "../Texture/D3D9RenderTarget.h"
 
 #include "../Buffer/D3D9VertexBuffer.h"

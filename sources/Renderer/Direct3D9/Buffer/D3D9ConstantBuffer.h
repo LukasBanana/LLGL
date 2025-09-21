@@ -10,6 +10,7 @@
 
 
 #include "D3D9Buffer.h"
+#include "../Direct3D9.h"
 #include <vector>
 
 
@@ -29,16 +30,55 @@ class D3D9ConstantBuffer final : public D3D9Buffer
 
         D3D9ConstantBuffer(const BufferDescriptor& desc, const void* initialData);
 
+        // Writes new data into the buffer. This only updates the CPU data, Bind() sends it to the GPU.
+        HRESULT Write(UINT dstOffset, const void* data, UINT dataSize);
+
+        // Bind the buffer to the D3D device.
+        void Bind(IDirect3DDevice9* device);
+
     private:
 
-        struct ShaderRegister
+        enum D3DShaderStage
         {
-            std::uint32_t words[4];
+            D3DShaderStage_Vertex = 0,
+            D3DShaderStage_Pixel,
+
+            D3DShaderStage_Num,
+        };
+
+        struct alignas(4) D3DConstantsHeader
+        {
+            UINT startRegister;
+            UINT vector4Count;
+        };
+
+        struct D3DConstantsLayout
+        {
+            UINT firstEntry         = 0;
+            UINT numEntries         = 0;
+
+            UINT numFloatVectors    = 0;
+            UINT numIntVectors      = 0;
+            UINT numBoolVectors     = 0;
+        };
+
+        // Maps from interface layout to constants commands.
+        struct ConstantEntry
+        {
+            UINT offsetInStages[D3DShaderStage_Num] = { ~0u, ~0u }; // Word offset into 'constantsCommands_'
+            UINT byteSize                           = 0;
         };
 
     private:
 
-        std::vector<ShaderRegister> registers;
+        void WriteForStage(D3DShaderStage stage, UINT dstOffset, const void* data, UINT dataSize);
+
+    private:
+
+        std::vector<DWORD>          constantsCommands_; // Array of variable sized constants, each starting with D3DConstantsHeader
+        std::vector<ConstantEntry>  entries_;
+        UINT                        bufferSize_             = 0;
+        D3DConstantsLayout          constantsLayouts_[D3DShaderStage_Num];
 
 };
 

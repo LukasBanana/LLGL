@@ -11,6 +11,7 @@
 
 #include <LLGL/Format.h>
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/SamplerFlags.h>
 #include "Direct3D9.h"
 
 
@@ -24,6 +25,9 @@ namespace D3D9Types
 D3DFORMAT ToD3DFormat( const Format format );
 D3DFORMAT ToD3DIndexFormat( const Format format );
 D3DDECLTYPE ToD3DDeclType( const Format format );
+D3DTEXTUREADDRESS ToD3DTextureAddress( const SamplerAddressMode mode );
+D3DCOLOR ToD3DColor( const float color[4] );
+D3DTEXTUREFILTERTYPE ToD3DTextureFilter( const SamplerFilter type );
 
 Format ToFormat(const D3DFORMAT format);
 
