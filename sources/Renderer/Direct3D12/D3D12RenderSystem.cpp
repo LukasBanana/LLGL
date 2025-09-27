@@ -735,7 +735,10 @@ static std::vector<Format> GetDefaultSupportedDXTextureFormats()
 
     formats.insert(
         formats.end(),
-        { Format::BC4UNorm, Format::BC4SNorm, Format::BC5UNorm, Format::BC5SNorm }
+        {
+            Format::BC4UNorm,   Format::BC4SNorm,   Format::BC5UNorm, Format::BC5SNorm,
+            Format::BC6HUFloat, Format::BC6HSFloat, Format::BC7UNorm, Format::BC7UNorm_sRGB,
+        }
     );
 
     return formats;

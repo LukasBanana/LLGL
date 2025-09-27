@@ -70,6 +70,8 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
         Format::BC3UNorm,           Format::BC3UNorm_sRGB,
         Format::BC4UNorm,           Format::BC4SNorm,
         Format::BC5UNorm,           Format::BC5SNorm,
+        Format::BC6HUFloat,         Format::BC6HSFloat,
+        Format::BC7UNorm,           Format::BC7UNorm_sRGB,
         #endif
 
         Format::ASTC4x4,            Format::ASTC4x4_sRGB,

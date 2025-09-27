@@ -226,6 +226,10 @@ enum class Format
     BC4SNorm,           //!< Compressed color format: S3TC BC4 compressed red channel with normalized signed integer component 64-bit per 4x4 block.
     BC5UNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized unsigned integer components in 64-bit per 4x4 block.
     BC5SNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized signed integer components in 128-bit per 4x4 block.
+    BC6HUFloat,         //!< Compressed color format: BPTC BC6H compressed RGB for high-dynamic range (HDR) with unsigned 16-bit floating-point components in 128-bit per 4x4 block.
+    BC6HSFloat,         //!< Compressed color format: BPTC BC6H compressed RGB for high-dynamic range (HDR) with signed 16-bit floating-point components in 128-bit per 4x4 block.
+    BC7UNorm,           //!< Compressed color format: BPTC BC7 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block.
+    BC7UNorm_sRGB,      //!< Compressed color format: BPTC BC7 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block in non-linear sRGB color space.
 
     /* --- Advanced scalable texture compression (ASTC) formats --- */
     ASTC4x4,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 4x4 block (8.00 bit rate). \note Only supported with: OpenGL, Vulkan, Metal.

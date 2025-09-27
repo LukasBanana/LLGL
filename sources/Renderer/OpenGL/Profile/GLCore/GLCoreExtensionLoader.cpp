@@ -1240,6 +1240,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( EXT_texture_array                );
     ENABLE_GLEXT( INTEL_conservative_rasterization );
     ENABLE_GLEXT( NV_conservative_raster           );
+    ENABLE_GLEXT( ARB_texture_compression_bptc     );
 
     #undef LOAD_GLEXT
     #undef ENABLE_GLEXT

@@ -144,6 +144,10 @@ const (
     FormatBC4SNorm
     FormatBC5UNorm
     FormatBC5SNorm
+    FormatBC6HUFloat
+    FormatBC6HSFloat
+    FormatBC7UNorm
+    FormatBC7UNorm_sRGB
     FormatASTC4x4
     FormatASTC4x4_sRGB
     FormatASTC5x4

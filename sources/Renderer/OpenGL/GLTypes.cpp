@@ -217,6 +217,13 @@ GLenum MapOrZero(const Format format)
         case Format::BC5SNorm:          return GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
         #endif // /GL_EXT_texture_compression_rgtc
 
+        #if GL_ARB_texture_compression_bptc
+        case Format::BC6HUFloat:        return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB;
+        case Format::BC6HSFloat:        return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB;
+        case Format::BC7UNorm:          return GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
+        case Format::BC7UNorm_sRGB:     return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB;
+        #endif // /GL_ARB_texture_compression_bptc
+
         /* --- Advanced scalable texture compression (ASTC) formats --- */
         #if GL_ES_VERSION_3_2
         case Format::ASTC4x4:           return GL_COMPRESSED_RGBA_ASTC_4x4;
@@ -1149,6 +1156,14 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_COMPRESSED_RED_GREEN_RGTC2_EXT:         return Format::BC5UNorm;
         case GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT:  return Format::BC5SNorm;
         #endif // /GL_EXT_texture_compression_rgtc
+
+
+        #if GL_ARB_texture_compression_bptc
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB: return Format::BC6HUFloat;
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB:   return Format::BC6HSFloat;
+        case GL_COMPRESSED_RGBA_BPTC_UNORM_ARB:         return Format::BC7UNorm;
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB:   return Format::BC7UNorm_sRGB;
+        #endif // /GL_ARB_texture_compression_bptc
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
         #if GL_ES_VERSION_3_2

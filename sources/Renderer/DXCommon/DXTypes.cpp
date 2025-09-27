@@ -149,6 +149,10 @@ DXGI_FORMAT ToDXGIFormat(const Format format)
         case Format::BC4SNorm:          return DXGI_FORMAT_BC4_SNORM;
         case Format::BC5UNorm:          return DXGI_FORMAT_BC5_UNORM;
         case Format::BC5SNorm:          return DXGI_FORMAT_BC5_SNORM;
+        case Format::BC6HUFloat:        return DXGI_FORMAT_BC6H_UF16;
+        case Format::BC6HSFloat:        return DXGI_FORMAT_BC6H_SF16;
+        case Format::BC7UNorm:          return DXGI_FORMAT_BC7_UNORM;
+        case Format::BC7UNorm_sRGB:     return DXGI_FORMAT_BC7_UNORM_SRGB;
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
         case Format::ASTC4x4:           break;
@@ -329,6 +333,10 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_BC4_SNORM:                 return Format::BC4SNorm;
         case DXGI_FORMAT_BC5_UNORM:                 return Format::BC5UNorm;
         case DXGI_FORMAT_BC5_SNORM:                 return Format::BC5SNorm;
+        case DXGI_FORMAT_BC6H_UF16:                 return Format::BC6HUFloat;
+        case DXGI_FORMAT_BC6H_SF16:                 return Format::BC6HSFloat;
+        case DXGI_FORMAT_BC7_UNORM:                 return Format::BC7UNorm;
+        case DXGI_FORMAT_BC7_UNORM_SRGB:            return Format::BC7UNorm_sRGB;
 
         default:                                    return Format::Undefined;
     }

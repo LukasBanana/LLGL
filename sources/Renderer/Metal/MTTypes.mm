@@ -173,6 +173,10 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::BC4SNorm:          return MTLPixelFormatBC4_RSnorm;
         case Format::BC5UNorm:          return MTLPixelFormatBC5_RGUnorm;
         case Format::BC5SNorm:          return MTLPixelFormatBC5_RGSnorm;
+        case Format::BC6HUFloat:        return MTLPixelFormatBC6H_RGBUfloat;
+        case Format::BC6HSFloat:        return MTLPixelFormatBC6H_RGBFloat;
+        case Format::BC7UNorm:          return MTLPixelFormatBC7_RGBAUnorm;
+        case Format::BC7UNorm_sRGB:     return MTLPixelFormatBC7_RGBAUnorm_sRGB;
         #endif
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
@@ -637,6 +641,10 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatBC4_RSnorm:              return Format::BC4SNorm;
         case MTLPixelFormatBC5_RGUnorm:             return Format::BC5UNorm;
         case MTLPixelFormatBC5_RGSnorm:             return Format::BC5SNorm;
+        case MTLPixelFormatBC6H_RGBUfloat:          return Format::BC6HUFloat;
+        case MTLPixelFormatBC6H_RGBFloat:           return Format::BC6HSFloat;
+        case MTLPixelFormatBC7_RGBAUnorm:           return Format::BC7UNorm;
+        case MTLPixelFormatBC7_RGBAUnorm_sRGB:      return Format::BC7UNorm_sRGB;
         #endif // /LLGL_OS_IOS
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */

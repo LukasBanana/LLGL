@@ -157,6 +157,10 @@ VkFormat Map(const Format format)
         case Format::BC4SNorm:          return VK_FORMAT_BC4_SNORM_BLOCK;
         case Format::BC5UNorm:          return VK_FORMAT_BC5_UNORM_BLOCK;
         case Format::BC5SNorm:          return VK_FORMAT_BC5_SNORM_BLOCK;
+        case Format::BC6HUFloat:        return VK_FORMAT_BC6H_UFLOAT_BLOCK;
+        case Format::BC6HSFloat:        return VK_FORMAT_BC6H_SFLOAT_BLOCK;
+        case Format::BC7UNorm:          return VK_FORMAT_BC7_UNORM_BLOCK;
+        case Format::BC7UNorm_sRGB:     return VK_FORMAT_BC7_SRGB_BLOCK;
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
         case Format::ASTC4x4:           return VK_FORMAT_ASTC_4x4_UNORM_BLOCK;
@@ -594,6 +598,10 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_BC4_SNORM_BLOCK:             return Format::BC4SNorm;
         case VK_FORMAT_BC5_UNORM_BLOCK:             return Format::BC5UNorm;
         case VK_FORMAT_BC5_SNORM_BLOCK:             return Format::BC5SNorm;
+        case VK_FORMAT_BC6H_UFLOAT_BLOCK:           return Format::BC6HUFloat;
+        case VK_FORMAT_BC6H_SFLOAT_BLOCK:           return Format::BC6HSFloat;
+        case VK_FORMAT_BC7_UNORM_BLOCK:             return Format::BC7UNorm;
+        case VK_FORMAT_BC7_SRGB_BLOCK:              return Format::BC7UNorm_sRGB;
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
         case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:        return Format::ASTC4x4;
