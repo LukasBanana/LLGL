@@ -185,6 +185,8 @@ class D3D11Texture final : public Texture
 
         void SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize);
 
+        UINT GetDepthOrArraySize() const;
+
     private:
 
         ComPtr<ID3D11Resource>              native_;

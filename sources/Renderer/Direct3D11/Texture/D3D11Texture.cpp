@@ -1050,7 +1050,7 @@ void D3D11Texture::CreateDefaultUAV(ID3D11Device* device)
     if (hasTypelessFormat || hasDepthStencilFormat)
     {
         /* Create UAV with parameters for entire texture resource */
-        CreateSubresourceUAV(device, uav_.ReleaseAndGetAddressOf(), GetType(), DXTypes::ToDXGIFormat(GetFormat()), 0, 0, GetNumArrayLayers());
+        CreateSubresourceUAV(device, uav_.ReleaseAndGetAddressOf(), GetType(), DXTypes::ToDXGIFormat(GetFormat()), 0, 0, GetDepthOrArraySize());
     }
     else
     {
@@ -1065,6 +1065,11 @@ void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& extent,
     format_         = format;
     numMipLevels_   = (mipLevels == 0 ? NumMipLevels(extent.width, extent.height, extent.height) : mipLevels);
     numArrayLayers_ = arraySize;
+}
+
+UINT D3D11Texture::GetDepthOrArraySize() const
+{
+    return (GetType() == TextureType::Texture3D ? GetMipExtent(0).depth : numArrayLayers_);
 }
 
 

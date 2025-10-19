@@ -549,7 +549,7 @@ void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DES
         device,
         D3D12Types::MapUavDimension(GetType()),
         format_,
-        TextureSubresource{ 0, numArrayLayers_, 0, 1 },
+        TextureSubresource{ 0, GetDepthOrArraySize(), 0, 1 },
         cpuDescHandle
     );
 }
@@ -902,6 +902,11 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
             cpuDescHandle.ptr += descSize;
         }
     }
+}
+
+UINT D3D12Texture::GetDepthOrArraySize() const
+{
+    return (GetType() == TextureType::Texture3D ? extent_.depth : numArrayLayers_);
 }
 
 

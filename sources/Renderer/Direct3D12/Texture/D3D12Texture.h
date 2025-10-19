@@ -173,6 +173,8 @@ class D3D12Texture final : public Texture
 
         void CreateMipDescHeap(ID3D12Device* device);
 
+        UINT GetDepthOrArraySize() const;
+
     private:
 
         D3D12Resource                   resource_;
