@@ -1,13 +1,13 @@
 /*
- * DualSourceBlending.420core.vert
+ * AlphaOnlyTexture.330core.vert
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#version 420 core
+#version 330 core
 
-layout(location = 0) out vec2 vTexCoord;
+out vec2 vTexCoord;
 
 void main()
 {

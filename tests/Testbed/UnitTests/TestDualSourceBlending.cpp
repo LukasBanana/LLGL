@@ -29,7 +29,7 @@ DEF_TEST( DualSourceBlending )
     if (shaders[VSDualSourceBlend] == nullptr || shaders[PSDualSourceBlend] == nullptr)
         return TestResult::Skipped;
 
-    // Create all blend states
+    // Create PSO for dual-source blending
     PipelineLayout* psoLayout = renderer->CreatePipelineLayout(
         Parse(
             HasCombinedSamplers()

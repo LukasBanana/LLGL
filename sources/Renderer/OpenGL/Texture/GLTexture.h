@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Texture.h>
+#include "GLImageViewConverter.h"
 #include "../OpenGL.h"
 
 
@@ -21,14 +22,6 @@ struct ImageView;
 struct MutableImageView;
 struct TextureViewDescriptor;
 class GLEmulatedSampler;
-
-// Predefined texture swizzles to emulate certain texture format
-enum class GLSwizzleFormat
-{
-    RGBA,   // GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA (Identity mapping)
-    BGRA,   // GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA
-    Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
-};
 
 // OpenGL texture class that manages a GL texture or renderbuffer (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture

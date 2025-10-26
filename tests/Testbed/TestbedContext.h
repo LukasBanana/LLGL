@@ -110,6 +110,9 @@ class TestbedContext
         // Returns the aspect ratio of the main viewport.
         float GetAspectRatio() const;
 
+        // Loads a new texture from file.
+        LLGL::Texture* LoadTextureFromFile(const char* name, const std::string& filename, LLGL::Format format = LLGL::Format::RGBA8UNorm);
+
     protected:
 
         enum Models
@@ -160,6 +163,9 @@ class TestbedContext
 
             VSDualSourceBlend,
             PSDualSourceBlend,
+
+            VSAlphaOnlyTexture,
+            PSAlphaOnlyTexture,
 
             VSShadowMap,
             VSShadowedScene,
@@ -399,7 +405,7 @@ class TestbedContext
 
         bool LoadShaders();
         void CreatePipelineLayouts();
-        bool LoadTextures();
+        bool LoadDefaultTextures();
         void CreateSamplerStates();
         void LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio = 1.0f, float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
         void LoadDefaultProjectionMatrix();

@@ -75,6 +75,7 @@ DECL_TEST( SceneUpdate );
 DECL_TEST( VertexBuffer );
 DECL_TEST( BlendStates );
 DECL_TEST( DualSourceBlending );
+DECL_TEST( AlphaOnlyTexture );
 DECL_TEST( TriangleStripCutOff );
 DECL_TEST( TextureViews );
 DECL_TEST( TextureStrides );

@@ -881,7 +881,11 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
 {
     if (!IsRenderbuffer())
     {
-        const GLuint srcRowLength = GetGLRowLengthOrZero(srcImageView);
+        /* Convert initial image data for texture swizzle formats */
+        GLImageViewConverter imageViewConverter{ &srcImageView, GetSwizzleFormat() };
+        const ImageView& imageView = *imageViewConverter.GetView();
+
+        const GLuint srcRowLength = GetGLRowLengthOrZero(imageView);
 
         GLStateManager::Get().SetPixelStoreUnpack(srcRowLength, region.extent.height, 1);
         {
@@ -889,7 +893,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
             if (HasExtension(GLExt::ARB_direct_state_access))
             {
                 /* Transfer image data directly to GL texture */
-                GLTextureSubImage(GetID(), GetType(), region, srcImageView, GetGLInternalFormat());
+                GLTextureSubImage(GetID(), GetType(), region, imageView, GetGLInternalFormat());
             }
             else
             #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
@@ -901,7 +905,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
                     GLStateManager::Get().PushBoundTexture(target);
                     {
                         GLStateManager::Get().BindTexture(target, GetID());
-                        GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
+                        GLTexSubImage(GetType(), region, imageView, GetGLInternalFormat());
                     }
                     GLStateManager::Get().PopBoundTexture();
                 }
@@ -909,7 +913,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
                 {
                     /* Bind texture and transfer image data to GL texture */
                     GLStateManager::Get().BindTexture(target, GetID());
-                    GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
+                    GLTexSubImage(GetType(), region, imageView, GetGLInternalFormat());
                 }
             }
         }
@@ -1239,16 +1243,6 @@ static GLint GetInitialGlTextureMagFilter(const TextureDescriptor& textureDesc)
     return (IsIntegerFormat(textureDesc.format) ? GL_NEAREST : GL_LINEAR);
 }
 
-static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
-{
-    switch (format)
-    {
-        case ImageFormat::RGBA: return ImageFormat::BGRA;
-        case ImageFormat::RGB:  return ImageFormat::BGR;
-        default:                return format;
-    }
-}
-
 // Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
 static void BindGLTextureNonPersistent(const GLTexture& textureGL)
 {
@@ -1283,25 +1277,18 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     GLStateManager::Get().BindGLTexture(*this);
 
     /* Convert initial image data for texture swizzle formats */
-    ImageView intermediateImageView;
+    GLImageViewConverter imageViewConverter{ initialImage, GetSwizzleFormat() };
+    const ImageView* imageView = imageViewConverter.GetView();
 
-    if (initialImage != nullptr)
+    if (imageView != nullptr)
     {
-        /* Re-map image format if texture format must be emulated with component swizzling */
-        if (GetSwizzleFormat() == GLSwizzleFormat::BGRA)
-        {
-            intermediateImageView = *initialImage;
-            intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
-            initialImage = &intermediateImageView;
-        }
-
-        const GLuint srcRowLength = GetGLRowLengthOrZero(*initialImage);
+        const GLuint srcRowLength = GetGLRowLengthOrZero(*imageView);
         GLStateManager::Get().SetPixelStoreUnpack(srcRowLength, textureDesc.extent.height, 1);
     }
 
     /* Build texture storage and upload image dataa */
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
-    GLTexImage(textureDesc, initialImage);
+    GLTexImage(textureDesc, imageView);
 
     /* Store internal GL format. Only desktop OpenGL can query the actual internal format. For GLES 3.0 and WebGL 2.0 we have to rely on the input format. */
     #if LLGL_OPENGL || GL_ES_VERSION_3_1
@@ -1323,7 +1310,7 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
     #endif
 
-    if (initialImage != nullptr)
+    if (imageView != nullptr)
     {
         GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
 

@@ -100,9 +100,7 @@ float SampleShadowMapPCF(float2 screenPos, float3 worldPos)
 {
     // Perform percentage closer filtering (PCF) as described here:
     // https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
-    float2 offset = (float2)(frac(screenPos * 0.5) > 0.25);
-    if (offset.y > 1.1)
-        offset.y = 0.0;
+    float2 offset = step(frac(screenPos * 0.5), (float2)0.25);
 
     float shadowSamples =
     (

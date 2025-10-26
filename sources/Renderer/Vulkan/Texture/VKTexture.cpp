@@ -155,9 +155,31 @@ TextureDescriptor VKTexture::GetDesc() const
     return texDesc;
 }
 
+// Maps the format from Alpha swizzling to RGBA
+static Format MapVKSwizzleFormatAlpha(const Format format)
+{
+    switch (format)
+    {
+        case Format::R8UNorm:   return Format::A8UNorm;
+        default:                return format;
+    }
+}
+
+// Returns the texture format for the specified texture swizzling
+static Format MapVKSwizzleFormat(const Format format, const VKSwizzleFormat swizzle)
+{
+    switch (swizzle)
+    {
+        case VKSwizzleFormat::Alpha:    return MapVKSwizzleFormatAlpha(format);
+        default:                        return format;
+    }
+}
+
 Format VKTexture::GetFormat() const
 {
-    return VKTypes::Unmap(GetVkFormat());
+    /* Translate internal format depending on texture swizzle since A8UNorm is not natively supported in VkFormat */
+    const Format format = VKTypes::Unmap(GetVkFormat());
+    return MapVKSwizzleFormat(format, swizzleFormat_);
 }
 
 SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const

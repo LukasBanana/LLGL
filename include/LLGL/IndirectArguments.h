@@ -25,9 +25,8 @@ namespace LLGL
 */
 
 /**
-\brief Format structure for the arguments of an indirect draw command.
-\remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
-\note This is a plain-old-data (POD) structure, so it has no default constructor to make it easily compatible with the GPU memory space.
+\brief Structure for the arguments of an indirect draw command.
+\remarks This is a plain-old-data (POD) structure aligned with no default constructor to make it compatible between CPU and GPU memory space.
 \see CommandBuffer::DrawIndirect
 \see OpenGL counterpart \c DrawArraysIndirectCommand: https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_draw_indirect.txt
 \see Vulkan counterpart \c VkDrawIndirectCommand: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkDrawIndirectCommand.html
@@ -65,9 +64,8 @@ struct DrawIndirectArguments
 };
 
 /**
-\brief Format structure for the arguments of an indirect indexed draw command.
-\remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
-\note This is a plain-old-data (POD) structure, so it has no default constructor to make it easily compatible with the GPU memory space.
+\brief Structure for the arguments of an indirect indexed draw command.
+\remarks This is a plain-old-data (POD) structure aligned with no default constructor to make it compatible between CPU and GPU memory space.
 \see CommandBuffer::DrawIndexedIndirect
 \see OpenGL counterpart \c DrawElementsIndirectCommand: https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_draw_indirect.txt
 \see Vulkan counterpart \c VkDrawIndexedIndirectCommand: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkDrawIndexedIndirectCommand.html
@@ -101,7 +99,8 @@ struct DrawIndexedIndirectArguments
 };
 
 /**
-\brief Format structure for the arguments of an indirect draw/indexed-draw command for tessellation on Metal renderer.
+\brief Structure for the arguments of an indirect draw/indexed-draw command for tessellation on Metal renderer.
+\remarks This is a plain-old-data (POD) structure aligned with no default constructor to make it compatible between CPU and GPU memory space.
 \remarks The Metal API treats the arguments for rendering tessellated patches differently,
 so this structure is required to fill the buffer that is used for the arguments of an indirect draw command on the Metal backend.
 \note Only supported with: Metal.
@@ -125,9 +124,8 @@ struct DrawPatchIndirectArguments
 };
 
 /**
-\brief Format structure for the arguments of an indirect compute command.
-\remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
-\note This is a plain-old-data (POD) structure, so it has no default constructor to make it easily compatible with the GPU memory space.
+\brief Structure for the arguments of an indirect compute command.
+\remarks This is a plain-old-data (POD) structure aligned with no default constructor to make it compatible between CPU and GPU memory space.
 \see CommandBuffer::DispatchIndirect
 \see OpenGL counterpart \c DispatchIndirectCommand: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDispatchComputeIndirect.xhtml
 \see Vulkan counterpart \c VkDispatchIndirectCommand: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkDispatchIndirectCommand.html
@@ -142,7 +140,8 @@ struct DispatchIndirectArguments
 };
 
 /**
-\brief Format structure for the arguments of an indirect mesh draw command.
+\brief Structure for the arguments of an indirect mesh draw command.
+\remarks This is a plain-old-data (POD) structure aligned with no default constructor to make it compatible between CPU and GPU memory space.
 \see CommandBufferTier1::DrawMeshIndirect
 \see Vulkan counterpart \c VkDrawMeshTasksIndirectCommandEXT: https://registry.khronos.org/vulkan/specs/latest/man/html/VkDrawMeshTasksIndirectCommandEXT.html
 \see Direct3D12 counterpart \c D3D12_DISPATCH_MESH_ARGUMENTS: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_dispatch_mesh_arguments
