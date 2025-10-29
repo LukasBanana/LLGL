@@ -134,6 +134,41 @@ static const char* GetResourceLabel(const Resource& resource)
     return "LLGL::Resource";
 }
 
+static std::string GetVerboseResourceLabel(const Resource& resource)
+{
+    switch (resource.GetResourceType())
+    {
+        case ResourceType::Buffer:
+        {
+            auto& bufferDbg = LLGL_CAST(const DbgBuffer&, resource);
+            return (bufferDbg.label.empty() ? "<unknown> buffer" : "buffer '" + bufferDbg.label + "'");
+        }
+
+        case ResourceType::Texture:
+        {
+            auto& textureDbg = LLGL_CAST(const DbgTexture&, resource);
+            return (textureDbg.label.empty() ? "<unknown> texture" : "texture '" + textureDbg.label + "'");
+        }
+
+        case ResourceType::Sampler:
+            return "<unknown> sampler";
+
+        case ResourceType::Undefined:
+            break;
+
+        default:
+            break;
+    }
+    return "LLGL::Resource";
+}
+
+static const char* GetVerboseResourceLabelCstr(const Resource& resource)
+{
+    static std::string intermediateLabel;
+    intermediateLabel = GetVerboseResourceLabel(resource);
+    return intermediateLabel.c_str();
+}
+
 DbgCommandBuffer::DbgCommandBuffer(
     RenderSystem&                   renderSystemInstance,
     CommandQueue&                   commandQueueInstance,
@@ -744,10 +779,12 @@ void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 
             if (bindingDesc != nullptr)
             {
+                /* Only the pipeline layout needs to know about the TexelBuffer flag, so pretend each buffer was created with it */
+                const long bufferBindFlags = (bufferDbg.desc.bindFlags | BindFlags::TexelBuffer);
                 ValidateBindFlags(
-                    bufferDbg.desc.bindFlags,
+                    bufferBindFlags,
                     bindingDesc->bindFlags,
-                    (BindFlags::ConstantBuffer | BindFlags::Sampled | BindFlags::Storage),
+                    (BindFlags::ConstantBuffer | BindFlags::Sampled | BindFlags::Storage | BindFlags::TexelBuffer),
                     GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer")
                 );
             }
@@ -1787,7 +1824,8 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidState,
-            "cannot generate MIP-maps for texture that was created without 'LLGL::BindFlags::ColorAttachment' flag"
+            "cannot generate MIP-maps for %s that was created without 'LLGL::BindFlags::ColorAttachment' flag",
+            GetVerboseResourceLabelCstr(textureDbg)
         );
     }
 
@@ -1798,15 +1836,16 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
         {
             LLGL_DBG_WARN(
                 WarningType::PointlessOperation,
-                "generating a total number of 0 MIP-maps for texture has no effect"
+                "generating a total number of 0 MIP-maps for %s has no effect",
+                GetVerboseResourceLabelCstr(textureDbg)
             );
         }
         else if (subresource->baseMipLevel + subresource->numMipLevels > textureDbg.mipLevels)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot generate MIP-maps for texture with subresource being out of bounds: MIP-map range is [0, %u), but [%u, %u) was specified",
-                textureDbg.mipLevels, subresource->baseMipLevel, (subresource->baseMipLevel + subresource->numMipLevels)
+                "cannot generate MIP-maps for %s with subresource being out of bounds: MIP-map range is [0, %u), but [%u, %u) was specified",
+                GetVerboseResourceLabelCstr(textureDbg), textureDbg.mipLevels, subresource->baseMipLevel, (subresource->baseMipLevel + subresource->numMipLevels)
             );
         }
 
@@ -1814,15 +1853,16 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
         {
             LLGL_DBG_WARN(
                 WarningType::PointlessOperation,
-                "generating MIP-maps with a total number of 0 array layers for texture has no effect"
+                "generating MIP-maps with a total number of 0 array layers for %s has no effect",
+                GetVerboseResourceLabelCstr(textureDbg)
             );
         }
         else if (subresource->baseArrayLayer + subresource->numArrayLayers > textureDbg.desc.arrayLayers)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot generate MIP-maps for texture with subresource being out of bounds: array layer range is [0, %u), but [%u, %u) was specified",
-                textureDbg.desc.arrayLayers, subresource->baseArrayLayer, (subresource->baseArrayLayer + subresource->numArrayLayers)
+                "cannot generate MIP-maps for %s with subresource being out of bounds: array layer range is [0, %u), but [%u, %u) was specified",
+                GetVerboseResourceLabelCstr(textureDbg), textureDbg.desc.arrayLayers, subresource->baseArrayLayer, (subresource->baseArrayLayer + subresource->numArrayLayers)
             );
         }
     }
@@ -1833,7 +1873,8 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
         {
             LLGL_DBG_WARN(
                 WarningType::PointlessOperation,
-                "generate MIP-maps for texture with only a single MIP-map has no effect"
+                "generate MIP-maps for %s with only a single MIP-map has no effect",
+                GetVerboseResourceLabelCstr(textureDbg)
             );
         }
     }
@@ -2203,6 +2244,7 @@ static const char* BindFlagToString(long bindFlag)
         case BindFlags::CombinedSampler:        return "CombinedSampler";
         case BindFlags::CopySrc:                return "CopySrc";
         case BindFlags::CopyDst:                return "CopyDst";
+        case BindFlags::TexelBuffer:            return "TexelBuffer";
         default:                                return nullptr;
     }
 }

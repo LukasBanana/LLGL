@@ -62,9 +62,7 @@ void GLDeferredCommandBuffer::Begin()
 
 void GLDeferredCommandBuffer::End()
 {
-    /* Pack virtual command buffer if it has to be traversed multiple times */
-    if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
-        buffer_.Pack();
+    // dummy
 }
 
 void GLDeferredCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
@@ -339,7 +337,8 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numV
 
         auto cmdBuildVertexArray = AllocCommand<GLCmdBuildVertexArray>(GLOpcodeBuildVertexArray, sizeof(GLVertexAttribute) * numVertexAttribs);
         {
-            cmdBuildVertexArray->numVertexAttribs = numVertexAttribs;
+            cmdBuildVertexArray->bufferWithVAO      = &vertexBufferGL;
+            cmdBuildVertexArray->numVertexAttribs   = numVertexAttribs;
             auto* dstVertexAttribs = reinterpret_cast<GLVertexAttribute*>(cmdBuildVertexArray + 1);
 
             for_range(i, numVertexAttribs)

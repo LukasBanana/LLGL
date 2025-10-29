@@ -206,23 +206,6 @@ class VirtualCommandBuffer
             size_       = 0;
         }
 
-        // Packs the entire buffer to one consecutive memory block.
-        void Pack()
-        {
-#if 0 //TODO: disabled until preservation of memory alignment can be ensured
-            /* Only pack if there is more than one memory chunk */
-            if (first_ != nullptr && first_->next != nullptr)
-            {
-                /* Check if last (and biggest) chunk is big enough */
-                Chunk* biggest = FindBiggestChunk();
-                if (biggest != nullptr && biggest->capacity >= size_)
-                    PackRecycle(biggest);
-                else
-                    PackNew();
-            }
-#endif
-        }
-
         // Allocates a new opcode in this virtual command buffer.
         void AllocOpcode(const TOpcode opcode)
         {
@@ -458,74 +441,6 @@ class VirtualCommandBuffer
                 return result;
             }
             return biggest_;
-        }
-
-        // Packs the entire virtual command buffer into the specified memory chunk.
-        void PackRecycle(Chunk* chunk)
-        {
-            LLGL_ASSERT_PTR(chunk);
-
-            /* Determine offset to move existing memory within recycled chunk */
-            std::size_t offset = 0;
-            for (Chunk* c = first_; c != nullptr; c = c->next)
-            {
-                if (c == chunk)
-                    break;
-                offset += c->size;
-            }
-
-            /* Move memory within recycled chunk */
-            ::memmove(VirtualCommandBuffer::GetChunkData(chunk) + offset, VirtualCommandBuffer::GetChunkData(chunk), chunk->size);
-
-            /* Copy other chunks into this chunk and free old chunks */
-            offset = 0;
-            for (Chunk* c = first_, *next = nullptr; c != nullptr; c = next)
-            {
-                if (c != chunk)
-                {
-                    ::memcpy(VirtualCommandBuffer::GetChunkData(chunk) + offset, VirtualCommandBuffer::GetChunkData(c), c->size);
-                    offset += c->size;
-                    next = c->next;
-                    VirtualCommandBuffer::FreeChunk(c);
-                }
-                else
-                {
-                    offset += c->size;
-                    next = c->next;
-                }
-            }
-            chunk->size = offset;
-
-            /* Clean up references */
-            first_      = chunk;
-            current_    = chunk;
-            biggest_    = chunk;
-            capacity_   = chunk->size;
-        }
-
-        // Packs the entire virtual command buffer into a new single memory chunk.
-        void PackNew()
-        {
-            /* Allocate new chunk */
-            Chunk* chunk = VirtualCommandBuffer::AllocChunk(size_);
-
-            /* Copy all chunks into new chunk and free old chunks */
-            for (Chunk* c = first_, *next = nullptr; c != nullptr; c = next)
-            {
-                /* Copy old chunk into new at current offset */
-                ::memcpy(VirtualCommandBuffer::GetChunkData(chunk) + chunk->size, VirtualCommandBuffer::GetChunkData(c), c->size);
-                chunk->size += c->size;
-
-                /* Delete old chunk and move to next one */
-                next = c->next;
-                VirtualCommandBuffer::FreeChunk(c);
-            }
-
-            /* Clean up references */
-            first_      = chunk;
-            current_    = chunk;
-            biggest_    = chunk;
-            capacity_   = chunk->size;
         }
 
     private:
