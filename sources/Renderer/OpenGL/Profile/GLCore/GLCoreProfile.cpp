@@ -102,6 +102,11 @@ void DrawBuffer(GLenum buf)
     glDrawBuffer(buf);
 }
 
+void TexParameterSwizzleRGBA(GLenum target, const GLint params[4])
+{
+    glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, params);
+}
+
 void FramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
     glFramebufferTexture1D(target, attachment, textarget, texture, level);

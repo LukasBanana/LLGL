@@ -76,6 +76,9 @@ void UnmapBuffer(GLenum target);
 // Wrapper for glDrawBuffer; uses glDrawBuffers for GLES.
 void DrawBuffer(GLenum buf);
 
+// Wrapper function for glTexParameteri() in GLES and glTexParameteriv() in Desktop GL.
+void TexParameterSwizzleRGBA(GLenum target, const GLint params[4]);
+
 // Wrapper functions for glFramebufferTexture* for GL and GLES.
 void FramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);

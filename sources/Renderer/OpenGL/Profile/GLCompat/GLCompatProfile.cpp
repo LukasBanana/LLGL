@@ -7,6 +7,7 @@
 
 #include "../GLProfile.h"
 #include "../../../../Core/Exception.h"
+#include "../../../../Core/Assertion.h"
 #include "GLCompatExtensions.h"
 #include <LLGL/RenderSystemFlags.h>
 
@@ -98,6 +99,17 @@ void UnmapBuffer(GLenum target)
 void DrawBuffer(GLenum buf)
 {
     glDrawBuffer(buf);
+}
+
+void TexParameterSwizzleRGBA(GLenum target, const GLint params[4])
+{
+    LLGL_ASSERT(
+        params[0] == GL_RED   &&
+        params[1] == GL_GREEN &&
+        params[2] == GL_BLUE  &&
+        params[3] == GL_ALPHA,
+        "texture component swizzling not supported in GL 2.x; components must have identity of RGBA"
+    );
 }
 
 void FramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
