@@ -45,7 +45,7 @@ void GLVertexArrayObject::BuildVertexLayout(const GLVertexInputLayout& inputLayo
     #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     /* Skip call if input layout hasn't changed */
-    if (inputLayoutHash_ == inputLayout.GetHash())
+    if (id_ != 0 && inputLayoutHash_ == inputLayout.GetHash())
         return;
 
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
