@@ -356,6 +356,7 @@ class TestbedContext
     protected:
 
         const std::string               moduleName;
+        const std::string               textureDir;
         const Options                   opt;
         const LLGL::ClearValue          bgColorDarkBlue         = { 0.2f, 0.2f, 0.4f, 1.0f };
         const LLGL::ClearValue          bgColorLightBlue        = { 127.0f/255.0f, 127.0f/255.0f, 1.0f, 1.0f };
@@ -394,7 +395,7 @@ class TestbedContext
 
         static double ToMillisecs(std::uint64_t t0, std::uint64_t t1);
 
-        static LLGL::Image LoadImageFromFile(const std::string& filename, bool verbose = false);
+        static LLGL::Image LoadImageFromFile(const std::string& filename, bool verbose = false, LLGL::ImageFormat format = LLGL::ImageFormat::RGB);
         static void SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose = false);
 
         static bool IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::uint8_t rhs[4], int threshold = 1);

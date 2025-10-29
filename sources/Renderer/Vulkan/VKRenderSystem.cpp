@@ -504,7 +504,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     const TextureSubresource&   subresource     = textureRegion.subresource;
   //const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent, subresource.numArrayLayers);
-    const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
+    const Format                format          = textureVK.GetFormat();
 
     VkImage                     image           = textureVK.GetVkImage();
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth;

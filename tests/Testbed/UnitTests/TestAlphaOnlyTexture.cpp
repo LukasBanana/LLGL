@@ -38,23 +38,44 @@ DEF_TEST( AlphaOnlyTexture )
     CREATE_GRAPHICS_PSO(pso, psoDesc, "psoAlphaOnlyTexture");
 
     // Load texture with A8UNorm format
-    const char* texName = "AlphaChannel";
+    const char* texNameA = "AlphaChannelTex_A";
 
-    const LLGL::Format expectedTexFormat = LLGL::Format::A8UNorm;
-    LLGL::Texture* texA8UNorm = LoadTextureFromFile(texName, "AlphaChannel.png", expectedTexFormat);
+    const Format expectedTexFormat = LLGL::Format::A8UNorm;
+    Texture* texA8UNorm_A = LoadTextureFromFile(texNameA, "AlphaChannel.png", expectedTexFormat);
 
-    const LLGL::Format actualTexFormat = texA8UNorm->GetFormat();
+    const Format actualTexFormat = texA8UNorm_A->GetFormat();
     if (actualTexFormat != expectedTexFormat)
     {
         Log::Errorf(
             "Expected texture '%s' to have format LLGL::%s, but actual format is LLGL::%s\n",
-            texName, LLGL::ToString(expectedTexFormat), LLGL::ToString(actualTexFormat)
+            texNameA, LLGL::ToString(expectedTexFormat), LLGL::ToString(actualTexFormat)
         );
         return TestResult::FailedErrors;
     }
 
+    // Create texture with A8UNorm format and fill image data separately
+    TextureDescriptor texBDesc;
+    {
+        texBDesc.extent     = texA8UNorm_A->GetMipExtent(0);
+        texBDesc.format     = Format::A8UNorm;
+        texBDesc.mipLevels  = 1;
+    }
+    CREATE_TEXTURE(texA8UNorm_B, texBDesc, "AlphaChannelTex_B", nullptr);
+
+    // Write same image into texture via WriteTexture()
+    {
+        Image imgB = TestbedContext::LoadImageFromFile(textureDir + "AlphaChannel.png", opt.verbose, ImageFormat::RGBA);
+        if (imgB.GetData() == nullptr)
+            return TestResult::FailedErrors;
+        const TextureRegion texB_Region{ Offset3D{}, imgB.GetExtent() };
+        renderer->WriteTexture(*texA8UNorm_B, texB_Region, imgB.GetView());
+    }
+
     // Render scene
     Texture* readbackTex = nullptr;
+
+    const LLGL::Extent2D resolution = swapChain->GetResolution();
+    const LLGL::Extent2D halfResolution{ resolution.width / 2, resolution.height };
 
     cmdBuffer->Begin();
     {
@@ -62,14 +83,18 @@ DEF_TEST( AlphaOnlyTexture )
 
         cmdBuffer->BeginRenderPass(*swapChain);
         {
-            // Draw fullscreen traingle
-            cmdBuffer->SetViewport(swapChain->GetResolution());
-            cmdBuffer->Clear(LLGL::ClearFlags::Color, LLGL::ClearValue{ 1.0f, 1.0f, 1.0f, 1.0f });
-
+            cmdBuffer->Clear(ClearFlags::Color, ClearValue{ 1.0f, 0.0f, 0.0f, 1.0f });
             cmdBuffer->SetPipelineState(*pso);
-            cmdBuffer->SetResource(0, *texA8UNorm);
-            cmdBuffer->SetResource(1, *samplers[SamplerLinearClamp]);
+            cmdBuffer->SetResource(1, *samplers[SamplerLinearNoMips]);
 
+            // Draw first texture into left side of the screen
+            cmdBuffer->SetViewport(Viewport{ Offset2D{ 0, 0 }, halfResolution });
+            cmdBuffer->SetResource(0, *texA8UNorm_A);
+            cmdBuffer->Draw(3, 0);
+
+            // Draw second texture into right side of the screen
+            cmdBuffer->SetViewport(Viewport{ Offset2D{ static_cast<std::int32_t>(halfResolution.width), 0 }, halfResolution });
+            cmdBuffer->SetResource(0, *texA8UNorm_B);
             cmdBuffer->Draw(3, 0);
 
             // Capture framebuffer
@@ -88,7 +113,8 @@ DEF_TEST( AlphaOnlyTexture )
     const DiffResult diff = DiffImages(colorBufferName, threshold);
 
     // Clear resources
-    renderer->Release(*texA8UNorm);
+    renderer->Release(*texA8UNorm_A);
+    renderer->Release(*texA8UNorm_B);
     renderer->Release(*pso);
     renderer->Release(*psoLayout);
 

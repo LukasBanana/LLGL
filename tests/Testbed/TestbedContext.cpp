@@ -149,6 +149,7 @@ static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
     moduleName    { moduleName                               },
+    textureDir    { "../Media/Textures/"                     },
     opt           { TestbedContext::ParseOptions(argc, argv) },
     reportHandle_ { Log::RegisterCallbackReport(report_)     }
 {
@@ -1230,7 +1231,7 @@ void TestbedContext::CreatePipelineLayouts()
 
 Texture* TestbedContext::LoadTextureFromFile(const char* name, const std::string& filename, LLGL::Format format)
 {
-    const std::string texturePath = "../Media/Textures/" + filename;
+    const std::string texturePath = textureDir + filename;
 
     auto PrintLoadingInfo = [&texturePath]()
     {
@@ -1626,15 +1627,16 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
     return true;
 }
 
-static bool LoadImage(Image& img, const std::string& filename, bool verbose = false)
+static bool LoadImage(Image& img, const std::string& filename, bool verbose = false, ImageFormat format = ImageFormat::RGB)
 {
     if (verbose)
         PrintLoadImageInfo(filename);
 
     int w = 0, h = 0, c = 0;
-    if (stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 3))
+    const int requestedComponents = (format == ImageFormat::RGB ? 3 : 4);
+    if (stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, requestedComponents))
     {
-        img.Convert(c == 4 ? ImageFormat::RGBA : ImageFormat::RGB, DataType::UInt8);
+        img.Convert(format, DataType::UInt8);
         img.Resize(Extent3D{ static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h), 1 });
         if (img.GetDataSize() == static_cast<std::size_t>(w*h*c))
         {
@@ -1664,10 +1666,10 @@ static bool LoadImage(Image& img, const std::string& filename, bool verbose = fa
     return true;
 }
 
-Image TestbedContext::LoadImageFromFile(const std::string& filename, bool verbose)
+Image TestbedContext::LoadImageFromFile(const std::string& filename, bool verbose, LLGL::ImageFormat format)
 {
     Image img;
-    LoadImage(img, filename, verbose);
+    LoadImage(img, filename, verbose, format);
     return img;
 }
 
