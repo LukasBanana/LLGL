@@ -63,7 +63,6 @@ void MTMultiSubmitCommandBuffer::End()
         FlushContext();
         PresentDrawables();
     }
-    buffer_.Pack();
 }
 
 void MTMultiSubmitCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
