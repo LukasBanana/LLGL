@@ -387,10 +387,14 @@ static TextureSwizzleRGBA GetTextureSwizzlePermutationAlpha(const TextureSwizzle
 static void InitializeGLTextureSwizzle(GLenum target, const TextureSwizzleRGBA& swizzle)
 {
     #if !LLGL_GL_ENABLE_OPENGL2X
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GLTypes::Map(swizzle.r));
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GLTypes::Map(swizzle.g));
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GLTypes::Map(swizzle.b));
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GLTypes::Map(swizzle.a));
+    const GLint swizzleParams[4] =
+    {
+        static_cast<GLint>(GLTypes::Map(swizzle.r)),
+        static_cast<GLint>(GLTypes::Map(swizzle.g)),
+        static_cast<GLint>(GLTypes::Map(swizzle.b)),
+        static_cast<GLint>(GLTypes::Map(swizzle.a)),
+    };
+    glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, swizzleParams);
     #else
     LLGL_ASSERT(IsTextureSwizzleIdentity(swizzle), "texture component swizzling not supported in GL 2.x");
     #endif
