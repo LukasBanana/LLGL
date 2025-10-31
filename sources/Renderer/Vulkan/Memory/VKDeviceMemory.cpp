@@ -271,20 +271,26 @@ VKDeviceMemoryRegion* VKDeviceMemory::InsertBlock(VKDeviceMemoryRegionPtr&& regi
 {
     VKDeviceMemoryRegion* regionRef = region.get();
 
-    /* Add block by insertion sort */
     if (!blocks_.empty())
     {
+        /* Add block by insertion sort starting search from the right */
         for (auto it = blocks_.rbegin(); it != blocks_.rend(); ++it)
         {
             if ((*it)->GetOffset() < region->GetOffset())
             {
                 blocks_.insert(it.base(), std::move(region));
-                break;
+                return regionRef;
             }
         }
+
+        /* Insert block at the beginning */
+        blocks_.insert(blocks_.begin(), std::move(region));
     }
     else
+    {
+        /* Insert first block */
         blocks_.emplace_back(std::move(region));
+    }
 
     return regionRef;
 }
