@@ -75,11 +75,12 @@ class VKCommandContext
 
         void CopyImage(
             VkImage             srcImage,
+            VkFormat            srcFormat,
             VkImageLayout       srcImageLayout,
             VkImage             dstImage,
+            VkFormat            dstFormat,
             VkImageLayout       dstImageLayout,
-            const VkImageCopy&  region,
-            VkFormat            format
+            const VkImageCopy&  region
         );
 
         void ResolveImage(
@@ -116,7 +117,9 @@ class VKCommandContext
             VkFormat                    format,
             const VkOffset3D&           offset,
             const VkExtent3D&           extent,
-            const TextureSubresource&   subresource
+            const TextureSubresource&   subresource,
+            VkDeviceSize                depthBufferOffset   = 0,
+            VkDeviceSize                stencilBufferOffset = 0
         );
 
         void CopyImageToBuffer(

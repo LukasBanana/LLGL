@@ -139,6 +139,8 @@ If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_
 the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
 Note that this does not guarantee the maximum number of threads the system supports if the workload does not demand it. By default 0.
 \param[in] copyUnchangedImage Specifies whether to copy the source buffer into the destination buffer if no conversion was necessary. By default false.
+\param[in] depthMask Specifies a bitmask for the depth components. This determines what depth bits will be overrideen in the destination buffer. By default 0xFFFFFFFF.
+\param[in] stencilMask Specifies a bitmask for the stencil components. This determines what stencil bits will be overrideen in the destination buffer. By default 0xFFFFFFFF.
 
 \return Number of bytes that have been written to the destination buffer.
 If this is 0, no conversion was necessary and the destination buffer is not modified.
@@ -160,7 +162,9 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
     const MutableImageView& dstImageView,
     const Extent3D&         extent,
     unsigned                threadCount         = 0,
-    bool                    copyUnchangedImage  = false
+    bool                    copyUnchangedImage  = false,
+    std::uint32_t           depthMask           = ~0u,
+    std::uint32_t           stencilMask         = ~0u
 );
 
 /**

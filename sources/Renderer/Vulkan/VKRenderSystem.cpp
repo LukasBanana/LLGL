@@ -21,6 +21,7 @@
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "VKInitializers.h"
+#include "Texture/VKImageUtils.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
 #include "RenderState/VKPipelineLayoutPermutationPool.h"
@@ -586,14 +587,33 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     const TextureSubresource&   subresource     = textureRegion.subresource;
   //const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset, subresource.baseArrayLayer);
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent, subresource.numArrayLayers);
-    const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
+    const Format                format          = textureVK.GetFormat();
     const FormatAttributes&     formatAttribs   = GetFormatAttribs(format);
     const std::size_t           imageNumTexels  = extent.width * extent.height * extent.depth;
-    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageNumTexels));
+
+    VkDeviceSize stagingBufferSize      = 0;
+    VkDeviceSize depthBufferOffset      = 0;
+    VkDeviceSize depthBufferSize        = 0;
+    VkDeviceSize stencilBufferOffset    = 0;
+    VkDeviceSize stencilBufferSize      = 0;
+
+    if (IsDepthAndStencilFormat(format))
+    {
+        depthBufferSize     = static_cast<VkDeviceSize>(GetMemoryFootprint(formatAttribs.format, formatAttribs.dataType, imageNumTexels));
+        stencilBufferSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(ImageFormat::Stencil, DataType::UInt8, imageNumTexels));
+
+        stencilBufferOffset = 0;
+        depthBufferOffset   = GetAlignedSize<VkDeviceSize>(stencilBufferSize, 4u);
+        stagingBufferSize   = GetAlignedSize<VkDeviceSize>(depthBufferOffset + depthBufferSize, 4u);
+    }
+    else
+    {
+        stagingBufferSize = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageNumTexels));
+    }
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
-    BuildVkBufferCreateInfo(stagingCreateInfo, imageDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+    BuildVkBufferCreateInfo(stagingCreateInfo, stagingBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     VKDeviceBuffer stagingBuffer = CreateStagingBuffer(stagingCreateInfo);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
@@ -608,7 +628,9 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             textureVK.GetVkFormat(),
             VkOffset3D{ textureRegion.offset.x, textureRegion.offset.y, textureRegion.offset.z },
             VkExtent3D{ textureRegion.extent.width, textureRegion.extent.height, textureRegion.extent.depth },
-            subresource
+            subresource,
+            depthBufferOffset,
+            stencilBufferOffset
         );
 
         textureVK.TransitionImageLayout(context_, oldLayout, subresource, true);
@@ -620,11 +642,24 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     {
         /* Map buffer memory to host memory */
         VKDeviceMemory* deviceMemory = region->GetParentChunk();
-        if (void* memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
+        if (void* memory = deviceMemory->Map(device_, region->GetOffset(), stagingBufferSize))
         {
             /* Copy data to buffer object */
-            const ImageView srcImageView{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(imageDataSize) };
-            ConvertImageBuffer(srcImageView, dstImageView, extent, LLGL_MAX_THREAD_COUNT, true);
+            if (IsDepthAndStencilFormat(format))
+            {
+                const std::uint8_t* memoryDepthStart = reinterpret_cast<const std::uint8_t*>(memory) + depthBufferOffset;
+                const ImageView srcImageViewDepth{ formatAttribs.format, formatAttribs.dataType, memoryDepthStart, static_cast<std::size_t>(depthBufferSize) };
+                ConvertImageBuffer(srcImageViewDepth, dstImageView, extent, /*LLGL_MAX_THREAD_COUNT*/0, true, ~0u, 0u);
+
+                const std::uint8_t* memoryStencilStart = reinterpret_cast<const std::uint8_t*>(memory) + stencilBufferOffset;
+                const ImageView srcImageViewStencil{ ImageFormat::Stencil, DataType::UInt8, memoryStencilStart, static_cast<std::size_t>(stencilBufferSize) };
+                ConvertImageBuffer(srcImageViewStencil, dstImageView, extent, /*LLGL_MAX_THREAD_COUNT*/0, true, 0u, ~0u);
+            }
+            else
+            {
+                const ImageView srcImageView{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(stagingBufferSize) };
+                ConvertImageBuffer(srcImageView, dstImageView, extent, LLGL_MAX_THREAD_COUNT, true);
+            }
             deviceMemory->Unmap(device_);
         }
     }

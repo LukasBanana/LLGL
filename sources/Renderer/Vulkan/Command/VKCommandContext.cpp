@@ -234,22 +234,23 @@ void VKCommandContext::CopyTexture(
 
 void VKCommandContext::CopyImage(
     VkImage             srcImage,
+    VkFormat            srcFormat,
     VkImageLayout       srcImageLayout,
     VkImage             dstImage,
+    VkFormat            dstFormat,
     VkImageLayout       dstImageLayout,
-    const VkImageCopy&  region,
-    VkFormat            format)
+    const VkImageCopy&  region)
 {
     const TextureSubresource srcImageSubresource{ region.srcSubresource.baseArrayLayer, region.srcSubresource.layerCount, region.srcSubresource.mipLevel, 1u };
     const TextureSubresource dstImageSubresource{ region.dstSubresource.baseArrayLayer, region.dstSubresource.layerCount, region.dstSubresource.mipLevel, 1u };
 
-    ImageMemoryBarrier(srcImage, format, srcImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageSubresource);
-    ImageMemoryBarrier(dstImage, format, dstImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageSubresource, true);
+    ImageMemoryBarrier(srcImage, srcFormat, srcImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageSubresource);
+    ImageMemoryBarrier(dstImage, dstFormat, dstImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageSubresource, true);
 
     vkCmdCopyImage(commandBuffer_, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    ImageMemoryBarrier(srcImage, format, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageLayout, srcImageSubresource);
-    ImageMemoryBarrier(dstImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageLayout, dstImageSubresource, true);
+    ImageMemoryBarrier(srcImage, srcFormat, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageLayout, srcImageSubresource);
+    ImageMemoryBarrier(dstImage, dstFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageLayout, dstImageSubresource, true);
 }
 
 void VKCommandContext::ResolveImage(
@@ -272,6 +273,27 @@ void VKCommandContext::ResolveImage(
     ImageMemoryBarrier(dstImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageLayout, dstImageSubresource, true);
 }
 
+static void InitVkBufferImageCopy(
+    VkBufferImageCopy&          outRegion,
+    const VkOffset3D&           offset,
+    const VkExtent3D&           extent,
+    const TextureSubresource&   subresource,
+    VkImageAspectFlags          aspectMask,
+    VkDeviceSize                bufferOffset    = 0,
+    std::uint32_t               rowLength       = 0,
+    std::uint32_t               imageHeight     = 0)
+{
+    outRegion.bufferOffset                      = bufferOffset;
+    outRegion.bufferRowLength                   = rowLength;
+    outRegion.bufferImageHeight                 = imageHeight;
+    outRegion.imageSubresource.aspectMask       = aspectMask;
+    outRegion.imageSubresource.mipLevel         = subresource.baseMipLevel;
+    outRegion.imageSubresource.baseArrayLayer   = subresource.baseArrayLayer;
+    outRegion.imageSubresource.layerCount       = subresource.numArrayLayers;
+    outRegion.imageOffset                       = offset;
+    outRegion.imageExtent                       = extent;
+}
+
 void VKCommandContext::CopyBufferToImage(
     VkBuffer                    srcBuffer,
     VkImage                     dstImage,
@@ -286,21 +308,11 @@ void VKCommandContext::CopyBufferToImage(
     VUID-VkBufferImageCopy-aspectMask-09103
     "The aspectMask member of imageSubresource must only have a single bit set"
     */
-    auto CopyBufferToImageWithSingleImageAspect = [this, srcBuffer, dstImage, rowLength, imageHeight, &subresource, &offset, &extent](VkImageAspectFlagBits aspectMask) -> void
+    VkBufferImageCopy regions[2];
+
+    auto CopyBufferToImageForRegions = [this, srcBuffer, dstImage, &regions](std::uint32_t numRegions) -> void
     {
-        VkBufferImageCopy region;
-        {
-            region.bufferOffset                     = 0;
-            region.bufferRowLength                  = rowLength;
-            region.bufferImageHeight                = imageHeight;
-            region.imageSubresource.aspectMask      = aspectMask;
-            region.imageSubresource.mipLevel        = subresource.baseMipLevel;
-            region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
-            region.imageSubresource.layerCount      = subresource.numArrayLayers;
-            region.imageOffset                      = offset;
-            region.imageExtent                      = extent;
-        }
-        vkCmdCopyBufferToImage(commandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        vkCmdCopyBufferToImage(commandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, numRegions, regions);
     };
 
     switch (format)
@@ -308,22 +320,26 @@ void VKCommandContext::CopyBufferToImage(
         case VK_FORMAT_D16_UNORM:
         case VK_FORMAT_X8_D24_UNORM_PACK32:
         case VK_FORMAT_D32_SFLOAT:
-            CopyBufferToImageWithSingleImageAspect(VK_IMAGE_ASPECT_DEPTH_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_DEPTH_BIT, 0, rowLength, imageHeight);
+            CopyBufferToImageForRegions(1);
             break;
 
         case VK_FORMAT_S8_UINT:
-            CopyBufferToImageWithSingleImageAspect(VK_IMAGE_ASPECT_STENCIL_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_STENCIL_BIT, 0, rowLength, imageHeight);
+            CopyBufferToImageForRegions(1);
             break;
 
         case VK_FORMAT_D16_UNORM_S8_UINT:
         case VK_FORMAT_D24_UNORM_S8_UINT:
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
-            CopyBufferToImageWithSingleImageAspect(VK_IMAGE_ASPECT_DEPTH_BIT);
-            CopyBufferToImageWithSingleImageAspect(VK_IMAGE_ASPECT_STENCIL_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_STENCIL_BIT, 0, rowLength, imageHeight);
+            InitVkBufferImageCopy(regions[1], offset, extent, subresource, VK_IMAGE_ASPECT_DEPTH_BIT, 0, rowLength, imageHeight);
+            CopyBufferToImageForRegions(2);
             break;
 
         default:
-            CopyBufferToImageWithSingleImageAspect(VK_IMAGE_ASPECT_COLOR_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_COLOR_BIT, 0, rowLength, imageHeight);
+            CopyBufferToImageForRegions(1);
             break;
     }
 }
@@ -349,23 +365,19 @@ void VKCommandContext::CopyImageToBuffer(
     VkFormat                    format,
     const VkOffset3D&           offset,
     const VkExtent3D&           extent,
-    const TextureSubresource&   subresource)
+    const TextureSubresource&   subresource,
+    VkDeviceSize                depthBufferOffset,
+    VkDeviceSize                stencilBufferOffset)
 {
-    auto CopyImageToBufferWithSingleImageAspect = [this, srcImage, dstBuffer, format, &subresource, &offset, &extent](VkImageAspectFlagBits aspectMask) -> void
+    /*
+    VUID-VkBufferImageCopy-aspectMask-09103
+    "The aspectMask member of imageSubresource must only have a single bit set"
+    */
+    VkBufferImageCopy regions[2];
+
+    auto CopyImageToBufferForRegions = [this, srcImage, dstBuffer, &regions](std::uint32_t numRegions) -> void
     {
-        VkBufferImageCopy region;
-        {
-            region.bufferOffset                     = 0;
-            region.bufferRowLength                  = 0;
-            region.bufferImageHeight                = 0;
-            region.imageSubresource.aspectMask      = aspectMask;
-            region.imageSubresource.mipLevel        = subresource.baseMipLevel;
-            region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
-            region.imageSubresource.layerCount      = subresource.numArrayLayers;
-            region.imageOffset                      = offset;
-            region.imageExtent                      = extent;
-        }
-        vkCmdCopyImageToBuffer(commandBuffer_, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, 1, &region);
+        vkCmdCopyImageToBuffer(commandBuffer_, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, numRegions, regions);
     };
 
     switch (format)
@@ -373,22 +385,26 @@ void VKCommandContext::CopyImageToBuffer(
         case VK_FORMAT_D16_UNORM:
         case VK_FORMAT_X8_D24_UNORM_PACK32:
         case VK_FORMAT_D32_SFLOAT:
-            CopyImageToBufferWithSingleImageAspect(VK_IMAGE_ASPECT_DEPTH_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_DEPTH_BIT);
+            CopyImageToBufferForRegions(1);
             break;
 
         case VK_FORMAT_S8_UINT:
-            CopyImageToBufferWithSingleImageAspect(VK_IMAGE_ASPECT_STENCIL_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_STENCIL_BIT);
+            CopyImageToBufferForRegions(1);
             break;
 
         case VK_FORMAT_D16_UNORM_S8_UINT:
         case VK_FORMAT_D24_UNORM_S8_UINT:
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
-            CopyImageToBufferWithSingleImageAspect(VK_IMAGE_ASPECT_DEPTH_BIT);
-            CopyImageToBufferWithSingleImageAspect(VK_IMAGE_ASPECT_STENCIL_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_DEPTH_BIT, depthBufferOffset);
+            InitVkBufferImageCopy(regions[1], offset, extent, subresource, VK_IMAGE_ASPECT_STENCIL_BIT, stencilBufferOffset);
+            CopyImageToBufferForRegions(2);
             break;
 
         default:
-            CopyImageToBufferWithSingleImageAspect(VK_IMAGE_ASPECT_COLOR_BIT);
+            InitVkBufferImageCopy(regions[0], offset, extent, subresource, VK_IMAGE_ASPECT_COLOR_BIT);
+            CopyImageToBufferForRegions(1);
             break;
     }
 }
