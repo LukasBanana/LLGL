@@ -17,8 +17,8 @@ namespace LLGL
 {
 
 
-GLBufferWithXFB::GLBufferWithXFB(long bindFlags, const char* debugName) :
-    GLBufferWithVAO { bindFlags, debugName }
+GLBufferWithXFB::GLBufferWithXFB(const BufferDescriptor& bufferDesc) :
+    GLBufferWithVAO { bufferDesc }
 {
     #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
     if (HasExtension(GLExt::ARB_transform_feedback2))

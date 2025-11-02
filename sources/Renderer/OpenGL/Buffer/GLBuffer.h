@@ -33,7 +33,7 @@ class GLBuffer : public Buffer
 
     public:
 
-        GLBuffer(long bindFlags, const char* debugName = nullptr);
+        GLBuffer(const BufferDescriptor& bufferDesc);
         ~GLBuffer();
 
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);

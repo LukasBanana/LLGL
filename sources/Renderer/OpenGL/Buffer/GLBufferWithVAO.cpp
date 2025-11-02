@@ -15,12 +15,12 @@ namespace LLGL
 {
 
 
-GLBufferWithVAO::GLBufferWithVAO(long bindFlags, const char* debugName) :
-    GLBuffer { bindFlags, debugName }
+GLBufferWithVAO::GLBufferWithVAO(const BufferDescriptor& bufferDesc) :
+    GLBuffer { bufferDesc }
 {
-    if (debugName != nullptr)
+    if (bufferDesc.debugName != nullptr)
     {
-        const std::string vaoLabel = debugName + std::string(".VAO");
+        const std::string vaoLabel = bufferDesc.debugName + std::string(".VAO");
         vertexArray_.SetDebugName(vaoLabel.c_str());
     }
 }

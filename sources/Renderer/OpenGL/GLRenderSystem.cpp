@@ -182,7 +182,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
         /* Create buffer with VAO and transform feedback object */
-        auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc.bindFlags, bufferDesc.debugName);
+        auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
             bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
@@ -194,7 +194,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
-        auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc.bindFlags, bufferDesc.debugName);
+        auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
             bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
@@ -204,7 +204,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     else
     {
         /* Create generic buffer */
-        auto* bufferGL = buffers_.emplace<GLBuffer>(bufferDesc.bindFlags, bufferDesc.debugName);
+        auto* bufferGL = buffers_.emplace<GLBuffer>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
         }

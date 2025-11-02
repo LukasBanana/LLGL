@@ -21,26 +21,31 @@ namespace LLGL
 
 
 // Finds the primary buffer target used for a buffer with the specified binding flags
-static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
+static GLBufferTarget FindPrimaryBufferTarget(const BufferDescriptor& bufferDesc)
 {
-    if ((bindFlags & BindFlags::VertexBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
         return GLBufferTarget::ArrayBuffer;
-    if ((bindFlags & BindFlags::IndexBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0)
         return GLBufferTarget::ElementArrayBuffer;
-    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::ConstantBuffer) != 0)
         return GLBufferTarget::UniformBuffer;
-    if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
         return GLBufferTarget::TransformFeedbackBuffer;
-    if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-        return GLBufferTarget::ShaderStorageBuffer;
-    if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::IndirectBuffer) != 0)
         return GLBufferTarget::DrawIndirectBuffer;
+    if ((bufferDesc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
+    {
+        if (bufferDesc.format != Format::Undefined)
+            return GLBufferTarget::TextureBuffer;
+        else
+            return GLBufferTarget::ShaderStorageBuffer;
+    }
     return GLBufferTarget::ArrayBuffer;
 }
 
-GLBuffer::GLBuffer(long bindFlags, const char* debugName) :
-    Buffer  { bindFlags                          },
-    target_ { FindPrimaryBufferTarget(bindFlags) }
+GLBuffer::GLBuffer(const BufferDescriptor& bufferDesc) :
+    Buffer  { bufferDesc.bindFlags                },
+    target_ { FindPrimaryBufferTarget(bufferDesc) }
 {
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
@@ -55,8 +60,8 @@ GLBuffer::GLBuffer(long bindFlags, const char* debugName) :
         glGenBuffers(1, &id_);
     }
 
-    if (debugName != nullptr)
-        SetDebugName(debugName);
+    if (bufferDesc.debugName != nullptr)
+        SetDebugName(bufferDesc.debugName);
 }
 
 GLBuffer::~GLBuffer()
@@ -405,6 +410,7 @@ void GLBuffer::CreateTexBuffer(GLenum internalFormat)
     #endif
     {
         glGenTextures(1, &texID_);
+        GLStateManager::Get().BindBuffer(GLBufferTarget::TextureBuffer, id_);
         GLStateManager::Get().BindTexture(GLTextureTarget::TextureBuffer, texID_);
         glTexBuffer(GL_TEXTURE_BUFFER, internalFormat, id_);
     }

@@ -23,7 +23,7 @@ class GLBufferWithXFB : public GLBufferWithVAO
 
     public:
 
-        GLBufferWithXFB(long bindFlags, const char* debugName = nullptr);
+        GLBufferWithXFB(const BufferDescriptor& bufferDesc);
         ~GLBufferWithXFB();
 
         // Returns and caches the vertex count the last time this transform-feedback buffer was updated.

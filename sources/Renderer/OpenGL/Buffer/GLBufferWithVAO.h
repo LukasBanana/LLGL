@@ -24,7 +24,7 @@ class GLBufferWithVAO : public GLBuffer
 
     public:
 
-        GLBufferWithVAO(long bindFlags, const char* debugName = nullptr);
+        GLBufferWithVAO(const BufferDescriptor& bufferDesc);
 
         void BuildVertexArray(const ArrayView<GLVertexAttribute>& vertexAttribs);
         void BuildVertexArray(const ArrayView<VertexAttribute>& vertexAttribs);
