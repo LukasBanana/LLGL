@@ -402,7 +402,7 @@ class TestbedContext
 
     private:
 
-        void LogRendererInfo();
+        void LogRendererInfo(bool isImmediateContext);
 
         bool LoadShaders();
         void CreatePipelineLayouts();

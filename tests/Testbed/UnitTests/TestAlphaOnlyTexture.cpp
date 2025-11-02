@@ -77,7 +77,7 @@ DEF_TEST( AlphaOnlyTexture )
     const LLGL::Extent2D resolution = swapChain->GetResolution();
     const LLGL::Extent2D halfResolution{ resolution.width / 2, resolution.height };
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer); // Dummy vertex buffer
 
@@ -102,7 +102,7 @@ DEF_TEST( AlphaOnlyTexture )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const char* colorBufferName = "AlphaOnlyTexture";

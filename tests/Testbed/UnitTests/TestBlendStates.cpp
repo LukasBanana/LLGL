@@ -95,7 +95,7 @@ DEF_TEST( BlendStates )
 
     Texture* readbackTex = nullptr;
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer);
         cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
@@ -138,7 +138,7 @@ DEF_TEST( BlendStates )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const char* colorBufferName = "BlendStates";

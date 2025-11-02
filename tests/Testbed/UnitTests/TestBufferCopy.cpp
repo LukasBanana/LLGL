@@ -38,11 +38,11 @@ DEF_TEST( BufferCopy )
     CREATE_BUFFER(buf3, buf3Desc, "buf3{size=4096,dst}", nullptr);
 
     // Copy buf1 into buf2
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->CopyBuffer(*buf2, 0, *buf1, 0, buf1Desc.size);
     }
-    cmdBuffer->End();
+    END();
 
     // Read buf2 feedback data
     std::uint32_t buf2DataFeedback[4] = {};
@@ -58,12 +58,12 @@ DEF_TEST( BufferCopy )
     }
 
     // Copy buf2 into all all regions of buf3
-    cmdBuffer->Begin();
+    BEGIN();
     {
         for (std::uint64_t buf3Off = 0; buf3Off + buf2Desc.size < buf3Desc.size; buf3Off += buf2Desc.size)
             cmdBuffer->CopyBuffer(*buf3, buf3Off, *buf2, 0, buf2Desc.size);
     }
-    cmdBuffer->End();
+    END();
 
     // Read buf3 feedback data
     std::uint32_t buf3DataFeedback[4] = {};

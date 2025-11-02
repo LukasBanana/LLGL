@@ -58,7 +58,7 @@ DEF_TEST( DualSourceBlending )
     // Render scene
     Texture* readbackTex = nullptr;
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer); // Dummy vertex buffer
 
@@ -81,7 +81,7 @@ DEF_TEST( DualSourceBlending )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const char* colorBufferName = "DualSourceBlend";

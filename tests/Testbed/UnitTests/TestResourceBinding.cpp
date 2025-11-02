@@ -649,6 +649,7 @@ DEF_TEST( ResourceBinding )
     // Encode dispatch and render commands to calculate values in buffer/texture
     ExpectedResults expectedResults = {};
     EncodeCommandBuffer(*cmdBuffer, expectedResults);
+    cmdQueue->Submit(*cmdBuffer);
 
     // Run this test many times in full test mode to ensure resource transitioning works, but only use a few iterations in fast mode
     const unsigned numFrames = (opt.fastTest ? 10 : 1000);

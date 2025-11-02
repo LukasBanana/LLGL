@@ -83,7 +83,7 @@ DEF_TEST( TriangleStripCutOff )
     Texture* readbackTex[2] = {};
 
     // Render scene
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*vertexBuf);
         cmdBuffer->BeginRenderPass(*swapChain);
@@ -119,7 +119,7 @@ DEF_TEST( TriangleStripCutOff )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Diff color buffer for undefined and fixed index formats
     bool diffFailed = false;

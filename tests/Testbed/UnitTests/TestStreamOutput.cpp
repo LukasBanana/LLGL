@@ -232,7 +232,7 @@ DEF_TEST( StreamOutput )
     renderer->WriteBuffer(*soVertexBuffers[0], 0, cubeVertices.data(), sizeof(ColoredVertex) * cubeVertices.size());
 
     // Draw frame
-    cmdBuffer->Begin();
+    BEGIN();
     {
         // Initialize constant buffer with identity matrices to perform pre-transformations only in model space
         cmdBuffer->UpdateBuffer(*soSceneCbuffer, 0, &soSceneConstants, sizeof(soSceneConstants));
@@ -339,9 +339,7 @@ DEF_TEST( StreamOutput )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
-
-    cmdQueue->Submit(*cmdBuffer);
+    END();
 
     // Query number of written stream-output vertices and match them with the expected numbers per frame
     const std::uint32_t expectedNumPrimitives = expectedSOVerticesPerFrame[frame] / 3;

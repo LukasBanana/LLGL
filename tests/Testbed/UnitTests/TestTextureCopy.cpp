@@ -120,12 +120,12 @@ DEF_TEST( TextureCopy )
                 renderer->WriteTexture(*srcTex, texRegion, srcImage);
 
                 // Copy source into intermediate texture
-                cmdBuffer->Begin();
+                BEGIN();
                 {
                     cmdBuffer->CopyTexture(*interTex, TextureLocation{ texRegion.offset }, *srcTex, TextureLocation{ texRegion.offset, layer, mip }, texRegion.extent);
                     cmdBuffer->CopyTexture(*dstTex, TextureLocation{ texRegion.offset, layer, mip }, *interTex, TextureLocation{ texRegion.offset }, texRegion.extent);
                 }
-                cmdBuffer->End();
+                END();
 
                 // Read results from destination texture
                 ColorRGBAub outputData[8];

@@ -59,12 +59,12 @@ DEF_TEST( BufferUpdate )
             continue;
 
         // Fill buffer
-        cmdBuffer->Begin();
+        BEGIN();
         {
             for (std::uint64_t bufOff = 0; bufOff + sizeof(updateData) < bufferSizes[i]; bufOff += sizeof(updateData))
                 cmdBuffer->UpdateBuffer(*buffers[i], bufOff, updateData, sizeof(updateData));
         }
-        cmdBuffer->End();
+        END();
 
         // Read feedback data
         for (std::uint64_t bufOff = 0; bufOff + sizeof(readbackData) < bufferSizes[i]; bufOff += sizeof(readbackData))
@@ -98,11 +98,11 @@ DEF_TEST( BufferUpdate )
     std::vector<std::uint32_t> buf4LargeData;
     buf4LargeData.resize(static_cast<std::size_t>(buf4LargeDesc.size) / sizeof(std::uint32_t), 0xF000BAAA); // Initialize with test value
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->UpdateBuffer(*buf4Large, 0, buf4LargeData.data(), buf4LargeData.size() * sizeof(std::uint32_t));
     }
-    cmdBuffer->End();
+    END();
 
     // Read feedback data
     std::vector<std::uint32_t> buf4LargeReadback;

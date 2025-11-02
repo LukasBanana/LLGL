@@ -68,7 +68,7 @@ DEF_TEST( ResourceCopy )
         }
 
         // Encode copy commands
-        cmdBuffer->Begin();
+        BEGIN();
         {
             // Fill up content buffer (Note: swap endian)
             cmdBuffer->FillBuffer(*contentBuffer, /*Offset:*/ 128 * 4, /*Value:*/ 0xFF50D040, /*Size:*/ 128 * 4); // Green
@@ -92,13 +92,13 @@ DEF_TEST( ResourceCopy )
             // Duplicate destination texture context
             cmdBuffer->CopyTexture(*dstTextures[1], {}, *dstTextures[0], {}, dstTextureSize);
         }
-        cmdBuffer->End();
+        END();
     };
 
     auto ModifyTextureContent = [&](LLGL::ColorRGBAub& outSrcColor0) -> void
     {
         // Encode copy commands
-        cmdBuffer->Begin();
+        BEGIN();
         {
             // Modify texture by copying data between the two alternating destination textures
             cmdBuffer->CopyTexture(
@@ -121,7 +121,7 @@ DEF_TEST( ResourceCopy )
                 }
             );
         }
-        cmdBuffer->End();
+        END();
 
         // Map content buffer for reading
         if (const void* src = renderer->MapBuffer(*contentBuffer, LLGL::CPUAccess::ReadOnly))
@@ -231,7 +231,7 @@ DEF_TEST( ResourceCopy )
 
     const IndexedTriangleMesh& mesh = models[ModelRect];
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer);
         cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
@@ -255,7 +255,7 @@ DEF_TEST( ResourceCopy )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "ResourceCopy_Frame" + std::to_string(frame);

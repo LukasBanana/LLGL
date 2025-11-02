@@ -60,7 +60,7 @@ DEF_TEST( MeshShaders )
     const float aspectRatio = 1.0f / GetAspectRatio();
     const std::uint32_t numMeshlets = frame + 1;
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->BeginRenderPass(*swapChain);
         {
@@ -79,7 +79,7 @@ DEF_TEST( MeshShaders )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "MeshShaders_Frame" + std::to_string(frame);

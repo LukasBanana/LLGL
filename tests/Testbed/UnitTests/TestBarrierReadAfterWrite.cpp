@@ -134,7 +134,7 @@ DEF_TEST( BarrierReadAfterWrite )
     renderer->WriteTexture(*tex2, firstPixelRegion, initialTex2Value);
 
     // Run compute shader invocations
-    cmdBuffer->Begin();
+    BEGIN();
     {
         // Initialize first element of buffers with propagate value
         cmdBuffer->FillBuffer(*buf1, 0, 0x00000000);
@@ -168,7 +168,7 @@ DEF_TEST( BarrierReadAfterWrite )
             }
         }
     }
-    cmdBuffer->End();
+    END();
 
     // Read back results
     TestResult result = TestResult::Passed;

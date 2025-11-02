@@ -111,7 +111,7 @@ DEF_TEST( Uniforms )
 
     const IndexedTriangleMesh& mesh = models[ModelCube];
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
         cmdBuffer->SetVertexBuffer(*meshBuffer);
@@ -162,7 +162,7 @@ DEF_TEST( Uniforms )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "Uniforms_Frame" + std::to_string(frame);

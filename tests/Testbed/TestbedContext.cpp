@@ -20,7 +20,7 @@
 
 
 static const char* k_defaultOutputDir       = "Output/";
-static const char* k_knownSingleCharArgs    = "bcdfghpstv";
+static const char* k_knownSingleCharArgs    = "bcdfghpstvi";
 
 // Returns true of the specified list of program arguments contains the search string
 bool HasProgramArgument(int argc, char* argv[], const char* search, const char** outValue)
@@ -158,6 +158,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     const bool  isDebugMode             = (HasProgramArgument(argc, argv, "-d", &debugValue) || HasProgramArgument(argc, argv, "--debug", &debugValue));
     const bool  isBreakOnError          = (HasProgramArgument(argc, argv, "-b") || HasProgramArgument(argc, argv, "--break"));
     const bool  isRefMode               = HasProgramArgument(argc, argv, "--ref");
+    const bool  isImmediateContext      = (HasProgramArgument(argc, argv, "-i") || HasProgramArgument(argc, argv, "--icontext"));
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
     const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
@@ -222,12 +223,12 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         cmdQueue = renderer->GetCommandQueue();
 
         // Create primary command buffer
-        cmdBuffer = renderer->CreateCommandBuffer(CommandBufferFlags::ImmediateSubmit);
+        cmdBuffer = renderer->CreateCommandBuffer(isImmediateContext ? CommandBufferFlags::ImmediateSubmit : 0);
 
         // Print renderer information
         rendererInfo = renderer->GetRendererInfo();
         if (opt.verbose)
-            LogRendererInfo();
+            LogRendererInfo(isImmediateContext);
 
         // Query rendering capabilities
         caps = renderer->GetRenderingCaps();
@@ -976,7 +977,7 @@ double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
     return duration;
 }
 
-void TestbedContext::LogRendererInfo()
+void TestbedContext::LogRendererInfo(bool isImmediateContext)
 {
     const RendererInfo& info = rendererInfo;
     if (opt.verbose)
@@ -997,15 +998,26 @@ void TestbedContext::LogRendererInfo()
     else
         Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
 
+    const char* cmdBufferContextInfo = (isImmediateContext ? "Immediate Context" : "Deferred Context");
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
     {
         const bool hasDSAExtension = (std::find(info.extensionNames.begin(), info.extensionNames.end(), "GL_ARB_direct_state_access") != info.extensionNames.end());
         Log::Printf(
             "Configuration:\n"
             " - Profile: %s\n"
-            " - DSA extension: %s\n",
+            " - DSA extension: %s\n"
+            " - %s\n",
             renderer->GetName(),
-            (hasDSAExtension ? "Yes" : "No")
+            (hasDSAExtension ? "Yes" : "No"),
+            cmdBufferContextInfo
+        );
+    }
+    else
+    {
+        Log::Printf(
+            "Configuration:\n"
+            " - %s\n",
+            cmdBufferContextInfo
         );
     }
 }
@@ -1722,7 +1734,7 @@ void TestbedContext::SaveDepthImage(const std::vector<float>& image, const LLGL:
         invProjection.MakeInverse();
     }
 
-    for (std::size_t i = 0; i < image.size(); ++i)
+    for_range(i, image.size())
     {
         float depthValue = image[i];
 
@@ -1753,7 +1765,7 @@ void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, co
     std::vector<ColorRGBub> colors;
     colors.resize(image.size());
 
-    for (std::size_t i = 0; i < image.size(); ++i)
+    for_range(i, image.size())
         colors[i] = ColorRGBub{ image[i] };
 
     const std::string path = opt.outputDir + moduleName + "/";

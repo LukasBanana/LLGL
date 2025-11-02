@@ -86,7 +86,7 @@ DEF_TEST( StencilBuffer )
     constexpr std::uint32_t stencilRef = 50;
     static_assert(stencilRef <= UINT8_MAX, "'stencilRef' must not be greater than UINT8_MAX");
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
         cmdBuffer->BeginRenderPass(*renderTarget);
@@ -103,7 +103,7 @@ DEF_TEST( StencilBuffer )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Readback stencil buffer and compare with expected result
     const Offset3D readbackTexPosition
@@ -121,9 +121,9 @@ DEF_TEST( StencilBuffer )
     MutableImageView dstImageView;
     {
         dstImageView.format     = ImageFormat::Stencil;
+        dstImageView.dataType   = DataType::UInt8;
         dstImageView.data       = &readbackStencilValue;
         dstImageView.dataSize   = sizeof(readbackStencilValue);
-        dstImageView.dataType   = DataType::UInt8;
     }
     renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageView);
 
@@ -131,12 +131,12 @@ DEF_TEST( StencilBuffer )
 
     // Match entire stencil and create delta heat map
     std::vector<std::uint8_t> readbackStencilBuffer;
-    readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, 0);
+    readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, invalidStencilValue);
     {
         dstImageView.format     = ImageFormat::Stencil;
-        dstImageView.data       = readbackStencilBuffer.data();
-        dstImageView.dataSize   = sizeof(decltype(readbackStencilBuffer)::value_type) * readbackStencilBuffer.size();
         dstImageView.dataType   = DataType::UInt8;
+        dstImageView.data       = readbackStencilBuffer.data();
+        dstImageView.dataSize   = readbackStencilBuffer.size() * sizeof(decltype(readbackStencilBuffer)::value_type);
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageView);
 

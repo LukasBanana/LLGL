@@ -297,7 +297,7 @@ DEF_TEST( ShadowMapping )
         ViewportConfig{ Viewport{ Offset2D{        0, halfResY }, halfRes }, 80.0f, ColorRGBf{ 0.6f, 0.6f, 0.8f } },
     };
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
         cmdBuffer->SetVertexBuffer(*meshBuffer);
@@ -349,7 +349,7 @@ DEF_TEST( ShadowMapping )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     cmdQueue->WaitIdle();
 

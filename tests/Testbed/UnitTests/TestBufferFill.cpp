@@ -31,11 +31,11 @@ DEF_TEST( BufferFill )
     CREATE_BUFFER(buf2, buf2Desc, "buf2{size=2048}", nullptr);
 
     // Fill buf1
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->FillBuffer(*buf1, 0, fillData[0], buf1Desc.size);
     }
-    cmdBuffer->End();
+    END();
 
     // Read buf1 feedback data
     std::uint32_t buf1DataFeedback[4] = {};
@@ -52,12 +52,12 @@ DEF_TEST( BufferFill )
     }
 
     // Fill buf2
-    cmdBuffer->Begin();
+    BEGIN();
     {
         for (std::uint64_t buf2Off = 0; buf2Off + sizeof(std::uint32_t) < buf2Desc.size; buf2Off += sizeof(std::uint32_t))
             cmdBuffer->FillBuffer(*buf2, buf2Off, fillData[(buf2Off / sizeof(std::uint32_t)) % 4], sizeof(std::uint32_t));
     }
-    cmdBuffer->End();
+    END();
 
     // Read buf2 feedback data
     std::uint32_t buf2DataFeedback[4] = {};

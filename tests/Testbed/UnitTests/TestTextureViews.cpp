@@ -112,7 +112,7 @@ DEF_TEST( TextureViews )
 
     Texture* readbackTex = nullptr;
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer);
         cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
@@ -152,7 +152,7 @@ DEF_TEST( TextureViews )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const char* colorBufferName = (isTextureFormatReinterpretationSupported ? "TextureViews" : "TextureViews_Limited");

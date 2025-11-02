@@ -154,7 +154,7 @@ DEF_TEST( TextureToBufferCopy )
                 };
 
                 // Copy source texture to buffer and back to destination texture
-                cmdBuffer->Begin();
+                BEGIN();
                 {
                     const std::string debugGroup = std::string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
                     cmdBuffer->PushDebugGroup(debugGroup.c_str());
@@ -165,7 +165,7 @@ DEF_TEST( TextureToBufferCopy )
                     }
                     cmdBuffer->PopDebugGroup();
                 }
-                cmdBuffer->End();
+                END();
 
                 // Read back image data from destination texture and compare it with source texture image
                 const std::uint32_t numMipTexels    = srcRegion.extent.width * srcRegion.extent.height * srcRegion.extent.depth;

@@ -118,7 +118,7 @@ DEF_TEST( BufferToTextureCopy )
                 };
 
                 // Copy source buffer to texture and back to destination buffer
-                cmdBuffer->Begin();
+                BEGIN();
                 {
                     const std::string debugGroup = std::string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
                     cmdBuffer->PushDebugGroup(debugGroup.c_str());
@@ -129,7 +129,7 @@ DEF_TEST( BufferToTextureCopy )
                     }
                     cmdBuffer->PopDebugGroup();
                 }
-                cmdBuffer->End();
+                END();
 
                 // Read back image data from destination buffer
                 srcData.resize(srcBufSize);

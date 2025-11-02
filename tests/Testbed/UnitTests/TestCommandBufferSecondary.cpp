@@ -145,7 +145,7 @@ DEF_TEST( CommandBufferSecondary )
     // Record primary command buffer to render frame
     const TextureRegion texRegion{ Offset3D{}, readbackTexDesc.extent };
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->SetVertexBuffer(*meshBuffer);
         cmdBuffer->BeginRenderPass(*swapChain);
@@ -164,7 +164,7 @@ DEF_TEST( CommandBufferSecondary )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Read result from readback texture
     std::vector<ColorRGBub> readbackImage;

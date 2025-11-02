@@ -112,6 +112,13 @@ using namespace LLGL;
         OBJ = nullptr;              \
     }
 
+#define BEGIN()                     \
+    cmdBuffer->Begin()
+
+#define END()                       \
+    cmdBuffer->End();               \
+    cmdQueue->Submit(*cmdBuffer)
+
 
 #endif
 

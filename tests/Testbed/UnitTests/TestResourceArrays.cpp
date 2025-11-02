@@ -85,7 +85,7 @@ DEF_TEST( ResourceArrays )
 
     const Extent2D halfResolution{ opt.resolution.width/2, opt.resolution.height };
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
 
@@ -115,7 +115,7 @@ DEF_TEST( ResourceArrays )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Evaluate readback result
     SaveCapture(readbackTex, "ResourceArrays");

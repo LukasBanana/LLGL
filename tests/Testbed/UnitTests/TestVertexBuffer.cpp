@@ -101,7 +101,7 @@ DEF_TEST( VertexBuffer )
     // Render scene
     Texture* readbackTex = nullptr;
 
-    cmdBuffer->Begin();
+    BEGIN();
     {
         if (frame + 1 == numFrames)
         {
@@ -135,7 +135,7 @@ DEF_TEST( VertexBuffer )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
+    END();
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "VertexBuffer_Format" + std::to_string(frame);
