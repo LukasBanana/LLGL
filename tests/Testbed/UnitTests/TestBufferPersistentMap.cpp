@@ -42,7 +42,7 @@ DEF_TEST( BufferPersistentMap )
     {
         auto* buf1DataU32 = reinterpret_cast<std::uint32_t*>(buf1Data);
         const int result = ::memcmp(buf1DataU32, buf1Initial, sizeof(buf1Initial));
-        //renderer->UnmapBuffer(*buf1);
+        renderer->UnmapBuffer(*buf1);
         if (result != 0)
         {
             Log::Errorf(
@@ -66,7 +66,7 @@ DEF_TEST( BufferPersistentMap )
         // Write memory into buf2
         auto* buf2DataU32 = reinterpret_cast<std::uint32_t*>(buf2Data);
         ::memcpy(buf2DataU32, buf1Initial, sizeof(buf1Initial));
-        //renderer->UnmapBuffer(*buf2);
+        renderer->UnmapBuffer(*buf2);
 
         // Read buffer and compare data
         std::uint32_t buf2DataFeedback[4] = {};
@@ -95,7 +95,7 @@ DEF_TEST( BufferPersistentMap )
         {
             // Write data to buffer
             ::memcpy(buf3Data, buf1Initial, sizeof(buf1Initial));
-            //renderer->UnmapBuffer(*buf3);
+            renderer->UnmapBuffer(*buf3);
         }
         else
         {
@@ -116,7 +116,7 @@ DEF_TEST( BufferPersistentMap )
             // Read data from buffer
             auto* buf3DataU32 = reinterpret_cast<std::uint32_t*>(buf3Data);
             int result = ::memcmp(buf3DataU32, buf1Initial, sizeof(buf1Initial));
-            //renderer->UnmapBuffer(*buf3);
+            renderer->UnmapBuffer(*buf3);
             if (result != 0)
             {
                 Log::Errorf(
