@@ -386,6 +386,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( NativeHandle                );
     RUN_TEST( BufferWriteAndRead          );
     RUN_TEST( BufferMap                   );
+    RUN_TEST( BufferPersistentMap         );
     RUN_TEST( BufferFill                  );
     RUN_TEST( BufferUpdate                );
     RUN_TEST( BufferCopy                  );

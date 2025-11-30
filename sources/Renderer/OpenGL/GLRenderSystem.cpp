@@ -125,6 +125,9 @@ static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
     /* Allways enable dynamic storage, to enable usage of 'glBufferSubData' */
     flagsGL |= GL_DYNAMIC_STORAGE_BIT;
 
+    if ((cpuAccessFlags & CPUAccessFlags::Persistent) != 0)
+        flagsGL |= GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+
     if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
         flagsGL |= GL_MAP_READ_BIT;
     if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)

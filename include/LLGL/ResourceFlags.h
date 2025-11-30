@@ -207,6 +207,13 @@ struct CPUAccessFlags
         \see CPUAccessFlags::Write
         */
         ReadWrite   = (Read | Write),
+
+        /**
+        \brief Allow a buffer to remain mapped indefinitely. This technique is particularly useful for scenarios requiring frequent updates of data from the CPU to the GPU.
+        \note  Only supported with OpenGL currently.
+        \see   https://wikis.khronos.org/opengl/Buffer_Object#Persistent_mapping
+         */
+        Persistent = (1 << 2),
     };
 };
 

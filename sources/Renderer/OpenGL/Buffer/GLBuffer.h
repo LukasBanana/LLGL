@@ -109,7 +109,9 @@ class GLBuffer : public Buffer
         bool            indexType16Bits_    = false;
         GLuint          texID_              = 0; // Used for sampler and image buffers
         GLenum          texInternalFormat_  = 0; // Used for sampler and image buffers
-
+        GLbitfield      storageFlags_       = 0;
+        GLsizeiptr      bufferSize_         = 0;
+        void*           mapped_             = nullptr; // Used for persistent mapping
 };
 
 

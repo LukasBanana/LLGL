@@ -50,6 +50,7 @@ DECL_TEST( CommandBufferMultiThreading );
 // Resource tests
 DECL_TEST( BufferWriteAndRead );
 DECL_TEST( BufferMap );
+DECL_TEST( BufferPersistentMap);
 DECL_TEST( BufferFill );
 DECL_TEST( BufferUpdate );
 DECL_TEST( BufferCopy );
