@@ -72,7 +72,7 @@ endif()
 
 # === Project ===
 
-if(LLGL_UWP_PLATFORM)
+if(LLGL_UWP_PLATFORM OR LLGL_WASM_PLATFORM)
     set(CMAKE_CXX_STANDARD 17)
 else()
     set(CMAKE_CXX_STANDARD 11)
