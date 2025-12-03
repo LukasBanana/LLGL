@@ -207,13 +207,6 @@ struct CPUAccessFlags
         \see CPUAccessFlags::Write
         */
         ReadWrite   = (Read | Write),
-
-        /**
-        \brief Allow a buffer to remain mapped indefinitely. This technique is particularly useful for scenarios requiring frequent updates of data from the CPU to the GPU.
-        \note  Only supported with OpenGL currently.
-        \see   https://wikis.khronos.org/opengl/Buffer_Object#Persistent_mapping
-         */
-        Persistent = (1 << 2),
     };
 };
 
@@ -278,6 +271,18 @@ struct MiscFlags
         \see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_buffer_uav_flag
         */
         Counter         = (1 << 5),
+
+
+        /**
+        \brief Allow a buffer to remain mapped indefinitely. This technique is particularly useful for scenarios requiring frequent updates of data from the CPU to the GPU.
+        \note  Only supported with OpenGL currently.
+        \note  If this flag set a buffer can mapped with persistent map fashion.
+        \note  If flags contains GL_MAP_PERSISTENT_BIT, it must also contain at least one of GL_MAP_READ_BIT or GL_MAP_WRITE_BIT.
+        \note  If flags contains GL_MAP_COHERENT_BIT, it must also contain GL_MAP_PERSISTENT_BIT.
+        \note  GL_MAP_COHERENT_BIT guarantee that the effect of writes to a buffer's data store by either the client or server will eventually become visible to the other.
+        \see   https://wikis.khronos.org/opengl/Buffer_Object#Persistent_mapping
+         */
+         PersistentMap = (1 << 6),
     };
 };
 

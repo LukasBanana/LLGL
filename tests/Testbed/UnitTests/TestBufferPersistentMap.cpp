@@ -1,5 +1,5 @@
 /*
- * TestContext.cpp
+ * TestBufferPersistentMap.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -17,7 +17,8 @@ DEF_TEST( BufferPersistentMap )
     BufferDescriptor buf1Desc;
     {
         buf1Desc.size           = 16;
-        buf1Desc.cpuAccessFlags = CPUAccessFlags::Read | CPUAccessFlags::Persistent;
+        buf1Desc.cpuAccessFlags = CPUAccessFlags::Read;
+        buf1Desc.miscFlags = MiscFlags::PersistentMap;
     }
     CREATE_BUFFER(buf1, buf1Desc, "buf1{size=16,r}", buf1Initial);
 
@@ -25,7 +26,8 @@ DEF_TEST( BufferPersistentMap )
     BufferDescriptor buf2Desc;
     {
         buf2Desc.size           = 16;
-        buf2Desc.cpuAccessFlags = CPUAccessFlags::Write | CPUAccessFlags::Persistent;
+        buf2Desc.cpuAccessFlags = CPUAccessFlags::Write;
+        buf1Desc.miscFlags = MiscFlags::PersistentMap;
     }
     CREATE_BUFFER(buf2, buf2Desc, "buf2{size=16,w}", nullptr);
 
@@ -33,7 +35,7 @@ DEF_TEST( BufferPersistentMap )
     BufferDescriptor buf3Desc;
     {
         buf3Desc.size           = 2048;
-        buf3Desc.cpuAccessFlags = CPUAccessFlags::ReadWrite | CPUAccessFlags::Persistent;
+        buf3Desc.cpuAccessFlags = CPUAccessFlags::ReadWrite;
     }
     CREATE_BUFFER(buf3, buf3Desc, "buf3{size=2048,rw}", nullptr);
 

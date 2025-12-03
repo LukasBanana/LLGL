@@ -61,20 +61,16 @@ GLBuffer::GLBuffer(long bindFlags, const char* debugName) :
 
 GLBuffer::~GLBuffer()
 {
-    if (mapped_)
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+    if (HasExtension(GLExt::ARB_direct_state_access))
     {
-        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-        if (HasExtension(GLExt::ARB_direct_state_access))
+        if (mapped_)
         {
             glUnmapNamedBuffer(GetID());
+            mapped_ = nullptr;
         }
-        else
-        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-        {
-            GLStateManager::Get().BindGLBuffer(*this);
-            GLProfile::UnmapBuffer(GetGLTarget());
-        }  
     }
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
 
     glDeleteBuffers(1, &id_);
     GLStateManager::Get().NotifyBufferRelease(*this);
@@ -129,8 +125,6 @@ BufferDescriptor GLBuffer::GetDesc() const
             bufferDesc.cpuAccessFlags |= CPUAccessFlags::Read;
         if ((storageFlags & GL_MAP_WRITE_BIT) != 0)
             bufferDesc.cpuAccessFlags |= CPUAccessFlags::Write;
-        if ((storageFlags & GL_MAP_PERSISTENT_BIT) != 0)
-            bufferDesc.cpuAccessFlags |= CPUAccessFlags::Persistent;
     }
     else
     #endif // /GL_ARB_buffer_storage
@@ -151,13 +145,14 @@ void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
-		storageFlags_ = flags;
+        // Immutable Buffer
+        storageFlags_ = flags;
         /* Allocate buffer with immutable storage (4.5+) */
         glNamedBufferStorage(GetID(), size, data, flags);
     }
     else
     #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-    #ifdef GL_ARB_buffer_storage
+    #if GL_ARB_buffer_storage
     if (HasExtension(GLExt::ARB_buffer_storage))
     {
         storageFlags_ = flags;
@@ -213,7 +208,7 @@ void GLBuffer::ClearBufferData(std::uint32_t data)
     }
     else
     #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-    #ifdef GL_ARB_clear_buffer_object
+    #if GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
         GLStateManager::Get().BindGLBuffer(*this);
@@ -250,7 +245,7 @@ void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_
     else
     #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #endif // /TODO
-    #ifdef GL_ARB_clear_buffer_object
+    #if GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
         GLStateManager::Get().BindGLBuffer(*this);
@@ -280,7 +275,7 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
     }
     else
     #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-    #ifdef GL_ARB_copy_buffer
+    #if GL_ARB_copy_buffer
     if (HasExtension(GLExt::ARB_copy_buffer))
     {
         /* Bind source and destination buffer for copy operation (GL 3.1+) */
@@ -306,106 +301,82 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
 
 void* GLBuffer::MapBuffer(GLenum access)
 {
-    #ifdef GL_ARB_buffer_storage
-    if (storageFlags_ & GL_MAP_PERSISTENT_BIT)
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {        
+        if (storageFlags_ & GL_MAP_PERSISTENT_BIT)
         {
             if (mapped_ == nullptr)
             {
-                GLbitfield flags = storageFlags_ & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-                #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-                if (HasExtension(GLExt::ARB_direct_state_access))
-                {
-                    mapped_ = glMapNamedBufferRange(GetID(), 0, bufferSize_, flags);
-                }
-                else
-                #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-                {
-                    GLStateManager::Get().BindGLBuffer(*this);
-                    mapped_ = glMapBufferRange(GetGLTarget(), 0, bufferSize_, flags);
-                }
+                mapped_ = glMapNamedBufferRange(GetID(), 0, bufferSize_,
+                    storageFlags_ & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
             }
+        }
+
+        if (mapped_)
             return mapped_;
-        }    
-    else
-    #endif // /GL_ARB_buffer_storage
-    {
-        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-        if (HasExtension(GLExt::ARB_direct_state_access))
-        {
-            return glMapNamedBuffer(GetID(), access);
-        }
         else
-        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-        {
-            GLStateManager::Get().BindGLBuffer(*this);
-            return GLProfile::MapBuffer(GetGLTarget(), access);
-        }
+            return glMapNamedBuffer(GetID(), access);
+    }
+    else
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
+    {
+        GLStateManager::Get().BindGLBuffer(*this);   
+        return GLProfile::MapBuffer(GetGLTarget(), access);
     }
 }
 
 void* GLBuffer::MapBufferRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
-    #ifdef GL_ARB_buffer_storage
-    if (storageFlags_ & GL_MAP_PERSISTENT_BIT)
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+    if (HasExtension(GLExt::ARB_direct_state_access))
     {
-        if (mapped_ == nullptr)
+        if (storageFlags_ & GL_MAP_PERSISTENT_BIT)
         {
-            GLbitfield flags = storageFlags_ & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-            #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-            if (HasExtension(GLExt::ARB_direct_state_access))
+            if (mapped_ == nullptr)
             {
-                mapped_ = glMapNamedBufferRange(GetID(), 0, bufferSize_, flags);
-            }
-            else
-            #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-            {
-                GLStateManager::Get().BindGLBuffer(*this);
-                mapped_ = glMapBufferRange(GetGLTarget(), 0, bufferSize_, flags);
+                mapped_ = glMapNamedBufferRange(GetID(), 0, bufferSize_,
+                    storageFlags_ & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
             }
         }
-        return (char*)mapped_ + offset;
+
+        if (mapped_)
+            return static_cast<char*>(mapped_)+offset;
+        else
+            return glMapNamedBufferRange(GetID(), offset, length, access);
     }
     else
-    #endif // GL_ARB_buffer_storage
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
+    #if GL_ARB_map_buffer_range
+    if (HasExtension(GLExt::ARB_map_buffer_range))
     {
-        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-        if (HasExtension(GLExt::ARB_direct_state_access))
-        {
-            return glMapNamedBufferRange(GetID(), offset, length, access);
-        }
-        else
-        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-        #ifdef GL_ARB_map_buffer_range
-        if (HasExtension(GLExt::ARB_map_buffer_range))
-        {
-            GLStateManager::Get().BindGLBuffer(*this);
-            return glMapBufferRange(GetGLTarget(), offset, length, access);
-        }
-        else
-        #endif // /GL_ARB_map_buffer_range
-        {
-            GLStateManager::Get().BindGLBuffer(*this);
-            return GLProfile::MapBufferRange(GetGLTarget(), offset, length, access);
-        }
+        GLStateManager::Get().BindGLBuffer(*this);
+        return glMapBufferRange(GetGLTarget(), offset, length, access);
     }
-
+    else
+    #endif // /GL_ARB_map_buffer_range
+    {
+        GLStateManager::Get().BindGLBuffer(*this);
+        return GLProfile::MapBufferRange(GetGLTarget(), offset, length, access);
+    }
 }
 
 void GLBuffer::UnmapBuffer()
 {
-    if (mapped_ == nullptr)
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+    if (HasExtension(GLExt::ARB_direct_state_access))
     {
-        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-        if (HasExtension(GLExt::ARB_direct_state_access))
+        /*if persistent mapping just unmap it when buffer destroy*/
+        if (mapped_ == nullptr)
         {
             glUnmapNamedBuffer(GetID());
         }
-        else
-        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-        {
-            GLStateManager::Get().BindGLBuffer(*this);
-            GLProfile::UnmapBuffer(GetGLTarget());
-        }
+    }
+    else
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
+    {
+        GLStateManager::Get().BindGLBuffer(*this);
+        GLProfile::UnmapBuffer(GetGLTarget());
     }
 }
 

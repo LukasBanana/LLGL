@@ -116,7 +116,7 @@ void GLRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
+static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags,long miscFlags)
 {
     #if GL_ARB_buffer_storage
 
@@ -125,14 +125,19 @@ static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
     /* Allways enable dynamic storage, to enable usage of 'glBufferSubData' */
     flagsGL |= GL_DYNAMIC_STORAGE_BIT;
 
-    if ((cpuAccessFlags & CPUAccessFlags::Persistent) != 0)
-        flagsGL |= GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-
     if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
         flagsGL |= GL_MAP_READ_BIT;
     if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
         flagsGL |= GL_MAP_WRITE_BIT;
-
+    if (miscFlags & MiscFlags::PersistentMap)
+    {
+        if (flagsGL & ( GL_MAP_READ_BIT | GL_MAP_WRITE_BIT))
+        {
+            // If flags contains GL_MAP_PERSISTENT_BIT, it must also contain at least one of GL_MAP_READ_BIT or GL_MAP_WRITE_BIT.
+            // If flags contains GL_MAP_COHERENT_BIT, it must also contain GL_MAP_PERSISTENT_BIT. 
+            flagsGL |= (GL_MAP_PERSISTENT_BIT|GL_MAP_COHERENT_BIT);
+        }
+    }
     return flagsGL;
 
     #else
@@ -152,7 +157,7 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& bufferDe
     bufferGL.BufferStorage(
         static_cast<GLsizeiptr>(bufferDesc.size),
         initialData,
-        GetGLBufferStorageFlags(bufferDesc.cpuAccessFlags),
+        GetGLBufferStorageFlags(bufferDesc.cpuAccessFlags,bufferDesc.miscFlags),
         GetGLBufferUsage(bufferDesc.miscFlags)
     );
 }
