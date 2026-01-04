@@ -1,4 +1,4 @@
-name: MS Windows
+name: MS Windows (MSVC 16+)
 
 on:
   push:
