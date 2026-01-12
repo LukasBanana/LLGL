@@ -26,8 +26,15 @@ std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
     return vertices;
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
+static Gs::Vector3f ToLeftHanded(const Gs::Vector3f& v)
 {
+    return { v.x, v.y, -v.z };
+}
+
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool isLeftHanded)
+{
+    LLGL_VERIFY(verticesPerFace <= 4);
+
     // Read obj file
     std::vector<char> fileContent = ReadAsset(filename);
     if (fileContent.empty())
@@ -61,7 +68,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             s >> v.x;
             s >> v.y;
             s >> v.z;
-            coords.push_back(v);
+            coords.push_back(isLeftHanded ? ToLeftHanded(v) : v);
         }
         else if (mode == "vt")
         {
@@ -76,16 +83,16 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             s >> n.x;
             s >> n.y;
             s >> n.z;
-            normals.push_back(n);
+            normals.push_back(isLeftHanded ? ToLeftHanded(n) : n);
         }
         else if (mode == "f")
         {
-            unsigned int v = 0, vt = 0, vn = 0;
+            unsigned int v[4] = {}, vt[4] = {}, vn[4] = {};
 
             for (unsigned i = 0; i < verticesPerFace; ++i)
             {
                 // Read vertex index
-                s >> v;
+                s >> v[i];
 
                 // Read texture-coordinate index
                 if (texCoords.empty())
@@ -93,23 +100,31 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
                 else
                 {
                     s.ignore(1);
-                    s >> vt;
+                    s >> vt[i];
                     s.ignore(1);
                 }
 
                 // Read normal index
-                s >> vn;
+                s >> vn[i];
+            }
 
-                // Add vertex to mesh
+            // Add vertices to mesh
+            for (unsigned i = 0; i < verticesPerFace; ++i)
+            {
+                unsigned iface = isLeftHanded ? verticesPerFace - i - 1 : i;
+                unsigned iv = v[iface] - 1;
+                unsigned in = vn[iface] - 1;
+                unsigned it = vt[iface] - 1;
+
                 vertices.push_back(
                     {
-                        coords[v - 1],
-                        (vn - 1 < normals.size() ? normals[vn - 1] : Gs::Vector3f{}),
-                        (vt - 1 < texCoords.size() ? texCoords[vt - 1] : Gs::Vector2f{})
+                        coords[iv],
+                        (in < normals.size() ? normals[in] : Gs::Vector3f{}),
+                        (it < texCoords.size() ? texCoords[it] : Gs::Vector2f{})
                     }
                 );
-                mesh.numVertices++;
             }
+            mesh.numVertices += verticesPerFace;
         }
     }
 

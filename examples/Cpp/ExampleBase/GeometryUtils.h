@@ -52,7 +52,7 @@ struct TriangleMesh
 std::vector<TexturedVertex> LoadObjModel(const std::string& filename);
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3);
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool isLeftHanded = false);
 
 // Generates eight vertices for a unit cube.
 std::vector<Gs::Vector3f> GenerateCubeVertices();
