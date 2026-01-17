@@ -37,8 +37,9 @@ class PerlinNoise
             std::uint32_t       height,
             std::uint32_t       depth,
             std::uint32_t       frequency,
-            std::uint32_t       octaves     = 5,
-            float               persistence = 0.5f
+            std::uint32_t       octaves         = 5,
+            float               persistence     = 0.5f,
+            bool                isRightHanded   = false
         );
 
         // Generates a perlin noise pattern into the output buffer.
@@ -48,8 +49,9 @@ class PerlinNoise
             std::uint32_t               height,
             std::uint32_t               depth,
             std::uint32_t               frequency,
-            std::uint32_t               octaves     = 5,
-            float                       persistence = 0.5f
+            std::uint32_t               octaves         = 5,
+            float                       persistence     = 0.5f,
+            bool                        isRightHanded   = false
         );
 
     private:

@@ -9,6 +9,7 @@ cbuffer SceneSettings : register(b1)
 	float4x4	wMatrix;
 	float4		diffuse;
 	float4		glossiness;
+	float3 		lightDir;
 	float		intensity;
 };
 
@@ -43,7 +44,6 @@ OutputPScene PScene(OutputVScene inp)
 	OutputPScene outp;
 	
 	// Write simple lighting into 1st render target
-	float3 lightDir = float3(0, 0, -1);
 	float3 normal = normalize(inp.normal);
 	
 	float NdotL = max(0.4, dot(lightDir, normal));

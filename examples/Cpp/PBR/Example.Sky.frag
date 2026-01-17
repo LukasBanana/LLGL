@@ -30,7 +30,8 @@ uniform samplerCubeArray skyBox;
 
 void main()
 {
-    vec3 texCoord = normalize(cMatrix * inp.viewRay).xyz;
+    vec4 viewRay = vec4(inp.viewRay.xy, (gl_FrontFacing ? -1.0 : +1.0), 0.0);
+    vec3 texCoord = normalize(cMatrix * viewRay).xyz;
     outColor = texture(skyBox, vec4(texCoord, float(skyboxLayer)));
 }
 

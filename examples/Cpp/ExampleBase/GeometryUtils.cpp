@@ -19,10 +19,10 @@
 * Global helper functions
 */
 
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates)
 {
     std::vector<TexturedVertex> vertices;
-    LoadObjModel(vertices, filename);
+    LoadObjModel(vertices, filename, verticesPerFace, keepRightHandedCoordinates);
     return vertices;
 }
 
@@ -31,7 +31,7 @@ static Gs::Vector3f ToLeftHanded(const Gs::Vector3f& v)
     return { v.x, v.y, -v.z };
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool isLeftHanded)
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates)
 {
     LLGL_VERIFY(verticesPerFace <= 4);
 
@@ -68,7 +68,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             s >> v.x;
             s >> v.y;
             s >> v.z;
-            coords.push_back(isLeftHanded ? ToLeftHanded(v) : v);
+            coords.push_back(keepRightHandedCoordinates ? v : ToLeftHanded(v));
         }
         else if (mode == "vt")
         {
@@ -83,7 +83,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             s >> n.x;
             s >> n.y;
             s >> n.z;
-            normals.push_back(isLeftHanded ? ToLeftHanded(n) : n);
+            normals.push_back(keepRightHandedCoordinates ? n : ToLeftHanded(n));
         }
         else if (mode == "f")
         {
@@ -108,10 +108,12 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
                 s >> vn[i];
             }
 
-            // Add vertices to mesh
+            // Add vertices to mesh.
+            // Wavefront Object format stores triangle indices in counter-clockwise (CCW) order.
+            // Since LLGL::RasterizerDescriptor::frontCCW is disabled by default, we convert it to clockwise (CW) order here.
             for (unsigned i = 0; i < verticesPerFace; ++i)
             {
-                unsigned iface = isLeftHanded ? verticesPerFace - i - 1 : i;
+                unsigned iface = verticesPerFace - i - 1;
                 unsigned iv = v[iface] - 1;
                 unsigned in = vn[iface] - 1;
                 unsigned it = vt[iface] - 1;
@@ -131,12 +133,13 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     return mesh;
 }
 
-std::vector<Gs::Vector3f> GenerateCubeVertices()
+std::vector<Gs::Vector3f> GenerateCubeVertices(bool isRightHanded)
 {
+    const float z = (isRightHanded ? -1.0f : +1.0f);
     return
     {
-        { -1, -1, -1 }, { -1,  1, -1 }, {  1,  1, -1 }, {  1, -1, -1 },
-        { -1, -1,  1 }, { -1,  1,  1 }, {  1,  1,  1 }, {  1, -1,  1 },
+        { -1, -1, -z }, { -1,  1, -z }, {  1,  1, -z }, {  1, -1, -z },
+        { -1, -1,  z }, { -1,  1,  z }, {  1,  1,  z }, {  1, -1,  z },
     };
 }
 
@@ -153,46 +156,47 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     };
 }
 
-std::vector<TexturedVertex> GenerateTexturedCubeVertices()
+std::vector<TexturedVertex> GenerateTexturedCubeVertices(bool isRightHanded)
 {
+    const float z = (isRightHanded ? -1.0f : +1.0f);
     return
     {
         //   x   y   z      nx  ny  nz      u  v
         // front
-        { { -1, -1, -1 }, {  0,  0, -1 }, { 0, 1 } },
-        { { -1,  1, -1 }, {  0,  0, -1 }, { 0, 0 } },
-        { {  1,  1, -1 }, {  0,  0, -1 }, { 1, 0 } },
-        { {  1, -1, -1 }, {  0,  0, -1 }, { 1, 1 } },
+        { { -1, -1, -z }, {  0,  0, -z }, { 0, 1 } },
+        { { -1,  1, -z }, {  0,  0, -z }, { 0, 0 } },
+        { {  1,  1, -z }, {  0,  0, -z }, { 1, 0 } },
+        { {  1, -1, -z }, {  0,  0, -z }, { 1, 1 } },
 
         // right
-        { {  1, -1, -1 }, { +1,  0,  0 }, { 0, 1 } },
-        { {  1,  1, -1 }, { +1,  0,  0 }, { 0, 0 } },
-        { {  1,  1,  1 }, { +1,  0,  0 }, { 1, 0 } },
-        { {  1, -1,  1 }, { +1,  0,  0 }, { 1, 1 } },
+        { {  1, -1, -z }, { +1,  0,  0 }, { 0, 1 } },
+        { {  1,  1, -z }, { +1,  0,  0 }, { 0, 0 } },
+        { {  1,  1,  z }, { +1,  0,  0 }, { 1, 0 } },
+        { {  1, -1,  z }, { +1,  0,  0 }, { 1, 1 } },
 
         // left
-        { { -1, -1,  1 }, { -1,  0,  0 }, { 0, 1 } },
-        { { -1,  1,  1 }, { -1,  0,  0 }, { 0, 0 } },
-        { { -1,  1, -1 }, { -1,  0,  0 }, { 1, 0 } },
-        { { -1, -1, -1 }, { -1,  0,  0 }, { 1, 1 } },
+        { { -1, -1,  z }, { -1,  0,  0 }, { 0, 1 } },
+        { { -1,  1,  z }, { -1,  0,  0 }, { 0, 0 } },
+        { { -1,  1, -z }, { -1,  0,  0 }, { 1, 0 } },
+        { { -1, -1, -z }, { -1,  0,  0 }, { 1, 1 } },
 
         // top
-        { { -1,  1, -1 }, {  0, +1,  0 }, { 0, 1 } },
-        { { -1,  1,  1 }, {  0, +1,  0 }, { 0, 0 } },
-        { {  1,  1,  1 }, {  0, +1,  0 }, { 1, 0 } },
-        { {  1,  1, -1 }, {  0, +1,  0 }, { 1, 1 } },
+        { { -1,  1, -z }, {  0, +1,  0 }, { 0, 1 } },
+        { { -1,  1,  z }, {  0, +1,  0 }, { 0, 0 } },
+        { {  1,  1,  z }, {  0, +1,  0 }, { 1, 0 } },
+        { {  1,  1, -z }, {  0, +1,  0 }, { 1, 1 } },
 
         // bottom
-        { { -1, -1,  1 }, {  0, -1,  0 }, { 0, 1 } },
-        { { -1, -1, -1 }, {  0, -1,  0 }, { 0, 0 } },
-        { {  1, -1, -1 }, {  0, -1,  0 }, { 1, 0 } },
-        { {  1, -1,  1 }, {  0, -1,  0 }, { 1, 1 } },
+        { { -1, -1,  z }, {  0, -1,  0 }, { 0, 1 } },
+        { { -1, -1, -z }, {  0, -1,  0 }, { 0, 0 } },
+        { {  1, -1, -z }, {  0, -1,  0 }, { 1, 0 } },
+        { {  1, -1,  z }, {  0, -1,  0 }, { 1, 1 } },
 
         // back
-        { {  1, -1,  1 }, {  0,  0, +1 }, { 0, 1 } },
-        { {  1,  1,  1 }, {  0,  0, +1 }, { 0, 0 } },
-        { { -1,  1,  1 }, {  0,  0, +1 }, { 1, 0 } },
-        { { -1, -1,  1 }, {  0,  0, +1 }, { 1, 1 } },
+        { {  1, -1,  z }, {  0,  0, +z }, { 0, 1 } },
+        { {  1,  1,  z }, {  0,  0, +z }, { 0, 0 } },
+        { { -1,  1,  z }, {  0,  0, +z }, { 1, 0 } },
+        { { -1, -1,  z }, {  0,  0, +z }, { 1, 1 } },
     };
 }
 

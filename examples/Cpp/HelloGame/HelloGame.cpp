@@ -88,8 +88,8 @@ class Example_HelloGame : public ExampleBase
         }
     };
 
-    const TimeOfDay         timeOfDayMorning        = { Gs::Vector3f{ +0.15f, -1.0f, 0.25f }, LLGL::ColorRGBf{ 1.0f, 1.0f, 1.0f }, 0.6f };
-    const TimeOfDay         timeOfDayEvening        = { Gs::Vector3f{ -0.75f, -0.7f, 2.25f }, LLGL::ColorRGBf{ 0.6f, 0.5f, 0.2f }, 0.2f };
+    TimeOfDay               timeOfDayMorning        = { Gs::Vector3f{ +0.15f, -1.0f, 0.25f }, LLGL::ColorRGBf{ 1.0f, 1.0f, 1.0f }, 0.6f };
+    TimeOfDay               timeOfDayEvening        = { Gs::Vector3f{ -0.75f, -0.7f, 2.25f }, LLGL::ColorRGBf{ 0.6f, 0.5f, 0.2f }, 0.2f };
 
     LLGL::PipelineLayout*   scenePSOLayout[2]       = {};
     LLGL::PipelineState*    scenePSO[2]             = {};
@@ -773,6 +773,12 @@ public:
         CreatePipelines();
         LoadLevels();
         SelectLevel(0);
+
+        // Update vectors for projection
+        const float projZAxis = GetProjectionZAxis();
+        scene.lightDir.z *= projZAxis;
+        timeOfDayMorning.lightDir.z *= projZAxis;
+        timeOfDayEvening.lightDir.z *= projZAxis;
     }
 
 private:
@@ -793,10 +799,10 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        mdlPlayer   = LoadObjModel(vertices, "HelloGame_Player.obj");
-        mdlBlock    = LoadObjModel(vertices, "HelloGame_Block.obj");
-        mdlTree     = LoadObjModel(vertices, "HelloGame_Tree.obj");
-        mdlGround   = LoadObjModel(vertices, "HelloGame_Ground.obj");
+        mdlPlayer   = Load3DModel(vertices, "HelloGame_Player.obj");
+        mdlBlock    = Load3DModel(vertices, "HelloGame_Block.obj");
+        mdlTree     = Load3DModel(vertices, "HelloGame_Tree.obj");
+        mdlGround   = Load3DModel(vertices, "HelloGame_Ground.obj");
 
         // Create vertex, index, and constant buffer
         vertexBuffer    = CreateVertexBuffer(vertices, vertexFormat);
@@ -1014,15 +1020,17 @@ private:
         ReportPSOErrors(groundPSO);
     }
 
-    static Gs::Vector3f GridPosToWorldPos(const int (&gridPos)[2], float posY)
+    Gs::Vector3f GridPosToWorldPos(const int (&gridPos)[2], float posY)
     {
         const float posX = static_cast<float>(gridPos[0])*2.0f;
         const float posZ = static_cast<float>(gridPos[1])*2.0f;
-        return Gs::Vector3f{ posX, posY, posZ };
+        return Gs::Vector3f{ posX, posY, posZ * GetProjectionZAxis() };
     }
 
     void SetPlayerTransform(InstanceMatrixType& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         outMatrix.LoadIdentity();
 
         // Position player onto current grid
@@ -1056,12 +1064,12 @@ private:
             else if (moveZ < 0)
             {
                 // Move forwards
-                Gs::RotateFree(outMatrix, Gs::Vector3f{ 1,0,0 }, +angle, Gs::Vector3f{  0,-1,-1 });
+                Gs::RotateFree(outMatrix, Gs::Vector3f{ 1,0,0 }, +angle*projZAxis, Gs::Vector3f{  0,-1,-1*projZAxis });
             }
             else if (moveZ > 0)
             {
                 // Move backwards
-                Gs::RotateFree(outMatrix, Gs::Vector3f{ 1,0,0 }, -angle, Gs::Vector3f{  0,-1,+1 });
+                Gs::RotateFree(outMatrix, Gs::Vector3f{ 1,0,0 }, -angle*projZAxis, Gs::Vector3f{  0,-1,+1*projZAxis });
             }
         }
     }
@@ -1404,11 +1412,23 @@ private:
 
     void SetShadowMapView()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Generate shadow map projection for light direction
-        Gs::Vector3f lightDir = scene.lightDir;
-        Gs::Vector3f upVector = (lightDir.y < 0.999f ? Gs::Vector3f{ 0, 1, 0 } : Gs::Vector3f{ 0, 0, -1 });
-        Gs::Vector3f tangentU = Gs::Cross(upVector, lightDir).Normalized();
-        Gs::Vector3f tangentV = Gs::Cross(lightDir, tangentU);
+        const Gs::Vector3f lightDir = scene.lightDir;
+        const Gs::Vector3f upVector = (lightDir.y < 0.999f ? Gs::Vector3f{ 0, 1, 0 } : Gs::Vector3f{ 0, 0, -1 * projZAxis });
+
+        Gs::Vector3f tangentU, tangentV;
+        if (HasRightHandedProjection())
+        {
+            tangentU = Gs::Cross(lightDir, upVector).Normalized();
+            tangentV = Gs::Cross(tangentU, lightDir);
+        }
+        else
+        {
+            tangentU = Gs::Cross(upVector, lightDir).Normalized();
+            tangentV = Gs::Cross(lightDir, tangentU);
+        }
 
         Gs::Matrix4f lightOrientation;
 
@@ -1420,17 +1440,17 @@ private:
         lightOrientation(1, 1) = tangentV.y;
         lightOrientation(1, 2) = tangentV.z;
 
-        lightOrientation(2, 0) = lightDir.x;
-        lightOrientation(2, 1) = lightDir.y;
-        lightOrientation(2, 2) = lightDir.z;
+        lightOrientation(2, 0) = lightDir.x * projZAxis;
+        lightOrientation(2, 1) = lightDir.y * projZAxis;
+        lightOrientation(2, 2) = lightDir.z * projZAxis;
 
         lightOrientation.MakeInverse();
 
         // Update view transformation from light perspective
         scene.vpMatrix.LoadIdentity();
-        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0.0f, camera.levelCenterPos.y });
+        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0.0f, camera.levelCenterPos.y * projZAxis });
         scene.vpMatrix *= lightOrientation;
-        Gs::Translate(scene.vpMatrix, { 0, 0, -50.0f });
+        Gs::Translate(scene.vpMatrix, { 0, 0, -50.0f * projZAxis });
 
         const float shadowMapScale = camera.viewDistance*1.5f;
         Gs::Matrix4f lightProjection = OrthogonalProjection(shadowMapScale, shadowMapScale, 0.1f, 100.0f);
@@ -1444,11 +1464,13 @@ private:
 
     void SetCameraView()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update view transformation from camera perspective
         scene.vpMatrix.LoadIdentity();
-        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0, camera.levelCenterPos.y });
-        Gs::RotateFree(scene.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-65.0f));
-        Gs::Translate(scene.vpMatrix, { 0, 0, -camera.viewDistance });
+        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0, camera.levelCenterPos.y * projZAxis });
+        Gs::RotateFree(scene.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-65.0f * projZAxis));
+        Gs::Translate(scene.vpMatrix, { 0, 0, -camera.viewDistance * projZAxis });
         scene.viewPos = Gs::TransformVector(scene.vpMatrix, Gs::Vector3f{ 0, 0, 0 });
         scene.vpMatrix.MakeInverse();
         scene.vpMatrix = projection * scene.vpMatrix;
@@ -1625,6 +1647,8 @@ private:
 
     void UpdateScene(float dt)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update user input, but not while transitioning
         if (nextLevel == nullptr)
             PollUserInput();
@@ -1874,8 +1898,8 @@ private:
                 }
 
                 // Update player rotation with jitter effect
-                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 1, 0, 0 }, effects.jitterRotation[0]);
-                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 0, 1, 0 }, effects.jitterRotation[1]);
+                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 1, 0, 0 }, effects.jitterRotation[0] * projZAxis);
+                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 0, 1, 0 }, effects.jitterRotation[1] * projZAxis);
                 Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 0, 0, 1 }, effects.jitterRotation[2]);
 
                 const float playerScale = 1.0f + explodePhase * playerExplodeScale;

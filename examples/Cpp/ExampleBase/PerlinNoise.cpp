@@ -105,7 +105,8 @@ void PerlinNoise::GenerateBuffer(
     std::uint32_t       depth,
     std::uint32_t       frequency,
     std::uint32_t       octaves,
-    float               persistence)
+    float               persistence,
+    bool                isRightHanded)
 {
     buffer.resize(static_cast<std::size_t>(width*height*depth));
 
@@ -124,7 +125,7 @@ void PerlinNoise::GenerateBuffer(
                 buffer[i] = Noise(
                     static_cast<float>(x) * invWidth,
                     static_cast<float>(y) * invHeight,
-                    static_cast<float>(z) * invDepth,
+                    static_cast<float>(isRightHanded ? depth - z - 1 : z) * invDepth,
                     frequency,
                     octaves,
                     persistence
@@ -142,7 +143,8 @@ void PerlinNoise::GenerateBuffer(
     std::uint32_t               depth,
     std::uint32_t               frequency,
     std::uint32_t               octaves,
-    float                       persistence)
+    float                       persistence,
+    bool                        isRightHanded)
 {
     buffer.resize(static_cast<std::size_t>(width*height*depth));
 
@@ -163,7 +165,7 @@ void PerlinNoise::GenerateBuffer(
                 auto noise = Noise(
                     static_cast<float>(x) * invWidth,
                     static_cast<float>(y) * invHeight,
-                    static_cast<float>(z) * invDepth,
+                    static_cast<float>(isRightHanded ? depth - z - 1 : z) * invDepth,
                     frequency,
                     octaves,
                     persistence

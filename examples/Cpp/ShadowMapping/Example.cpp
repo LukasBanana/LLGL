@@ -63,6 +63,9 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
+        // Update vectors for projection
+        settings.lightDir.z *= GetProjectionZAxis();
+
         #if 0
         // Show some information
         LLGL::Log::Printf(
@@ -85,8 +88,8 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshes.push_back(LoadObjModel(vertices, "SimpleRoom.obj"));
-        meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
+        meshes.push_back(Load3DModel(vertices, "SimpleRoom.obj"));
+        meshes.push_back(Load3DModel(vertices, "WiredBox.obj"));
 
         meshes[1].color = { 0.4f, 0.5f, 1.0f };
 
@@ -265,6 +268,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update animation
         static float animation;
 
@@ -285,15 +290,15 @@ private:
         // Update model transform
         meshes[1].transform.LoadIdentity();
         Gs::Translate(meshes[1].transform, boxPosition);
-        Gs::RotateFree(meshes[1].transform, Gs::Vector3f(1.0f).Normalized(), Gs::Deg2Rad(animation));
+        Gs::RotateFree(meshes[1].transform, Gs::Vector3f(1, 1, projZAxis).Normalized(), Gs::Deg2Rad(animation) * projZAxis);
         Gs::Scale(meshes[1].transform, Gs::Vector3f(0.15f));
 
         // Update view transformation
         settings.vpMatrix.LoadIdentity();
         Gs::Translate(settings.vpMatrix, boxPosition);
-        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
-        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
-        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToBox });
+        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y) * projZAxis);
+        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x) * projZAxis);
+        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToBox * projZAxis });
         settings.vpMatrix.MakeInverse();
         settings.vpMatrix = projection * settings.vpMatrix;
 
@@ -302,7 +307,7 @@ private:
 
         settings.vpShadowMatrix.LoadIdentity();
         Gs::Translate(settings.vpShadowMatrix, boxPosition + lightOffset);
-        Gs::RotateFree(settings.vpShadowMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-90.0f));
+        Gs::RotateFree(settings.vpShadowMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-90.0f) * projZAxis);
         settings.vpShadowMatrix.MakeInverse();
         settings.vpShadowMatrix = lightProjection * settings.vpShadowMatrix;
     }

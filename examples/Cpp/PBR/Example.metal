@@ -71,12 +71,14 @@ vertex VertexSkyOut VSky(
 }
 
 fragment float4 PSky(
-    VertexSkyOut                inp      [[stage_in]],
-    constant Settings&          settings [[buffer(1)]],
-    sampler                     smpl     [[sampler(2)]],
-    texturecube_array<float>    skybox   [[texture(3)]])
+    VertexSkyOut                inp         [[stage_in]],
+    constant Settings&          settings    [[buffer(1)]],
+    sampler                     smpl        [[sampler(2)]],
+    texturecube_array<float>    skybox      [[texture(3)]],
+    bool                        isFrontFace [[front_facing]])
 {
-    float3 texCoord = normalize(settings.cMatrix * inp.viewRay).xyz;
+    float4 viewRay = float4(inp.viewRay.xy, (isFrontFace ? -1.0 : +1.0), 0.0);
+    float3 texCoord = normalize(settings.cMatrix * viewRay).xyz;
     return skybox.sample(smpl, texCoord, settings.skyboxLayer);
 }
 

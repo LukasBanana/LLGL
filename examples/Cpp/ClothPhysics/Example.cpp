@@ -135,6 +135,9 @@ public:
         particleBuffers[AttribVelocity]->SetDebugName("Particles.Velocity");
         particleBuffers[AttribNormal  ]->SetDebugName("Particles.Normal");
 
+        // Update vectors for projection
+        sceneState.lightVec.z *= GetProjectionZAxis();
+
         // Show some information
         LLGL::Log::Printf(
             "press LEFT MOUSE BUTTON and move the mouse to rotate the camera\n"
@@ -148,11 +151,13 @@ public:
         std::vector<Gs::Vector4f>&  verticesPos,
         std::vector<std::uint32_t>& indices)
     {
-        const auto invSegsU = 1.0f / static_cast<float>(clothSegmentsU);
-        const auto invSegsV = 1.0f / static_cast<float>(clothSegmentsV);
+        const float projZAxis = GetProjectionZAxis();
+
+        const float invSegsU = 1.0f / static_cast<float>(clothSegmentsU);
+        const float invSegsV = 1.0f / static_cast<float>(clothSegmentsV);
 
         // Generate vertices from top to bottom, left to right
-        const auto numVertices = (clothSegmentsU + 1)*(clothSegmentsV + 1);
+        const std::uint32_t numVertices = (clothSegmentsU + 1)*(clothSegmentsV + 1);
         verticesBase.resize(numVertices);
         verticesPos.resize(numVertices);
 
@@ -181,7 +186,7 @@ public:
                 {
                     vertPos.x = vertBase.uv[0] * 2.0f - 1.0f;
                     vertPos.y = 0.0f;
-                    vertPos.z = vertBase.uv[1] * -2.0f;
+                    vertPos.z = vertBase.uv[1] * -2.0f * projZAxis;
                 }
             }
         }
@@ -508,6 +513,9 @@ public:
             #ifdef ENABLE_WIREFRAME
             pipelineDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
             #endif
+
+            // Flip triangle winding for right-handed projection, since we did not change index generation for our cloth geometry.
+            pipelineDesc.rasterizer.frontCCW            = HasRightHandedProjection();
         }
         graphicsPipeline = renderer->CreatePipelineState(pipelineDesc);
         ReportPSOErrors(graphicsPipeline);
@@ -536,6 +544,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update user input
         auto motion = input.GetMouseMotion();
 
@@ -566,9 +576,9 @@ private:
 
         // Update view matrix
         Gs::Matrix4f vMatrix;
-        Gs::RotateFree(vMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
-        Gs::RotateFree(vMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
-        Gs::Translate(vMatrix, viewPos);
+        Gs::RotateFree(vMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y * projZAxis));
+        Gs::RotateFree(vMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x * projZAxis));
+        Gs::Translate(vMatrix, { viewPos.x, viewPos.y, viewPos.z * projZAxis });
         vMatrix.MakeInverse();
 
         // Update world-view-projection matrix

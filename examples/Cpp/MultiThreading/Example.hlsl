@@ -18,6 +18,7 @@ cbuffer Scene : register(b1)
 {
     float4x4 wvpMatrix;
     float4x4 wMatrix;
+    float3   lightVec;
 };
 
 void VS(VertexIn inp, out VertexOut outp)
@@ -32,7 +33,6 @@ float4 PS(VertexOut inp) : SV_Target
     float4 color = inp.color;
 
 	// Apply lambert factor for simple shading
-	const float3 lightVec = float3(0, 0, -1);
 	float NdotL = dot(lightVec, normalize(inp.normal));
 	color.rgb *= lerp(0.2, 1.0, NdotL);
 

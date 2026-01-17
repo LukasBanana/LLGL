@@ -69,8 +69,8 @@ class Example_PostProcessing : public ExampleBase
         Gs::Matrix4f        wMatrix;
         LLGL::ColorRGBAf    diffuse;
         LLGL::ColorRGBAf    glossiness;
+        Gs::Vector3f        lightDir            = { 0.0f, 0.0f, -1.0f };
         float               intensity           = 3.0f;
-        float               _pad0[3];
     }
     sceneSettings;
 
@@ -83,8 +83,8 @@ class Example_PostProcessing : public ExampleBase
 
     struct Animation
     {
-        Gs::Matrix4f    rotation;
-        float           innerModelRotation = 0.0f;
+        Gs::Matrix4f        rotation;
+        float               innerModelRotation  = 0.0f;
     }
     animation;
 
@@ -106,6 +106,9 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
+        // Update vectors for projection
+        sceneSettings.lightDir.z *= GetProjectionZAxis();
+
         // Show some information
         LLGL::Log::Printf(
             "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box\n"
@@ -121,7 +124,7 @@ public:
         vertexFormatScene.SetStride(sizeof(TexturedVertex));
 
         // Create scene buffers
-        auto sceneVertices = LoadObjModel("WiredBox.obj");
+        auto sceneVertices = Load3DModel("WiredBox.obj");
         numSceneVertices = static_cast<std::uint32_t>(sceneVertices.size());
 
         vertexBufferScene = CreateVertexBuffer(sceneVertices, vertexFormatScene);
@@ -303,7 +306,13 @@ public:
     void CreatePipelineLayouts()
     {
         // Create pipeline layout for scene rendering
-        layoutScene = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(SceneSettings@1):vert:frag}"));
+        layoutScene = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(SceneSettings@1):vert:frag"
+                "}"
+            )
+        );
 
         // Create pipeline layout for blur post-processor
         layoutBlur = renderer->CreatePipelineLayout(
@@ -429,9 +438,11 @@ private:
 
     void SetSceneSettingsInnerModel(float rotation)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
-        Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 });
+        Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 * projZAxis });
 
         // Rotate model around the (1, 1, 1) axis
         Gs::RotateFree(sceneSettings.wMatrix, Gs::Vector3f(1).Normalized(), rotation);
@@ -448,15 +459,17 @@ private:
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Rotate model around X and Y axes
         Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, deltaPitch);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, deltaYaw);
+        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, projZAxis * deltaPitch);
+        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, projZAxis * deltaYaw);
         animation.rotation = deltaRotation * animation.rotation;
 
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
-        Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 });
+        Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 * projZAxis });
         sceneSettings.wMatrix *= animation.rotation;
 
         // Set colors and matrix

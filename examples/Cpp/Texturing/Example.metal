@@ -11,6 +11,7 @@ struct Scene
 {
     float4x4 wvpMatrix;
     float4x4 wMatrix;
+    float3   lightVec;
 };
 
 struct VertexIn
@@ -43,14 +44,14 @@ vertex VertexOut VS(
 
 fragment float4 PS(
     VertexOut           inp          [[stage_in]],
+    constant Scene&     scene        [[buffer(1)]],
     texture2d<float>    colorMap     [[texture(2)]],
     sampler             samplerState [[sampler(3)]])
 {
     float4 color = colorMap.sample(samplerState, inp.texCoord);
 
     // Apply lambert factor for simple shading
-    const float3 lightVec = float3(0, 0, -1);
-    float NdotL = dot(lightVec, normalize(inp.normal));
+    float NdotL = dot(scene.lightVec, normalize(inp.normal));
     color.rgb *= mix(0.2, 1.0, NdotL);
 
     return color;

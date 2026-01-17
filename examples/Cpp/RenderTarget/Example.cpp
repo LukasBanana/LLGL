@@ -75,8 +75,10 @@ class Example_RenderTarget : public ExampleBase
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
-        int                 useTexture2DMS = 0;
-    };
+        Gs::Vector3f        lightDir                = { 0, 0, -1 };
+        int                 useTexture2DMS          = 0;
+    }
+    settings;
 
 public:
 
@@ -92,6 +94,9 @@ public:
         #if ENABLE_RESOURCE_HEAP
         CreateResourceHeap();
         #endif
+
+        // Update vectors for projection
+        settings.lightDir.z *= GetProjectionZAxis();
 
         // Show some information
         LLGL::Log::Printf(
@@ -112,7 +117,8 @@ private:
         vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
         // Initialize vertices (scale texture-coordinates a little bit, to show the texture border)
-        auto vertices = GenerateTexturedCubeVertices();
+        const bool isRightHanded = HasRightHandedProjection();
+        auto vertices = GenerateTexturedCubeVertices(isRightHanded);
 
         constexpr float borderSize = 0.02f;
         for (auto& v : vertices)
@@ -375,7 +381,9 @@ private:
 
     void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
-        Gs::Translate(settings.wMatrix, { 0, 0, 5 });
+        const float projZAxis = GetProjectionZAxis();
+        settings.wMatrix.LoadIdentity();
+        Gs::Translate(settings.wMatrix, { 0, 0, 5 * projZAxis });
         Gs::RotateFree(settings.wMatrix, axis.Normalized(), rotation);
         settings.wvpMatrix = proj * settings.wMatrix;
     }
@@ -384,8 +392,10 @@ private:
 
     void UpdateSettingsForTexture(Settings& settings)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update model transformation with render-target projection
-        UpdateModelTransform(settings, renderTargetProj, rotation.y, Gs::Vector3f(1));
+        UpdateModelTransform(settings, renderTargetProj, rotation.y * projZAxis, Gs::Vector3f{ 1, 1, projZAxis });
 
         #if ENABLE_CUSTOM_MULTISAMPLING
 
@@ -404,7 +414,7 @@ private:
 
         #endif // ENABLE_CUSTOM_MULTISAMPLING
 
-        UpdateModelTransform(settings, projection, rotation.x);
+        UpdateModelTransform(settings, projection, rotation.x * GetProjectionZAxis());
     }
 
     void UpdateScene()
@@ -425,7 +435,6 @@ private:
         #if !ENABLE_CBUFFER_RANGE
 
         // Update constant buffer with current settings
-        Settings settings;
         UpdateSettingsForTexture(settings);
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
@@ -473,7 +482,6 @@ private:
         #if !ENABLE_CBUFFER_RANGE
 
         // Update model transformation with standard projection
-        Settings settings;
         UpdateSettingsForScreen(settings);
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 

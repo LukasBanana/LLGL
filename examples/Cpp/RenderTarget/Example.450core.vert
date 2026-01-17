@@ -6,6 +6,7 @@ layout(std140, binding = 3) uniform Settings
 {
 	mat4 wvpMatrix;
 	mat4 wMatrix;
+	vec3 lightDir;
 	int useTexture2DMS;
 };
 

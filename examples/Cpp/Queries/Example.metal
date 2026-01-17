@@ -19,16 +19,17 @@ struct OutputVS
     float3 normal;
 };
 
-struct Scene
+struct Settings
 {
     float4x4 wvpMatrix;
     float4x4 wMatrix;
     float4   color;
+    float3   lightDir;
 };
 
 vertex OutputVS VS(
-    InputVS         inp   [[stage_in]],
-    constant Scene& scene [[buffer(1)]])
+    InputVS            inp   [[stage_in]],
+    constant Settings& scene [[buffer(1)]])
 {
 	OutputVS outp;
 	outp.position = scene.wvpMatrix * float4(inp.position, 1);
@@ -40,11 +41,10 @@ vertex OutputVS VS(
 // PIXEL SHADER
 
 fragment float4 PS(
-    OutputVS        inp   [[stage_in]],
-    constant Scene& scene [[buffer(1)]])
+    OutputVS           inp   [[stage_in]],
+    constant Settings& scene [[buffer(1)]])
 {
-    float3 lightDir = float3(0, 0, -1);
-    float NdotL = dot(lightDir, normalize(inp.normal));
+    float NdotL = dot(scene.lightDir, normalize(inp.normal));
     float intensity = max(0.2, NdotL);
 	return scene.color * float4((float3)intensity, 1);
 }

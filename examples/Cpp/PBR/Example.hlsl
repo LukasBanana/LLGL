@@ -63,9 +63,10 @@ void VSky(uint id : SV_VertexID, out VSkyOut outp)
 SamplerState smpl : register(s2);
 TextureCubeArray skyBox : register(t3);
 
-float4 PSky(VSkyOut inp) : SV_Target
+float4 PSky(VSkyOut inp, bool isFrontFace : SV_IsFrontFace) : SV_Target
 {
-    float3 texCoord = normalize(mul(cMatrix, inp.viewRay)).xyz;
+    float4 viewRay = float4(inp.viewRay.xy, (isFrontFace ? -1.0 : +1.0), 0.0);
+    float3 texCoord = normalize(mul(cMatrix, viewRay)).xyz;
     return skyBox.Sample(smpl, float4(texCoord, (float)skyboxLayer));
 }
 

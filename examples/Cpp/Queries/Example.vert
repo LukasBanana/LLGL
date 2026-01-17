@@ -7,6 +7,7 @@ layout(std140) uniform Settings
     mat4 wvpMatrix;
     mat4 wMatrix;
     vec4 color;
+    vec3 lightDir;
 };
 
 in vec3 position;

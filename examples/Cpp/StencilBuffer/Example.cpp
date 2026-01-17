@@ -30,17 +30,15 @@ class Example_StencilBuffer : public ExampleBase
     TriangleMesh                meshObject1;
     TriangleMesh                meshObject2;
 
-    Gs::Vector3f                objectPosition          = { 0, -1, 3 };
     float                       viewDistanceToCenter    = 8.0f;
     Gs::Vector2f                viewRotation;
 
     struct Settings
     {
-        Gs::Matrix4f            wMatrix;
-        Gs::Matrix4f            vpMatrix;
-        Gs::Vector3f            lightDir                = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
-        float                   _pad1;
-        LLGL::ColorRGBAf        diffuse                 = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alignas(16) Gs::Matrix4f        wMatrix;
+        alignas(16) Gs::Matrix4f        vpMatrix;
+        alignas(16) Gs::Vector3f        lightDir        = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        alignas(16) LLGL::ColorRGBAf    diffuse         = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
     settings;
 
@@ -55,6 +53,9 @@ public:
         CreatePipelineLayouts();
         CreatePipelines();
         CreateResourceHeaps();
+
+        // Update vectors for projection
+        settings.lightDir.z *= GetProjectionZAxis();
 
         #if 0
         // Show some information
@@ -78,10 +79,10 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshScene   = LoadObjModel(vertices, "Portal-Scene.obj");
-        meshPortal  = LoadObjModel(vertices, "Portal-Stencil.obj");
-        meshObject1 = LoadObjModel(vertices, "WiredBox.obj");
-        meshObject2 = LoadObjModel(vertices, "Pyramid.obj");
+        meshScene   = Load3DModel(vertices, "Portal-Scene.obj");
+        meshPortal  = Load3DModel(vertices, "Portal-Stencil.obj");
+        meshObject1 = Load3DModel(vertices, "WiredBox.obj");
+        meshObject2 = Load3DModel(vertices, "Pyramid.obj");
 
         meshObject1.color = { 0.2f, 0.9f, 0.1f };
         meshObject2.color = { 0.9f, 0.1f, 0.2f };
@@ -209,6 +210,8 @@ private:
     {
         static float animation;
 
+        const float projZAxis = GetProjectionZAxis();
+
         // Update animation
         if (input.KeyPressed(LLGL::Key::LButton))
         {
@@ -225,20 +228,22 @@ private:
         }
 
         // Update model transform
+        const Gs::Vector3f objectPosition{ 0, -1, 3 * projZAxis };
+
         meshObject1.transform.LoadIdentity();
         Gs::Translate(meshObject1.transform, objectPosition);
-        Gs::RotateFree(meshObject1.transform, Gs::Vector3f{ 0, 1, 0 }, Gs::pi + Gs::Deg2Rad(animation));
+        Gs::RotateFree(meshObject1.transform, Gs::Vector3f{ 0, 1, 0 }, Gs::pi + Gs::Deg2Rad(animation * projZAxis));
 
         meshObject2.transform.LoadIdentity();
         Gs::Translate(meshObject2.transform, objectPosition);
-        Gs::RotateFree(meshObject2.transform, Gs::Vector3f{ 0, 1, 0 }, Gs::pi + Gs::Deg2Rad(animation));
+        Gs::RotateFree(meshObject2.transform, Gs::Vector3f{ 0, 1, 0 }, Gs::pi + Gs::Deg2Rad(animation * projZAxis));
 
         // Update view transformation
         settings.vpMatrix.LoadIdentity();
         //Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::pi*0.5f);
-        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
-        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
-        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter });
+        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y * projZAxis));
+        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x * projZAxis));
+        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter * projZAxis });
         settings.vpMatrix.MakeInverse();
         settings.vpMatrix = projection * settings.vpMatrix;
     }

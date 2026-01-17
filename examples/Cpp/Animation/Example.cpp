@@ -25,7 +25,7 @@ class Example_Animation : public ExampleBase
     TriangleMesh                meshStairsBottom;
     TriangleMesh                meshBall;
 
-    const Gs::Vector2f          viewRotationOrigin      = { -33.4f, 45.0f };
+    Gs::Vector2f                viewRotationOrigin      = { -33.4f, 45.0f };
     const float                 viewDistanceToCenter    = 15.0f;
     const float                 ballJumpHeight          = 0.5f;
 
@@ -88,6 +88,12 @@ public:
         CreatePipelines(vertexFormat);
         CreateResourceHeaps();
 
+        // Update vectors for projection
+        const float projZAxis = GetProjectionZAxis();
+        viewRotationOrigin *= projZAxis;
+        viewRotation *= projZAxis;
+        settings.lightDir.z *= projZAxis;
+
         // Add balls to scene
         AddBall(LLGL::ColorRGBf{ 1, 0, 0 });
         AddBall(LLGL::ColorRGBf{ 0, 1, 0 }, 5, 0.33f);
@@ -107,9 +113,9 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshStairsTop       = LoadObjModel(vertices, "PenroseStairs-Top.obj");
-        meshStairsBottom    = LoadObjModel(vertices, "PenroseStairs-Bottom.obj");
-        meshBall            = LoadObjModel(vertices, "IcoSphere.obj");
+        meshStairsTop       = Load3DModel(vertices, "PenroseStairs-Top.obj");
+        meshStairsBottom    = Load3DModel(vertices, "PenroseStairs-Bottom.obj");
+        meshBall            = Load3DModel(vertices, "IcoSphere.obj");
 
         meshStairsTop.color     = { 1.0f, 1.0f, 1.0f, 1.0f };
         meshStairsBottom.color  = { 1.0f, 1.0f, 0.0f, 0.0f };
@@ -178,7 +184,7 @@ private:
         {
             gridPosFrames[frame].x + 0.5f,
             3.3f - static_cast<float>(frame) * 0.2f,
-            gridPosFrames[frame].y + 0.5f
+            (gridPosFrames[frame].y + 0.5f) * GetProjectionZAxis()
         };
     }
 
@@ -229,13 +235,15 @@ private:
 
     void UpdateScene(float dt)
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update animation
         if (input.KeyPressed(LLGL::Key::LButton))
         {
-            auto motion = input.GetMouseMotion();
-            viewRotation.x += static_cast<float>(motion.y) * 0.25f;
+            const LLGL::Offset2D motion = input.GetMouseMotion();
+            viewRotation.x += static_cast<float>(motion.y) * 0.25f * projZAxis;
             viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 90.0f);
-            viewRotation.y += static_cast<float>(motion.x) * 0.25f;
+            viewRotation.y += static_cast<float>(motion.x) * 0.25f * projZAxis;
         }
         else if (input.KeyUp(LLGL::Key::LButton))
         {
@@ -255,14 +263,14 @@ private:
         }
 
         // Initialize camera matrices for orthogonal projection
-        const float winSize = 8.0f;
-        projection = OrthogonalProjection(winSize * GetAspectRatio(), winSize, 0.1f, 100.0f);
+        const float viewScale = 8.0f;
+        projection = OrthogonalProjection(viewScale * GetAspectRatio(), viewScale, 0.1f, 100.0f);
 
         // Update view transformation
         settings.vpMatrix.LoadIdentity();
         Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
         Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
-        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter });
+        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter * projZAxis });
         settings.viewPos = Gs::TransformVector(settings.vpMatrix, Gs::Vector3f{ 0, 0, 0 });
         settings.vpMatrix.MakeInverse();
         settings.vpMatrix = projection * settings.vpMatrix;
@@ -305,7 +313,7 @@ private:
         RenderMesh(meshStairsBottom);
         RenderMesh(meshStairsTop);
 
-        for (const auto& ball : balls)
+        for (const Ball& ball : balls)
             RenderBall(ball);
     }
 

@@ -45,11 +45,12 @@ class Example_Queries : public ExampleBase
 
     Model                   model0;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
         LLGL::ColorRGBAf    color;
+        Gs::Vector3f        lightDir    = { 0.0f, 0.0f, -1.0f };
     }
     settings;
 
@@ -64,6 +65,9 @@ public:
         CreatePipelines();
         CreateQueries();
 
+        // Update vectors for projection
+        settings.lightDir.z *= GetProjectionZAxis();
+
         // Show info
         LLGL::Log::Printf("press SPACE KEY to enable/disable animation of occluder\n");
     }
@@ -77,7 +81,7 @@ public:
         vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load models
-        auto vertices = LoadObjModel("Pyramid.obj");
+        auto vertices = Load3DModel("Pyramid.obj");
         model0.numVertices = static_cast<std::uint32_t>(vertices.size());
 
         // Create vertex and constant buffer
@@ -90,7 +94,7 @@ public:
     void CreatePipelines()
     {
         // Create pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(1):vert:frag"));
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(Settings@1):vert:frag"));
 
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -224,6 +228,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update matrices in constant buffer
         static float anim0, anim1;
 
@@ -236,13 +242,13 @@ private:
         anim1 += 0.01f;
 
         modelTransform[0].LoadIdentity();
-        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim0)*15.0f));
-        Gs::Translate(modelTransform[0], { 0, 0, 5 });
-        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim0*3);
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim0)*15.0f) * projZAxis);
+        Gs::Translate(modelTransform[0], { 0, 0, 5 * projZAxis });
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim0*3 * projZAxis);
 
         modelTransform[1].LoadIdentity();
-        Gs::Translate(modelTransform[1], { 0, 0, 10 });
-        Gs::RotateFree(modelTransform[1], { 0, 1, 0 }, anim1*-1.5f);
+        Gs::Translate(modelTransform[1], { 0, 0, 10 * projZAxis });
+        Gs::RotateFree(modelTransform[1], { 0, 1, 0 }, anim1*-1.5f * projZAxis);
     }
 
     void RenderBoundingBoxes()

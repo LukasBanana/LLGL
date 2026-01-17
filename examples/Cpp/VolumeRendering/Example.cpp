@@ -70,6 +70,9 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
+        if (HasRightHandedProjection())
+            settings.lightDir.z = -settings.lightDir.z;
+
         // Show some information
         LLGL::Log::Printf(
             "press LEFT MOUSE BUTTON and move the mouse to ROTATE the model\n"
@@ -89,7 +92,7 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        mesh = LoadObjModel(vertices, "Suzanne.obj");
+        mesh = Load3DModel(vertices, "Suzanne.obj");
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
@@ -166,7 +169,11 @@ private:
         // Generate 3D perlin noise texture
         std::vector<std::uint8_t> imageData;
         {
-            perlinNoise.GenerateBuffer(imageData, noiseTextureSize, noiseTextureSize, noiseTextureSize, 4);
+            constexpr std::uint32_t frequency       = 4;
+            constexpr std::uint32_t octaves         = 5;
+            constexpr float         persistence     = 0.5f;
+            const bool              isRightHanded   = HasRightHandedProjection();
+            perlinNoise.GenerateBuffer(imageData, noiseTextureSize, noiseTextureSize, noiseTextureSize, frequency, octaves, persistence, isRightHanded);
         }
         LLGL::ImageView imageView;
         {
@@ -300,6 +307,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update input
         const Gs::Vector2f mouseMotion
         {
@@ -325,13 +334,13 @@ private:
 
         // Rotate model around X and Y axes
         Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, rotationVec.y);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, rotationVec.x);
+        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, rotationVec.y * projZAxis);
+        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, rotationVec.x * projZAxis);
         rotation = deltaRotation * rotation;
 
         // Transform scene mesh
         settings.wMatrix.LoadIdentity();
-        Gs::Translate(settings.wMatrix, { 0, 0, 5 });
+        Gs::Translate(settings.wMatrix, { 0, 0, 5 * projZAxis });
         settings.wMatrix *= rotation;
 
         settings.wMatrixInv = settings.wMatrix.Inverse();

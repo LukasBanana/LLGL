@@ -42,8 +42,8 @@ class Example_PBR : public ExampleBase
         Gs::Matrix4f    vpMatrix;
         Gs::Matrix4f    wMatrix;
         Gs::Vector2f    aspectRatio;
-        float           mipCount;
-        float           _pad0;
+        float           mipCount        = 0.0f;
+        float           projZAxis       = 0.0f;
         Gs::Vector4f    lightDir        = { 0, 0, -1, 0 };
         std::uint32_t   skyboxLayer     = 0;
         std::uint32_t   materialLayer   = 0;//1;
@@ -79,6 +79,10 @@ public:
         CreateTextures();
         CreateResourceHeaps();
 
+        // Update vectors for projection
+        settings.projZAxis = GetProjectionZAxis();
+        settings.lightDir.z *= settings.projZAxis;
+
         // Print some information on the standard output
         LLGL::Log::Printf("press TAB KEY to switch between five different texture samplers\n");
     }
@@ -97,8 +101,8 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshes.push_back(LoadObjModel(vertices, "UVSphere.obj"));
-        meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
+        meshes.push_back(Load3DModel(vertices, "UVSphere.obj"));
+        meshes.push_back(Load3DModel(vertices, "WiredBox.obj"));
 
         // Create vertex and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), vertexFormat);
@@ -166,9 +170,10 @@ private:
             pipelineDescSky.vertexShader                    = shaderPipelineSky.vs;
             pipelineDescSky.fragmentShader                  = shaderPipelineSky.ps;
             pipelineDescSky.pipelineLayout                  = layoutSky;
-            //pipelineDescSky.depth.testEnabled               = true;
-            //pipelineDescSky.depth.writeEnabled              = true;
             pipelineDescSky.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
+
+            // Use triangle winding order as indicator whether right-handed projection is used for fullscreen triangles
+            pipelineDescSky.rasterizer.frontCCW             = HasRightHandedProjection();
         }
         pipelineSky = renderer->CreatePipelineState(pipelineDescSky);
 
@@ -226,8 +231,8 @@ private:
         }
 
         // Copy into array
-        auto offset  = imageData.size();
-        auto bufSize = imageReader.GetImageView().dataSize;
+        std::size_t offset  = imageData.size();
+        std::size_t bufSize = imageReader.GetImageView().dataSize;
 
         imageData.resize(offset + bufSize);
         ::memcpy(&(imageData[offset]), imageReader.GetImageView().data, bufSize);
@@ -245,8 +250,8 @@ private:
         }
 
         // Fill image data
-        auto offset = imageData.size();
-        auto bufSize = static_cast<std::size_t>(texWidth*texHeight*4);
+        std::size_t offset = imageData.size();
+        std::size_t bufSize = static_cast<std::size_t>(texWidth*texHeight*4);
 
         imageData.resize(offset + bufSize, 0);
     }
@@ -303,18 +308,40 @@ private:
         numMaterials = 4;
 
         // Load skybox textures
-        skyboxArray = LoadTextureArray(
-            LLGL::TextureType::TextureCubeArray,
-            {
-                // 1st skybox "mp_alpha"
-                "mp_alpha/alpha-island_rt.tga", // X+ = right
-                "mp_alpha/alpha-island_lf.tga", // X- = left
-                "mp_alpha/alpha-island_up.tga", // Y+ = up
-                "mp_alpha/alpha-island_dn.tga", // Y- = down
-                "mp_alpha/alpha-island_bk.tga", // Z+ = back
-                "mp_alpha/alpha-island_ft.tga", // Z- = front
-            }
-        );
+        if (HasRightHandedProjection())
+        {
+            // We need to create a skybox that is specifically created for right-handed coordinates, otherwise it will be displayed flipped.
+            // This can be done by rotating and mirroring the images as well as swapping the cube faces left with right and back with front.
+            // For this example, we simply use a different skybox to show a different environment depending on whether left- or right-handed projections are used.
+            // This simply hides the fact that we did not provide a right-handed skybox nor did we care to convert it.
+            skyboxArray = LoadTextureArray(
+                LLGL::TextureType::TextureCubeArray,
+                {
+                    // 1st skybox "mp_hanging"
+                    "mp_hanging/hangingstone_ft.tga", // X+ = interpret 'ft' as right
+                    "mp_hanging/hangingstone_bk.tga", // X- = interpret 'bk' as left
+                    "mp_hanging/hangingstone_up.tga", // Y+ = up
+                    "mp_hanging/hangingstone_dn.tga", // Y- = down
+                    "mp_hanging/hangingstone_rt.tga", // Z+ = interpret 'rt' as front (right-handed has Z+ at the front)
+                    "mp_hanging/hangingstone_lf.tga", // Z- = interpret 'lf' as back (right-handed has Z- at the back)
+                }
+            );
+        }
+        else
+        {
+            skyboxArray = LoadTextureArray(
+                LLGL::TextureType::TextureCubeArray,
+                {
+                    // 1st skybox "mp_alpha"
+                    "mp_alpha/alpha-island_rt.tga", // X+ = right
+                    "mp_alpha/alpha-island_lf.tga", // X- = left
+                    "mp_alpha/alpha-island_up.tga", // Y+ = up
+                    "mp_alpha/alpha-island_dn.tga", // Y- = down
+                    "mp_alpha/alpha-island_bk.tga", // Z+ = back
+                    "mp_alpha/alpha-island_ft.tga", // Z- = front
+                }
+            );
+        }
 
         // Store number of MIP-maps for environment map
         settings.mipCount = static_cast<float>(skyboxArray->GetDesc().mipLevels);
@@ -397,6 +424,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update camera rotation
         const auto motion = input.GetMouseMotion();
         const Gs::Vector2f motionVec
@@ -412,15 +441,17 @@ private:
                 // Rotate mesh
                 auto& m = meshes[currentMesh].transform;
                 Gs::Matrix4f deltaRotation;
-                Gs::RotateFree(deltaRotation, { 1, 0, 0 }, motionVec.y * 0.01f);
-                Gs::RotateFree(deltaRotation, { 0, 1, 0 }, motionVec.x * 0.01f);
+                const float rotateSpeed = 0.01f * projZAxis;
+                Gs::RotateFree(deltaRotation, { 1, 0, 0 }, motionVec.y * rotateSpeed);
+                Gs::RotateFree(deltaRotation, { 0, 1, 0 }, motionVec.x * rotateSpeed);
                 m = deltaRotation * m;
             }
             else
             {
                 // Rotate camera
-                viewPitch   += motionVec.y * 0.25f;
-                viewYaw     += motionVec.x * 0.25f;
+                const float rotateSpeed = 0.25f;
+                viewPitch   += motionVec.y * rotateSpeed;
+                viewYaw     += motionVec.x * rotateSpeed;
                 viewPitch = Gs::Clamp(viewPitch, -90.0f, 90.0f);
             }
         }
@@ -445,18 +476,16 @@ private:
             }
         }
 
-        // Set projection, view, and world matrix
-        Gs::Matrix4f viewMatrix;
-        Gs::RotateFree(viewMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(viewYaw));
-        Gs::RotateFree(viewMatrix, Gs::Vector3f{ 1, 0, 0 }, Gs::Deg2Rad(viewPitch));
-        Gs::Translate(viewMatrix, Gs::Vector3f{ 0, 0, -4 });
+        // Set camera, view-projection, and world matrix
+        settings.cMatrix.LoadIdentity();
+        Gs::RotateFree(settings.cMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(projZAxis * viewYaw));
+        Gs::RotateFree(settings.cMatrix, Gs::Vector3f{ 1, 0, 0 }, Gs::Deg2Rad(projZAxis * viewPitch));
+        Gs::Translate(settings.cMatrix, Gs::Vector3f{ 0, 0, -4 * projZAxis });
 
-        settings.vpMatrix = projection * viewMatrix.Inverse();
+        settings.vpMatrix = projection * settings.cMatrix.Inverse();
         settings.wMatrix = meshes[currentMesh].transform;
 
         settings.aspectRatio = { GetAspectRatio(), 1.0f };
-
-        settings.cMatrix = viewMatrix;
     }
 
     void RenderSkybox()

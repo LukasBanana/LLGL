@@ -11,7 +11,8 @@ layout(std140) uniform Settings
 {
 	mat4 wvpMatrix;
 	mat4 wMatrix;
-	int useTexture2DMS;
+	vec3 lightDir;
+	int  useTexture2DMS;
 };
 
 uniform sampler2D colorMap;
@@ -62,8 +63,7 @@ void main()
     vec4 color = SampleColorMap(vTexCoord);
     
 	// Apply lambert factor for simple shading
-	const vec3 lightVec = vec3(0, 0, -1);
-	float NdotL = dot(lightVec, normalize(vNormal));
+	float NdotL = dot(lightDir, normalize(vNormal));
 	color.rgb *= mix(0.2, 1.0, NdotL);
     
     fragColor = color;

@@ -10,6 +10,7 @@ layout(std140) uniform Scene
 {
 	mat4 wvpMatrix;
 	mat4 wMatrix;
+	vec3 lightVec;
 };
 
 in vec3 position;

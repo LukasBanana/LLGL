@@ -61,6 +61,9 @@ public:
         CreatePipelines(vertexFormat);
         const auto caps = renderer->GetRenderingCaps();
 
+        // Update vectors for projection
+        lightVec.z *= GetProjectionZAxis();
+
         // Show info
         //LLGL::Log::Printf("press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n");
     }
@@ -72,9 +75,9 @@ private:
         static std::uint32_t instanceCounter;
         Model mdl;
         {
-            mdl.mesh = LoadObjModel(vertices, filename);
+            mdl.mesh = Load3DModel(vertices, filename);
             mdl.mesh.transform.LoadIdentity();
-            Gs::Translate(mdl.mesh.transform, position);
+            Gs::Translate(mdl.mesh.transform, { position.x, position.y, position.z * GetProjectionZAxis() });
             Gs::Scale(mdl.mesh.transform, Gs::Vector3f{ scale });
             mdl.colorMapIndex = colorMapIndex;
             mdl.instance = instanceCounter++;

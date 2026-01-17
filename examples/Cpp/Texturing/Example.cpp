@@ -45,8 +45,9 @@ class Example_Texturing : public ExampleBase
 
     struct Scene
     {
-        Gs::Matrix4f wvpMatrix;
-        Gs::Matrix4f wMatrix;
+        alignas(16) Gs::Matrix4f wvpMatrix;
+        alignas(16) Gs::Matrix4f wMatrix;
+        alignas(16) Gs::Vector3f lightVec = { 0, 0, -1 };
     }
     scene;
 
@@ -61,6 +62,9 @@ public:
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
+
+        // Update vectors for projection
+        scene.lightVec.z *= GetProjectionZAxis();
 
         // Print some information on the standard output
         LLGL::Log::Printf(
@@ -96,9 +100,9 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor{ "Scene",        LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   1 },
-                LLGL::BindingDescriptor{ "colorMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage, 2 },
-                LLGL::BindingDescriptor{ "samplerState", LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, 3 },
+                LLGL::BindingDescriptor{ "Scene",        LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 1 },
+                LLGL::BindingDescriptor{ "colorMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2 },
+                LLGL::BindingDescriptor{ "samplerState", LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3 },
             };
             layoutDesc.combinedTextureSamplers =
             {
@@ -230,6 +234,8 @@ private:
 
     void OnDrawFrame() override
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Examine user input
         if (input.KeyDown(LLGL::Key::Tab))
         {
@@ -258,8 +264,8 @@ private:
             rotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
 
         scene.wMatrix.LoadIdentity();
-        Gs::Translate(scene.wMatrix, Gs::Vector3f{ 0, 0, 5 });
-        Gs::RotateFree(scene.wMatrix, Gs::Vector3f{ 0, 1, 0 }, rotation);
+        Gs::Translate(scene.wMatrix, Gs::Vector3f{ 0, 0, 5 * projZAxis });
+        Gs::RotateFree(scene.wMatrix, Gs::Vector3f{ 0, 1, 0 }, rotation * projZAxis);
 
         scene.wvpMatrix = projection;
         scene.wvpMatrix *= scene.wMatrix;

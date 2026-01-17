@@ -90,6 +90,8 @@ private:
 
     std::vector<LLGL::VertexFormat> CreateBuffers()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;
         static const float grassTexSize = 40.0f;
@@ -108,10 +110,10 @@ private:
             { {  1, 2, 0 }, { 1, 0 } },
 
             // Vertices for grass plane
-            { { -grassSize, 0, -grassSize }, {            0, grassTexSize } },
-            { { -grassSize, 0,  grassSize }, {            0,            0 } },
-            { {  grassSize, 0, -grassSize }, { grassTexSize, grassTexSize } },
-            { {  grassSize, 0,  grassSize }, { grassTexSize,            0 } },
+            { { -grassSize, 0, -grassSize * projZAxis }, {            0, grassTexSize } },
+            { { -grassSize, 0,  grassSize * projZAxis }, {            0,            0 } },
+            { {  grassSize, 0, -grassSize * projZAxis }, { grassTexSize, grassTexSize } },
+            { {  grassSize, 0,  grassSize * projZAxis }, { grassTexSize,            0 } },
         };
 
         // Initialize per-instance data (use dynamic container to avoid a stack overflow)
@@ -333,6 +335,8 @@ private:
 
     void UpdateAnimation()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update view rotation by user input
         if (input.KeyPressed(LLGL::Key::RButton) || input.KeyPressed(LLGL::Key::LButton))
             viewRotation += static_cast<float>(input.GetMouseMotion().x) * 0.005f;
@@ -342,9 +346,9 @@ private:
         // Set view-projection matrix
         Gs::Matrix4f vMatrix;
 
-        Gs::RotateFree(vMatrix, { 0, 1, 0 }, viewRotation);
-        Gs::RotateFree(vMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-33.0f));
-        Gs::Translate(vMatrix, { 0, 0, -18 });
+        Gs::RotateFree(vMatrix, { 0, 1, 0 }, projZAxis * viewRotation);
+        Gs::RotateFree(vMatrix, { 1, 0, 0 }, projZAxis * Gs::Deg2Rad(-33.0f));
+        Gs::Translate(vMatrix, { 0, 0, -18 * projZAxis });
 
         settings.viewPos    = vMatrix * Gs::Vector4{ 0, 0, 0, 1 };
         settings.vpMatrix   = projection * vMatrix.Inverse();

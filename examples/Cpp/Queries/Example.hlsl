@@ -7,7 +7,8 @@ cbuffer Settings : register(b1)
 {
 	float4x4 wvpMatrix;
     float4x4 wMatrix;
-	float4 color;
+	float4   color;
+	float3   lightDir;
 };
 
 struct InputVS
@@ -35,7 +36,6 @@ OutputVS VS(InputVS inp)
 
 float4 PS(OutputVS inp) : SV_Target
 {
-    float3 lightDir = float3(0, 0, -1);
     float NdotL = dot(lightDir, normalize(inp.normal));
     float intensity = max(0.2, NdotL);
 	return color * float4((float3)intensity, 1);

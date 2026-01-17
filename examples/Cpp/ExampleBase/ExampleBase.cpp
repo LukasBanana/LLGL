@@ -341,6 +341,7 @@ struct ExampleConfig
     bool            debugger        = false;
     long            flags           = 0;
     bool            immediateSubmit = false;
+    bool            rightHandedProj = false;
 };
 
 static ExampleConfig g_Config;
@@ -360,6 +361,8 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.debugger = true;
     if (HasArgument("-i", argc, argv) || HasArgument("--icontext", argc, argv))
         g_Config.immediateSubmit = true;
+    if (HasArgument("-r", argc, argv) || HasArgument("--right-handed", argc, argv))
+        g_Config.rightHandedProj = true;
     if (HasArgument("--nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
     if (HasArgument("--amd", argc, argv))
@@ -527,12 +530,12 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     // Fallback to null device if selected renderer cannot be loaded
     if (!renderer)
     {
-        LLGL::Log::Errorf("Failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
-        LLGL::Log::Errorf("Reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
+        LLGL::Log::Errorf("failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
+        LLGL::Log::Errorf("reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
         renderer = LLGL::RenderSystem::Load("Null");
         if (!renderer)
         {
-            LLGL::Log::Errorf("Failed to load \"Null\" module. Exiting.\n");
+            LLGL::Log::Errorf("failed to load \"Null\" module. Exiting.\n");
             exit(1);
         }
     }
@@ -553,8 +556,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
 
-    samples_        = swapChain->GetSamples();
-    drawableSize_   = swapChain->GetResolution();
+    samples_            = swapChain->GetSamples();
+    drawableSize_       = swapChain->GetResolution();
+    useRightHandedProj_ = g_Config.rightHandedProj;
 
     // Create command buffer
     LLGL::CommandBufferDescriptor cmdBufferDesc;
@@ -584,6 +588,10 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         "  samples:            %u\n"
         "  colorFormat:        %s\n"
         "  depthStencilFormat: %s\n"
+        "\n"
+        "options:\n"
+        "  command buffer:     %s\n"
+        "  coordinate system:  %s\n"
         "\n",
         info.rendererName.c_str(),
         info.deviceName.c_str(),
@@ -593,7 +601,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         swapChainRes.height,
         swapChain->GetSamples(),
         LLGL::ToString(swapChain->GetColorFormat()),
-        LLGL::ToString(swapChain->GetDepthStencilFormat())
+        LLGL::ToString(swapChain->GetDepthStencilFormat()),
+        g_Config.immediateSubmit ? "immediate" : "deferred",
+        g_Config.rightHandedProj ? "right-handed" : "left-handed"
     );
 
     if (!info.extensionNames.empty())
@@ -991,10 +1001,54 @@ LLGL::Texture* ExampleBase::CaptureFramebuffer(LLGL::CommandBuffer& commandBuffe
     return tex;
 }
 
+static bool HasObjFileExtension(const std::string& filename)
+{
+    return (filename.size() > 4 && filename.compare(filename.size() - 4, 4, ".obj") == 0);
+}
+
+TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
+{
+    if (HasObjFileExtension(filename))
+    {
+        return LoadObjModel(vertices, filename, verticesPerFace, HasRightHandedProjection());
+    }
+    else
+    {
+        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        return {};
+    }
+}
+
+std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace)
+{
+    if (HasObjFileExtension(filename))
+    {
+        return LoadObjModel(filename, verticesPerFace, HasRightHandedProjection());
+    }
+    else
+    {
+        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        return {};
+    }
+}
+
 float ExampleBase::GetAspectRatio() const
 {
     const auto resolution = swapChain->GetResolution();
     return (static_cast<float>(resolution.width) / static_cast<float>(resolution.height));
+}
+
+int ExampleBase::GetProjectionMatrixFlags() const
+{
+    int flags = 0;
+    {
+        const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
+        if (isClipRangeUnitCube)
+            flags |= Gs::ProjectionFlags::UnitCube;
+        if (useRightHandedProj_)
+            flags |= Gs::ProjectionFlags::RightHanded;
+    }
+    return flags;
 }
 
 bool ExampleBase::IsOpenGL() const
@@ -1038,17 +1092,25 @@ bool ExampleBase::IsScreenOriginLowerLeft() const
     return (renderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft);
 }
 
+bool ExampleBase::HasRightHandedProjection() const
+{
+    return useRightHandedProj_;
+}
+
+float ExampleBase::GetProjectionZAxis() const
+{
+    return (HasRightHandedProjection() ? -1.0f : +1.0f);
+}
+
 Gs::Matrix4f ExampleBase::PerspectiveProjection(float aspectRatio, float near, float far, float fov) const
 {
-    const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
-    int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
+    const int flags = GetProjectionMatrixFlags();
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
 }
 
 Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float near, float far) const
 {
-    const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
-    int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
+    const int flags = GetProjectionMatrixFlags();
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
 }
 

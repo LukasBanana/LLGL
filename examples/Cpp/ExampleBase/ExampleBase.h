@@ -160,12 +160,11 @@ private:
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
     bool                                        loadingDone_        = false;
-
     std::uint32_t                               samples_            = 1;
-
     LLGL::Extent2D                              initialResolution_;
     bool                                        showTimeRecords_    = false;
     bool                                        fullscreen_         = false;
+    bool                                        useRightHandedProj_ = false;
 
     LLGL::Extent2D                              drawableSize_;
 
@@ -287,8 +286,15 @@ protected:
     // Captures the current framebuffer into a new texture.
     LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
 
+    // Loads a 3D model from file and determines the coordinates depending on the current projection matrix.
+    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3);
+    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3);
+
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
+
+    // Returns the flags to generate a projection matrix for this renderer.
+    int GetProjectionMatrixFlags() const;
 
     // Returns true if OpenGL is used as rendering API.
     bool IsOpenGL() const;
@@ -307,6 +313,13 @@ protected:
 
     // Returns true if the screen origin of the selected renderer is lower-left. See RenderingCapabilities::screenOrigin.
     bool IsScreenOriginLowerLeft() const;
+
+    // Returns true if the projection matrix is in a right-handed coordinate system.
+    // By default, the ExampleBase puts its projection into a left-handed coordinate system.
+    bool HasRightHandedProjection() const;
+
+    // Returns the value of the Z-axis for this projection. +1 for left-handed, -1 for right-handed.
+    float GetProjectionZAxis() const;
 
     // Returns a perspective projection with the specified parameters for the respective renderer.
     Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov) const;
@@ -426,7 +439,7 @@ int RunExample(int argc, char* argv[])
     catch (const std::exception& e)
     {
         LLGL::Log::Errorf("%s\n", e.what());
-        #ifdef _WIN32
+        #if _WIN32
         system("pause");
         #endif
     }

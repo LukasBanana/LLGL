@@ -8,6 +8,7 @@ layout(std140, binding = 1) uniform SceneSettings
 	mat4	wMatrix;
 	vec4	diffuse;
 	vec4	glossiness;
+	vec3    lightDir;
 	float	intensity;
 };
 

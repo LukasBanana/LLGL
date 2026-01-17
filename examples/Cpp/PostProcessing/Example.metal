@@ -14,6 +14,7 @@ struct SceneSettings
     float4x4    wMatrix;
     float4      diffuse;
     float4      glossiness;
+	float3      lightDir;
     float       intensity;
 };
 
@@ -52,10 +53,9 @@ fragment OutputPScene PScene(
 	OutputPScene outp;
 	
 	// Write simple lighting into 1st render target
-	float3 lightDir = float3(0, 0, -1);
 	float3 normal = normalize(inp.normal);
 	
-	float NdotL = max(0.4, dot(lightDir, normal));
+	float NdotL = max(0.4, dot(settings.lightDir, normal));
 	outp.color = settings.diffuse * float4((float3)NdotL, 1);
 	
 	// Write glossiness into 2nd render target

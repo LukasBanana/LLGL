@@ -12,6 +12,7 @@ layout(std140) uniform SceneSettings
     mat4    wMatrix;
     vec4    diffuse;
     vec4    glossiness;
+	vec3    lightDir;
     float   intensity;
 };
 
@@ -23,7 +24,6 @@ layout(location=1) out vec4 outGloss;
 void main()
 {
     // Write simple lighting into 1st render target
-    vec3 lightDir = vec3(0, 0, -1);
     vec3 normal = normalize(vNormal);
 
     float NdotL = max(0.4, dot(lightDir, normal));

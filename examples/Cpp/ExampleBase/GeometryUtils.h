@@ -49,20 +49,22 @@ struct TriangleMesh
  */
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename);
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false);
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool isLeftHanded = false);
+// This format is defined to have right-handed coordinates, but the default coordinate system in the LLGL examples is left-handed,
+// so unless 'keepRightHandedCoordinates' is true, the coordinates are transformed into left-handed coordinates (i.e. negate Z-axis).
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false);
 
 // Generates eight vertices for a unit cube.
-std::vector<Gs::Vector3f> GenerateCubeVertices();
+std::vector<Gs::Vector3f> GenerateCubeVertices(bool isRightHanded = false);
 
 // Generates 36 indices for a unit cube of 8 vertices
 // (36 = 3 indices per triangle * 2 triangles per cube face * 6 faces).
 std::vector<std::uint32_t> GenerateCubeTriangleIndices();
 
 // Generates 24 vertices for a unit cube with texture coordinates.
-std::vector<TexturedVertex> GenerateTexturedCubeVertices();
+std::vector<TexturedVertex> GenerateTexturedCubeVertices(bool isRightHanded = false);
 
 // Generates 36 indices for a unit cube of 24 vertices
 std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices();

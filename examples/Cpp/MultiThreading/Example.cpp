@@ -108,12 +108,13 @@ class Example_MultiThreading : public ExampleBase
         LLGL::ResourceHeap*     resourceHeap                        = nullptr;
         LLGL::CommandBuffer*    secondaryCmdBuffer                  = nullptr;
 
-        struct Matrices
+        struct Scene
         {
-            Gs::Matrix4f        wvpMatrix;
-            Gs::Matrix4f        wMatrix;
+            alignas(16) Gs::Matrix4f wvpMatrix;
+            alignas(16) Gs::Matrix4f wMatrix;
+            alignas(16) Gs::Vector3f lightVec = { 0.0f, 0.0f, -1.0f };
         }
-        matrices;
+        scene;
     }
     bundle[2];
 
@@ -139,8 +140,9 @@ private:
         vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
         // Generate data for mesh buffers
+        const bool isRightHanded = HasRightHandedProjection();
         auto indices = GenerateTexturedCubeTriangleIndices();
-        auto vertices = GenerateTexturedCubeVertices();
+        auto vertices = GenerateTexturedCubeVertices(isRightHanded);
         numIndices = static_cast<std::uint32_t>(indices.size());
 
         // Create buffers for a simple 3D cube model
@@ -148,7 +150,7 @@ private:
         indexBuffer = CreateIndexBuffer(indices, LLGL::Format::R32UInt);
 
         for (auto& bdl : bundle)
-            bdl.constantBuffer = CreateConstantBuffer(bdl.matrices);
+            bdl.constantBuffer = CreateConstantBuffer(bdl.scene);
 
         return vertexFormat;
     }
@@ -162,7 +164,7 @@ private:
     void CreatePipelines()
     {
         // Create pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Scene@1):vert}"));
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Scene@1):vert:frag}"));
 
         // Create resource view heap
         for (auto& bdl : bundle)
@@ -322,12 +324,13 @@ private:
             EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i, "mainThread");
     }
 
-    void Transform(Bundle::Matrices& matrices, const Gs::Vector3f& pos, const Gs::Vector3f& axis, float angle)
+    void Transform(Bundle::Scene& scene, const Gs::Vector3f& pos, const Gs::Vector3f& axis, float angle)
     {
-        matrices.wMatrix.LoadIdentity();
-        Gs::Translate(matrices.wMatrix, pos);
-        Gs::RotateFree(matrices.wMatrix, axis.Normalized(), angle);
-        matrices.wvpMatrix = projection * matrices.wMatrix;
+        scene.wMatrix.LoadIdentity();
+        Gs::Translate(scene.wMatrix, pos);
+        Gs::RotateFree(scene.wMatrix, axis.Normalized(), angle);
+        scene.wvpMatrix = projection * scene.wMatrix;
+        scene.lightVec = Gs::Vector3f{ 0.0f, 0.0f, -1.0f * GetProjectionZAxis() };
     }
 
     void UpdateCommandBuffers()
@@ -359,6 +362,8 @@ private:
 
     void UpdateScene()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         if (input.KeyDown(LLGL::Key::Tab))
             UpdateCommandBuffers();
 
@@ -366,9 +371,9 @@ private:
         static float rotation;
         rotation += 0.01f;
 
-        // Update scene matrices
-        Transform(bundle[0].matrices, { -1, 0, 8 }, { +1, 1, 1 }, -rotation);
-        Transform(bundle[1].matrices, { +1, 0, 8 }, { -1, 1, 1 }, +rotation);
+        // Update scene constant data
+        Transform(bundle[0].scene, { -1, 0, 8 * projZAxis }, { +projZAxis, projZAxis, 1 }, -rotation);
+        Transform(bundle[1].scene, { +1, 0, 8 * projZAxis }, { -projZAxis, projZAxis, 1 }, +rotation);
 
         // Update constant buffer
         for (auto& bdl : bundle)
@@ -376,8 +381,8 @@ private:
             renderer->WriteBuffer(
                 *bdl.constantBuffer,
                 0,
-                &(bdl.matrices),
-                sizeof(bdl.matrices)
+                &(bdl.scene),
+                sizeof(bdl.scene)
             );
         }
     }

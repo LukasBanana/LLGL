@@ -12,6 +12,7 @@ typedef struct
 {
     float4x4    wvpMatrix;
     float4x4    wMatrix;
+    float3      lightDir;
     int         useTexture2DMS;
 }
 Settings;
@@ -48,14 +49,14 @@ vertex VertexOut VS(
 
 fragment float4 PS(
     VertexOut           inp         [[stage_in]],
+    constant Settings&  settings    [[buffer(3)]],
     texture2d<float>    colorMap    [[texture(2)]],
     sampler             smpl        [[sampler(1)]])
 {
     float4 color = colorMap.sample(smpl, inp.texCoord);
 
     // Apply lambert factor for simple shading
-    const float3 lightVec = float3(0, 0, -1);
-    float NdotL = dot(lightVec, normalize(inp.normal));
+    float NdotL = dot(settings.lightDir, normalize(inp.normal));
     color.rgb *= mix(0.2, 1.0, NdotL);
 
     return color;

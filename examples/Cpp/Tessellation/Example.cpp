@@ -76,6 +76,9 @@ public:
         CreateTextures();
         CreatePipelines();
 
+        // Update vectors for projection
+        scene.lightVec.z *= GetProjectionZAxis();
+
         // Print some information on the standard output
         LLGL::Log::Printf(
             "press LEFT MOUSE BUTTON to rotate the model\n"
@@ -98,10 +101,9 @@ public:
         // Load cube model with minor pre-tessellation.
         // A cube with only 8 vertices would only allow a rough tessellation depending on the displacement map.
         std::vector<TexturedVertex> texuturedVertices;
-        model = LoadObjModel(texuturedVertices, "UVCube2x.obj", 4);
+        model = Load3DModel(texuturedVertices, "UVCube2x.obj", 4);
 
         // Create buffers for a simple 3D cube model
-        //auto texuturedVertices = GenerateTexturedCubeVertices();
         vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceQuadVertices(texuturedVertices), vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeQuadIndices(model.numVertices, model.firstVertex), LLGL::Format::R32UInt);
         sceneBuffer = CreateConstantBuffer(scene);
@@ -198,9 +200,6 @@ public:
             pipelineDesc.indexFormat                    = LLGL::Format::R32UInt;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
 
-            // Enable multi-sample anti-aliasing
-            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
@@ -208,6 +207,9 @@ public:
             // Enable back-face culling and scissor test to show multiple views in the same viewport
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.scissorTestEnabled  = true;
+
+            // Enable multi-sample anti-aliasing
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
 
             // Specify tessellation state (only required for Metal)
             pipelineDesc.tessellation.partition         = LLGL::TessellationPartition::FractionalOdd;
@@ -232,14 +234,17 @@ private:
 
     void UpdateUserInput()
     {
+        const float projZAxis = GetProjectionZAxis();
+
         // Update tessellation levels by user input
         const LLGL::Offset2D motion = input.GetMouseMotion();
         const float deltaX = static_cast<float>(motion.x)*0.1f;
         const float deltaY = static_cast<float>(motion.y)*0.1f;
+        const float rotateSpeed = 0.05f * projZAxis;
 
         static Gs::Quaternionf rotation = Rotation(Gs::Deg2Rad(-20.0f), 0.0f);
         if (input.KeyPressed(LLGL::Key::LButton))
-            RotateModel(rotation, deltaX*0.05f, deltaY*0.05f);
+            RotateModel(rotation, deltaX*rotateSpeed, deltaY*rotateSpeed);
 
         if (input.KeyPressed(LLGL::Key::RButton))
             SetTessellationFactor(scene.tessLevelInner + deltaX, scene.tessLevelOuter + deltaX);
@@ -249,7 +254,7 @@ private:
 
         // Update matrices
         scene.vMatrix.LoadIdentity();
-        Gs::Translate(scene.vMatrix, Gs::Vector3f(0, 0, -5));
+        Gs::Translate(scene.vMatrix, Gs::Vector3f(0, 0, -5 * projZAxis));
         scene.vMatrix.MakeInverse();
 
         scene.vpMatrix = projection * scene.vMatrix;

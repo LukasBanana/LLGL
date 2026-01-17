@@ -15,6 +15,7 @@ layout(std140, binding = 1) uniform Scene
 {
     mat4 wvpMatrix;
     mat4 wMatrix;
+    vec3 lightVec;
 };
 
 // Vertex shader main function
