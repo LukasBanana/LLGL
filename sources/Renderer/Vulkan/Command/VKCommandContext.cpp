@@ -312,7 +312,7 @@ void VKCommandContext::CopyBufferToImage(
 
     auto CopyBufferToImageForRegions = [this, srcBuffer, dstImage, &regions](std::uint32_t numRegions) -> void
     {
-        vkCmdCopyBufferToImage(commandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, numRegions, regions);
+        vkCmdCopyBufferToImage(commandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numRegions, regions);
     };
 
     switch (format)
