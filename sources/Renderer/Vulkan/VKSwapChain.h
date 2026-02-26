@@ -63,9 +63,6 @@ class VKSwapChain final : public SwapChain
         // Returns the actual swap buffer index.
         std::uint32_t TranslateSwapIndex(std::uint32_t swapBufferIndex) const;
 
-        // Transitions all color buffers into the new specified image layout and returns the old layout.
-        VkImageLayout TransitionColorBuffers(std::uint32_t swapBufferIndex, VkImageLayout newLayout);
-
         // Returns the native VkFramebuffer object that is currently used from swap-chain.
         inline VkFramebuffer GetVkFramebuffer(std::uint32_t swapBufferIndex) const
         {
@@ -164,7 +161,6 @@ class VKSwapChain final : public SwapChain
         VKPtr<VkSemaphore>                  imageAvailableSemaphore_[maxNumFramesInFlight];
         VKPtr<VkSemaphore>                  renderFinishedSemaphore_[maxNumFramesInFlight];
         VKPtr<VkFence>                      inFlightFences_[maxNumFramesInFlight];
-        VkImageLayout                       imageLayouts_[maxNumFramesInFlight];
 
 };
 

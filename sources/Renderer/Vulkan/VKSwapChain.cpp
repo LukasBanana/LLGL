@@ -77,8 +77,7 @@ VKSwapChain::VKSwapChain(
     depthStencilBuffer_      { device                                    },
     imageAvailableSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
     renderFinishedSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
-    inFlightFences_          { INIT_PER_FRAME(NullVkFence(device_))      },
-    imageLayouts_            { INIT_PER_FRAME(VK_IMAGE_LAYOUT_UNDEFINED) }
+    inFlightFences_          { INIT_PER_FRAME(NullVkFence(device_))      }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
@@ -108,10 +107,6 @@ bool VKSwapChain::IsPresentable() const
 
 void VKSwapChain::Present()
 {
-    /* Ignore present call if nothing has been rendered into the current color buffer */
-    if (imageLayouts_[currentColorBuffer_] != VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-        return;
-
     /* Initialize semaphores */
     VkSemaphore waitSemaphores[] = { imageAvailableSemaphore_[currentFrameInFlight_] };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -203,13 +198,6 @@ std::uint32_t VKSwapChain::TranslateSwapIndex(std::uint32_t swapBufferIndex) con
         return currentColorBuffer_;
     else
         return std::min(swapBufferIndex, numColorBuffers_ - 1);
-}
-
-VkImageLayout VKSwapChain::TransitionColorBuffers(std::uint32_t swapBufferIndex, VkImageLayout newLayout)
-{
-    VkImageLayout oldLayout = imageLayouts_[swapBufferIndex];
-    imageLayouts_[swapBufferIndex] = newLayout;
-    return oldLayout;
 }
 
 bool VKSwapChain::HasDepthStencilBuffer() const
