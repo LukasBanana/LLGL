@@ -6,6 +6,7 @@
  */
 
 #include "VKPoolSizeAccumulator.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -16,10 +17,8 @@ namespace LLGL
 // Returns the zero-based index of a descriptor pool for the specified descriptor type
 static std::uint32_t GetPoolIndex(VkDescriptorType type)
 {
-    if (type >= VK_DESCRIPTOR_TYPE_SAMPLER && type <= VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
-        return static_cast<std::uint32_t>(type);
-    else
-        return -1;
+    LLGL_ASSERT(type >= VK_DESCRIPTOR_TYPE_SAMPLER && type <= VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
+    return static_cast<std::uint32_t>(type);
 }
 
 void VKPoolSizeAccumulator::Accumulate(VkDescriptorType type, std::uint32_t count)
