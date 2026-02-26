@@ -13,6 +13,7 @@
 #include "../Texture/VKTexture.h"
 #include "../Texture/VKSampler.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <algorithm>
@@ -163,8 +164,55 @@ VkBufferView* VKDescriptorCache::NextBufferViewOrUpdateCache(VKDescriptorSetWrit
     return view;
 }
 
+static const char* VkDescriptorTypeToString(VkDescriptorType descriptorType)
+{
+    switch (descriptorType)
+    {
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_SAMPLER                    );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER     );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE              );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_STORAGE_IMAGE              );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER       );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER       );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER             );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_STORAGE_BUFFER             );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC     );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC     );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT           );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK       );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV  );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM   );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM     );
+        LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_MUTABLE_EXT                );
+    }
+    return "<unknown>";
+}
+
+static bool IsVkDescriptorOfTypeBuffer(VkDescriptorType descriptorType)
+{
+    switch (descriptorType)
+    {
+        case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+        case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
+    LLGL_ASSERT(
+        IsVkDescriptorOfTypeBuffer(binding.descriptorType),
+        "cannot emplace LLGL::Buffer when Vulkan PSO expects descriptor type %s (0x%08X)",
+        VkDescriptorTypeToString(binding.descriptorType), binding.descriptorType
+    );
+
     VkBufferView* bufferView = nullptr;
     VkDescriptorBufferInfo* bufferInfo = nullptr;
 
@@ -199,6 +247,19 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
     }
 }
 
+static bool IsVkDescriptorOfTypeTexture(VkDescriptorType descriptorType)
+{
+    switch (descriptorType)
+    {
+        case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+        case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+        case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            return true;
+        default:
+            return false;
+    }
+}
+
 static VkImageLayout GetShaderReadOptimalImageLayout(VkDescriptorType descriptorType, Format format)
 {
     if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
@@ -215,6 +276,12 @@ static VkImageLayout GetShaderReadOptimalImageLayout(VkDescriptorType descriptor
 
 void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
+    LLGL_ASSERT(
+        IsVkDescriptorOfTypeTexture(binding.descriptorType),
+        "cannot emplace LLGL::Texture when Vulkan PSO expects descriptor type %s (0x%08X)",
+        VkDescriptorTypeToString(binding.descriptorType), binding.descriptorType
+    );
+
     VkDescriptorImageInfo* imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
@@ -234,8 +301,25 @@ void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKL
     }
 }
 
+static bool IsVkDescriptorOfTypeSampler(VkDescriptorType descriptorType)
+{
+    switch (descriptorType)
+    {
+        case VK_DESCRIPTOR_TYPE_SAMPLER:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
+    LLGL_ASSERT(
+        IsVkDescriptorOfTypeSampler(binding.descriptorType),
+        "cannot emplace LLGL::Sampler when Vulkan PSO expects descriptor type %s (0x%08X)",
+        VkDescriptorTypeToString(binding.descriptorType), binding.descriptorType
+    );
+
     VkDescriptorImageInfo* imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler          = samplerVK.GetVkSampler();
