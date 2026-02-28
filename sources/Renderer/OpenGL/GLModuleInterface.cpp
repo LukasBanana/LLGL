@@ -27,11 +27,6 @@ namespace ModuleOpenGL
         return GLProfile::GetRendererID();
     }
 
-    const char* GetModuleName()
-    {
-        return GLProfile::GetModuleName();
-    }
-
     const char* GetRendererName()
     {
         return GLProfile::GetRendererName();
@@ -42,6 +37,14 @@ namespace ModuleOpenGL
         return new GLRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleOpenGL
+
+#if defined(LLGL_OPENGLES3)
+LLGL_IMPLEMENT_RENDERER_MODULE(OpenGLES3, 100);
+#elif defined(LLGL_WEBGL)
+LLGL_IMPLEMENT_RENDERER_MODULE(WebGL, 100);
+#else
+LLGL_IMPLEMENT_RENDERER_MODULE(OpenGL, 100);
+#endif
 
 
 } // /namespace LLGL

@@ -20,11 +20,6 @@ namespace ModuleVulkan
         return LLGL::RendererID::Vulkan;
     }
 
-    const char* GetModuleName()
-    {
-        return "Vulkan";
-    }
-
     const char* GetRendererName()
     {
         return "Vulkan";
@@ -35,6 +30,8 @@ namespace ModuleVulkan
         return new VKRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleVulkan
+
+LLGL_IMPLEMENT_RENDERER_MODULE(Vulkan, 200);
 
 
 } // /namespace LLGL

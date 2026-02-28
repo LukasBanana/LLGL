@@ -13,6 +13,9 @@
 #include <LLGL/Export.h>
 
 
+#define LLGL_IMPLEMENT_RENDERER_MODULE(...)
+
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -38,6 +38,20 @@
 #   define LLGL_NODISCARD
 #endif
 
+#if defined _MSC_VER
+#   define LLGL_BEGIN_NO_OPTIMIZE   __pragma(optimize("", off)) __declspec(noinline)
+#   define LLGL_END_NO_OPTIMIZE     __pragma(optimize("", on))
+#elif defined __clang__
+#   define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline, optnone))
+#   define LLGL_END_NO_OPTIMIZE
+#elif defined __GNUC__
+#   define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline, optimize("O0")))
+#   define LLGL_END_NO_OPTIMIZE
+#else
+#   define LLGL_BEGIN_NO_OPTIMIZE
+#   define LLGL_END_NO_OPTIMIZE
+#endif
+
 
 #endif
 

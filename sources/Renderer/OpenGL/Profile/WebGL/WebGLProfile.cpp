@@ -26,11 +26,6 @@ int GetRendererID()
     return RendererID::WebGL;
 }
 
-const char* GetModuleName()
-{
-    return "WebGL";
-}
-
 const char* GetRendererName()
 {
     return "WebGL";

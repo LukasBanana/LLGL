@@ -20,11 +20,6 @@ namespace ModuleMetal
         return RendererID::Metal;
     }
 
-    const char* GetModuleName()
-    {
-        return "Metal";
-    }
-
     const char* GetRendererName()
     {
         return "Metal";
@@ -35,6 +30,8 @@ namespace ModuleMetal
         return new MTRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleMetal
+
+LLGL_IMPLEMENT_RENDERER_MODULE(Metal, 200);
 
 
 } // /namespace LLGL

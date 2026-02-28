@@ -23,11 +23,6 @@ int GetRendererID()
     return RendererID::OpenGL;
 }
 
-const char* GetModuleName()
-{
-    return "OpenGL";
-}
-
 const char* GetRendererName()
 {
     return "OpenGL Core";

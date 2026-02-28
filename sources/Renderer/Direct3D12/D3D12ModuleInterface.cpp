@@ -20,11 +20,6 @@ namespace ModuleDirect3D12
         return RendererID::Direct3D12;
     }
 
-    const char* GetModuleName()
-    {
-        return "Direct3D12";
-    }
-
     const char* GetRendererName()
     {
         return "Direct3D 12";
@@ -35,6 +30,8 @@ namespace ModuleDirect3D12
         return new D3D12RenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleDirect3D12
+
+LLGL_IMPLEMENT_RENDERER_MODULE(Direct3D12, 1012);
 
 
 } // /namespace LLGL

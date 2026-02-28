@@ -20,11 +20,6 @@ namespace ModuleNull
         return RendererID::Null;
     }
 
-    const char* GetModuleName()
-    {
-        return "Null";
-    }
-
     const char* GetRendererName()
     {
         return "Null";
@@ -35,6 +30,8 @@ namespace ModuleNull
         return new NullRenderSystem(*renderSystemDesc);
     }
 } // /namespace ModuleNull
+
+LLGL_IMPLEMENT_RENDERER_MODULE(Null, 0);
 
 
 } // /namespace LLGL

@@ -9,7 +9,7 @@
 #define LLGL_MODULE_INTERFACE_H
 
 
-#ifdef LLGL_BUILD_STATIC_LIB
+#if LLGL_BUILD_STATIC_LIB
 #   include "StaticModuleInterface.h"
 #else
 #   include "DynamicModuleInterface.h"

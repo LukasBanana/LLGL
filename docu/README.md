@@ -94,3 +94,16 @@ The **WebGL backend does not work correctly on Safari**. There is a workaround w
 On all ARM based Macs and iOS devices, Safari shows synchronization issues that mostly affect buffer updates via `glBufferSubData` making it look as if staging buffers
 are not synchronized between CPU and GPU, even though WebGL does not have a concept of staging buffers like Vulkan or D3D.
 
+
+## Static Linking
+
+If you want to build LLGL as a static library and link your project against it, you'll have to link against the core library (*LLGL.lib*/ *libLLGL.a*) and all backends that are compiled into that core library. So any backend that has been enabled via the respective CMake option needs to be linked against, for example the Vulkan backend (*LLGL_Vulkan.lib*/ *libLLGL_Vulkan.a*) if `LLGL_BUILD_RENDERER_VULKAN` is enabled. At the time of writing, CMake does not provide a straightforward method to build all submodules into a single static library. Another caveat is that the core library and its backends have a cyclic dependency when built as static library. This makes it necessary for some compilers such as GCC to link against the core library twice, once before all backends and a second time afterwards. In CMake, this may look like this:
+```CMake
+set(MyProjectLibraryDependencies
+    libLLGL.a        # First reference to LLGL is required for the backends to use LLGL's core functionality
+    libLLGL_Vulkan.a # Reference to Vulkan backend if LLGL_BUILD_RENDERER_VULKAN is enabled
+    libLLGL_OpenGL.a # Reference to OpenGL backend if LLGL_BUILD_RENDERER_OPENGL is enabled
+    libLLGL.a        # Second reference to LLGL is required for it to instantiate the backends
+)
+```
+

@@ -11,6 +11,9 @@
 #include "StaticModuleInterface.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Container/Strings.h>
+#include "../Core/Assertion.h"
+#include "../Core/CompilerExtensions.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -19,211 +22,179 @@ namespace LLGL
 
 class RenderSystem;
 
-#define LLGL_DECLARE_STATIC_MODULE_INTERFACE(NAME)                                      \
-    namespace Module##NAME                                                              \
-    {                                                                                   \
-        extern int GetRendererID();                                                     \
-        extern const char* GetModuleName();                                             \
-        extern const char* GetRendererName();                                           \
-        extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor*);    \
-    }
+#define LLGL_DECLARE_STATIC_MODULE(NAME) \
+    extern LLGL::StaticModules::RegisterStaticModuleWrapper g_StaticModule_ ## NAME
+
+#define LLGL_STATIC_MODULE_STUB(NAME) \
+    g_StaticModule_ ## NAME .Stub()
 
 #if LLGL_BUILD_RENDERER_NULL
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(Null);
+LLGL_DECLARE_STATIC_MODULE(Null);
 #endif
 
 #if LLGL_BUILD_RENDERER_OPENGL
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGL);
+LLGL_DECLARE_STATIC_MODULE(OpenGL);
 #endif
 
 #if LLGL_BUILD_RENDERER_OPENGLES3
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGLES3);
+LLGL_DECLARE_STATIC_MODULE(OpenGLES3);
 #endif
 
 #if LLGL_BUILD_RENDERER_WEBGL
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(WebGL);
+LLGL_DECLARE_STATIC_MODULE(WebGL);
 #endif
 
 #if LLGL_BUILD_RENDERER_VULKAN
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(Vulkan);
+LLGL_DECLARE_STATIC_MODULE(Vulkan);
 #endif
 
 #if LLGL_BUILD_RENDERER_METAL
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(Metal);
+LLGL_DECLARE_STATIC_MODULE(Metal);
 #endif
 
 #if LLGL_BUILD_RENDERER_DIRECT3D11
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(Direct3D11);
+LLGL_DECLARE_STATIC_MODULE(Direct3D11);
 #endif
 
 #if LLGL_BUILD_RENDERER_DIRECT3D12
-LLGL_DECLARE_STATIC_MODULE_INTERFACE(Direct3D12);
+LLGL_DECLARE_STATIC_MODULE(Direct3D12);
 #endif
 
+/*
+The sole purpose of this function is to force the inclusion of all those backends by the linker when building as static library.
+This, unfortunately, creats a cyclic dependency between the core library and its backends.
+The alternative is to let each project that uses LLGL call a stub function of the backend that it wants to include at link time.
+*/
+static void StaticModuleStubs()
+{
+    #if LLGL_BUILD_RENDERER_NULL
+    LLGL_STATIC_MODULE_STUB(Null);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_OPENGL
+    LLGL_STATIC_MODULE_STUB(OpenGL);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_OPENGLES3
+    LLGL_STATIC_MODULE_STUB(OpenGLES3);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_WEBGL
+    LLGL_STATIC_MODULE_STUB(WebGL);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_VULKAN
+    LLGL_STATIC_MODULE_STUB(Vulkan);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_METAL
+    LLGL_STATIC_MODULE_STUB(Metal);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_DIRECT3D11
+    LLGL_STATIC_MODULE_STUB(Direct3D11);
+    #endif
+
+    #if LLGL_BUILD_RENDERER_DIRECT3D12
+    LLGL_STATIC_MODULE_STUB(Direct3D12);
+    #endif
+}
 
 namespace StaticModules
 {
 
 
+// Wrapper function to ensure the static container is initialized by the time we need it,
+// since this gets called by initializer expressions of other global static variables, for which there is no guarantee in which order they are initialized.
+static std::vector<StaticModuleRecord>& GetStaticModuleList()
+{
+    static std::vector<StaticModuleRecord> staticModuleRecords;
+    return staticModuleRecords;
+}
+
+static const StaticModuleRecord* FindStaticModule(const char* name)
+{
+    const std::vector<StaticModuleRecord>& moduleRecords = GetStaticModuleList();
+    auto it = std::find_if(
+        moduleRecords.begin(),
+        moduleRecords.end(),
+        [name](const StaticModuleRecord& entry)
+        {
+            return (entry.moduleName == name);
+        }
+    );
+    return (it != moduleRecords.end() ? &(*it) : nullptr);
+}
+
+void RegisterStaticModule(StaticModuleRecord&& moduleRecord)
+{
+    LLGL_ASSERT_PTR(moduleRecord.funcGetRendererID);
+    LLGL_ASSERT_PTR(moduleRecord.funcGetRendererName);
+    LLGL_ASSERT_PTR(moduleRecord.funcAllocRenderSystem);
+
+    /* Insert new module record via insertion sort by its priority */
+    std::vector<StaticModuleRecord>& allModuleRecords = GetStaticModuleList();
+    auto it = std::find_if(
+        allModuleRecords.begin(),
+        allModuleRecords.end(),
+        [&moduleRecord](const StaticModuleRecord& entry) -> bool
+        {
+            return (entry.priority < moduleRecord.priority);
+        }
+    );
+    if (it != allModuleRecords.end())
+        allModuleRecords.insert(it, std::move(moduleRecord));
+    else
+        allModuleRecords.push_back(std::move(moduleRecord));
+}
+
+RegisterStaticModuleWrapper::RegisterStaticModuleWrapper(StaticModuleRecord&& moduleRecord)
+{
+    RegisterStaticModule(std::forward<StaticModuleRecord>(moduleRecord));
+}
+
 std::vector<std::string> GetStaticModules()
 {
-    return
-    {
-        #if LLGL_BUILD_RENDERER_DIRECT3D12
-        ModuleDirect3D12::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_DIRECT3D11
-        ModuleDirect3D11::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_VULKAN
-        ModuleVulkan::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_METAL
-        ModuleMetal::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_OPENGL
-        ModuleOpenGL::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_OPENGLES3
-        ModuleOpenGLES3::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_WEBGL
-        ModuleWebGL::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_NULL
-        ModuleNull::GetModuleName(),
-        #endif
-    };
+    std::vector<std::string> staticModuleNames;
+    staticModuleNames.reserve(GetStaticModuleList().size());
+
+    for (const StaticModuleRecord& moduleRecord : GetStaticModuleList())
+        staticModuleNames.push_back(moduleRecord.moduleName);
+
+    return staticModuleNames;
 }
 
 const char* GetRendererName(const StringLiteral& moduleName)
 {
-    #define LLGL_GET_RENDERER_NAME(MODULE)          \
-        if (moduleName == MODULE::GetModuleName())  \
-            return MODULE::GetRendererName()
-
-    #if LLGL_BUILD_RENDERER_NULL
-    LLGL_GET_RENDERER_NAME(ModuleNull);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGL
-    LLGL_GET_RENDERER_NAME(ModuleOpenGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGLES3
-    LLGL_GET_RENDERER_NAME(ModuleOpenGLES3);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_WEBGL
-    LLGL_GET_RENDERER_NAME(ModuleWebGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_VULKAN
-    LLGL_GET_RENDERER_NAME(ModuleVulkan);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_METAL
-    LLGL_GET_RENDERER_NAME(ModuleMetal);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D11
-    LLGL_GET_RENDERER_NAME(ModuleDirect3D11);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D12
-    LLGL_GET_RENDERER_NAME(ModuleDirect3D12);
-    #endif
-
-    #undef LLGL_GET_RENDERER_NAME
-
-    return nullptr;
+    if (const StaticModuleRecord* moduleRecord = FindStaticModule(moduleName.c_str()))
+        return moduleRecord->funcGetRendererName();
+    else
+        return nullptr;
 }
 
 int GetRendererID(const StringLiteral& moduleName)
 {
-    #define LLGL_GET_RENDERER_ID(MODULE)            \
-        if (moduleName == MODULE::GetModuleName())  \
-            return MODULE::GetRendererID()
-
-    #if LLGL_BUILD_RENDERER_NULL
-    LLGL_GET_RENDERER_ID(ModuleNull);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGL
-    LLGL_GET_RENDERER_ID(ModuleOpenGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGLES3
-    LLGL_GET_RENDERER_ID(ModuleOpenGLES3);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_WEBGL
-    LLGL_GET_RENDERER_ID(ModuleWebGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_VULKAN
-    LLGL_GET_RENDERER_ID(ModuleVulkan);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_METAL
-    LLGL_GET_RENDERER_ID(ModuleMetal);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D11
-    LLGL_GET_RENDERER_ID(ModuleDirect3D11);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D12
-    LLGL_GET_RENDERER_ID(ModuleDirect3D12);
-    #endif
-
-    #undef LLGL_GET_RENDERER_ID
-
-    return RendererID::Undefined;
+    if (const StaticModuleRecord* moduleRecord = FindStaticModule(moduleName.c_str()))
+        return moduleRecord->funcGetRendererID();
+    else
+        return RendererID::Undefined;
 }
 
 RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
-    #define LLGL_ALLOC_RENDER_SYSTEM(MODULE)                        \
-        if (renderSystemDesc.moduleName == MODULE::GetModuleName()) \
-            return MODULE::AllocRenderSystem(&renderSystemDesc)
-
-    #if LLGL_BUILD_RENDERER_NULL
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleNull);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGL
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleOpenGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_OPENGLES3
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleOpenGLES3);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_WEBGL
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleWebGL);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_VULKAN
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleVulkan);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_METAL
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleMetal);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D11
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleDirect3D11);
-    #endif
-
-    #if LLGL_BUILD_RENDERER_DIRECT3D12
-    LLGL_ALLOC_RENDER_SYSTEM(ModuleDirect3D12);
-    #endif
-
-    #undef LLGL_ALLOC_RENDER_SYSTEM
-
-    return nullptr;
+    StaticModuleStubs();
+    if (const StaticModuleRecord* moduleRecord = FindStaticModule(renderSystemDesc.moduleName.c_str()))
+        return moduleRecord->funcAllocRenderSystem(&renderSystemDesc);
+    else
+        return nullptr;
 }
+
+LLGL_BEGIN_NO_OPTIMIZE
+void RegisterStaticModuleWrapper::Stub()
+{
+    // do nothing - this is to ensure the global variables of this wrapper are included by the linker
+}
+LLGL_END_NO_OPTIMIZE
 
 
 } // /namespace StaticModules

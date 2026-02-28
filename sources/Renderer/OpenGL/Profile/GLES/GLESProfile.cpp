@@ -24,11 +24,6 @@ int GetRendererID()
     return RendererID::OpenGLES;
 }
 
-const char* GetModuleName()
-{
-    return "OpenGLES3";
-}
-
 const char* GetRendererName()
 {
     return "OpenGL ES 3";

@@ -20,21 +20,18 @@ namespace ModuleDirect3D11
         return RendererID::Direct3D11;
     }
 
-    const char* GetModuleName()
-    {
-        return "Direct3D11";
-    }
-
     const char* GetRendererName()
     {
         return "Direct3D 11";
     }
 
-    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
+    RenderSystem* AllocRenderSystem(const RenderSystemDescriptor* renderSystemDesc)
     {
         return new D3D11RenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleDirect3D11
+
+LLGL_IMPLEMENT_RENDERER_MODULE(Direct3D11, 1011);
 
 
 } // /namespace LLGL
