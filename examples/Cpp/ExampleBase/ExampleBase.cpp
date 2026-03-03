@@ -871,8 +871,10 @@ LLGL::Shader* ExampleBase::LoadStandardVertexShader(
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, vertexFormats, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
+    if (Supported(LLGL::ShadingLanguage::HLSL_5_0))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, vertexFormats, {}, defines);
+    if (Supported(LLGL::ShadingLanguage::HLSL_3_0))
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.sm3.hlsl", entryPoint, "vs_3_0" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, vertexFormats, {}, defines);
     return nullptr;
@@ -887,8 +889,10 @@ LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, fragmentAttribs, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, fragmentAttribs, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
+    if (Supported(LLGL::ShadingLanguage::HLSL_5_0))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, fragmentAttribs, defines);
+    if (Supported(LLGL::ShadingLanguage::HLSL_3_0))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.sm3.hlsl", entryPoint, "ps_3_0" }, fragmentAttribs, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, fragmentAttribs, defines);
     return nullptr;
@@ -902,7 +906,7 @@ LLGL::Shader* ExampleBase::LoadStandardComputeShader(
         return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, {}, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
         return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
+    if (Supported(LLGL::ShadingLanguage::HLSL_5_0))
         return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, {}, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
         return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, {}, defines);

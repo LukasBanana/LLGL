@@ -11,13 +11,45 @@
 
 #include <LLGL/Shader.h>
 #include "../Direct3D9.h"
+#include "../../DXCommon/ComPtr.h"
 #include <d3dcommon.h>
+#include <string>
+#include <memory>
+#include <vector>
 
 
 namespace LLGL
 {
 
 
+enum class D3D9UniformType
+{
+    Undefined,
+
+    Bool,
+    Int,
+    Float,
+};
+
+struct D3D9ShaderConstant
+{
+    std::string                     name;
+    std::vector<D3D9ShaderConstant> structMembers;
+    D3D9UniformType                 type            = D3D9UniformType::Undefined;
+    UINT                            registerIndex   = 0;
+    UINT                            registerCount   = 0;
+    UINT                            rows            = 0;
+    UINT                            columns         = 0;
+    UINT                            arraySize       = 0;
+    UINT                            byteSize        = 0;
+};
+
+struct D3D9ShaderConstantTable
+{
+    std::vector<D3D9ShaderConstant> constants;
+};
+
+// Base class for D3D9VertexShader and D3D9PixelShader.
 class D3D9Shader : public Shader
 {
 
@@ -25,6 +57,11 @@ class D3D9Shader : public Shader
 
         void SetDebugName(const char* name) override final;
         const Report* GetReport() const override final;
+
+        inline const D3D9ShaderConstantTable& GetConstantTable() const
+        {
+            return constantTable_;
+        }
 
     protected:
 
@@ -41,11 +78,12 @@ class D3D9Shader : public Shader
         bool CompileSource(IDirect3DDevice9* device, const ShaderDescriptor& shaderDesc);
         bool LoadBinary(IDirect3DDevice9* device, const ShaderDescriptor& shaderDesc);
 
-        HRESULT ReflectShaderByteCode(ID3DBlob* byteCode);
+        bool ReflectConstantTable(ID3DBlob* byteCode);
 
     private:
 
-        Report report_;
+        Report                  report_;
+        D3D9ShaderConstantTable constantTable_;
 
 };
 

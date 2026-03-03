@@ -52,7 +52,7 @@ class D3D9CommandBuffer final : public CommandBuffer
         struct RenderState
         {
             D3DPRIMITIVETYPE    primitiveType       = D3DPT_POINTLIST;
-            std::uint64_t       indexBufferOffset   = 0;
+            UINT                indexBufferOffset   = 0;
         };
 
     private:

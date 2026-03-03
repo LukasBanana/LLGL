@@ -6,11 +6,15 @@
  */
 
 #include "D3D9Shader.h"
+#include "D3D9ConstantTableParser.h"
 #include "../D3D9Core.h"
 #include "../../DXCommon/ComPtr.h"
+#include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include <d3dcompiler.h>
 
 
@@ -105,11 +109,14 @@ bool D3D9Shader::CompileSource(IDirect3DDevice9* device, const ShaderDescriptor&
     /* Get byte code from blob */
     if (byteCode)
     {
-        if (FAILED(CreateD3DShaderFromBlob(device, byteCode.Get())))
+        HRESULT hr = CreateD3DShaderFromBlob(device, byteCode.Get());
+        if (FAILED(hr))
         {
-            report_.Errorf("Failed to create %s shader for D3D9 backend\n", ToString(shaderDesc.type));
+            report_.Errorf("Failed to create %s shader for D3D9 backend (error=%s)\n", ToString(shaderDesc.type), D3DErrorToStrOrHex(hr));
             return false;
         }
+        if (ReflectConstantTable(byteCode.Get()))
+            return false;
     }
 
     /* Store if compilation was successful */
@@ -136,23 +143,28 @@ bool D3D9Shader::LoadBinary(IDirect3DDevice9* device, const ShaderDescriptor& sh
     if (byteCode.Get() != nullptr && byteCode->GetBufferSize() > 0)
     {
         /* Create native shader object */
-        if (FAILED(CreateD3DShaderFromBlob(device, byteCode.Get())))
+        HRESULT hr = CreateD3DShaderFromBlob(device, byteCode.Get());
+        if (FAILED(hr))
         {
-            report_.Errorf("Failed to create %s shader for D3D9 backend\n", ToString(shaderDesc.type));
+            report_.Errorf("Failed to create %s shader for D3D9 backend (error=%s)\n", ToString(shaderDesc.type), D3DErrorToStrOrHex(hr));
             return false;
         }
-        return true;
+        return ReflectConstantTable(byteCode.Get());
     }
 
     report_.Errorf("%s shader error: missing DXBC bytecode\n", ToString(shaderDesc.type));
     return false;
 }
 
-HRESULT D3D9Shader::ReflectShaderByteCode(ID3DBlob* byteCode)
+bool D3D9Shader::ReflectConstantTable(ID3DBlob* byteCode)
 {
-
-
-    return S_OK;
+    HRESULT hr = D3DParseSM3ConstantTable(byteCode->GetBufferPointer(), constantTable_);
+    if (FAILED(hr))
+    {
+        report_.Errorf("Failed to reflect constant table for D3D9 shader (error=%s)", D3DErrorToStrOrHex(hr));
+        return false;
+    }
+    return true;
 }
 
 

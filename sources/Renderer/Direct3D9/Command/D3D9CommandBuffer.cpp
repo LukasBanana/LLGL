@@ -239,7 +239,8 @@ void D3D9CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std:
         cmd->indexBuffer = indexBufferD3D9.GetNative();
     }
 
-    renderState_.indexBufferOffset = offset;
+    const std::uint32_t formatSize = GetFormatAttribs(format).bitSize / 8;
+    renderState_.indexBufferOffset = (formatSize > 0 ? static_cast<UINT>(offset / formatSize) : 0);
 }
 
 /* ----- Resources ----- */
@@ -405,29 +406,6 @@ void D3D9CommandBuffer::EndStreamOutput()
 
 /* ----- Drawing ----- */
 
-static UINT GetPrimitiveCount(D3DPRIMITIVETYPE primitiveType, UINT numVertices)
-{
-    switch (primitiveType)
-    {
-        case D3DPT_POINTLIST:
-            return numVertices;
-
-        case D3DPT_LINELIST:
-            return numVertices / 2;
-
-        case D3DPT_LINESTRIP:
-            return (numVertices >= 2 ? numVertices - 1 : 0);
-
-        case D3DPT_TRIANGLELIST:
-            return numVertices / 3;
-
-        case D3DPT_TRIANGLESTRIP:
-        case D3DPT_TRIANGLEFAN:
-            return (numVertices >= 3 ? numVertices - 2 : 0);
-    }
-    return 0;
-}
-
 void D3D9CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     AllocDrawCommand(firstVertex, numVertices);
@@ -557,6 +535,29 @@ TCommand* D3D9CommandBuffer::AllocCommand(const D3D9Opcode opcode, std::size_t p
     return buffer_.AllocCommand<TCommand>(opcode, payloadSize);
 }
 
+static UINT GetPrimitiveCount(D3DPRIMITIVETYPE primitiveType, UINT numVertices)
+{
+    switch (primitiveType)
+    {
+        case D3DPT_POINTLIST:
+            return numVertices;
+
+        case D3DPT_LINELIST:
+            return numVertices / 2;
+
+        case D3DPT_LINESTRIP:
+            return (numVertices >= 2 ? numVertices - 1 : 0);
+
+        case D3DPT_TRIANGLELIST:
+            return numVertices / 3;
+
+        case D3DPT_TRIANGLESTRIP:
+        case D3DPT_TRIANGLEFAN:
+            return (numVertices >= 3 ? numVertices - 2 : 0);
+    }
+    return 0;
+}
+
 void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)
 {
     auto cmd = AllocCommand<D3D9CmdDraw>(D3D9OpcodeDraw);
@@ -575,7 +576,7 @@ void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVer
         cmd->baseVertexIndex    = baseVertexIndex;
         cmd->minVertexIndex     = minVertexIndex;
         cmd->numVertices        = numVertices;
-        cmd->startIndex         = startIndex;
+        cmd->startIndex         = startIndex + renderState_.indexBufferOffset;
         cmd->primitiveCount     = GetPrimitiveCount(renderState_.primitiveType, numVertices);
     }
 }

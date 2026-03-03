@@ -33,21 +33,6 @@ set(
 )
 
 
-# === D3DX9 library ===
-
-find_path(D3DX9_INCLUDE_DIR D3DX9Shader.h
-    PATHS
-        "$ENV{DXSDK_DIR}/Include"
-        "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include"
-)
-
-find_library(D3DX9_LIBRARY d3dx9
-    PATHS
-        "$ENV{DXSDK_DIR}/Lib/x86"
-        "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86"
-)
-
-
 # === Source group folders ===
 
 source_group("Direct3D9"                FILES ${FilesRendererD3D9})
@@ -64,8 +49,6 @@ if(LLGL_BUILD_RENDERER_DIRECT3D9)
     # Direct3D 9 Renderer
     add_llgl_module(LLGL_Direct3D9 LLGL_BUILD_RENDERER_DIRECT3D9 "${FilesD3D9}")
     target_link_libraries(LLGL_Direct3D9 LLGL d3d9 D3DCompiler)
-#    target_link_libraries(LLGL_Direct3D9 LLGL d3d9 ${D3DX9_LIBRARY})
-#    target_include_directories(LLGL_Direct3D9 AFTER PRIVATE ${D3DX9_INCLUDE_DIR})
 endif()
 
 

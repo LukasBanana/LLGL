@@ -27,7 +27,7 @@ namespace ModuleDirect3D9
 
     RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new D3D9RenderSystem(*renderSystemDesc);
+        return new D3D9RenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleDirect3D9
 

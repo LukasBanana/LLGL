@@ -10,7 +10,7 @@
 
 #include "Buffer/D3D9VertexBuffer.h"
 #include "Buffer/D3D9IndexBuffer.h"
-#include "Buffer/D3D9ConstantBuffer.h"
+#include "Buffer/D3D9EmulatedConstantBuffer.h"
 
 #include "Shader/D3D9VertexShader.h"
 #include "Shader/D3D9PixelShader.h"
@@ -182,7 +182,7 @@ Buffer* D3D9RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const
     if (bindFlags == BindFlags::IndexBuffer)
         return buffers_.emplace<D3D9IndexBuffer>(device_.Get(), bufferDesc, initialData);
     if (bindFlags == BindFlags::ConstantBuffer)
-        return buffers_.emplace<D3D9ConstantBuffer>(bufferDesc, initialData);
+        return buffers_.emplace<D3D9EmulatedConstantBuffer>(bufferDesc, initialData);
 
     LLGL_TRAP("Invalid binding flags for D3D9 backend: 0x%08X", bufferDesc.bindFlags);
     return nullptr;

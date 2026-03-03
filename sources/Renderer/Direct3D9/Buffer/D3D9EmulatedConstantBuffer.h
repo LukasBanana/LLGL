@@ -1,12 +1,12 @@
 /*
- * D3D9ConstantBuffer.h
+ * D3D9EmulatedConstantBuffer.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_D3D9_CONSTANT_BUFFER_H
-#define LLGL_D3D9_CONSTANT_BUFFER_H
+#ifndef LLGL_D3D9_EMULATED_CONSTANT_BUFFER_H
+#define LLGL_D3D9_EMULATED_CONSTANT_BUFFER_H
 
 
 #include "D3D9Buffer.h"
@@ -19,7 +19,7 @@ namespace LLGL
 
 
 // D3D9 constant buffer is emulated to set multiple shader constants at once.
-class D3D9ConstantBuffer final : public D3D9Buffer
+class D3D9EmulatedConstantBuffer final : public D3D9Buffer
 {
 
     public:
@@ -28,7 +28,7 @@ class D3D9ConstantBuffer final : public D3D9Buffer
 
     public:
 
-        D3D9ConstantBuffer(const BufferDescriptor& desc, const void* initialData);
+        D3D9EmulatedConstantBuffer(const BufferDescriptor& desc, const void* initialData);
 
         // Writes new data into the buffer. This only updates the CPU data, Bind() sends it to the GPU.
         HRESULT Write(UINT dstOffset, const void* data, UINT dataSize);
@@ -77,7 +77,7 @@ class D3D9ConstantBuffer final : public D3D9Buffer
 
         std::vector<DWORD>          constantsCommands_; // Array of variable sized constants, each starting with D3DConstantsHeader
         std::vector<ConstantEntry>  entries_;
-        UINT                        bufferSize_             = 0;
+        UINT                        bufferSize_ = 0;
         D3DConstantsLayout          constantsLayouts_[D3DShaderStage_Num];
 
 };

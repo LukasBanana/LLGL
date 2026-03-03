@@ -1,11 +1,11 @@
 /*
- * D3D9ConstantBuffer.cpp
+ * D3D9EmulatedConstantBuffer.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "D3D9ConstantBuffer.h"
+#include "D3D9EmulatedConstantBuffer.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
@@ -16,14 +16,14 @@ namespace LLGL
 {
 
 
-D3D9ConstantBuffer::D3D9ConstantBuffer(const BufferDescriptor& desc, const void* initialData) :
+D3D9EmulatedConstantBuffer::D3D9EmulatedConstantBuffer(const BufferDescriptor& desc, const void* initialData) :
     D3D9Buffer { desc.bindFlags }
 {
     if (initialData != nullptr)
         Write(0, initialData, static_cast<UINT>(desc.size));
 }
 
-BufferDescriptor D3D9ConstantBuffer::GetDesc() const
+BufferDescriptor D3D9EmulatedConstantBuffer::GetDesc() const
 {
     BufferDescriptor desc;
     {
@@ -33,12 +33,12 @@ BufferDescriptor D3D9ConstantBuffer::GetDesc() const
     return desc;
 }
 
-bool D3D9ConstantBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+bool D3D9EmulatedConstantBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     return false; // dummy
 }
 
-HRESULT D3D9ConstantBuffer::Write(UINT dstOffset, const void* data, UINT dataSize)
+HRESULT D3D9EmulatedConstantBuffer::Write(UINT dstOffset, const void* data, UINT dataSize)
 {
     const UINT dstOffsetEnd = dstOffset + dataSize;
     if (dstOffsetEnd < dstOffset || dstOffsetEnd > bufferSize_)
@@ -60,7 +60,7 @@ HRESULT D3D9ConstantBuffer::Write(UINT dstOffset, const void* data, UINT dataSiz
         commands += (sizeof(D3DConstantsHeader)/sizeof(DWORD) + header->vector4Count*4);                \
     }
 
-void D3D9ConstantBuffer::Bind(IDirect3DDevice9* device)
+void D3D9EmulatedConstantBuffer::Bind(IDirect3DDevice9* device)
 {
     const DWORD* commands = constantsCommands_.data();
 
@@ -88,7 +88,7 @@ void D3D9ConstantBuffer::Bind(IDirect3DDevice9* device)
  * ======= Private: =======
  */
 
-void D3D9ConstantBuffer::WriteForStage(D3DShaderStage stage, UINT dstOffset, const void* data, UINT dataSize)
+void D3D9EmulatedConstantBuffer::WriteForStage(D3DShaderStage stage, UINT dstOffset, const void* data, UINT dataSize)
 {
     /* No need to search or write anything if there are no entires for this stage */
     const D3DConstantsLayout& layout = constantsLayouts_[stage];

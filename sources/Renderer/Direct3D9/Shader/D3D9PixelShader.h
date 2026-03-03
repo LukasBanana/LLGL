@@ -10,7 +10,6 @@
 
 
 #include "D3D9Shader.h"
-#include "../../DXCommon/ComPtr.h"
 
 
 namespace LLGL
