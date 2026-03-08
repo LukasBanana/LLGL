@@ -27,7 +27,9 @@ class D3D9VertexBuffer final : public D3D9Buffer
 
     public:
 
-        D3D9VertexBuffer(IDirect3DDevice9* device, const BufferDescriptor& desc, const void* initialData);
+        D3D9VertexBuffer(IDirect3DDevice9* device, const BufferDescriptor& desc);
+
+        HRESULT Write(UINT dstOffset, const void* data, UINT dataSize) override;
 
         inline IDirect3DVertexBuffer9* GetNative() const
         {

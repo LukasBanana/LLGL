@@ -7,6 +7,8 @@
 
 #include "D3D9PipelineState.h"
 #include "../D3D9Types.h"
+#include "../Shader/D3D9VertexShader.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
@@ -14,8 +16,14 @@ namespace LLGL
 
 
 D3D9PipelineState::D3D9PipelineState(const GraphicsPipelineDescriptor& desc, bool isProgrammablePipeline) :
-    isProgrammablePipeline_ { isProgrammablePipeline }
+    isProgrammablePipeline_ { isProgrammablePipeline                                },
+    primitiveType_          { D3D9Types::ToD3DPrimitiveType(desc.primitiveTopology) }
 {
+    if (desc.vertexShader != nullptr)
+    {
+        auto* vertexShaderD3D = LLGL_CAST(D3D9VertexShader*, desc.vertexShader);
+        d3dVertexDecl_ = ComPtr<IDirect3DVertexDeclaration9>(vertexShaderD3D->GetVertexDeclaration());
+    }
 }
 
 void D3D9PipelineState::SetDebugName(const char* name)

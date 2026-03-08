@@ -58,6 +58,8 @@ class D3D9StateManager
 
         void SetSamplerStateInternal(DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value);
 
+        void InitializeForFixedFunctionPipeline();
+
     private:
 
         static constexpr DWORD numTextureStages = 8;
@@ -66,7 +68,7 @@ class D3D9StateManager
         static_assert(numRenderStates == 209, "D3DRS_BLENDOPALPHA is expected to be equal to 209");
 
         ComPtr<IDirect3DDevice9>    device_;
-        DWORD                       renderStates_[numRenderStates]  = {};
+        DWORD                       renderStates_[numRenderStates]      = {};
         D3DTextureStage             textureStages_[numTextureStages];
 
 };

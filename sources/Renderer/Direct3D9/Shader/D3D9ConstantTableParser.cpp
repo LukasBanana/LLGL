@@ -79,38 +79,43 @@ static D3D9UniformType ToD3D9UniformType(D3DXParameterType componentType)
     }
 }
 
-static WORD ParseSM3Constant(const BYTE* base, D3D9ShaderConstant& outConstant, WORD regIndex, WORD regCount, DWORD nameOffset, DWORD typeInfoOffset)
+static void ParseSM3Constant(const BYTE* base, D3D9ShaderConstant& constant, DWORD nameOffset, DWORD typeInfoOffset)
 {
     const char* name = reinterpret_cast<const char*>(base + nameOffset);
     const auto* type = reinterpret_cast<const D3DXShaderTypeInfo*>(base + typeInfoOffset);
 
-    outConstant.name            = name;
-    outConstant.type            = ToD3D9UniformType(static_cast<D3DXParameterType>(type->baseType));
-    outConstant.registerIndex   = regIndex;
-    outConstant.registerCount   = regCount;
-    outConstant.rows            = type->rows;
-    outConstant.columns         = type->columns;
-    outConstant.arraySize       = type->elements;
-  //outConstant.byteSize        = ;
+    constant.name       = name;
+    constant.type       = ToD3D9UniformType(static_cast<D3DXParameterType>(type->baseType));
+    constant.rows       = type->rows;
+    constant.columns    = type->columns;
+    constant.arraySize  = type->elements;
 
+    const ArrayView<D3DXShaderStructMemberInfo> structMembers
     {
-        ArrayView<D3DXShaderStructMemberInfo> structMembers
-        {
-            reinterpret_cast<const D3DXShaderStructMemberInfo*>(base + type->structMemberInfo),
-            type->structMembers
-        };
+        reinterpret_cast<const D3DXShaderStructMemberInfo*>(base + type->structMemberInfo),
+        type->structMembers
+    };
 
-        WORD regMemberIndex = regIndex;
-        outConstant.structMembers.resize(type->structMembers);
-        for_range(i, type->structMembers)
-        {
-            regMemberIndex = ParseSM3Constant(
-                base, outConstant.structMembers[i], regMemberIndex, 1 /*???*/, structMembers[i].name, structMembers[i].typeInfo
-            );
-        }
+    constant.structMembers.resize(type->structMembers);
+    for_range(i, type->structMembers)
+        ParseSM3Constant(base, constant.structMembers[i], structMembers[i].name, structMembers[i].typeInfo);
+}
+
+static void CalculateRegisterSlotsAndByteSizes(D3D9ShaderConstant& constant, D3D9ShaderRegister& regBase, UINT& byteOffset)
+{
+    if (constant.type == D3D9UniformType::Undefined)
+    {
+        for_range(i, constant.structMembers.size())
+            CalculateRegisterSlotsAndByteSizes(constant.structMembers[i], regBase, constant.byteSize);
     }
+    else
+    {
+        UINT paddingOffset  = 0;
+        byteOffset += paddingOffset;
 
-    return regIndex + regCount;
+        constant.byteSize;
+    }
+    byteOffset += constant.byteSize;
 }
 
 HRESULT D3DParseSM3ConstantTable(const void* byteCode, D3D9ShaderConstantTable& outCtable)
@@ -126,8 +131,10 @@ HRESULT D3DParseSM3ConstantTable(const void* byteCode, D3D9ShaderConstantTable& 
             {
                 const BYTE* base = reinterpret_cast<const BYTE*>(ptr);
                 auto* table = reinterpret_cast<const D3DXShaderConstantTable*>(base);
+                if (table->size != sizeof(D3DXShaderConstantTable))
+                    return E_INVALIDARG;
 
-                ArrayView<D3DXShaderConstantInfo> constants
+                const ArrayView<D3DXShaderConstantInfo> constants
                 {
                     reinterpret_cast<const D3DXShaderConstantInfo*>(base + table->constantInfo),
                     table->constants
@@ -136,13 +143,24 @@ HRESULT D3DParseSM3ConstantTable(const void* byteCode, D3D9ShaderConstantTable& 
                 outCtable.constants.resize(table->constants);
                 for_range(i, table->constants)
                 {
+                    /* Parse all constant information */
                     const D3DXShaderConstantInfo& cinfo = constants[i];
-                    ParseSM3Constant(base, outCtable.constants[i], cinfo.registerIndex, cinfo.registerCount, cinfo.name, cinfo.typeInfo);
+                    {
+                        outCtable.constants[i].reg.index = cinfo.registerIndex;
+                        outCtable.constants[i].reg.count = cinfo.registerCount;
+                    }
+                    ParseSM3Constant(base, outCtable.constants[i], cinfo.name, cinfo.typeInfo);
+
+                    /* Calculate register index, register count, and bytesize for each constant's struct members */
+                    D3D9ShaderRegister regBase = outCtable.constants[i].reg;
+                    CalculateRegisterSlotsAndByteSizes(outCtable.constants[i], regBase, outCtable.byteSize);
                 }
+
+                return S_OK;
             }
         }
     }
-    return S_OK;
+    return E_FAIL;
 }
 
 

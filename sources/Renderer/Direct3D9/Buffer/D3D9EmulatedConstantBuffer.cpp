@@ -6,9 +6,12 @@
  */
 
 #include "D3D9EmulatedConstantBuffer.h"
+#include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/PrintfUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
+#include <limits.h>
 #include <algorithm>
 
 
@@ -16,11 +19,11 @@ namespace LLGL
 {
 
 
-D3D9EmulatedConstantBuffer::D3D9EmulatedConstantBuffer(const BufferDescriptor& desc, const void* initialData) :
-    D3D9Buffer { desc.bindFlags }
+D3D9EmulatedConstantBuffer::D3D9EmulatedConstantBuffer(const BufferDescriptor& desc) :
+    D3D9Buffer  { desc.bindFlags               },
+    bufferSize_ { static_cast<UINT>(desc.size) }
 {
-    if (initialData != nullptr)
-        Write(0, initialData, static_cast<UINT>(desc.size));
+    LLGL_ASSERT(desc.size <= UINT32_MAX, "D3D9 buffer size (%" PRIu64 ") exceeds limit (%u)", desc.size, UINT32_MAX);
 }
 
 BufferDescriptor D3D9EmulatedConstantBuffer::GetDesc() const

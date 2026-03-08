@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+class D3D9Buffer;
+
 struct D3D9CmdClear
 {
     DWORD       flags;
@@ -43,15 +45,6 @@ struct D3D9CmdSetScissorRect
     RECT scissorRect;
 };
 
-/*struct D3D9CmdBufferWrite
-{
-    D3D9VertexBuffer*   vertexBuffer;
-    D3D9IndexBuffer*    indexBuffer;
-    std::size_t         offset;
-    std::size_t         size;
-//  std::int8_t         data[dataSize];
-};*/
-
 struct D3D9CmdSetIndices
 {
     IDirect3DIndexBuffer9* indexBuffer;
@@ -72,6 +65,11 @@ struct D3D9CmdBindProgrammablePSO
     IDirect3DPixelShader9*          pixelShader;
 };
 
+struct D3D9CmdBindFixedFunctionPSO
+{
+    IDirect3DVertexDeclaration9* vertexDeclaration;
+};
+
 struct D3D9CmdSetRenderStates
 {
     UINT                    numRenderStates;
@@ -81,6 +79,14 @@ struct D3D9CmdSetRenderStates
         DWORD               value;
     };
 //  RenderState             renderStates[numRenderStates];
+};
+
+struct D3D9CmdBufferWrite
+{
+    D3D9Buffer* dstBuffer;
+    UINT        dstOffset;
+    UINT        dataSize;
+//  char        data[dataSize];
 };
 
 //TODO...

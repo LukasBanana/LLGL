@@ -28,10 +28,10 @@ class D3D9EmulatedConstantBuffer final : public D3D9Buffer
 
     public:
 
-        D3D9EmulatedConstantBuffer(const BufferDescriptor& desc, const void* initialData);
+        D3D9EmulatedConstantBuffer(const BufferDescriptor& desc);
 
         // Writes new data into the buffer. This only updates the CPU data, Bind() sends it to the GPU.
-        HRESULT Write(UINT dstOffset, const void* data, UINT dataSize);
+        HRESULT Write(UINT dstOffset, const void* data, UINT dataSize) override;
 
         // Bind the buffer to the D3D device.
         void Bind(IDirect3DDevice9* device);
@@ -65,7 +65,7 @@ class D3D9EmulatedConstantBuffer final : public D3D9Buffer
         // Maps from interface layout to constants commands.
         struct ConstantEntry
         {
-            UINT offsetInStages[D3DShaderStage_Num] = { ~0u, ~0u }; // Word offset into 'constantsCommands_'
+            UINT offsetInStages[D3DShaderStage_Num] = { ~0u, ~0u }; // Word offset into 'constantsCommands'
             UINT byteSize                           = 0;
         };
 

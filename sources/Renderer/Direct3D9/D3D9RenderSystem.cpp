@@ -15,6 +15,7 @@
 #include "Shader/D3D9VertexShader.h"
 #include "Shader/D3D9PixelShader.h"
 
+#include "RenderState/D3D9FixedFunctionPSO.h"
 #include "RenderState/D3D9ProgrammablePSO.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
@@ -170,19 +171,35 @@ void D3D9RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-Buffer* D3D9RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
+//private
+D3D9Buffer* D3D9RenderSystem::CreateD3D9Buffer(const BufferDescriptor& bufferDesc)
 {
-    RenderSystem::AssertCreateBuffer(bufferDesc, GetRenderingCaps().limits.maxBufferSize);
-
     constexpr long supportedBindFlags = (BindFlags::VertexBuffer | BindFlags::IndexBuffer | BindFlags::ConstantBuffer);
     const long bindFlags = bufferDesc.bindFlags & supportedBindFlags;
 
     if (bindFlags == BindFlags::VertexBuffer)
-        return buffers_.emplace<D3D9VertexBuffer>(device_.Get(), bufferDesc, initialData);
+        return buffers_.emplace<D3D9VertexBuffer>(device_.Get(), bufferDesc);
     if (bindFlags == BindFlags::IndexBuffer)
-        return buffers_.emplace<D3D9IndexBuffer>(device_.Get(), bufferDesc, initialData);
+        return buffers_.emplace<D3D9IndexBuffer>(device_.Get(), bufferDesc);
     if (bindFlags == BindFlags::ConstantBuffer)
-        return buffers_.emplace<D3D9EmulatedConstantBuffer>(bufferDesc, initialData);
+        return buffers_.emplace<D3D9EmulatedConstantBuffer>(bufferDesc);
+
+    return nullptr;
+}
+
+Buffer* D3D9RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
+{
+    RenderSystem::AssertCreateBuffer(bufferDesc, GetRenderingCaps().limits.maxBufferSize);
+
+    if (D3D9Buffer* bufferD3D = CreateD3D9Buffer(bufferDesc))
+    {
+        if (initialData != nullptr)
+        {
+            HRESULT hr = bufferD3D->Write(0, initialData, static_cast<UINT>(bufferDesc.size));
+            D3DThrowIfFailed(hr, "failed to write D3D9 buffer with initial data");
+        }
+        return bufferD3D;
+    }
 
     LLGL_TRAP("Invalid binding flags for D3D9 backend: 0x%08X", bufferDesc.bindFlags);
     return nullptr;
@@ -361,18 +378,19 @@ void D3D9RenderSystem::Release(PipelineCache& pipelineCache)
 
 /* ----- Pipeline States ----- */
 
+//TODO: check vertex and fragment shaders whether they are to be interpreted as fixed-function shaders
 static bool IsD3DProgrammablePipeline(const GraphicsPipelineDescriptor& desc)
 {
-    //TODO: check if shaders refer to fixed-function emulated shaders
-    return true;
+    const bool isHasValidPixelShader = (desc.fragmentShader != nullptr || desc.rasterizer.discardEnabled || desc.blend.targets[0].colorMask == 0);
+    return isHasValidPixelShader;
 }
 
 PipelineState* D3D9RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
-//  if (IsD3DProgrammablePipeline(pipelineStateDesc))
+    if (IsD3DProgrammablePipeline(pipelineStateDesc))
         return pipelineStates_.emplace<D3D9ProgrammablePSO>(pipelineStateDesc);
-//  else
-//      return pipelineStates_.emplace<D3D9FixedFunctionPipelineState>(pipelineStateDesc);
+    else
+        return pipelineStates_.emplace<D3D9FixedFunctionPSO>(pipelineStateDesc);
 }
 
 PipelineState* D3D9RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)

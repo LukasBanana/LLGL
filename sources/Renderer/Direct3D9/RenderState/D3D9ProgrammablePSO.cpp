@@ -21,7 +21,6 @@ D3D9ProgrammablePSO::D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc)
     if (desc.vertexShader != nullptr)
     {
         auto* vertexShaderD3D = LLGL_CAST(D3D9VertexShader*, desc.vertexShader);
-        d3dVertexDecl_ = ComPtr<IDirect3DVertexDeclaration9>(vertexShaderD3D->GetVertexDeclaration());
         d3dVertexShader_ = ComPtr<IDirect3DVertexShader9>(vertexShaderD3D->GetNative());
     }
     if (desc.fragmentShader != nullptr)

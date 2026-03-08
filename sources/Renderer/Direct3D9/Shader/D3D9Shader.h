@@ -16,6 +16,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -31,22 +32,29 @@ enum class D3D9UniformType
     Float,
 };
 
+struct D3D9ShaderRegister
+{
+    std::uint16_t index     : 14;
+    std::uint16_t component :  2;
+    std::uint16_t count;
+};
+
 struct D3D9ShaderConstant
 {
     std::string                     name;
     std::vector<D3D9ShaderConstant> structMembers;
     D3D9UniformType                 type            = D3D9UniformType::Undefined;
-    UINT                            registerIndex   = 0;
-    UINT                            registerCount   = 0;
-    UINT                            rows            = 0;
-    UINT                            columns         = 0;
-    UINT                            arraySize       = 0;
-    UINT                            byteSize        = 0;
+    D3D9ShaderRegister              reg             = {};
+    std::uint16_t                   rows            = 0;
+    std::uint16_t                   columns         = 0;
+    std::uint16_t                   arraySize       = 0;
+    std::uint32_t                   byteSize        = 0;
 };
 
 struct D3D9ShaderConstantTable
 {
     std::vector<D3D9ShaderConstant> constants;
+    std::uint32_t                   byteSize    = 0;
 };
 
 // Base class for D3D9VertexShader and D3D9PixelShader.

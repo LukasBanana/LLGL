@@ -16,30 +16,21 @@ namespace LLGL
 {
 
 
-D3D9IndexBuffer::D3D9IndexBuffer(IDirect3DDevice9* device, const BufferDescriptor& desc, const void* initialData) :
+D3D9IndexBuffer::D3D9IndexBuffer(IDirect3DDevice9* device, const BufferDescriptor& desc) :
     D3D9Buffer { desc.bindFlags }
 {
     const UINT bufferLength = static_cast<UINT>(desc.size);
+    const DWORD usageFlags = D3D9Buffer::GetUsageFlags(desc.bindFlags, desc.cpuAccessFlags, desc.miscFlags);
 
     HRESULT hr = device->CreateIndexBuffer(
         bufferLength,
-        0, // Usage
+        usageFlags, // Usage
         D3D9Types::ToD3DIndexFormat(desc.format),
         D3DPOOL_DEFAULT,
         d3dBuffer_.GetAddressOf(),
         nullptr // Shared handle (must be null)
     );
     D3DThrowIfCreateFailed(hr, "IDirect3DIndexBuffer9");
-
-    if (initialData != nullptr)
-    {
-        void* dstData = nullptr;
-        if (SUCCEEDED(d3dBuffer_->Lock(0, bufferLength, &dstData, 0)))
-        {
-            ::memcpy(dstData, initialData, bufferLength);
-            d3dBuffer_->Unlock();
-        }
-    }
 }
 
 bool D3D9IndexBuffer::GetNativeHandle(void* /*nativeHandle*/, std::size_t /*nativeHandleSize*/)
@@ -61,6 +52,11 @@ BufferDescriptor D3D9IndexBuffer::GetDesc() const
         outDesc.bindFlags = BindFlags::IndexBuffer;
     }
     return outDesc;
+}
+
+HRESULT D3D9IndexBuffer::Write(UINT dstOffset, const void* data, UINT dataSize)
+{
+    return D3D9Buffer::WriteLocked(d3dBuffer_.Get(), dstOffset, data, dataSize);
 }
 
 

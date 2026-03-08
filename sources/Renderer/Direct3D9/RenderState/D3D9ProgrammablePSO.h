@@ -11,7 +11,6 @@
 
 #include "D3D9PipelineState.h"
 #include "../Direct3D9.h"
-#include "../../DXCommon/ComPtr.h"
 
 
 namespace LLGL
@@ -29,11 +28,6 @@ class D3D9ProgrammablePSO final : public D3D9PipelineState
 
         D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc);
 
-        inline IDirect3DVertexDeclaration9* GetVertexDeclaration()
-        {
-            return d3dVertexDecl_.Get();
-        }
-
         inline IDirect3DVertexShader9* GetVertexShader() const
         {
             return d3dVertexShader_.Get();
@@ -46,9 +40,8 @@ class D3D9ProgrammablePSO final : public D3D9PipelineState
 
     private:
 
-        ComPtr<IDirect3DVertexDeclaration9> d3dVertexDecl_;
-        ComPtr<IDirect3DVertexShader9>      d3dVertexShader_;
-        ComPtr<IDirect3DPixelShader9>       d3dPixelShader_;
+        ComPtr<IDirect3DVertexShader9>  d3dVertexShader_;
+        ComPtr<IDirect3DPixelShader9>   d3dPixelShader_;
 
 };
 

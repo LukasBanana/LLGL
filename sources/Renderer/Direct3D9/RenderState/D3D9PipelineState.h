@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
+#include "../../DXCommon/ComPtr.h"
 #include "../Direct3D9.h"
 
 
@@ -39,11 +40,16 @@ class D3D9PipelineState : public PipelineState
             return primitiveType_;
         }
 
+        inline IDirect3DVertexDeclaration9* GetVertexDeclaration()
+        {
+            return d3dVertexDecl_.Get();
+        }
+
     private:
 
-        const bool          isProgrammablePipeline_ = true;
-
-        D3DPRIMITIVETYPE    primitiveType_          = D3DPT_TRIANGLELIST;
+        const bool                          isProgrammablePipeline_ = true;
+        const D3DPRIMITIVETYPE              primitiveType_          = D3DPT_TRIANGLELIST;
+        ComPtr<IDirect3DVertexDeclaration9> d3dVertexDecl_;
 
 };
 

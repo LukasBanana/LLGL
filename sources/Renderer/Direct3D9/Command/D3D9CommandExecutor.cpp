@@ -90,6 +90,14 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             device->SetPixelShader(cmd->pixelShader);
             return sizeof(*cmd);
         }
+        case D3D9OpcodeBindFixedFunctionPSO:
+        {
+            auto cmd = static_cast<const D3D9CmdBindFixedFunctionPSO*>(pc);
+            device->SetVertexDeclaration(cmd->vertexDeclaration);
+            device->SetVertexShader(nullptr);
+            device->SetPixelShader(nullptr);
+            return sizeof(*cmd);
+        }
         case D3D9OpcodeSetRenderStates:
         {
             //TODO: this needs to use a state manager to avoid unnecessary state changes
@@ -98,6 +106,12 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             for_range(i, cmd->numRenderStates)
                 stateMngr->SetRenderState(renderStates[i].type, renderStates[i].value);
             return sizeof(*cmd) + sizeof(D3D9CmdSetRenderStates::RenderState) * cmd->numRenderStates;
+        }
+        case D3D9OpcodeBufferWrite:
+        {
+            auto cmd = static_cast<const D3D9CmdBufferWrite*>(pc);
+            cmd->dstBuffer->Write(cmd->dstOffset, cmd + 1, cmd->dataSize);
+            return sizeof(*cmd) + cmd->dataSize;
         }
 
         //TODO...

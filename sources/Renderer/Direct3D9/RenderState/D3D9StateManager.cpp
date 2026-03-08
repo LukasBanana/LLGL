@@ -20,6 +20,7 @@ D3D9StateManager::D3D9StateManager(IDirect3DDevice9* device) :
 {
     ::memset(renderStates_, 0xFFFFFFFF, sizeof(renderStates_));
     ::memset(textureStages_, 0xFFFFFFFF, sizeof(textureStages_));
+    InitializeForFixedFunctionPipeline();
 }
 
 void D3D9StateManager::SetRenderState(D3DRENDERSTATETYPE state, DWORD value)
@@ -87,6 +88,11 @@ void D3D9StateManager::SetSamplerStateInternal(DWORD stage, D3DSAMPLERSTATETYPE 
         textureStages_[stage].samplerStates[stateIndex] = value;
         device_->SetSamplerState(stage, type, value);
     }
+}
+
+void D3D9StateManager::InitializeForFixedFunctionPipeline()
+{
+    SetRenderState(D3DRS_LIGHTING, FALSE);
 }
 
 

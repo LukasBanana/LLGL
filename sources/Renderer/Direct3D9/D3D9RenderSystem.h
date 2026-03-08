@@ -59,6 +59,8 @@ class D3D9RenderSystem final : public RenderSystem
 
         HWND CreateFocusWindow();
 
+        D3D9Buffer* CreateD3D9Buffer(const BufferDescriptor& bufferDesc);
+
     private:
 
         /* ----- Common objects ----- */

@@ -6,6 +6,9 @@
  */
 
 #include "D3D9Buffer.h"
+#include "../../../Core/Assertion.h"
+#include "../D3D9Core.h"
+#include <string.h>
 
 
 namespace LLGL
@@ -20,6 +23,21 @@ D3D9Buffer::D3D9Buffer(long bindFlags) :
 void D3D9Buffer::SetDebugName(const char* name)
 {
     // dummy
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+DWORD D3D9Buffer::GetUsageFlags(long /*bindFlags*/, long /*cpuAccessFlags*/, long miscFlags)
+{
+    DWORD usageFlags = D3DUSAGE_WRITEONLY;
+
+    if ((miscFlags & MiscFlags::DynamicUsage) != 0)
+        usageFlags |= D3DUSAGE_DYNAMIC;
+
+    return usageFlags;
 }
 
 

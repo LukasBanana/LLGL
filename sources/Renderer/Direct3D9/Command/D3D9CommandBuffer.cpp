@@ -19,6 +19,7 @@
 #include "../Buffer/D3D9IndexBuffer.h"
 #include "../Buffer/D3D9BufferArray.h"
 #include "../RenderState/D3D9QueryHeap.h"
+#include "../RenderState/D3D9FixedFunctionPSO.h"
 #include "../RenderState/D3D9ProgrammablePSO.h"
 #include "../RenderState/D3D9ResourceHeap.h"
 #include "../RenderState/D3D9StateManager.h"
@@ -72,8 +73,16 @@ void D3D9CommandBuffer::UpdateBuffer(
     const void*     data,
     std::uint64_t   dataSize)
 {
+    LLGL_ASSERT(dstOffset + dataSize <= UINT32_MAX, "D3D9 buffer range out of bounds: [%u, %u+%u)", dstOffset, dstOffset, dataSize);
     auto dstBufferD3D9 = LLGL_CAST(D3D9Buffer*, &dstBuffer);
-    //todo
+    const std::size_t length = static_cast<std::size_t>(dataSize);
+    auto cmd = AllocCommand<D3D9CmdBufferWrite>(D3D9OpcodeBufferWrite, length);
+    {
+        cmd->dstBuffer  = dstBufferD3D9;
+        cmd->dstOffset  = static_cast<UINT>(dstOffset);
+        cmd->dataSize   = static_cast<UINT>(length);
+        ::memcpy(cmd + 1, data, length);
+    }
 }
 
 void D3D9CommandBuffer::CopyBuffer(
@@ -169,7 +178,7 @@ void D3D9CommandBuffer::SetViewport(const Viewport& viewport)
 
 void D3D9CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    LLGL_ASSERT(numViewports == 1);
+    LLGL_ASSERT(numViewports == 1, "D3D9 backend only supports a single viewport, but %u are specified", numViewports);
     SetViewport(viewports[0]);
 }
 
@@ -186,7 +195,7 @@ void D3D9CommandBuffer::SetScissor(const Scissor& scissor)
 
 void D3D9CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    LLGL_ASSERT(numScissors == 1);
+    LLGL_ASSERT(numScissors == 1, "D3D9 backend only supports a single scissor rectangle, but %u are specified", numScissors);
     SetScissor(scissors[0]);
 }
 
@@ -336,11 +345,11 @@ void D3D9CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Att
 
 void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& pipelineStateD3D9 = LLGL_CAST(D3D9PipelineState&, pipelineState);
+    auto& pipelineStateD3D = LLGL_CAST(D3D9PipelineState&, pipelineState);
 
-    if (pipelineStateD3D9.IsProgrammablePipeline())
+    if (pipelineStateD3D.IsProgrammablePipeline())
     {
-        auto& programmablePsoD3D9 = LLGL_CAST(D3D9ProgrammablePSO&, pipelineStateD3D9);
+        auto& programmablePsoD3D9 = LLGL_CAST(D3D9ProgrammablePSO&, pipelineStateD3D);
         auto cmd = AllocCommand<D3D9CmdBindProgrammablePSO>(D3D9OpcodeBindProgrammablePSO);
         {
             cmd->vertexDeclaration  = programmablePsoD3D9.GetVertexDeclaration();
@@ -348,8 +357,16 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
             cmd->pixelShader        = programmablePsoD3D9.GetPixelShader();
         }
     }
+    else
+    {
+        auto& fixedFunctionPsoD3D = LLGL_CAST(D3D9FixedFunctionPSO&, pipelineStateD3D);
+        auto cmd = AllocCommand<D3D9CmdBindFixedFunctionPSO>(D3D9OpcodeBindFixedFunctionPSO);
+        {
+            cmd->vertexDeclaration = fixedFunctionPsoD3D.GetVertexDeclaration();
+        }
+    }
 
-    renderState_.primitiveType = pipelineStateD3D9.GetPrimitiveType();
+    renderState_.primitiveType = pipelineStateD3D.GetPrimitiveType();
 }
 
 void D3D9CommandBuffer::SetBlendFactor(const float color[4])
@@ -423,64 +440,64 @@ void D3D9CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firs
 
 void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    // dummy
+    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
 }
 
 void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    // dummy
+    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    // dummy
+    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    // dummy
+    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    // dummy
+    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
 }
 
 void D3D9CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("indirect instanced draw commands");
 }
 
 void D3D9CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("indirect instanced draw commands");
 }
 
 void D3D9CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("indexed-indirect instanced draw commands");
 }
 
 void D3D9CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("indexed-indirect instanced draw commands");
 }
 
 void D3D9CommandBuffer::DrawStreamOutput()
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("stream-output draw commands");
 }
 
 /* ----- Compute ----- */
 
 void D3D9CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("compute commands");
 }
 
 void D3D9CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    // dummy
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("indirect compute commands");
 }
 
 /* ----- Debugging ----- */

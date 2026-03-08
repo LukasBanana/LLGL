@@ -115,7 +115,7 @@ bool D3D9Shader::CompileSource(IDirect3DDevice9* device, const ShaderDescriptor&
             report_.Errorf("Failed to create %s shader for D3D9 backend (error=%s)\n", ToString(shaderDesc.type), D3DErrorToStrOrHex(hr));
             return false;
         }
-        if (ReflectConstantTable(byteCode.Get()))
+        if (!ReflectConstantTable(byteCode.Get()))
             return false;
     }
 
