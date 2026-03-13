@@ -6,6 +6,7 @@
  */
 
 #include "D3D9FixedFunctionPSO.h"
+#include "D3D9StateManager.h"
 #include "../Shader/D3D9VertexShader.h"
 #include "../Shader/D3D9PixelShader.h"
 #include "../../CheckedCast.h"
@@ -23,6 +24,15 @@ D3D9FixedFunctionPSO::D3D9FixedFunctionPSO(const GraphicsPipelineDescriptor& des
 const Report* D3D9FixedFunctionPSO::GetReport() const
 {
     return nullptr; // dummy - fixed-function pipeline cannot produce error reports
+}
+
+void D3D9FixedFunctionPSO::Bind(D3D9StateManager& stateMngr)
+{
+    D3D9PipelineState::Bind(stateMngr);
+
+    IDirect3DDevice9* device = stateMngr.GetDevice();
+    device->SetVertexShader(nullptr);
+    device->SetPixelShader(nullptr);
 }
 
 

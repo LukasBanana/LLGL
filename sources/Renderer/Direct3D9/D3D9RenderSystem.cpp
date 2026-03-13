@@ -15,6 +15,7 @@
 #include "Shader/D3D9VertexShader.h"
 #include "Shader/D3D9PixelShader.h"
 
+#include "RenderState/D3D9StatePool.h"
 #include "RenderState/D3D9FixedFunctionPSO.h"
 #include "RenderState/D3D9ProgrammablePSO.h"
 #include "../../Core/CoreUtils.h"
@@ -136,6 +137,12 @@ D3D9RenderSystem::D3D9RenderSystem(const RenderSystemDescriptor& renderSystemDes
     commandQueue_ { MakeUnique<D3D9CommandQueue>() }
 {
     (void)CreateDevice();
+}
+
+D3D9RenderSystem::~D3D9RenderSystem()
+{
+    /* Clear all render state containers first, the rest will be deleted automatically */
+    D3D9StatePool::Get().Clear();
 }
 
 /* ----- Swap-chain ----- */

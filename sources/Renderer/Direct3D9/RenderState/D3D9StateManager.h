@@ -17,8 +17,11 @@ namespace LLGL
 {
 
 
-class D3D9EmulatedSampler;
 struct D3D9SamplerState;
+class D3D9EmulatedSampler;
+class D3D9DepthStencilState;
+class D3D9RasterizerState;
+class D3D9BlendState;
 
 class D3D9StateManager
 {
@@ -38,6 +41,10 @@ class D3D9StateManager
         void SetSamplerStates(DWORD stage, const D3D9SamplerState& d3dState);
 
         void BindSampler(DWORD stage, const D3D9EmulatedSampler* sampler);
+
+        void BindDepthStencilState(D3D9DepthStencilState* depthStencilState);
+        void BindRasterizerState(D3D9RasterizerState* rasterizerState);
+        void BindBlendState(D3D9BlendState* blendState);
 
         void SetRenderTargets(UINT numColorTargets, IDirect3DSurface9* const * renderTargets, IDirect3DSurface9* depthStencil);
         void Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil);
@@ -75,6 +82,10 @@ class D3D9StateManager
         D3DTextureStage             textureStages_[numTextureStages];
         UINT                        numColorTargets_                    = 0;
         DWORD                       clearMask_                          = 0; // Bitmask of render targets that can be cleared
+
+        D3D9DepthStencilState*      boundDepthStencilState_             = nullptr;
+        D3D9RasterizerState*        boundRasterizerState_               = nullptr;
+        D3D9BlendState*             boundBlendState_                    = nullptr;
 
 };
 

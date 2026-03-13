@@ -86,20 +86,10 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             device->SetStreamSource(cmd->stream, cmd->vertexBuffer, cmd->offset, cmd->stride);
             return sizeof(*cmd);
         }
-        case D3D9OpcodeBindProgrammablePSO:
+        case D3D9OpcodeSetPipelineState:
         {
-            auto cmd = static_cast<const D3D9CmdBindProgrammablePSO*>(pc);
-            device->SetVertexDeclaration(cmd->vertexDeclaration);
-            device->SetVertexShader(cmd->vertexShader);
-            device->SetPixelShader(cmd->pixelShader);
-            return sizeof(*cmd);
-        }
-        case D3D9OpcodeBindFixedFunctionPSO:
-        {
-            auto cmd = static_cast<const D3D9CmdBindFixedFunctionPSO*>(pc);
-            device->SetVertexDeclaration(cmd->vertexDeclaration);
-            device->SetVertexShader(nullptr);
-            device->SetPixelShader(nullptr);
+            auto cmd = static_cast<const D3D9CmdSetPipelineState*>(pc);
+            cmd->pipelineState->Bind(*stateMngr);
             return sizeof(*cmd);
         }
         case D3D9OpcodeSetRenderStates:

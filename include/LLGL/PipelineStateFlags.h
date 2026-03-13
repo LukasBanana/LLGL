@@ -191,7 +191,7 @@ enum class PolygonMode
     Wireframe,  //!< Draw triangle edges only.
     /**
     \brief Draw vertex points only.
-    \note Only supported with: OpenGL, Vulkan.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 9.
     */
     Points,
 };
@@ -555,10 +555,7 @@ struct RasterizerDescriptor
     //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding. By default disabled.
     bool                frontCCW                    = false;
 
-    /**
-    \brief If enabled, primitives are discarded after optional stream-outputs but before the rasterization stage. By default disabled.
-    \note Only supported with: OpenGL, Vulkan, Metal.
-    */
+    //! If enabled, primitives are discarded after optional stream-outputs but before the rasterization stage. By default disabled.
     bool                discardEnabled              = false;
 
     //! If enabled, there is effectively no near and far clipping plane. By default disabled.

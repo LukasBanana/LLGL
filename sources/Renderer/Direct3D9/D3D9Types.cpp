@@ -239,6 +239,100 @@ D3DTEXTUREFILTERTYPE ToD3DTextureFilter(const SamplerFilter type)
     LLGL_TRAP_D3D_MAP(SamplerFilter, type, D3DTEXTUREFILTERTYPE);
 }
 
+D3DCMPFUNC ToD3DCmpFunc( const CompareOp op )
+{
+    switch (op)
+    {
+        case CompareOp::NeverPass:      return D3DCMP_NEVER;
+        case CompareOp::Less:           return D3DCMP_LESS;
+        case CompareOp::Equal:          return D3DCMP_EQUAL;
+        case CompareOp::LessEqual:      return D3DCMP_LESSEQUAL;
+        case CompareOp::Greater:        return D3DCMP_GREATER;
+        case CompareOp::NotEqual:       return D3DCMP_NOTEQUAL;
+        case CompareOp::GreaterEqual:   return D3DCMP_GREATEREQUAL;
+        case CompareOp::AlwaysPass:     return D3DCMP_ALWAYS;
+    }
+    LLGL_TRAP_D3D_MAP(CompareOp, op, D3DCMPFUNC);
+}
+
+D3DSTENCILOP ToD3DStenciOp( const StencilOp op )
+{
+    switch (op)
+    {
+        case StencilOp::Keep:       return D3DSTENCILOP_KEEP;
+        case StencilOp::Zero:       return D3DSTENCILOP_ZERO;
+        case StencilOp::Replace:    return D3DSTENCILOP_REPLACE;
+        case StencilOp::IncClamp:   return D3DSTENCILOP_INCRSAT;
+        case StencilOp::DecClamp:   return D3DSTENCILOP_DECRSAT;
+        case StencilOp::Invert:     return D3DSTENCILOP_INVERT;
+        case StencilOp::IncWrap:    return D3DSTENCILOP_INCR;
+        case StencilOp::DecWrap:    return D3DSTENCILOP_DECR;
+    }
+    LLGL_TRAP_D3D_MAP(StencilOp, op, D3DSTENCILOP);
+}
+
+D3DCULL ToD3DCull( const CullMode mode )
+{
+    switch (mode)
+    {
+        case CullMode::Disabled:    return D3DCULL_NONE;
+        case CullMode::Front:       return D3DCULL_CW;
+        case CullMode::Back:        return D3DCULL_CCW;
+    }
+    LLGL_TRAP_D3D_MAP(CullMode, mode, D3DCULL);
+}
+
+D3DFILLMODE ToD3DFillMode( const PolygonMode mode )
+{
+    switch (mode)
+    {
+        case PolygonMode::Fill:       return D3DFILL_SOLID;
+        case PolygonMode::Wireframe:  return D3DFILL_WIREFRAME;
+        case PolygonMode::Points:     return D3DFILL_POINT;
+    }
+    LLGL_TRAP_D3D_MAP(PolygonMode, mode, D3DFILLMODE);
+}
+
+
+D3DBLENDOP ToD3DBlendOp( const BlendArithmetic arithmetic )
+{
+    switch (arithmetic)
+    {
+        case BlendArithmetic::Add:          return D3DBLENDOP_ADD;
+        case BlendArithmetic::Subtract:     return D3DBLENDOP_SUBTRACT;
+        case BlendArithmetic::RevSubtract:  return D3DBLENDOP_REVSUBTRACT;
+        case BlendArithmetic::Min:          return D3DBLENDOP_MIN;
+        case BlendArithmetic::Max:          return D3DBLENDOP_MAX;
+    }
+    LLGL_TRAP_D3D_MAP(BlendArithmetic, arithmetic, D3DBLENDOP);
+}
+
+D3DBLEND ToD3DBlend( const BlendOp op )
+{
+    switch (op)
+    {
+        case BlendOp::Zero:             return D3DBLEND_ZERO;
+        case BlendOp::One:              return D3DBLEND_ONE;
+        case BlendOp::SrcColor:         return D3DBLEND_SRCCOLOR;
+        case BlendOp::InvSrcColor:      return D3DBLEND_INVSRCCOLOR;
+        case BlendOp::SrcAlpha:         return D3DBLEND_SRCALPHA;
+        case BlendOp::InvSrcAlpha:      return D3DBLEND_INVSRCALPHA;
+        case BlendOp::DstColor:         return D3DBLEND_DESTCOLOR;
+        case BlendOp::InvDstColor:      return D3DBLEND_INVDESTCOLOR;
+        case BlendOp::DstAlpha:         return D3DBLEND_DESTALPHA;
+        case BlendOp::InvDstAlpha:      return D3DBLEND_INVDESTALPHA;
+        case BlendOp::SrcAlphaSaturate: return D3DBLEND_SRCALPHASAT;
+        case BlendOp::BlendFactor:      return D3DBLEND_BLENDFACTOR;
+        case BlendOp::InvBlendFactor:   return D3DBLEND_INVBLENDFACTOR;
+        case BlendOp::Src1Color:        return D3DBLEND_SRCCOLOR2;
+        case BlendOp::InvSrc1Color:     return D3DBLEND_INVSRCCOLOR2;
+        case BlendOp::Src1Alpha:        break; // Not supported
+        case BlendOp::InvSrc1Alpha:     break; // Not supported
+    }
+    LLGL_TRAP_D3D_MAP(BlendOp, op, D3DBLEND);
+}
+
+
 Format ToFormat(const D3DFORMAT format)
 {
     switch (format)

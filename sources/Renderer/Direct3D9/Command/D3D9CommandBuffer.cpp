@@ -348,16 +348,14 @@ void D3D9CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Att
 void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     auto& pipelineStateD3D = LLGL_CAST(D3D9PipelineState&, pipelineState);
+    {
+        auto cmd = AllocCommand<D3D9CmdSetPipelineState>(D3D9OpcodeSetPipelineState);
+        cmd->pipelineState = &pipelineStateD3D;
+    }
 
     if (pipelineStateD3D.IsProgrammablePipeline())
     {
         auto& programmablePsoD3D9 = LLGL_CAST(D3D9ProgrammablePSO&, pipelineStateD3D);
-        auto cmd = AllocCommand<D3D9CmdBindProgrammablePSO>(D3D9OpcodeBindProgrammablePSO);
-        {
-            cmd->vertexDeclaration  = programmablePsoD3D9.GetVertexDeclaration();
-            cmd->vertexShader       = programmablePsoD3D9.GetVertexShader();
-            cmd->pixelShader        = programmablePsoD3D9.GetPixelShader();
-        }
 
         /* Bind constants cache and invalidate after settings a new vertex and pixel shader */
         boundConstantsCache_ = programmablePsoD3D9.GetConstantsCache();
@@ -365,23 +363,9 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
             boundConstantsCache_->Invalidate();
     }
     else
-    {
-        auto& fixedFunctionPsoD3D = LLGL_CAST(D3D9FixedFunctionPSO&, pipelineStateD3D);
-        auto cmd = AllocCommand<D3D9CmdBindFixedFunctionPSO>(D3D9OpcodeBindFixedFunctionPSO);
-        {
-            cmd->vertexDeclaration = fixedFunctionPsoD3D.GetVertexDeclaration();
-        }
         boundConstantsCache_ = nullptr;
-    }
 
-#if 1 //TEST
-    {
-        D3D9CmdSetRenderStates::D3DRenderState* rs = AllocSetRenderStatesCommand(2);
-        rs[0] = { D3DRS_ZENABLE,      TRUE };
-        rs[1] = { D3DRS_ZWRITEENABLE, TRUE };
-    }
-#endif
-
+    /* Cache pipeline render states only used for current command encoding */
     renderState_.primitiveType = pipelineStateD3D.GetPrimitiveType();
 }
 

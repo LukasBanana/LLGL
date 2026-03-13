@@ -27,8 +27,7 @@ enum D3D9Opcode : std::uint8_t
     D3D9OpcodeClear,
     D3D9OpcodeSetIndices,
     D3D9OpcodeSetStreamSource,
-    D3D9OpcodeBindProgrammablePSO,
-    D3D9OpcodeBindFixedFunctionPSO,
+    D3D9OpcodeSetPipelineState,
     D3D9OpcodeSetRenderStates,
     D3D9OpcodeBufferWrite,
     //TODO

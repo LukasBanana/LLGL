@@ -25,6 +25,8 @@ class D3D9ProgrammablePSO final : public D3D9PipelineState
 
         const Report* GetReport() const override;
 
+        void Bind(D3D9StateManager& stateMngr) override;
+
     public:
 
         D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc);

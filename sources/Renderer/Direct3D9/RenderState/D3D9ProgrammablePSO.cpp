@@ -7,6 +7,7 @@
 
 #include "D3D9ProgrammablePSO.h"
 #include "D3D9PipelineLayout.h"
+#include "D3D9StateManager.h"
 #include "../Shader/D3D9VertexShader.h"
 #include "../Shader/D3D9PixelShader.h"
 #include "../../CheckedCast.h"
@@ -43,6 +44,15 @@ D3D9ProgrammablePSO::D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc)
 const Report* D3D9ProgrammablePSO::GetReport() const
 {
     return nullptr; //TODO
+}
+
+void D3D9ProgrammablePSO::Bind(D3D9StateManager& stateMngr)
+{
+    D3D9PipelineState::Bind(stateMngr);
+
+    IDirect3DDevice9* device = stateMngr.GetDevice();
+    device->SetVertexShader(GetVertexShader());
+    device->SetPixelShader(GetPixelShader());
 }
 
 

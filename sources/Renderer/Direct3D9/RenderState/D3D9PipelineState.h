@@ -11,6 +11,9 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
+#include "D3D9DepthStencilState.h"
+#include "D3D9RasterizerState.h"
+#include "D3D9BlendState.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../Direct3D9.h"
 
@@ -29,6 +32,9 @@ class D3D9PipelineState : public PipelineState
     public:
 
         D3D9PipelineState(const GraphicsPipelineDescriptor& desc, bool isProgrammablePipeline);
+        ~D3D9PipelineState();
+
+        virtual void Bind(D3D9StateManager& stateMngr);
 
         inline bool IsProgrammablePipeline() const
         {
@@ -50,6 +56,11 @@ class D3D9PipelineState : public PipelineState
         const bool                          isProgrammablePipeline_ = true;
         const D3DPRIMITIVETYPE              primitiveType_          = D3DPT_TRIANGLELIST;
         ComPtr<IDirect3DVertexDeclaration9> d3dVertexDecl_;
+
+        // State objects
+        D3D9DepthStencilStateSPtr           depthStencilState_;
+        D3D9RasterizerStateSPtr             rasterizerState_;
+        D3D9BlendStateSPtr                  blendState_;
 
 };
 

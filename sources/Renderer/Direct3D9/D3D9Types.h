@@ -28,6 +28,12 @@ D3DDECLTYPE ToD3DDeclType( const Format format );
 D3DTEXTUREADDRESS ToD3DTextureAddress( const SamplerAddressMode mode );
 D3DCOLOR ToD3DColor( const float color[4] );
 D3DTEXTUREFILTERTYPE ToD3DTextureFilter( const SamplerFilter type );
+D3DCMPFUNC ToD3DCmpFunc( const CompareOp op );
+D3DSTENCILOP ToD3DStenciOp( const StencilOp op );
+D3DCULL ToD3DCull( const CullMode mode );
+D3DFILLMODE ToD3DFillMode( const PolygonMode mode );
+D3DBLENDOP ToD3DBlendOp( const BlendArithmetic arithmetic );
+D3DBLEND ToD3DBlend( const BlendOp op );
 
 Format ToFormat(const D3DFORMAT format);
 

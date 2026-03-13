@@ -48,6 +48,7 @@ class D3D9RenderSystem final : public RenderSystem
     public:
 
         D3D9RenderSystem(const RenderSystemDescriptor& renderSystemDesc);
+        ~D3D9RenderSystem();
 
     private:
 

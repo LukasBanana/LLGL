@@ -6,6 +6,9 @@
  */
 
 #include "D3D9StateManager.h"
+#include "D3D9DepthStencilState.h"
+#include "D3D9RasterizerState.h"
+#include "D3D9BlendState.h"
 #include "../Texture/D3D9EmulatedSampler.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
@@ -73,6 +76,33 @@ void D3D9StateManager::BindSampler(DWORD stage, const D3D9EmulatedSampler* sampl
     {
         SetSamplerStates(stage, sampler->GetD3DState());
         textureStages_[stage].boundSampler = sampler;
+    }
+}
+
+void D3D9StateManager::BindDepthStencilState(D3D9DepthStencilState* depthStencilState)
+{
+    if (boundDepthStencilState_ != depthStencilState)
+    {
+        boundDepthStencilState_ = depthStencilState;
+        depthStencilState->Bind(*this);
+    }
+}
+
+void D3D9StateManager::BindRasterizerState(D3D9RasterizerState* rasterizerState)
+{
+    if (boundRasterizerState_ != rasterizerState)
+    {
+        boundRasterizerState_ = rasterizerState;
+        rasterizerState->Bind(*this);
+    }
+}
+
+void D3D9StateManager::BindBlendState(D3D9BlendState* blendState)
+{
+    if (boundBlendState_ != blendState)
+    {
+        boundBlendState_ = blendState;
+        blendState->Bind(*this);
     }
 }
 

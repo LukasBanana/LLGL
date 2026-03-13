@@ -21,6 +21,7 @@ namespace LLGL
 
 class D3D9Buffer;
 class D3D9ConstantsCache;
+class D3D9PipelineState;
 
 struct D3D9CmdClear
 {
@@ -60,16 +61,9 @@ struct D3D9CmdSetStreamSource
     UINT                    stride;
 };
 
-struct D3D9CmdBindProgrammablePSO
+struct D3D9CmdSetPipelineState
 {
-    IDirect3DVertexDeclaration9*    vertexDeclaration;
-    IDirect3DVertexShader9*         vertexShader;
-    IDirect3DPixelShader9*          pixelShader;
-};
-
-struct D3D9CmdBindFixedFunctionPSO
-{
-    IDirect3DVertexDeclaration9* vertexDeclaration;
+    D3D9PipelineState* pipelineState;
 };
 
 struct D3D9CmdSetRenderStates
