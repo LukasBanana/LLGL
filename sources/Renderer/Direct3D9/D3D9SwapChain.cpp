@@ -27,8 +27,9 @@ static Format ChooseDepthStencilFormat(int depthBits, int stencilBits)
         return Format::D24UNormS8UInt;
     else if (depthBits == 16)
         return Format::D16UNorm;
-    else
+    else if (depthBits != 0)
         return Format::D32Float;
+    return Format::Undefined;
 }
 
 D3D9SwapChain::D3D9SwapChain(
@@ -161,7 +162,7 @@ bool D3D9SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 
 D3DMULTISAMPLE_TYPE D3D9SwapChain::GetMultiSampleType() const
 {
-    return D3DMULTISAMPLE_NONE; //TODO
+    return D3D9Types::ToD3DMultiSampleType(samples_);
 }
 
 void D3D9SwapChain::CreateResolutionDependentResources(const Extent2D& resolution)

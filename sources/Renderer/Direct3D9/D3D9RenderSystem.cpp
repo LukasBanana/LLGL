@@ -7,6 +7,7 @@
 
 #include "D3D9RenderSystem.h"
 #include "D3D9Core.h"
+#include "D3D9Types.h"
 
 #include "Buffer/D3D9VertexBuffer.h"
 #include "Buffer/D3D9IndexBuffer.h"
@@ -18,6 +19,7 @@
 #include "RenderState/D3D9StatePool.h"
 #include "RenderState/D3D9FixedFunctionPSO.h"
 #include "RenderState/D3D9ProgrammablePSO.h"
+
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
 #include <LLGL/Window.h>
@@ -82,7 +84,25 @@ static void InitD3D9RendererFeatures(RenderingFeatures& features)
     features.hasRenderCondition             = false;
 }
 
-static void InitD3D9RendererLimits(RenderingLimits& limits, const D3DCAPS9& inCaps)
+static bool IsMultiSampleTypeSupported(IDirect3D9* direct3d, D3DFORMAT format, UINT samples)
+{
+    D3DMULTISAMPLE_TYPE d3dType = D3D9Types::ToD3DMultiSampleType(samples);
+    DWORD qualityLevels = 0;
+    HRESULT hr = direct3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, format, TRUE, d3dType, &qualityLevels);
+    return SUCCEEDED(hr);
+}
+
+static UINT FindSuitableMultiSampleFormat(IDirect3D9* direct3d, D3DFORMAT format)
+{
+    for (UINT samples = 16; samples >= 2; --samples)
+    {
+        if (IsMultiSampleTypeSupported(direct3d, format, samples))
+            return samples;
+    }
+    return 1;
+}
+
+static void InitD3D9RendererLimits(IDirect3D9* direct3d, RenderingLimits& limits, const D3DCAPS9& inCaps)
 {
     constexpr DWORD shaderConstantRegisterSize = 16;
 
@@ -110,18 +130,18 @@ static void InitD3D9RendererLimits(RenderingLimits& limits, const D3DCAPS9& inCa
     limits.minConstantBufferAlignment       = 4;
     limits.minSampledBufferAlignment        = 0;
     limits.minStorageBufferAlignment        = 0;
-    limits.maxColorBufferSamples            = 1;
-    limits.maxDepthBufferSamples            = 1;
+    limits.maxColorBufferSamples            = FindSuitableMultiSampleFormat(direct3d, D3DFMT_A8R8G8B8);
+    limits.maxDepthBufferSamples            = FindSuitableMultiSampleFormat(direct3d, D3DFMT_D24S8);
     limits.maxStencilBufferSamples          = 1;
     limits.maxNoAttachmentSamples           = 1;
 }
 
-static void GetD3D9RenderingCaps(RenderingCapabilities& outCaps, const D3DCAPS9& inCaps)
+static void GetD3D9RenderingCaps(IDirect3D9* direct3d, RenderingCapabilities& outCaps, const D3DCAPS9& inCaps)
 {
     InitD3D9RendererShadingLanguages(outCaps.shadingLanguages);
     InitD3D9RendererTextureFormats(outCaps.textureFormats);
     InitD3D9RendererFeatures(outCaps.features);
-    InitD3D9RendererLimits(outCaps.limits, inCaps);
+    InitD3D9RendererLimits(direct3d, outCaps.limits, inCaps);
 }
 
 static void GetD3D9RendererInfo(RendererInfo& outInfo, const D3DADAPTER_IDENTIFIER9& inAdapterIdent)
@@ -463,7 +483,7 @@ bool D3D9RenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapa
         GetD3D9RendererInfo(*outInfo, adapterIdent);
     }
     if (outCaps != nullptr)
-        GetD3D9RenderingCaps(*outCaps, caps_);
+        GetD3D9RenderingCaps(direct3d_.Get(), *outCaps, caps_);
     return true;
 }
 

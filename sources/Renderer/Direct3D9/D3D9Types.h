@@ -34,6 +34,7 @@ D3DCULL ToD3DCull( const CullMode mode );
 D3DFILLMODE ToD3DFillMode( const PolygonMode mode );
 D3DBLENDOP ToD3DBlendOp( const BlendArithmetic arithmetic );
 D3DBLEND ToD3DBlend( const BlendOp op );
+D3DMULTISAMPLE_TYPE ToD3DMultiSampleType( UINT samples );
 
 Format ToFormat(const D3DFORMAT format);
 
