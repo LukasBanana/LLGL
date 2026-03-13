@@ -8,6 +8,7 @@
 #include "D3D9StateManager.h"
 #include "../Texture/D3D9EmulatedSampler.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/Utils/ForRange.h>
 #include <string.h>
 
 
@@ -73,6 +74,33 @@ void D3D9StateManager::BindSampler(DWORD stage, const D3D9EmulatedSampler* sampl
         SetSamplerStates(stage, sampler->GetD3DState());
         textureStages_[stage].boundSampler = sampler;
     }
+}
+
+void D3D9StateManager::SetRenderTargets(UINT numColorTargets, IDirect3DSurface9* const * renderTargets, IDirect3DSurface9* depthStencil)
+{
+    /* Bind new color targets and unbind previous targets that are now inactive */
+    for_range(i, numColorTargets)
+        device_->SetRenderTarget(i, renderTargets[i]);
+    for_subrange(i, numColorTargets, numColorTargets_)
+        device_->SetRenderTarget(i, nullptr);
+    numColorTargets_ = numColorTargets;
+
+    /* Bind depth-stencil target */
+    device_->SetDepthStencilSurface(depthStencil);
+
+    /* Determine new clear mask */
+    clearMask_ = 0;
+    if (numColorTargets > 0)
+        clearMask_ |= D3DCLEAR_TARGET;
+    if (depthStencil != nullptr)
+        clearMask_ |= (D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER);
+}
+
+void D3D9StateManager::Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil)
+{
+    const DWORD clearFlags = (flags & clearMask_);
+    if (clearFlags != 0)
+        device_->Clear(0, nullptr, clearFlags, color, z, stencil);
 }
 
 

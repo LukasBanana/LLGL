@@ -51,16 +51,31 @@ class D3D9SwapChain final : public SwapChain
             return backBuffers_[index].Get();
         }
 
+        inline IDirect3DSurface9* GetDepthStencilSurface() const
+        {
+            return depthStencil_.Get();
+        }
+
     private:
 
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
     private:
 
+        D3DMULTISAMPLE_TYPE GetMultiSampleType() const;
+
+        void CreateResolutionDependentResources(const Extent2D& resolution);
+
+    private:
+
+        IDirect3DDevice9*           device_             = nullptr;
         ComPtr<IDirect3DSwapChain9> swapChain_;
 
+        UINT                        maxNumBackBuffers_  = 0;
         UINT                        numBackBuffers_     = 1;
         ComPtr<IDirect3DSurface9>   backBuffers_[2];
+
+        ComPtr<IDirect3DSurface9>   depthStencil_;
 
         std::string                 label_;
         std::uint32_t               samples_            = 1;

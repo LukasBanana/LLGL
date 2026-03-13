@@ -12,8 +12,7 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/Container/SmallVector.h>
 #include "D3D9CommandOpcode.h"
-#include "../../VirtualCommandBuffer.h"
-
+#include "D3D9Command.h"
 #include "../Direct3D9.h"
 
 
@@ -24,8 +23,7 @@ namespace LLGL
 class D3D9VertexBuffer;
 class D3D9IndexBuffer;
 class D3D9StateManager;
-
-using D3D9VirtualCommandBuffer = VirtualCommandBuffer<D3D9Opcode>;
+class D3D9ConstantsCache;
 
 class D3D9CommandBuffer final : public CommandBuffer
 {
@@ -64,15 +62,20 @@ class D3D9CommandBuffer final : public CommandBuffer
         template <typename TCommand>
         TCommand* AllocCommand(const D3D9Opcode opcode, std::size_t payloadSize = 0);
 
+        void FlushConstantsCache();
+
         void AllocDrawCommand(UINT startVertex, UINT numVertices);
         void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex);
 
+        D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
+
     private:
 
-        IDirect3DDevice9*           device_         = nullptr;
-        D3D9StateManager*           stateMngr_      = nullptr;
+        IDirect3DDevice9*           device_                 = nullptr;
+        D3D9StateManager*           stateMngr_              = nullptr;
         D3D9VirtualCommandBuffer    buffer_;
         RenderState                 renderState_;
+        D3D9ConstantsCache*         boundConstantsCache_    = nullptr;
 
 };
 

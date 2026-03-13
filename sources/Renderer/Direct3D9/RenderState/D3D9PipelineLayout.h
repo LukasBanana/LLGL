@@ -33,16 +33,17 @@ class D3D9PipelineLayout final : public PipelineLayout
 
         D3D9PipelineLayout(const PipelineLayoutDescriptor& desc);
 
-    public:
-
-        const PipelineLayoutDescriptor desc;
+        inline const std::vector<UniformDescriptor>& GetUniforms() const
+        {
+            return uniformDesc_;
+        }
 
     private:
 
-        std::uint32_t numHeapBindings_      = 0;
-        std::uint32_t numBindings_          = 0;
-        std::uint32_t numStaticSamplers_    = 0;
-        std::uint32_t numUniforms_          = 0;
+        std::uint32_t                   numHeapBindings_      = 0;
+        std::uint32_t                   numBindings_          = 0;
+        std::uint32_t                   numStaticSamplers_    = 0;
+        std::vector<UniformDescriptor>  uniformDesc_;
 
 };
 

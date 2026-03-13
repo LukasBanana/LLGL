@@ -39,6 +39,9 @@ class D3D9StateManager
 
         void BindSampler(DWORD stage, const D3D9EmulatedSampler* sampler);
 
+        void SetRenderTargets(UINT numColorTargets, IDirect3DSurface9* const * renderTargets, IDirect3DSurface9* depthStencil);
+        void Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil);
+
     private:
 
         struct D3DTextureStage
@@ -70,6 +73,8 @@ class D3D9StateManager
         ComPtr<IDirect3DDevice9>    device_;
         DWORD                       renderStates_[numRenderStates]      = {};
         D3DTextureStage             textureStages_[numTextureStages];
+        UINT                        numColorTargets_                    = 0;
+        DWORD                       clearMask_                          = 0; // Bitmask of render targets that can be cleared
 
 };
 

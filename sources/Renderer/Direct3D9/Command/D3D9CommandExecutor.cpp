@@ -15,6 +15,7 @@
 #include "../Buffer/D3D9VertexBuffer.h"
 #include "../Buffer/D3D9IndexBuffer.h"
 
+#include "../RenderState/D3D9ConstantsCache.h"
 #include "../RenderState/D3D9PipelineState.h"
 #include "../RenderState/D3D9ResourceHeap.h"
 #include "../RenderState/D3D9RenderPass.h"
@@ -25,10 +26,15 @@
 
 #include <LLGL/Utils/ForRange.h>
 
+#include "../D3D9Core.h" //TEST
+
 
 namespace LLGL
 {
 
+
+static constexpr std::size_t k_d3dShaderWordSize        = sizeof(std::uint32_t);
+static constexpr std::size_t k_d3dShaderRegisterSize    = k_d3dShaderWordSize * 4;
 
 static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, IDirect3DDevice9* device, D3D9StateManager* stateMngr)
 {
@@ -47,9 +53,7 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         case D3D9OpcodeSetRenderTargets:
         {
             auto cmd = static_cast<const D3D9CmdSetRenderTargets*>(pc);
-            auto* renderTargets = reinterpret_cast<IDirect3DSurface9* const *>(cmd + 1);
-            for_range(i, cmd->count)
-                device->SetRenderTarget(i, renderTargets[i]);
+            stateMngr->SetRenderTargets(cmd->count, reinterpret_cast<IDirect3DSurface9* const *>(cmd + 1), cmd->depthStencilSurface);
             return (sizeof(*cmd) + cmd->count * sizeof(IDirect3DSurface9*));
         }
         case D3D9OpcodeSetViewport:
@@ -67,7 +71,7 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         case D3D9OpcodeClear:
         {
             auto cmd = static_cast<const D3D9CmdClear*>(pc);
-            device->Clear(0, nullptr, cmd->flags, cmd->color, cmd->z, cmd->stencil);
+            stateMngr->Clear(cmd->flags, cmd->color, cmd->z, cmd->stencil);
             return sizeof(*cmd);
         }
         case D3D9OpcodeSetIndices:
@@ -100,12 +104,11 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         }
         case D3D9OpcodeSetRenderStates:
         {
-            //TODO: this needs to use a state manager to avoid unnecessary state changes
             auto cmd = static_cast<const D3D9CmdSetRenderStates*>(pc);
-            auto* renderStates = reinterpret_cast<const D3D9CmdSetRenderStates::RenderState*>(cmd + 1);
+            auto* renderStates = reinterpret_cast<const D3D9CmdSetRenderStates::D3DRenderState*>(cmd + 1);
             for_range(i, cmd->numRenderStates)
                 stateMngr->SetRenderState(renderStates[i].type, renderStates[i].value);
-            return sizeof(*cmd) + sizeof(D3D9CmdSetRenderStates::RenderState) * cmd->numRenderStates;
+            return sizeof(*cmd) + sizeof(D3D9CmdSetRenderStates::D3DRenderState) * cmd->numRenderStates;
         }
         case D3D9OpcodeBufferWrite:
         {
@@ -116,6 +119,42 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
 
         //TODO...
 
+        case D3D9OpcodeSetVertexShaderConstantF:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetVertexShaderConstantF(cmd->startRegister, reinterpret_cast<const float*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
+        case D3D9OpcodeSetVertexShaderConstantI:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetVertexShaderConstantI(cmd->startRegister, reinterpret_cast<const int*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
+        case D3D9OpcodeSetVertexShaderConstantB:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetVertexShaderConstantB(cmd->startRegister, reinterpret_cast<const BOOL*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
+        case D3D9OpcodeSetPixelShaderConstantF:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetPixelShaderConstantF(cmd->startRegister, reinterpret_cast<const float*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
+        case D3D9OpcodeSetPixelShaderConstantI:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetPixelShaderConstantI(cmd->startRegister, reinterpret_cast<const int*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
+        case D3D9OpcodeSetPixelShaderConstantB:
+        {
+            auto cmd = static_cast<const D3D9CmdSetShaderConstant*>(pc);
+            device->SetVertexShaderConstantB(cmd->startRegister, reinterpret_cast<const BOOL*>(cmd + 1), cmd->vector4Count);
+            return sizeof(*cmd) + cmd->vector4Count * k_d3dShaderRegisterSize;
+        }
         case D3D9OpcodeDraw:
         {
             auto cmd = static_cast<const D3D9CmdDraw*>(pc);

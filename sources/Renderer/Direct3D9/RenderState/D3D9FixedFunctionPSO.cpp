@@ -22,7 +22,7 @@ D3D9FixedFunctionPSO::D3D9FixedFunctionPSO(const GraphicsPipelineDescriptor& des
 
 const Report* D3D9FixedFunctionPSO::GetReport() const
 {
-    return nullptr; //TODO
+    return nullptr; // dummy - fixed-function pipeline cannot produce error reports
 }
 
 

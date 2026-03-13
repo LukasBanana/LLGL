@@ -20,7 +20,7 @@ namespace LLGL
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutD3D9 = LLGL_CAST(const D3D9PipelineLayout*, pipelineLayout);
-    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutD3D9->desc.heapBindings.size()));
+    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutD3D9->GetNumHeapBindings()));
 }
 
 D3D9ResourceHeap::D3D9ResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :

@@ -456,12 +456,7 @@ bool D3D9RenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapa
         GetD3D9RendererInfo(*outInfo, adapterIdent);
     }
     if (outCaps != nullptr)
-    {
-        D3DCAPS9 inCaps = {};
-        if (FAILED(device_->GetDeviceCaps(&inCaps)))
-            return false;
-        GetD3D9RenderingCaps(*outCaps, inCaps);
-    }
+        GetD3D9RenderingCaps(*outCaps, caps_);
     return true;
 }
 
@@ -497,6 +492,10 @@ void D3D9RenderSystem::CreateDevice()
     }
     HRESULT hr = direct3d_->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, focusWndHandle, D3DCREATE_HARDWARE_VERTEXPROCESSING, &presentParams, device_.GetAddressOf());
     D3DThrowIfCreateFailed(hr, "IDirect3DDevice9");
+
+    /* Get device capabilities immediately as they will be needed by various interfaces */
+    hr = device_->GetDeviceCaps(&caps_);
+    D3DThrowIfFailed(hr, "failed to get capabilities of IDirect3DDevice9");
 
     /* Create state manager for D3D device */
     stateMngr_ = MakeUnique<D3D9StateManager>(device_.Get());

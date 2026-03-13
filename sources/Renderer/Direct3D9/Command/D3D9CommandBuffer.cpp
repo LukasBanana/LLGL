@@ -18,6 +18,7 @@
 #include "../Buffer/D3D9VertexBuffer.h"
 #include "../Buffer/D3D9IndexBuffer.h"
 #include "../Buffer/D3D9BufferArray.h"
+#include "../RenderState/D3D9ConstantsCache.h"
 #include "../RenderState/D3D9QueryHeap.h"
 #include "../RenderState/D3D9FixedFunctionPSO.h"
 #include "../RenderState/D3D9ProgrammablePSO.h"
@@ -289,7 +290,8 @@ void D3D9CommandBuffer::BeginRenderPass(
         const UINT numBackBuffers = swapChainD3D9.GetNumBackBuffers();
         auto cmd = AllocCommand<D3D9CmdSetRenderTargets>(D3D9OpcodeSetRenderTargets, sizeof(IDirect3DSurface9*) * numBackBuffers);
         {
-            cmd->count = numBackBuffers;
+            cmd->count                  = numBackBuffers;
+            cmd->depthStencilSurface    = swapChainD3D9.GetDepthStencilSurface();
 
             IDirect3DSurface9** renderTargets = reinterpret_cast<IDirect3DSurface9**>(cmd + 1);
             for_range(i, numBackBuffers)
@@ -356,6 +358,11 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
             cmd->vertexShader       = programmablePsoD3D9.GetVertexShader();
             cmd->pixelShader        = programmablePsoD3D9.GetPixelShader();
         }
+
+        /* Bind constants cache and invalidate after settings a new vertex and pixel shader */
+        boundConstantsCache_ = programmablePsoD3D9.GetConstantsCache();
+        if (boundConstantsCache_ != nullptr)
+            boundConstantsCache_->Invalidate();
     }
     else
     {
@@ -364,7 +371,16 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         {
             cmd->vertexDeclaration = fixedFunctionPsoD3D.GetVertexDeclaration();
         }
+        boundConstantsCache_ = nullptr;
     }
+
+#if 1 //TEST
+    {
+        D3D9CmdSetRenderStates::D3DRenderState* rs = AllocSetRenderStatesCommand(2);
+        rs[0] = { D3DRS_ZENABLE,      TRUE };
+        rs[1] = { D3DRS_ZWRITEENABLE, TRUE };
+    }
+#endif
 
     renderState_.primitiveType = pipelineStateD3D.GetPrimitiveType();
 }
@@ -381,7 +397,8 @@ void D3D9CommandBuffer::SetStencilReference(std::uint32_t reference, const Stenc
 
 void D3D9CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    //todo
+    if (boundConstantsCache_ != nullptr)
+        boundConstantsCache_->SetUniforms(first, data, dataSize);
 }
 
 /* ----- Queries ----- */
@@ -575,8 +592,15 @@ static UINT GetPrimitiveCount(D3DPRIMITIVETYPE primitiveType, UINT numVertices)
     return 0;
 }
 
+void D3D9CommandBuffer::FlushConstantsCache()
+{
+    if (boundConstantsCache_ != nullptr)
+        boundConstantsCache_->AllocCommands(buffer_);
+}
+
 void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)
 {
+    FlushConstantsCache();
     auto cmd = AllocCommand<D3D9CmdDraw>(D3D9OpcodeDraw);
     {
         cmd->primitiveType  = renderState_.primitiveType;
@@ -587,6 +611,7 @@ void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)
 
 void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex)
 {
+    FlushConstantsCache();
     auto cmd = AllocCommand<D3D9CmdDrawIndexed>(D3D9OpcodeDrawIndexed);
     {
         cmd->primitiveType      = renderState_.primitiveType;
@@ -596,6 +621,13 @@ void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVer
         cmd->startIndex         = startIndex + renderState_.indexBufferOffset;
         cmd->primitiveCount     = GetPrimitiveCount(renderState_.primitiveType, numVertices);
     }
+}
+
+D3D9CmdSetRenderStates::D3DRenderState* D3D9CommandBuffer::AllocSetRenderStatesCommand(UINT count)
+{
+    auto cmd = AllocCommand<D3D9CmdSetRenderStates>(D3D9OpcodeSetRenderStates, sizeof(D3D9CmdSetRenderStates::D3DRenderState) * count);
+    cmd->numRenderStates = count;
+    return reinterpret_cast<D3D9CmdSetRenderStates::D3DRenderState*>(cmd + 1);
 }
 
 

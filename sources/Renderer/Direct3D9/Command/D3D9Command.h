@@ -20,6 +20,7 @@ namespace LLGL
 
 
 class D3D9Buffer;
+class D3D9ConstantsCache;
 
 struct D3D9CmdClear
 {
@@ -32,6 +33,7 @@ struct D3D9CmdClear
 struct D3D9CmdSetRenderTargets
 {
     UINT                count;
+    IDirect3DSurface9*  depthStencilSurface;
 //  IDirect3DSurface9*  targets[count];
 };
 
@@ -73,7 +75,7 @@ struct D3D9CmdBindFixedFunctionPSO
 struct D3D9CmdSetRenderStates
 {
     UINT                    numRenderStates;
-    struct RenderState
+    struct D3DRenderState
     {
         D3DRENDERSTATETYPE  type;
         DWORD               value;
@@ -90,6 +92,13 @@ struct D3D9CmdBufferWrite
 };
 
 //TODO...
+
+struct D3D9CmdSetShaderConstant
+{
+    UINT startRegister;
+    UINT vector4Count;
+//  VEC4 data[vector4Count];
+};
 
 struct D3D9CmdDraw
 {

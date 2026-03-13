@@ -69,6 +69,7 @@ class D3D9RenderSystem final : public RenderSystem
 
         ComPtr<IDirect3D9>                      direct3d_;
         ComPtr<IDirect3DDevice9>                device_;
+        D3DCAPS9                                caps_;
 
         std::unique_ptr<D3D9StateManager>       stateMngr_;
 

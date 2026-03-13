@@ -37,49 +37,16 @@ D3D9SwapChain::D3D9SwapChain(
     const std::shared_ptr<Surface>& surface,
     const RendererInfo&             rendererInfo)
 :
-    SwapChain           { desc                            },
-    numBackBuffers_     { desc.swapBuffers >= 3 ? 2u : 1u },
-    samples_            { desc.samples                    }
+    SwapChain           { desc                                                       },
+    device_             { device                                                     },
+    numBackBuffers_     { (desc.swapBuffers >= 3 ? 2u : 1u)                          },
+    samples_            { desc.samples                                               },
+    depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
-    /* Get native handle */
-    NativeHandle nativeHandle = {};
-    GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    HWND deviceWindow = nativeHandle.window;
-
-    /* Create D3D swap chain */
-    D3DPRESENT_PARAMETERS presentParams = {};
-    {
-        presentParams.BackBufferWidth               = desc.resolution.width;
-        presentParams.BackBufferHeight              = desc.resolution.height;
-        presentParams.BackBufferFormat              = D3DFMT_UNKNOWN;
-        presentParams.BackBufferCount               = 1 + numBackBuffers_;
-
-        presentParams.MultiSampleType               = D3DMULTISAMPLE_NONE; //TODO
-        presentParams.MultiSampleQuality            = 0;
-
-        presentParams.SwapEffect                    = D3DSWAPEFFECT_DISCARD;
-        presentParams.hDeviceWindow                 = deviceWindow;
-        presentParams.Windowed                      = TRUE;
-        presentParams.EnableAutoDepthStencil        = FALSE;
-        presentParams.AutoDepthStencilFormat        = D3DFMT_UNKNOWN;
-        presentParams.Flags                         = 0;
-
-        presentParams.FullScreen_RefreshRateInHz    = 0; // FullScreen_RefreshRateInHz must be zero for Windowed mode
-        presentParams.PresentationInterval          = D3DPRESENT_INTERVAL_DEFAULT;
-    }
-    HRESULT result = device->CreateAdditionalSwapChain(&presentParams, swapChain_.GetAddressOf());
-    D3DThrowIfCreateFailed(result, "IDirect3DSwapChain9");
-
-    /* Get actual presentation parameters */
-    D3DPRESENT_PARAMETERS resolvedParams = {};
-    if (SUCCEEDED(swapChain_->GetPresentParameters(&resolvedParams)))
-        colorFormat_ = D3D9Types::ToFormat(resolvedParams.BackBufferFormat);
-
-    /* Store references to back buffers for faster access */
-    for_range(i, numBackBuffers_)
-        swapChain_->GetBackBuffer(i, D3DBACKBUFFER_TYPE_MONO, backBuffers_[i].GetAddressOf());
+    /* Initialize resolution dependent resources: D3D swap-chain with back buffers and custom depth-stencil surface */
+    CreateResolutionDependentResources(desc.resolution);
 
     /* Initialize debug name */
     if (desc.debugName != nullptr)
@@ -144,9 +111,115 @@ const RenderPass* D3D9SwapChain::GetRenderPass() const
     return renderPass_;
 }
 
-bool D3D9SwapChain::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
+
+/*
+ * ======= Private: =======
+ */
+
+bool D3D9SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
+    /* Unbind all render targets we're about to release and bind the new ones if they were active */
+    constexpr int maxNumTargets = LLGL_ARRAY_LENGTH(backBuffers_);
+
+    bool isRenderTargetBound[maxNumTargets] = {};
+    for_range(i, maxNumTargets)
+    {
+        ComPtr<IDirect3DSurface9> renderTarget;
+        device_->GetRenderTarget(i, renderTarget.GetAddressOf());
+        if (renderTarget.Get() == backBuffers_[i].Get())
+        {
+            isRenderTargetBound[i] = true;
+            device_->SetRenderTarget(i, nullptr);
+        }
+    }
+
+    bool isDepthStencilBound = false;
+    {
+        ComPtr<IDirect3DSurface9> depthStencil;
+        device_->GetDepthStencilSurface(depthStencil.GetAddressOf());
+        if (depthStencil.Get() == depthStencil_.Get())
+        {
+            device_->SetDepthStencilSurface(false);
+            isDepthStencilBound = true;
+        }
+    }
+
+    /* Create new back buffers and depth-stencil surface for new resolution */
+    CreateResolutionDependentResources(resolution);
+
+    /* Bind new targets if the old ones were previously bound */
+    for_range(i, maxNumTargets)
+    {
+        if (isRenderTargetBound[i])
+            device_->SetRenderTarget(i, backBuffers_[i].Get());
+    }
+    if (isDepthStencilBound)
+        device_->SetDepthStencilSurface(depthStencil_.Get());
+
     return true;
+}
+
+D3DMULTISAMPLE_TYPE D3D9SwapChain::GetMultiSampleType() const
+{
+    return D3DMULTISAMPLE_NONE; //TODO
+}
+
+void D3D9SwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
+{
+    /* Get native handle */
+    NativeHandle nativeHandle = {};
+    GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+    HWND deviceWindow = nativeHandle.window;
+
+    /* Create D3D swap chain */
+    D3DPRESENT_PARAMETERS presentParams = {};
+    {
+        presentParams.BackBufferWidth               = resolution.width;
+        presentParams.BackBufferHeight              = resolution.height;
+        presentParams.BackBufferFormat              = D3DFMT_UNKNOWN;
+        presentParams.BackBufferCount               = 1 + numBackBuffers_;
+
+        presentParams.MultiSampleType               = GetMultiSampleType();
+        presentParams.MultiSampleQuality            = 0;
+
+        presentParams.SwapEffect                    = D3DSWAPEFFECT_DISCARD;
+        presentParams.hDeviceWindow                 = deviceWindow;
+        presentParams.Windowed                      = TRUE;
+        presentParams.EnableAutoDepthStencil        = FALSE;
+        presentParams.AutoDepthStencilFormat        = D3DFMT_UNKNOWN;
+        presentParams.Flags                         = 0;
+
+        presentParams.FullScreen_RefreshRateInHz    = 0; // FullScreen_RefreshRateInHz must be zero for Windowed mode
+        presentParams.PresentationInterval          = D3DPRESENT_INTERVAL_DEFAULT;
+    }
+    HRESULT result = device_->CreateAdditionalSwapChain(&presentParams, swapChain_.ReleaseAndGetAddressOf());
+    D3DThrowIfCreateFailed(result, "IDirect3DSwapChain9");
+
+    /* Get actual presentation parameters */
+    D3DPRESENT_PARAMETERS resolvedParams = {};
+    if (SUCCEEDED(swapChain_->GetPresentParameters(&resolvedParams)))
+        colorFormat_ = D3D9Types::ToFormat(resolvedParams.BackBufferFormat);
+
+    /* Store references to back buffers for faster access */
+    for_range(i, numBackBuffers_)
+        swapChain_->GetBackBuffer(i, D3DBACKBUFFER_TYPE_MONO, backBuffers_[i].ReleaseAndGetAddressOf());
+
+    /* Create depth-stencil surface */
+    if (depthStencilFormat_ != Format::Undefined)
+    {
+        D3DFORMAT d3dFormat = D3D9Types::ToD3DFormat(depthStencilFormat_);
+        HRESULT hr = device_->CreateDepthStencilSurface(
+            resolution.width,
+            resolution.height,
+            d3dFormat,
+            GetMultiSampleType(),
+            0,
+            TRUE,
+            depthStencil_.ReleaseAndGetAddressOf(),
+            nullptr
+        );
+        D3DThrowIfCreateFailed(hr, "IDirect3DSurface9", "for swap-chain depth-stencil");
+    }
 }
 
 

@@ -9,6 +9,7 @@
 #define LLGL_D3D9_COMMAND_OPCODE_H
 
 
+#include "../../VirtualCommandBuffer.h"
 #include <cstdint>
 
 
@@ -31,9 +32,17 @@ enum D3D9Opcode : std::uint8_t
     D3D9OpcodeSetRenderStates,
     D3D9OpcodeBufferWrite,
     //TODO
+    D3D9OpcodeSetVertexShaderConstantF,
+    D3D9OpcodeSetVertexShaderConstantI,
+    D3D9OpcodeSetVertexShaderConstantB,
+    D3D9OpcodeSetPixelShaderConstantF,
+    D3D9OpcodeSetPixelShaderConstantI,
+    D3D9OpcodeSetPixelShaderConstantB,
     D3D9OpcodeDraw,
     D3D9OpcodeDrawIndexed,
 };
+
+using D3D9VirtualCommandBuffer = VirtualCommandBuffer<D3D9Opcode>;
 
 
 } // /namespace LLGL

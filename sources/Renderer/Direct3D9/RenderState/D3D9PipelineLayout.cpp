@@ -16,7 +16,7 @@ D3D9PipelineLayout::D3D9PipelineLayout(const PipelineLayoutDescriptor& desc) :
     numHeapBindings_   { static_cast<std::uint32_t>(desc.heapBindings.size())   },
     numBindings_       { static_cast<std::uint32_t>(desc.bindings.size())       },
     numStaticSamplers_ { static_cast<std::uint32_t>(desc.staticSamplers.size()) },
-    numUniforms_       { static_cast<std::uint32_t>(desc.uniforms.size())       }
+    uniformDesc_       { desc.uniforms                                          }
 {
 }
 
@@ -27,22 +27,22 @@ void D3D9PipelineLayout::SetDebugName(const char* name)
 
 std::uint32_t D3D9PipelineLayout::GetNumHeapBindings() const
 {
-    return static_cast<std::uint32_t>(desc.heapBindings.size());
+    return numHeapBindings_;
 }
 
 std::uint32_t D3D9PipelineLayout::GetNumBindings() const
 {
-    return static_cast<std::uint32_t>(desc.bindings.size());
+    return numBindings_;
 }
 
 std::uint32_t D3D9PipelineLayout::GetNumStaticSamplers() const
 {
-    return static_cast<std::uint32_t>(desc.staticSamplers.size());
+    return numStaticSamplers_;
 }
 
 std::uint32_t D3D9PipelineLayout::GetNumUniforms() const
 {
-    return static_cast<std::uint32_t>(desc.uniforms.size());
+    return static_cast<std::uint32_t>(uniformDesc_.size());
 }
 
 

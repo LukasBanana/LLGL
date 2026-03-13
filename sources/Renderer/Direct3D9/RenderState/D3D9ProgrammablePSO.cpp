@@ -6,9 +6,11 @@
  */
 
 #include "D3D9ProgrammablePSO.h"
+#include "D3D9PipelineLayout.h"
 #include "../Shader/D3D9VertexShader.h"
 #include "../Shader/D3D9PixelShader.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
@@ -27,6 +29,14 @@ D3D9ProgrammablePSO::D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc)
     {
         auto* pixelShaderD3D = LLGL_CAST(D3D9PixelShader*, desc.fragmentShader);
         d3dPixelShader_ = ComPtr<IDirect3DPixelShader9>(pixelShaderD3D->GetNative());
+    }
+
+    if (desc.pipelineLayout != nullptr)
+    {
+        const D3D9PipelineLayout* pipelineLayoutD3D = LLGL_CAST(const D3D9PipelineLayout*, desc.pipelineLayout);
+        const std::vector<UniformDescriptor>& uniformDescs = pipelineLayoutD3D->GetUniforms();
+        if (!uniformDescs.empty())
+            constantsCache_ = MakeUnique<D3D9ConstantsCache>(desc.vertexShader, desc.fragmentShader, uniformDescs);
     }
 }
 
