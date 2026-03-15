@@ -8,6 +8,7 @@
 #include "D3D9VertexShader.h"
 #include "../D3D9Core.h"
 #include "../D3D9Types.h"
+#include "../../../Core/Assertion.h"
 #include "../../../Core/StringUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
@@ -16,11 +17,25 @@ namespace LLGL
 {
 
 
+static bool HasAnyInstanceDivisors(ArrayView<VertexAttribute> vertexAttribs)
+{
+    for (const VertexAttribute& attrib : vertexAttribs)
+    {
+        if (attrib.instanceDivisor > 0)
+            return true;
+    }
+    return false;
+}
+
 D3D9VertexShader::D3D9VertexShader(IDirect3DDevice9* device, const ShaderDescriptor& shaderDesc) :
     D3D9Shader { ShaderType::Vertex }
 {
     if (BuildShader(device, shaderDesc))
+    {
         BuildVertexDeclaration(device, shaderDesc.vertex.inputAttribs);
+        if (HasAnyInstanceDivisors(shaderDesc.vertex.inputAttribs))
+            BuildStreamSourceFreq(shaderDesc.vertex.inputAttribs);
+    }
 }
 
 bool D3D9VertexShader::Reflect(ShaderReflection& reflection) const
@@ -59,7 +74,7 @@ static void ConvertD3DVertexAttrib(D3DVERTEXELEMENT9& outVertexElement, const Ve
     outVertexElement.UsageIndex = (outVertexElement.Usage == D3DDECLUSAGE_TEXCOORD ? numUserSemantics++ : 0); // Semantic index
 }
 
-void D3D9VertexShader::BuildVertexDeclaration(IDirect3DDevice9* device, const ArrayView<VertexAttribute>& vertexAttribs)
+void D3D9VertexShader::BuildVertexDeclaration(IDirect3DDevice9* device, ArrayView<VertexAttribute> vertexAttribs)
 {
     std::vector<D3DVERTEXELEMENT9> vertexElements;
     vertexElements.resize(vertexAttribs.size() + 1);
@@ -72,6 +87,23 @@ void D3D9VertexShader::BuildVertexDeclaration(IDirect3DDevice9* device, const Ar
 
     HRESULT hr = device->CreateVertexDeclaration(vertexElements.data(), d3dVertexDecl_.ReleaseAndGetAddressOf());
     D3DThrowIfCreateFailed(hr, "IDirect3DVertexDeclaration9");
+}
+
+void D3D9VertexShader::BuildStreamSourceFreq(ArrayView<VertexAttribute> vertexAttribs)
+{
+    for (const VertexAttribute& attrib : vertexAttribs)
+    {
+        if (attrib.instanceDivisor > 0)
+        {
+            LLGL_ASSERT(attrib.slot > 0, "per-instance vertex data cannot be set in stream 0 in D3D9");
+            D3D9StreamSourceFreq streamSourceFreq;
+            {
+                streamSourceFreq.stream     = attrib.slot;
+                streamSourceFreq.divider    = (D3DSTREAMSOURCE_INSTANCEDATA | attrib.instanceDivisor);
+            }
+            streamSourceFreq_.push_back(streamSourceFreq);
+        }
+    }
 }
 
 

@@ -12,6 +12,7 @@
 #include "D3D9PipelineState.h"
 #include "D3D9ConstantsCache.h"
 #include "../Direct3D9.h"
+#include "../Shader/D3D9VertexShader.h"
 
 
 namespace LLGL
@@ -46,12 +47,19 @@ class D3D9ProgrammablePSO final : public D3D9PipelineState
             return constantsCache_.get();
         }
 
+        // See D3D9VertexShader::GetStreamSourceFreq().
+        inline const SmallVector<D3D9StreamSourceFreq, 1>& GetStreamSourceFreq() const
+        {
+            return streamSourceFreq_;
+        }
+
     private:
 
-        ComPtr<IDirect3DVertexShader9>  d3dVertexShader_;
-        ComPtr<IDirect3DPixelShader9>   d3dPixelShader_;
+        ComPtr<IDirect3DVertexShader9>          d3dVertexShader_;
+        ComPtr<IDirect3DPixelShader9>           d3dPixelShader_;
 
-        D3D9ConstantsCachePtr           constantsCache_;
+        D3D9ConstantsCachePtr                   constantsCache_;
+        SmallVector<D3D9StreamSourceFreq, 1>    streamSourceFreq_;
 
 };
 

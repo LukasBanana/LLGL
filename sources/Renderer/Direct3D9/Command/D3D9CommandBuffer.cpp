@@ -15,21 +15,26 @@
 #include <LLGL/Utils/ForRange.h>
 
 #include "../D3D9SwapChain.h"
+
 #include "../Buffer/D3D9VertexBuffer.h"
 #include "../Buffer/D3D9IndexBuffer.h"
 #include "../Buffer/D3D9BufferArray.h"
+
 #include "../RenderState/D3D9ConstantsCache.h"
 #include "../RenderState/D3D9QueryHeap.h"
 #include "../RenderState/D3D9FixedFunctionPSO.h"
 #include "../RenderState/D3D9ProgrammablePSO.h"
 #include "../RenderState/D3D9ResourceHeap.h"
 #include "../RenderState/D3D9StateManager.h"
+
 #include "../Texture/D3D9Texture.h"
 #include "../Texture/D3D9RenderTarget.h"
 #include "../Texture/D3D9EmulatedSampler.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
+
+#include <string.h>
 
 
 namespace LLGL
@@ -395,9 +400,14 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         boundConstantsCache_ = programmablePsoD3D9.GetConstantsCache();
         if (boundConstantsCache_ != nullptr)
             boundConstantsCache_->Invalidate();
+
+        SetStreamSourceFreqInstanceData(programmablePsoD3D9.GetStreamSourceFreq());
     }
     else
+    {
         boundConstantsCache_ = nullptr;
+        SetStreamSourceFreqInstanceData({});
+    }
 
     /* Cache pipeline render states only used for current command encoding */
     renderState_.primitiveType = pipelineStateD3D.GetPrimitiveType();
@@ -475,27 +485,29 @@ void D3D9CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firs
 
 void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
+    AllocDrawCommand(firstVertex, numVertices, numInstances);
 }
 
 void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
+    LLGL_ASSERT(firstInstance == 0, "D3D9 does not support instance offset");
+    AllocDrawCommand(firstVertex, numVertices, numInstances);
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
+    AllocDrawIndexedCommand(0, 0, numIndices, firstIndex, numInstances);
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
+    AllocDrawIndexedCommand(vertexOffset, 0, numIndices, firstIndex, numInstances);
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    //TODOL use SetStreamSourceFreq() with D3DSTREAMSOURCE_INDEXEDDATA and D3DSTREAMSOURCE_INSTANCEDATA
+    LLGL_ASSERT(firstInstance == 0, "D3D9 does not support instance offset");
+    AllocDrawIndexedCommand(vertexOffset, 0, numIndices, firstIndex, numInstances);
 }
 
 void D3D9CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
@@ -627,9 +639,10 @@ void D3D9CommandBuffer::AllocSetStreamSourceCommand(UINT stream, IDirect3DVertex
     }
 }
 
-void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)
+void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances)
 {
     FlushConstantsCache();
+    SetNumInstances(numInstances);
     auto cmd = AllocCommand<D3D9CmdDraw>(D3D9OpcodeDraw);
     {
         cmd->primitiveType  = renderState_.primitiveType;
@@ -638,9 +651,10 @@ void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)
     }
 }
 
-void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex)
+void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances)
 {
     FlushConstantsCache();
+    SetNumInstances(numInstances);
     auto cmd = AllocCommand<D3D9CmdDrawIndexed>(D3D9OpcodeDrawIndexed);
     {
         cmd->primitiveType      = renderState_.primitiveType;
@@ -657,6 +671,46 @@ D3D9CmdSetRenderStates::D3DRenderState* D3D9CommandBuffer::AllocSetRenderStatesC
     auto cmd = AllocCommand<D3D9CmdSetRenderStates>(D3D9OpcodeSetRenderStates, sizeof(D3D9CmdSetRenderStates::D3DRenderState) * count);
     cmd->numRenderStates = count;
     return reinterpret_cast<D3D9CmdSetRenderStates::D3DRenderState*>(cmd + 1);
+}
+
+void D3D9CommandBuffer::AllocSetStreamSourceFreqIndexDataCommand(UINT numInstances)
+{
+    auto cmd = AllocCommand<D3D9CmdSetStreamSourceFreqIndexData>(D3D9OpcodeSetStreamSourceFreqIndexData);
+    cmd->numInstance = numInstances;
+}
+
+void D3D9CommandBuffer::AllocSetStreamSourceFreqInstanceDataCommand(ArrayView<D3D9StreamSourceFreq> streamSourceFreq)
+{
+    auto cmd = AllocCommand<D3D9CmdSetStreamSourceFreqInstanceData>(D3D9OpcodeSetStreamSourceFreqInstanceData, streamSourceFreq.size() * sizeof(D3D9StreamSourceFreq));
+    cmd->count = static_cast<UINT>(streamSourceFreq.size());
+    if (cmd->count > 0)
+        ::memcpy(cmd + 1, streamSourceFreq.data(), streamSourceFreq.size() * sizeof(D3D9StreamSourceFreq));
+}
+
+void D3D9CommandBuffer::SetStreamSourceFreqInstanceData(ArrayView<D3D9StreamSourceFreq> streamSourceFreq)
+{
+    if (streamSourceFreq.empty())
+    {
+        /* Disable instanced drawing */
+        if (renderState_.isInstancedVS)
+        {
+            renderState_.isInstancedVS = false;
+            AllocSetStreamSourceFreqInstanceDataCommand({});
+            AllocSetStreamSourceFreqIndexDataCommand(0);
+        }
+    }
+    else
+    {
+        /* Enable instanced drawing */
+        renderState_.isInstancedVS = true;
+        AllocSetStreamSourceFreqInstanceDataCommand(streamSourceFreq);
+    }
+}
+
+void D3D9CommandBuffer::SetNumInstances(UINT numInstances)
+{
+    if (renderState_.isInstancedVS)
+        AllocSetStreamSourceFreqIndexDataCommand(numInstances);
 }
 
 

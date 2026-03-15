@@ -11,6 +11,8 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/ArrayView.h>
+#include "../Shader/D3D9VertexShader.h"
 #include "D3D9CommandOpcode.h"
 #include "D3D9Command.h"
 #include "../Direct3D9.h"
@@ -51,6 +53,7 @@ class D3D9CommandBuffer final : public CommandBuffer
         {
             D3DPRIMITIVETYPE    primitiveType       = D3DPT_POINTLIST;
             UINT                indexBufferOffset   = 0;
+            bool                isInstancedVS       = false; // Does vertex shader have instanced vertex data?
         };
 
     private:
@@ -66,10 +69,16 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void AllocSetStreamSourceCommand(UINT stream, IDirect3DVertexBuffer9* vertexBuffer, UINT stride, UINT offset);
 
-        void AllocDrawCommand(UINT startVertex, UINT numVertices);
-        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex);
+        void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances = 0);
+        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances = 0);
 
         D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
+
+        void AllocSetStreamSourceFreqIndexDataCommand(UINT numInstances);
+        void AllocSetStreamSourceFreqInstanceDataCommand(ArrayView<D3D9StreamSourceFreq> streamSourceFreq);
+
+        void SetStreamSourceFreqInstanceData(ArrayView<D3D9StreamSourceFreq> streamSourceFreq);
+        void SetNumInstances(UINT numInstances);
 
         inline bool IsPrimary() const
         {

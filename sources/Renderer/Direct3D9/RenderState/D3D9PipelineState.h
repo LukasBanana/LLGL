@@ -22,6 +22,10 @@ namespace LLGL
 {
 
 
+/*
+Base class of a D3D9 pipeline state.
+In D3D9, there are only graphics PSOs, but we distinguish between programmable- and legacy fixed-function pipelines.
+*/
 class D3D9PipelineState : public PipelineState
 {
 

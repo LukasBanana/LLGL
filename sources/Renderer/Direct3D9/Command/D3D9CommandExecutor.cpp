@@ -22,6 +22,8 @@
 #include "../RenderState/D3D9QueryHeap.h"
 #include "../RenderState/D3D9StateManager.h"
 
+#include "../Shader/D3D9VertexShader.h"
+
 #include "../../CheckedCast.h"
 
 #include <LLGL/Utils/ForRange.h>
@@ -180,6 +182,18 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             auto cmd = static_cast<const D3D9CmdDrawIndexed*>(pc);
             device->DrawIndexedPrimitive(cmd->primitiveType, cmd->baseVertexIndex, cmd->minVertexIndex, cmd->numVertices, cmd->startIndex, cmd->primitiveCount);
             return sizeof(*cmd);
+        }
+        case D3D9OpcodeSetStreamSourceFreqIndexData:
+        {
+            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqIndexData*>(pc);
+            stateMngr->SetStreamSourceFreqIndexData(cmd->numInstance);
+            return sizeof(*cmd);
+        }
+        case D3D9OpcodeSetStreamSourceFreqInstanceData:
+        {
+            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqInstanceData*>(pc);
+            stateMngr->SetStreamSourceFreqInstanceData(cmd->count, reinterpret_cast<const D3D9StreamSourceFreq*>(cmd + 1));
+            return sizeof(*cmd) + cmd->count * sizeof(D3D9StreamSourceFreq);
         }
         default:
             return 0;

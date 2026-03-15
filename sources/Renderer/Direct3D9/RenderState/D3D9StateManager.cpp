@@ -9,6 +9,7 @@
 #include "D3D9DepthStencilState.h"
 #include "D3D9RasterizerState.h"
 #include "D3D9BlendState.h"
+#include "../Shader/D3D9VertexShader.h"
 #include "../Texture/D3D9EmulatedSampler.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
@@ -141,6 +142,55 @@ void D3D9StateManager::Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil
     const DWORD clearFlags = (flags & clearMask_);
     if (clearFlags != 0)
         device_->Clear(0, nullptr, clearFlags, color, z, stencil);
+}
+
+//private
+void D3D9StateManager::SetStreamSourceFreqInternal(UINT stream, UINT divier)
+{
+    LLGL_ASSERT(stream < D3DStreamSourceFreqCache::maxNumStreams);
+    if (streamSourceFreqCache_.diviers[stream] != divier)
+    {
+        streamSourceFreqCache_.diviers[stream] = divier;
+        device_->SetStreamSourceFreq(stream, divier);
+    }
+}
+
+void D3D9StateManager::SetStreamSourceFreqIndexData(UINT numInstances)
+{
+    if (numInstances > 0)
+        SetStreamSourceFreqInternal(0, D3DSTREAMSOURCE_INDEXEDDATA | numInstances);
+    else
+        SetStreamSourceFreqInternal(0, 1);
+}
+
+void D3D9StateManager::SetStreamSourceFreqInstanceData(UINT count, const D3D9StreamSourceFreq* streamSourceFreq)
+{
+    UINT newDiviers[D3DStreamSourceFreqCache::maxNumStreams] = {};
+
+    /* Initialize new diviers with reset value from previous upper bound */
+    for_range(i, streamSourceFreqCache_.streamUpperBound)
+    {
+        if ((streamSourceFreqCache_.diviers[i] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
+            newDiviers[i] = 1;
+    }
+
+    /* Override new stream source frequencies */
+    UINT streamUpperBound = 0;
+    for_range(i, count)
+    {
+        newDiviers[streamSourceFreq[i].stream] = streamSourceFreq[i].divider;
+        streamUpperBound = std::max<UINT>(streamUpperBound, streamSourceFreq[i].stream + 1);
+    }
+
+    /* Set new diviers */
+    for_range(i, std::max<UINT>(streamSourceFreqCache_.streamUpperBound, streamUpperBound))
+    {
+        if (newDiviers[i] != 0)
+            SetStreamSourceFreqInternal(i, newDiviers[i]);
+    }
+
+    /* Cache new upper bound */
+    streamSourceFreqCache_.streamUpperBound = streamUpperBound;
 }
 
 

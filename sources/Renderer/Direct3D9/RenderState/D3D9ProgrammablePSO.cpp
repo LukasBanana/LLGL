@@ -25,6 +25,7 @@ D3D9ProgrammablePSO::D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc)
     {
         auto* vertexShaderD3D = LLGL_CAST(D3D9VertexShader*, desc.vertexShader);
         d3dVertexShader_ = ComPtr<IDirect3DVertexShader9>(vertexShaderD3D->GetNative());
+        streamSourceFreq_ = vertexShaderD3D->GetStreamSourceFreq();
     }
     if (desc.fragmentShader != nullptr)
     {
@@ -53,6 +54,8 @@ void D3D9ProgrammablePSO::Bind(D3D9StateManager& stateMngr)
     IDirect3DDevice9* device = stateMngr.GetDevice();
     device->SetVertexShader(GetVertexShader());
     device->SetPixelShader(GetPixelShader());
+
+    stateMngr.SetStreamSourceFreqInstanceData(streamSourceFreq_.size(), streamSourceFreq_.data());
 }
 
 

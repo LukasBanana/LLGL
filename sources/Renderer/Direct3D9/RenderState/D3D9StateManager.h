@@ -18,6 +18,7 @@ namespace LLGL
 
 
 struct D3D9SamplerState;
+struct D3D9StreamSourceFreq;
 class D3D9EmulatedSampler;
 class D3D9DepthStencilState;
 class D3D9RasterizerState;
@@ -50,6 +51,9 @@ class D3D9StateManager
         void SetRenderTargets(UINT numColorTargets, IDirect3DSurface9* const * renderTargets, IDirect3DSurface9* depthStencil);
         void Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil);
 
+        void SetStreamSourceFreqIndexData(UINT numInstances);
+        void SetStreamSourceFreqInstanceData(UINT count, const D3D9StreamSourceFreq* streamSourceFreq);
+
     private:
 
         struct D3DTextureStage
@@ -66,9 +70,18 @@ class D3D9StateManager
             const D3D9EmulatedSampler*  boundSampler        = nullptr;
         };
 
+        struct D3DStreamSourceFreqCache
+        {
+            static constexpr UINT maxNumStreams = 16;
+
+            UINT diviers[maxNumStreams] = {};
+            UINT streamUpperBound       = 0;
+        };
+
     private:
 
         void SetSamplerStateInternal(DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value);
+        void SetStreamSourceFreqInternal(UINT stream, UINT divier);
 
         void InitializeForFixedFunctionPipeline();
 
@@ -84,6 +97,7 @@ class D3D9StateManager
         D3DTextureStage             textureStages_[numTextureStages];
         UINT                        numColorTargets_                    = 0;
         DWORD                       clearMask_                          = 0; // Bitmask of render targets that can be cleared
+        D3DStreamSourceFreqCache    streamSourceFreqCache_;
 
         D3D9DepthStencilState*      boundDepthStencilState_             = nullptr;
         D3D9RasterizerState*        boundRasterizerState_               = nullptr;

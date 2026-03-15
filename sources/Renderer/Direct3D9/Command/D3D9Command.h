@@ -135,6 +135,17 @@ struct D3D9CmdDrawIndexed
     UINT                primitiveCount;
 };
 
+struct D3D9CmdSetStreamSourceFreqIndexData
+{
+    UINT numInstance;
+};
+
+struct D3D9CmdSetStreamSourceFreqInstanceData
+{
+    UINT                    count;
+//  D3D9StreamSourceFreq    streamSourceFreq[count];
+};
+
 struct D3D9CmdPushDebugGroup
 {
     std::size_t length;
