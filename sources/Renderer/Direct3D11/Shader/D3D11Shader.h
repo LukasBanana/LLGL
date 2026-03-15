@@ -77,14 +77,19 @@ class D3D11Shader : public Shader
             ID3DBlob*               blob,
             std::size_t             numStreamOutputAttribs  = 0,
             const VertexAttribute*  streamOutputAttribs     = nullptr,
-            UINT                    rasterizedStream        = D3D11_SO_NO_RASTERIZED_STREAM,
+            UINT                    rasterizedStream        = 0,
             ID3D11ClassLinkage*     classLinkage            = nullptr
         );
 
     protected:
 
         bool BuildShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
-        bool BuildProxyGeometryShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc, ComPtr<ID3D11GeometryShader>& outProxyGeomtryShader);
+        bool BuildProxyGeometryShader(
+            ID3D11Device*                   device,
+            const ShaderDescriptor&         shaderDesc,
+            ComPtr<ID3D11GeometryShader>&   outProxyGeomtryShader,
+            UINT                            rasterizedStream        = 0
+        );
 
     private:
 

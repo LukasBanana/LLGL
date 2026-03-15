@@ -78,7 +78,11 @@ bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shad
         return LoadBinary(device, shaderDesc);
 }
 
-bool D3D11Shader::BuildProxyGeometryShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc, ComPtr<ID3D11GeometryShader>& outProxyGeomtryShader)
+bool D3D11Shader::BuildProxyGeometryShader(
+    ID3D11Device*                   device,
+    const ShaderDescriptor&         shaderDesc,
+    ComPtr<ID3D11GeometryShader>&   outProxyGeomtryShader,
+    UINT                            rasterizedStream)
 {
     /*
     Pass vertex shader bytecode into ID3D11Device::CreateGeometryShaderWithStreamOutput().
@@ -89,7 +93,8 @@ bool D3D11Shader::BuildProxyGeometryShader(ID3D11Device* device, const ShaderDes
         ShaderType::Geometry,
         GetByteCode(),
         shaderDesc.vertex.outputAttribs.size(),
-        shaderDesc.vertex.outputAttribs.data()
+        shaderDesc.vertex.outputAttribs.data(),
+        rasterizedStream
     );
 
     if (geometryShader)
@@ -245,7 +250,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
         case ShaderType::Geometry:
         {
             ComPtr<ID3D11GeometryShader> geometryShader;
-            if (streamOutputAttribs != nullptr && numStreamOutputAttribs > 0)
+            if ((streamOutputAttribs != nullptr && numStreamOutputAttribs > 0) || rasterizedStream == D3D11_SO_NO_RASTERIZED_STREAM)
             {
                 /* Initialize output elements for geometry shader with stream-output */
                 std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
@@ -270,7 +275,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
                     static_cast<UINT>(outputElements.size()),
                     bufferStrides,
                     numBufferStrides,
-                    0,//rasterizedStream,
+                    rasterizedStream,
                     classLinkage,
                     &geometryShader
                 );

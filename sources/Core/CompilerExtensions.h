@@ -42,7 +42,11 @@
 #   define LLGL_BEGIN_NO_OPTIMIZE   __pragma(optimize("", off)) __declspec(noinline)
 #   define LLGL_END_NO_OPTIMIZE     __pragma(optimize("", on))
 #elif defined __clang__
-#   define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline, optnone))
+#   if __has_attribute(optnone)
+#       define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline, optnone))
+#   else
+#       define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline))
+#   endif
 #   define LLGL_END_NO_OPTIMIZE
 #elif defined __GNUC__
 #   define LLGL_BEGIN_NO_OPTIMIZE   __attribute__((noinline, optimize("O0")))
