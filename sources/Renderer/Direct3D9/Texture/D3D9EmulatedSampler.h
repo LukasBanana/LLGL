@@ -12,6 +12,7 @@
 #include <LLGL/Sampler.h>
 #include "../Direct3D9.h"
 #include "../RenderState/D3D9State.h"
+#include <memory>
 
 
 namespace LLGL
@@ -46,6 +47,8 @@ class D3D9EmulatedSampler final : public Sampler
         D3D9SamplerState d3dState_;
 
 };
+
+using D3D9EmulatedSamplerSPtr = std::shared_ptr<D3D9EmulatedSampler>;
 
 
 } // /namespace LLGL

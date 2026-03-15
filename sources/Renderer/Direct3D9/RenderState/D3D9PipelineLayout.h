@@ -11,12 +11,29 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/StringView.h>
 #include <string>
+#include "../Texture/D3D9EmulatedSampler.h"
+#include "../Direct3D9.h"
 
 
 namespace LLGL
 {
 
+
+class D3D9StateManager;
+
+struct D3D9ResourceBinding
+{
+    ResourceType    type;
+    UINT            combiners; // If `combiners` is greater than zero, `stage` is interpreted as index into the array of combined sampler stages.
+    DWORD           stage;
+};
+
+struct D3D9ResourceBindingTable
+{
+    std::vector<D3D9ResourceBinding> resourceBindings;
+};
 
 class D3D9PipelineLayout final : public PipelineLayout
 {
@@ -33,17 +50,45 @@ class D3D9PipelineLayout final : public PipelineLayout
 
         D3D9PipelineLayout(const PipelineLayoutDescriptor& desc);
 
+        void BindStaticSamplers(D3D9StateManager& stateMngr) const;
+
         inline const std::vector<UniformDescriptor>& GetUniforms() const
         {
             return uniformDesc_;
         }
 
+        inline const D3D9ResourceBindingTable& GetResourceBindingTable() const
+        {
+            return resourceBindingTable_;
+        }
+
+        inline const std::vector<DWORD>& GetCombinedSamplerStages() const
+        {
+            return combinedSamplerStages_;
+        }
+
     private:
 
-        std::uint32_t                   numHeapBindings_      = 0;
-        std::uint32_t                   numBindings_          = 0;
-        std::uint32_t                   numStaticSamplers_    = 0;
-        std::vector<UniformDescriptor>  uniformDesc_;
+        struct D3DStaticSamplerAndStage
+        {
+            DWORD                   stage;
+            D3D9EmulatedSamplerSPtr sampler;
+        };
+
+    private:
+
+        void BuildCombinedSamplerStages(const PipelineLayoutDescriptor& pipelineLayoutDesc, D3D9ResourceBinding& resourceBinding, StringView name);
+        void BuildStaticSampler(const PipelineLayoutDescriptor& pipelineLayoutDesc, const StaticSamplerDescriptor& staticSamplerDesc);
+        bool AddCombinedStaticSamplers(const PipelineLayoutDescriptor& pipelineLayoutDesc, const StaticSamplerDescriptor& staticSamplerDesc, const D3D9EmulatedSamplerSPtr& newStaticSampler);
+        void AddStaticSampler(const BindingSlot& slot, const D3D9EmulatedSamplerSPtr& newStaticSampler);
+
+    private:
+
+        std::vector<UniformDescriptor>          uniformDesc_;
+        D3D9ResourceBindingTable                resourceBindingTable_;
+        std::vector<DWORD>                      combinedSamplerStages_;
+        std::vector<D3DStaticSamplerAndStage>   staticSamplers_;                // Dupliated for combined sampler stages
+        std::uint32_t                           numUniqueStaticSampler_ = 0;    // Number of unique static samplers
 
 };
 

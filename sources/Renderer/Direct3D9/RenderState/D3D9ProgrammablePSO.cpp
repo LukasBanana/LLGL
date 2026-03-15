@@ -55,7 +55,7 @@ void D3D9ProgrammablePSO::Bind(D3D9StateManager& stateMngr)
     device->SetVertexShader(GetVertexShader());
     device->SetPixelShader(GetPixelShader());
 
-    stateMngr.SetStreamSourceFreqInstanceData(streamSourceFreq_.size(), streamSourceFreq_.data());
+    stateMngr.SetStreamSourceFreqInstanceData(static_cast<UINT>(streamSourceFreq_.size()), streamSourceFreq_.data());
 }
 
 

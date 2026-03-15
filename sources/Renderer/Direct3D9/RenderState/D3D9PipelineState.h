@@ -22,6 +22,8 @@ namespace LLGL
 {
 
 
+class D3D9PipelineLayout;
+
 /*
 Base class of a D3D9 pipeline state.
 In D3D9, there are only graphics PSOs, but we distinguish between programmable- and legacy fixed-function pipelines.
@@ -55,11 +57,18 @@ class D3D9PipelineState : public PipelineState
             return d3dVertexDecl_.Get();
         }
 
+        inline const D3D9PipelineLayout* GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
     private:
 
         const bool                          isProgrammablePipeline_ = true;
         const D3DPRIMITIVETYPE              primitiveType_          = D3DPT_TRIANGLELIST;
         ComPtr<IDirect3DVertexDeclaration9> d3dVertexDecl_;
+
+        const D3D9PipelineLayout*           pipelineLayout_         = nullptr;
 
         // State objects
         D3D9DepthStencilStateSPtr           depthStencilState_;

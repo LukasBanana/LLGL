@@ -6,6 +6,7 @@
  */
 
 #include "D3D9PipelineState.h"
+#include "D3D9PipelineLayout.h"
 #include "D3D9StateManager.h"
 #include "D3D9StatePool.h"
 #include "../D3D9Types.h"
@@ -21,6 +22,9 @@ D3D9PipelineState::D3D9PipelineState(const GraphicsPipelineDescriptor& desc, boo
     isProgrammablePipeline_ { isProgrammablePipeline                                },
     primitiveType_          { D3D9Types::ToD3DPrimitiveType(desc.primitiveTopology) }
 {
+    if (desc.pipelineLayout != nullptr)
+        pipelineLayout_ = LLGL_CAST(const D3D9PipelineLayout*, desc.pipelineLayout);
+
     if (desc.vertexShader != nullptr)
     {
         auto* vertexShaderD3D = LLGL_CAST(D3D9VertexShader*, desc.vertexShader);
@@ -47,6 +51,9 @@ void D3D9PipelineState::Bind(D3D9StateManager& stateMngr)
     stateMngr.BindDepthStencilState(depthStencilState_.get());
     stateMngr.BindRasterizerState(rasterizerState_.get());
     stateMngr.BindBlendState(blendState_.get());
+
+    if (pipelineLayout_ != nullptr)
+        pipelineLayout_->BindStaticSamplers(stateMngr);
 }
 
 void D3D9PipelineState::SetDebugName(const char* name)

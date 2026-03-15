@@ -22,10 +22,12 @@ namespace LLGL
 {
 
 
+struct D3D9ResourceBinding;
 class D3D9VertexBuffer;
 class D3D9IndexBuffer;
 class D3D9StateManager;
 class D3D9ConstantsCache;
+class D3D9PipelineLayout;
 
 class D3D9CommandBuffer final : public CommandBuffer
 {
@@ -58,6 +60,8 @@ class D3D9CommandBuffer final : public CommandBuffer
 
     private:
 
+        void ResetRenderStates();
+
         // Allocates only an opcode for empty commands.
         void AllocOpcode(const D3D9Opcode opcode);
 
@@ -79,6 +83,9 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void SetStreamSourceFreqInstanceData(ArrayView<D3D9StreamSourceFreq> streamSourceFreq);
         void SetNumInstances(UINT numInstances);
+
+        void SetCombinedResource(const D3D9ResourceBinding& resourceBinding, Resource& resource, const DWORD* stages);
+        void SetSingleResource(ResourceType type, DWORD stage, Resource& resource);
 
         inline bool IsPrimary() const
         {
@@ -102,6 +109,7 @@ class D3D9CommandBuffer final : public CommandBuffer
         D3D9VirtualCommandBuffer    buffer_;
         RenderState                 renderState_;
         D3D9ConstantsCache*         boundConstantsCache_    = nullptr;
+        const D3D9PipelineLayout*   boundPipelineLayout_    = nullptr;
 
 };
 

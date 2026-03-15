@@ -24,6 +24,7 @@
 #include "../RenderState/D3D9QueryHeap.h"
 #include "../RenderState/D3D9FixedFunctionPSO.h"
 #include "../RenderState/D3D9ProgrammablePSO.h"
+#include "../RenderState/D3D9PipelineLayout.h"
 #include "../RenderState/D3D9ResourceHeap.h"
 #include "../RenderState/D3D9StateManager.h"
 
@@ -65,6 +66,8 @@ void D3D9CommandBuffer::End()
 
     if (IsImmediateSubmit())
         ExecuteVirtualCommands();
+
+    ResetRenderStates();
 }
 
 void D3D9CommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
@@ -280,29 +283,24 @@ void D3D9CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_
 
 void D3D9CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    switch (resource.GetResourceType())
+    if (boundPipelineLayout_ == nullptr)
+        return;
+
+    const D3D9ResourceBindingTable& bindingTable = boundPipelineLayout_->GetResourceBindingTable();
+    if (descriptor >= bindingTable.resourceBindings.size())
+        return;
+
+    const D3D9ResourceBinding& resourceBinding = bindingTable.resourceBindings[descriptor];
+    if (resourceBinding.type != resource.GetResourceType())
+        return;
+
+    if (resourceBinding.combiners > 0)
     {
-        case ResourceType::Texture:
-        {
-            D3D9Texture& textureD3D = LLGL_CAST(D3D9Texture&, resource);
-            auto cmd = AllocCommand<D3D9CmdBindTexture>(D3D9OpcodeBindTexture);
-            cmd->stage = 0;//descriptor; //TODO: resource table mapping
-            cmd->texture = textureD3D.GetNative();
-        }
-        break;
-
-        case ResourceType::Sampler:
-        {
-            D3D9EmulatedSampler& samplerD3D = LLGL_CAST(D3D9EmulatedSampler&, resource);
-            auto cmd = AllocCommand<D3D9CmdBindSampler>(D3D9OpcodeBindSampler);
-            cmd->stage = 0;//descriptor; //TODO: resource table mapping
-            cmd->emulatedSampler = &(samplerD3D);
-        }
-        break;
-
-        default:
-        break;
+        const DWORD* stages = &(boundPipelineLayout_->GetCombinedSamplerStages()[resourceBinding.stage]);
+        SetCombinedResource(resourceBinding, resource, stages);
     }
+    else
+        SetSingleResource(resourceBinding.type, resourceBinding.stage, resource);
 }
 
 void D3D9CommandBuffer::ResourceBarrier(
@@ -411,6 +409,7 @@ void D3D9CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
     /* Cache pipeline render states only used for current command encoding */
     renderState_.primitiveType = pipelineStateD3D.GetPrimitiveType();
+    boundPipelineLayout_ = pipelineStateD3D.GetPipelineLayout();
 }
 
 void D3D9CommandBuffer::SetBlendFactor(const float color[4])
@@ -588,6 +587,12 @@ void D3D9CommandBuffer::ExecuteVirtualCommands()
  * ======= Private: =======
  */
 
+void D3D9CommandBuffer::ResetRenderStates()
+{
+    boundConstantsCache_ = nullptr;
+    boundPipelineLayout_ = nullptr;
+}
+
 void D3D9CommandBuffer::AllocOpcode(const D3D9Opcode opcode)
 {
     buffer_.AllocOpcode(opcode);
@@ -711,6 +716,45 @@ void D3D9CommandBuffer::SetNumInstances(UINT numInstances)
 {
     if (renderState_.isInstancedVS)
         AllocSetStreamSourceFreqIndexDataCommand(numInstances);
+}
+
+void D3D9CommandBuffer::SetCombinedResource(const D3D9ResourceBinding& resourceBinding, Resource& resource, const DWORD* stages)
+{
+    for_range(i, resourceBinding.combiners)
+        SetSingleResource(resourceBinding.type, stages[i], resource);
+}
+
+void D3D9CommandBuffer::SetSingleResource(ResourceType type, DWORD stage, Resource& resource)
+{
+    switch (type)
+    {
+        case ResourceType::Buffer:
+        {
+            //TODO
+        }
+        break;
+
+        case ResourceType::Texture:
+        {
+            D3D9Texture& textureD3D = LLGL_CAST(D3D9Texture&, resource);
+            auto cmd = AllocCommand<D3D9CmdBindTexture>(D3D9OpcodeBindTexture);
+            cmd->stage = stage;
+            cmd->texture = textureD3D.GetNative();
+        }
+        break;
+
+        case ResourceType::Sampler:
+        {
+            D3D9EmulatedSampler& samplerD3D = LLGL_CAST(D3D9EmulatedSampler&, resource);
+            auto cmd = AllocCommand<D3D9CmdBindSampler>(D3D9OpcodeBindSampler);
+            cmd->stage = stage;
+            cmd->emulatedSampler = &(samplerD3D);
+        }
+        break;
+
+        default:
+            break;
+    }
 }
 
 
