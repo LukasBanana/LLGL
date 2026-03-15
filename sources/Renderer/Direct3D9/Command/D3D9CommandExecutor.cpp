@@ -85,7 +85,13 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         case D3D9OpcodeSetIndices:
         {
             auto cmd = static_cast<const D3D9CmdSetIndices*>(pc);
-            device->SetIndices(cmd->indexBuffer);
+            stateMngr->SetIndices(cmd->indexBuffer);
+            return sizeof(*cmd);
+        }
+        case D3D9OpcodeSetAutoIndices:
+        {
+            auto cmd = static_cast<const D3D9CmdSetAutoIndices*>(pc);
+            stateMngr->SetAutoIndices(cmd->numIndices);
             return sizeof(*cmd);
         }
         case D3D9OpcodeSetStreamSource:
@@ -93,6 +99,18 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             auto cmd = static_cast<const D3D9CmdSetStreamSource*>(pc);
             device->SetStreamSource(cmd->stream, cmd->vertexBuffer, cmd->offset, cmd->stride);
             return sizeof(*cmd);
+        }
+        case D3D9OpcodeSetStreamSourceFreqIndexData:
+        {
+            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqIndexData*>(pc);
+            stateMngr->SetStreamSourceFreqIndexData(cmd->numInstance);
+            return sizeof(*cmd);
+        }
+        case D3D9OpcodeSetStreamSourceFreqInstanceData:
+        {
+            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqInstanceData*>(pc);
+            stateMngr->SetStreamSourceFreqInstanceData(cmd->count, reinterpret_cast<const D3D9StreamSourceFreq*>(cmd + 1));
+            return sizeof(*cmd) + cmd->count * sizeof(D3D9StreamSourceFreq);
         }
         case D3D9OpcodeSetPipelineState:
         {
@@ -182,18 +200,6 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             auto cmd = static_cast<const D3D9CmdDrawIndexed*>(pc);
             device->DrawIndexedPrimitive(cmd->primitiveType, cmd->baseVertexIndex, cmd->minVertexIndex, cmd->numVertices, cmd->startIndex, cmd->primitiveCount);
             return sizeof(*cmd);
-        }
-        case D3D9OpcodeSetStreamSourceFreqIndexData:
-        {
-            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqIndexData*>(pc);
-            stateMngr->SetStreamSourceFreqIndexData(cmd->numInstance);
-            return sizeof(*cmd);
-        }
-        case D3D9OpcodeSetStreamSourceFreqInstanceData:
-        {
-            auto cmd = static_cast<const D3D9CmdSetStreamSourceFreqInstanceData*>(pc);
-            stateMngr->SetStreamSourceFreqInstanceData(cmd->count, reinterpret_cast<const D3D9StreamSourceFreq*>(cmd + 1));
-            return sizeof(*cmd) + cmd->count * sizeof(D3D9StreamSourceFreq);
         }
         default:
             return 0;

@@ -73,8 +73,11 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void AllocSetStreamSourceCommand(UINT stream, IDirect3DVertexBuffer9* vertexBuffer, UINT stride, UINT offset);
 
-        void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances = 0);
-        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances = 0);
+        void DrawInternal(UINT startVertex, UINT numVertices, UINT numInstances = 0);
+        void DrawIndexedInternal(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances = 0);
+
+        void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances);
+        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances);
 
         D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
 
@@ -83,6 +86,7 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void SetStreamSourceFreqInstanceData(ArrayView<D3D9StreamSourceFreq> streamSourceFreq);
         void SetNumInstances(UINT numInstances);
+        void AllocSetAutoIndicesCommand(UINT numIndices);
 
         void SetCombinedResource(const D3D9ResourceBinding& resourceBinding, Resource& resource, const DWORD* stages);
         void SetSingleResource(ResourceType type, DWORD stage, Resource& resource);

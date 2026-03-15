@@ -60,12 +60,28 @@ struct D3D9CmdSetIndices
     IDirect3DIndexBuffer9* indexBuffer;
 };
 
+struct D3D9CmdSetAutoIndices
+{
+    UINT numIndices;
+};
+
 struct D3D9CmdSetStreamSource
 {
     UINT                    stream;
     IDirect3DVertexBuffer9* vertexBuffer;
     UINT                    offset;
     UINT                    stride;
+};
+
+struct D3D9CmdSetStreamSourceFreqIndexData
+{
+    UINT numInstance;
+};
+
+struct D3D9CmdSetStreamSourceFreqInstanceData
+{
+    UINT                    count;
+    //  D3D9StreamSourceFreq    streamSourceFreq[count];
 };
 
 struct D3D9CmdSetPipelineState
@@ -133,17 +149,6 @@ struct D3D9CmdDrawIndexed
     UINT                numVertices;
     UINT                startIndex;
     UINT                primitiveCount;
-};
-
-struct D3D9CmdSetStreamSourceFreqIndexData
-{
-    UINT numInstance;
-};
-
-struct D3D9CmdSetStreamSourceFreqInstanceData
-{
-    UINT                    count;
-//  D3D9StreamSourceFreq    streamSourceFreq[count];
 };
 
 struct D3D9CmdPushDebugGroup

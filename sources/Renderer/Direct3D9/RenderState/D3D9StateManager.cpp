@@ -21,7 +21,9 @@ namespace LLGL
 
 
 D3D9StateManager::D3D9StateManager(IDirect3DDevice9* device) :
-    device_ { device }
+    device_               { device         },
+    autoGenIndexBuffer16_ { D3DFMT_INDEX16 },
+    autoGenIndexBuffer32_ { D3DFMT_INDEX32 }
 {
     ::memset(renderStates_, 0xFFFFFFFF, sizeof(renderStates_));
     ::memset(textureStages_, 0xFFFFFFFF, sizeof(textureStages_));
@@ -145,13 +147,13 @@ void D3D9StateManager::Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil
 }
 
 //private
-void D3D9StateManager::SetStreamSourceFreqInternal(UINT stream, UINT divier)
+void D3D9StateManager::SetStreamSourceFreqInternal(UINT stream, UINT divider)
 {
     LLGL_ASSERT(stream < D3DStreamSourceFreqCache::maxNumStreams);
-    if (streamSourceFreqCache_.diviers[stream] != divier)
+    if (streamSourceFreqCache_.dividers[stream] != divider)
     {
-        streamSourceFreqCache_.diviers[stream] = divier;
-        device_->SetStreamSourceFreq(stream, divier);
+        streamSourceFreqCache_.dividers[stream] = divider;
+        device_->SetStreamSourceFreq(stream, divider);
     }
 }
 
@@ -165,32 +167,49 @@ void D3D9StateManager::SetStreamSourceFreqIndexData(UINT numInstances)
 
 void D3D9StateManager::SetStreamSourceFreqInstanceData(UINT count, const D3D9StreamSourceFreq* streamSourceFreq)
 {
-    UINT newDiviers[D3DStreamSourceFreqCache::maxNumStreams] = {};
+    UINT newDividers[D3DStreamSourceFreqCache::maxNumStreams] = {};
 
     /* Initialize new diviers with reset value from previous upper bound */
     for_range(i, streamSourceFreqCache_.streamUpperBound)
     {
-        if ((streamSourceFreqCache_.diviers[i] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
-            newDiviers[i] = 1;
+        if ((streamSourceFreqCache_.dividers[i] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
+            newDividers[i] = 1;
     }
 
     /* Override new stream source frequencies */
     UINT streamUpperBound = 0;
     for_range(i, count)
     {
-        newDiviers[streamSourceFreq[i].stream] = streamSourceFreq[i].divider;
+        newDividers[streamSourceFreq[i].stream] = streamSourceFreq[i].divider;
         streamUpperBound = std::max<UINT>(streamUpperBound, streamSourceFreq[i].stream + 1);
     }
 
     /* Set new diviers */
     for_range(i, std::max<UINT>(streamSourceFreqCache_.streamUpperBound, streamUpperBound))
     {
-        if (newDiviers[i] != 0)
-            SetStreamSourceFreqInternal(i, newDiviers[i]);
+        if (newDividers[i] != 0)
+            SetStreamSourceFreqInternal(i, newDividers[i]);
     }
 
     /* Cache new upper bound */
     streamSourceFreqCache_.streamUpperBound = streamUpperBound;
+}
+
+void D3D9StateManager::SetIndices(IDirect3DIndexBuffer9* indexBuffer)
+{
+    if (inputAssembly_.indexBuffer != indexBuffer)
+    {
+        inputAssembly_.indexBuffer = indexBuffer;
+        device_->SetIndices(indexBuffer);
+    }
+}
+
+void D3D9StateManager::SetAutoIndices(UINT numIndices)
+{
+    if (IDirect3DIndexBuffer9* indexBuffer16 = autoGenIndexBuffer16_.GetNativeForMaxIndex(device_.Get(), numIndices))
+        SetIndices(indexBuffer16);
+    else if (IDirect3DIndexBuffer9* indexBuffer32 = autoGenIndexBuffer32_.GetNativeForMaxIndex(device_.Get(), numIndices))
+        SetIndices(indexBuffer32);
 }
 
 

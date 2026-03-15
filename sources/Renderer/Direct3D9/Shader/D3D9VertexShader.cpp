@@ -11,6 +11,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/StringUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -64,14 +65,14 @@ static D3DDECLUSAGE MapToD3DDeclUsage(const char* semanticsName)
     return D3DDECLUSAGE_TEXCOORD;
 }
 
-static void ConvertD3DVertexAttrib(D3DVERTEXELEMENT9& outVertexElement, const VertexAttribute& inAttrib, BYTE& numUserSemantics)
+static void ConvertD3DVertexAttrib(D3DVERTEXELEMENT9& outVertexElement, const VertexAttribute& inAttrib)
 {
     outVertexElement.Stream     = static_cast<WORD>(inAttrib.slot); // Stream index
     outVertexElement.Offset     = static_cast<WORD>(inAttrib.offset); // Offset in the stream in bytes
     outVertexElement.Type       = D3D9Types::ToD3DDeclType(inAttrib.format); // Data type
     outVertexElement.Method     = D3DDECLMETHOD_DEFAULT; // Processing method
     outVertexElement.Usage      = MapToD3DDeclUsage(inAttrib.name.c_str()); // Semantics
-    outVertexElement.UsageIndex = (outVertexElement.Usage == D3DDECLUSAGE_TEXCOORD ? numUserSemantics++ : 0); // Semantic index
+    outVertexElement.UsageIndex = static_cast<BYTE>(inAttrib.semanticIndex); // Semantic index
 }
 
 void D3D9VertexShader::BuildVertexDeclaration(IDirect3DDevice9* device, ArrayView<VertexAttribute> vertexAttribs)
@@ -79,9 +80,8 @@ void D3D9VertexShader::BuildVertexDeclaration(IDirect3DDevice9* device, ArrayVie
     std::vector<D3DVERTEXELEMENT9> vertexElements;
     vertexElements.resize(vertexAttribs.size() + 1);
 
-    BYTE numUserSemantics = 0;
     for_range(i, vertexAttribs.size())
-        ConvertD3DVertexAttrib(vertexElements[i], vertexAttribs[i], numUserSemantics);
+        ConvertD3DVertexAttrib(vertexElements[i], vertexAttribs[i]);
 
     vertexElements.back() = D3DDECL_END();
 
@@ -96,12 +96,36 @@ void D3D9VertexShader::BuildStreamSourceFreq(ArrayView<VertexAttribute> vertexAt
         if (attrib.instanceDivisor > 0)
         {
             LLGL_ASSERT(attrib.slot > 0, "per-instance vertex data cannot be set in stream 0 in D3D9");
-            D3D9StreamSourceFreq streamSourceFreq;
+
+            /* Try to find existing entry for this stream first */
+            auto it = std::find_if(
+                streamSourceFreq_.begin(),
+                streamSourceFreq_.end(),
+                [&attrib](const D3D9StreamSourceFreq& entry) -> bool
+                {
+                    return (entry.stream == attrib.slot);
+                }
+            );
+            if (it != streamSourceFreq_.end())
             {
-                streamSourceFreq.stream     = attrib.slot;
-                streamSourceFreq.divider    = (D3DSTREAMSOURCE_INSTANCEDATA | attrib.instanceDivisor);
+                /* Match existing stream soruce frequency with new one. If they occupy the same stream, they must have the same divider */
+                const UINT existingDivier = (it->divider ^ D3DSTREAMSOURCE_INSTANCEDATA);
+                LLGL_ASSERT(
+                    existingDivier == attrib.instanceDivisor,
+                    "mismtach between existing instance divisor (%u) and existing one (%u) for attribute '%s'",
+                    attrib.instanceDivisor, existingDivier, attrib.name.c_str()
+                );
             }
-            streamSourceFreq_.push_back(streamSourceFreq);
+            else
+            {
+                /* Add new stream source frequency */
+                D3D9StreamSourceFreq streamSourceFreq;
+                {
+                    streamSourceFreq.stream     = attrib.slot;
+                    streamSourceFreq.divider    = (D3DSTREAMSOURCE_INSTANCEDATA | attrib.instanceDivisor);
+                }
+                streamSourceFreq_.push_back(streamSourceFreq);
+            }
         }
     }
 }

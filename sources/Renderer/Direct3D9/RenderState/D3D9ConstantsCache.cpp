@@ -87,13 +87,15 @@ HRESULT D3D9ConstantsCache::SetUniforms(std::uint32_t first, const void* data, s
         /* Copy input data into cache and move to next uniform */
         if (location.offsetVS != invalidOffset)
         {
-            ::memcpy(GetConstantPtrByOffset(location.startRegisterVS, /*location.offsetVS*/0), dataByteAligned, chunkSize);
+            const std::uint32_t chunkSizeVS = std::min<std::uint32_t>(chunkSize, location.numVectors4VS * 16);
+            ::memcpy(GetConstantPtrByOffset(location.startRegisterVS, /*location.offsetVS*/0), dataByteAligned, chunkSizeVS);
             //stageLayouts_[D3DShaderStage_Vertex].Invalidate(location.startRegisterVS, location.numVectors4VS);
             Invalidate();
         }
         if (location.offsetPS != invalidOffset)
         {
-            ::memcpy(GetConstantPtrByOffset(psRegisterOffset_ + location.startRegisterPS, /*location.offsetPS*/0), dataByteAligned, chunkSize);
+            const std::uint32_t chunkSizePS = std::min<std::uint32_t>(chunkSize, location.numVectors4PS * 16);
+            ::memcpy(GetConstantPtrByOffset(psRegisterOffset_ + location.startRegisterPS, /*location.offsetPS*/0), dataByteAligned, chunkSizePS);
             //stageLayouts_[D3DShaderStage_Pixel].Invalidate(location.startRegisterPS, location.numVectors4PS);
             Invalidate();
         }

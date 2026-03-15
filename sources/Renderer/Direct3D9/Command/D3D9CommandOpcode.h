@@ -27,7 +27,10 @@ enum D3D9Opcode : std::uint8_t
     D3D9OpcodeSetScissorRect,
     D3D9OpcodeClear,
     D3D9OpcodeSetIndices,
+    D3D9OpcodeSetAutoIndices,
     D3D9OpcodeSetStreamSource,
+    D3D9OpcodeSetStreamSourceFreqIndexData,
+    D3D9OpcodeSetStreamSourceFreqInstanceData,
     D3D9OpcodeSetPipelineState,
     D3D9OpcodeSetRenderStates,
     D3D9OpcodeBindTexture,
@@ -43,8 +46,6 @@ enum D3D9Opcode : std::uint8_t
     D3D9OpcodeSetPixelShaderConstantB,
     D3D9OpcodeDraw,
     D3D9OpcodeDrawIndexed,
-    D3D9OpcodeSetStreamSourceFreqIndexData,
-    D3D9OpcodeSetStreamSourceFreqInstanceData,
 };
 
 using D3D9VirtualCommandBuffer = VirtualCommandBuffer<D3D9Opcode>;
