@@ -149,11 +149,67 @@ void D3D9StateManager::Clear(DWORD flags, D3DCOLOR color, float z, DWORD stencil
 //private
 void D3D9StateManager::SetStreamSourceFreqInternal(UINT stream, UINT divider)
 {
-    LLGL_ASSERT(stream < D3DStreamSourceFreqCache::maxNumStreams);
-    if (streamSourceFreqCache_.dividers[stream] != divider)
+    LLGL_ASSERT(stream < maxNumStreams);
+    if (inputAssembly_.streamSourceFreq.dividers[stream] != divider)
     {
-        streamSourceFreqCache_.dividers[stream] = divider;
+        inputAssembly_.streamSourceFreq.dividers[stream] = divider;
         device_->SetStreamSourceFreq(stream, divider);
+    }
+}
+
+void D3D9StateManager::SetStreamSource(UINT stream, const D3DStreamSource& source)
+{
+    LLGL_ASSERT(stream < maxNumStreams);
+    D3DStreamSource& cacheEntry = inputAssembly_.streamSource[stream];
+    if (cacheEntry.vertexBuffer != source.vertexBuffer  ||
+        cacheEntry.offset       != source.offset        ||
+        cacheEntry.stride       != source.stride)
+    {
+        cacheEntry = source;
+        device_->SetStreamSource(stream, source.vertexBuffer, source.offset, source.stride);
+    }
+}
+
+void D3D9StateManager::SetInstanceOffset(UINT firstInstance)
+{
+    if (firstInstance > 0)
+    {
+        UINT streamSourceUpperBound = 0;
+
+        for_range(stream, inputAssembly_.streamSourceFreq.streamUpperBound)
+        {
+            if ((inputAssembly_.streamSourceFreq.dividers[stream] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
+            {
+                /* Map instance offset to byte offset */
+                const UINT offset = inputAssembly_.streamSource[stream].stride * firstInstance;
+
+                /* Modify stream source offset */
+                D3DStreamSource& cacheEntry = inputAssembly_.streamSource[stream];
+                if (cacheEntry.vertexBuffer != nullptr && cacheEntry.offset != offset)
+                {
+                    cacheEntry.offset = offset;
+                    device_->SetStreamSource(stream, cacheEntry.vertexBuffer, cacheEntry.offset, cacheEntry.stride);
+
+                    streamSourceUpperBound = std::max<UINT>(streamSourceUpperBound, stream + 1);
+                }
+            }
+        }
+
+        inputAssembly_.streamSourceOffsetUpperBound = streamSourceUpperBound;
+    }
+    else if (inputAssembly_.streamSourceOffsetUpperBound > 0)
+    {
+        /* Reset stream source offets to zero */
+        for_range(stream, inputAssembly_.streamSourceOffsetUpperBound)
+        {
+            D3DStreamSource& cacheEntry = inputAssembly_.streamSource[stream];
+            if (cacheEntry.vertexBuffer != nullptr && cacheEntry.offset != 0)
+            {
+                cacheEntry.offset = 0;
+                device_->SetStreamSource(stream, cacheEntry.vertexBuffer, cacheEntry.offset, cacheEntry.stride);
+            }
+        }
+        inputAssembly_.streamSourceOffsetUpperBound = 0;
     }
 }
 
@@ -167,13 +223,13 @@ void D3D9StateManager::SetStreamSourceFreqIndexData(UINT numInstances)
 
 void D3D9StateManager::SetStreamSourceFreqInstanceData(UINT count, const D3D9StreamSourceFreq* streamSourceFreq)
 {
-    UINT newDividers[D3DStreamSourceFreqCache::maxNumStreams] = {};
+    UINT newDividers[maxNumStreams] = {};
 
     /* Initialize new diviers with reset value from previous upper bound */
-    for_range(i, streamSourceFreqCache_.streamUpperBound)
+    for_range(stream, inputAssembly_.streamSourceFreq.streamUpperBound)
     {
-        if ((streamSourceFreqCache_.dividers[i] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
-            newDividers[i] = 1;
+        if ((inputAssembly_.streamSourceFreq.dividers[stream] & D3DSTREAMSOURCE_INSTANCEDATA) != 0)
+            newDividers[stream] = 1;
     }
 
     /* Override new stream source frequencies */
@@ -185,14 +241,14 @@ void D3D9StateManager::SetStreamSourceFreqInstanceData(UINT count, const D3D9Str
     }
 
     /* Set new diviers */
-    for_range(i, std::max<UINT>(streamSourceFreqCache_.streamUpperBound, streamUpperBound))
+    for_range(stream, std::max<UINT>(inputAssembly_.streamSourceFreq.streamUpperBound, streamUpperBound))
     {
-        if (newDividers[i] != 0)
-            SetStreamSourceFreqInternal(i, newDividers[i]);
+        if (newDividers[stream] != 0)
+            SetStreamSourceFreqInternal(stream, newDividers[stream]);
     }
 
     /* Cache new upper bound */
-    streamSourceFreqCache_.streamUpperBound = streamUpperBound;
+    inputAssembly_.streamSourceFreq.streamUpperBound = streamUpperBound;
 }
 
 void D3D9StateManager::SetIndices(IDirect3DIndexBuffer9* indexBuffer)

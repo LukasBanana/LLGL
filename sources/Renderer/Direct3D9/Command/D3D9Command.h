@@ -12,6 +12,7 @@
 #include <LLGL/IndirectArguments.h>
 #include <cstddef>
 #include <cstdint>
+#include "../RenderState/D3D9State.h"
 #include "../Direct3D9.h"
 
 
@@ -67,10 +68,8 @@ struct D3D9CmdSetAutoIndices
 
 struct D3D9CmdSetStreamSource
 {
-    UINT                    stream;
-    IDirect3DVertexBuffer9* vertexBuffer;
-    UINT                    offset;
-    UINT                    stride;
+    UINT            stream;
+    D3DStreamSource source;
 };
 
 struct D3D9CmdSetStreamSourceFreqIndexData
@@ -139,6 +138,7 @@ struct D3D9CmdDraw
     D3DPRIMITIVETYPE    primitiveType;
     UINT                startVertex;
     UINT                primitiveCount;
+    UINT                firstInstance;
 };
 
 struct D3D9CmdDrawIndexed
@@ -149,6 +149,7 @@ struct D3D9CmdDrawIndexed
     UINT                numVertices;
     UINT                startIndex;
     UINT                primitiveCount;
+    UINT                firstInstance;
 };
 
 struct D3D9CmdPushDebugGroup

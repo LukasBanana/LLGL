@@ -31,6 +31,13 @@ struct D3D9SamplerState
     DWORD maxAnisotropy = 0;
 };
 
+struct D3DStreamSource
+{
+    IDirect3DVertexBuffer9* vertexBuffer;
+    UINT                    offset;
+    UINT                    stride;
+};
+
 
 } // /namespace LLGL
 

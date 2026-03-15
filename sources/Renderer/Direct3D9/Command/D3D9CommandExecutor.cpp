@@ -97,7 +97,7 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         case D3D9OpcodeSetStreamSource:
         {
             auto cmd = static_cast<const D3D9CmdSetStreamSource*>(pc);
-            device->SetStreamSource(cmd->stream, cmd->vertexBuffer, cmd->offset, cmd->stride);
+            stateMngr->SetStreamSource(cmd->stream, cmd->source);
             return sizeof(*cmd);
         }
         case D3D9OpcodeSetStreamSourceFreqIndexData:
@@ -192,12 +192,14 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
         case D3D9OpcodeDraw:
         {
             auto cmd = static_cast<const D3D9CmdDraw*>(pc);
+            stateMngr->SetInstanceOffset(cmd->firstInstance);
             device->DrawPrimitive(cmd->primitiveType, cmd->startVertex, cmd->primitiveCount);
             return sizeof(*cmd);
         }
         case D3D9OpcodeDrawIndexed:
         {
             auto cmd = static_cast<const D3D9CmdDrawIndexed*>(pc);
+            stateMngr->SetInstanceOffset(cmd->firstInstance);
             device->DrawIndexedPrimitive(cmd->primitiveType, cmd->baseVertexIndex, cmd->minVertexIndex, cmd->numVertices, cmd->startIndex, cmd->primitiveCount);
             return sizeof(*cmd);
         }

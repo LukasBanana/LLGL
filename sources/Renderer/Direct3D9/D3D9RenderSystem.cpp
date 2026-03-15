@@ -74,7 +74,7 @@ static void InitD3D9RendererFeatures(RenderingFeatures& features)
     features.hasTessellatorStage            = false;
     features.hasComputeShaders              = false;
     features.hasInstancing                  = true;
-    features.hasOffsetInstancing            = false;//true;
+    features.hasOffsetInstancing            = true;
     features.hasIndirectDrawing             = false;
     features.hasViewportArrays              = false;
     features.hasConservativeRasterization   = false;

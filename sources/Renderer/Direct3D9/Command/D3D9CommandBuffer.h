@@ -73,11 +73,11 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void AllocSetStreamSourceCommand(UINT stream, IDirect3DVertexBuffer9* vertexBuffer, UINT stride, UINT offset);
 
-        void DrawInternal(UINT startVertex, UINT numVertices, UINT numInstances = 0);
-        void DrawIndexedInternal(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances = 0);
+        void DrawInternal(UINT startVertex, UINT numVertices, UINT numInstances = 0, UINT firstInstance = 0);
+        void DrawIndexedInternal(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances = 0, UINT firstInstance = 0);
 
-        void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances);
-        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances);
+        void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances, UINT firstInstance);
+        void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances, UINT firstInstance);
 
         D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
 

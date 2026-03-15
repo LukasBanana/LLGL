@@ -489,8 +489,7 @@ void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t f
 
 void D3D9CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    LLGL_ASSERT(firstInstance == 0, "D3D9 does not support instance offset");
-    DrawInternal(firstVertex, numVertices, numInstances);
+    DrawInternal(firstVertex, numVertices, numInstances, firstInstance);
 }
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
@@ -505,8 +504,7 @@ void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint
 
 void D3D9CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    LLGL_ASSERT(firstInstance == 0, "D3D9 does not support instance offset");
-    DrawIndexedInternal(vertexOffset, 0, numIndices, firstIndex, numInstances);
+    DrawIndexedInternal(vertexOffset, 0, numIndices, firstIndex, numInstances, firstInstance);
 }
 
 void D3D9CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
@@ -637,14 +635,14 @@ void D3D9CommandBuffer::AllocSetStreamSourceCommand(UINT stream, IDirect3DVertex
 {
     auto cmd = AllocCommand<D3D9CmdSetStreamSource>(D3D9OpcodeSetStreamSource);
     {
-        cmd->stream         = stream;
-        cmd->vertexBuffer   = vertexBuffer;
-        cmd->stride         = stride;
-        cmd->offset         = offset;
+        cmd->stream                 = stream;
+        cmd->source.vertexBuffer    = vertexBuffer;
+        cmd->source.stride          = stride;
+        cmd->source.offset          = offset;
     }
 }
 
-void D3D9CommandBuffer::DrawInternal(UINT startVertex, UINT numVertices, UINT numInstances)
+void D3D9CommandBuffer::DrawInternal(UINT startVertex, UINT numVertices, UINT numInstances, UINT firstInstance)
 {
     FlushConstantsCache();
     SetNumInstances(numInstances);
@@ -655,30 +653,31 @@ void D3D9CommandBuffer::DrawInternal(UINT startVertex, UINT numVertices, UINT nu
         See https://learn.microsoft.com/en-us/windows/win32/direct3d9/efficiently-drawing-multiple-instances-of-geometry#drawing-non-indexed-geometry
         */
         AllocSetAutoIndicesCommand(numVertices);
-        AllocDrawIndexedCommand(0, 0, numVertices, startVertex, numInstances);
+        AllocDrawIndexedCommand(0, 0, numVertices, startVertex, numInstances, firstInstance);
     }
     else
-        AllocDrawCommand(startVertex, numVertices, numInstances);
+        AllocDrawCommand(startVertex, numVertices, numInstances, firstInstance);
 }
 
-void D3D9CommandBuffer::DrawIndexedInternal(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances)
+void D3D9CommandBuffer::DrawIndexedInternal(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances, UINT firstInstance)
 {
     FlushConstantsCache();
     SetNumInstances(numInstances);
-    AllocDrawIndexedCommand(baseVertexIndex, minVertexIndex, numVertices, startIndex, numInstances);
+    AllocDrawIndexedCommand(baseVertexIndex, minVertexIndex, numVertices, startIndex, numInstances, firstInstance);
 }
 
-void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances)
+void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances, UINT firstInstance)
 {
     auto cmd = AllocCommand<D3D9CmdDraw>(D3D9OpcodeDraw);
     {
         cmd->primitiveType  = renderState_.primitiveType;
         cmd->startVertex    = startVertex;
         cmd->primitiveCount = GetPrimitiveCount(renderState_.primitiveType, numVertices);
+        cmd->firstInstance  = firstInstance;
     }
 }
 
-void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances)
+void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances, UINT firstInstance)
 {
     auto cmd = AllocCommand<D3D9CmdDrawIndexed>(D3D9OpcodeDrawIndexed);
     {
@@ -688,6 +687,7 @@ void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVer
         cmd->numVertices        = numVertices;
         cmd->startIndex         = startIndex + renderState_.indexBufferOffset;
         cmd->primitiveCount     = GetPrimitiveCount(renderState_.primitiveType, numVertices);
+        cmd->firstInstance      = firstInstance;
     }
 }
 
