@@ -11,6 +11,7 @@
 
 #include <LLGL/BufferArray.h>
 #include <vector>
+#include "../Direct3D9.h"
 
 
 namespace LLGL
@@ -25,11 +26,24 @@ class D3D9BufferArray final : public BufferArray
 
     public:
 
+        struct D3DBufferAndStride
+        {
+            IDirect3DVertexBuffer9* vertexBuffer;
+            UINT                    stride;
+        };
+
+    public:
+
         D3D9BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+
+        inline const std::vector<D3DBufferAndStride>& GetNativeBuffersAndStrides() const
+        {
+            return nativeBuffersAndStrides_;
+        }
 
     private:
 
-        std::vector<D3D9VertexBuffer*> vertexBuffers_;
+        std::vector<D3DBufferAndStride> nativeBuffersAndStrides_;
 
 };
 

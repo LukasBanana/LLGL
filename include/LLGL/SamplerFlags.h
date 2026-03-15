@@ -143,7 +143,10 @@ struct LLGL_EXPORT SamplerDescriptor
     //! Lower end of the MIP-map range. By default 0.
     float               minLOD          = 0.0f;
 
-    //! Upper end of the MIP-map range. Must be greater than or equal to \c minLOD. By default 1000.
+    /**
+    \brief Upper end of the MIP-map range. Must be greater than or equal to \c minLOD. By default 1000.
+    \note Not supported with: Direct3D 9.
+    */
     float               maxLOD          = 1000.0f;
 
     /**

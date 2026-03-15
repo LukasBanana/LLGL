@@ -17,21 +17,22 @@ namespace LLGL
 {
 
 
-static std::vector<D3D9VertexBuffer*> GetD3D9VertexBuffers(std::uint32_t numBuffers, Buffer* const * bufferArray)
+static std::vector<D3D9BufferArray::D3DBufferAndStride> GetD3DVertexBuffersAndStrides(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    std::vector<D3D9VertexBuffer*> buffers;
+    std::vector<D3D9BufferArray::D3DBufferAndStride> buffers;
     buffers.reserve(numBuffers);
     for_range(i, numBuffers)
     {
         LLGL_ASSERT((bufferArray[i]->GetBindFlags() & BindFlags::VertexBuffer) != 0);
-        buffers.push_back(LLGL_CAST(D3D9VertexBuffer*, bufferArray[i]));
+        D3D9VertexBuffer* vertexBufferD3D = LLGL_CAST(D3D9VertexBuffer*, bufferArray[i]);
+        buffers.push_back({ vertexBufferD3D->GetNative(), vertexBufferD3D->GetStride() });
     }
     return buffers;
 }
 
 D3D9BufferArray::D3D9BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray    { BindFlags::VertexBuffer                       },
-    vertexBuffers_ { GetD3D9VertexBuffers(numBuffers, bufferArray) }
+    BufferArray              { BindFlags::VertexBuffer                                },
+    nativeBuffersAndStrides_ { GetD3DVertexBuffersAndStrides(numBuffers, bufferArray) }
 {
 }
 

@@ -6,8 +6,9 @@
  */
 
 #include "D3D9EmulatedSampler.h"
-#include "../RenderState/D3D9StateManager.h"
+#include "../D3D9Core.h"
 #include "../D3D9Types.h"
+#include "../RenderState/D3D9StateManager.h"
 
 
 namespace LLGL
@@ -20,9 +21,9 @@ static void ConvertSamplerDescToD3D9SamplerState(D3D9SamplerState& dst, const Sa
     dst.addressV        = D3D9Types::ToD3DTextureAddress(src.addressModeV);
     dst.addressW        = D3D9Types::ToD3DTextureAddress(src.addressModeW);
     dst.borderColor     = D3D9Types::ToD3DColor(src.borderColor);
-    dst.mipMapLodBias   = static_cast<DWORD>(src.mipMapLODBias);
-    dst.maxMipLevel     = static_cast<DWORD>(src.maxLOD);
     dst.mipFilter       = (src.mipMapEnabled ? D3D9Types::ToD3DTextureFilter(src.mipMapFilter) : D3DTEXF_NONE);
+    dst.mipMapLodBias   = FloatToDWORD(src.mipMapLODBias);
+    dst.maxMipLevel     = static_cast<DWORD>(src.minLOD); // `minLOD` maps to D3D9's `D3DSAMP_MAXMIPLEVEL` as it describes the LOD index of the larges MIP-map
     dst.maxAnisotropy   = static_cast<DWORD>(src.maxAnisotropy);
 
     if (src.maxAnisotropy > 1)

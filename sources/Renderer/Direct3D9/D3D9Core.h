@@ -20,6 +20,15 @@ namespace LLGL
 {
 
 
+#define LLGL_VERIFY_HRESULT(EXPR)   \
+    do                              \
+    {                               \
+        HRESULT hr = (EXPR);        \
+        if (FAILED(hr))             \
+            return hr;              \
+    }                               \
+    while (false)
+
 /* ----- Functions ----- */
 
 // Returns a string representation for the specified HRESULT error code.
@@ -45,6 +54,12 @@ ComPtr<ID3DBlob> D3DCreateBlob(const void* data, std::size_t size);
 
 // Returns a blob and copies the specified data into the blob.
 ComPtr<ID3DBlob> D3DCreateBlob(const std::vector<char>& data);
+
+// Converts the specified floating-point value to a DWORD.
+inline DWORD FloatToDWORD(float value)
+{
+    return *reinterpret_cast<const DWORD*>(&(value));
+}
 
 
 } // /namespace LLGL

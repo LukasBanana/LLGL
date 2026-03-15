@@ -50,6 +50,12 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             device->EndScene();
             return 0;
         }
+        case D3D9OpcodeExecute:
+        {
+            auto cmd = static_cast<const D3D9CmdExecute*>(pc);
+            ExecuteD3D9VirtualCommandBuffer(*cmd->vcmdBuffer, stateMngr);
+            return sizeof(*cmd);
+        }
         case D3D9OpcodeSetRenderTargets:
         {
             auto cmd = static_cast<const D3D9CmdSetRenderTargets*>(pc);
@@ -99,6 +105,24 @@ static std::size_t ExecuteD3D9Command(const D3D9Opcode opcode, const void* pc, I
             for_range(i, cmd->numRenderStates)
                 stateMngr->SetRenderState(renderStates[i].type, renderStates[i].value);
             return sizeof(*cmd) + sizeof(D3D9CmdSetRenderStates::D3DRenderState) * cmd->numRenderStates;
+        }
+        case D3D9OpcodeBindTexture:
+        {
+            auto cmd = static_cast<const D3D9CmdBindTexture*>(pc);
+            stateMngr->BindTexture(cmd->stage, cmd->texture);
+            return sizeof(*cmd);
+        }
+        case D3D9OpcodeBindSampler:
+        {
+            auto cmd = static_cast<const D3D9CmdBindSampler*>(pc);
+            stateMngr->BindSampler(cmd->stage, cmd->emulatedSampler);
+            return sizeof(*cmd);
+        }
+        case D3D9OpcodeGenerateMips:
+        {
+            auto cmd = static_cast<const D3D9CmdGenerateMips*>(pc);
+            cmd->texture->GenerateMipSubLevels();
+            return sizeof(*cmd);
         }
         case D3D9OpcodeBufferWrite:
         {

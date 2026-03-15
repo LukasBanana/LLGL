@@ -6,6 +6,7 @@
  */
 
 #include "D3D9RasterizerState.h"
+#include "../D3D9Core.h"
 #include "../D3D9Types.h"
 #include "../../../Core/MacroUtils.h"
 #include "D3D9StateManager.h"
@@ -15,11 +16,6 @@
 namespace LLGL
 {
 
-
-static DWORD FloatToDWORD(float value)
-{
-    return *reinterpret_cast<const DWORD*>(&(value));
-}
 
 D3D9RasterizerState::D3D9RasterizerState(const RasterizerDescriptor& desc)
 {

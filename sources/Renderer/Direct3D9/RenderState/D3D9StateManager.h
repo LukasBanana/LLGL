@@ -38,8 +38,9 @@ class D3D9StateManager
         void SetRenderState(D3DRENDERSTATETYPE state, DWORD value);
         void SetTextureStageState(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value);
         void SetSamplerState(DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value);
-        void SetSamplerStates(DWORD stage, const D3D9SamplerState& d3dState);
+        void SetSamplerState(DWORD stage, const D3D9SamplerState& d3dState);
 
+        void BindTexture(DWORD stage, IDirect3DBaseTexture9* texture);
         void BindSampler(DWORD stage, const D3D9EmulatedSampler* sampler);
 
         void BindDepthStencilState(D3D9DepthStencilState* depthStencilState);
@@ -61,7 +62,8 @@ class D3D9StateManager
             static_assert(numSamplerStates == 13, "D3DSAMP_DMAPOFFSET is expected to be equal to 13");
             DWORD samplerStates[numSamplerStates] = {};
 
-            const D3D9EmulatedSampler* boundSampler = nullptr;
+            IDirect3DBaseTexture9*      boundD3DBaseTexture = nullptr;
+            const D3D9EmulatedSampler*  boundSampler        = nullptr;
         };
 
     private:

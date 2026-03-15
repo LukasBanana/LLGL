@@ -54,7 +54,7 @@ void D3D9StateManager::SetSamplerState(DWORD stage, D3DSAMPLERSTATETYPE type, DW
     SetSamplerStateInternal(stage, type, value);
 }
 
-void D3D9StateManager::SetSamplerStates(DWORD stage, const D3D9SamplerState& d3dState)
+void D3D9StateManager::SetSamplerState(DWORD stage, const D3D9SamplerState& d3dState)
 {
     SetSamplerStateInternal(stage, D3DSAMP_ADDRESSU,      d3dState.addressU     );
     SetSamplerStateInternal(stage, D3DSAMP_ADDRESSV,      d3dState.addressV     );
@@ -68,13 +68,23 @@ void D3D9StateManager::SetSamplerStates(DWORD stage, const D3D9SamplerState& d3d
     SetSamplerStateInternal(stage, D3DSAMP_MAXANISOTROPY, d3dState.maxAnisotropy);
 }
 
+void D3D9StateManager::BindTexture(DWORD stage, IDirect3DBaseTexture9* texture)
+{
+    LLGL_ASSERT(stage < D3D9StateManager::numTextureStages);
+    if (textureStages_[stage].boundD3DBaseTexture != texture)
+    {
+        device_->SetTexture(stage, texture);
+        textureStages_[stage].boundD3DBaseTexture = texture;
+    }
+}
+
 void D3D9StateManager::BindSampler(DWORD stage, const D3D9EmulatedSampler* sampler)
 {
     LLGL_ASSERT(stage < D3D9StateManager::numTextureStages);
     LLGL_ASSERT_PTR(sampler);
     if (textureStages_[stage].boundSampler != sampler)
     {
-        SetSamplerStates(stage, sampler->GetD3DState());
+        SetSamplerState(stage, sampler->GetD3DState());
         textureStages_[stage].boundSampler = sampler;
     }
 }

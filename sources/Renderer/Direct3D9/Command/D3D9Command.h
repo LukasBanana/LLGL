@@ -20,8 +20,15 @@ namespace LLGL
 
 
 class D3D9Buffer;
+class D3D9EmulatedSampler;
 class D3D9ConstantsCache;
 class D3D9PipelineState;
+class D3D9CommandBuffer;
+
+struct D3D9CmdExecute
+{
+    const D3D9VirtualCommandBuffer* vcmdBuffer;
+};
 
 struct D3D9CmdClear
 {
@@ -74,7 +81,24 @@ struct D3D9CmdSetRenderStates
         D3DRENDERSTATETYPE  type;
         DWORD               value;
     };
-//  RenderState             renderStates[numRenderStates];
+//  D3DRenderState          renderStates[numRenderStates];
+};
+
+struct D3D9CmdBindTexture
+{
+    DWORD                   stage;
+    IDirect3DBaseTexture9*  texture;
+};
+
+struct D3D9CmdBindSampler
+{
+    DWORD                       stage;
+    const D3D9EmulatedSampler*  emulatedSampler;
+};
+
+struct D3D9CmdGenerateMips
+{
+    IDirect3DBaseTexture9* texture;
 };
 
 struct D3D9CmdBufferWrite

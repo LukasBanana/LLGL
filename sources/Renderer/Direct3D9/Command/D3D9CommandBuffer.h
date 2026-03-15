@@ -64,10 +64,27 @@ class D3D9CommandBuffer final : public CommandBuffer
 
         void FlushConstantsCache();
 
+        void AllocSetStreamSourceCommand(UINT stream, IDirect3DVertexBuffer9* vertexBuffer, UINT stride, UINT offset);
+
         void AllocDrawCommand(UINT startVertex, UINT numVertices);
         void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex);
 
         D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
+
+        inline bool IsPrimary() const
+        {
+            return ((desc.flags & CommandBufferFlags::Secondary) == 0);
+        }
+
+        inline bool IsImmediateSubmit() const
+        {
+            return ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0);
+        }
+
+        inline const D3D9VirtualCommandBuffer* GetVcmdBuffer() const
+        {
+            return &(buffer_);
+        }
 
     private:
 

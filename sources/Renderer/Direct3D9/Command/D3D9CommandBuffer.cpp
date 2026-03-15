@@ -26,6 +26,7 @@
 #include "../RenderState/D3D9StateManager.h"
 #include "../Texture/D3D9Texture.h"
 #include "../Texture/D3D9RenderTarget.h"
+#include "../Texture/D3D9EmulatedSampler.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
@@ -48,22 +49,30 @@ void D3D9CommandBuffer::Begin()
 {
     buffer_.Clear();
 
-    AllocOpcode(D3D9OpcodeBeginScene);
+    if (IsPrimary())
+        AllocOpcode(D3D9OpcodeBeginScene);
 }
 
 void D3D9CommandBuffer::End()
 {
-    AllocOpcode(D3D9OpcodeEndScene);
+    if (IsPrimary())
+        AllocOpcode(D3D9OpcodeEndScene);
 
-    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+    if (IsImmediateSubmit())
         ExecuteVirtualCommands();
 }
 
 void D3D9CommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& secondaryCommandBufferD3D9 = LLGL_CAST(D3D9CommandBuffer&, secondaryCommandBuffer);
-    if ((secondaryCommandBufferD3D9.desc.flags & CommandBufferFlags::Secondary) != 0)
-        secondaryCommandBufferD3D9.ExecuteVirtualCommands();
+    if (IsPrimary())
+    {
+        auto& secondaryCommandBufferD3D9 = LLGL_CAST(D3D9CommandBuffer&, secondaryCommandBuffer);
+        if (!secondaryCommandBufferD3D9.IsPrimary())
+        {
+            auto cmd = AllocCommand<D3D9CmdExecute>(D3D9OpcodeExecute);
+            cmd->vcmdBuffer = secondaryCommandBufferD3D9.GetVcmdBuffer();
+        }
+    }
 }
 
 /* ----- Blitting ----- */
@@ -152,13 +161,13 @@ void D3D9CommandBuffer::CopyTextureFromFramebuffer(
 
 void D3D9CommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& textureD3D9 = LLGL_CAST(D3D9Texture&, texture);
-    //todo
+    auto& textureD3D = LLGL_CAST(D3D9Texture&, texture);
+    auto cmd = AllocCommand<D3D9CmdGenerateMips>(D3D9OpcodeGenerateMips);
+    cmd->texture = textureD3D.GetNative();
 }
 
 void D3D9CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    auto& textureD3D9 = LLGL_CAST(D3D9Texture&, texture);
     //todo
 }
 
@@ -206,24 +215,27 @@ void D3D9CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     LLGL_ASSERT((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0);
     auto& vertexBufferD3D9 = LLGL_CAST(D3D9VertexBuffer&, buffer);
-
-    auto cmd = AllocCommand<D3D9CmdSetStreamSource>(D3D9OpcodeSetStreamSource);
-    {
-        cmd->stream         = 0;
-        cmd->vertexBuffer   = vertexBufferD3D9.GetNative();
-        cmd->stride         = vertexBufferD3D9.GetStride();
-        cmd->offset         = 0;
-    }
+    AllocSetStreamSourceCommand(0, vertexBufferD3D9.GetNative(), vertexBufferD3D9.GetStride(), 0);
 }
 
 void D3D9CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
-    //TODO
+    LLGL_ASSERT((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0);
+    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
+    {
+        auto& vertexBufferD3D9 = LLGL_CAST(D3D9VertexBuffer&, buffer);
+        AllocSetStreamSourceCommand(0, vertexBufferD3D9.GetNative(), vertexAttribs[0].stride, 0);
+    }
 }
 
 void D3D9CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //TODO
+    D3D9BufferArray& bufferArrayD3D = LLGL_CAST(D3D9BufferArray&, bufferArray);
+    for_range(i, static_cast<UINT>(bufferArrayD3D.GetNativeBuffersAndStrides().size()))
+    {
+        const D3D9BufferArray::D3DBufferAndStride& entry = bufferArrayD3D.GetNativeBuffersAndStrides()[i];
+        AllocSetStreamSourceCommand(i, entry.vertexBuffer, entry.stride, 0);
+    }
 }
 
 void D3D9CommandBuffer::SetIndexBuffer(Buffer& buffer)
@@ -263,7 +275,29 @@ void D3D9CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_
 
 void D3D9CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    //todo
+    switch (resource.GetResourceType())
+    {
+        case ResourceType::Texture:
+        {
+            D3D9Texture& textureD3D = LLGL_CAST(D3D9Texture&, resource);
+            auto cmd = AllocCommand<D3D9CmdBindTexture>(D3D9OpcodeBindTexture);
+            cmd->stage = 0;//descriptor; //TODO: resource table mapping
+            cmd->texture = textureD3D.GetNative();
+        }
+        break;
+
+        case ResourceType::Sampler:
+        {
+            D3D9EmulatedSampler& samplerD3D = LLGL_CAST(D3D9EmulatedSampler&, resource);
+            auto cmd = AllocCommand<D3D9CmdBindSampler>(D3D9OpcodeBindSampler);
+            cmd->stage = 0;//descriptor; //TODO: resource table mapping
+            cmd->emulatedSampler = &(samplerD3D);
+        }
+        break;
+
+        default:
+        break;
+    }
 }
 
 void D3D9CommandBuffer::ResourceBarrier(
@@ -580,6 +614,17 @@ void D3D9CommandBuffer::FlushConstantsCache()
 {
     if (boundConstantsCache_ != nullptr)
         boundConstantsCache_->AllocCommands(buffer_);
+}
+
+void D3D9CommandBuffer::AllocSetStreamSourceCommand(UINT stream, IDirect3DVertexBuffer9* vertexBuffer, UINT stride, UINT offset)
+{
+    auto cmd = AllocCommand<D3D9CmdSetStreamSource>(D3D9OpcodeSetStreamSource);
+    {
+        cmd->stream         = stream;
+        cmd->vertexBuffer   = vertexBuffer;
+        cmd->stride         = stride;
+        cmd->offset         = offset;
+    }
 }
 
 void D3D9CommandBuffer::AllocDrawCommand(UINT startVertex, UINT numVertices)

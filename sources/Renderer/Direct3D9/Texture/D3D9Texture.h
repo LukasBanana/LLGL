@@ -46,12 +46,6 @@ class D3D9Texture final : public Texture
 
     private:
 
-        void CreateD3DTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
-        void CreateD3DVolumeTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
-        void CreateD3DCubeTexture(IDirect3DDevice9* device, const TextureDescriptor& desc);
-
-    private:
-
         ComPtr<IDirect3DBaseTexture9> baseTexture_;
 
 };

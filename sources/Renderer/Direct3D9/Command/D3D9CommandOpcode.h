@@ -21,6 +21,7 @@ enum D3D9Opcode : std::uint8_t
 {
     D3D9OpcodeBeginScene = 1,
     D3D9OpcodeEndScene,
+    D3D9OpcodeExecute,
     D3D9OpcodeSetRenderTargets,
     D3D9OpcodeSetViewport,
     D3D9OpcodeSetScissorRect,
@@ -29,6 +30,9 @@ enum D3D9Opcode : std::uint8_t
     D3D9OpcodeSetStreamSource,
     D3D9OpcodeSetPipelineState,
     D3D9OpcodeSetRenderStates,
+    D3D9OpcodeBindTexture,
+    D3D9OpcodeBindSampler,
+    D3D9OpcodeGenerateMips,
     D3D9OpcodeBufferWrite,
     //TODO
     D3D9OpcodeSetVertexShaderConstantF,
