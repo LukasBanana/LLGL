@@ -24,14 +24,17 @@ namespace LLGL
 However, for efficient evaluation, write your own sub class and only respond to user input when the appropriate callback is invoked.
 Here is an example usage:
 \code
-auto myInput = std::make_shared<LLGL::Input>();
-myWindow->AddEventListener(myInput);
+LLGL::Input myInput;
+myInput.Listen(*myWindow);
 while (LLGL::Surface::ProcessEvents()) {
     // Quit main loop when user hit the escape key.
-    if (myInput->KeyDown(LLGL::Key::Escape))
+    if (myInput.KeyDown(LLGL::Key::Escape))
         break;
 
     // Rendering goes here ...
+
+    // Reset input states
+    myInput.Reset();
 }
 \endcode
 \todo Make Window::EventListener a member of Input instead of extending it. Also add a member of Canvas::EventListener and add touch event functions.
@@ -56,6 +59,7 @@ class LLGL_EXPORT Input : public Interface
         \brief Resets the internal state.
         remarks This should be called once \e before Surface::ProcessEvents is invoked.
         \see Surface::ProcessEvents
+        \todo Rename to Tick() or something else to indicate this needs to be called once a frame.
         */
         void Reset();
 

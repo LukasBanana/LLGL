@@ -60,7 +60,7 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] maxNumCommands Specifies the maximum number of draw commands that are to be taken from the argument buffer.
         The lower bound is determined by the value taken from \c countBuffer.
-        The exacty number of commands processed is as \f$\min \left\{ \text{countBuffer}_\text{countOffset}, \text{maxNumCommands} \right\}\f$.
+        The exact number of commands processed is as \f$\mathit{\min \left\{ countBuffer_countOffset, maxNumCommands \right\}}\f$.
         \param[in] stride Specifies the stride (in bytes) between consecutive sets of arguments,
         which is commonly greater than or equal to <code>sizeof(DrawMeshIndirectArguments)</code>. This stride must be a multiple of 4.
         \see DrawMeshIndirectArguments

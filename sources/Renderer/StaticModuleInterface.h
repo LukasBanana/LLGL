@@ -64,7 +64,7 @@ struct RegisterStaticModuleWrapper
 // Registers a new static module. Static modules cannot be unregistered. This is used to avoid cyclic dependencies between LLGL's core library and its backends.
 void RegisterStaticModule(StaticModuleRecord&& moduleRecord);
 
-// Returns the list of staticly compiled modules.
+// Returns the list of statically compiled modules.
 std::vector<std::string> GetStaticModules();
 
 // Returns the renderer name of the specified module (module name "Direct3D11" may result in "Direct3D 11" for instance).

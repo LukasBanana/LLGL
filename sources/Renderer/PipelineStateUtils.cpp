@@ -186,7 +186,7 @@ LLGL_EXPORT std::uint32_t GetUniformTypeSize(UniformType type, std::uint32_t arr
 {
     if (arraySize > 1)
     {
-        const auto typeSizeVec4Aligned = GetAlignedSize(GetUniformBaseTypeSize(type), GetUniformBaseTypeSize(UniformType::Float4));
+        const std::uint32_t typeSizeVec4Aligned = GetAlignedSize(GetUniformBaseTypeSize(type), GetUniformBaseTypeSize(UniformType::Float4));
         return (typeSizeVec4Aligned * (arraySize - 1) + GetUniformBaseTypeSize(type));
     }
     return GetUniformBaseTypeSize(type);

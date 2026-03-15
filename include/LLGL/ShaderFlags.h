@@ -339,7 +339,7 @@ struct ShaderDescriptor
     \brief Optional name for debugging purposes. By default null.
     \remarks The final name of the native hardware resource is implementation defined.
     \remarks For the HLSL backend, this will also be used as shader name if the shader is provided in source form.
-    \see RenderSystemChild::SetName
+    \see RenderSystemChild::SetDebugName
     */
     const char*                 debugName       = nullptr;
 

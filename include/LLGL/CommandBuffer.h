@@ -1012,7 +1012,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note Only supported in debug mode or when the debug layer is enabled. Otherwise, the function has no effect.
 
         \see PopDebugGroup
-        \see RenderSystemChild::SetName
+        \see RenderSystemChild::SetDebugName
         */
         virtual void PushDebugGroup(const char* name) = 0;
 
