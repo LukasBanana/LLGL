@@ -14,6 +14,7 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
+#include "../../StaticStateBuffer.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Container/DynamicArray.h>
 
@@ -52,11 +53,7 @@ class GLGraphicsPSO final : public GLPipelineState
     private:
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
-
-        void SetStaticViewports(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter);
-        void SetStaticScissors(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter);
+        void SetStaticViewportsAndScissors(GLStateManager& stateMngr);
 
     private:
 
@@ -71,10 +68,7 @@ class GLGraphicsPSO final : public GLPipelineState
         GLBlendStateSPtr        blendState_;
 
         // Packed byte buffer for static viewports and scissors
-        DynamicByteArray        staticStateBuffer_;
-        GLsizei                 numStaticViewports_ = 0;
-        GLsizei                 numStaticScissors_  = 0;
-
+        StaticStateBuffer       staticStateBuffer_;
 };
 
 

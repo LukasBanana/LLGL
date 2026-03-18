@@ -10,6 +10,7 @@
 
 
 #include "D3D12PipelineState.h"
+#include "../../StaticStateBuffer.h"
 #include <LLGL/Container/DynamicArray.h>
 
 
@@ -60,10 +61,7 @@ class D3D12RenderPSOBase : public D3D12PipelineState
 
     private:
 
-        void BuildStaticStateBuffer(const ArrayView<Viewport>& staticViewports, const ArrayView<Scissor>& staticScissors);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
-
+        void BuildStaticStateBuffer(const ArrayView<Viewport>& viewports, const ArrayView<Scissor>& scissors);
         void SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList);
 
     private:
@@ -76,9 +74,7 @@ class D3D12RenderPSOBase : public D3D12PipelineState
         UINT                blendFactorEnabled_ : 1;
         FLOAT               blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-        DynamicByteArray    staticStateBuffer_;
-        UINT                numStaticViewports_ = 0;
-        UINT                numStaticScissors_  = 0;
+        StaticStateBuffer   staticStateBuffer_;
 
 };
 

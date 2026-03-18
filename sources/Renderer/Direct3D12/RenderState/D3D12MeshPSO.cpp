@@ -20,7 +20,6 @@
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 
 

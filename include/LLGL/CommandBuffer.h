@@ -406,7 +406,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the specified vertex buffer for subsequent drawing operations and re-formats its vertex attributes.
         \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
         \param[in] numVertexAttribs Specifies the number of new vertex attributes to associate this buffer with. This \b must be greater than zero.
-        \param[in] vertexAttribs Pointer to an array of new vertex attributes to associate this buffer with. This \b must pointer to an array of at least \c numVertexAttribs elements.
+        \param[in] vertexAttribs Pointer to an array of new vertex attributes to associate this buffer with. This \b must point to an array of at least \c numVertexAttribs elements.
         \remarks Note that this function changes the vertex format of the specified buffer as opposed to binding it as a temporary re-interpretation.
         The extended SetIndexBuffer(Buffer&, const Format, std::uint64_t) function on the other hand does not modify the buffer and only binds it with a temporary re-interpretation of its index format.
         Subsequent calls to the primary version of SetVertexBuffer(Buffer&) will use the new format.

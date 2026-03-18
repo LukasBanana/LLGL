@@ -10,6 +10,7 @@
 
 
 #include "MTPipelineState.h"
+#include "../../StaticStateBuffer.h"
 #include <LLGL/Container/DynamicArray.h>
 #include <cstdint>
 
@@ -109,8 +110,6 @@ class MTGraphicsPSO final : public MTPipelineState
         );
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
 
     private:
 
@@ -140,9 +139,7 @@ class MTGraphicsPSO final : public MTPipelineState
         std::uint32_t               stencilFrontRef_        = 0;
         std::uint32_t               stencilBackRef_         = 0;
 
-        DynamicByteArray            staticStateBuffer_;
-        NSUInteger                  numStaticViewports_     = 0;
-        NSUInteger                  numStaticScissors_      = 0;
+        StaticStateBuffer           staticStateBuffer_;
 
 };
 

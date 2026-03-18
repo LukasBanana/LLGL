@@ -22,8 +22,8 @@ class ByteBufferIterator
         ByteBufferIterator() = default;
 
         // Initializes the byte buffer.
-        inline ByteBufferIterator(char* byteBuffer) :
-            byteBuffer_ { byteBuffer }
+        inline ByteBufferIterator(void* byteBuffer) :
+            byteBuffer_ { static_cast<char*>(byteBuffer) }
         {
         }
 
@@ -66,8 +66,8 @@ class ByteBufferConstIterator
         ByteBufferConstIterator() = default;
 
         // Initializes the byte buffer.
-        inline ByteBufferConstIterator(const char* byteBuffer) :
-            byteBuffer_ { byteBuffer }
+        inline ByteBufferConstIterator(const void* byteBuffer) :
+            byteBuffer_ { static_cast<const char*>(byteBuffer) }
         {
         }
 

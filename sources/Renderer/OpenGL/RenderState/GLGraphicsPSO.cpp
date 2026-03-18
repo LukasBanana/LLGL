@@ -112,14 +112,7 @@ void GLGraphicsPSO::Bind(GLStateManager& stateMngr)
     stateMngr.BindBlendState(blendState_.get());
 
     /* Set static viewports and scissors */
-    if (staticStateBuffer_)
-    {
-        ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
-        if (numStaticViewports_ > 0)
-            SetStaticViewports(stateMngr, byteBufferIter);
-        if (numStaticScissors_ > 0)
-            SetStaticScissors(stateMngr, byteBufferIter);
-    }
+    SetStaticViewportsAndScissors(stateMngr);
 }
 
 
@@ -129,98 +122,64 @@ void GLGraphicsPSO::Bind(GLStateManager& stateMngr)
 
 void GLGraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
 {
-    /* Allocate packed raw buffer */
-    const std::size_t bufferSize =
-    (
-        desc.viewports.size() * (sizeof(GLViewport) + sizeof(GLDepthRange)) +
-        desc.scissors.size()  * (sizeof(GLScissor))
+    ByteBufferIterator byteBufferIter = staticStateBuffer_.Allocate(
+        desc.viewports.size(), desc.scissors.size(),
+        (sizeof(GLViewport) + sizeof(GLDepthRange)), sizeof(GLScissor),
+        GetMutableReport()
     );
-    staticStateBuffer_ = DynamicByteArray{ bufferSize, UninitializeTag{} };
-
-    ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
-
-    /* Build static viewports in raw buffer */
-    if (!desc.viewports.empty())
-        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), byteBufferIter);
-
-    /* Build static scissors in raw buffer */
-    if (!desc.scissors.empty())
-        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), byteBufferIter);
-}
-
-void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter)
-{
-    /* Store number of viewports and validate limit */
-    if (numViewports > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
-    {
-        GetMutableReport().Errorf(
-            "too many viewports in graphics pipeline state (%d specified, but limit is %u)\n",
-            numStaticViewports_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
-        );
-        numStaticViewports_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
-    }
-    else
-        numStaticViewports_ = static_cast<GLsizei>(numViewports);
 
     /* Build <GLViewport> entries */
-    for_range(i, numViewports)
+    for_range(i, staticStateBuffer_.GetNumViewports())
     {
         auto dst = byteBufferIter.Next<GLViewport>();
         {
-            dst->x      = static_cast<GLfloat>(viewports[i].x);
-            dst->y      = static_cast<GLfloat>(viewports[i].y);
-            dst->width  = static_cast<GLfloat>(viewports[i].width);
-            dst->height = static_cast<GLfloat>(viewports[i].height);
+            dst->x      = static_cast<GLfloat>(desc.viewports[i].x);
+            dst->y      = static_cast<GLfloat>(desc.viewports[i].y);
+            dst->width  = static_cast<GLfloat>(desc.viewports[i].width);
+            dst->height = static_cast<GLfloat>(desc.viewports[i].height);
         }
     }
 
     /* Build <GLDepthRange> entries */
-    for_range(i, numViewports)
+    for_range(i, staticStateBuffer_.GetNumViewports())
     {
         auto dst = byteBufferIter.Next<GLDepthRange>();
         {
-            dst->minDepth = static_cast<GLclamp_t>(viewports[i].minDepth);
-            dst->maxDepth = static_cast<GLclamp_t>(viewports[i].maxDepth);
+            dst->minDepth = static_cast<GLclamp_t>(desc.viewports[i].minDepth);
+            dst->maxDepth = static_cast<GLclamp_t>(desc.viewports[i].maxDepth);
         }
     }
-}
-
-void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter)
-{
-    /* Store number of scissors and validate limit */
-    if (numScissors > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
-    {
-        GetMutableReport().Errorf(
-            "too many scissors in graphics pipeline state (%d specified, but limit is %u)\n",
-            numStaticScissors_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
-        );
-        numStaticScissors_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
-    }
-    else
-        numStaticScissors_ = static_cast<GLsizei>(numScissors);
 
     /* Build <GLScissor> entries */
-    for_range(i, numScissors)
+    for_range(i, staticStateBuffer_.GetNumScissors())
     {
         auto dst = byteBufferIter.Next<GLScissor>();
         {
-            dst->x      = static_cast<GLint>(scissors[i].x);
-            dst->y      = static_cast<GLint>(scissors[i].y);
-            dst->width  = static_cast<GLsizei>(scissors[i].width);
-            dst->height = static_cast<GLsizei>(scissors[i].height);
+            dst->x      = static_cast<GLint>(desc.scissors[i].x);
+            dst->y      = static_cast<GLint>(desc.scissors[i].y);
+            dst->width  = static_cast<GLsizei>(desc.scissors[i].width);
+            dst->height = static_cast<GLsizei>(desc.scissors[i].height);
         }
     }
 }
 
-void GLGraphicsPSO::SetStaticViewports(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter)
+void GLGraphicsPSO::SetStaticViewportsAndScissors(GLStateManager& stateMngr)
 {
-    stateMngr.SetViewportArray(0, numStaticViewports_, byteBufferIter.Next<GLViewport>(numStaticViewports_));
-    stateMngr.SetDepthRangeArray(0, numStaticViewports_, byteBufferIter.Next<GLDepthRange>(numStaticViewports_));
-}
-
-void GLGraphicsPSO::SetStaticScissors(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter)
-{
-    stateMngr.SetScissorArray(0, numStaticScissors_, byteBufferIter.Next<GLScissor>(numStaticScissors_));
+    if (staticStateBuffer_)
+    {
+        ByteBufferConstIterator byteBufferIter = staticStateBuffer_.GetBufferIterator();
+        if (staticStateBuffer_.GetNumViewports() > 0)
+        {
+            const GLsizei numViewportsSizei = static_cast<GLsizei>(staticStateBuffer_.GetNumViewports());
+            stateMngr.SetViewportArray(0, numViewportsSizei, byteBufferIter.Next<GLViewport>(staticStateBuffer_.GetNumViewports()));
+            stateMngr.SetDepthRangeArray(0, numViewportsSizei, byteBufferIter.Next<GLDepthRange>(staticStateBuffer_.GetNumViewports()));
+        }
+        if (staticStateBuffer_.GetNumScissors() > 0)
+        {
+            const GLsizei numScissorsSizei = static_cast<GLsizei>(staticStateBuffer_.GetNumScissors());
+            stateMngr.SetScissorArray(0, numScissorsSizei, byteBufferIter.Next<GLScissor>(staticStateBuffer_.GetNumScissors()));
+        }
+    }
 }
 
 

@@ -132,7 +132,7 @@ class LLGL_EXPORT BasicStringLiteral
             CopyFrom(str);
         }
 
-        //! Destrcuts the string literal. If this is a managed string, it will delete its internal memory.
+        //! Destructs the string literal. If this is a managed string, it will delete its internal memory.
         ~BasicStringLiteral()
         {
             clear();

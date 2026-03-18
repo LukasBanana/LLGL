@@ -19,6 +19,7 @@
 #include "Float16Compressor.h"
 #include "BCDecompressor.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 
 
 namespace LLGL
@@ -799,7 +800,11 @@ static void ValidateDestinationImageView(const MutableImageView& imageView)
     LLGL_ASSERT_PTR(imageView.data);
     const std::size_t dataTypeSize = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
     LLGL_ASSERT(dataTypeSize > 0, "destination image data type size must be greater than zero");
-    LLGL_ASSERT(imageView.dataSize % dataTypeSize == 0, "destination image data size is not a multiple of the source data type size");
+    LLGL_ASSERT(
+        imageView.dataSize % dataTypeSize == 0,
+        "destination image data size (%zu) is not a multiple of the source data type size (%zu)",
+        imageView.dataSize, dataTypeSize
+    );
 }
 
 static void ValidateImageConversionParams(
@@ -807,12 +812,21 @@ static void ValidateImageConversionParams(
     ImageFormat         dstFormat,
     DataType            dstDataType)
 {
-    if (srcImageView.format == ImageFormat::Compressed || dstFormat == ImageFormat::Compressed)
-        LLGL_TRAP("cannot convert compressed image formats");
-    if (IsDepthOrStencilFormat(srcImageView.format) != IsDepthOrStencilFormat(dstFormat))
-        LLGL_TRAP("cannot convert between depth-stencil and non-depth-stencil image formats");
-    if (dstDataType < DataType::Int8 || dstDataType > DataType::Float64)
-        LLGL_TRAP("invalid value for destination data type: 0x%08X", static_cast<unsigned>(dstDataType));
+    LLGL_ASSERT(
+        srcImageView.format != ImageFormat::Compressed && dstFormat != ImageFormat::Compressed,
+        "cannot convert compressed image formats: from %s to %s",
+        ToString(srcImageView.format), ToString(dstFormat)
+    );
+    LLGL_ASSERT(
+        IsDepthOrStencilFormat(srcImageView.format) == IsDepthOrStencilFormat(dstFormat),
+        "cannot convert between depth-stencil and non-depth-stencil image formats: %s vs %s",
+        ToString(srcImageView.format), ToString(dstFormat)
+    );
+    LLGL_ASSERT(
+        dstDataType >= DataType::Int8 && dstDataType <= DataType::Float64,
+        "invalid value for destination data type: 0x%08X",
+        static_cast<unsigned>(dstDataType)
+    );
 }
 
 
