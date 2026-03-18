@@ -79,7 +79,7 @@ class D3D9CommandBuffer final : public CommandBuffer
         void AllocDrawCommand(UINT startVertex, UINT numVertices, UINT numInstances, UINT firstInstance);
         void AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVertexIndex, UINT numVertices, UINT startIndex, UINT numInstances, UINT firstInstance);
 
-        D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
+        //D3D9CmdSetRenderStates::D3DRenderState* AllocSetRenderStatesCommand(UINT count);
 
         void AllocSetStreamSourceFreqIndexDataCommand(UINT numInstances);
         void AllocSetStreamSourceFreqInstanceDataCommand(ArrayView<D3D9StreamSourceFreq> streamSourceFreq);

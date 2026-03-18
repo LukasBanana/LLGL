@@ -691,12 +691,12 @@ void D3D9CommandBuffer::AllocDrawIndexedCommand(INT baseVertexIndex, UINT minVer
     }
 }
 
-D3D9CmdSetRenderStates::D3DRenderState* D3D9CommandBuffer::AllocSetRenderStatesCommand(UINT count)
+/*D3D9CmdSetRenderStates::D3DRenderState* D3D9CommandBuffer::AllocSetRenderStatesCommand(UINT count)
 {
     auto cmd = AllocCommand<D3D9CmdSetRenderStates>(D3D9OpcodeSetRenderStates, sizeof(D3D9CmdSetRenderStates::D3DRenderState) * count);
     cmd->numRenderStates = count;
     return reinterpret_cast<D3D9CmdSetRenderStates::D3DRenderState*>(cmd + 1);
-}
+}*/
 
 void D3D9CommandBuffer::AllocSetStreamSourceFreqIndexDataCommand(UINT numInstances)
 {

@@ -46,6 +46,12 @@ class D3D9Texture final : public Texture
 
     private:
 
+        HRESULT WriteD3DTexture(UINT mipLevel, const Offset3D& offset, const Extent3D& extent, const ImageView& srcImageView);
+        HRESULT WriteD3DVolumeTexture(UINT mipLevel, const Offset3D& offset, const Extent3D& extent, const ImageView& srcImageView);
+        HRESULT WriteD3DCubeTexture(UINT mipLevel, const Offset3D& offset, const Extent3D& extent, const ImageView& srcImageView);
+
+    private:
+
         ComPtr<IDirect3DBaseTexture9> baseTexture_;
 
 };

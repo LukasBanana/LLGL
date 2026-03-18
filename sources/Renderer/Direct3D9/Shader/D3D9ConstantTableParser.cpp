@@ -55,13 +55,13 @@ enum D3DXRegisterSet : WORD
 // Mimics D3DXSHADER_CONSTANTTABLE
 struct D3DXShaderConstantTable
 {
-    DWORD   size;          // Size of this struct
-    DWORD   creator;       // Offset to string
-    DWORD   version;       // Shader version
-    DWORD   constants;     // Number of constants
-    DWORD   constantInfo;  // Offset to array of D3DXShaderConstantInfo
-    DWORD   flags;
-    DWORD   target;        // Offset to profile string
+    DWORD size;         // Size of this struct
+    DWORD creator;      // Offset to string
+    DWORD version;      // Shader version
+    DWORD constants;    // Number of constants
+    DWORD constantInfo; // Offset to array of D3DXShaderConstantInfo
+    DWORD flags;
+    DWORD target;       // Offset to profile string
 };
 
 LLGL_ASSERT_POD_TYPE(D3DXShaderConstantTable);
@@ -97,8 +97,8 @@ LLGL_ASSERT_POD_TYPE(D3DXShaderTypeInfo);
 // Mimics D3DXSHADER_STRUCTMEMBERINFO
 struct D3DXShaderStructMemberInfo
 {
-    DWORD   name;       // Offset to string
-    DWORD   typeInfo;   // Offset to D3DXShaderTypeInfo
+    DWORD name;     // Offset to string
+    DWORD typeInfo; // Offset to D3DXShaderTypeInfo
 };
 
 LLGL_ASSERT_POD_TYPE(D3DXShaderStructMemberInfo);
@@ -131,22 +131,9 @@ static void ParseSM3Constant(const BYTE* base, D3D9ShaderConstant& constant, DWO
     const auto* type = reinterpret_cast<const D3DXShaderTypeInfo*>(base + typeInfoOffset);
 
     constant.name       = name;
-    //constant.type       = ToD3D9UniformType(type->baseType);
     constant.rows       = type->rows;
     constant.columns    = type->columns;
     constant.arraySize  = type->elements;
-
-#if 0
-    const ArrayView<D3DXShaderStructMemberInfo> structMembers
-    {
-        reinterpret_cast<const D3DXShaderStructMemberInfo*>(base + type->structMemberInfo),
-        type->structMembers
-    };
-
-    constant.structMembers.resize(type->structMembers);
-    for_range(i, type->structMembers)
-        ParseSM3Constant(base, constant.structMembers[i], structMembers[i].name, structMembers[i].typeInfo);
-#endif
 }
 
 constexpr std::uint32_t k_d3dComponentSize = sizeof(float);
@@ -156,53 +143,6 @@ static std::uint32_t GetLowerRegisterOffset(std::uint32_t offset)
 {
     return (offset - offset % k_d3dRegisterSize);
 };
-
-#if 0
-// Returns the total size of the specified constant.
-static void CalculateRegisterSlotsAndByteSizes(D3D9ShaderConstant& constant, D3D9ShaderRegister& regBase, std::uint32_t& byteOffset)
-{
-    constant.byteOffset = byteOffset;
-
-    if (constant.type == D3D9UniformType::Undefined)
-    {
-        if (!constant.structMembers.empty())
-        {
-            for_range(i, constant.structMembers.size())
-                CalculateRegisterSlotsAndByteSizes(constant.structMembers[i], regBase, byteOffset);
-
-            constant.byteSize = (byteOffset - constant.byteOffset);
-        }
-    }
-    else
-    {
-        LLGL_ASSERT(constant.rows > 0);
-        LLGL_ASSERT(constant.columns > 0);
-        constant.byteSize = (constant.rows - 1) * k_d3dRegisterSize + (constant.columns) * k_d3dComponentSize;
-
-        const std::uint32_t startRegisterOffset = GetLowerRegisterOffset(byteOffset);
-        const std::uint32_t targetOffset = startRegisterOffset + constant.reg.component * k_d3dComponentSize;
-
-        if (constant.byteOffset <= targetOffset && startRegisterOffset == GetLowerRegisterOffset(targetOffset + constant.byteSize))
-        {
-            /* Use target offset if we did not cross register boundaries, e.g. "float2 A; float2 B : register(c0.zw);" both fall into register 0 */
-            constant.byteOffset = targetOffset;
-        }
-        else
-        {
-            /* Add padding to move offset into next register */
-            const std::uint32_t paddingOffset = GetAlignedSize<std::uint32_t>(byteOffset, k_d3dRegisterSize) % k_d3dRegisterSize;
-            constant.byteOffset += paddingOffset;
-        }
-
-        /* Update output byte offset */
-        byteOffset = constant.byteOffset + constant.byteSize;
-    }
-
-    /* Assign register slots */
-    constant.reg.index = GetLowerRegisterOffset(constant.byteOffset) / k_d3dRegisterSize;
-    constant.reg.count = DivideRoundUp(constant.byteSize, k_d3dRegisterSize);
-}
-#endif
 
 HRESULT D3DParseSM3ConstantTable(const void* byteCode, D3D9ShaderConstantTable& outCtable)
 {
@@ -240,15 +180,9 @@ HRESULT D3DParseSM3ConstantTable(const void* byteCode, D3D9ShaderConstantTable& 
                     }
                     ParseSM3Constant(base, constant, cinfo.name, cinfo.typeInfo);
 
-#if 0
-                    /* Calculate register index, register count, and bytesize for each constant's struct members */
-                    D3D9ShaderRegister regBase = constant.reg;
-                    CalculateRegisterSlotsAndByteSizes(constant, regBase, outCtable.byteSize);
-#else
                     /* Determine byte offset and size by register index and count */
                     constant.byteOffset = constant.reg.index * k_d3dRegisterSize;
                     constant.byteSize   = constant.reg.count * k_d3dRegisterSize;
-#endif
                 }
 
                 return S_OK;

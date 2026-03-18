@@ -102,12 +102,6 @@ class D3D9ConstantsCache
             std::uint32_t words[4];
         };
 
-        struct IndexAndOffset
-        {
-            std::size_t constantLayoutIndex;
-
-        };
-
         struct ConstantNameContext
         {
             std::vector<std::string>            nameStack;                          // Stacks up struct members, e.g. "myStruct"."field0"."subField1"

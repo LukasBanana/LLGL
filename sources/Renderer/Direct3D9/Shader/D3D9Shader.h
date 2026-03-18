@@ -41,15 +41,14 @@ struct D3D9ShaderRegister
 
 struct D3D9ShaderConstant
 {
-    std::string                     name;
-    //std::vector<D3D9ShaderConstant> structMembers;
-    D3D9UniformType                 type            = D3D9UniformType::Undefined;
-    D3D9ShaderRegister              reg             = {};
-    std::uint16_t                   rows            = 0;
-    std::uint16_t                   columns         = 0;
-    std::uint16_t                   arraySize       = 0;
-    std::uint32_t                   byteOffset      = 0;
-    std::uint32_t                   byteSize        = 0;
+    std::string         name;
+    D3D9UniformType     type        = D3D9UniformType::Undefined;
+    D3D9ShaderRegister  reg         = {};
+    std::uint16_t       rows        = 0;
+    std::uint16_t       columns     = 0;
+    std::uint16_t       arraySize   = 0;
+    std::uint32_t       byteOffset  = 0;
+    std::uint32_t       byteSize    = 0;
 };
 
 struct D3D9ShaderConstantTable
