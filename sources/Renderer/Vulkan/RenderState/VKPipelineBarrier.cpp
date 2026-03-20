@@ -138,9 +138,9 @@ void VKPipelineBarrier::InsertImageMemoryBarrier(VkPipelineStageFlags stageFlags
         barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = 0;
+        barrier.subresourceRange.levelCount     = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = 0;
+        barrier.subresourceRange.layerCount     = 1;
     }
     imageBarriers_.push_back(barrier);
 }

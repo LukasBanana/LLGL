@@ -633,8 +633,8 @@ void VKCommandBuffer::ResourceBarrier(
     std::uint32_t       numTextures,
     Texture* const *    textures)
 {
-    VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-    VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    const VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    const VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 
     SmallVector<VkBufferMemoryBarrier, 32u>  bufferBarriers;
     SmallVector<VkImageMemoryBarrier, 32u>   imageBarriers;

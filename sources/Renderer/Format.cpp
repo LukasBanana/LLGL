@@ -294,7 +294,7 @@ LLGL_EXPORT bool IsDepthAndStencilFormat(const Format format)
 
 LLGL_EXPORT bool IsDepthFormat(const Format format)
 {
-    return ((GetFormatAttribs(format).flags & (FormatFlags::HasDepth)) != 0);
+    return ((GetFormatAttribs(format).flags & FormatFlags::HasDepth) != 0);
 }
 
 LLGL_EXPORT bool IsStencilFormat(const Format format)
@@ -320,7 +320,7 @@ LLGL_EXPORT bool IsIntegerFormat(const Format format)
 
 LLGL_EXPORT bool IsFloatFormat(const Format format)
 {
-    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) == 0);
+    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized | FormatFlags::HasDepthStencil | FormatFlags::IsCompressed)) == 0);
 }
 
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)

@@ -707,10 +707,14 @@ DEF_TEST( ResourceBinding )
     if (intermediateResult == TestResult::Passed)
     {
         if (opt.verbose)
-            Log::Printf("Binding test passed (Frame %u)\n", frame);
+            Log::Printf("Binding test [Frame %u] passed\n", frame);
     }
     else
+    {
+        if (opt.verbose)
+            Log::Errorf(Log::ColorFlags::StdWarning, "Binding test [Frame %u] failed\n", frame);
         result = intermediateResult;
+    }
 
     if (intermediateResult == TestResult::Passed || opt.greedy)
     {

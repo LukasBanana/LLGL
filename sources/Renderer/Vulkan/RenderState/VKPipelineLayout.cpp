@@ -38,6 +38,10 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     barrierFlags_               { desc.barrierFlags                    },
     flags_                      { 0                                    }
 {
+    /* Create pipeline barrier if any barrier flags are specified */
+    if ((barrierFlags_ & (BarrierFlags::StorageBuffer | BarrierFlags::StorageTexture)) != 0)
+        barrier_ = MakeUnique<VKPipelineBarrier>();
+
     /* Create Vulkan descriptor set layouts */
     if (!desc.heapBindings.empty())
         CreateDescriptorSetLayout(device, desc.heapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_);
@@ -414,10 +418,8 @@ void VKPipelineLayout::CreateDescriptorSetLayout(
 
 void VKPipelineLayout::AllocateDescriptorBarriers(std::vector<VKLayoutBinding>& bindings)
 {
-    if ((barrierFlags_ & (BarrierFlags::StorageBuffer | BarrierFlags::StorageTexture)) != 0)
+    if (barrier_)
     {
-        barrier_ = MakeUnique<VKPipelineBarrier>();
-
         for (VKLayoutBinding& binding : bindings)
         {
             /* Allocate barrier slots for RW buffers */
