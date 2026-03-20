@@ -39,8 +39,8 @@ static constexpr long Dim2D_3D      = Dim2D | Dim3D;
 static constexpr long Dim1D_2D_3D   = Dim1D | Dim2D | Dim3D;
 static constexpr long SInt          = Integer;
 static constexpr long UInt          = Integer | Unsigned;
-static constexpr long SNorm         = Norm;
-static constexpr long UNorm         = Unsigned | Norm;
+static constexpr long SNorm         = SInt | Norm;
+static constexpr long UNorm         = UInt | Norm;
 static constexpr long SFloat        = 0;
 static constexpr long UFloat        = Unsigned;
 
@@ -315,12 +315,12 @@ LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 
 LLGL_EXPORT bool IsIntegerFormat(const Format format)
 {
-    return ((GetFormatAttribs(format).flags & FormatFlags::IsInteger) != 0);
+    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) == FormatFlags::IsInteger);
 }
 
 LLGL_EXPORT bool IsFloatFormat(const Format format)
 {
-    return ((GetFormatAttribs(format).flags & FormatFlags::IsInteger) == 0);
+    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) == 0);
 }
 
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)

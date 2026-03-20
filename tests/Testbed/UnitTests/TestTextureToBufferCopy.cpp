@@ -126,6 +126,7 @@ DEF_TEST( TextureToBufferCopy )
         // Run test through all MIP-maps and array layers (should not be more than 2 each)
         std::vector<char> srcTexImage;
         std::vector<char> dstTexImage;
+        std::vector<char> intermediateBuf;
 
         for_range(mip, srcTexDesc.mipLevels)
         {
@@ -192,7 +193,25 @@ DEF_TEST( TextureToBufferCopy )
                 renderer->ReadTexture(*srcTex, srcRegion, srcTexImageView);
                 renderer->ReadTexture(*dstTex, dstRegion, dstTexImageView);
 
-                if (::memcmp(srcTexImage.data(), dstTexImage.data(), subBufSize) != 0)
+                // Match source texture against immediate buffer first, to diagnose what step might have failed
+                const std::size_t bufAndTexMinSize = std::min<std::size_t>(subBufSize, bufDesc.size);
+                intermediateBuf.resize(bufAndTexMinSize, 0);
+                renderer->ReadBuffer(*buf, 0, intermediateBuf.data(), bufAndTexMinSize);
+
+                if (::memcmp(srcTexImage.data(), intermediateBuf.data(), bufAndTexMinSize) != 0)
+                {
+                    const std::string srcDataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
+                    const std::string dstDataStr = TestbedContext::FormatByteArray(intermediateBuf.data(), bufAndTexMinSize, 4, formatAsFloats);
+                    Log::Errorf(
+                        Log::ColorFlags::StdError,
+                        "Mismatch between data of texture %s [MIP %u, Layer %u] and intermediate buffer:\n"
+                        " -> Expected: [%s]\n"
+                        " -> Actual:   [%s]\n",
+                        name, mip, layer, srcDataStr.c_str(), dstDataStr.c_str()
+                    );
+                    return TestResult::FailedMismatch;
+                }
+                else if (::memcmp(srcTexImage.data(), dstTexImage.data(), subBufSize) != 0)
                 {
                     const std::string srcDataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
                     const std::string dstDataStr = TestbedContext::FormatByteArray(dstTexImage.data(), dstTexImage.size(), 4, formatAsFloats);

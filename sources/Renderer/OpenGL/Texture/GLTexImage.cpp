@@ -44,12 +44,6 @@ static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPix
     return std::vector<std::uint8_t>(static_cast<std::size_t>(numPixels), stencil);
 }*/
 
-// Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
-static bool IsStrictFloatFormat(const Format format)
-{
-    return (IsFloatFormat(format) && !IsNormalizedFormat(format));
-}
-
 // Returns true if the 'clearValue' member is enabled if no initial image data is specified, i.e. MiscFlags::NoInitialData is NOT specified
 static bool IsClearValueEnabled(const TextureDescriptor& desc)
 {
@@ -59,7 +53,7 @@ static bool IsClearValueEnabled(const TextureDescriptor& desc)
 // Returns true if a GL texture with the specified descriptor can be default initialized with an RGBA float format, i.e. GL_RGBA and GL_FLOAT.
 static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
 {
-    return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && IsStrictFloatFormat(desc.format));
+    return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && IsFloatFormat(desc.format));
 }
 
 static GLenum GetDefaultInitialGLImageFormat(Format format)

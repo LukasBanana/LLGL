@@ -562,8 +562,8 @@ LLGL_EXPORT bool IsColorFormat(const Format format);
 LLGL_EXPORT bool IsNormalizedFormat(const Format format);
 
 /**
-\brief Returns true if the specified hardware format is an integer format (like Format::RGBA8UInt, Format::R8SInt etc.).
-\remarks This does not include normalized formats such as Format::RGBA8UNorm.
+\brief Returns true if the specified hardware format is a strict integer format (like Format::RGBA8UInt, Format::R8SInt etc.).
+\remarks Unlike FormatFlags::IsInteger, this does \e not include normalized integer formats such as Format::RGBA8UNorm.
 While these types use an integer type as input, they are normalized to a fractional number in the closed range [0, 1].
 \see IsNormalizedFormat
 \see Format
@@ -571,8 +571,8 @@ While these types use an integer type as input, they are normalized to a fractio
 LLGL_EXPORT bool IsIntegerFormat(const Format format);
 
 /**
-\brief Returns true if the specified hardware format is a floating-point format (like Format::RGBA32Float, Format::R32Float etc.).
-\remarks This does not include depth-stencil formats or compressed formats.
+\brief Returns true if the specified hardware format is a strict floating-point format (like Format::RGBA32Float, Format::R32Float etc.).
+\remarks This does \e not include depth-stencil formats or compressed formats.
 \see IsDepthOrStencilFormat
 \see IsCompressedFormat
 \see Format
