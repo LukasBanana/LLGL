@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBuffer.h>
+#include "VKCommandBufferRing.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include "../VKCore.h"
@@ -52,13 +53,10 @@ class VKCommandBuffer final : public CommandBuffer
             const CommandBufferDescriptor&  desc
         );
 
-        ~VKCommandBuffer();
-
     public:
 
-        // Returns the fence used to submit the command buffer and resets it if this is a multi-submit command buffer,
-        // i.e. it won't need another signal for the next submission.
-        VkFence GetQueueSubmitFenceAndFlush();
+        // Submits this command buffer to the specified queue. This might include another command buffer that is submitted alongside to reset query pools.
+        VkResult SubmitToQueue(VkQueue queue);
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -90,9 +88,6 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
-        void CreateVkCommandPool(std::uint32_t queueFamilyIndex);
-        void CreateVkCommandBuffers();
-        void CreateVkRecordingFences();
         void CreateStagingBufferPools(VKDeviceMemoryManager& deviceMemoryMngr, VkDeviceSize minStagingPoolSize);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
@@ -128,17 +123,12 @@ class VKCommandBuffer final : public CommandBuffer
 
         void ResetBindingStates();
 
-        #if 1//TODO: optimize
-        void ResetQueryPoolsInFlight();
-        void AppendQueryPoolInFlight(VKQueryHeap* queryHeap);
-        #endif
-
         void BindVertexBuffer(VKBuffer& bufferVK);
 
-    private:
-
-        // Returns the number of native Vulkan command buffers used for the specified descriptor.
-        static std::uint32_t GetNumVkCommandBuffers(const CommandBufferDescriptor& desc);
+        inline VKStagingBufferPool& GetStagingBufferPool()
+        {
+            return stagingBufferPools_[commandBufferRing_.GetIndex()];
+        }
 
     private:
 
@@ -159,25 +149,16 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
-        static constexpr std::uint32_t maxNumCommandBuffers = 3;
-
         VkDevice                        device_                                         = VK_NULL_HANDLE;
 
         VkQueue                         commandQueue_                                   = VK_NULL_HANDLE;
 
-        VKPtr<VkCommandPool>            commandPool_;
-
-        VKPtr<VkFence>                  recordingFenceArray_[maxNumCommandBuffers];
-        VkFence                         recordingFence_                                 = VK_NULL_HANDLE;
-        bool                            recordingFenceDirty_[maxNumCommandBuffers]      = {};
-        VkCommandBuffer                 commandBufferArray_[maxNumCommandBuffers];
+        VKCommandBufferRing             commandBufferRing_;
         VkCommandBuffer                 commandBuffer_                                  = VK_NULL_HANDLE;
-        std::uint32_t                   commandBufferIndex_                             = 0;
-        std::uint32_t                   numCommandBuffers_                              = 2;
 
         VKCommandContext                context_;
 
-        VKStagingBufferPool             stagingBufferPools_[maxNumCommandBuffers];
+        VKStagingBufferPool             stagingBufferPools_[VKCommandBufferRing::maxCount];
 
         RecordState                     recordState_                                    = RecordState::Undefined;
 
@@ -207,7 +188,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         std::uint32_t                   maxDrawIndirectCount_                           = 0;
 
-        VKStagingDescriptorSetPool      descriptorSetPoolArray_[maxNumCommandBuffers];
+        VKStagingDescriptorSetPool      descriptorSetPoolArray_[VKCommandBufferRing::maxCount];
         VKStagingDescriptorSetPool*     descriptorSetPool_                              = nullptr;
         VKDescriptorCache*              descriptorCache_                                = nullptr;
         VKDescriptorSetWriter           descriptorSetWriter_;

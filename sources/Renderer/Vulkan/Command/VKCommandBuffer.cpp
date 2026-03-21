@@ -38,8 +38,6 @@ namespace LLGL
 {
 
 
-constexpr std::uint32_t VKCommandBuffer::maxNumCommandBuffers;
-
 // Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
@@ -57,18 +55,14 @@ VKCommandBuffer::VKCommandBuffer(
     const VKQueueFamilyIndices&     queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
-    device_                 { device                                        },
-    commandQueue_           { commandQueue                                  },
-    commandPool_            { device, vkDestroyCommandPool                  },
-    recordingFenceArray_    { VKPtr<VkFence>{ device, vkDestroyFence },
-                              VKPtr<VkFence>{ device, vkDestroyFence },
-                              VKPtr<VkFence>{ device, vkDestroyFence }      },
-    numCommandBuffers_      { VKCommandBuffer::GetNumVkCommandBuffers(desc) },
-    queuePresentFamily_     { queueFamilyIndices.presentFamily              },
-    maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice)       },
+    device_                 { device                                  },
+    commandQueue_           { commandQueue                            },
+    commandBufferRing_      { device                                  },
+    queuePresentFamily_     { queueFamilyIndices.presentFamily        },
+    maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice) },
     descriptorSetPoolArray_ { device,
                               device,
-                              device                                        }
+                              device                                  }
 {
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
@@ -93,27 +87,8 @@ VKCommandBuffer::VKCommandBuffer(
     }
 
     /* Create native command buffer objects */
-    CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
-    CreateVkCommandBuffers();
-    CreateVkRecordingFences();
+    commandBufferRing_.Create(bufferLevel_, queueFamilyIndices.graphicsFamily, desc.numNativeBuffers);
     CreateStagingBufferPools(deviceMemoryMngr, static_cast<VkDeviceSize>(desc.minStagingPoolSize));
-}
-
-VKCommandBuffer::~VKCommandBuffer()
-{
-    vkFreeCommandBuffers(device_, commandPool_, numCommandBuffers_, commandBufferArray_);
-}
-
-VkFence VKCommandBuffer::GetQueueSubmitFenceAndFlush()
-{
-    /*
-    Flush recoring fence since we don't have to signal it more than once,
-    until the same native command buffer is recorded again.
-    */
-    VkFence fence = recordingFence_;
-    recordingFence_ = VK_NULL_HANDLE;
-    recordingFenceDirty_[commandBufferIndex_] = true;
-    return fence;
 }
 
 /* ----- Encoding ----- */
@@ -148,11 +123,6 @@ void VKCommandBuffer::Begin()
     VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
 
-    #if 0//TODO: optimize
-    /* Reset all query pools that were in flight during last encoding */
-    ResetQueryPoolsInFlight();
-    #endif
-
     /* Reset record states to default values */
     recordState_                            = RecordState::OutsideRenderPass;
     framebufferRenderArea_.offset.x         = 0;
@@ -174,17 +144,36 @@ void VKCommandBuffer::End()
     /* Execute command buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
     {
-        VkResult result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFenceAndFlush());
+        VkResult result = SubmitToQueue(commandQueue_);
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 
     ResetBindingStates();
 }
 
+VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
+{
+    VkFence fence = commandBufferRing_.GetQueueSubmitFenceAndFlush();
+
+    VkSubmitInfo submitInfo;
+    {
+        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext                = nullptr;
+        submitInfo.waitSemaphoreCount   = 0;
+        submitInfo.pWaitSemaphores      = nullptr;
+        submitInfo.pWaitDstStageMask    = 0;
+        submitInfo.commandBufferCount   = 1;
+        submitInfo.pCommandBuffers      = &commandBuffer_;
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores    = nullptr;
+    }
+    return vkQueueSubmit(queue, 1, &submitInfo, fence);
+}
+
 void VKCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, secondaryCommandBuffer);
-    VkCommandBuffer cmdBuffers[] = { cmdBufferVK.GetVkCommandBuffer() };
+    auto& secondaryCommandBufferVK = LLGL_CAST(VKCommandBuffer&, secondaryCommandBuffer);
+    VkCommandBuffer cmdBuffers[] = { secondaryCommandBufferVK.GetVkCommandBuffer() };
     vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
 }
 
@@ -208,7 +197,7 @@ void VKCommandBuffer::UpdateBuffer(
         PauseRenderPass();
         {
             if (size > k_limitForCmdUpdateBuffer)
-                stagingBufferPools_[commandBufferIndex_].WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+                GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
             else
                 vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
             BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
@@ -218,7 +207,7 @@ void VKCommandBuffer::UpdateBuffer(
     else
     {
         if (size > k_limitForCmdUpdateBuffer)
-            stagingBufferPools_[commandBufferIndex_].WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+            GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
         else
             vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
         BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
@@ -1293,60 +1282,13 @@ bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
  * ======= Private: =======
  */
 
-void VKCommandBuffer::CreateVkCommandPool(std::uint32_t queueFamilyIndex)
-{
-    /* Create command pool */
-    VkCommandPoolCreateInfo createInfo;
-    {
-        createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        createInfo.pNext            = nullptr;
-        createInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        createInfo.queueFamilyIndex = queueFamilyIndex;
-    }
-    VkResult result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan command pool");
-}
-
-void VKCommandBuffer::CreateVkCommandBuffers()
-{
-    /* Allocate command buffers */
-    VkCommandBufferAllocateInfo allocInfo;
-    {
-        allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.pNext                 = nullptr;
-        allocInfo.commandPool           = commandPool_;
-        allocInfo.level                 = bufferLevel_;
-        allocInfo.commandBufferCount    = numCommandBuffers_;
-    }
-    VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferArray_);
-    VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
-}
-
-void VKCommandBuffer::CreateVkRecordingFences()
-{
-    /* Create all recording fences with their initial state being signaled */
-    VkFenceCreateInfo createInfo;
-    {
-        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    }
-
-    for_range(i, numCommandBuffers_)
-    {
-        /* Create fence for command buffer recording */
-        VkResult result = vkCreateFence(device_, &createInfo, nullptr, recordingFenceArray_[i].ReleaseAndGetAddressOf());
-        VKThrowIfFailed(result, "failed to create Vulkan fence");
-    }
-}
-
 void VKCommandBuffer::CreateStagingBufferPools(VKDeviceMemoryManager& deviceMemoryMngr, VkDeviceSize minStagingPoolSize)
 {
     /* Create command allocators and descriptor heap pools */
     constexpr VkDeviceSize minStagingChunkSize = 256;
     minStagingPoolSize = std::max(minStagingChunkSize, minStagingPoolSize);
 
-    for_range(i, numCommandBuffers_)
+    for_range(i, commandBufferRing_.GetCount())
         stagingBufferPools_[i].InitializeDevice(&deviceMemoryMngr, minStagingPoolSize);
 }
 
@@ -1489,25 +1431,14 @@ void VKCommandBuffer::SubmitAutoPipelineBarrier()
 
 void VKCommandBuffer::AcquireNextBuffer()
 {
-    /* Move to next command buffer index */
-    commandBufferIndex_ = (commandBufferIndex_ + 1) % numCommandBuffers_;
-
-    /* Wait for fence before using next command buffer */
-    recordingFence_ = recordingFenceArray_[commandBufferIndex_].Get();
-    if (recordingFenceDirty_[commandBufferIndex_])
-        vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
-
-    /* Reset fence state after it has been signaled by the command queue */
-    vkResetFences(device_, 1, &recordingFence_);
-    recordingFenceDirty_[commandBufferIndex_] = false;
+    commandBuffer_ = commandBufferRing_.AcquireNextBuffer();
 
     /* Make next command buffer current and reset pools and context */
-    commandBuffer_      = commandBufferArray_[commandBufferIndex_];
-    descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
+    descriptorSetPool_ = &(descriptorSetPoolArray_[commandBufferRing_.GetIndex()]);
     descriptorSetPool_->Reset();
     context_.Reset(commandBuffer_);
 
-    stagingBufferPools_[commandBufferIndex_].Reset();
+    stagingBufferPools_[commandBufferRing_.GetIndex()].Reset();
 }
 
 void VKCommandBuffer::ResetBindingStates()
@@ -1517,41 +1448,6 @@ void VKCommandBuffer::ResetBindingStates()
     boundPipelineState_     = nullptr;
     boundPipelineBarrier_   = nullptr;
     descriptorCache_        = nullptr;
-}
-
-#if 0
-void VKCommandBuffer::ResetQueryPoolsInFlight()
-{
-    for_range(i, numQueryHeapsInFlight_)
-    {
-        auto& queryHeapVK = *(queryHeapsInFlight_[0]);
-        vkCmdResetQueryPool(
-            commandBuffer_,
-            queryHeapVK.GetVkQueryPool(),
-            0,
-            queryHeapVK.GetNumQueries()
-        );
-    }
-    numQueryHeapsInFlight_ = 0;
-}
-
-void VKCommandBuffer::AppendQueryPoolInFlight(VKQueryHeap* queryHeap)
-{
-    if (numQueryHeapsInFlight_ >= queryHeapsInFlight_.size())
-        queryHeapsInFlight_.push_back(queryHeap);
-    else
-        queryHeapsInFlight_[numQueryHeapsInFlight_] = queryHeap;
-    ++numQueryHeapsInFlight_;
-}
-#endif
-
-std::uint32_t VKCommandBuffer::GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
-{
-    constexpr std::uint32_t numNativeBuffersDefault = 2;
-    if (desc.numNativeBuffers == 0)
-        return numNativeBuffersDefault;
-    else
-        return Clamp<std::uint32_t>(desc.numNativeBuffers, 1u, VKCommandBuffer::maxNumCommandBuffers);
 }
 
 

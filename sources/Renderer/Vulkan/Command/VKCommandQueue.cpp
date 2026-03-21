@@ -17,23 +17,6 @@ namespace LLGL
 {
 
 
-VkResult VKSubmitCommandBuffer(VkQueue commandQueue, VkCommandBuffer commandBuffer, VkFence fence)
-{
-    VkSubmitInfo submitInfo;
-    {
-        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pNext                = nullptr;
-        submitInfo.waitSemaphoreCount   = 0;
-        submitInfo.pWaitSemaphores      = nullptr;
-        submitInfo.pWaitDstStageMask    = 0;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = &commandBuffer;
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores    = nullptr;
-    }
-    return vkQueueSubmit(commandQueue, 1, &submitInfo, fence);
-}
-
 VKCommandQueue::VKCommandQueue(VkDevice device, VkQueue queue) :
     device_ { device },
     native_ { queue  }
@@ -47,11 +30,7 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
     auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
     if (!commandBufferVK.IsImmediateCmdBuffer())
     {
-        VkResult result = VKSubmitCommandBuffer(
-            native_,
-            commandBufferVK.GetVkCommandBuffer(),
-            commandBufferVK.GetQueueSubmitFenceAndFlush()
-        );
+        VkResult result = commandBufferVK.SubmitToQueue(native_);
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 }
