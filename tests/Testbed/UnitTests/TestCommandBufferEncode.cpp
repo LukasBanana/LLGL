@@ -25,10 +25,10 @@ DEF_TEST( CommandBufferEncode )
         TestCmdBufferSecondary0,
         TestCmdBufferSecondary1,
 
-        TestCmdBuffer_Count,
+        TestCmdBuffer_Num,
     };
 
-    static CommandBuffer* cmdBuffers[TestCmdBuffer_Count] = {};
+    static CommandBuffer* cmdBuffers[TestCmdBuffer_Num] = {};
     static Texture* framebufferResultTex[2] = {};
     static PipelineLayout* psoLayout;
     static PipelineState* pso;
@@ -117,7 +117,7 @@ DEF_TEST( CommandBufferEncode )
         framebufferResultTex[1] = renderer->CreateTexture(texDesc, &initialImage);
 
         // Create multi-submit command buffers
-        for_range(i, TestCmdBuffer_Count)
+        for_range(i, TestCmdBuffer_Num)
         {
             CommandBufferDescriptor cmdBufferDesc;
             {

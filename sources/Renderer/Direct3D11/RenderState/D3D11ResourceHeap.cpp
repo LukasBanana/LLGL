@@ -212,7 +212,7 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
         subresourceContext.newIndex = subresourceLocator.index;
 
         /* Write descriptor into respective heap segment for each affected shader stage */
-        for_range(stage, static_cast<int>(D3DShaderStage_Count))
+        for_range(stage, static_cast<int>(D3DShaderStage_Num))
         {
             const std::uint32_t offset = binding.stages[stage].segmentOffset;
             if (offset == BindingSegmentLocation::invalidOffset)
@@ -1147,7 +1147,7 @@ D3D11ResourceHeap::D3DShaderStage D3D11ResourceHeap::StageFlagsToD3DShaderStage(
         case StageFlags::GeometryStage:         return D3DShaderStage_GS;
         case StageFlags::FragmentStage:         return D3DShaderStage_PS;
         case StageFlags::ComputeStage:          return D3DShaderStage_CS;
-        default:                                return D3DShaderStage_Count;
+        default:                                return D3DShaderStage_Num;
     }
 }
 

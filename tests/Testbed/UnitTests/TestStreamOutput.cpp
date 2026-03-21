@@ -191,7 +191,7 @@ DEF_TEST( StreamOutput )
             psoFragDesc.debugName                       = "SO.FRAG.PSO";
             psoFragDesc.pipelineLayout                  = psoLayoutFrag;
             psoFragDesc.renderPass                      = swapChain->GetRenderPass();
-            psoFragDesc.vertexShader                    = shaders[VSStreamOutput];
+            psoFragDesc.vertexShader                    = shaders[VSStreamOutputXfb];
             psoFragDesc.fragmentShader                  = shaders[PSStreamOutput];
             psoFragDesc.primitiveTopology               = PrimitiveTopology::TriangleList;
             psoFragDesc.depth.testEnabled               = true;
@@ -318,7 +318,8 @@ DEF_TEST( StreamOutput )
                 cmdBuffer->SetResource(0, *soSceneCbuffer);
 
                 // Only bind a stream-output buffer so we can query the number of written primitives.
-                // The stream-output buffer is not needed for anything else.
+                // The stream-output buffer is not needed for anything else,
+                // but Vulkan will also require a PSO with an Xfb vertex shader when used in StreamOutput section.
                 cmdBuffer->SetVertexBuffer(*soVertexBuffers[currentSOSwapBuffer]);
                 cmdBuffer->BeginStreamOutput(1, &(soVertexBuffers[(currentSOSwapBuffer + 1) % 2]));
                 {

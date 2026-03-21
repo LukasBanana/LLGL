@@ -81,7 +81,7 @@ class D3D11ResourceHeap final : public ResourceHeap
             D3DShaderStage_PS,
             D3DShaderStage_CS,
 
-            D3DShaderStage_Count,
+            D3DShaderStage_Num,
         };
 
         /*
@@ -141,7 +141,7 @@ class D3D11ResourceHeap final : public ResourceHeap
                 std::uint32_t segmentOffset     : 24; // Byte offset to the first segment within a segment set for the respective shader stage.
                 std::uint32_t descriptorIndex   :  8; // Index of the descriptor the binding maps to (within each segment).
             }
-            stages[D3DShaderStage_Count];
+            stages[D3DShaderStage_Num];
             D3DResourceType type;
         };
 
