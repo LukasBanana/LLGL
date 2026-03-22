@@ -459,7 +459,10 @@ void ExampleBase::Resize(const LLGL::Extent2D& clientAreaSize)
 
         // Re-draw frame
         if (IsLoadingDone())
+        {
+            OnResize(drawableSize_);
             DrawFrame();
+        }
     }
 }
 
