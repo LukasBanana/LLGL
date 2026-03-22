@@ -12,7 +12,6 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Report.h>
 #include <algorithm>
-#include <unordered_map>
 
 #if LLGL_VK_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
@@ -67,6 +66,8 @@ static VkDescriptorType SpirvTypeToVkDescriptorType(const SpirvReflect::SpvType*
             case spv::OpTypeSampler:
                 return VK_DESCRIPTOR_TYPE_SAMPLER;
 
+            case spv::OpTypeArray:
+            case spv::OpTypeRuntimeArray:
             case spv::OpTypeSampledImage:
                 return SpirvTypeToVkDescriptorType(derefType->baseType, true);
 
@@ -95,41 +96,8 @@ bool VKShaderBindingLayout::BuildFromSpirvModule(const void* data, std::size_t s
     if (result != SpirvResult::NoError)
         return false;
 
-    /* Validate all uniform binding slots are unique */
-    std::unordered_map<std::uint64_t, const SpirvReflect::SpvUniform*> validationBindingSlots;
-    bool hasUniformValidationFailed = false;
-
-    for (const auto& it : reflection.GetUniforms())
-    {
-        const std::uint64_t bindingSetAndSlot =
-        (
-            static_cast<std::uint64_t>(it.second.set    ) << 32 |
-            static_cast<std::uint64_t>(it.second.binding)
-        );
-        auto itPrev = validationBindingSlots.find(bindingSetAndSlot);
-        if (itPrev == validationBindingSlots.end())
-        {
-            validationBindingSlots[bindingSetAndSlot] = &(it.second);
-        }
-        else
-        {
-            /* Validation failed: Uniform binding slot collision detected */
-            if (outReport != nullptr)
-            {
-                outReport->Errorf(
-                    "SPIR-V validation failed: binding slot collision between '%s' and '%s' (set=%u, binding=%u)\n",
-                    itPrev->second->name, it.second.name, it.second.set, it.second.binding
-                );
-            }
-            hasUniformValidationFailed = true;
-        }
-    }
-
-    if (hasUniformValidationFailed)
-        return false;
-
     /* Convert binding points into to module bindings */
-    auto ConvertBindingPoint = [](ModuleBinding& dst, const SpirvReflect::SpvUniform& src)
+    auto ConvertBindingPoint = [](ModuleBinding& dst, const SpirvReflect::SpvUniform& src) -> bool
     {
         dst.srcDescriptorSet    = src.set;
         dst.srcBinding          = src.binding;
@@ -138,13 +106,31 @@ bool VKShaderBindingLayout::BuildFromSpirvModule(const void* data, std::size_t s
         dst.spirvDescriptorSet  = src.setWordOffset;
         dst.spirvBinding        = src.bindingWordOffset;
         dst.descriptorType      = SpirvTypeToVkDescriptorType(src.type);
+        return (dst.descriptorType != VK_DESCRIPTOR_TYPE_MAX_ENUM);
     };
 
     bindings_.resize(reflection.GetUniforms().size());
 
     std::size_t bindingIndex = 0;
+    bool hasUniformValidationFailed = false;
+
     for (const auto& it : reflection.GetUniforms())
-        ConvertBindingPoint(bindings_[bindingIndex++], it.second);
+    {
+        if (!ConvertBindingPoint(bindings_[bindingIndex++], it.second))
+        {
+            if (outReport != nullptr)
+            {
+                outReport->Errorf(
+                    "SPIR-V binding table failure: resource '%s' (set=%u, binding=%u) could not be resolved to a valid descriptor type\n",
+                    it.second.name, it.second.set, it.second.binding
+                );
+            }
+            hasUniformValidationFailed = true;
+        }
+    }
+
+    if (hasUniformValidationFailed)
+        return false;
 
     /* Sort module bindings by descriptor set and binding points */
     std::sort(
