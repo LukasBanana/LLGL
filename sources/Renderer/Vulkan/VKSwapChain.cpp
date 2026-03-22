@@ -733,7 +733,6 @@ std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
 
 void VKSwapChain::AcquireNextColorBuffer()
 {
-    currentFrameInFlight_ = (currentFrameInFlight_ + 1) % maxNumFramesInFlight;
     vkWaitForFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf(), VK_TRUE, UINT64_MAX);
 
     vkAcquireNextImageKHR(
@@ -752,6 +751,9 @@ void VKSwapChain::AcquireNextColorBuffer()
     );
 
     vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());
+
+    /* Move to next frame index at the very end */
+    currentFrameInFlight_ = (currentFrameInFlight_ + 1) % maxNumFramesInFlight;
 }
 
 
