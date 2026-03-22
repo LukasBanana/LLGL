@@ -908,6 +908,13 @@ Only the fragment shader remains from the traditional PSO.
 */
 struct MeshPipelineDescriptor
 {
+    // Silence deprecation warnings in default constructors until `amplificationShader` is removed.
+    LLGL_DEPRECATED_IGNORE_PUSH();
+    inline MeshPipelineDescriptor() = default;
+    inline MeshPipelineDescriptor(const MeshPipelineDescriptor&) = default;
+    inline MeshPipelineDescriptor& operator = (const MeshPipelineDescriptor&) = default;
+    LLGL_DEPRECATED_IGNORE_POP();
+
     /**
     \brief Optional name for debugging purposes. By default null.
     \remarks The final name of the native hardware resource is implementation defined.
