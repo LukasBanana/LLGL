@@ -46,7 +46,7 @@ jobs:
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-${{ matrix.target }}-${{ matrix.config }}-${{ matrix.arch }}

@@ -50,7 +50,7 @@ jobs:
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: matrix.lib == 'Static' && matrix.config == 'Release'
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
