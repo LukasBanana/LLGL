@@ -29,6 +29,20 @@ VKDescriptorSetLayout::VKDescriptorSetLayout(VKDescriptorSetLayout&& rhs) noexce
 {
 }
 
+static VkPipelineStageFlags ShaderStageToPipelineStage(VkShaderStageFlags flags)
+{
+    VkPipelineStageFlags bitmask = 0;
+
+    if ((flags & VK_SHADER_STAGE_VERTEX_BIT                 ) != 0) { bitmask |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;                  }
+    if ((flags & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT   ) != 0) { bitmask |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;    }
+    if ((flags & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) != 0) { bitmask |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT; }
+    if ((flags & VK_SHADER_STAGE_GEOMETRY_BIT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;                }
+    if ((flags & VK_SHADER_STAGE_FRAGMENT_BIT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;                }
+    if ((flags & VK_SHADER_STAGE_COMPUTE_BIT                ) != 0) { bitmask |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;                 }
+
+    return bitmask;
+}
+
 void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outBindings) const
 {
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
@@ -45,7 +59,7 @@ void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outB
                     /*dstArrayElement:*/    arrayElement,
                     /*barrierSlot:*/        ~0u,
                     /*descriptorType:*/     setLayoutBindings_[i].descriptorType,
-                    /*stageFlags:*/         setLayoutBindings_[i].stageFlags
+                    /*stageFlags:*/         ShaderStageToPipelineStage(setLayoutBindings_[i].stageFlags)
                 }
             );
         }

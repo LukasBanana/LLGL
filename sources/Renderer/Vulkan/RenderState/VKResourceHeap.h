@@ -157,6 +157,9 @@ class VKResourceHeap final : public ResourceHeap
         // Allocates the buffer/image barrier slots for all descriptor sets.
         void AllocateBarrierSlots(std::uint32_t numDescriptorSets);
 
+        // Adds the specified vaLUe to the barrier slots and returns the index to that barrier slot.
+        std::uint32_t AddBarrierSlot(std::uint32_t slot);
+
     private:
 
         VKPtr<VkDescriptorPool>             descriptorPool_;

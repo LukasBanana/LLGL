@@ -495,8 +495,7 @@ void VKResourceHeap::AllocateBarrierSlots(std::uint32_t numDescriptorSets)
                 case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
                 case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
                     /* Move barrier slot and assign old field a new value as index to the barrier array */
-                    barrierSlots_.push_back(binding.barrierSlot);
-                    binding.barrierSlot = static_cast<std::uint32_t>(barrierSlots_.size());
+                    binding.barrierSlot = AddBarrierSlot(binding.barrierSlot);
                     ++numBufferBarriers_;
                     break;
 
@@ -515,8 +514,7 @@ void VKResourceHeap::AllocateBarrierSlots(std::uint32_t numDescriptorSets)
             {
                 case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
                     /* Move barrier slot and assign old field a new value as index to the barrier array */
-                    barrierSlots_.push_back(binding.barrierSlot);
-                    binding.barrierSlot = static_cast<std::uint32_t>(barrierSlots_.size());
+                    binding.barrierSlot = AddBarrierSlot(binding.barrierSlot);
                     ++numImageBarriers_;
                     break;
 
@@ -528,6 +526,13 @@ void VKResourceHeap::AllocateBarrierSlots(std::uint32_t numDescriptorSets)
 
     /* Allocate barrier resource array */
     barrierResources_.resize(barrierSlots_.size()*numDescriptorSets);
+}
+
+std::uint32_t VKResourceHeap::AddBarrierSlot(std::uint32_t slot)
+{
+    const std::uint32_t nextBarrierSlotIndex = static_cast<std::uint32_t>(barrierSlots_.size());
+    barrierSlots_.push_back(slot);
+    return nextBarrierSlotIndex;
 }
 
 

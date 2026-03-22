@@ -112,8 +112,8 @@ void VKPipelineBarrier::InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlag
         barrier.pNext                   = nullptr;
         barrier.srcAccessMask           = srcAccess;
         barrier.dstAccessMask           = dstAccess;
-        barrier.srcQueueFamilyIndex     = 0;
-        barrier.dstQueueFamilyIndex     = 0;
+        barrier.srcQueueFamilyIndex     = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex     = VK_QUEUE_FAMILY_IGNORED;
         barrier.buffer                  = buffer;
         barrier.offset                  = 0;
         barrier.size                    = VK_WHOLE_SIZE;
@@ -132,8 +132,8 @@ void VKPipelineBarrier::InsertImageMemoryBarrier(VkPipelineStageFlags stageFlags
         barrier.dstAccessMask                   = dstAccess;
         barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED; // ???
         barrier.newLayout                       = VK_IMAGE_LAYOUT_UNDEFINED; // ???
-        barrier.srcQueueFamilyIndex             = 0;
-        barrier.dstQueueFamilyIndex             = 0;
+        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
         barrier.image                           = image;
         barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseArrayLayer = 0;

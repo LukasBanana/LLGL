@@ -110,9 +110,7 @@ bool VKSwapChain::IsPresentable() const
 void VKSwapChain::Present()
 {
     /* Initialize semaphores */
-    VkSemaphore waitSemaphores[] = { imageAvailableSemaphore_[currentFrameInFlight_] };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    VkSemaphore signalSemaphores[] = { renderFinishedSemaphore_[currentFrameInFlight_] };
 
     /* Submit signal semaphore to graphics queue */
     VkSubmitInfo submitInfo;
@@ -120,12 +118,12 @@ void VKSwapChain::Present()
         submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext                = nullptr;
         submitInfo.waitSemaphoreCount   = 1;
-        submitInfo.pWaitSemaphores      = waitSemaphores;
+        submitInfo.pWaitSemaphores      = imageAvailableSemaphore_[currentFrameInFlight_].GetAddressOf();
         submitInfo.pWaitDstStageMask    = waitStages;
         submitInfo.commandBufferCount   = 0;
         submitInfo.pCommandBuffers      = nullptr;
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores    = signalSemaphores;
+        submitInfo.pSignalSemaphores    = renderFinishedSemaphore_[currentFrameInFlight_].GetAddressOf();
     }
     VkResult result = graphicsQueue_->Submit(submitInfo, inFlightFences_[currentFrameInFlight_]);
     VKThrowIfFailed(result, "failed to submit semaphore to Vulkan graphics queue");
@@ -136,7 +134,7 @@ void VKSwapChain::Present()
         presentInfo.sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.pNext               = nullptr;
         presentInfo.waitSemaphoreCount  = 1;
-        presentInfo.pWaitSemaphores     = signalSemaphores;
+        presentInfo.pWaitSemaphores     = renderFinishedSemaphore_[currentFrameInFlight_].GetAddressOf();
         presentInfo.swapchainCount      = 1;
         presentInfo.pSwapchains         = swapChain_.GetAddressOf();
         presentInfo.pImageIndices       = &currentColorBuffer_;
@@ -733,8 +731,13 @@ std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
 
 void VKSwapChain::AcquireNextColorBuffer()
 {
-    vkWaitForFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf(), VK_TRUE, UINT64_MAX);
+    /* Move to next frame index */
+    currentFrameInFlight_ = (currentFrameInFlight_ + 1) % numColorBuffers_;
 
+    vkWaitForFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf(), VK_TRUE, UINT64_MAX);
+    vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());
+
+    /* Acquire next image from swap-chain and signal image available semaphore */
     vkAcquireNextImageKHR(
         device_,
         swapChain_,
@@ -749,11 +752,6 @@ void VKSwapChain::AcquireNextColorBuffer()
         "next swap-chain image index (%u) exceeds upper bound (%u)",
         currentColorBuffer_, numColorBuffers_
     );
-
-    vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());
-
-    /* Move to next frame index at the very end */
-    currentFrameInFlight_ = (currentFrameInFlight_ + 1) % maxNumFramesInFlight;
 }
 
 
