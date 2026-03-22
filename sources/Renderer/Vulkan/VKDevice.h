@@ -15,6 +15,7 @@
 #include "VKPtr.h"
 #include "VKCore.h"
 #include "Buffer/VKDeviceBuffer.h"
+#include "Command/VKCommandQueue.h"
 
 
 namespace LLGL
@@ -97,7 +98,7 @@ class VKDevice
         }
 
         // Returns the native VkQueue handle.
-        inline VkQueue GetVkQueue() const
+        inline const VKSharedCommandQueueSPtr& GetGraphicsQueue() const
         {
             return graphicsQueue_;
         }
@@ -110,10 +111,14 @@ class VKDevice
 
     private:
 
-        VKPtr<VkDevice>         device_;
-        VKQueueFamilyIndices    queueFamilyIndices_;
-        VkQueue                 graphicsQueue_      = VK_NULL_HANDLE;
-        VKPtr<VkCommandPool>    commandPool_;
+        void MakeDeviceGraphicsQueue();
+
+    private:
+
+        VKPtr<VkDevice>             device_;
+        VKQueueFamilyIndices        queueFamilyIndices_;
+        VKSharedCommandQueueSPtr    graphicsQueue_;
+        VKPtr<VkCommandPool>        commandPool_;
 
 };
 

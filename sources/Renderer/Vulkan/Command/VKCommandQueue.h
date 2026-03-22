@@ -15,6 +15,7 @@
 #include "../VKPtr.h"
 #include "../VKCore.h"
 #include "../RenderState/VKFence.h"
+#include <memory>
 
 
 namespace LLGL
@@ -22,6 +23,24 @@ namespace LLGL
 
 
 class VKQueryHeap;
+
+struct VKSharedCommandQueue
+{
+    VKSharedCommandQueue() = default;
+
+    inline VKSharedCommandQueue(VkQueue native) :
+        native { native }
+    {
+    }
+
+    VkQueue native = VK_NULL_HANDLE;
+    bool    isIdle = false;
+
+    VkResult WaitIdle();
+    VkResult Submit(const VkSubmitInfo& submitInfo, VkFence fence);
+};
+
+using VKSharedCommandQueueSPtr = std::shared_ptr<VKSharedCommandQueue>;
 
 class VKCommandQueue final : public CommandQueue
 {
@@ -32,7 +51,7 @@ class VKCommandQueue final : public CommandQueue
 
     public:
 
-        VKCommandQueue(VkDevice device, VkQueue queue);
+        VKCommandQueue(VkDevice device, const VKSharedCommandQueueSPtr& sharedCmdQueue);
 
     private:
 
@@ -65,8 +84,8 @@ class VKCommandQueue final : public CommandQueue
 
     private:
 
-        VkDevice    device_ = VK_NULL_HANDLE;
-        VkQueue     native_ = VK_NULL_HANDLE;
+        VkDevice                    device_         = VK_NULL_HANDLE;
+        VKSharedCommandQueueSPtr    sharedCmdQueue_;
 
 };
 

@@ -15,6 +15,7 @@
 #include "../VKPtr.h"
 #include "../VKCore.h"
 #include "VKCommandContext.h"
+#include "VKCommandQueue.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../Buffer/VKStagingBufferPool.h"
 #include "../RenderState/VKStagingDescriptorSetPool.h"
@@ -48,7 +49,7 @@ class VKCommandBuffer final : public CommandBuffer
         VKCommandBuffer(
             const VKPhysicalDevice&         physicalDevice,
             VkDevice                        device,
-            VkQueue                         commandQueue,
+            const VKSharedCommandQueueSPtr& sharedCmdQueue,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const VKQueueFamilyIndices&     queueFamilyIndices,
             const CommandBufferDescriptor&  desc
@@ -57,7 +58,7 @@ class VKCommandBuffer final : public CommandBuffer
     public:
 
         // Submits this command buffer to the specified queue. This might include another command buffer that is submitted alongside to reset query pools.
-        VkResult SubmitToQueue(VkQueue queue);
+        VkResult SubmitToQueue(VKSharedCommandQueue& cmdQueue);
 
         // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
         inline bool IsImmediateCmdBuffer() const
@@ -156,7 +157,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         VkDevice                        device_                                         = VK_NULL_HANDLE;
 
-        VkQueue                         commandQueue_                                   = VK_NULL_HANDLE;
+        VKSharedCommandQueueSPtr        sharedCmdQueue_;
 
         VKCommandBufferRing             commandBufferRing_;
         VkCommandBuffer                 commandBuffer_                                  = VK_NULL_HANDLE;

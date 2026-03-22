@@ -31,10 +31,10 @@ VKDevice::VKDevice() :
 }
 
 VKDevice::VKDevice(VKDevice&& device) :
-    device_             { std::move(device.device_)      },
-    queueFamilyIndices_ { device.queueFamilyIndices_     },
-    graphicsQueue_      { device.graphicsQueue_          },
-    commandPool_        { std::move(device.commandPool_) }
+    device_             { std::move(device.device_)        },
+    queueFamilyIndices_ { device.queueFamilyIndices_       },
+    graphicsQueue_      { std::move(device.graphicsQueue_) },
+    commandPool_        { std::move(device.commandPool_)   }
 {
 }
 
@@ -42,7 +42,7 @@ VKDevice& VKDevice::operator = (VKDevice&& device)
 {
     device_             = std::move(device.device_);
     queueFamilyIndices_ = device.queueFamilyIndices_;
-    graphicsQueue_      = device.graphicsQueue_;
+    graphicsQueue_      = std::move(device.graphicsQueue_);
     commandPool_        = std::move(device.commandPool_);
     return *this;
 }
@@ -113,7 +113,7 @@ void VKDevice::CreateLogicalDevice(
     VKThrowIfFailed(result, "failed to create Vulkan logical device");
 
     /* Query device graphics queue */
-    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+    MakeDeviceGraphicsQueue();
 
     /* Create default command pool */
     commandPool_ = CreateCommandPool();
@@ -128,7 +128,7 @@ void VKDevice::LoadLogicalDeviceWeakRef(VkPhysicalDevice physicalDevice, VkDevic
     device_ = VKPtr<VkDevice>{ device };
 
     /* Query device graphics queue */
-    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+    MakeDeviceGraphicsQueue();
 
     /* Create default command pool */
     commandPool_ = CreateCommandPool();
@@ -202,7 +202,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
             submitInfo.commandBufferCount   = 1;
             submitInfo.pCommandBuffers      = (&cmdBuffer);
         }
-        vkQueueSubmit(graphicsQueue_, 1, &submitInfo, fence.GetVkFence());
+        graphicsQueue_->Submit(submitInfo, fence.GetVkFence());
 
         /* Wait for fence to be signaled */
         fence.Wait(device_, ULLONG_MAX);
@@ -279,6 +279,18 @@ void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDe
         VkResult result = vkFlushMappedMemoryRanges(device_, 1, &memoryRange);
         VKThrowIfFailed(result, "failed to flush mapped memory range");
     }
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void VKDevice::MakeDeviceGraphicsQueue()
+{
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
+    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue);
+    graphicsQueue_ = std::make_shared<VKSharedCommandQueue>(graphicsQueue);
 }
 
 

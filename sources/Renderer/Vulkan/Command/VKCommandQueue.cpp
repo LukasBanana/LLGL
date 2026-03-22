@@ -17,9 +17,9 @@ namespace LLGL
 {
 
 
-VKCommandQueue::VKCommandQueue(VkDevice device, VkQueue queue) :
-    device_ { device },
-    native_ { queue  }
+VKCommandQueue::VKCommandQueue(VkDevice device, const VKSharedCommandQueueSPtr& sharedCmdQueue) :
+    device_         { device         },
+    sharedCmdQueue_ { sharedCmdQueue }
 {
 }
 
@@ -30,7 +30,7 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
     auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
     if (!commandBufferVK.IsImmediateCmdBuffer())
     {
-        VkResult result = commandBufferVK.SubmitToQueue(native_);
+        VkResult result = commandBufferVK.SubmitToQueue(*sharedCmdQueue_);
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 }
@@ -45,6 +45,17 @@ bool VKCommandQueue::QueryResult(
     std::size_t     dataSize)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
+
+    /*
+    We currenlty simply flush the whole queue for query readbacks,
+    because resetting query pools are encoded in a concurrent VkCommandBuffer.
+    A reset from a previous native command encoding could have become stale,
+    which lets QueryResult() return too early before the updated query results are ready.
+    This function needs at least to wait for the VkFence of the VkCommandBuffer that encoded the reset of the specified input query.
+    This could potentially point to a multitude of command buffers that issued queries, which would require complex book keeping.
+    Since GPU readbacks from queries are expected to be slow anyway, we simply flush the entire queue.
+    */
+    sharedCmdQueue_->WaitIdle();
 
     /* Store result directly into output parameter */
     VkResult stateResult = GetQueryResults(queryHeapVK, firstQuery, numQueries, data, dataSize);
@@ -81,9 +92,10 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryP
 
 void VKCommandQueue::Submit(Fence& fence)
 {
+    sharedCmdQueue_->isIdle = false;
     auto& fenceVK = LLGL_CAST(VKFence&, fence);
     fenceVK.Reset(device_);
-    vkQueueSubmit(native_, 0, nullptr, fenceVK.GetVkFence());
+    vkQueueSubmit(sharedCmdQueue_->native, 0, nullptr, fenceVK.GetVkFence());
 }
 
 bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -94,7 +106,7 @@ bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 
 void VKCommandQueue::WaitIdle()
 {
-    vkQueueWaitIdle(native_);
+    sharedCmdQueue_->WaitIdle();
 }
 
 
@@ -299,6 +311,30 @@ VkResult VKCommandQueue::GetQuerySingleResult(
     }
 
     return result;
+}
+
+
+/*
+ * VKSharedCommandQueue structure
+ */
+
+VkResult VKSharedCommandQueue::WaitIdle()
+{
+    /* Cache idle state to avoid subsequent calls when used to readback query results */
+    VkResult result = VK_SUCCESS;
+    if (!isIdle)
+    {
+        result = vkQueueWaitIdle(native);
+        if (result== VK_SUCCESS)
+            isIdle = true;
+    }
+    return result;
+}
+
+VkResult VKSharedCommandQueue::Submit(const VkSubmitInfo& submitInfo, VkFence fence)
+{
+    isIdle = false;
+    return vkQueueSubmit(native, 1, &submitInfo, fence);
 }
 
 

@@ -15,6 +15,7 @@
 #include "VKCore.h"
 #include "VKPtr.h"
 #include "RenderState/VKRenderPass.h"
+#include "Command/VKCommandQueue.h"
 #include "Texture/VKDepthStencilBuffer.h"
 #include "Texture/VKColorBuffer.h"
 #include <memory>
@@ -43,6 +44,7 @@ class VKSwapChain final : public SwapChain
             VkPhysicalDevice                physicalDevice,
             VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
+            const VKSharedCommandQueueSPtr& graphicsQueue,
             const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface,
             const RendererInfo&             rendererInfo
@@ -155,7 +157,7 @@ class VKSwapChain final : public SwapChain
         VKDepthStencilBuffer                depthStencilBuffer_;
         std::vector<VKColorBuffer>          colorBuffers_;
 
-        VkQueue                             graphicsQueue_                              = VK_NULL_HANDLE;
+        VKSharedCommandQueueSPtr            graphicsQueue_;
         VkQueue                             presentQueue_                               = VK_NULL_HANDLE;
 
         VKPtr<VkSemaphore>                  imageAvailableSemaphore_[maxNumFramesInFlight];

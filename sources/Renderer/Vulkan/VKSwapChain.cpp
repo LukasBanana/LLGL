@@ -60,6 +60,7 @@ VKSwapChain::VKSwapChain(
     VkPhysicalDevice                physicalDevice,
     VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
+    const VKSharedCommandQueueSPtr& graphicsQueue,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface,
     const RendererInfo&             rendererInfo)
@@ -75,6 +76,7 @@ VKSwapChain::VKSwapChain(
     swapChainSamples_        { GetClampedSamples(desc.samples)           },
     secondaryRenderPass_     { device                                    },
     depthStencilBuffer_      { device                                    },
+    graphicsQueue_           { graphicsQueue                             },
     imageAvailableSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
     renderFinishedSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
     inFlightFences_          { INIT_PER_FRAME(NullVkFence(device_))      }
@@ -125,7 +127,7 @@ void VKSwapChain::Present()
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores    = signalSemaphores;
     }
-    VkResult result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, inFlightFences_[currentFrameInFlight_]);
+    VkResult result = graphicsQueue_->Submit(submitInfo, inFlightFences_[currentFrameInFlight_]);
     VKThrowIfFailed(result, "failed to submit semaphore to Vulkan graphics queue");
 
     /* Present result on screen */
@@ -276,7 +278,7 @@ bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
         swapChainExtent_.height != resolution.height)
     {
         /* Wait until graphics queue is idle before resources are destroyed and recreated */
-        vkQueueWaitIdle(graphicsQueue_);
+        graphicsQueue_->WaitIdle();
 
         /* Recreate presenting semaphores and Vulkan surface */
         CreatePresentSemaphoresAndFences();
@@ -455,7 +457,6 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     VkSurfaceKHR surface = surface_.Get();
     const VKQueueFamilyIndices queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT, &surface);
 
-    vkGetDeviceQueue(device_, queueFamilyIndices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 
     /* Pick swap-chain presentation mode (with v-sync parameters) */

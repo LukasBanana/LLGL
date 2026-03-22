@@ -50,13 +50,13 @@ static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDev
 VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
     VkDevice                        device,
-    VkQueue                         commandQueue,
+    const VKSharedCommandQueueSPtr& sharedCmdQueue,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const VKQueueFamilyIndices&     queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
     device_                 { device                                  },
-    commandQueue_           { commandQueue                            },
+    sharedCmdQueue_         { sharedCmdQueue                          },
     commandBufferRing_      { device                                  },
     queuePresentFamily_     { queueFamilyIndices.presentFamily        },
     maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice) },
@@ -142,14 +142,14 @@ void VKCommandBuffer::End()
     /* Execute command buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
     {
-        VkResult result = SubmitToQueue(commandQueue_);
+        VkResult result = SubmitToQueue(*sharedCmdQueue_);
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 
     ResetRecordStatesEnd();
 }
 
-VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
+VkResult VKCommandBuffer::SubmitToQueue(VKSharedCommandQueue& cmdQueue)
 {
     /* Validate the VkCommandBuffer can be submitted */
     LLGL_ASSERT(recordState_ == RecordState::ReadyForSubmit, "invalid record state to submit VkCommandBuffer");
@@ -184,7 +184,7 @@ VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores    = nullptr;
     }
-    return vkQueueSubmit(queue, 1, &submitInfo, fence);
+    return cmdQueue.Submit(submitInfo, fence);
 }
 
 void VKCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)

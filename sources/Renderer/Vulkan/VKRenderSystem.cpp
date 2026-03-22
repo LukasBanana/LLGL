@@ -109,7 +109,7 @@ VKRenderSystem::~VKRenderSystem()
 SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     return swapChains_.emplace<VKSwapChain>(
-        instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface, GetRendererInfo()
+        instance_, physicalDevice_, device_, *deviceMemoryMngr_, device_.GetGraphicsQueue(), swapChainDesc, surface, GetRendererInfo()
     );
 }
 
@@ -130,7 +130,7 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     return commandBuffers_.emplace<VKCommandBuffer>(
-        physicalDevice_, device_, device_.GetVkQueue(), *deviceMemoryMngr_, device_.GetQueueFamilyIndices(), commandBufferDesc
+        physicalDevice_, device_, device_.GetGraphicsQueue(), *deviceMemoryMngr_, device_.GetQueueFamilyIndices(), commandBufferDesc
     );
 }
 
@@ -824,7 +824,7 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
         nativeHandleVK->instance        = instance_.Get();
         nativeHandleVK->physicalDevice  = physicalDevice_.GetVkPhysicalDevice();
         nativeHandleVK->device          = device_.GetVkDevice();
-        nativeHandleVK->queue           = device_.GetVkQueue();
+        nativeHandleVK->queue           = device_.GetGraphicsQueue()->native;
         nativeHandleVK->queueFamily     = device_.GetQueueFamilyIndices().graphicsFamily;
         return true;
     }
@@ -1050,7 +1050,7 @@ void VKRenderSystem::CreateLogicalDevice(VkDevice customLogicalDevice)
     device_ = physicalDevice_.CreateLogicalDevice(customLogicalDevice);
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
+    commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetGraphicsQueue());
 
     /* Load Vulkan device extensions */
     VKLoadDeviceExtensions(device_, physicalDevice_.GetExtensionNames());
