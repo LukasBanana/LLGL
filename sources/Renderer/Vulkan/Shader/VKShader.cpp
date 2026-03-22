@@ -618,7 +618,7 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
 void VKShader::BuildBindingLayout()
 {
-    bindingLayout_.BuildFromSpirvModule(shaderCode_.data(), shaderCode_.size() * sizeof(std::uint32_t));
+    bindingLayout_.BuildFromSpirvModule(shaderCode_.data(), shaderCode_.size() * sizeof(std::uint32_t), &report_);
 }
 
 void VKShader::BuildReport()

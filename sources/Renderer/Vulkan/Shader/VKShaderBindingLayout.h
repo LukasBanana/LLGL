@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class Report;
+
 // Store shader reflection of binding points per VKShader instance.
 class VKShaderBindingLayout
 {
@@ -27,7 +29,7 @@ class VKShaderBindingLayout
     public:
 
         // Builds the internal binding table from the specified SPIR-V module.
-        bool BuildFromSpirvModule(const void* data, std::size_t size);
+        bool BuildFromSpirvModule(const void* data, std::size_t size, Report* outReport = nullptr);
 
         // Returns true if the binding layout already matches the layout as is assigned by 'AssignBindingSlots'.
         bool MatchesBindingSlots(
