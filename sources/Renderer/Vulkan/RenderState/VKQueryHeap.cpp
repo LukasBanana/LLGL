@@ -8,6 +8,8 @@
 #include "VKQueryHeap.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
+#include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
@@ -72,6 +74,33 @@ VKQueryHeap::VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc, bool 
     }
     VkResult result = vkCreateQueryPool(device, &createInfo, nullptr, queryPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan query pool");
+}
+
+void VKQueryHeap::ResetAlias(std::uint32_t query)
+{
+    if (query < aliases_.size() && aliases_[query])
+    {
+        aliases_[query].reset();
+        LLGL_ASSERT(numAliases_ > 0);
+        --numAliases_;
+        if (numAliases_ == 0)
+            aliases_.clear();
+    }
+}
+
+void VKQueryHeap::SetAlias(std::uint32_t query, const VKQueryAlias& queryAlias)
+{
+    LLGL_ASSERT(query < numQueries_);
+    if (!(query < aliases_.size()))
+        aliases_.resize(query + 1);
+    if (!aliases_[query])
+        ++numAliases_;
+    aliases_[query] = MakeUnique<VKQueryAlias>(queryAlias);
+}
+
+const VKQueryAlias* VKQueryHeap::GetAlias(std::uint32_t query) const
+{
+    return (query < aliases_.size() ? aliases_[query].get() : nullptr);
 }
 
 

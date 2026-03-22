@@ -20,6 +20,7 @@
 #include "../RenderState/VKStagingDescriptorSetPool.h"
 #include "../RenderState/VKDescriptorCache.h"
 #include "../RenderState/VKPipelineLayout.h"
+#include "../RenderState/VKQueryHeap.h"
 #include <vector>
 
 
@@ -57,12 +58,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         // Submits this command buffer to the specified queue. This might include another command buffer that is submitted alongside to reset query pools.
         VkResult SubmitToQueue(VkQueue queue);
-
-        // Returns the native VkCommandBuffer object.
-        inline VkCommandBuffer GetVkCommandBuffer() const
-        {
-            return commandBuffer_;
-        }
 
         // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
         inline bool IsImmediateCmdBuffer() const
@@ -121,9 +116,14 @@ class VKCommandBuffer final : public CommandBuffer
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
 
-        void ResetBindingStates();
+        void ResetRecordStatesBegin();
+        void ResetRecordStatesEnd();
 
         void BindVertexBuffer(VKBuffer& bufferVK);
+
+        // Enqueues a command to reset a query pool in a separate command buffer.
+        void CmdResetQueryPool(VkQueryPool queryPool, std::uint32_t firstQuery, std::uint32_t queryCount);
+        void FinishResetQueryCommands();
 
         inline VKStagingBufferPool& GetStagingBufferPool()
         {
@@ -145,6 +145,11 @@ class VKCommandBuffer final : public CommandBuffer
             VkBuffer        xfbBuffers[LLGL_MAX_NUM_SO_BUFFERS]         = {};
             VkDeviceSize    xfbCounterOffsets[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t   numXfbBuffers                               = 0;
+        };
+
+        struct ActiveQuery : VKQueryAlias
+        {
+            std::uint32_t refCount = 0;
         };
 
     private:
@@ -193,13 +198,13 @@ class VKCommandBuffer final : public CommandBuffer
         VKDescriptorCache*              descriptorCache_                                = nullptr;
         VKDescriptorSetWriter           descriptorSetWriter_;
 
+        bool                            isAnyQueryReset_                                = false;
+        VKPtr<VkEvent>                  resetQueryEvents_[VKCommandBufferRing::maxCount];
+
         InputAssemblyState              iaState_;
         TransformFeedbackState          xfbState_;
 
-        #if 0//TODO: optimize usage of query pools
-        std::vector<VKQueryHeap*>       queryHeapsInFlight_;
-        std::size_t                     numQueryHeapsInFlight_                          = 0;
-        #endif
+        ActiveQuery                     activeQueries_[VKQueryHeap::PoolType_Num]       = {};
 
 };
 

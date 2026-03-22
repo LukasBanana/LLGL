@@ -124,16 +124,14 @@ void VKCommandBuffer::Begin()
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
 
     /* Reset record states to default values */
-    recordState_                            = RecordState::OutsideRenderPass;
-    framebufferRenderArea_.offset.x         = 0;
-    framebufferRenderArea_.offset.y         = 0;
-    framebufferRenderArea_.extent.width     = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
-    framebufferRenderArea_.extent.height    = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
-    hasDynamicScissorRect_                  = false;
+    ResetRecordStatesBegin();
 }
 
 void VKCommandBuffer::End()
 {
+    /* Finish any concurrent commands */
+    FinishResetQueryCommands();
+
     /* End encoding of current command buffer */
     VkResult result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
@@ -148,12 +146,20 @@ void VKCommandBuffer::End()
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 
-    ResetBindingStates();
+    ResetRecordStatesEnd();
 }
 
 VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
 {
+    /* Validate the VkCommandBuffer can be submitted */
+    LLGL_ASSERT(recordState_ == RecordState::ReadyForSubmit, "invalid record state to submit VkCommandBuffer");
+    if ((usageFlags_ & VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT) != 0)
+        recordState_ = RecordState::Undefined;
+
+    /* Flush and get fence to ensure command buffer can be submitted */
     VkFence fence = commandBufferRing_.GetQueueSubmitFenceAndFlush();
+
+    VkCommandBuffer cmdBuffers[2];
 
     VkSubmitInfo submitInfo;
     {
@@ -162,8 +168,19 @@ VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
         submitInfo.waitSemaphoreCount   = 0;
         submitInfo.pWaitSemaphores      = nullptr;
         submitInfo.pWaitDstStageMask    = 0;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = &commandBuffer_;
+        if (isAnyQueryReset_)
+        {
+            /* Submit command buffer for resetting query pools first, then the primary command buffer, and syncrhonize with event signal */
+            cmdBuffers[0] = commandBufferRing_.GetVkCommandBuffer(VKCommandBufferRing::CommandType_ResetQuery);
+            cmdBuffers[1] = commandBuffer_;
+            submitInfo.commandBufferCount   = 2;
+            submitInfo.pCommandBuffers      = cmdBuffers;
+        }
+        else
+        {
+            submitInfo.commandBufferCount   = 1;
+            submitInfo.pCommandBuffers      = &commandBuffer_;
+        }
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores    = nullptr;
     }
@@ -173,7 +190,7 @@ VkResult VKCommandBuffer::SubmitToQueue(VkQueue queue)
 void VKCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
     auto& secondaryCommandBufferVK = LLGL_CAST(VKCommandBuffer&, secondaryCommandBuffer);
-    VkCommandBuffer cmdBuffers[] = { secondaryCommandBufferVK.GetVkCommandBuffer() };
+    VkCommandBuffer cmdBuffers[] = { secondaryCommandBufferVK.commandBuffer_ };
     vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
 }
 
@@ -959,28 +976,65 @@ void VKCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::ui
 
 /* ----- Queries ----- */
 
+static VKQueryHeap::PoolType MapToQueryPoolType(QueryType type)
+{
+    switch (type)
+    {
+        case QueryType::SamplesPassed:                  /*pass*/
+        case QueryType::AnySamplesPassed:               /*pass*/
+        case QueryType::AnySamplesPassedConservative:   return VKQueryHeap::PoolType_Occlusion;
+        case QueryType::TimeElapsed:                    return VKQueryHeap::PoolType_Timestamp;
+        case QueryType::StreamOutPrimitivesWritten:     /*pass*/
+        case QueryType::StreamOutOverflow:              return VKQueryHeap::PoolType_TransformFeedbackStreamExt;
+        case QueryType::PipelineStatistics:             return VKQueryHeap::PoolType_PipelineStatistics;
+    }
+    LLGL_UNREACHABLE();
+}
+
 void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    query *= queryHeapVK.GetGroupSize();
+    /* Check if there is already another query of the same type active in this command buffer */
+    const VKQueryHeap::PoolType poolType = MapToQueryPoolType(queryHeapVK.GetType());
+    ActiveQuery& activeQuery = activeQueries_[poolType];
+    if (activeQuery.queryHeap != nullptr)
+    {
+        activeQuery.refCount++;
+        queryHeapVK.SetAlias(query, activeQuery);
+        return;
+    }
+    else
+        queryHeapVK.ResetAlias(query);
+
+    /* Initialize active query slot */
+    LLGL_ASSERT(activeQuery.refCount == 0);
+    activeQuery.queryHeap   = &queryHeapVK;
+    activeQuery.queryIndex  = query;
+    activeQuery.refCount    = 1;
+
+    /* Get native query index */
+    const std::uint32_t nativeQueryIndex = query * queryHeapVK.GetGroupSize();
+
+    /* Reset query before using it again */
+    CmdResetQueryPool(queryHeapVK.GetVkQueryPool(), nativeQueryIndex, queryHeapVK.GetGroupSize());
 
     if (queryHeapVK.GetType() == QueryType::TimeElapsed)
     {
         /* Record first timestamp */
-        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query);
+        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), nativeQueryIndex);
     }
     else
     {
         /* Begin query section */
-        vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, queryHeapVK.GetControlFlags());
+        vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), nativeQueryIndex, queryHeapVK.GetControlFlags());
     }
 
     if (queryHeapVK.HasPredicates())
     {
         /* Mark dirty range for predicates */
         auto& predicateQueryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeapVK);
-        predicateQueryHeapVK.MarkDirtyRange(query, 1);
+        predicateQueryHeapVK.MarkDirtyRange(nativeQueryIndex, 1);
     }
 }
 
@@ -988,22 +1042,31 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    query *= queryHeapVK.GetGroupSize();
+    /* Check if input query was aliased */
+    const VKQueryHeap::PoolType poolType = MapToQueryPoolType(queryHeapVK.GetType());
+    ActiveQuery& activeQuery = activeQueries_[poolType];
+
+    LLGL_ASSERT(activeQuery.refCount > 0);
+    activeQuery.refCount--;
+    if (activeQuery.refCount != 0)
+        return;
+
+    /* Get native query index */
+    const std::uint32_t nativeQueryIndex = activeQuery.queryIndex * activeQuery.queryHeap->GetGroupSize();
 
     if (queryHeapVK.GetType() == QueryType::TimeElapsed)
     {
         /* Record second timestamp */
-        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query + 1);
+        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, activeQuery.queryHeap->GetVkQueryPool(), nativeQueryIndex + 1);
     }
     else
     {
         /* End query section */
-        vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
+        vkCmdEndQuery(commandBuffer_, activeQuery.queryHeap->GetVkQueryPool(), nativeQueryIndex);
     }
 
-    #if 0//TEST
-    AppendQueryPoolInFlight(&queryHeapVK);
-    #endif
+    /* Reset active query slot */
+    activeQuery.queryHeap = nullptr;
 }
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
@@ -1441,13 +1504,86 @@ void VKCommandBuffer::AcquireNextBuffer()
     stagingBufferPools_[commandBufferRing_.GetIndex()].Reset();
 }
 
-void VKCommandBuffer::ResetBindingStates()
+void VKCommandBuffer::ResetRecordStatesBegin()
+{
+    recordState_                            = RecordState::OutsideRenderPass;
+    framebufferRenderArea_.offset.x         = 0;
+    framebufferRenderArea_.offset.y         = 0;
+    framebufferRenderArea_.extent.width     = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
+    framebufferRenderArea_.extent.height    = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
+    hasDynamicScissorRect_                  = false;
+    isAnyQueryReset_                        = false;
+}
+
+void VKCommandBuffer::ResetRecordStatesEnd()
 {
     boundSwapChain_         = nullptr;
     boundBindingTable_      = nullptr;
     boundPipelineState_     = nullptr;
     boundPipelineBarrier_   = nullptr;
     descriptorCache_        = nullptr;
+}
+
+void VKCommandBuffer::CmdResetQueryPool(VkQueryPool queryPool, std::uint32_t firstQuery, std::uint32_t queryCount)
+{
+    const std::uint32_t cmdBufferIndex = commandBufferRing_.GetIndex();
+
+    /* If this is the first query to reset, start recording commands for the reset-query command buffer */
+    VkCommandBuffer cmdBuffer = commandBufferRing_.GetVkCommandBuffer(VKCommandBufferRing::CommandType_ResetQuery);
+
+    if (!isAnyQueryReset_)
+    {
+        isAnyQueryReset_ = true;
+
+        /* Create event if not done yet */
+        if (!resetQueryEvents_[cmdBufferIndex])
+        {
+            resetQueryEvents_[cmdBufferIndex] = VKPtr<VkEvent>{ device_, vkDestroyEvent };
+            VkEventCreateInfo createInfo;
+            {
+                createInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+                createInfo.pNext = nullptr;
+                createInfo.flags = VK_EVENT_CREATE_DEVICE_ONLY_BIT;
+            }
+            VkResult result = vkCreateEvent(device_, &createInfo, nullptr, resetQueryEvents_[cmdBufferIndex].GetAddressOf());
+            VKThrowIfCreateFailed(result, "VkEvent", "for concurrent reset-query command buffer");
+        }
+
+        /* Encode command to wait for the event that the concurrent command buffer for query resets has finished */
+        VkEvent event = resetQueryEvents_[cmdBufferIndex].Get();
+        vkCmdWaitEvents(commandBuffer_, 1, &event, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, 0, nullptr, 0, nullptr, 0, nullptr);
+
+        /* Begin concurrent command buffer to reset query pools before the primary command buffer starts using them */
+        VkCommandBufferBeginInfo beginInfo;
+        {
+            beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.pNext             = nullptr;
+            beginInfo.flags             = (usageFlags_ & VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+            beginInfo.pInheritanceInfo  = nullptr;
+        }
+        VkResult result = vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+        VKThrowIfFailed(result, "failed to begin Vulkan command buffer to reset query pools");
+    }
+
+    /* Encode next query reset command */
+    vkCmdResetQueryPool(cmdBuffer, queryPool, firstQuery, queryCount);
+}
+
+void VKCommandBuffer::FinishResetQueryCommands()
+{
+    if (isAnyQueryReset_)
+    {
+        /* Encode reset event command at the end of the primary command buffer */
+        VkEvent event = resetQueryEvents_[commandBufferRing_.GetIndex()].Get();
+        vkCmdResetEvent(commandBuffer_, event, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+
+        /* Encode event in the concurrent command buffer to signal that resetting query pools has finished */
+        VkCommandBuffer cmdBuffer = commandBufferRing_.GetVkCommandBuffer(VKCommandBufferRing::CommandType_ResetQuery);
+        vkCmdSetEvent(cmdBuffer, event, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+        /* Finish encoding concurrent command buffer */
+        vkEndCommandBuffer(cmdBuffer);
+    }
 }
 
 

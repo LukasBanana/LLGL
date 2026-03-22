@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include <LLGL/QueryHeapFlags.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include "../VKCore.h"
@@ -54,6 +55,7 @@ class VKCommandQueue final : public CommandQueue
         );
 
         VkResult GetQuerySingleResult(
+            QueryType           parentQueryType,
             VKQueryHeap&        queryHeapVK,
             std::uint32_t       query,
             void*               data,
