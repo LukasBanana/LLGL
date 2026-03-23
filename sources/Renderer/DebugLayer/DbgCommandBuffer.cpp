@@ -2653,12 +2653,13 @@ void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDb
 
 void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::uint32_t swapBufferIndex)
 {
-    if (swapBufferIndex != LLGL_CURRENT_SWAP_INDEX && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
+    const std::uint32_t numSwapBuffers = swapChainDbg.GetNumSwapBuffers();
+    if (swapBufferIndex != LLGL_CURRENT_SWAP_INDEX && swapBufferIndex >= numSwapBuffers)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "cannot begin render pass with swap-buffer index %u for swap-chain with only %u buffer(s)",
-            swapBufferIndex, swapChainDbg.desc.swapBuffers
+            swapBufferIndex, numSwapBuffers
         );
     }
 }
