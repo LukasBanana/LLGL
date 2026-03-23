@@ -10,7 +10,7 @@
 
 DEF_TEST( CommandBufferSubmit )
 {
-    constexpr unsigned maxNumCmdBuffers = 2;
+    constexpr unsigned maxNumCmdBuffers = 3;
 
     static CommandBuffer* multiSubmitCmdBuffers[maxNumCmdBuffers] = {};
     static Texture* framebufferResultTex;
@@ -22,6 +22,7 @@ DEF_TEST( CommandBufferSubmit )
         ClearValue{ 0.2f, 1.0f, 0.2f, 1 }, // Green
         ClearValue{ 0.2f, 0.4f, 0.8f, 1 }  // Blue
     };
+    constexpr unsigned numClearValues = sizeof(clearValues)/sizeof(clearValues[0]);
 
     const TextureRegion texRegion{ Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } };
 
@@ -43,8 +44,6 @@ DEF_TEST( CommandBufferSubmit )
         framebufferResultTex = renderer->CreateTexture(texDesc, &initialImage);
 
         // Create multi-submit command buffers
-        constexpr unsigned numClearValues = sizeof(clearValues)/sizeof(clearValues[0]);
-
         CommandBufferDescriptor cmdBufferDesc;
         cmdBufferDesc.flags = CommandBufferFlags::MultiSubmit;
 
@@ -90,10 +89,10 @@ DEF_TEST( CommandBufferSubmit )
 
         const std::uint8_t expectedResult[4] =
         {
-            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[0] * 255.0f),
-            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[1] * 255.0f),
-            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[2] * 255.0f),
-            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[3] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex % numClearValues].color[0] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex % numClearValues].color[1] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex % numClearValues].color[2] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex % numClearValues].color[3] * 255.0f),
         };
 
         if (::memcmp(framebufferResult, expectedResult, sizeof(framebufferResult)) != 0)
