@@ -33,7 +33,7 @@ jobs:
         sudo wget -O /etc/apt/trusted.gpg.d/lunarg-signing-key-pub.asc http://packages.lunarg.com/lunarg-signing-key-pub.asc
         sudo wget -O /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
         sudo apt update
-        sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
+        sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-vulkan-drivers vulkan-sdk vulkan-tools
 
     - name: Configure CMake
       run: >
@@ -67,7 +67,8 @@ jobs:
     - name: Testbed
       working-directory: tests/Testbed
       run: |
-        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl -vftgi ${{ matrix.config == 'Debug' && '-d' || '' }}
+        export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/lvp_icd.json
+        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl ${{ env.EXT_FULL == 'ON' && 'vk' || '' }} -vftgi ${{ matrix.config == 'Debug' && '-d' || '' }}
         CURRENT_TIME=$(date)
         echo "LLGL built with GCC for Linux on $CURRENT_TIME." > ${{ env.README }}
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
@@ -80,3 +81,5 @@ jobs:
         path: |
           tests/Testbed/Output/OpenGL/*.png
           tests/Testbed/Output/OpenGL/Report.txt
+          tests/Testbed/Output/Vulkan/*.png
+          tests/Testbed/Output/Vulkan/Report.txt
