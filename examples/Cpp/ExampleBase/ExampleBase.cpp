@@ -71,7 +71,8 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
 
         /* Wait for user input */
         char selectionBuffer[256] = {};
-        (void)::fgets(selectionBuffer, sizeof(selectionBuffer), stdin);
+        char* silenceCompilerWarningStub = ::fgets(selectionBuffer, sizeof(selectionBuffer), stdin);
+        (void)silenceCompilerWarningStub;
 
         std::string selectionStr = selectionBuffer;
         selectionStr = selectionStr.substr(0, selectionStr.find_first_not_of("0123456789"));
