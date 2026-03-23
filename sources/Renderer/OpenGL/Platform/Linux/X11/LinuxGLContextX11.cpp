@@ -14,7 +14,6 @@
 #include "../../../../RenderSystemUtils.h"
 #include "../../../../../Core/CoreUtils.h"
 #include "../../../../../Core/Assertion.h"
-#include "../../../../../Platform/Linux/X11/LinuxDisplayX11.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
@@ -48,9 +47,6 @@ LinuxGLContextX11::LinuxGLContextX11(
 :
     samples_ { pixelFormat.samples }
 {
-    /* Notify the shared X11 display that it'll be used by libGL.so to ensure a clean teardown */
-    LinuxSharedDisplayX11::RetainLibGL();
-
     /* Create GLX or proxy context if a custom one is specified */
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));

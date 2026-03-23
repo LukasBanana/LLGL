@@ -6,14 +6,15 @@
  */
 
 #include "LinuxDisplayX11.h"
+#include "../../../Core/Assertion.h"
 
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
-#include "../../../Core/Assertion.h"
 
 namespace LLGL
 {
+
 
 LinuxSharedX11DisplaySPtr LinuxSharedDisplayX11::GetShared()
 {
@@ -22,15 +23,9 @@ LinuxSharedX11DisplaySPtr LinuxSharedDisplayX11::GetShared()
 }
 
 
-
-
 /*
  * LinuxSharedDisplayX11 class
  */
-
-#if !LLGL_BUILD_STATIC_LIB
-static void* g_retainedLibGL = nullptr;
-#endif
 
 LinuxSharedDisplayX11::LinuxSharedDisplayX11() :
     native_ { XOpenDisplay(nullptr) }
@@ -41,24 +36,6 @@ LinuxSharedDisplayX11::LinuxSharedDisplayX11() :
 LinuxSharedDisplayX11::~LinuxSharedDisplayX11()
 {
     XCloseDisplay(native_);
-
-    #if !LLGL_BUILD_STATIC_LIB
-    /*
-    If libGL.so was retained, release it now.
-    This library must be unloaded *after* the connection to the X11 display is closed, because GL might have registerd shutdown callbacks.
-    If we unload libGL.so too soon, XCloseDisplay() will crash with SIGSEGV on Linux.
-    */
-    if (g_retainedLibGL)
-        dlclose(g_retainedLibGL);
-    #endif
-}
-
-void LinuxSharedDisplayX11::RetainLibGL()
-{
-    #if !LLGL_BUILD_STATIC_LIB
-    if (!g_retainedLibGL)
-        g_retainedLibGL = dlopen("libGL.so", RTLD_LAZY);
-    #endif
 }
 
 bool LinuxDisplayX11::SetCursorPositionInternal(const Offset2D& position)
@@ -241,6 +218,9 @@ std::vector<DisplayMode> LinuxDisplayX11::GetSupportedDisplayModes() const
     return sharedX11Display_->GetNative();
 }
 
+
 } // /namespace LLGL
+
+
 
 // ================================================================================

@@ -36,6 +36,10 @@
 #   include "../Platform/Android/AndroidApp.h"
 #endif
 
+#ifdef LLGL_OS_LINUX
+#   include "../Platform/Linux/LinuxDisplay.h"
+#endif
+
 #include "ModuleInterface.h"
 
 
@@ -65,6 +69,15 @@ RenderSystem::RenderSystem() :
 RenderSystem::~RenderSystem()
 {
     delete pimpl_;
+
+    #ifdef LLGL_OS_LINUX
+    /*
+    Explicitly clear display cache.
+    This is only needed for Linux to release additional references to the shared X11 display.
+    Otherwise, the system may unload libGL.so and libX11.so before the global array of X11 displays in LLGL is released.
+    */
+    LinuxDisplay::ClearCache();
+    #endif
 }
 
 std::vector<std::string> RenderSystem::FindModules()

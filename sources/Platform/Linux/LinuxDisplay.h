@@ -24,6 +24,10 @@ class LinuxDisplay : public Display
         virtual bool SetCursorPositionInternal(const Offset2D& position) = 0;
 
         virtual Offset2D GetCursorPositionInternal() = 0;
+
+    public:
+
+        static void ClearCache();
     
 };
 

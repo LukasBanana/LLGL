@@ -44,6 +44,13 @@ static bool UpdateDisplayList()
     return false;
 }
 
+void LinuxDisplay::ClearCache()
+{
+    g_displayList.clear();
+    g_displayRefList.clear();
+    g_primaryDisplay = nullptr;
+}
+
 std::size_t Display::Count()
 {
     UpdateDisplayList();
