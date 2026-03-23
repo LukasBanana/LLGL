@@ -78,9 +78,9 @@ jobs:
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v6
-      if: always() && matrix.ext == 'Full' && matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
+      if: always() && matrix.ext == 'Full' && matrix.arch == 'x64' && matrix.lib == 'Shared'
       with:
-        name: LLGL-Win64-Test_Report
+        name: LLGL-Win64-Test_Report-${{ matrix.config }}
         path: |
           tests/Testbed/Output/Direct3D11/*.png
           tests/Testbed/Output/Direct3D11/Report.txt
