@@ -16,7 +16,6 @@
 #include <LLGL/Constants.h>
 #include <LLGL/Container/DynamicVector.h>
 #include <LLGL/Deprecated.h>
-#include <vector>
 #include <cstdint>
 
 
@@ -839,7 +838,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewports
     */
-    std::vector<Viewport>   viewports;
+    DynamicVector<Viewport> viewports;
 
     /**
     \brief Specifies an optional list of static scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
@@ -847,7 +846,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
     */
-    std::vector<Scissor>    scissors;
+    DynamicVector<Scissor>  scissors;
 
     //! Specifies the depth state for the depth-stencil stage.
     DepthDescriptor         depth;
@@ -909,11 +908,11 @@ Only the fragment shader remains from the traditional PSO.
 struct MeshPipelineDescriptor
 {
     // Silence deprecation warnings in default constructors until `amplificationShader` is removed.
-    LLGL_DEPRECATED_IGNORE_PUSH();
+    LLGL_DEPRECATED_IGNORE_PUSH()
     inline MeshPipelineDescriptor() = default;
     inline MeshPipelineDescriptor(const MeshPipelineDescriptor&) = default;
     inline MeshPipelineDescriptor& operator = (const MeshPipelineDescriptor&) = default;
-    LLGL_DEPRECATED_IGNORE_POP();
+    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.

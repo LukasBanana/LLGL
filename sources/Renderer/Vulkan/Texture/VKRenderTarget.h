@@ -16,6 +16,7 @@
 #include "VKDepthStencilBuffer.h"
 #include "VKColorBuffer.h"
 #include <memory>
+#include <vector>
 
 
 namespace LLGL

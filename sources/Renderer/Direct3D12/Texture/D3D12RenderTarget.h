@@ -13,8 +13,9 @@
 #include <LLGL/Container/SmallVector.h>
 #include "../D3D12Resource.h"
 #include "../RenderState/D3D12RenderPass.h"
-#include <d3d12.h>
 #include "../../DXCommon/ComPtr.h"
+#include <d3d12.h>
+#include <vector>
 
 
 namespace LLGL
