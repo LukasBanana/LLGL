@@ -28,6 +28,14 @@ namespace LLGL
 {
 
 
+static const VKRenderPass* GetRenderPassVK(const RenderPass* optionalRenderPass, const RenderPass* defaultRenderPass)
+{
+    /* Get render pass from descriptor or default render pass */
+    const RenderPass* renderPass = (optionalRenderPass != nullptr ? optionalRenderPass : defaultRenderPass);
+    LLGL_ASSERT_PTR(renderPass);
+    return LLGL_CAST(const VKRenderPass*, renderPass);
+}
+
 VKGraphicsPSO::VKGraphicsPSO(
     VkDevice                            device,
     const RenderPass*                   defaultRenderPass,
@@ -39,22 +47,43 @@ VKGraphicsPSO::VKGraphicsPSO(
     scissorEnabled_    { desc.rasterizer.scissorTestEnabled                                                    },
     hasDynamicScissor_ { desc.scissors.empty()                                                                 }
 {
-    /* Get render pass from descriptor or default render pass */
-    const RenderPass* renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass);
-    LLGL_ASSERT_PTR(renderPass);
-
     /* Create Vulkan graphics pipeline object */
-    const VKRenderPass* renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
+    const VKRenderPass* renderPassVK = GetRenderPassVK(desc.renderPass, defaultRenderPass);
     if (VKPipelineCache* pipelineCacheVK = (pipelineCache != nullptr ? LLGL_CAST(VKPipelineCache*, pipelineCache) : nullptr))
-        CreateVkPipeline(device, *renderPassVK, limits, desc, pipelineCacheVK->GetNative());
+        CreateGraphicsVkPipeline(device, *renderPassVK, limits, desc, pipelineCacheVK->GetNative());
     else
-        CreateVkPipeline(device, *renderPassVK, limits, desc);
+        CreateGraphicsVkPipeline(device, *renderPassVK, limits, desc);
+}
+
+VKGraphicsPSO::VKGraphicsPSO(
+    VkDevice                            device,
+    const RenderPass*                   defaultRenderPass,
+    const MeshPipelineDescriptor&       desc,
+    const VKGraphicsPipelineLimits&     limits,
+    PipelineCache*                      pipelineCache)
+:
+    VKPipelineState    { device, VK_PIPELINE_BIND_POINT_GRAPHICS, GetShadersAsArray(desc), desc.pipelineLayout },
+    scissorEnabled_    { desc.rasterizer.scissorTestEnabled                                                    },
+    hasDynamicScissor_ { desc.scissors.empty()                                                                 }
+{
+    /* Create Vulkan graphics pipeline object */
+    const VKRenderPass* renderPassVK = GetRenderPassVK(desc.renderPass, defaultRenderPass);
+    if (VKPipelineCache* pipelineCacheVK = (pipelineCache != nullptr ? LLGL_CAST(VKPipelineCache*, pipelineCache) : nullptr))
+        CreateMeshVkPipeline(device, *renderPassVK, limits, desc, pipelineCacheVK->GetNative());
+    else
+        CreateMeshVkPipeline(device, *renderPassVK, limits, desc);
 }
 
 
 /*
  * ======= Private: =======
  */
+
+using SmallVector_VkViewport                            = SmallVector<VkViewport, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS>;
+using SmallVector_VkRect2D                              = SmallVector<VkRect2D, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS>;
+using SmallVector_VkPipelineColorBlendAttachmentState   = SmallVector<VkPipelineColorBlendAttachmentState, LLGL_MAX_NUM_COLOR_ATTACHMENTS>;
+using SmallVector_VkDynamicState                        = SmallVector<VkDynamicState, 4>;
+using SmallVector_VkPipelineShaderStageCreateInfo       = SmallVector<VkPipelineShaderStageCreateInfo, 5>;
 
 static void CreateInputAssemblyState(
     const GraphicsPipelineDescriptor&       desc,
@@ -79,13 +108,14 @@ static void CreateTessellationState(
 }
 
 static void CreateViewportState(
-    const GraphicsPipelineDescriptor&   desc,
+    ArrayView<Viewport>                 viewports,
+    ArrayView<Scissor>                  scissors,
     VkPipelineViewportStateCreateInfo&  createInfo,
-    std::vector<VkViewport>&            viewportsVK,
-    std::vector<VkRect2D>&              scissorsVK)
+    SmallVector_VkViewport&             viewportsVK,
+    SmallVector_VkRect2D&               scissorsVK)
 {
-    const std::size_t numViewports = desc.viewports.size();
-    const std::size_t numScissors = desc.scissors.size();
+    const std::size_t numViewports = viewports.size();
+    const std::size_t numScissors = scissors.size();
 
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     createInfo.pNext = nullptr;
@@ -100,7 +130,7 @@ static void CreateViewportState(
         viewportsVK.resize(numViewports);
 
         for_range(i, numViewports)
-            VKTypes::Convert(viewportsVK[i], desc.viewports[i]);
+            VKTypes::Convert(viewportsVK[i], viewports[i]);
 
         createInfo.pViewports = viewportsVK.data();
     }
@@ -120,9 +150,9 @@ static void CreateViewportState(
         for_range(i, numViewports)
         {
             if (i < numScissors)
-                VKTypes::Convert(scissorsVK[i], desc.scissors[i]);
+                VKTypes::Convert(scissorsVK[i], scissors[i]);
             else
-                VKTypes::Convert(scissorsVK[i], desc.viewports[i]);
+                VKTypes::Convert(scissorsVK[i], viewports[i]);
         }
 
         createInfo.pScissors = scissorsVK.data();
@@ -200,19 +230,20 @@ static void CreateStencilOpState(
 }
 
 static void CreateDepthStencilState(
-    const GraphicsPipelineDescriptor&       desc,
+    const DepthDescriptor&                  depthDesc,
+    const StencilDescriptor&                stencilDesc,
     VkPipelineDepthStencilStateCreateInfo&  createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.depthTestEnable          = VKBoolean(desc.depth.testEnabled);
-    createInfo.depthWriteEnable         = VKBoolean(desc.depth.writeEnabled);
-    createInfo.depthCompareOp           = VKTypes::Map(desc.depth.compareOp);
+    createInfo.depthTestEnable          = VKBoolean(depthDesc.testEnabled);
+    createInfo.depthWriteEnable         = VKBoolean(depthDesc.writeEnabled);
+    createInfo.depthCompareOp           = VKTypes::Map(depthDesc.compareOp);
     createInfo.depthBoundsTestEnable    = VK_FALSE;
-    createInfo.stencilTestEnable        = VKBoolean(desc.stencil.testEnabled);
-    CreateStencilOpState(desc.stencil.front, createInfo.front);
-    CreateStencilOpState(desc.stencil.back, createInfo.back);
+    createInfo.stencilTestEnable        = VKBoolean(stencilDesc.testEnabled);
+    CreateStencilOpState(stencilDesc.front, createInfo.front);
+    CreateStencilOpState(stencilDesc.back, createInfo.back);
     createInfo.minDepthBounds           = 0.0f;
     createInfo.maxDepthBounds           = 1.0f;
 }
@@ -234,7 +265,7 @@ static void CreateColorBlendAttachmentState(
 static void CreateColorBlendState(
     const BlendDescriptor&                              desc,
     VkPipelineColorBlendStateCreateInfo&                createInfo,
-    std::vector<VkPipelineColorBlendAttachmentState>&   attachmentStatesVK,
+    SmallVector_VkPipelineColorBlendAttachmentState&    attachmentStatesVK,
     std::uint32_t                                       numColorAttachments)
 {
     numColorAttachments = std::min(numColorAttachments, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -272,10 +303,11 @@ static void CreateColorBlendState(
     createInfo.blendConstants[3]    = desc.blendFactor[3];
 }
 
+template <typename TDesc>
 static void CreateDynamicState(
-    const GraphicsPipelineDescriptor&   desc,
+    const TDesc&                        desc,
     VkPipelineDynamicStateCreateInfo&   createInfo,
-    std::vector<VkDynamicState>&        dynamicStatesVK)
+    SmallVector_VkDynamicState&         dynamicStatesVK)
 {
     if (desc.viewports.empty())
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_VIEWPORT);
@@ -293,7 +325,31 @@ static void CreateDynamicState(
     createInfo.pDynamicStates       = (dynamicStatesVK.empty() ? nullptr : dynamicStatesVK.data());
 }
 
-bool VKGraphicsPSO::CreateVkPipeline(
+void VKGraphicsPSO::FillAndAppendShaderStageCreateInfo(
+    Shader*                                         shader,
+    const char*                                     debugName,
+    SmallVector_VkPipelineShaderStageCreateInfo&    createInfos,
+    bool&                                           outShaderCreationFailed)
+{
+    if (shader != nullptr)
+    {
+        VKShader& shaderVK = LLGL_CAST(VKShader&, *shader);
+        const Report* report = shaderVK.GetReport();
+        if (report != nullptr && report->HasErrors())
+        {
+            GetMutableReport().Errorf("Failed to load %s shader into Vulkan graphics pipeline state [%s]\n", ToString(shader->GetType()), GetOptionalDebugName(debugName));
+            outShaderCreationFailed = true;
+        }
+        else
+        {
+            const std::size_t shaderIndex = createInfos.size();
+            createInfos.resize(shaderIndex + 1);
+            this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
+        }
+    }
+};
+
+bool VKGraphicsPSO::CreateGraphicsVkPipeline(
     VkDevice                            device,
     const VKRenderPass&                 renderPass,
     const VKGraphicsPipelineLimits&     limits,
@@ -308,37 +364,14 @@ bool VKGraphicsPSO::CreateVkPipeline(
         return false;
     }
 
-    auto FillAndAppendShaderStageCreateInfo = [this, &desc](
-        Shader*                                             shader,
-        SmallVector<VkPipelineShaderStageCreateInfo, 5>&    createInfos,
-        bool&                                               outShaderCreationFailed)
-    {
-        if (shader != nullptr)
-        {
-            VKShader& shaderVK = LLGL_CAST(VKShader&, *shader);
-            const Report* report = shaderVK.GetReport();
-            if (report != nullptr && report->HasErrors())
-            {
-                GetMutableReport().Errorf("Failed to load %s shader into Vulkan graphics pipeline state [%s]\n", ToString(shader->GetType()), GetOptionalDebugName(desc.debugName));
-                outShaderCreationFailed = true;
-            }
-            else
-            {
-                const std::size_t shaderIndex = createInfos.size();
-                createInfos.resize(shaderIndex + 1);
-                this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
-            }
-        }
-    };
-
     /* Get shader stages */
-    SmallVector<VkPipelineShaderStageCreateInfo, 5> shaderStageCreateInfos;
+    SmallVector_VkPipelineShaderStageCreateInfo shaderStageCreateInfos;
     bool shaderCreationFailed = false;
-    FillAndAppendShaderStageCreateInfo(desc.vertexShader,           shaderStageCreateInfos, shaderCreationFailed);
-    FillAndAppendShaderStageCreateInfo(desc.tessControlShader,      shaderStageCreateInfos, shaderCreationFailed);
-    FillAndAppendShaderStageCreateInfo(desc.tessEvaluationShader,   shaderStageCreateInfos, shaderCreationFailed);
-    FillAndAppendShaderStageCreateInfo(desc.geometryShader,         shaderStageCreateInfos, shaderCreationFailed);
-    FillAndAppendShaderStageCreateInfo(desc.fragmentShader,         shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.vertexShader,           desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.tessControlShader,      desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.tessEvaluationShader,   desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.geometryShader,         desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.fragmentShader,         desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
     if (shaderCreationFailed)
         return false;
 
@@ -355,10 +388,10 @@ bool VKGraphicsPSO::CreateVkPipeline(
     CreateTessellationState(desc, tessellationState);
 
     /* Initialize viewport state */
-    std::vector<VkViewport> viewportsVK;
-    std::vector<VkRect2D> scissorsVK;
+    SmallVector_VkViewport viewportsVK;
+    SmallVector_VkRect2D scissorsVK;
     VkPipelineViewportStateCreateInfo viewportState;
-    CreateViewportState(desc, viewportState, viewportsVK, scissorsVK);
+    CreateViewportState(desc.viewports, desc.scissors, viewportState, viewportsVK, scissorsVK);
 
     /* Initialize rasterizer state */
     VkPipelineRasterizationStateCreateInfo rasterizerState;
@@ -372,15 +405,15 @@ bool VKGraphicsPSO::CreateVkPipeline(
 
     /* Initialize depth-stencil state */
     VkPipelineDepthStencilStateCreateInfo depthStencilState;
-    CreateDepthStencilState(desc, depthStencilState);
+    CreateDepthStencilState(desc.depth, desc.stencil, depthStencilState);
 
     /* Initialize color-blend state */
-    std::vector<VkPipelineColorBlendAttachmentState> attachmentStatesVK;
+    SmallVector_VkPipelineColorBlendAttachmentState attachmentStatesVK;
     VkPipelineColorBlendStateCreateInfo colorBlendState;
     CreateColorBlendState(desc.blend, colorBlendState, attachmentStatesVK, renderPass.GetNumColorAttachments());
 
     /* Initialize dynamic state */
-    std::vector<VkDynamicState> dynamicStatesVK;
+    SmallVector_VkDynamicState dynamicStatesVK;
     VkPipelineDynamicStateCreateInfo dynamicState;
     CreateDynamicState(desc, dynamicState, dynamicStatesVK);
 
@@ -409,6 +442,89 @@ bool VKGraphicsPSO::CreateVkPipeline(
     }
     VkResult result = vkCreateGraphicsPipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan graphics pipeline");
+
+    return true;
+}
+
+bool VKGraphicsPSO::CreateMeshVkPipeline(
+    VkDevice                        device,
+    const VKRenderPass&             renderPass,
+    const VKGraphicsPipelineLimits& limits,
+    const MeshPipelineDescriptor&   desc,
+    VkPipelineCache                 pipelineCache)
+{
+    /* Get shader program object */
+    const VKShader* meshShaderVK = LLGL_CAST(const VKShader*, desc.meshShader);
+    if (meshShaderVK == nullptr)
+    {
+        GetMutableReport().Errorf("cannot create Vulkan mesh pipeline without mesh shader\n");
+        return false;
+    }
+
+    /* Get shader stages */
+    SmallVector_VkPipelineShaderStageCreateInfo shaderStageCreateInfos;
+    bool shaderCreationFailed = false;
+    FillAndAppendShaderStageCreateInfo(desc.taskShader,     desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.meshShader,     desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.fragmentShader, desc.debugName, shaderStageCreateInfos, shaderCreationFailed);
+    if (shaderCreationFailed)
+        return false;
+
+    /* Initialize viewport state */
+    SmallVector_VkViewport viewportsVK;
+    SmallVector_VkRect2D scissorsVK;
+    VkPipelineViewportStateCreateInfo viewportState;
+    CreateViewportState(desc.viewports, desc.scissors, viewportState, viewportsVK, scissorsVK);
+
+    /* Initialize rasterizer state */
+    VkPipelineRasterizationStateCreateInfo rasterizerState;
+    VkPipelineRasterizationConservativeStateCreateInfoEXT createInfoConservativeRasterExt;
+    CreateRasterizerState(desc.rasterizer, limits, rasterizerState, createInfoConservativeRasterExt);
+
+    /* Initialize multi-sample state */
+    VkPipelineMultisampleStateCreateInfo multisampleState;
+    const VkSampleCountFlagBits sampleCountBits = (desc.rasterizer.multiSampleEnabled ? renderPass.GetSampleCountBits() : VK_SAMPLE_COUNT_1_BIT);
+    CreateMultisampleState(sampleCountBits, desc.blend, multisampleState);
+
+    /* Initialize depth-stencil state */
+    VkPipelineDepthStencilStateCreateInfo depthStencilState;
+    CreateDepthStencilState(desc.depth, desc.stencil, depthStencilState);
+
+    /* Initialize color-blend state */
+    SmallVector_VkPipelineColorBlendAttachmentState attachmentStatesVK;
+    VkPipelineColorBlendStateCreateInfo colorBlendState;
+    CreateColorBlendState(desc.blend, colorBlendState, attachmentStatesVK, renderPass.GetNumColorAttachments());
+
+    /* Initialize dynamic state */
+    SmallVector_VkDynamicState dynamicStatesVK;
+    VkPipelineDynamicStateCreateInfo dynamicState;
+    CreateDynamicState(desc, dynamicState, dynamicStatesVK);
+
+    /* Create graphics pipeline state object */
+    VkGraphicsPipelineCreateInfo createInfo;
+    {
+        createInfo.sType                = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        createInfo.pNext                = nullptr;
+        createInfo.flags                = 0;
+        createInfo.stageCount           = static_cast<std::uint32_t>(shaderStageCreateInfos.size());
+        createInfo.pStages              = shaderStageCreateInfos.data();
+        createInfo.pVertexInputState    = nullptr;
+        createInfo.pInputAssemblyState  = nullptr;
+        createInfo.pTessellationState   = nullptr;
+        createInfo.pViewportState       = (&viewportState);
+        createInfo.pRasterizationState  = (&rasterizerState);
+        createInfo.pMultisampleState    = (&multisampleState);
+        createInfo.pDepthStencilState   = (&depthStencilState);
+        createInfo.pColorBlendState     = (&colorBlendState);
+        createInfo.pDynamicState        = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
+        createInfo.layout               = GetVkPipelineLayout();
+        createInfo.renderPass           = renderPass.GetVkRenderPass();
+        createInfo.subpass              = 0;
+        createInfo.basePipelineHandle   = VK_NULL_HANDLE;
+        createInfo.basePipelineIndex    = 0;
+    }
+    VkResult result = vkCreateGraphicsPipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
+    VKThrowIfFailed(result, "failed to create Vulkan mesh pipeline");
 
     return true;
 }

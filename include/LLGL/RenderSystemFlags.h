@@ -599,6 +599,7 @@ struct RenderingFeatures
     \brief Specifies whether task and mesh shaders are supported.
     \remarks Task and mesh shaders belong to the same mesh pipeline but task shaders are optional to use in such a pipeline,
     so task shader support is implied if mesh shaders are supported.
+    \note Only supported with: Direct3D 12, Vulkan.
     \see ShaderType::Task
     \see ShaderType::Mesh
     \see RenderSystem::CreatePipelineState(const MeshPipelineDescriptor&)

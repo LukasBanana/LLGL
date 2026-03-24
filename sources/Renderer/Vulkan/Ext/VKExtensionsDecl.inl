@@ -33,6 +33,10 @@ DECL_VKPROC( vkCreateAndroidSurfaceKHR );
 
 #endif
 
+/* VK_EXT_headless_surface */
+
+DECL_VKPROC( vkCreateHeadlessSurfaceEXT );
+
 /* VK_EXT_conditional_rendering */
 
 DECL_VKPROC( vkCmdBeginConditionalRenderingEXT );
@@ -78,6 +82,17 @@ DECL_VKPROC( vkGetPhysicalDeviceImageFormatProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceQueueFamilyProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
 DECL_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
+
+/* KHR_fragment_shading_rate */
+
+DECL_VKPROC( vkCmdSetFragmentShadingRateKHR             );
+DECL_VKPROC( vkGetPhysicalDeviceFragmentShadingRatesKHR );
+
+/* VK_EXT_mesh_shader */
+
+DECL_VKPROC( vkCmdDrawMeshTasksEXT );
+DECL_VKPROC( vkCmdDrawMeshTasksIndirectEXT );
+DECL_VKPROC( vkCmdDrawMeshTasksIndirectCountEXT ); // Requires VK_KHR_draw_indirect_count or VK_AMD_draw_indirect_count
 
 
 

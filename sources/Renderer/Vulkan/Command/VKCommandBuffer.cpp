@@ -41,7 +41,7 @@ namespace LLGL
 // Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
-    if (physicalDevice.GetFeatures().features.multiDrawIndirect != VK_FALSE)
+    if (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE)
         return physicalDevice.GetProperties().limits.maxDrawIndirectCount;
     else
         return 1u;
@@ -1338,6 +1338,62 @@ bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
         return true;
     }
     return false;
+}
+
+/* ----- Mesh pipeline ----- */
+
+void VKCommandBuffer::DrawMesh(
+    std::uint32_t   numWorkGroupsX,
+    std::uint32_t   numWorkGroupsY,
+    std::uint32_t   numWorkGroupsZ)
+{
+    if (HasExtension(VKExt::EXT_mesh_shader))
+    {
+        FlushDescriptorCache();
+        SubmitAutoPipelineBarrier();
+        vkCmdDrawMeshTasksEXT(commandBuffer_, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    }
+}
+
+void VKCommandBuffer::DrawMeshIndirect(
+    LLGL::Buffer&   buffer,
+    std::uint64_t   offset,
+    std::uint32_t   numCommands,
+    std::uint32_t   stride)
+{
+    if (HasExtension(VKExt::EXT_mesh_shader))
+    {
+        FlushDescriptorCache();
+        SubmitAutoPipelineBarrier();
+        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+        vkCmdDrawMeshTasksIndirectEXT(commandBuffer_, bufferVK.GetVkBuffer(), static_cast<VkDeviceSize>(offset), numCommands, stride);
+    }
+}
+
+void VKCommandBuffer::DrawMeshIndirect(
+    LLGL::Buffer&   argumentsBuffer,
+    std::uint64_t   argumentsOffset,
+    LLGL::Buffer&   countBuffer,
+    std::uint64_t   countOffset,
+    std::uint32_t   maxNumCommands,
+    std::uint32_t   stride)
+{
+    if (HasExtension(VKExt::EXT_mesh_shader))
+    {
+        FlushDescriptorCache();
+        SubmitAutoPipelineBarrier();
+        auto& argumentsBufferVK = LLGL_CAST(VKBuffer&, argumentsBuffer);
+        auto& countBufferVK = LLGL_CAST(VKBuffer&, countBuffer);
+        vkCmdDrawMeshTasksIndirectCountEXT(
+            commandBuffer_,
+            argumentsBufferVK.GetVkBuffer(),
+            static_cast<VkDeviceSize>(argumentsOffset),
+            countBufferVK.GetVkBuffer(),
+            static_cast<VkDeviceSize>(countOffset),
+            maxNumCommands,
+            stride
+        );
+    }
 }
 
 

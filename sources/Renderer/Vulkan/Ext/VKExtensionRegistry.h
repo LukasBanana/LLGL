@@ -25,14 +25,16 @@ enum class VKExt
     KHR_win32_surface,
     KHR_xlib_surface,
 
-#if LLGL_LINUX_ENABLE_WAYLAND
+    #if LLGL_LINUX_ENABLE_WAYLAND
     KHR_wayland_surface,
-#endif
+    #endif
 
     /* Khronos extensions */
     KHR_maintenance1,
     KHR_get_physical_device_properties2,
     KHR_imageless_framebuffer,
+    KHR_multiview,              // Needed for EXT_mesh_shader
+    KHR_fragment_shading_rate,  // Needed for EXT_mesh_shader
 
     /* Multivendor extensions */
     EXT_conditional_rendering,
@@ -41,6 +43,8 @@ enum class VKExt
     EXT_debug_utils,
     EXT_nested_command_buffer,
     EXT_transform_feedback,
+    EXT_headless_surface,
+    EXT_mesh_shader,
 
     /* Enumeration entry counter */
     Count,

@@ -52,6 +52,18 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_EXT_nested_command_buffer
     VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
     #endif
+    #if VK_EXT_headless_surface
+    VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_fragment_shading_rate
+    VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_multiview
+    VK_KHR_MULTIVIEW_EXTENSION_NAME,
+    #endif
+    #if VK_EXT_mesh_shader
+    VK_EXT_MESH_SHADER_EXTENSION_NAME,
+    #endif
     nullptr,
 };
 
@@ -100,6 +112,9 @@ static bool IsVulkanInstanceExtOptional(const StringView& name)
         #endif
         #if VK_KHR_portability_enumeration
         || name == VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+        #endif
+        #if VK_EXT_headless_surface
+        || name == VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME
         #endif
     );
 }

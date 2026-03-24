@@ -9,7 +9,7 @@
 #define LLGL_VK_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferTier1.h>
 #include "VKCommandBufferRing.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
@@ -37,12 +37,12 @@ class VKSwapChain;
 class VKPipelineState;
 class VKPipelineBarrier;
 
-class VKCommandBuffer final : public CommandBuffer
+class VKCommandBuffer final : public CommandBufferTier1
 {
 
     public:
 
-        #include <LLGL/Backend/CommandBuffer.inl>
+        #include <LLGL/Backend/CommandBufferTier1.inl>
 
     public:
 

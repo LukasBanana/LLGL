@@ -243,6 +243,7 @@ VKPipelineLayoutPermutationSPtr VKPipelineLayout::CreatePermutation(
                 setLayoutBindings[i].descriptorType = GetDescriptorTypeForBinding(inBindingSlots[i]);
         };
 
+        //TODO: this needs to handle overridden binding slots, `srcSlots` can contain overlapping binding points
         UpdateSetLayoutDescriptorTypes(setBindingTables_[SetLayoutType_HeapBindings].srcSlots, permutationParams.setLayoutHeapBindings);
         UpdateSetLayoutDescriptorTypes(setBindingTables_[SetLayoutType_DynamicBindings].srcSlots, permutationParams.setLayoutDynamicBindings);
     }

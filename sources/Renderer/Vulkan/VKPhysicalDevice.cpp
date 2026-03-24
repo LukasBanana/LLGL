@@ -257,7 +257,6 @@ void VKPhysicalDevice::QueryRendererInfo(RendererInfo& info)
 void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
 {
     /* Map limits to output rendering capabilites */
-    const VkPhysicalDeviceFeatures& features = features_.features;
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Query common attributes */
@@ -266,19 +265,19 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
     caps.textureFormats                             = GetDefaultSupportedVKTextureFormats();
 
-    if (features.textureCompressionBC != VK_FALSE)
+    if (features_.textureCompressionBC != VK_FALSE)
     {
         const std::vector<Format> compressedFormatsBC = GetCompressedVKTextureFormatsBC();
         caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsBC.begin(), compressedFormatsBC.end());
     }
 
-    if (features.textureCompressionASTC_LDR != VK_FALSE)
+    if (features_.textureCompressionASTC_LDR != VK_FALSE)
     {
         const std::vector<Format> compressedFormatsASTC = GetCompressedVKTextureFormatsASTC();
         caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsASTC.begin(), compressedFormatsASTC.end());
     }
 
-    if (features.textureCompressionETC2 != VK_FALSE)
+    if (features_.textureCompressionETC2 != VK_FALSE)
     {
         const std::vector<Format> compressedFormatsETC2 = GetCompressedVKTextureFormatsETC2();
         caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsETC2.begin(), compressedFormatsETC2.end());
@@ -289,7 +288,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.has3DTextures                     = true;
     caps.features.hasCubeTextures                   = true;
     caps.features.hasArrayTextures                  = true;
-    caps.features.hasCubeArrayTextures              = (features.imageCubeArray != VK_FALSE);
+    caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
     caps.features.hasMultiSampleTextures            = true;
     caps.features.hasMultiSampleArrayTextures       = true;
     caps.features.hasTextureViews                   = true;
@@ -298,20 +297,21 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasBufferViews                    = true;
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;
-    caps.features.hasGeometryShaders                = (features.geometryShader != VK_FALSE);
-    caps.features.hasTessellationShaders            = (features.tessellationShader != VK_FALSE);
+    caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
+    caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
     caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
     caps.features.hasComputeShaders                 = true;
+    caps.features.hasMeshShaders                    = SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     caps.features.hasInstancing                     = true;
     caps.features.hasOffsetInstancing               = true;
-    caps.features.hasIndirectDrawing                = (features.drawIndirectFirstInstance != VK_FALSE);
-    caps.features.hasViewportArrays                 = (features.multiViewport != VK_FALSE);
+    caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
+    caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
     caps.features.hasStreamOutputs                  = SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
-    caps.features.hasLogicOp                        = (features.logicOp != VK_FALSE);
-    caps.features.hasPipelineStatistics             = (features.pipelineStatisticsQuery != VK_FALSE);
-    caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+    caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
     caps.features.hasPipelineCaching                = true;
+    caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
+    caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
@@ -335,7 +335,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
-    caps.limits.maxStreamOutputs                    = transformFeedbackProps_.maxTransformFeedbackBuffers;
+    caps.limits.maxStreamOutputs                    = properties_.transformFeedback.maxTransformFeedbackBuffers;
     caps.limits.maxTessFactor                       = limits.maxTessellationGenerationLevel;
     caps.limits.minConstantBufferAlignment          = limits.minUniformBufferOffsetAlignment;
     caps.limits.minSampledBufferAlignment           = limits.minStorageBufferOffsetAlignment; // Use SSBO for both sampled and storage buffers
@@ -370,7 +370,7 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice(VkDevice customLogicalDevice)
     if (customLogicalDevice != VK_NULL_HANDLE)
         device.LoadLogicalDeviceWeakRef(physicalDevice_, customLogicalDevice);
     else
-        device.CreateLogicalDevice(physicalDevice_, &features_, GetExtensionNames());
+        device.CreateLogicalDevice(physicalDevice_, &features2_, GetExtensionNames());
     return device;
 }
 
@@ -450,29 +450,45 @@ void VKPhysicalDevice::QueryDeviceFeatures()
         currentDesc = baseDescPtr;
     };
 
-    features_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&features_);
+    features2_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&features2_);
 
     #if VK_EXT_nested_command_buffer
     if (SupportsExtension(VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME))
-        AppendFeaturesDesc(&nestedCmdBufferFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
+        AppendFeaturesDesc(&(features_.nestedCmdBuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
     #endif
 
     #if VK_EXT_transform_feedback
     if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
-        AppendFeaturesDesc(&transformFeedbackFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+        AppendFeaturesDesc(&(features_.transformFeedback), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+    #endif
+
+    #if VK_KHR_fragment_shading_rate
+    if (SupportsExtension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
+        AppendFeaturesDesc(&(features_.fragmentShadingRate), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR);
+    #endif
+
+    #if VK_KHR_multiview
+    if (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME))
+        AppendFeaturesDesc(&(features_.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR);
+    #endif
+
+    #if VK_EXT_mesh_shader
+    if (SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
+        AppendFeaturesDesc(&(features_.meshShader), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT);
     #endif
 
     #if VK_KHR_imageless_framebuffer
     if (SupportsExtension(VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME))
-        AppendFeaturesDesc(&imagelessFramebufferFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR);
+        AppendFeaturesDesc(&(features_.imagelessFramebuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR);
     #endif
 
-    vkGetPhysicalDeviceFeatures2(physicalDevice_, &features_);
+    vkGetPhysicalDeviceFeatures2(physicalDevice_, &features2_);
+    static_cast<VkPhysicalDeviceFeatures&>(features_) = features2_.features;
 
     #else // VK_KHR_get_physical_device_properties2
 
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &(features_.features));
+    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
 
     #endif // /VK_KHR_get_physical_device_properties2
 }
@@ -502,19 +518,39 @@ void VKPhysicalDevice::QueryDeviceProperties()
 
     currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&propertiesExt);
 
+    #if VK_EXT_nested_command_buffer
+    if (SupportsExtension(VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME))
+        ChainDescriptor(&(properties_.nestedCmdBuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_PROPERTIES_EXT);
+    #endif
+
+    #if VK_EXT_conservative_rasterization
     if (SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME))
-        ChainDescriptor(&conservRasterProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
+        ChainDescriptor(&(properties_.conservRaster), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
+    #endif
 
     #if VK_EXT_transform_feedback
     if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
-        ChainDescriptor(&transformFeedbackProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_PROPERTIES_EXT);
+        ChainDescriptor(&(properties_.transformFeedback), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_PROPERTIES_EXT);
+    #endif
+
+    #if VK_KHR_fragment_shading_rate
+    if (SupportsExtension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
+        ChainDescriptor(&(properties_.fragmentShadingRate), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR);
+    #endif
+
+    #if VK_KHR_multiview
+    if (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME))
+        ChainDescriptor(&(properties_.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR);
+    #endif
+
+    #if VK_EXT_mesh_shader
+    if (SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
+        ChainDescriptor(&(properties_.meshShader), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT);
     #endif
 
     /* Query device properties with extension "VK_KHR_get_physical_device_properties2" */
     vkGetPhysicalDeviceProperties2(physicalDevice_, &propertiesExt);
-
-    /* Store primary device properties */
-    properties_ = propertiesExt.properties;
+    static_cast<VkPhysicalDeviceProperties&>(properties_) = propertiesExt.properties;
 
     #else // VK_KHR_get_physical_device_properties2
 

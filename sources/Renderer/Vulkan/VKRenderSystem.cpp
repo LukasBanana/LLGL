@@ -777,9 +777,15 @@ PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescript
     return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc, pipelineCache);
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& /*pipelineStateDesc*/, PipelineCache* /*pipelineCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return nullptr; // TODO
+    return pipelineStates_.emplace<VKGraphicsPSO>(
+        device_,
+        (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
+        pipelineStateDesc,
+        graphicsPipelineLimits_,
+        pipelineCache
+    );
 }
 
 void VKRenderSystem::Release(PipelineState& pipelineState)

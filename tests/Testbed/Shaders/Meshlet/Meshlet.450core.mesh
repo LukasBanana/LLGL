@@ -1,0 +1,75 @@
+/*
+ * Meshlet.450core.mesh
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#version 450 core
+#extension GL_EXT_mesh_shader : require
+
+#define NUM_TRIANGLES   6
+#define NUM_VERTICES    (NUM_TRIANGLES + 2)
+#define NUM_COLORS      6
+#define M_PI            3.141592654
+
+layout(local_size_x = NUM_VERTICES) in;
+layout(max_vertices = NUM_VERTICES, max_primitives = NUM_TRIANGLES) out;
+layout(triangles) out;
+
+layout(location = 0) out vec3 vColor[];
+
+layout(push_constant) uniform Scene
+{
+    float aspectRatio;
+    uint numMeshlets;
+};
+
+vec2 GetPointOnCircle(float angle, float radius)
+{
+    float s = sin(angle * M_PI * 2.0);
+    float c = cos(angle * M_PI * 2.0);
+    return vec2(s * radius * aspectRatio, c * radius);
+}
+
+/*
+Generates vertices and indices for a small umbrella geometry:
+   6 ----- 1
+ /   \   /   \
+5 ---- 0 ---- 2
+ \   /   \   /
+   4 ----- 3
+*/
+void main()
+{
+    uint groupThreadId = gl_LocalInvocationID.x;
+    uint groupId = gl_WorkGroupID.x;
+
+    SetMeshOutputsEXT(NUM_VERTICES, NUM_TRIANGLES);
+
+    const vec3 colors[NUM_COLORS] =
+    {
+        vec3(1, 0, 0),
+        vec3(0, 1, 0),
+        vec3(0, 0, 1),
+        vec3(1, 1, 0),
+        vec3(0, 1, 1),
+        vec3(1, 0, 1),
+    };
+
+    const float radius = 0.5;
+    float angle = float(groupThreadId + groupId * NUM_TRIANGLES) / float(NUM_TRIANGLES * numMeshlets);
+    vec2 coord = (groupThreadId == 0 ? vec2(0, 0) : GetPointOnCircle(angle, radius));
+
+    gl_MeshVerticesEXT[groupThreadId].gl_Position = vec4(coord, 0, 1);
+    vColor[groupThreadId] = colors[groupThreadId % NUM_COLORS];
+
+    if (groupThreadId < NUM_TRIANGLES)
+    {
+        gl_PrimitiveTriangleIndicesEXT[groupThreadId] = uvec3(
+            0,
+            groupThreadId + 1,
+            groupThreadId + 2
+        );
+    }
+}

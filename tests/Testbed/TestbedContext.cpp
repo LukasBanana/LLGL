@@ -1215,6 +1215,11 @@ bool TestbedContext::LoadShaders()
         shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.Format1.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout2);
         shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout3);
         shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.450core.frag.spv",         ShaderType::Fragment);
+        if (caps.features.hasMeshShaders)
+        {
+            shaders[MSMeshlet]      = LoadShaderFromFile("Meshlet.450core.mesh.spv",               ShaderType::Mesh);
+            shaders[PSMeshlet]      = LoadShaderFromFile("Meshlet.450core.frag.spv",               ShaderType::Fragment);
+        }
     }
     else
     {

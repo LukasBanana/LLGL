@@ -37,8 +37,11 @@ VkShaderStageFlagBits Map(const ShaderType shaderType)
         case ShaderType::Geometry:          return VK_SHADER_STAGE_GEOMETRY_BIT;
         case ShaderType::Fragment:          return VK_SHADER_STAGE_FRAGMENT_BIT;
         case ShaderType::Compute:           return VK_SHADER_STAGE_COMPUTE_BIT;
-        case ShaderType::Task:              break; //return VK_SHADER_STAGE_TASK_BIT_EXT;
-        case ShaderType::Mesh:              break; //return VK_SHADER_STAGE_MESH_BIT_EXT;
+        #if VK_EXT_mesh_shader
+        case ShaderType::Task:              return VK_SHADER_STAGE_TASK_BIT_EXT;
+        case ShaderType::Mesh:              return VK_SHADER_STAGE_MESH_BIT_EXT;
+        #endif
+        default:                            break;
     }
     MapFailed("ShaderType", "VkShaderStageFlagBits");
 }
