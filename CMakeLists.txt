@@ -45,6 +45,10 @@ if(NOT DEFINED LLGL_TARGET_PLATFORM)
             message(FATAL_ERROR "Cannot build for Android platform: Missing environment variable 'ANDROID_NDK_ROOT'")
         endif()
         set(LLGL_ANDROID_PLATFORM ON)
+
+        # Google Play compatibility requires 16 KB page sizes now
+        # See https://developer.android.com/guide/practices/page-sizes?utm_source=android-studio-app&utm_medium=app
+        add_link_options("-Wl,-z,max-page-size=16384")
     elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
         set(LLGL_TARGET_PLATFORM "${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION}")
         set(LLGL_UWP_PLATFORM ON)
