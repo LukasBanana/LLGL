@@ -451,6 +451,30 @@ void VKSwapChain::CreateDefaultAndSecondaryRenderPass()
     CreateRenderPass(secondaryRenderPass_, AttachmentLoadOp::Load, AttachmentStoreOp::Store);
 }
 
+static VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval, bool isTearingAllowed)
+{
+    if (vsyncInterval == 0)
+    {
+        if (isTearingAllowed)
+        {
+            /* Prefer immediate present mode to allow tearing */
+            for (const VkPresentModeKHR& mode : presentModes)
+            {
+                if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+                    return mode;
+            }
+        }
+
+        /* Alternatively, check if MAILBOX presentation mode is available */
+        for (const VkPresentModeKHR& mode : presentModes)
+        {
+            if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+                return mode;
+        }
+    }
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
 void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval)
 {
     /* Pick swap-chain extent by resolution */
@@ -463,7 +487,8 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 
     /* Pick swap-chain presentation mode (with v-sync parameters) */
-    const VkPresentModeKHR presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncInterval);
+    constexpr bool isTearingAllowed = true;
+    const VkPresentModeKHR presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncInterval, isTearingAllowed);
 
     /* Create swap-chain */
     VkSwapchainCreateInfoKHR createInfo;
@@ -674,20 +699,6 @@ VkSurfaceFormatKHR VKSwapChain::PickSwapSurfaceFormat(const std::vector<VkSurfac
     }
 
     return surfaceFormats.front();
-}
-
-VkPresentModeKHR VKSwapChain::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const
-{
-    if (vsyncInterval == 0)
-    {
-        /* Check if MAILBOX or IMMEDIATE presentation mode is available, to avoid vertical synchronization */
-        for (const VkPresentModeKHR& mode : presentModes)
-        {
-            if (mode == VK_PRESENT_MODE_MAILBOX_KHR || mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-                return mode;
-        }
-    }
-    return VK_PRESENT_MODE_FIFO_KHR;
 }
 
 VkExtent2D VKSwapChain::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const
