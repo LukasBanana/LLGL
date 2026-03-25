@@ -452,6 +452,8 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     set_target_properties(
         ${PROJECT_NAME} PROPERTIES
             DEBUG_POSTFIX               "D"
+            ARCHIVE_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
             RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
             BUILD_RPATH                 "\$ORIGIN"
     )

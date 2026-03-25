@@ -34,7 +34,7 @@ print_help()
     echo "  --api-level=VERSION ....... Set Android API level (default is 21)"
     echo "  --apps .................... Generate Android Studio projects to build example apps (implies '--abi=all -s')"
     echo "  --gles=VER ................ Enables the maximum OpenGLES version: 300 (default), 310, or 320"
-    echo "  --vulkan .................. Include Vulkan renderer"
+    echo "  --vk ...................... Include Vulkan renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
     echo "  Default output directory is '$OUTPUT_DIR'"
@@ -74,7 +74,7 @@ for ARG in "$@"; do
             300) GLES_VER="OpenGLES 3.0" ;;
             *) echo "Unknown GLES version: $GLES_VER_NO; Must be 320, 310, or 300"; exit 1 ;;
         esac
-    elif [ "$ARG" = "--vulkan" ]; then
+    elif [ "$ARG" = "--vk" ] || [ "$ARG" = "--vulkan" ]; then # Accept '--vulkan' for backward compatibility
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
@@ -220,6 +220,24 @@ else
     build_with_android_abi $ANDROID_ABI "$OUTPUT_DIR"
 fi
 
+copy_build_to_jnilibs()
+{
+    CURRENT_PROJECT=$1
+    APP_ROOT=$2
+    ABI=$3
+    USE_MULTI_ABI=$4
+
+    LIB_FILENAME="libExample_${CURRENT_PROJECT}.so"
+    if [[ "$USE_MULTI_ABI" == "1" ]]; then
+        SRC_LIB_PATH="$OUTPUT_DIR/$ABI/build"
+    else
+        SRC_LIB_PATH="$OUTPUT_DIR/build"
+    fi
+    DST_LIB_PATH="$APP_ROOT/app/src/main/jniLibs/$ABI"
+    mkdir -p "$DST_LIB_PATH"
+    cp "$SRC_LIB_PATH/$LIB_FILENAME" "$DST_LIB_PATH/$LIB_FILENAME"
+}
+
 # Build project solutions for example apps
 generate_app_project()
 {
@@ -249,8 +267,6 @@ generate_app_project()
     # Get destination folder
     APP_ROOT="${OUTPUT_DIR}/apps/Example_$CURRENT_PROJECT"
 
-    BIN_ROOT=${OUTPUT_DIR}/${ABI}/build
-
     # Create folder structure
     mkdir -p "$APP_ROOT"
     PLATFORM_SOURCE_DIR="$SOURCE_DIR/examples/Shared/Platform/Android"
@@ -262,13 +278,13 @@ generate_app_project()
     cp -r "$PLATFORM_SOURCE_DIR/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
 
     # Copy binary files into JNI lib folders for respective ABI
-    for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
-        LIB_FILENAME="libExample_${CURRENT_PROJECT}.so"
-        SRC_LIB_PATH="$OUTPUT_DIR/$ABI/build"
-        DST_LIB_PATH="$APP_ROOT/app/src/main/jniLibs/$ABI"
-        mkdir -p "$DST_LIB_PATH"
-        cp "$SRC_LIB_PATH/$LIB_FILENAME" "$DST_LIB_PATH/$LIB_FILENAME"
-    done
+    if [ $ANDROID_ABI = "all" ]; then
+        for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
+            copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ABI" 1
+        done
+    else
+        copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ANDROID_ABI" 0
+    fi
 
     # Replace meta data
     sed -i "s/LLGL_PROJECT_NAME/Example_${CURRENT_PROJECT}/g" "$APP_ROOT/app/src/main/AndroidManifest.xml"
@@ -279,7 +295,7 @@ generate_app_project()
     ASSET_DIR="$APP_ROOT/app/src/main/assets"
     mkdir -p "$ASSET_DIR"
 
-    ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name *.assets.txt)
+    ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name "*.assets.txt")
     if [ -f "$ASSETS_LIST_FILE" ]; then
         # Read *.assets.txt file line-by-line into array and make sure '\r' character is not present (on Win32 platform)
         readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSETS_LIST_FILE")
@@ -326,16 +342,33 @@ generate_app_project()
 
 if [ $BUILD_APPS -ne 0 ]; then
 
-    BIN_FILE_BASE="${OUTPUT_DIR}/${SUPPORTED_ANDROID_ABIS[0]}/build/libExample_"
-    BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
-    EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.so)
-
-    for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do
-        if { [ $BUILD_TYPE = "Debug" ] && [[ $BIN_FILE == *D.so ]] } || { [ ! $BUILD_TYPE = "Debug" ] && ! [[ $BIN_FILE == *D.so ]] }; then
-            BIN_FILE_LEN=${#BIN_FILE}
-            PROJECT_NAME=${BIN_FILE:BIN_FILE_BASE_LEN:BIN_FILE_LEN-BIN_FILE_BASE_LEN-3}
-            generate_app_project $PROJECT_NAME
+    if [ $ANDROID_ABI = "all" ]; then
+        BUILD_BASE_DIR="${OUTPUT_DIR}/${SUPPORTED_ANDROID_ABIS[0]}/build"
+        if [ ! -d "$BUILD_BASE_DIR" ]; then
+            echo "Error: Failed to find build folder: '$BUILD_BASE_DIR'"
+            exit 1
         fi
-    done
+    else
+        BUILD_BASE_DIR="${OUTPUT_DIR}/build"
+    fi
+
+    BIN_FILE_BASE="${BUILD_BASE_DIR}/libExample_"
+    BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
+
+    shopt -s nullglob # Expand glob expressions to nothing if nothing can be found
+    EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.so)
+    shopt -u nullglob # Back to original behavior
+
+    if [ ${#EXAMPLE_BIN_FILES[@]} -eq 0 ]; then
+        echo "Error: Failed to find any builds of example projects in '${BIN_FILE_BASE}*.so'"
+    else
+        for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do
+            if { [ $BUILD_TYPE = "Debug" ] && [[ $BIN_FILE == *D.so ]] } || { [ ! $BUILD_TYPE = "Debug" ] && ! [[ $BIN_FILE == *D.so ]] }; then
+                BIN_FILE_LEN=${#BIN_FILE}
+                PROJECT_NAME=${BIN_FILE:BIN_FILE_BASE_LEN:BIN_FILE_LEN-BIN_FILE_BASE_LEN-3}
+                generate_app_project $PROJECT_NAME
+            fi
+        done
+    fi
 
 fi
