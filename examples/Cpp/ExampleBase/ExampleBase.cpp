@@ -161,7 +161,7 @@ static const char* GetDefaultRendererModule()
     #elif defined LLGL_OS_IOS
     return "Metal";
     #elif defined LLGL_OS_ANDROID
-    return "OpenGLES3";
+    return "Vulkan";//"OpenGLES3";
     #elif defined LLGL_OS_WASM
     return "WebGL";
     #else
@@ -222,22 +222,42 @@ static bool ParseWindowSize(LLGL::Extent2D& size, int argc, char* argv[])
     return false;
 }
 
-static bool ParseSamples(std::uint32_t& samples, int argc, char* argv[])
+static bool ParseIntFromCommandline(int argc, char* argv[], LLGL::StringView inArg, int& outValue)
 {
-    const LLGL::StringView msArg = "-ms=";
     for_subrange(i, 1, argc)
     {
         const LLGL::StringView arg = argv[i];
-        if (arg.compare(0, msArg.size(), msArg) == 0)
+        if (arg.compare(0, inArg.size(), inArg) == 0)
         {
-            if (arg.size() < msArg.size() + 1)
+            if (arg.size() < inArg.size() + 1)
                 return false;
 
-            int value = ::atoi(argv[i] + msArg.size());
-            samples = static_cast<std::uint32_t>(std::max(1, std::min(value, 16)));
+            outValue = ::atoi(argv[i] + inArg.size());
 
             return true;
         }
+    }
+    return false;
+}
+
+static bool ParseSamples(std::uint32_t& samples, int argc, char* argv[])
+{
+    int value = 0;
+    if (ParseIntFromCommandline(argc, argv, "-ms=", value))
+    {
+        samples = static_cast<std::uint32_t>(std::max(1, std::min(value, 16)));
+        return true;
+    }
+    return false;
+}
+
+static bool ParseSwapChain(std::uint32_t& samples, int argc, char* argv[])
+{
+    int value = 0;
+    if (ParseIntFromCommandline(argc, argv, "-sc=", value))
+    {
+        samples = static_cast<std::uint32_t>(std::max(2, std::min(value, 16)));
+        return true;
     }
     return false;
 }
@@ -333,11 +353,18 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
  * ExampleBase class
  */
 
+#ifdef LLGL_OS_ANDROID
+#   define LLGL_EXAMPLE_MULTISAMPLING ( 1 )
+#else
+#   define LLGL_EXAMPLE_MULTISAMPLING ( 8 )
+#endif
+
 struct ExampleConfig
 {
     std::string     rendererModule  = GetDefaultRendererModule();
     LLGL::Extent2D  windowSize      = { 800, 600 };
-    std::uint32_t   samples         = 8;
+    std::uint32_t   samples         = LLGL_EXAMPLE_MULTISAMPLING;
+    std::uint32_t   swapBuffers     = 2;
     bool            vsync           = true;
     bool            debugger        = false;
     long            flags           = 0;
@@ -356,6 +383,7 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
     g_Config.rendererModule = GetSelectedRendererModule(argc, argv);
     ParseWindowSize(g_Config.windowSize, argc, argv);
     ParseSamples(g_Config.samples, argc, argv);
+    ParseSwapChain(g_Config.swapBuffers, argc, argv);
     if (HasArgument("-v0", argc, argv) || HasArgument("--novsync", argc, argv))
         g_Config.vsync = false;
     if (HasArgument("-d", argc, argv) || HasArgument("--debug", argc, argv))
@@ -554,6 +582,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         #else
         swapChainDesc.samples       = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
         #endif
+        swapChainDesc.swapBuffers   = g_Config.swapBuffers;
         swapChainDesc.resizable     = true;
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
@@ -590,6 +619,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         "swap-chain:\n"
         "  resolution:         %u x %u\n"
         "  samples:            %u\n"
+        "  swapBuffers:        %u\n"
         "  colorFormat:        %s\n"
         "  depthStencilFormat: %s\n"
         "\n"
@@ -604,6 +634,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         swapChainRes.width,
         swapChainRes.height,
         swapChain->GetSamples(),
+        swapChain->GetNumSwapBuffers(),
         LLGL::ToString(swapChain->GetColorFormat()),
         LLGL::ToString(swapChain->GetDepthStencilFormat()),
         g_Config.immediateSubmit ? "immediate" : "deferred",
