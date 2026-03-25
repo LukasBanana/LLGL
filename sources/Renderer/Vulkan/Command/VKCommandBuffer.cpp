@@ -1347,12 +1347,14 @@ void VKCommandBuffer::DrawMesh(
     std::uint32_t   numWorkGroupsY,
     std::uint32_t   numWorkGroupsZ)
 {
+    #if VK_EXT_mesh_shader
     if (HasExtension(VKExt::EXT_mesh_shader))
     {
         FlushDescriptorCache();
         SubmitAutoPipelineBarrier();
         vkCmdDrawMeshTasksEXT(commandBuffer_, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
     }
+    #endif // /VK_EXT_mesh_shader
 }
 
 void VKCommandBuffer::DrawMeshIndirect(
@@ -1361,6 +1363,7 @@ void VKCommandBuffer::DrawMeshIndirect(
     std::uint32_t   numCommands,
     std::uint32_t   stride)
 {
+    #if VK_EXT_mesh_shader
     if (HasExtension(VKExt::EXT_mesh_shader))
     {
         FlushDescriptorCache();
@@ -1368,6 +1371,7 @@ void VKCommandBuffer::DrawMeshIndirect(
         auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
         vkCmdDrawMeshTasksIndirectEXT(commandBuffer_, bufferVK.GetVkBuffer(), static_cast<VkDeviceSize>(offset), numCommands, stride);
     }
+    #endif // /VK_EXT_mesh_shader
 }
 
 void VKCommandBuffer::DrawMeshIndirect(
@@ -1378,6 +1382,7 @@ void VKCommandBuffer::DrawMeshIndirect(
     std::uint32_t   maxNumCommands,
     std::uint32_t   stride)
 {
+    #if VK_EXT_mesh_shader
     if (HasExtension(VKExt::EXT_mesh_shader))
     {
         FlushDescriptorCache();
@@ -1394,6 +1399,7 @@ void VKCommandBuffer::DrawMeshIndirect(
             stride
         );
     }
+    #endif // /VK_EXT_mesh_shader
 }
 
 

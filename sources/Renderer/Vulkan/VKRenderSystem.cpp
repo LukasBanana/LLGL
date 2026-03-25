@@ -779,13 +779,22 @@ PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescript
 
 PipelineState* VKRenderSystem::CreatePipelineState(const MeshPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return pipelineStates_.emplace<VKGraphicsPSO>(
-        device_,
-        (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
-        pipelineStateDesc,
-        graphicsPipelineLimits_,
-        pipelineCache
-    );
+    #if VK_EXT_mesh_shader
+    if (HasExtension(VKExt::EXT_mesh_shader))
+    {
+        return pipelineStates_.emplace<VKGraphicsPSO>(
+            device_,
+            (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
+            pipelineStateDesc,
+            graphicsPipelineLimits_,
+            pipelineCache
+        );
+    }
+    else
+    #endif // /VK_EXT_mesh_shader
+    {
+        return nullptr; // VK_EXT_mesh_shader not supported
+    }
 }
 
 void VKRenderSystem::Release(PipelineState& pipelineState)

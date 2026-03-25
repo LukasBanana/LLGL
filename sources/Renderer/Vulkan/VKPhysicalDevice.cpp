@@ -301,17 +301,25 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
     caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
     caps.features.hasComputeShaders                 = true;
+    #if VK_EXT_mesh_shader
     caps.features.hasMeshShaders                    = SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+    #endif
     caps.features.hasInstancing                     = true;
     caps.features.hasOffsetInstancing               = true;
     caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
+    #if VK_EXT_conservative_rasterization
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
+    #endif
+    #if VK_EXT_transform_feedback
     caps.features.hasStreamOutputs                  = SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    #endif
     caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
     caps.features.hasPipelineCaching                = true;
     caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
+    #if VK_EXT_conditional_rendering
     caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+    #endif
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];

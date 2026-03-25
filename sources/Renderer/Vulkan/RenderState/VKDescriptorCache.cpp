@@ -182,25 +182,25 @@ static const char* VkDescriptorTypeToString(VkDescriptorType descriptorType)
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT           );
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK       );
 
-        #if VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+        #if VK_KHR_acceleration_structure
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR );
         #endif
 
-        #if VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV
+        #if VK_NV_ray_tracing
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV  );
         #endif
 
-        #if VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM
+        #if VK_QCOM_image_processing
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM   );
-        #endif
-
-        #if VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM     );
         #endif
 
-        #if VK_DESCRIPTOR_TYPE_MUTABLE_EXT
+        #if VK_EXT_mutable_descriptor_type
         LLGL_CASE_TO_STR( VK_DESCRIPTOR_TYPE_MUTABLE_EXT                );
         #endif
+
+        default:
+        break;
     }
     return "<unknown>";
 }

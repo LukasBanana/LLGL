@@ -95,16 +95,21 @@ static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_android_surface)
 
 static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_debug_marker)
 {
+    #if VK_EXT_debug_marker
     LOAD_VKPROC( vkDebugMarkerSetObjectTagEXT  );
     LOAD_VKPROC( vkDebugMarkerSetObjectNameEXT );
     LOAD_VKPROC( vkCmdDebugMarkerBeginEXT      );
     LOAD_VKPROC( vkCmdDebugMarkerEndEXT        );
     LOAD_VKPROC( vkCmdDebugMarkerInsertEXT     );
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_debug_marker
 }
 
 static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_debug_utils)
 {
+    #if VK_EXT_debug_utils
     LOAD_VKPROC( vkCmdBeginDebugUtilsLabelEXT    );
     LOAD_VKPROC( vkCmdEndDebugUtilsLabelEXT      );
     LOAD_VKPROC( vkCmdInsertDebugUtilsLabelEXT   );
@@ -117,23 +122,35 @@ static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_debug_utils)
     LOAD_VKPROC( vkSetDebugUtilsObjectTagEXT     );
     LOAD_VKPROC( vkSubmitDebugUtilsMessageEXT    );
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_debug_utils
 }
 
 static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_headless_surface)
 {
+    #if VK_EXT_headless_surface
     LOAD_VKPROC( vkCreateHeadlessSurfaceEXT );
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_headless_surface
 }
 
 static bool DECL_LOADVKEXT_PROC(EXT_conditional_rendering)
 {
+    #if VK_EXT_conditional_rendering
     LOAD_VKPROC( vkCmdBeginConditionalRenderingEXT );
     LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_conditional_rendering
 }
 
 static bool DECL_LOADVKEXT_PROC(KHR_get_physical_device_properties2)
 {
+    #if VK_KHR_get_physical_device_properties2
     LOAD_VKPROC( vkGetPhysicalDeviceFeatures2KHR                    );
     LOAD_VKPROC( vkGetPhysicalDeviceProperties2KHR                  );
     LOAD_VKPROC( vkGetPhysicalDeviceFormatProperties2KHR            );
@@ -142,24 +159,36 @@ static bool DECL_LOADVKEXT_PROC(KHR_get_physical_device_properties2)
     LOAD_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
     LOAD_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
     return true;
+    #else
+    return false;
+    #endif // /VK_KHR_get_physical_device_properties2
 }
 
 // Instance functions for KHR_fragment_shading_rate
 static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_fragment_shading_rate)
 {
+    #if VK_KHR_fragment_shading_rate
     LOAD_VKPROC( vkGetPhysicalDeviceFragmentShadingRatesKHR );
     return true;
+    #else
+    return false;
+    #endif // /VK_KHR_fragment_shading_rate
 }
 
 // Device functions for KHR_fragment_shading_rate
 static bool DECL_LOADVKEXT_PROC(KHR_fragment_shading_rate)
 {
+    #if VK_KHR_fragment_shading_rate
     LOAD_VKPROC( vkCmdSetFragmentShadingRateKHR );
     return true;
+    #else
+    return false;
+    #endif // /VK_KHR_fragment_shading_rate
 }
 
 static bool DECL_LOADVKEXT_PROC(EXT_transform_feedback)
 {
+    #if VK_EXT_transform_feedback
     LOAD_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
     LOAD_VKPROC( vkCmdBeginTransformFeedbackEXT       );
     LOAD_VKPROC( vkCmdEndTransformFeedbackEXT         );
@@ -167,14 +196,21 @@ static bool DECL_LOADVKEXT_PROC(EXT_transform_feedback)
     LOAD_VKPROC( vkCmdEndQueryIndexedEXT              );
     LOAD_VKPROC( vkCmdDrawIndirectByteCountEXT        );
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_transform_feedback
 }
 
 static bool DECL_LOADVKEXT_PROC(EXT_mesh_shader)
 {
+    #if VK_EXT_mesh_shader
     LOAD_VKPROC( vkCmdDrawMeshTasksEXT              );
     LOAD_VKPROC( vkCmdDrawMeshTasksIndirectEXT      );
     LOAD_VKPROC( vkCmdDrawMeshTasksIndirectCountEXT ); // Requires VK_KHR_draw_indirect_count or VK_AMD_draw_indirect_count
     return true;
+    #else
+    return false;
+    #endif // /VK_EXT_mesh_shader
 }
 
 #undef DECL_LOADVKEXT_PROC_BASE
