@@ -11,12 +11,15 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/SwapChain.h>
-#include <cstddef>
 #include "D3D12Resource.h"
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12RenderPass.h"
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
+
+#include <cstddef>
+#include <string>
+#include <vector>
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -80,9 +83,6 @@ class D3D12SwapChain final : public SwapChain
 
     private:
 
-        static constexpr UINT maxNumColorBuffers    = 3;
-        static constexpr UINT numDebugNames         = maxNumColorBuffers*2 + 1;
-
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetPresentSyncInterval(UINT syncInterval);
@@ -95,8 +95,8 @@ class D3D12SwapChain final : public SwapChain
 
         void MoveToNextFrame();
 
-        void StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
-        void RestoreDebugNames(const std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
+        void StoreDebugNames(std::vector<std::string>& debugNames);
+        void RestoreDebugNames(const std::vector<std::string>& debugNames);
 
     private:
 
@@ -112,14 +112,14 @@ class D3D12SwapChain final : public SwapChain
         UINT                            rtvDescSize_                            = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        D3D12Resource                   colorBuffers_[maxNumColorBuffers];
-        D3D12Resource                   colorBuffersMS_[maxNumColorBuffers];
+        std::vector<D3D12Resource>      colorBuffers_;
+        std::vector<D3D12Resource>      colorBuffersMS_;
         DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
 
         D3D12Resource                   depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                     = DXGI_FORMAT_UNKNOWN;
 
-        UINT64                          frameFenceValues_[maxNumColorBuffers]   = {};
+        std::vector<UINT64>             frameFenceValues_;
         D3D12NativeFence                frameFence_;
 
         UINT                            numColorBuffers_                        = 0;
