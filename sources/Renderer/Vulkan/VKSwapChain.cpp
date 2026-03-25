@@ -31,8 +31,6 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-constexpr std::uint32_t VKSwapChain::maxNumFramesInFlight;
-
 static VKPtr<VkImageView> NullVkImageView(VkDevice device)
 {
     return VKPtr<VkImageView>{ device, vkDestroyImageView };
@@ -52,8 +50,6 @@ static VKPtr<VkFence> NullVkFence(VkDevice device)
 {
     return VKPtr<VkFence>{ device, vkDestroyFence };
 }
-
-#define INIT_PER_FRAME(EXPR) EXPR, EXPR, EXPR
 
 VKSwapChain::VKSwapChain(
     VkInstance                      instance,
@@ -76,14 +72,10 @@ VKSwapChain::VKSwapChain(
     swapChainSamples_        { GetClampedSamples(desc.samples)           },
     secondaryRenderPass_     { device                                    },
     depthStencilBuffer_      { device                                    },
-    graphicsQueue_           { graphicsQueue                             },
-    imageAvailableSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
-    renderFinishedSemaphore_ { INIT_PER_FRAME(NullVkSemaphore(device_))  },
-    inFlightFences_          { INIT_PER_FRAME(NullVkFence(device_))      }
+    graphicsQueue_           { graphicsQueue                             }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
-    CreatePresentSemaphoresAndFences();
     CreateGpuSurface();
 
     /* Pick image count for swap-chain and depth-stencil format */
@@ -98,8 +90,6 @@ VKSwapChain::VKSwapChain(
     if (!surface)
         ShowSurface();
 }
-
-#undef INIT_PER_FRAME
 
 bool VKSwapChain::IsPresentable() const
 {
@@ -182,7 +172,6 @@ bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     /* Recreate swap-chain with new vsnyc settings */
     if (vsyncInterval_ != vsyncInterval)
     {
-        CreatePresentSemaphoresAndFences();
         CreateSwapChain(GetResolution(), vsyncInterval);
         CreateSwapChainFramebuffers();
         vsyncInterval_ = vsyncInterval;
@@ -279,7 +268,6 @@ bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
         graphicsQueue_->WaitIdle();
 
         /* Recreate presenting semaphores and Vulkan surface */
-        CreatePresentSemaphoresAndFences();
         CreateGpuSurface();
 
         /* Recreate color and depth-stencil buffers */
@@ -316,12 +304,29 @@ void VKSwapChain::CreateGpuFence(VKPtr<VkFence>& fence)
 
 void VKSwapChain::CreatePresentSemaphoresAndFences()
 {
-    /* Create presentation semaphorse */
-    for_range(i, maxNumFramesInFlight)
+    /*
+    Allocate arrays for number of color buffers.
+    Android devices tend to have 4, while PC usually only has 3.
+    For that reason, we need to use dynamic arrays instead of a fixed size array.
+    */
+    imageAvailableSemaphore_.resize(numColorBuffers_);
+    renderFinishedSemaphore_.resize(numColorBuffers_);
+    inFlightFences_.resize(numColorBuffers_);
+
+    /* Create presentation semaphorses and fences */
+    for_range(i, numColorBuffers_)
     {
-        CreateGpuSemaphore(imageAvailableSemaphore_[i]);
-        CreateGpuSemaphore(renderFinishedSemaphore_[i]);
-        CreateGpuFence(inFlightFences_[i]);
+        VKPtr<VkSemaphore> imageAvailableSemaphore{ NullVkSemaphore(device_) };
+        CreateGpuSemaphore(imageAvailableSemaphore);
+        imageAvailableSemaphore_[i] = std::move(imageAvailableSemaphore);
+
+        VKPtr<VkSemaphore> renderFinishedSemaphore{ NullVkSemaphore(device_) };
+        CreateGpuSemaphore(renderFinishedSemaphore);
+        renderFinishedSemaphore_[i] = std::move(renderFinishedSemaphore);
+
+        VKPtr<VkFence> inFlightFence{ NullVkFence(device_) };
+        CreateGpuFence(inFlightFence);
+        inFlightFences_[i] = std::move(inFlightFence);
     }
 }
 
@@ -511,7 +516,8 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, swapChainImages_.data());
     VKThrowIfFailed(result, "failed to query Vulkan swap-chain images");
 
-    /* Create swap-chain image views */
+    /* Create present semaphores, fences, and swap-chain image views */
+    CreatePresentSemaphoresAndFences();
     CreateSwapChainImageViews();
 
     /* Get initial color buffer index for new Vulkan swap-chain */

@@ -126,8 +126,6 @@ class VKSwapChain final : public SwapChain
 
     private:
 
-        static constexpr std::uint32_t maxNumFramesInFlight = 3;
-
         VkInstance                          instance_                                   = VK_NULL_HANDLE;
         VkPhysicalDevice                    physicalDevice_                             = VK_NULL_HANDLE;
         VkDevice                            device_;
@@ -160,9 +158,9 @@ class VKSwapChain final : public SwapChain
         VKSharedCommandQueueSPtr            graphicsQueue_;
         VkQueue                             presentQueue_                               = VK_NULL_HANDLE;
 
-        VKPtr<VkSemaphore>                  imageAvailableSemaphore_[maxNumFramesInFlight];
-        VKPtr<VkSemaphore>                  renderFinishedSemaphore_[maxNumFramesInFlight];
-        VKPtr<VkFence>                      inFlightFences_[maxNumFramesInFlight];
+        std::vector<VKPtr<VkSemaphore>>     imageAvailableSemaphore_;
+        std::vector<VKPtr<VkSemaphore>>     renderFinishedSemaphore_;
+        std::vector<VKPtr<VkFence>>         inFlightFences_;
 
 };
 
