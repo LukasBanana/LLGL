@@ -213,20 +213,26 @@ void VKCommandBuffer::UpdateBuffer(
     {
         PauseRenderPass();
         {
-            if (size > k_limitForCmdUpdateBuffer)
-                GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
-            else
-                vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+            BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, dstBufferVK.GetAccessFlags(), VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+            {
+                if (size > k_limitForCmdUpdateBuffer)
+                    GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+                else
+                    vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+            }
             BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
         }
         ResumeRenderPass();
     }
     else
     {
-        if (size > k_limitForCmdUpdateBuffer)
-            GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
-        else
-            vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, dstBufferVK.GetAccessFlags(), VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+        {
+            if (size > k_limitForCmdUpdateBuffer)
+                GetStagingBufferPool().WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+            else
+                vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        }
         BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
     }
 }
