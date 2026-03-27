@@ -175,7 +175,8 @@ class VKPipelineLayout final : public PipelineLayout
             VkDevice                                device,
             const std::vector<BindingDescriptor>&   inBindings,
             std::vector<VKLayoutBinding>&           outBindings,
-            VKDescriptorSetLayout&                  outDescriptorSetLayout
+            VKDescriptorSetLayout&                  outDescriptorSetLayout,
+            VKSanitizeBindingSlotContext&           sanitizeContext
         );
 
         void AllocateDescriptorBarriers(std::vector<VKLayoutBinding>& bindings);

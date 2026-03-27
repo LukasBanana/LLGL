@@ -8,6 +8,7 @@
 #include "VKPipelineLayout.h"
 #include "VKPipelineLayoutPermutationPool.h"
 #include "VKPoolSizeAccumulator.h"
+#include "VKSanitizeBindingSlotContext.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../VKStaticLimits.h"
@@ -43,10 +44,11 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
         barrier_ = MakeUnique<VKPipelineBarrier>();
 
     /* Create Vulkan descriptor set layouts */
+    VKSanitizeBindingSlotContext sanitizeContext;
     if (!desc.heapBindings.empty())
-        CreateDescriptorSetLayout(device, desc.heapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_);
+        CreateDescriptorSetLayout(device, desc.heapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_, sanitizeContext);
     if (!desc.bindings.empty())
-        CreateDescriptorSetLayout(device, desc.bindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_);
+        CreateDescriptorSetLayout(device, desc.bindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_, sanitizeContext);
     if (!desc.staticSamplers.empty())
         CreateImmutableSamplers(device, desc.staticSamplers);
 
@@ -222,25 +224,28 @@ VKPipelineLayoutPermutationSPtr VKPipelineLayout::CreatePermutation(
     if (hasTexelBuffers)
     {
         /* Create permutation of set-layout bindings */
-        auto GetDescriptorTypeForBinding = [&shaders](const BindingSlot& slot) -> VkDescriptorType
+        auto UpdateDescriptorTypeForBinding = [&shaders](VkDescriptorType& outDescriptorType, const BindingSlot& slot) -> bool
         {
             for (Shader* shader : shaders)
             {
                 auto* shaderVK = LLGL_CAST(VKShader*, shader);
-                VkDescriptorType descriptorType = shaderVK->GetDescriptorTypeForBinding(slot);
-                if (descriptorType != VK_DESCRIPTOR_TYPE_MAX_ENUM)
-                    return descriptorType;
+                VkDescriptorType newDescriptorType = shaderVK->GetDescriptorTypeForBinding(slot);
+                if (newDescriptorType != VK_DESCRIPTOR_TYPE_MAX_ENUM)
+                {
+                    outDescriptorType = newDescriptorType;
+                    return true;
+                }
             }
-            return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+            return false;
         };
 
-        auto UpdateSetLayoutDescriptorTypes = [&GetDescriptorTypeForBinding](
+        auto UpdateSetLayoutDescriptorTypes = [&UpdateDescriptorTypeForBinding](
             const std::vector<BindingSlot>&             inBindingSlots,
             std::vector<VkDescriptorSetLayoutBinding>&  setLayoutBindings) -> void
         {
             LLGL_ASSERT(inBindingSlots.size() == setLayoutBindings.size());
             for_range(i, inBindingSlots.size())
-                setLayoutBindings[i].descriptorType = GetDescriptorTypeForBinding(inBindingSlots[i]);
+                UpdateDescriptorTypeForBinding(setLayoutBindings[i].descriptorType, inBindingSlots[i]);
         };
 
         //TODO: this needs to handle overridden binding slots, `srcSlots` can contain overlapping binding points
@@ -396,7 +401,8 @@ void VKPipelineLayout::CreateDescriptorSetLayout(
     VkDevice                                device,
     const std::vector<BindingDescriptor>&   inBindings,
     std::vector<VKLayoutBinding>&           outBindings,
-    VKDescriptorSetLayout&                  outDescriptorSetLayout)
+    VKDescriptorSetLayout&                  outDescriptorSetLayout,
+    VKSanitizeBindingSlotContext&           sanitizeContext)
 {
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
     const std::size_t numBindings = inBindings.size();
@@ -410,7 +416,7 @@ void VKPipelineLayout::CreateDescriptorSetLayout(
             flags_ |= PSOLayoutFlag_HasNonUniformBuffers;
     }
 
-    outDescriptorSetLayout.Initialize(device, std::move(setLayoutBindings));
+    outDescriptorSetLayout.Initialize(device, std::move(setLayoutBindings), sanitizeContext);
     outDescriptorSetLayout.GetLayoutBindings(outBindings);
 
     /* Allocate slots for automatic */

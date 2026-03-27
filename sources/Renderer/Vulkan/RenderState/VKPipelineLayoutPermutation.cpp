@@ -8,6 +8,7 @@
 #include "VKPipelineLayoutPermutation.h"
 #include "VKPipelineLayout.h"
 #include "VKPoolSizeAccumulator.h"
+#include "VKSanitizeBindingSlotContext.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../VKStaticLimits.h"
@@ -42,6 +43,7 @@ VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
     numImmutableSamplers_     { permutationParams.numImmutableSamplers }
 {
     /* Create Vulkan descriptor set layouts */
+    VKSanitizeBindingSlotContext sanitizeContext;
     if (!permutationParams.setLayoutHeapBindings.empty())
     {
         CreateBindingSetLayout(
@@ -49,7 +51,8 @@ VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
             owner->GetBindingTable().heapBindings,
             permutationParams.setLayoutHeapBindings,
             bindingTable_.heapBindings,
-            setLayoutHeapBindings_
+            setLayoutHeapBindings_,
+            sanitizeContext
         );
     }
     if (!permutationParams.setLayoutDynamicBindings.empty())
@@ -59,7 +62,8 @@ VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
             owner->GetBindingTable().dynamicBindings,
             permutationParams.setLayoutDynamicBindings,
             bindingTable_.dynamicBindings,
-            setLayoutDynamicBindings_
+            setLayoutDynamicBindings_,
+            sanitizeContext
         );
     }
 
@@ -105,9 +109,10 @@ void VKPipelineLayoutPermutation::CreateBindingSetLayout(
     const ArrayView<VKLayoutBinding>&           inBindings,
     std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
     std::vector<VKLayoutBinding>&               outBindings,
-    VKDescriptorSetLayout&                      outSetLayout)
+    VKDescriptorSetLayout&                      outSetLayout,
+    VKSanitizeBindingSlotContext&               sanitizeContext)
 {
-    outSetLayout.Initialize(device, std::move(setLayoutBindings));
+    outSetLayout.Initialize(device, std::move(setLayoutBindings), sanitizeContext);
     outSetLayout.GetLayoutBindings(outBindings);
     LLGL_ASSERT(inBindings.size() == outBindings.size());
     for_range(i, inBindings.size())

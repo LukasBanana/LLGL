@@ -100,7 +100,8 @@ class VKPipelineLayoutPermutation
             const ArrayView<VKLayoutBinding>&           inBindings,
             std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
             std::vector<VKLayoutBinding>&               outBindings,
-            VKDescriptorSetLayout&                      outSetLayout
+            VKDescriptorSetLayout&                      outSetLayout,
+            VKSanitizeBindingSlotContext&               sanitizeContext
         );
 
         VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, VkDescriptorSetLayout setLayoutImmutableSamplers) const;
