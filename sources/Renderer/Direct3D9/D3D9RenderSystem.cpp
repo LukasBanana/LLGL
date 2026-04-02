@@ -251,7 +251,7 @@ void D3D9RenderSystem::Release(BufferArray& bufferArray)
 void D3D9RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
     auto& bufferD3D9 = LLGL_CAST(D3D9Buffer&, buffer);
-    //bufferD3D9.Write(offset, data, dataSize);
+    bufferD3D9.Write(offset, data, dataSize);
 }
 
 void D3D9RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)

@@ -42,11 +42,6 @@ D3D9ProgrammablePSO::D3D9ProgrammablePSO(const GraphicsPipelineDescriptor& desc)
     }
 }
 
-const Report* D3D9ProgrammablePSO::GetReport() const
-{
-    return nullptr; //TODO
-}
-
 void D3D9ProgrammablePSO::Bind(D3D9StateManager& stateMngr)
 {
     D3D9PipelineState::Bind(stateMngr);

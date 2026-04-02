@@ -18,12 +18,20 @@ namespace LLGL
 {
 
 
+/*struct D3D9Matrix
+{
+    float m[4][4];
+};
+
+struct D3D9TransformAndLighting
+{
+    D3D9Matrix matrices[];
+};*/
+
 class D3D9FixedFunctionPSO final : public D3D9PipelineState
 {
 
     public:
-
-        const Report* GetReport() const override;
 
         void Bind(D3D9StateManager& stateMngr) override;
 

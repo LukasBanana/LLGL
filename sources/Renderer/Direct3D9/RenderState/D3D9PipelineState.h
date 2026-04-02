@@ -14,6 +14,7 @@
 #include "D3D9DepthStencilState.h"
 #include "D3D9RasterizerState.h"
 #include "D3D9BlendState.h"
+#include "../../StaticStateBuffer.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../Direct3D9.h"
 
@@ -34,6 +35,7 @@ class D3D9PipelineState : public PipelineState
     public:
 
         void SetDebugName(const char* name) override final;
+        const Report* GetReport() const override;
 
     public:
 
@@ -62,11 +64,25 @@ class D3D9PipelineState : public PipelineState
             return pipelineLayout_;
         }
 
+    protected:
+
+        // Returns a mutable reference to the PSO report.
+        inline Report& GetMutableReport()
+        {
+            return report_;
+        }
+
+    private:
+
+        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
+        void SetStaticViewportsAndScissors(IDirect3DDevice9* device);
+
     private:
 
         const bool                          isProgrammablePipeline_ = true;
         const D3DPRIMITIVETYPE              primitiveType_          = D3DPT_TRIANGLELIST;
         ComPtr<IDirect3DVertexDeclaration9> d3dVertexDecl_;
+        Report                              report_;
 
         const D3D9PipelineLayout*           pipelineLayout_         = nullptr;
 
@@ -74,6 +90,9 @@ class D3D9PipelineState : public PipelineState
         D3D9DepthStencilStateSPtr           depthStencilState_;
         D3D9RasterizerStateSPtr             rasterizerState_;
         D3D9BlendStateSPtr                  blendState_;
+
+        // Packed byte buffer for static viewports and scissors
+        StaticStateBuffer                   staticStateBuffer_;
 
 };
 
