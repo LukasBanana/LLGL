@@ -20,6 +20,8 @@
 #   define ENABLE_COMPRESSED_TEXTURE_DDX 1
 #endif
 
+#define TEST_D3D9 1
+
 
 class Example_Texturing : public ExampleBase
 {
@@ -108,6 +110,12 @@ public:
             {
                 LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "samplerState", 2 }
             };
+#if TEST_D3D9
+            layoutDesc.uniforms =
+            {
+                LLGL::UniformDescriptor{ "scene", LLGL::UniformType::Undefined },
+            };
+#endif
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
@@ -292,6 +300,10 @@ private:
                 commands->SetResource(0, *sceneBuffer);
                 commands->SetResource(1, *colorMaps[resourceIndex == 0 ? 0 : 1]);
                 commands->SetResource(2, *samplers[resourceIndex == 0 ? 0 : resourceIndex - 1]);
+
+#if TEST_D3D9
+                commands->SetUniforms(0, &scene, sizeof(scene));
+#endif
 
                 commands->DrawIndexed(36, 0);
             }

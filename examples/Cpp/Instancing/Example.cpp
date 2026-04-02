@@ -10,35 +10,43 @@
 #include <LLGL/Display.h>
 
 
+#define TEST_D3D9 1
+
+
 class Example_Instancing : public ExampleBase
 {
 
     // Static configuration for this demo
-    static const std::uint32_t  numPlantInstances   = 20000;
-    static const std::uint32_t  numPlantImages      = 10;
-    const float                 positionRange       = 40.0f;
+    static const std::uint32_t  numPlantInstances           = 20000;
+    static const std::uint32_t  numPlantImages              = 10;
+    static const std::uint32_t  numPlantInstancesPerImage   = numPlantInstances / numPlantImages;
+    const float                 positionRange               = 40.0f;
 
-    LLGL::Shader*               vertexShader        = nullptr;
-    LLGL::Shader*               fragmentShader      = nullptr;
+    LLGL::Shader*               vertexShader                = nullptr;
+    LLGL::Shader*               fragmentShader              = nullptr;
 
-    LLGL::PipelineState*        pipeline[2]         = {};
+    LLGL::PipelineState*        pipeline[2]                 = {};
 
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::ResourceHeap*         resourceHeap        = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout              = nullptr;
+    LLGL::ResourceHeap*         resourceHeap                = nullptr;
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
-    LLGL::Buffer*               perVertexDataBuf    = nullptr;
-    LLGL::Buffer*               perInstanceDataBuf  = nullptr;
-    LLGL::BufferArray*          vertexBufferArray   = nullptr;
+    LLGL::Buffer*               perVertexDataBuf            = nullptr;
+    LLGL::Buffer*               perInstanceDataBuf          = nullptr;
+    LLGL::BufferArray*          vertexBufferArray           = nullptr;
 
-    LLGL::Buffer*               constantBuffer      = nullptr;
+    LLGL::Buffer*               constantBuffer              = nullptr;
 
     // 2D-array texture for all plant images
-    LLGL::Texture*              arrayTexture        = nullptr;
+    LLGL::Texture*              arrayTexture                = nullptr;
 
-    LLGL::Sampler*              samplers[2]         = {};
+    // Array of single 2D textures if array textures are not supported
+    bool                        isArrayTextureSupported     = false;
+    std::vector<LLGL::Texture*> singleTextures;
 
-    float                       viewRotation        = 0.0f;
+    LLGL::Sampler*              samplers[2]                 = {};
+
+    float                       viewRotation                = 0.0f;
 
     struct Settings
     {
@@ -58,19 +66,23 @@ public:
     {
         UpdateAnimation();
 
+        // If array textures are not supported, all plany instances using the same texture must be rendered in separate groups
+        isArrayTextureSupported = renderer->GetRenderingCaps().features.hasArrayTextures;
+
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();
         CreateTextures();
         CreateSamplers();
         CreatePipelines(vertexFormats);
-        const auto caps = renderer->GetRenderingCaps();
 
         // Set debugging names
-        arrayTexture->SetDebugName("SceneTexture");
+        if (arrayTexture)
+            arrayTexture->SetDebugName("SceneTexture");
+        if (resourceHeap)
+            resourceHeap->SetDebugName("ResourceHeap");
         pipeline[0]->SetDebugName("PSO.Default");
         pipeline[1]->SetDebugName("PSO.AlphaToCoverage");
         pipelineLayout->SetDebugName("PipelineLayout");
-        resourceHeap->SetDebugName("ResourceHeap");
 
         // Show info
         LLGL::Log::Printf(
@@ -175,6 +187,19 @@ private:
             LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
         };
 
+        // In HLSL 3.0, vertex attributes cannot have custom semantic names, so use TEXCOORD for everything other than POSITION and COLOR.
+        if (Supported(LLGL::ShadingLanguage::HLSL_3_0) && !Supported(LLGL::ShadingLanguage::HLSL_4_0))
+        {
+            vertexFormatPerInstance.attributes[1].name = "TEXCOORD";
+            vertexFormatPerInstance.attributes[1].semanticIndex = 5;
+
+            for (std::uint32_t i = 0; i < 4; ++i)
+            {
+                vertexFormatPerInstance.attributes[2 + i].name = "TEXCOORD";
+                vertexFormatPerInstance.attributes[2 + i].semanticIndex = 1 + i;
+            };
+        }
+
         // Initialize last instance (for grass plane)
         auto& grassPlane = instanceData[numPlantInstances];
         grassPlane.arrayLayer = static_cast<float>(numPlantImages + 1);
@@ -211,22 +236,33 @@ private:
 
     void CreateTextures()
     {
-        std::string filename;
+        if (isArrayTextureSupported)
+            LoadImagesIntoSingleArrayTexture();
+        else
+            LoadImagesIntoArrayOfTextures();
+    }
 
+    std::string GetImageFilename(std::uint32_t i) const
+    {
+        // Setup filename for "Plants_<N>.png" where <N> is from 0 to 9
+        if (i < numPlantImages)
+            return "Plants_" + std::to_string(i) + ".png";
+        else
+            return "Grass.jpg";
+    }
+
+    void LoadImagesIntoSingleArrayTexture()
+    {
         std::vector<char> arrayImageBuffer;
 
-        // Load all array images
+        // Load all images into a single array
         std::uint32_t width = 0, height = 0;
 
         std::uint32_t numImages = 0;
 
         for (std::uint32_t i = 0; i <= numPlantImages; ++i)
         {
-            // Setup filename for "Plants_N.png" where N is from 0 to 9
-            if (i < numPlantImages)
-                filename = "Plants_" + std::to_string(i) + ".png";
-            else
-                filename = "Grass.jpg";
+            const std::string filename = GetImageFilename(i);
 
             // Load image asset
             ImageReader reader;
@@ -267,6 +303,17 @@ private:
         );
     }
 
+    void LoadImagesIntoArrayOfTextures()
+    {
+        singleTextures.resize(numPlantImages + 1);
+        for (std::uint32_t i = 0; i <= numPlantImages; ++i)
+        {
+            const std::string filename = GetImageFilename(i);
+            singleTextures[i] = LoadTexture(filename);
+            LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
+        }
+    }
+
     void CreateSamplers()
     {
         // Create sampler state object for the grass plane
@@ -294,6 +341,25 @@ private:
         fragmentShader  = LoadStandardFragmentShader("PS");
 
         // Create pipeline layout
+#if TEST_D3D9
+        LLGL::PipelineLayoutDescriptor psoLayoutDesc;
+        {
+            psoLayoutDesc.bindings =
+            {
+                LLGL::BindingDescriptor{ "tex",        LLGL::ResourceType::Texture, 0, 0, 3 },
+                LLGL::BindingDescriptor{ "texSampler", LLGL::ResourceType::Sampler, 0, 0, 4 },
+            };
+            psoLayoutDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "tex", "tex", "texSampler", 3 },
+            };
+            psoLayoutDesc.uniforms =
+            {
+                LLGL::UniformDescriptor{ "scene", LLGL::UniformType::Undefined },
+            };
+        }
+        pipelineLayout = renderer->CreatePipelineLayout(psoLayoutDesc);
+#else
         pipelineLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "heap{"
@@ -312,6 +378,7 @@ private:
             constantBuffer, arrayTexture, samplers[1],
         };
         resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
+#endif
 
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -399,15 +466,39 @@ private:
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
-                // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-                commands->SetResourceHeap(*resourceHeap, 0);
-                commands->DrawInstanced(4, 0, numPlantInstances);
-
-                // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-                if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                if (isArrayTextureSupported)
                 {
-                    commands->SetResourceHeap(*resourceHeap, 1);
-                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commands->SetResourceHeap(*resourceHeap, 0);
+                    commands->DrawInstanced(4, 0, numPlantInstances);
+
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                    {
+                        commands->SetResourceHeap(*resourceHeap, 1);
+                        commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                    }
+                }
+                else
+                {
+                    // Update constant data
+                    commands->SetUniforms(0, &settings, sizeof(settings));
+
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commands->SetResource(1, *samplers[0]);
+                    for (std::uint32_t plantImageIndex = 0; plantImageIndex < numPlantImages; ++plantImageIndex)
+                    {
+                        commands->SetResource(0, *singleTextures[plantImageIndex]);
+                        commands->DrawInstanced(4, 0, numPlantInstancesPerImage, numPlantInstancesPerImage * plantImageIndex);
+                    }
+
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                    {
+                        commands->SetResource(0, *singleTextures[numPlantImages]);
+                        commands->SetResource(1, *samplers[1]);
+                        commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                    }
                 }
             }
             commands->EndRenderPass();

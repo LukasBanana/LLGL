@@ -4,7 +4,7 @@ This is an experimental branch to explore the possibility of supporting older de
 
 ## Status
 
-This is its early stages with many features missing. Please do not expect this to be a working state; some interface such as ResourceHeap are not implemented yet. There is no test automation for this backend yet.
+This is in its early stages with many features missing. Please do not expect this to be in a working state; some interfaces such as `ResourceHeap` are not implemented and only uniforms are supported but no emulation for constant buffers yet. There is also no test automation for this backend.
 
 Considering that this backend will likely become a maintainence burden, there is no guarantee this backend will ever be merged into the main branch nor that it will be kept up to date.
 
@@ -33,7 +33,10 @@ myD3D9FixedFunctionPSOLayout = renderer->CreatePipelineLayout(
         // These names should be configurable globally,
         // so that they can refer to the same meaning as their programmable PSO counterpart.
         "float3(light0_position),"
-        "bool(light0_enabled)"
+        "bool(light0_enabled),"
+
+        // Special attributes need pre-defined constant values from <LLGL/Constants.h>
+        "int(fogMode),"
     )
 );
 struct MyUniforms {
@@ -41,6 +44,7 @@ struct MyUniforms {
         float position[3];
         bool  enabled;
     } lights[1];
+    int32_t fogMode;
 } uniforms;
 
 ...
@@ -53,5 +57,6 @@ cmdBuffer->SetResource(1, *myNormalTexture);
 
 uniforms.lights[0].position[0] = ...
 uniforms.lights[0].enabled = true;
+uniforms.fogMode = LLGL_FIXED_FUNCTION_FOG_MODE_EXP2;
 cmdBuffer->SetUniforms(0, &uniforms, sizeof(uniforms));
 ```
