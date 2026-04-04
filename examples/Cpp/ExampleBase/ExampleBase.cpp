@@ -102,17 +102,19 @@ static const char* GetRendererModuleFromCommandArgs(int argc, char* argv[])
         /* Replace shortcuts */
         if (arg == "Direct3D12" || arg == "D3D12" || arg == "d3d12" || arg == "DX12" || arg == "dx12")
             return "Direct3D12";
-        else if (arg == "Direct3D11" || arg == "D3D11" || arg == "d3d11" || arg == "DX11" || arg == "dx11")
+        if (arg == "Direct3D11" || arg == "D3D11" || arg == "d3d11" || arg == "DX11" || arg == "dx11")
             return "Direct3D11";
-        else if (arg == "OpenGL" || arg == "GL" || arg == "gl")
+        if (arg == "OpenGL" || arg == "GL" || arg == "gl")
             return "OpenGL";
-        else if (arg == "OpenGLES3" || arg == "GLES3" || arg == "gles3")
+        if (arg == "OpenGLES3" || arg == "GLES3" || arg == "gles3")
             return "OpenGLES3";
-        else if (arg == "Vulkan" || arg == "VK" || arg == "vk")
+        if (arg == "Vulkan" || arg == "VK" || arg == "vk")
             return "Vulkan";
-        else if (arg == "Metal" || arg == "MT" || arg == "mt")
+        if (arg == "Metal" || arg == "MT" || arg == "mt")
             return "Metal";
-        else if (arg == "Null" || arg == "NULL" || arg == "null")
+        if (arg == "WebGPU" || arg == "wgpu" || arg == "wg")
+            return "WebGPU";
+        if (arg == "Null" || arg == "NULL" || arg == "null")
             return "Null";
     }
 

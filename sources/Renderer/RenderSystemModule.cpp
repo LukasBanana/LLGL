@@ -58,6 +58,8 @@ std::vector<std::string> RenderSystemModule::FindModules()
         "OpenGL",
         #endif
 
+        "WebGPU",
+
         "Null",
     };
 
@@ -65,7 +67,7 @@ std::vector<std::string> RenderSystemModule::FindModules()
 
     for (const char* name : knownModules)
     {
-        std::string moduleFilename = Module::GetModuleFilename(name);
+        const std::string moduleFilename = Module::GetModuleFilename(name);
         if (Module::IsAvailable(moduleFilename.c_str()))
             moduleNames.push_back(name);
     }

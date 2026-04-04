@@ -111,6 +111,9 @@ set( SHARED_ASSETS_DIR              "${EXAMPLE_PROJECTS_ROOT_DIR}/Shared/Assets"
 set( TEST_PROJECTS_DIR              "${PROJECT_SOURCE_DIR}/tests"                   )
 set( BACKEND_INCLUDE_DIR            "${PROJECT_INCLUDE_DIR}/LLGL/Backend"           )
 
+# Tell CMake to look in 'cmake/' folder for Find*.cmake scripts
+list(APPEND CMAKE_MODULE_PATH "${EXTERNAL_MODULE_DIR}")
+
 
 # === Macros ===
 
@@ -182,6 +185,8 @@ if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
+
+option(LLGL_BUILD_RENDERER_WEBGPU "Include WebGPU renderer project" OFF)
 
 # OpenXR support (requires at least one compatible renderer; currently Vulkan, D3D11, D3D12).
 # Available on desktop (Windows/Linux/macOS) and Android (e.g. Quest, HTC Vive Focus).
@@ -917,6 +922,10 @@ if(LLGL_BUILD_RENDERER_DIRECT3D12)
     add_subdirectory(sources/Renderer/Direct3D12)
 endif()
 
+if(LLGL_BUILD_RENDERER_WEBGPU)
+    add_subdirectory(sources/Renderer/WebGPU)
+endif()
+
 # OpenXR module - depends on FindOpenXRDeps.cmake having been included earlier.
 if(LLGL_BUILD_XR_OPENXR)
     add_subdirectory(sources/XR/OpenXR)
@@ -989,6 +998,18 @@ message(STATUS "Target Platform: ${LLGL_TARGET_PLATFORM}")
 message(STATUS "Target Architecture: ${SUMMARY_TARGET_ARCH}")
 message(STATUS "Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
+if(LLGL_BUILD_RENDERER_DIRECT3D11)
+    message(STATUS "Build Renderer: ${LLGL_D3D11_ENABLE_FEATURELEVEL}")
+endif()
+
+if(LLGL_BUILD_RENDERER_DIRECT3D12)
+    message(STATUS "Build Renderer: ${LLGL_D3D12_ENABLE_FEATURELEVEL}")
+endif()
+
+if(LLGL_BUILD_RENDERER_METAL)
+    message(STATUS "Build Renderer: Metal")
+endif()
+
 if(LLGL_BUILD_RENDERER_NULL)
     message(STATUS "Build Renderer: Null")
 endif()
@@ -1001,24 +1022,16 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
     message(STATUS "Build Renderer: ${LLGL_GL_ENABLE_OPENGLES}")
 endif()
 
-if(LLGL_BUILD_RENDERER_WEBGL)
-    message(STATUS "Build Renderer: WebGL")
-endif()
-
 if(LLGL_BUILD_RENDERER_VULKAN)
     message(STATUS "Build Renderer: Vulkan")
 endif()
 
-if(LLGL_BUILD_RENDERER_METAL)
-    message(STATUS "Build Renderer: Metal")
+if(LLGL_BUILD_RENDERER_WEBGL)
+    message(STATUS "Build Renderer: WebGL")
 endif()
 
-if(LLGL_BUILD_RENDERER_DIRECT3D11)
-    message(STATUS "Build Renderer: ${LLGL_D3D11_ENABLE_FEATURELEVEL}")
-endif()
-
-if(LLGL_BUILD_RENDERER_DIRECT3D12)
-    message(STATUS "Build Renderer: ${LLGL_D3D12_ENABLE_FEATURELEVEL}")
+if(LLGL_BUILD_RENDERER_WEBGPU)
+    message(STATUS "Build Renderer: WebGPU")
 endif()
 
 if(LLGL_BUILD_XR_OPENXR)
