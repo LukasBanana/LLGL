@@ -21,6 +21,11 @@ namespace LLGL
 {
 
 
+// Implement stubs for commands that are not allowed in secondary command buffers.
+#define LLGL_SECONDARY_COMMAND_BUFFER_CLASS LLGL::D3D11SecondaryCommandBuffer
+#include "../../SecondaryCommandBufferStubs.inl"
+#undef LLGL_SECONDARY_COMMAND_BUFFER_CLASS
+
 static constexpr std::size_t g_initialSizeForD3DVirtualCmdBuffer = 4096;
 
 D3D11SecondaryCommandBuffer::D3D11SecondaryCommandBuffer(const CommandBufferDescriptor& /*desc*/)
@@ -40,113 +45,6 @@ void D3D11SecondaryCommandBuffer::Begin()
 void D3D11SecondaryCommandBuffer::End()
 {
     // dummy
-}
-
-void D3D11SecondaryCommandBuffer::Execute(CommandBuffer& /*secondaryCommandBuffer*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-/* ----- Blitting ----- */
-
-void D3D11SecondaryCommandBuffer::UpdateBuffer(
-    Buffer&         /*dstBuffer*/,
-    std::uint64_t   /*dstOffset*/,
-    const void*     /*data*/,
-    std::uint64_t   /*dataSize*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::CopyBuffer(
-    Buffer&         /*dstBuffer*/,
-    std::uint64_t   /*dstOffset*/,
-    Buffer&         /*srcBuffer*/,
-    std::uint64_t   /*srcOffset*/,
-    std::uint64_t   /*size*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::CopyBufferFromTexture(
-    Buffer&                 /*dstBuffer*/,
-    std::uint64_t           /*dstOffset*/,
-    Texture&                /*srcTexture*/,
-    const TextureRegion&    /*srcRegion*/,
-    std::uint32_t           /*rowStride*/,
-    std::uint32_t           /*layerStride*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::FillBuffer(
-    Buffer&         /*dstBuffer*/,
-    std::uint64_t   /*dstOffset*/,
-    std::uint32_t   /*value*/,
-    std::uint64_t   /*fillSize*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::CopyTexture(
-    Texture&                /*dstTexture*/,
-    const TextureLocation&  /*dstLocation*/,
-    Texture&                /*srcTexture*/,
-    const TextureLocation&  /*srcLocation*/,
-    const Extent3D&         /*extent*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::CopyTextureFromBuffer(
-    Texture&                /*dstTexture*/,
-    const TextureRegion&    /*dstRegion*/,
-    Buffer&                 /*srcBuffer*/,
-    std::uint64_t           /*srcOffset*/,
-    std::uint32_t           /*rowStride*/,
-    std::uint32_t           /*layerStride*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::CopyTextureFromFramebuffer(
-    Texture&                /*dstTexture*/,
-    const TextureRegion&    /*dstRegion*/,
-    const Offset2D&         /*srcOffset*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::GenerateMips(Texture& /*texture*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::GenerateMips(Texture& /*texture*/, const TextureSubresource& /*subresource*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-/* ----- Viewport and Scissor ----- */
-
-void D3D11SecondaryCommandBuffer::SetViewport(const Viewport& /*viewport*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::SetViewports(std::uint32_t /*numViewports*/, const Viewport* /*viewports*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::SetScissor(const Scissor& /*scissor*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::SetScissors(std::uint32_t /*numScissors*/, const Scissor* /*scissors*/)
-{
-    // dummy - command not allowed in secondary command buffer
 }
 
 /* ----- Buffers ------ */
@@ -235,33 +133,6 @@ void D3D11SecondaryCommandBuffer::ResourceBarrier(
     // dummy
 }
 
-/* ----- Render Passes ----- */
-
-void D3D11SecondaryCommandBuffer::BeginRenderPass(
-    RenderTarget&       /*renderTarget*/,
-    const RenderPass*   /*renderPass*/,
-    std::uint32_t       /*numClearValues*/,
-    const ClearValue*   /*clearValues*/,
-    std::uint32_t       /*swapBufferIndex*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::EndRenderPass()
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::Clear(long /*flags*/, const ClearValue& /*clearValue*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::ClearAttachments(std::uint32_t /*numAttachments*/, const AttachmentClear* /*attachments*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
 /* ----- Pipeline States ----- */
 
 void D3D11SecondaryCommandBuffer::SetPipelineState(PipelineState& pipelineState)
@@ -300,40 +171,6 @@ void D3D11SecondaryCommandBuffer::SetUniforms(std::uint32_t first, const void* d
         cmd->dataSize   = dataSize;
         std::memcpy(cmd + 1, data, dataSize);
     }
-}
-
-/* ----- Queries ----- */
-
-void D3D11SecondaryCommandBuffer::BeginQuery(QueryHeap& /*queryHeap*/, std::uint32_t /*query*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::EndQuery(QueryHeap& /*queryHeap*/, std::uint32_t /*query*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::BeginRenderCondition(QueryHeap& /*queryHeap*/, std::uint32_t /*query*/, const RenderConditionMode /*mode*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::EndRenderCondition()
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-/* ----- Stream Output ------ */
-
-void D3D11SecondaryCommandBuffer::BeginStreamOutput(std::uint32_t /*numBuffers*/, Buffer* const * /*buffers*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::EndStreamOutput()
-{
-    // dummy - command not allowed in secondary command buffer
 }
 
 /* ----- Drawing ----- */
@@ -498,30 +335,6 @@ void D3D11SecondaryCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t
         cmd->bufferForArgs              = bufferD3D.GetNative();
         cmd->alignedByteOffsetForArgs   = static_cast<UINT>(offset);
     }
-}
-
-/* ----- Debugging ----- */
-
-void D3D11SecondaryCommandBuffer::PushDebugGroup(const char* /*name*/)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-void D3D11SecondaryCommandBuffer::PopDebugGroup()
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-/* ----- Extensions ----- */
-
-void D3D11SecondaryCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
-{
-    // dummy - command not allowed in secondary command buffer
-}
-
-bool D3D11SecondaryCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
-{
-    return false; // dummy - command not allowed in secondary command buffer
 }
 
 
