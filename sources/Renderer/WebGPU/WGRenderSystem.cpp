@@ -6,10 +6,10 @@
  */
 
 #include "WGRenderSystem.h"
+#include "WGCore.h"
 #include "RenderState/WGComputePipeline.h"
 #include "RenderState/WGRenderPipeline.h"
 #include "../../Core/Assertion.h"
-#include "../../Core/StringUtils.h"
 
 
 namespace LLGL
@@ -28,7 +28,7 @@ WGRenderSystem::WGRenderSystem(const RenderSystemDescriptor& desc)
 
 SwapChain* WGRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<WGSwapChain>(swapChainDesc, surface, *this);
+    return swapChains_.emplace<WGSwapChain>(*this, swapChainDesc, surface);
 }
 
 void WGRenderSystem::Release(SwapChain& swapChain)
@@ -43,7 +43,7 @@ CommandQueue* WGRenderSystem::GetCommandQueue()
 
 CommandBuffer* WGRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return commandBuffers_.emplace<WGCommandBuffer>(device_, commandBufferDesc);
+    return commandBuffers_.emplace<WGCommandBuffer>(device_, commandQueue_->GetNative(), commandBufferDesc);
 }
 
 void WGRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -53,7 +53,10 @@ void WGRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* WGRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    return buffers_.emplace<WGBuffer>(bufferDesc, initialData);
+    WGBuffer* buffer = buffers_.emplace<WGBuffer>(device_, bufferDesc);
+    if (initialData != nullptr)
+        wgpuQueueWriteBuffer(commandQueue_->GetNative(), buffer->GetNative(), 0, initialData, bufferDesc.size);
+    return buffer;
 }
 
 BufferArray* WGRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -73,7 +76,8 @@ void WGRenderSystem::Release(BufferArray& bufferArray)
 
 void WGRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& bufferWG = LLGL_CAST(WGBuffer&, buffer);
+    wgpuQueueWriteBuffer(commandQueue_->GetNative(), bufferWG.GetNative(), offset, data, static_cast<std::size_t>(dataSize));
 }
 
 void WGRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
@@ -163,7 +167,7 @@ void WGRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* WGRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    return shaders_.emplace<WGShader>(shaderDesc);
+    return shaders_.emplace<WGShader>(instance_, device_, shaderDesc);
 }
 
 void WGRenderSystem::Release(Shader& shader)
@@ -193,7 +197,7 @@ void WGRenderSystem::Release(PipelineCache& pipelineCache)
 
 PipelineState* WGRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
-    return pipelineStates_.emplace<WGRenderPipeline>(pipelineStateDesc);
+    return pipelineStates_.emplace<WGRenderPipeline>(device_, pipelineStateDesc);
 }
 
 PipelineState* WGRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
@@ -236,8 +240,53 @@ bool WGRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     LLGL_TRAP_NOT_IMPLEMENTED();
 }
 
+static void QueryWebGpuRendererInfo(WGPUAdapter adapter, RendererInfo& outInfo)
+{
+    WGPUAdapterInfo adapterInfo = WGPU_ADAPTER_INFO_INIT;
+    wgpuAdapterGetInfo(adapter, &adapterInfo);
+
+    outInfo.rendererName        = "WebGPU";
+    outInfo.deviceName          = ToStringView(adapterInfo.device);
+    outInfo.vendorName          = ToStringView(adapterInfo.vendor);
+    outInfo.shadingLanguageName = "WGSL";
+    //outInfo.extensionNames      = { "" };
+
+    /* Append information to the renderer name */
+    UTF8String rendererNameInfo;
+    auto AppendRendererNameInfo = [&rendererNameInfo](StringView info)
+    {
+        if (!info.empty())
+        {
+            if (!rendererNameInfo.empty())
+                rendererNameInfo.append(", ");
+            rendererNameInfo.append(info);
+        }
+    };
+
+    AppendRendererNameInfo(ToStringView(adapterInfo.description));
+    AppendRendererNameInfo(ToString(adapterInfo.backendType));
+    AppendRendererNameInfo(ToString(adapterInfo.adapterType));
+
+    if (!rendererNameInfo.empty())
+        outInfo.rendererName.append(" ( " + rendererNameInfo + " )");
+}
+
+static void QueryWebGpuRenderingCaps(RenderingCapabilities& outCaps)
+{
+    //TODO
+    outCaps.limits.maxBufferSize        = 1ull << 30; // 1 GB
+    outCaps.limits.maxViewports         = 1;
+    outCaps.limits.maxViewportSize[0]   = 16384;
+    outCaps.limits.maxViewportSize[1]   = 16384;
+    outCaps.shadingLanguages            = { ShadingLanguage::WGSL };
+}
+
 bool WGRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
+    if (outInfo != nullptr)
+        QueryWebGpuRendererInfo(adapter_, *outInfo);
+    if (outCaps != nullptr)
+        QueryWebGpuRenderingCaps(*outCaps);
     return false; //todo
 }
 
@@ -266,17 +315,6 @@ static void OnWebGpuRequestAdapter(WGPURequestAdapterStatus status, WGPUAdapter 
 {
     LLGL_ASSERT(status == WGPURequestAdapterStatus_Success);
     *reinterpret_cast<WGPUAdapter*>(userdata1) = adapter;
-}
-
-static const char* ToString(WGPUWaitStatus status)
-{
-    switch (status)
-    {
-        case WGPUWaitStatus_Success:    return "Success";
-        case WGPUWaitStatus_TimedOut:   return "TimedOut";
-        case WGPUWaitStatus_Error:      return "Error";
-        default:                        return IntToHex(static_cast<std::uint32_t>(status));
-    }
 }
 
 bool WGRenderSystem::RequestWebGpuAdapter()

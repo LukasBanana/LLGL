@@ -188,6 +188,8 @@ class LLGL_EXPORT UTF8String
 
         UTF8String& append(size_type count, char ch);
         UTF8String& append(const char* first, const char* last);
+        UTF8String& append(const UTF8String& rhs);
+        UTF8String& append(UTF8String&& rhs);
 
     public:
 

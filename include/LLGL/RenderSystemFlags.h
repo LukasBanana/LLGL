@@ -104,6 +104,8 @@ enum class ShadingLanguage
     SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
     SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.
 
+    WGSL            = (0x60000),        //!< WGSL (WebGPU Shading Language).
+
     VersionBitmask  = 0x0000ffff,       //!< Bitmask for the version number of each shading language enumeration entry.
 };
 

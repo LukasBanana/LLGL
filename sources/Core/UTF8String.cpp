@@ -344,6 +344,27 @@ UTF8String& UTF8String::append(const char* first, const char* last)
     return *this;
 }
 
+UTF8String& UTF8String::append(const UTF8String& rhs)
+{
+    return append(rhs.begin(), rhs.end());
+}
+
+UTF8String& UTF8String::append(UTF8String&& rhs)
+{
+    if (empty())
+    {
+        /* Move the internal data container if this string is empty */
+        data_ = std::move(rhs.data_);
+        rhs.clear();
+    }
+    else
+    {
+        /* Append the other string if this string is not empty */
+        append(rhs.begin(), rhs.end());
+    }
+    return *this;
+}
+
 SmallVector<wchar_t> UTF8String::to_utf16() const
 {
     return ConvertToUTF16WCharArray(StringView{ c_str(), size() });

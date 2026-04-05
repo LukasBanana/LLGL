@@ -21,7 +21,7 @@ class WGRenderPipeline final : public WGPipelineState
 
     public:
 
-        WGRenderPipeline(const GraphicsPipelineDescriptor& desc);
+        WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDescriptor& desc);
 
         // Returns the native WebGPU render pipeline object.
         inline WGPURenderPipeline GetNative() const
