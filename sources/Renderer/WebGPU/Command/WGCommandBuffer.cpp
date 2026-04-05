@@ -253,12 +253,17 @@ void WGCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
 void WGCommandBuffer::SetBlendFactor(const float color[4])
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if (renderPassEncoder_ != nullptr)
+    {
+        WGPUColor blendColor = { color[0], color[1], color[2], color[3] };
+        wgpuRenderPassEncoderSetBlendConstant(renderPassEncoder_, &blendColor);
+    }
 }
 
-void WGCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+void WGCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if (renderPassEncoder_ != nullptr)
+        wgpuRenderPassEncoderSetStencilReference(renderPassEncoder_, reference);
 }
 
 void WGCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
