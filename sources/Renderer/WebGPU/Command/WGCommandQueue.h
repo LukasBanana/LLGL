@@ -29,6 +29,12 @@ class WGCommandQueue final : public CommandQueue
         WGCommandQueue(WGPUDevice device);
         ~WGCommandQueue();
 
+        // Returns the native WebGPU command queue object.
+        inline WGPUQueue GetNative() const
+        {
+            return queue_;
+        }
+
     private:
 
         WGPUQueue queue_ = nullptr;

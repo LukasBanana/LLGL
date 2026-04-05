@@ -117,6 +117,8 @@ enum class ShadingLanguage
     DXIL_1_8        = (0x60000 | 180),  //!< DXIL 1.8 (since Direct3D 12) maps to Shader model 6.8. See HLSL_6_8.
     DXIL_1_9        = (0x60000 | 190),  //!< DXIL 1.9 (since Direct3D 12) maps to Shader model 6.9. See HLSL_6_9.
 
+    WGSL            = (0x70000),        //!< WGSL (WebGPU Shading Language).
+
     VersionBitmask  = 0x0000FFFF,       //!< Bitmask for the version number of each shading language enumeration entry.
 };
 

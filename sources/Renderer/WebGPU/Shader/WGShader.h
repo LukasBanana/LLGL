@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/ShaderFlags.h>
 #include <webgpu/webgpu.h>
 
 
@@ -26,7 +27,7 @@ class WGShader final : public Shader
 
     public:
 
-        WGShader(const ShaderDescriptor& desc);
+        WGShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& desc);
 
         // Returns the native WebGPU shader module.
         inline WGPUShaderModule GetNative() const
@@ -36,7 +37,12 @@ class WGShader final : public Shader
 
     private:
 
-        WGPUShaderModule shaderModule_ = nullptr;
+        bool BuildShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& shaderDesc);
+
+    private:
+
+        WGPUShaderModule    shaderModule_ = nullptr;
+        Report              report_;
 
 };
 

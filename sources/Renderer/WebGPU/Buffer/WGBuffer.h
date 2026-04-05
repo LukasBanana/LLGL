@@ -26,7 +26,7 @@ class WGBuffer final : public Buffer
 
     public:
 
-        WGBuffer(const BufferDescriptor& bufferDesc, const void* initialData);
+        WGBuffer(WGPUDevice device, const BufferDescriptor& bufferDesc);
 
         // Returns the native WebGPU buffer.
         inline WGPUBuffer GetNative() const

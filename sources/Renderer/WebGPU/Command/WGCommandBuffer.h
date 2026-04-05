@@ -10,7 +10,10 @@
 
 
 #include <LLGL/CommandBuffer.h>
+#include <LLGL/Constants.h>
 #include <webgpu/webgpu.h>
+
+#include "../WGSwapChain.h"
 
 
 namespace LLGL
@@ -26,21 +29,50 @@ class WGCommandBuffer final : public CommandBuffer
 
     public:
 
-        WGCommandBuffer(WGPUDevice device, const CommandBufferDescriptor& desc);
+        WGCommandBuffer(WGPUDevice device, WGPUQueue queue, const CommandBufferDescriptor& desc);
+
+    private:
+
+        static constexpr std::uint32_t maxNumVertexBuffers  = 16;
+
+        enum DirtyBits
+        {
+            // Render encoder
+            DirtyBit_Viewports      = (1 << 0),
+            DirtyBit_Scissors       = (1 << 1),
+            DirtyBit_VertexBuffers  = (1 << 2),
+        };
+
+        struct WGRenderEncoderState
+        {
+            WGPUBuffer      vertexBuffers[maxNumVertexBuffers];
+            std::uint32_t   vertexBufferCount                   = 0;
+            Scissor         scissor;
+            Viewport        viewport;
+        };
 
     private:
 
         void EnsureComputeEncoder();
         void FlushPassEncoders();
+        void FlushRenderEncoderStates();
+        void ResetRenderStates();
 
     private:
 
         WGPUDevice              device_             = nullptr;
+        WGPUQueue               queue_              = nullptr;
         WGPUCommandEncoder      commandEncoder_     = nullptr;
         WGPURenderPassEncoder   renderPassEncoder_  = nullptr;
         WGPUComputePassEncoder  computePassEncoder_ = nullptr;
         WGPUCommandBuffer       commandBuffer_      = nullptr;
 
+        WGRenderEncoderState    renderEncoderState_;
+
+        std::uint32_t           renderDirtyBits_    = 0;
+        std::uint32_t           computeDirtyBits_   = 0;
+
+        const bool              isImmediateSubmit_  = false;
 
 };
 

@@ -52,6 +52,20 @@ class WGRenderSystem final : public RenderSystem
 
         WGRenderSystem(const RenderSystemDescriptor& desc);
 
+    public:
+
+        // Returns the native WebGPU instance object.
+        inline WGPUInstance GetNativeInstance() const
+        {
+            return instance_;
+        }
+
+        // Returns the native WebGPU device object.
+        inline WGPUDevice GetNativeDevice() const
+        {
+            return device_;
+        }
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>

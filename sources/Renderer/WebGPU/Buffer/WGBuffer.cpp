@@ -7,26 +7,72 @@
 
 #include "WGBuffer.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/WebGPU/NativeHandle.h>
 
 
 namespace LLGL
 {
 
 
-WGBuffer::WGBuffer(const BufferDescriptor& bufferDesc, const void* initialData) :
+static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
+{
+    WGPUBufferUsage usage = 0;
+    if ((bindFlags & BindFlags::VertexBuffer) != 0)
+        usage |= WGPUBufferUsage_Vertex;
+    if ((bindFlags & BindFlags::IndexBuffer) != 0)
+        usage |= WGPUBufferUsage_Index;
+    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        usage |= WGPUBufferUsage_Uniform;
+    if ((bindFlags & BindFlags::Sampled) != 0)
+        usage |= WGPUBufferUsage_Storage | WGPUBufferUsage_TexelBuffer; //???
+    if ((bindFlags & BindFlags::Storage) != 0)
+        usage |= WGPUBufferUsage_Storage;
+    if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+        usage |= WGPUBufferUsage_Indirect;
+    if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
+        usage |= WGPUBufferUsage_MapRead;
+    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
+        usage |= WGPUBufferUsage_MapWrite;
+    return usage;
+
+}
+
+WGBuffer::WGBuffer(WGPUDevice device, const BufferDescriptor& bufferDesc) :
     Buffer { bufferDesc.bindFlags }
 {
-    //todo
+    WGPUBufferDescriptor wgpuBufferDesc;
+    {
+        wgpuBufferDesc.nextInChain      = nullptr;
+        wgpuBufferDesc.label            = WGPU_STRING_VIEW_INIT;
+        wgpuBufferDesc.usage            = GetWebGpuBufferUsage(bufferDesc.bindFlags, bufferDesc.cpuAccessFlags);
+        wgpuBufferDesc.size             = bufferDesc.size;
+        wgpuBufferDesc.mappedAtCreation = false;
+    }
+    buffer_ = wgpuDeviceCreateBuffer(device, &wgpuBufferDesc);
+    LLGL_ASSERT_PTR(buffer_);
 }
 
 BufferDescriptor WGBuffer::GetDesc() const
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    BufferDescriptor outDesc;
+    {
+        outDesc.size        = wgpuBufferGetSize(buffer_);
+        outDesc.bindFlags   = GetBindFlags();
+        //todo
+    }
+    return outDesc;
 }
 
 bool WGBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if (auto* nativeHandleWG = GetTypedNativeHandle<WebGPU::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleWG->type    = WebGPU::ResourceNativeType::Buffer;
+        nativeHandleWG->buffer  = GetNative();
+        return true;
+    }
+    return false;
 }
 
 
