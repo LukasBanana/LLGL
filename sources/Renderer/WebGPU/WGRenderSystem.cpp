@@ -7,9 +7,11 @@
 
 #include "WGRenderSystem.h"
 #include "WGCore.h"
+#include "WGTypes.h"
 #include "RenderState/WGComputePipeline.h"
 #include "RenderState/WGRenderPipeline.h"
 #include "../../Core/Assertion.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -271,7 +273,36 @@ static void QueryWebGpuRendererInfo(WGPUAdapter adapter, RendererInfo& outInfo)
         outInfo.rendererName.append(" ( " + rendererNameInfo + " )");
 }
 
-static void QueryWebGpuRenderingCaps(RenderingCapabilities& outCaps)
+static std::vector<Format> QueryWebGpuSupportedTextureFormats(WGPUAdapter adapter)
+{
+    std::vector<Format> outFormats;
+
+    const bool isTexCompressionBCSupported      = (wgpuAdapterHasFeature(adapter, WGPUFeatureName_TextureCompressionBC  ) == WGPU_TRUE);
+    const bool isTexCompressionETC2Supported    = (wgpuAdapterHasFeature(adapter, WGPUFeatureName_TextureCompressionETC2) == WGPU_TRUE);
+    const bool isTexCompressionASTCSupported    = (wgpuAdapterHasFeature(adapter, WGPUFeatureName_TextureCompressionASTC) == WGPU_TRUE);
+
+    constexpr int firstTextureFormat = static_cast<int>(Format::Undefined) + 1;
+    constexpr int numTextureFormats = static_cast<int>(Format::ETC2UNorm_sRGB) + 1;
+    for_subrange(i, firstTextureFormat, numTextureFormats)
+    {
+        const Format format = static_cast<Format>(i);
+        const WGPUTextureFormat wgpuFormat = WGTypes::ToWGTextureFormatOrDefault(format);
+
+        if ((!isTexCompressionBCSupported   && WGTypes::IsWGTextureFormatBC  (wgpuFormat)) ||
+            (!isTexCompressionETC2Supported && WGTypes::IsWGTextureFormatETC2(wgpuFormat)) ||
+            (!isTexCompressionASTCSupported && WGTypes::IsWGTextureFormatASTC(wgpuFormat)))
+        {
+            continue;
+        }
+
+        if (wgpuFormat != WGPUTextureFormat_Undefined)
+            outFormats.push_back(format);
+    }
+
+    return outFormats;
+}
+
+static void QueryWebGpuRenderingCaps(WGPUAdapter adapter, RenderingCapabilities& outCaps)
 {
     //TODO
     outCaps.limits.maxBufferSize        = 1ull << 30; // 1 GB
@@ -279,6 +310,7 @@ static void QueryWebGpuRenderingCaps(RenderingCapabilities& outCaps)
     outCaps.limits.maxViewportSize[0]   = 16384;
     outCaps.limits.maxViewportSize[1]   = 16384;
     outCaps.shadingLanguages            = { ShadingLanguage::WGSL };
+    outCaps.textureFormats              = QueryWebGpuSupportedTextureFormats(adapter);
 }
 
 bool WGRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
@@ -286,7 +318,7 @@ bool WGRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabi
     if (outInfo != nullptr)
         QueryWebGpuRendererInfo(adapter_, *outInfo);
     if (outCaps != nullptr)
-        QueryWebGpuRenderingCaps(*outCaps);
+        QueryWebGpuRenderingCaps(adapter_, *outCaps);
     return false; //todo
 }
 
