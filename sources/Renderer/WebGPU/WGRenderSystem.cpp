@@ -10,6 +10,7 @@
 #include "WGTypes.h"
 #include "RenderState/WGComputePipeline.h"
 #include "RenderState/WGRenderPipeline.h"
+#include "Shader/WGShaderModulePool.h"
 #include "../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 
@@ -26,6 +27,11 @@ WGRenderSystem::WGRenderSystem(const RenderSystemDescriptor& desc)
     if (!RequestWebGpuDevice(desc.flags))
         return;
     CreateCommandQueue();
+}
+
+WGRenderSystem::~WGRenderSystem()
+{
+    WGShaderModulePool::Get().Clear();
 }
 
 SwapChain* WGRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)

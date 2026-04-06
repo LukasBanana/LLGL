@@ -51,6 +51,7 @@ class WGRenderSystem final : public RenderSystem
     public:
 
         WGRenderSystem(const RenderSystemDescriptor& desc);
+        ~WGRenderSystem();
 
     public:
 

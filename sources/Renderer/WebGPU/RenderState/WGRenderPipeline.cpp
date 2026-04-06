@@ -124,7 +124,7 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
 
         fragmentState.nextInChain   = nullptr;
         fragmentState.module        = fragmentShaderWG->GetNative();
-        fragmentState.entryPoint    = ToWGStringView("PS");
+        fragmentState.entryPoint    = fragmentShaderWG->GetEntryPointNameView();
         fragmentState.constantCount = 0;
         fragmentState.constants     = nullptr;
         fragmentState.targetCount   = 1;
@@ -142,7 +142,7 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
 
         renderPipelineDesc.vertex.nextInChain   = nullptr;
         renderPipelineDesc.vertex.module        = vertexShaderWG->GetNative();
-        renderPipelineDesc.vertex.entryPoint    = ToWGStringView("VS");
+        renderPipelineDesc.vertex.entryPoint    = vertexShaderWG->GetEntryPointNameView();
         renderPipelineDesc.vertex.constantCount = 0;
         renderPipelineDesc.vertex.constants     = nullptr;
         renderPipelineDesc.vertex.bufferCount   = 0;
