@@ -11,6 +11,7 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/ShaderFlags.h>
+#include "WGShaderModule.h"
 #include <webgpu/webgpu.h>
 
 
@@ -28,21 +29,29 @@ class WGShader final : public Shader
     public:
 
         WGShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& desc);
+        ~WGShader();
 
         // Returns the native WebGPU shader module.
         inline WGPUShaderModule GetNative() const
         {
-            return shaderModule_;
+            return shaderModule_->GetNative();
+        }
+
+        // Returns a WebGPU string view of the entry point name for this shader.
+        // This is used when the shared shader module is bound to a render or compute pipeline.
+        inline WGPUStringView GetEntryPointNameView() const
+        {
+            return WGPUStringView{ entryPoint_.data(), entryPoint_.size() };
         }
 
     private:
 
-        bool BuildShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& shaderDesc);
+        void BuildShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& shaderDesc);
 
     private:
 
-        WGPUShaderModule    shaderModule_ = nullptr;
-        Report              report_;
+        WGShaderModuleSPtr  shaderModule_;
+        std::string         entryPoint_;
 
 };
 
