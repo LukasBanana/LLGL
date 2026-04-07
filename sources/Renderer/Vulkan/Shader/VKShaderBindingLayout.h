@@ -41,7 +41,7 @@ class VKShaderBindingLayout
         /*
         Assigns new binding slots for all resource bindings in the specified range and returns the number of updated bindings.
         Parameter 'dstBindingInAscendingOrder' specifies whether binding indices are to be re-assigned as well, in which case they are assigned from [0, N).
-        Otherwise, only the descriptor set is re-assgined.
+        Otherwise, only the descriptor set is re-assigned.
         */
         std::uint32_t AssignBindingSlots(
             ConstFieldRangeIterator<BindingSlot>    iter,

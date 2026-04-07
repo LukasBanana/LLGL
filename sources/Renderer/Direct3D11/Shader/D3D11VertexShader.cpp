@@ -26,7 +26,7 @@ D3D11VertexShader::D3D11VertexShader(ID3D11Device* device, const ShaderDescripto
 
         /* Build optional proxy geometry shader if there are any output attributes */
         if (!desc.vertex.outputAttribs.empty())
-            BuildProxyGeometryShader(device, desc, proxyGeomtryShader_);
+            BuildProxyGeometryShader(device, desc, proxyGeometryShader_);
     }
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);

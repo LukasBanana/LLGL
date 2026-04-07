@@ -46,10 +46,10 @@ class D3D12RootParameter
 
         void Clear();
 
-        // Returns true if the specified descriptor range type is compatible with this root paramter.
+        // Returns true if the specified descriptor range type is compatible with this root parameter.
         bool IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const;
 
-        // Returns true if the specified root constants are compatible with this root paramter.
+        // Returns true if the specified root constants are compatible with this root parameter.
         bool IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility) const;
 
     public:

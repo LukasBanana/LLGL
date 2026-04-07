@@ -139,7 +139,7 @@ void DisableIncompatibleExtensions();
 // Returns true if the specified OpenGL extension is supported.
 bool HasExtension(const GLExt extension);
 
-// Returns ture if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
+// Returns true if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
 bool HasNativeSamplers();
 
 

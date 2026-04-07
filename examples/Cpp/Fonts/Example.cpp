@@ -231,7 +231,7 @@ private:
             mappings[static_cast<char>(ch)] = m;
         }
 
-        // Build glyph geomtry for specified character range
+        // Build glyph geometry for specified character range
         for (char c = firstChar; ; ++c)
         {
             const unsigned glyphIndex = static_cast<unsigned>(c - firstChar);

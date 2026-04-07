@@ -24,17 +24,17 @@ void D3D12RootSignature::Clear()
     staticSamplers_.clear();
 }
 
-void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignature::Reset(UINT maxNumRootParameters, UINT maxNumStaticSamplers)
 {
-    nativeRootParams_.reserve(maxNumRootParamters);
-    rootParams_.reserve(maxNumRootParamters);
+    nativeRootParams_.reserve(maxNumRootParameters);
+    rootParams_.reserve(maxNumRootParameters);
     staticSamplers_.reserve(maxNumStaticSamplers);
 }
 
-void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParameters, UINT maxNumStaticSamplers)
 {
-    Reset(maxNumRootParamters, maxNumStaticSamplers);
-    while (maxNumRootParamters-- > 0)
+    Reset(maxNumRootParameters, maxNumStaticSamplers);
+    while (maxNumRootParameters-- > 0)
         AppendRootParameter();
 }
 
@@ -44,7 +44,7 @@ D3D12RootParameter* D3D12RootSignature::AppendRootParameter(UINT* outRootParamet
     if (outRootParameterIndex != nullptr)
         *outRootParameterIndex = static_cast<UINT>(rootParams_.size());
 
-    /* Create new root paramter */
+    /* Create new root parameter */
     nativeRootParams_.push_back({});
     rootParams_.push_back(&(nativeRootParams_.back()));
 

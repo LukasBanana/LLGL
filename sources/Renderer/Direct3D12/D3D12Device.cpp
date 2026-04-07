@@ -78,7 +78,7 @@ HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice, long flags)
 
     featureLevel_ = featureLevelSupport.MaxSupportedFeatureLevel;
 
-    /* Store refernece to shared D3D device */
+    /* Store reference to shared D3D device */
     device_ = sharedD3DDevice;
 
     /* Query info queue if debugging is enabled */

@@ -73,7 +73,7 @@ class D3D12CommandBuffer final : public CommandBufferTier1
             return (isImmediateSubmit_ != 0);
         }
 
-        // Returns ture if this is a bundle command buffer.
+        // Returns true if this is a bundle command buffer.
         inline bool IsBundleCmdBuffer() const
         {
             return (isBundle_ != 0);

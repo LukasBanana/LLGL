@@ -97,14 +97,14 @@ class LLGL_EXPORT Blob : public NonCopyable
         /**
         \brief Creates a new Blob instance with the data read from the specified binary file.
         \param[in] filename Specifies the file that is to be read.
-        \return New instance of Blob that manages the memory of a conent copy from the specified file or null if the file could not be read.
+        \return New instance of Blob that manages the memory of a content copy from the specified file or null if the file could not be read.
         */
         static Blob CreateFromFile(const char* filename);
 
         /**
         \brief Creates a new Blob instance with the data read from the specified binary file.
         \param[in] filename Specifies the file that is to be read.
-        \return New instance of Blob that manages the memory of a conent copy from the specified file or null if the file could not be read.
+        \return New instance of Blob that manages the memory of a content copy from the specified file or null if the file could not be read.
         */
         static Blob CreateFromFile(const std::string& filename);
 

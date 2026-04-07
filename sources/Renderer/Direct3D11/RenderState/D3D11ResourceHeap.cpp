@@ -38,7 +38,7 @@ namespace LLGL
 /*
 
 The internal buffer of D3D11ResourceHeap is tightly packed which stores all segments of binding points consecutively.
-Here is an illustration of the buffer layout for one Texture resouce (at binding point 4) and two StorageBuffer resources (at binding points 5 and 6)
+Here is an illustration of the buffer layout for one Texture resource (at binding point 4) and two StorageBuffer resources (at binding points 5 and 6)
 on a 32-bit build, both for the fragment shader stage only:
 
 Offset      Attribute                              Value   Description                                         Segment

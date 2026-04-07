@@ -1860,7 +1860,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
 
 void GLStateManager::BindTransformFeedback(GLuint transformFeedback)
 {
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (contextState_.boundTransformFeedback != transformFeedback)
     {
         contextState_.boundTransformFeedback = transformFeedback;

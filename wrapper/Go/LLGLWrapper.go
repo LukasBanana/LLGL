@@ -1082,7 +1082,7 @@ type ProfileCommandQueueRecord struct {
     BufferMappings           uint32 /* = 0 */
     TextureWrites            uint32 /* = 0 */
     TextureReads             uint32 /* = 0 */
-    CommandBufferSubmittions uint32 /* = 0 */
+    CommandBufferSubmissions uint32 /* = 0 */
     FenceSubmissions         uint32 /* = 0 */
 }
 

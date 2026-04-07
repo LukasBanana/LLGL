@@ -75,7 +75,7 @@ class GLTextureViewPool
         // Compares the two texture views in a strict-weak-order (SWO).
         static int CompareTextureViewSWO(const GLTextureView& lhs, const GLTextureView& rhs);
 
-        // Creats a new GL texture view and stores it in the specified view entry.
+        // Creates a new GL texture view and stores it in the specified view entry.
         GLuint CreateGLTextureView(GLTextureView& texView, const TextureViewDescriptor& textureViewDesc, bool isSharedTex, bool restoreBoundTexture);
 
         // Deletes the specified GL texture view.

@@ -444,7 +444,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawTransformFeedback:
         {
             auto cmd = static_cast<const GLCmdDrawTransformFeedback*>(pc);
-            #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+            #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
             glDrawTransformFeedback(cmd->mode, cmd->xfbID);
             #endif
             return sizeof(*cmd);

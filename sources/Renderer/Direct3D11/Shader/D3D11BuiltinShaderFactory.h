@@ -40,7 +40,7 @@ class D3D11BuiltinShaderFactory
         // Returns the instance of this singleton.
         static D3D11BuiltinShaderFactory& Get();
 
-        // Creats all builtin shaders with the specified D3D device.
+        // Creates all builtin shaders with the specified D3D device.
         void CreateBuiltinShaders(ID3D11Device* device);
 
         // Releases all builtin shaders.

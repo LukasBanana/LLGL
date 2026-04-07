@@ -34,7 +34,7 @@ class D3D11VertexShader final : public D3D11Shader
         // Returns the proxy geometry shader for stream-output if there is one.
         inline const ComPtr<ID3D11GeometryShader>& GetProxyGeometryShader() const
         {
-            return proxyGeomtryShader_;
+            return proxyGeometryShader_;
         }
 
     private:
@@ -44,7 +44,7 @@ class D3D11VertexShader final : public D3D11Shader
     private:
 
         ComPtr<ID3D11InputLayout>       inputLayout_;
-        ComPtr<ID3D11GeometryShader>    proxyGeomtryShader_;
+        ComPtr<ID3D11GeometryShader>    proxyGeometryShader_;
 
 };
 

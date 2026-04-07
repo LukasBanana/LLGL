@@ -78,7 +78,7 @@ class LLGL_EXPORT Window : public Surface
                 /**
                 \brief Sent when the mouse has been moved on the sender window.
                 \param[in] sender Window which sent this event.
-                \param[in] position Mouse positon relative to the window's client area.
+                \param[in] position Mouse position relative to the window's client area.
                 */
                 virtual void OnLocalMotion(Window& sender, const Offset2D& position);
 

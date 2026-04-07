@@ -64,7 +64,7 @@ DEF_TEST( DualSourceBlending )
 
         cmdBuffer->BeginRenderPass(*swapChain);
         {
-            // Draw fullscreen traingle
+            // Draw fullscreen triangle
             cmdBuffer->SetViewport(swapChain->GetResolution());
             cmdBuffer->Clear(LLGL::ClearFlags::Color, LLGL::ClearValue{ 1.0f, 1.0f, 1.0f, 1.0f });
 

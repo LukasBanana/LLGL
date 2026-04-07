@@ -291,7 +291,7 @@ static void ValidateImageDataSize(const Extent3D& extent, const MutableImageView
     if (imageView.dataSize < requiredDataSize)
     {
         LLGL_TRAP(
-            "data size of destinaton image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
+            "data size of destination image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
             requiredDataSize, imageView.dataSize
         );
     }

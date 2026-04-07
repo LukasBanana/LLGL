@@ -63,7 +63,7 @@ GLenum MapOrZero(const Format format)
 
         /* --- Packed formats --- */
         case Format::RGB10A2UNorm:      return GL_RGB10_A2;
-                
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
         case Format::D32Float:          return GL_DEPTH_COMPONENT32;
@@ -979,7 +979,7 @@ GLenum ToColorAttachment(std::uint32_t attachmentIndex)
     #endif
     return 0;
 }
-    
+
 #if LLGL_GL_ENABLE_OPENGL2X
 
 Format UnmapFormat(const GLenum internalFormat)
@@ -1011,7 +1011,7 @@ Format UnmapFormat(const GLenum internalFormat)
         /* --- RGBA color formats --- */
         case GL_RGBA:                                   /*pass*/
         case GL_RGBA8:                                  return Format::RGBA8UNorm;
-            
+
         case GL_SRGB_ALPHA:                             /*pass*/
         case GL_SRGB8_ALPHA8:                           return Format::RGBA8UNorm_sRGB;
 
@@ -1297,7 +1297,7 @@ bool IsIntegerTypedFormat(GLenum internalFormat)
             return false;
     }
 }
-    
+
 #else // !LLGL_GL_ENABLE_OPENGL2X
 
 bool IsIntegerTypedFormat(GLenum internalFormat)
@@ -1391,9 +1391,9 @@ GLenum BufferTargetToBindingPname(GLenum target)
     }
 }
 
-const char* SystemValueToString(SystemValue sytemValue, ShaderType shaderType)
+const char* SystemValueToString(SystemValue systemValue, ShaderType shaderType)
 {
-    switch (sytemValue)
+    switch (systemValue)
     {
         case SystemValue::Undefined:            break;
         case SystemValue::ClipDistance:         return "gl_ClipDistance";

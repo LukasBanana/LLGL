@@ -59,7 +59,7 @@ class D3D11PipelineLayout final : public PipelineLayout
             return bindings_;
         }
 
-        // Returns the list of uniform descritpors this pipeline layout was created with.
+        // Returns the list of uniform descriptors this pipeline layout was created with.
         inline const std::vector<UniformDescriptor>& GetUniforms() const
         {
             return uniforms_;

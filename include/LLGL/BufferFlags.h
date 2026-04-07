@@ -172,7 +172,7 @@ i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, or \
 LLGL_EXPORT bool IsStructuredBuffer(const BufferDescriptor& desc);
 
 /**
-\brief Returns true if the buffer descriptor denotes a byte addresse buffer, i.e. \c ByteAddressBuffer or \c RWByteAddressBuffer in HLSL.
+\brief Returns true if the buffer descriptor denotes a byte address buffer, i.e. \c ByteAddressBuffer or \c RWByteAddressBuffer in HLSL.
 */
 LLGL_EXPORT bool IsByteAddressBuffer(const BufferDescriptor& desc);
 

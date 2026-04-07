@@ -54,7 +54,7 @@ class D3D12DescriptorHeap
             D3D12_DESCRIPTOR_HEAP_FLAGS flags   = D3D12_DESCRIPTOR_HEAP_FLAG_NONE
         );
 
-        // Re-creates the descriptor heap with a new size. This will discard all previously created descritpors.
+        // Re-creates the descriptor heap with a new size. This will discard all previously created descriptors.
         void Reset(UINT size);
 
         // Resets the internal descriptor.

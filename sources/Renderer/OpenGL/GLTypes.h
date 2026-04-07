@@ -88,7 +88,7 @@ bool IsDepthFormat(GLenum internalFormat);
 bool IsDepthStencilFormat(GLenum internalFormat);
 
 // Returns the binding parameter name for the specified buffer target,
-// e.g. GL_UNIFOMR_BUFFER to GL_UNIFORM_BUFFER_BINDING, used for glGetIntegerv().
+// e.g. GL_UNIFORM_BUFFER to GL_UNIFORM_BUFFER_BINDING, used for glGetIntegerv().
 GLenum BufferTargetToBindingPname(GLenum target);
 
 // Converts a vertex output system value to its GLSL built-in identifier or null if there is no such identifier.

@@ -57,7 +57,7 @@ class D3D12StagingDescriptorHeapPool
         // Allocates a new chunk with the specified minimal size.
         void AllocChunk(UINT minNumDescriptors);
 
-        // Reset all previously allocated chunks.
+        // Resets all previously allocated chunks.
         void ResetChunks();
 
         // Increments the offset for the next range of descriptor handles.

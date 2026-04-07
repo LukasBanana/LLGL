@@ -37,7 +37,7 @@ class D3D12BuiltinShaderFactory
         // Returns the instance of this singleton.
         static D3D12BuiltinShaderFactory& Get();
 
-        // Creats all builtin shaders with the specified D3D device.
+        // Creates all builtin shaders with the specified D3D device.
         void CreateBuiltinPSOs(ID3D12Device* device);
 
         // Releases all builtin shaders.

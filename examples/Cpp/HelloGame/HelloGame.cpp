@@ -53,7 +53,7 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  treeAnimRadius          = 0.2f;
     static constexpr int    shadowMapSize           = 512;
     static constexpr float  timeOfDayChangeSpeed    = 2.0f; // in seconds
-    static constexpr float  pointerMoveScale        = 15.0f; // percentage of largest screen dimension to move the pointer for player movemnt
+    static constexpr float  pointerMoveScale        = 15.0f; // percentage of largest screen dimension to move the pointer for player movement
     static constexpr float  jitterDelay             = 1.0f;
     static constexpr float  jitterDuration          = 1.0f;
     static constexpr float  jitterMaxAngle          = 15.0f;
@@ -155,7 +155,7 @@ class Example_HelloGame : public ExampleBase
     }
     scene;
 
-    enum Unifom
+    enum Uniform
     {
         Uniform_worldOffset = 0,
         Uniform_bendIntensity,
@@ -1641,7 +1641,7 @@ private:
             SetLightPhase(effects.lightPhase + delta);
             effects.lightPhaseChanged = false;
         }
-            
+
         #endif // /ENABLE_CHEATS
     }
 

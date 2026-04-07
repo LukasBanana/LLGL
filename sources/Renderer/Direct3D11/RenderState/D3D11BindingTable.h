@@ -102,7 +102,7 @@ class D3D11BindingTable
         // Clears the binding table state but doesn't perform any operations on the D3D device context.
         void ClearState();
 
-        // Binds all pending output merger UAVs to the device context if they have previosuly changed.
+        // Binds all pending output merger UAVs to the device context if they have previously changed.
         void FlushOutputMergerUAVs();
 
         // Notifies the binding table that a resource, represented by the specified binding locator, is about to be released.

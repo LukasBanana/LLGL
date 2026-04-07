@@ -61,7 +61,7 @@ class RenderSystem;
 
 /*
 The sole purpose of this function is to force the inclusion of all those backends by the linker when building as static library.
-This, unfortunately, creats a cyclic dependency between the core library and its backends.
+This, unfortunately, creates a cyclic dependency between the core library and its backends.
 The alternative is to let each project that uses LLGL call a stub function of the backend that it wants to include at link time.
 */
 static void StaticModuleStubs()

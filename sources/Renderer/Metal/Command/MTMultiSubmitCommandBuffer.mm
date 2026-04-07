@@ -202,7 +202,7 @@ void MTMultiSubmitCommandBuffer::FillBuffer(
         );
     }
 
-    /* Fill with native command if all four bytes are equal, otherwise use blit and comput commands */
+    /* Fill with native command if all four bytes are equal, otherwise use blit and compute commands */
     if (valueBytesAreEqual)
         FillBufferByte1(dstBufferMT, range, static_cast<std::uint8_t>(value & 0x000000FF));
     else

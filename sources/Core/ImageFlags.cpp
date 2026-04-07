@@ -143,7 +143,7 @@ static void GetImageOperationMemoryInfo(ImageOperationMemoryInfo& outInfo, const
 {
     ImageMemoryInfo memoryInfo;
 
-    /* Substract row padding from layer padding, or it would be applied twice in AdvancePaddingOffsetAtEdge() */
+    /* Subtract row padding from layer padding, or it would be applied twice in AdvancePaddingOffsetAtEdge() */
     GetImageMemoryInfo(memoryInfo, srcImageView, extent);
     outInfo.srcRowPadding   = memoryInfo.rowStride - memoryInfo.rowSize;
     outInfo.srcLayerPadding = memoryInfo.layerStride - memoryInfo.layerSize - outInfo.srcRowPadding;

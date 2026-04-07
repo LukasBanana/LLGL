@@ -68,7 +68,7 @@ class D3D12SwapChain final : public SwapChain
         bool HasMultiSampling() const;
         bool HasDepthBuffer() const;
 
-        // Copyies a subresource region from the backbuffer (color or depth-stencil) into the destination resource.
+        // Copies a subresource region from the backbuffer (color or depth-stencil) into the destination resource.
         HRESULT CopySubresourceRegion(
             D3D12CommandContext&    context,
             D3D12Resource&          dstResource,

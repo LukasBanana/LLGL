@@ -40,7 +40,7 @@ void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
     commandBufferDbg.FlushProfile(profile);
 
     RenderingDebugger::MergeProfiles(profile_, profile);
-    profile_.commandQueueRecord.commandBufferSubmittions++;
+    profile_.commandQueueRecord.commandBufferSubmissions++;
 }
 
 /* ----- Queries ----- */

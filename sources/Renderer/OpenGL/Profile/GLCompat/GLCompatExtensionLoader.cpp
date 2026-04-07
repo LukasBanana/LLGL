@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-// OpenGL extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successully.
+// OpenGL extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successfully.
 using GLExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */
@@ -480,7 +480,7 @@ static GLExtensionMap QuerySupportedOpenGLExtensions()
 // Includes all GL extensions that are considered default for core profiles
 static void IncludeDefaultCompatProfileExtensions(GLExtensionMap& extensions)
 {
-    static const char* compatProfileDefaultExtenions[] =
+    static const char* compatProfileDefaultExtensions[] =
     {
         "GL_ARB_compatibility",
         "GL_ARB_multitexture",          // GL 1.2
@@ -494,7 +494,7 @@ static void IncludeDefaultCompatProfileExtensions(GLExtensionMap& extensions)
         "GL_EXT_stencil_two_side",      // GL 2.0
         "GL_EXT_texture3D",
     };
-    for (const char* ext : compatProfileDefaultExtenions)
+    for (const char* ext : compatProfileDefaultExtensions)
         extensions[ext] = false;
 }
 

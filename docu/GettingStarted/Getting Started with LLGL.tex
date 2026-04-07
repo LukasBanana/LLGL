@@ -126,8 +126,8 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
 	In debug mode, \LLGL makes use of the native debug layers for the respective renderer.
 	These debug layers, however, vary in quality depending on the API.
 	\LLGL offers another debug layer on top of it that can be easily enabled or disabled.
-	This layer performs extensive state-, parameter-, and descritpor validation before each draw call.
-	This can be a powerful tool to find invalid render states or erronous descriptors.
+	This layer performs extensive state-, parameter-, and descriptor validation before each draw call.
+	This can be a powerful tool to find invalid render states or erroneous descriptors.
 
 	\item \textbf{Extension Support} \\
 	Especially OpenGL is a complex system due to its many extensions.
@@ -257,7 +257,7 @@ git clone --recursive https://github.com/LukasBanana/LLGL.git
 
 \subsection{Dependencies}
 
-Since version 0.02, LLGL has no longer any required base dependencies except the one for the repsective renderers.
+Since version 0.02, LLGL has no longer any required base dependencies except the one for the respective renderers.
 Previously, the \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} was required but has been replaced by a few plain-old-data structures.
 The GaussianLib is now only required for the Examples and Test projects.
 
@@ -309,7 +309,7 @@ Then your project files should be located in the build directory you just set up
 There are several options you can enable or disable to build the project:
 \begin{itemize}
 	\item \texttt{LLGL\_BUILD\_(TESTS/EXAMPLES/RENDERER\_\dots)} \\
-	Specifies whether to include all test, all examples, or the repsective renderer projects.
+	Specifies whether to include all test, all examples, or the respective renderer projects.
 
 	\item \texttt{LLGL\_D3D11\_ENABLE\_FEATURELEVEL} \\
 	Specifies which feature level is enabled in the Direct3D 11 renderer.
@@ -492,7 +492,7 @@ Moreover, most functions use enumerations instead of strings to specify some typ
 a module can be loaded dynamically at runtime and further modules can be added or removed independently.
 Therefore the renderer module is specified by a string (here ``OpenGL''). Other modules are
 named ``Direct3D11'', ``Direct3D12'', and ``Vulkan''.
-Whenver you load a new renderer, there must not remain any references to this shared object,
+Whenever you load a new renderer, there must not remain any references to this shared object,
 because only a single renderer can be loaded at a time.
 When this shared object expires, all objects allocated by this renderer will be deleted automatically.
 
@@ -500,7 +500,7 @@ If loading the renderer failed, an \texttt{std::runtime\_error} exception will b
 which can be cached to show an error message and/or load another renderer module instead.
 This can be very handy if a specific Direct3D version is not installed on the host Windows platform,
 so another Direct3D version or OpenGL renderer can be loaded as fallback
-without disturbing the user with akward error messages and program crashes.
+without disturbing the user with awkward error messages and program crashes.
 
 After we created the renderer we need a framebuffer to draw into and present the result on the screen.
 This is done by the \texttt{CreateSwapChain} function which takes the following descriptor structure:
@@ -593,7 +593,7 @@ vertexShaderDesc.source = "vertex.glsl";
 // CodeFile and BinaryFile denotes that our source must be a null terminated string.
 vertexShaderDesc.sourceType	= LLGL::ShaderSourceType::CodeFile;
 
-// Specifiy the vertex input attributes. This is obviously only necessary for the vertex shader.
+// Specify the vertex input attributes. This is obviously only necessary for the vertex shader.
 vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 \end{lstlisting}
 Now can create our vertex shader. For simplicity, we just create our fragment shader

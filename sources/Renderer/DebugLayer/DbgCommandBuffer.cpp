@@ -237,7 +237,7 @@ void DbgCommandBuffer::End()
         FlushProfile(profile);
 
         RenderingDebugger::MergeProfiles(commonProfile_, profile);
-        commonProfile_.commandQueueRecord.commandBufferSubmittions++;
+        commonProfile_.commandQueueRecord.commandBufferSubmissions++;
     }
 }
 
@@ -2773,9 +2773,9 @@ void DbgCommandBuffer::ValidateDynamicStates()
             " or PSO must be created with 'LLGL::StencilDescriptor::referenceDynamic' being disabled"
         );
     }
-    if (DbgPipelineState* piplineStateDbg = bindings_.pipelineState)
+    if (DbgPipelineState* pipelineStateDbg = bindings_.pipelineState)
     {
-        const GraphicsPipelineDescriptor& graphicsPSODesc = piplineStateDbg->graphicsDesc;
+        const GraphicsPipelineDescriptor& graphicsPSODesc = pipelineStateDbg->graphicsDesc;
         if (graphicsPSODesc.rasterizer.scissorTestEnabled && graphicsPSODesc.scissors.empty() && bindings_.numScissorRects == 0)
         {
             LLGL_DBG_WARN(

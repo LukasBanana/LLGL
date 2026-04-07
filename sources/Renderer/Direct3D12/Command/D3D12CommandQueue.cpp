@@ -68,7 +68,7 @@ bool D3D12CommandQueue::QueryResult(
     void* mappedData = queryHeapD3D.Map(firstQuery, numQueries);
     if (mappedData == nullptr)
         return false;
-     
+
     const QueryType queryType = queryHeapD3D.GetType();
     bool result = false;
 
@@ -250,9 +250,9 @@ void D3D12CommandQueue::QueryResultUInt32(
 {
     for (std::uint32_t i = 0; i < numQueries; ++i)
     {
-        std::uint64_t intermeidate64BitData = 0;
-        QueryResultSingleUInt64(queryType, mappedData, firstQuery + i, intermeidate64BitData);
-        data[i] = static_cast<std::uint32_t>(intermeidate64BitData);
+        std::uint64_t intermediate64BitData = 0;
+        QueryResultSingleUInt64(queryType, mappedData, firstQuery + i, intermediate64BitData);
+        data[i] = static_cast<std::uint32_t>(intermediate64BitData);
     }
 }
 

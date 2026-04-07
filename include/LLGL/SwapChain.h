@@ -177,7 +177,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \brief Puts the display, the swap-chain's surface is resident in, into fullscreen mode or puts it back into normal mode.
         \param[in] enable If true, puts the display into fullscreen mode (Display::SetDisplayMode). Otherwise, puts the display back into normal mode (Display::ResetDisplayMode).
         \return True on success, otherwise the display does not support the resolution of this swap-chain.
-        \remarks When switchting back from fullscreen into normal mode, this function restores the previous position of the swap-chain's surface.
+        \remarks When switching back from fullscreen into normal mode, this function restores the previous position of the swap-chain's surface.
         \see Display::SetDisplayMode
         \see Display::ResetDisplayMode
         */
@@ -214,7 +214,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this swap-chain.
         \param[in] title Specifies the surface title. This is only used if \c surface is null.
-        \param[in] swapChainDesc Specifies the swap-chain descriptor. Ues the resolution for the surface content size, fullscreen, and resiable flags.
+        \param[in] swapChainDesc Specifies the swap-chain descriptor. Use the resolution for the surface content size, fullscreen, and resiable flags.
         \param[in] windowContext Optional pointer to a NativeHandle structure. This is only used for desktop platforms.
         \param[in] windowContextSize Size (in bytes) of the native handle \c windowContext points to. This must be equal to \c sizeof(LLGL::NativeHandle).
         \see WindowDescriptor::windowContext

@@ -136,7 +136,7 @@ class D3D12RenderSystem final : public RenderSystem
         void EnableDebugLayer();
 
         void CreateFactory(bool debugDevice = false);
-        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter);
 
         HRESULT CreateDevice(IDXGIAdapter* preferredAdapter, long flags);
         HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle, long flags);
@@ -206,7 +206,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        VideoAdapterInfo                        videoAdatperInfo_;
+        VideoAdapterInfo                        videoAdapterInfo_;
 
 };
 

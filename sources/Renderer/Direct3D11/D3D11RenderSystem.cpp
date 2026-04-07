@@ -62,10 +62,10 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
         /* Create DXGU factory, query video adapters, and create D3D11 device */
         CreateFactory();
 
-        ComPtr<IDXGIAdapter> preferredAdatper;
-        QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+        ComPtr<IDXGIAdapter> preferredAdapter;
+        QueryVideoAdapters(renderSystemDesc.flags, preferredAdapter);
 
-        HRESULT hr = CreateDevice(preferredAdatper.Get(), isDebugDevice, isSoftwareDevice);
+        HRESULT hr = CreateDevice(preferredAdapter.Get(), isDebugDevice, isSoftwareDevice);
         DXThrowIfFailed(hr, "failed to create D3D11 device");
         QueryDXDeviceVersion();
     }
@@ -653,9 +653,9 @@ void D3D11RenderSystem::CreateFactory()
     #endif
 }
 
-void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
+void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter)
 {
-    videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
+    videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdapter.ReleaseAndGetAddressOf());
 }
 
 HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevice, bool isSoftwareDevice)
@@ -693,7 +693,7 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevic
     if (adapter != nullptr)
     {
         /* Update video adapter info with default adapter */
-        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+        videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get());
         hr = CreateDeviceWithFlags(nullptr, featureLevels, isSoftwareDevice);
         if (SUCCEEDED(hr))
             return hr;
@@ -764,7 +764,7 @@ HRESULT D3D11RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D11::R
     hr = adapter->GetDesc(&dxgiAdapterDesc);
     DXThrowIfFailed(hr, "failed to get descriptor from DXGI adapter");
 
-    DXConvertVideoAdapterInfo(adapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+    DXConvertVideoAdapterInfo(adapter.Get(), dxgiAdapterDesc, videoAdapterInfo_);
 
     /* Get DXGI factory */
     hr = adapter->GetParent(IID_PPV_ARGS(&factory_));
@@ -840,8 +840,8 @@ void D3D11RenderSystem::QueryRendererInfo(RendererInfo& info)
     info.shadingLanguageName = "HLSL " + std::string(DXFeatureLevelToShaderModel(GetFeatureLevel()));
 
     /* Initialize video adapter strings */
-    info.deviceName = videoAdatperInfo_.name.c_str();
-    info.vendorName = GetVendorName(videoAdatperInfo_.vendor);
+    info.deviceName = videoAdapterInfo_.name.c_str();
+    info.vendorName = GetVendorName(videoAdapterInfo_.vendor);
 }
 
 // Returns the HLSL version for the specified Direct3D feature level.

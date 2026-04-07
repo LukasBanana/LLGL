@@ -86,7 +86,7 @@ class LLGL_EXPORT Color<T, 3u>
             return *this;
         }
 
-        //! Substracts the specified color (component wise) from this color.
+        //! Subtracts the specified color (component wise) from this color.
         Color<T, 3>& operator -= (const Color<T, 3>& rhs)
         {
             r -= rhs.r;
@@ -143,7 +143,7 @@ class LLGL_EXPORT Color<T, 3u>
         \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         T& operator [] (std::size_t component)
-        {   
+        {
             LLGL_VERIFY_EXT(OutOfRange, (component < Color<T, 3>::components));
             return *((&r) + component);
         }

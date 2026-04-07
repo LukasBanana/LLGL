@@ -87,7 +87,7 @@ class D3D11Shader : public Shader
         bool BuildProxyGeometryShader(
             ID3D11Device*                   device,
             const ShaderDescriptor&         shaderDesc,
-            ComPtr<ID3D11GeometryShader>&   outProxyGeomtryShader,
+            ComPtr<ID3D11GeometryShader>&   outProxyGeometryShader,
             UINT                            rasterizedStream        = 0
         );
 

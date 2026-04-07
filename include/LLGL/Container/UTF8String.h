@@ -48,7 +48,7 @@ class LLGL_EXPORT UTF8String
         //! Initialize an empty string.
         UTF8String();
 
-        //! Initialies the UTF-8 string with a copy of the specified string.
+        //! Initializes the UTF-8 string with a copy of the specified string.
         UTF8String(const UTF8String& rhs);
 
         //! Takes the ownership of the specified UTF-8 string.

@@ -79,7 +79,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
         if (cbufferReflection == nullptr || fieldReflection == nullptr)
             continue;
 
-        /* Allocate cache for constant buffer and assgin index to cbuffer-slot map */
+        /* Allocate cache for constant buffer and assign index to cbuffer-slot map */
         std::uint8_t& cbufferIndex = cbufferSlotMap[cbufferReflection->slot];
         if (cbufferIndex == 0xFF)
         {

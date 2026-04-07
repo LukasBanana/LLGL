@@ -90,7 +90,7 @@ void D3D11RenderTarget::SetDebugName(const char* name)
         if (ID3D11DepthStencilView* dsv = renderTargetHandles_.GetDepthStencilView())
             D3D11SetObjectNameSubscript(dsv, name, ".DSV");
 
-        /* Set lable for each internal texture */
+        /* Set label for each internal texture */
         for_range(i, internalTextures_.size())
         {
             const std::string subscript = ".Tex2D[" + std::to_string(i) + "]";

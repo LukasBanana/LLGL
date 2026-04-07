@@ -81,7 +81,7 @@ bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shad
 bool D3D11Shader::BuildProxyGeometryShader(
     ID3D11Device*                   device,
     const ShaderDescriptor&         shaderDesc,
-    ComPtr<ID3D11GeometryShader>&   outProxyGeomtryShader,
+    ComPtr<ID3D11GeometryShader>&   outProxyGeometryShader,
     UINT                            rasterizedStream)
 {
     /*
@@ -99,7 +99,7 @@ bool D3D11Shader::BuildProxyGeometryShader(
 
     if (geometryShader)
     {
-        geometryShader.As<ID3D11GeometryShader>(&outProxyGeomtryShader);
+        geometryShader.As<ID3D11GeometryShader>(&outProxyGeometryShader);
         return true;
     }
 
@@ -115,7 +115,7 @@ bool D3D11Shader::BuildProxyGeometryShader(
 static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
     const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for 
+    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for
     dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
     dst.SemanticIndex   = src.semanticIndex;
     dst.StartComponent  = 0;

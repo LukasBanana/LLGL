@@ -124,7 +124,7 @@
 #endif
 
 #if GL_ARB_transform_feedback2
-#   define LLGL_GLEXT_TRNASFORM_FEEDBACK2 1
+#   define LLGL_GLEXT_TRANSFORM_FEEDBACK2 1
 #endif
 
 #if GL_EXT_draw_buffers_indexed || GL_ES_VERSION_3_2

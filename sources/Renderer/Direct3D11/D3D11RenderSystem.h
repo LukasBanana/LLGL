@@ -114,7 +114,7 @@ class D3D11RenderSystem final : public RenderSystem
     private:
 
         void CreateFactory();
-        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter);
         HRESULT CreateDevice(IDXGIAdapter* adapter, bool isDebugDevice = false, bool isSoftwareDevice = false);
         HRESULT CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isSoftwareDevice = false, UINT flags = 0);
         HRESULT CreateDeviceWithFlagsAndDriverType(IDXGIAdapter* adapter, D3D_DRIVER_TYPE driverType, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags);
@@ -213,7 +213,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        VideoAdapterInfo                        videoAdatperInfo_;
+        VideoAdapterInfo                        videoAdapterInfo_;
 
 };
 

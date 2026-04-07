@@ -303,7 +303,7 @@ if (LLGL::ShaderUniform* myUniformHandler = myShaderProgram->LockShaderUniform()
 
 After:
 ```cpp
-// Inteface:
+// Interface:
 std::string BindingDescriptor::name;
 void CommandBuffer::SetUniforms(std::uint32_t first,
                                 const void*   data,
@@ -330,7 +330,7 @@ myCmdBuffer->SetUniforms(/*first:*/ 0, &myProjectionMatrix[0], sizeof(myProjecti
 
 ## `ShaderProgram` interface
 
-The `ShaderProgram` interface has been removed. The graphics and compute PSOs are now created with individual shaders and reflection is performed on those invidual shaders, too.
+The `ShaderProgram` interface has been removed. The graphics and compute PSOs are now created with individual shaders and reflection is performed on those individual shaders, too.
 
 Before:
 ```cpp
@@ -792,8 +792,8 @@ myStructBufferDesc.storageBuffer.stride         = sizeof(MyStruct);
 After:
 ```cpp
 // Interface:
-std::uint32_t LLGL::BufferDescritpor::stride;
-LLGL::Format  LLGL::BufferDescritpor::format;
+std::uint32_t LLGL::BufferDescriptor::stride;
+LLGL::Format  LLGL::BufferDescriptor::format;
 
 // Usage:
 LLGL::BufferDescriptor myRWTypedBufferDesc;

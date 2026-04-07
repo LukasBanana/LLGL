@@ -851,7 +851,7 @@ void D3D11PrimaryCommandBuffer::BeginRenderPass(
 
 void D3D11PrimaryCommandBuffer::EndRenderPass()
 {
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    /* Resolve previously bound render target (in case multi-sampling is used) */
     context_.ResolveAndUnbindRenderTargets();
 }
 
@@ -1139,7 +1139,7 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
     if (uavOutput != nullptr)
         bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 
-    /* Create output buffer with raw view accesss */
+    /* Create output buffer with raw view access */
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = size;

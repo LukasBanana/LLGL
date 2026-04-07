@@ -20,7 +20,7 @@ namespace LLGL
 GLBufferWithXFB::GLBufferWithXFB(const BufferDescriptor& bufferDesc) :
     GLBufferWithVAO { bufferDesc }
 {
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (HasExtension(GLExt::ARB_transform_feedback2))
     {
         glGenTransformFeedbacks(1, &transformFeedbackID_);
@@ -34,7 +34,7 @@ GLBufferWithXFB::GLBufferWithXFB(const BufferDescriptor& bufferDesc) :
 
 GLBufferWithXFB::~GLBufferWithXFB()
 {
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (HasExtension(GLExt::ARB_transform_feedback2))
     {
         glDeleteTransformFeedbacks(1, &transformFeedbackID_);

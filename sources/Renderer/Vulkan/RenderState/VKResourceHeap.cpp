@@ -247,7 +247,7 @@ void VKResourceHeap::CreateDescriptorSets(
     std::uint32_t           numDescriptorSets,
     VkDescriptorSetLayout   globalSetLayout)
 {
-    /* Use copy of descritpor set layout for each descriptor set */
+    /* Use copy of descriptor set layout for each descriptor set */
     std::vector<VkDescriptorSetLayout> setLayouts;
     setLayouts.resize(numDescriptorSets, globalSetLayout);
 

@@ -146,7 +146,7 @@ class D3D12PipelineLayout final : public PipelineLayout
             return finalizedRootSignature_;
         }
 
-        // Returns the serialized blob of the root siganture.
+        // Returns the serialized blob of the root signature.
         inline ID3DBlob* GetSerializedBlob() const
         {
             return serializedBlob_.Get();

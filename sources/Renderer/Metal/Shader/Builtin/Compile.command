@@ -51,7 +51,7 @@ for SRC in ${SOURCES[@]}; do
 
 done
 
-# Check if Python 3 is avilable
+# Check if Python 3 is available
 which python3 &> /dev/null
 if [ $? -ne 0 ]; then
     echo Fatal: Cannot convert MetalLib files to hex strings without \'python3\'

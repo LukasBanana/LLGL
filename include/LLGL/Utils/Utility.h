@@ -129,7 +129,7 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
 
 /**
 \brief Converts the specified shader reflection descriptor into a pipeline layout descriptor.
-\remarks This can be used to specifiy a pipeline layout that fits the shader layout declaration.
+\remarks This can be used to specify a pipeline layout that fits the shader layout declaration.
 Some rendering APIs, such as OpenGL 2.0, do not provide sufficient functionality for shader reflection.
 Hence, this utility function cannot be used in conjunction with all renderer versions.
 */

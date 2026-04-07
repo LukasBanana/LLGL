@@ -73,7 +73,7 @@ UINT DXGetFxcCompilerFlags(int flags);
 void DXConvertVideoAdapterInfo(IDXGIAdapter* adapter, const DXGI_ADAPTER_DESC& inDesc, VideoAdapterInfo& outInfo);
 
 // Returns the video adapter descriptor from the specified DXGI adapter.
-VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags = 0, IDXGIAdapter** outPreferredAdatper = nullptr);
+VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags = 0, IDXGIAdapter** outPreferredAdapter = nullptr);
 
 // Returns the format for the specified signature parameter type (by its component type and mask).
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask);
