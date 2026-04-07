@@ -22,7 +22,7 @@
 #elif LLGL_WEBGL
 #   include "WebGL/WebGLProfileTypes.h"
 #else
-#   error Unknwon OpenGL backend
+#   error Unknown OpenGL backend
 #endif
 
 

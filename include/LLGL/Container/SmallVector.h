@@ -105,7 +105,7 @@ struct GrowStrategyRoundUpPow2
 /**
 \brief Generic container class for consecutive arrays optimized for small sizes.
 \tparam T Specifies the array element type.
-\tparam LocalCapacity Specifies the capacity of the local buffer. Up to this number of elemnts no dynamic memory allocation is necessary. By default 16.
+\tparam LocalCapacity Specifies the capacity of the local buffer. Up to this number of elements no dynamic memory allocation is necessary. By default 16.
 \tparam Allocator Specifies the memory allocator. This has to be compatible with std::allocator. By default std::allocator<T>.
 \tparam GrowStrategy Specifies the strategy to grow the internal storage when the container switched to heap allocations. By default GrowStrategyAddHalf.
 */

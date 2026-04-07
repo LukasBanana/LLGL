@@ -89,7 +89,7 @@ class VKPipelineState : public PipelineState
 
         /*
         Fills the native shader stage descriptor for the specified shader:
-        - If the pipeline layout constaints uniforms, the shader module will be parsed for push constants.
+        - If the pipeline layout constraints uniforms, the shader module will be parsed for push constants.
         - If the shader module has a binding set mismatch with the pipeline layout,
           a permutation of the shader module will be created to match the internal binding set layout of the Vulkan backend.
         */

@@ -95,7 +95,7 @@ class VKPipelineLayout final : public PipelineLayout
             return setBindingTables_[SetLayoutType_ImmutableSamplers].dstSet;
         }
 
-        // Returns a Vulkan handle of the static descriptor. May also be VK_NULL_HANLDE.
+        // Returns a Vulkan handle of the static descriptor. May also be VK_NULL_HANDLE.
         inline VkDescriptorSet GetStaticDescriptorSet() const
         {
             return staticDescriptorSet_;

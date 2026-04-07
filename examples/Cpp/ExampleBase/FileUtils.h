@@ -33,7 +33,7 @@ class AssetReader
         // Returns true if this asset reader has any content.
         bool IsValid() const;
 
-        // Shotcut to IsValid().
+        // Shortcut to IsValid().
         operator bool () const;
 
         // Main function to read data from the asset.
@@ -64,7 +64,7 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath = 
 std::vector<std::string> ReadTextLines(const std::string& name, std::string* outFullPath = nullptr);
 
 // Writes the specified FrameProfile as a JSON body string.
-// This can be loaded up in Goolge Chrome's Trace Viewer (see https://google.github.io/trace-viewer/).
+// This can be loaded up in Google Chrome's Trace Viewer (see https://google.github.io/trace-viewer/).
 std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile);
 
 // Writes the specified FrameProfile to a JSON file.

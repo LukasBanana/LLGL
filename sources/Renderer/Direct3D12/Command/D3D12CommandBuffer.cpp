@@ -909,7 +909,7 @@ void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_
     /* Set specified query as predicate */
     GetNative()->SetPredication(
         queryHeapD3D.GetResultResource(),
-        queryHeapD3D.GetAlignedBufferOffest(query),
+        queryHeapD3D.GetAlignedBufferOffset(query),
         GetDXPredicateOp(mode)
     );
 }

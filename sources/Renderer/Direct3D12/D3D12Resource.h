@@ -45,7 +45,7 @@ struct D3D12Resource
         return initialState;
     }
 
-    // Returns the natvie resource object.
+    // Returns the native resource object.
     inline ID3D12Resource* Get() const
     {
         return native.Get();

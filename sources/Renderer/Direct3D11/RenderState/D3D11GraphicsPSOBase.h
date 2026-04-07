@@ -40,7 +40,7 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
         void SetStaticViewportsAndScissors(D3D11StateManager& stateMngr);
 
-        // Returns the primitive toplogy for the 'IASetPrimitiveTopology' function.
+        // Returns the primitive topology for the 'IASetPrimitiveTopology' function.
         inline D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
         {
             return primitiveTopology_;

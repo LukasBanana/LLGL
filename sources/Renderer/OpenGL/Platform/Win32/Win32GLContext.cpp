@@ -283,7 +283,7 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
             }
             else
             {
-                /* Print warning and disbale profile selection */
+                /* Print warning and disable profile selection */
                 Log::Errorf("failed to create extended OpenGL profile");
                 profile_.contextProfile = OpenGLContextProfile::CompatibilityProfile;
             }

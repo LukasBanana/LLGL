@@ -97,7 +97,7 @@ Now we create the graphics pipeline state object (PSO):
 ```cpp
 LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc);
 ```
-There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible since we render an enclosed object and the interior will be hidden. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
+There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible since we render an enclosed object and the interior will be hidden. When tessellation shaders are used in the graphics pipeline, the primitive topology must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
 ```cpp
 myRenderer->GetRenderingCaps().limits.maxPatchVertices
 ```

@@ -77,7 +77,7 @@ bool VKPredicateQueryHeap::HasDirtyRange() const
 
 bool VKPredicateQueryHeap::InsideDirtyRange(std::uint32_t firstQuery, std::uint32_t numQueries) const
 {
-    /* Check if the specified queries are inside the dirty range, i.e. if [first, count) overlaps wiht [begin, end) */
+    /* Check if the specified queries are inside the dirty range, i.e. if [first, count) overlaps with [begin, end) */
     return (firstQuery + numQueries > dirtyRange_[0] && firstQuery < dirtyRange_[1]);
 }
 

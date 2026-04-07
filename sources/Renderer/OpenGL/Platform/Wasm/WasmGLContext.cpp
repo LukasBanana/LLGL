@@ -112,7 +112,7 @@ void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const Render
 {
     /*
     With WebGL, we assume that the maximum sample count is 4.
-    When the swap-control workaround is rquired, we enable anti-aliasing and swap-control.
+    When the swap-control workaround is required, we enable anti-aliasing and swap-control.
     Otherwise, synchronization issues with glBufferSubData() can be observed, likely caused by the translation layer (on both macOS and iOS Safari).
     */
     if (IsWebGLSwapControlWorkaroundRequired())
@@ -126,7 +126,7 @@ void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const Render
         hasExplicitSwapControl_ = false;
     }
 
-    /* Initialiye WebGL context attributes; Default to WebGL 2.0 */
+    /* Initialize WebGL context attributes; Default to WebGL 2.0 */
 	EmscriptenWebGLContextAttributes attrs = {};
 	emscripten_webgl_init_context_attributes(&attrs);
 

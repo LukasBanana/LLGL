@@ -101,7 +101,7 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
     BindOutputMergerAndStaticStates(commandList);
 }
 
-static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopology topology)
+static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(const PrimitiveTopology topology)
 {
     switch (topology)
     {
@@ -196,7 +196,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
     stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
     stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
-    stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
+    stateDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
     stateDesc.SampleDesc.Count      = (renderPass != nullptr ? renderPass->GetSampleDesc().Count : 1);

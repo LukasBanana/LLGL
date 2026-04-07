@@ -583,7 +583,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \remarks
         The following commands \em can be used both inside and outside a render pass section but are \em recommended
-        to be used only \b outside a render pass section to avoid potential performace penalties:
+        to be used only \b outside a render pass section to avoid potential performance penalties:
         - Copy commands (i.e. \c UpdateBuffer, \c CopyBuffer*, and \c CopyTexture*).
         - MIP-map generation commands (i.e. \c GenerateMips).
 

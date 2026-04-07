@@ -147,7 +147,7 @@ bool D3D12QueryHeap::HasDirtyRange() const
 
 bool D3D12QueryHeap::InsideDirtyRange(UINT firstQuery, UINT numQueries) const
 {
-    /* Check if the specified queries are inside the dirty range, i.e. if [first, count) overlaps wiht [begin, end) */
+    /* Check if the specified queries are inside the dirty range, i.e. if [first, count) overlaps with [begin, end) */
     return (firstQuery + numQueries > dirtyRange_[0] && firstQuery < dirtyRange_[1]);
 }
 
@@ -160,8 +160,8 @@ void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
 
     const D3D12_RANGE readRange
     {
-        static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery)),
-        static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery + numQueries))
+        static_cast<SIZE_T>(GetAlignedBufferOffset(firstQuery)),
+        static_cast<SIZE_T>(GetAlignedBufferOffset(firstQuery + numQueries))
     };
 
     HRESULT hr = resultResource_->Map(0, &readRange, &mappedData);
@@ -176,7 +176,7 @@ void D3D12QueryHeap::Unmap()
     resultResource_->Unmap(0, &writtenRange);
 }
 
-UINT64 D3D12QueryHeap::GetAlignedBufferOffest(UINT query) const
+UINT64 D3D12QueryHeap::GetAlignedBufferOffset(UINT query) const
 {
     return (alignedStride_ * query);
 }
@@ -233,7 +233,7 @@ void D3D12QueryHeap::CopyResultsToResource(
         firstQuery,
         numQueries,
         resultResource_.Get(),
-        GetAlignedBufferOffest(firstQuery)
+        GetAlignedBufferOffset(firstQuery)
     );
 }
 

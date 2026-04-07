@@ -820,7 +820,7 @@ struct GraphicsPipelineDescriptor
     some backends might generate two internal PSOs if the index format is undefined.
     For instance, the D3D12 backend needs to specify the strip index cut value for either 16 or 32 bit indices at PSO creation time.
     For performance reasons, it is therefore recommended to set this value to either Format::R16UInt or Format::R32UInt
-    when the primitive toplogy is one of the aforementioned types.
+    when the primitive topology is one of the aforementioned types.
     \see CommandBuffer::DrawIndexed
     \see CommandBuffer::DrawIndexedInstanced
     */

@@ -133,7 +133,7 @@ void RegisterExtension(GLExt extension);
 
 // Disables GL extensions that are incompatible with other unsupported extensions.
 // For example, if GL_ARB_texture_storage is not supported, GL_ARB_direct_state_access cannot be supported either.
-// Such mismatches can occurr when individual extensions are disbaled either for debugging purposes or due to other external input.
+// Such mismatches can occurr when individual extensions are disabled either for debugging purposes or due to other external input.
 void DisableIncompatibleExtensions();
 
 // Returns true if the specified OpenGL extension is supported.
