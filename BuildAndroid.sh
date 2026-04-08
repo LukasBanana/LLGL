@@ -133,7 +133,7 @@ if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir "$OUTPUT_DIR"
 fi
 
-# Checkout external depenencies
+# Checkout external dependencies
 GAUSSIAN_LIB_DIR="GaussianLib/include"
 
 if [ -f "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR/Gauss/Gauss.h" ]; then

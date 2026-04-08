@@ -373,7 +373,7 @@ void VKDeviceMemory::InsertBlockToFragmentsSorted(VKDeviceMemoryRegionPtr&& regi
     VkDeviceSize offset = region->GetOffset();
     std::size_t count = fragmentedBlocks_.size();
 
-    /* Start serach in half-open range [begin, end) */
+    /* Start search in half-open range [begin, end) */
     std::size_t begin = 0, end = count;
 
     while (begin + 2 < end)

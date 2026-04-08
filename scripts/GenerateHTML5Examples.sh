@@ -37,7 +37,7 @@ fi
 
 EMSCRIPTEN_FILE_PACKAGER="$EMSDK/upstream/emscripten/tools/file_packager"
 
-# Copys the input file to the output and removes '\r' EOL characters from text files.
+# Copies the input file to the output and removes '\r' EOL characters from text files.
 # Web page will run on Linux server and Git must not convert EOL for this output file.
 # Otherwise, data offsets in the *.data.js script won't match with the *.data file after Git uploaded it.
 copy_file_preserve_linux_eol()
@@ -91,7 +91,7 @@ generate_html5_page()
     sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
         -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
         "$SOURCE_DIR/examples/Shared/Platform/Wasm/index.html" > "$HTML5_ROOT/index.html"
-    
+
     # Find all required assets in *.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$HTML5_ROOT/assets"
     mkdir -p "$ASSET_DIR"

@@ -82,7 +82,7 @@ void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkA
     srcStageMask_ |= stageFlags;
     dstStageMask_ |= stageFlags;
 
-    /* Check if a memory barrier alread exists */
+    /* Check if a memory barrier already exists */
     for (const VkMemoryBarrier& barrier : memoryBarriers_)
     {
         if (barrier.srcAccessMask == srcAccess && barrier.dstAccessMask == dstAccess)

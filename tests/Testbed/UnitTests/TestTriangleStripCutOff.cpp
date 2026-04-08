@@ -49,12 +49,12 @@ DEF_TEST( TriangleStripCutOff )
     constexpr std::uint32_t numUI16Indices = sizeof(indicesUI16)/sizeof(indicesUI16[0]);
     constexpr std::uint32_t numUI32Indices = sizeof(indicesUI32)/sizeof(indicesUI32[0]);
 
-    BufferDescriptor indedBufDesc;
+    BufferDescriptor indexBufDesc;
     {
-        indedBufDesc.size       = sizeof(indicesUI16) + sizeof(indicesUI32);
-        indedBufDesc.bindFlags  = BindFlags::IndexBuffer;
+        indexBufDesc.size       = sizeof(indicesUI16) + sizeof(indicesUI32);
+        indexBufDesc.bindFlags  = BindFlags::IndexBuffer;
     }
-    CREATE_BUFFER(indexBuf, indedBufDesc, "indices2D", nullptr);
+    CREATE_BUFFER(indexBuf, indexBufDesc, "indices2D", nullptr);
 
     renderer->WriteBuffer(*indexBuf, indicesUI16Offset, indicesUI16, sizeof(indicesUI16));
     renderer->WriteBuffer(*indexBuf, indicesUI32Offset, indicesUI32, sizeof(indicesUI32));

@@ -158,7 +158,7 @@ enum class Key
     BrowserRefresh,
     BrowserStop,
     BrowserSearch,
-    BrowserFavorits,
+    BrowserFavorites,
     BrowserHome,
 
     VolumeMute,

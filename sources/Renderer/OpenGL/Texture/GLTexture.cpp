@@ -439,7 +439,7 @@ void GLTexture::TexParameterSwizzle(
 
 #ifdef GL_ARB_copy_image
 
-// For glCopyImageSubData, the array lazer is always specified in the Z-coordinate
+// For glCopyImageSubData, the array layer is always specified in the Z-coordinate
 static Offset3D ToGLArrayTextureOffset(TextureType type, const Offset3D& offset)
 {
     if (type == TextureType::Texture1DArray)
@@ -658,7 +658,7 @@ static void GLReadPixelsFromTexture(
 
         case TextureType::Texture1DArray:
         {
-            const std::size_t imageLayerStride = dstImageView.dataSize / extent.height; //TODO: calcualte required size independently of input 'dataSize'
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.height; //TODO: calculate required size independently of input 'dataSize'
             for_range(y, extent.height)
             {
                 ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.y + y);
@@ -694,7 +694,7 @@ static void GLReadPixelsFromTexture(
 
         case TextureType::TextureCube:
         {
-            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calcualte required size independently of input 'dataSize'
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calculate required size independently of input 'dataSize'
             for_range(z, extent.depth)
             {
                 ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);
@@ -717,7 +717,7 @@ static void GLReadPixelsFromTexture(
         case TextureType::Texture2DMSArray:
         case TextureType::TextureCubeArray:
         {
-            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calcualte required size independently of input 'dataSize'
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calculate required size independently of input 'dataSize'
             for_range(z, extent.depth)
             {
                 ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);

@@ -534,7 +534,7 @@ TestResult TestbedContext::CreateBuffer(
         return TestResult::FailedMismatch;
     }
 
-    // Return buffer to output or delete right away if no longer neeeded
+    // Return buffer to output or delete right away if no longer needed
     if (output != nullptr)
         *output = buf;
     else
@@ -648,7 +648,7 @@ TestResult TestbedContext::CreateTexture(
         }
     }
 
-    // Return texture to output or delete right away if no longer neeeded
+    // Return texture to output or delete right away if no longer needed
     if (output != nullptr)
         *output = tex;
     else
@@ -773,7 +773,7 @@ TestResult TestbedContext::CreateRenderTarget(
         return TestResult::FailedMismatch;
     }
 
-    // Return render-target to output or delete right away if no longer neeeded
+    // Return render-target to output or delete right away if no longer needed
     if (output != nullptr)
         *output = target;
     else

@@ -342,7 +342,7 @@ std::vector<DisplayMode> Win32Display::GetSupportedDisplayModes() const
         }
     }
 
-    /* Sort final display mode list and remove duplciate entries */
+    /* Sort final display mode list and remove duplicate entries */
     FinalizeDisplayModes(displayModes);
 
     return displayModes;

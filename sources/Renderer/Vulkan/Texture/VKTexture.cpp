@@ -288,7 +288,7 @@ void VKTexture::CreateImageView(
 
 static bool UsageFlagsAllowImageViews(VkImageUsageFlags flags)
 {
-    /* Vulkan only alows image views on images that were created with these usage flags */
+    /* Vulkan only allows image views on images that were created with these usage flags */
     constexpr VkImageUsageFlags requiredFlags =
     (
         VK_IMAGE_USAGE_SAMPLED_BIT                              |

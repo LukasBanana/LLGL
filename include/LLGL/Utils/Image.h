@@ -54,7 +54,7 @@ class LLGL_EXPORT Image
         Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAf& fillColor);
 
         /**
-        \brief Constructor to initialize the image with all atributes, including the image buffer specified by the 'data' parameter.
+        \brief Constructor to initialize the image with all attributes, including the image buffer specified by the 'data' parameter.
         \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
         \see Reset(const Extent3D&, const ImageFormat, const DataType, DynamicByteArray&&)
         */

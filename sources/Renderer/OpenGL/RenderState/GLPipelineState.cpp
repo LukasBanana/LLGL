@@ -148,7 +148,7 @@ void GLPipelineState::BuildUniformMap(GLShader::Permutation permutation, const s
 Returns the name of an active GL uniform as an identifier, i.e. removing any subscripts.
 Arrays of uniforms are reflected with a subscript for the first entry,
 e.g. "uniform inputTextures[2];" yields the active uniform name "inputTextures[0]".
-This functions removes the subscript, effecitvely returning "inputTextures" for this example.
+This functions removes the subscript, effectively returning "inputTextures" for this example.
 */
 static std::string GetActiveUniformNameAsIdent(const GLchar* uniformName)
 {

@@ -157,7 +157,7 @@ Key MapAndroidKeyCode(std::int32_t keycode)
         case AKEYCODE_REFRESH:          return Key::BrowserRefresh;
         //case :                        return Key::BrowserStop;
         case AKEYCODE_SEARCH:           return Key::BrowserSearch;
-        //case :                        return Key::BrowserFavorits;
+        //case :                        return Key::BrowserFavorites;
         case AKEYCODE_HOME:             return Key::BrowserHome;
 
         case AKEYCODE_VOLUME_MUTE:      return Key::VolumeMute;

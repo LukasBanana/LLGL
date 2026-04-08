@@ -21,7 +21,7 @@ if not "%1" == "" (
     if "%2" == "" (
         set OUTPUT_DIR=%1
     ) else (
-        echo error: too many arguemnts
+        echo error: too many arguments
         echo usage: BuildWin64.bat [OUTPUT_DIR]
         exit 1
     )
@@ -31,7 +31,7 @@ if not exist "%OUTPUT_DIR%" (
     mkdir "%OUTPUT_DIR%"
 )
 
-REM Checkout external depenencies
+REM Checkout external dependencies
 set GAUSSIAN_LIB_DIR=GaussianLib\include
 
 if exist "external\%GAUSSIAN_LIB_DIR%" (

@@ -138,15 +138,15 @@ bool GLPipelineCache::GetProgramBinary(GLShader::Permutation permutation, GLuint
     /* Get program binary format and data */
     entry.data.resize(static_cast<std::size_t>(binaryLength), UninitializeTag{});
 
-    GLsizei writtenLegnth = 0;
+    GLsizei writtenLength = 0;
     glGetProgramBinary(
         program,
         entry.length,
-        &writtenLegnth,
+        &writtenLength,
         &(entry.format),
         entry.data.get()
     );
-    if (writtenLegnth != entry.length)
+    if (writtenLength != entry.length)
         return false;
 
     return true;

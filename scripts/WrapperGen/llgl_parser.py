@@ -132,7 +132,7 @@ class Scanner:
             """
 
             return text
-        
+
         # Scan tokens from source file
         try:
             with open(filename, 'r') as file:
@@ -162,12 +162,12 @@ class Scanner:
 
     def tok(self, lookAhead = 0):
         return self.tokens[self.readPos + lookAhead] if self.readPos + lookAhead < len(self.tokens) else ''
-    
+
     def accept(self, count = 1):
         tok = self.tok()
         self.readPos += count
         return tok
-    
+
     def match(self, search, equality=True):
         if (self.tok() == search) == equality:
             return 1
@@ -321,7 +321,7 @@ class Parser:
                 elif isFunc:
                     self.scanner.context.currentFunc = self.scanner.accept()
 
-                # Ingore constructs
+                # Ignore constructs
                 self.scanner.acceptOrFail('(')
                 self.scanner.ignoreUntil(')')
                 self.scanner.acceptIf('noexcept')
@@ -363,7 +363,7 @@ class Parser:
             self.scanner.acceptOrFail(']')
             return LLGLAnnotation.ARRAY
         else:
-            fatal(f"error: unknwon annotation argument '{self.scanner.tok()}'")
+            fatal(f"error: unknown annotation argument '{self.scanner.tok()}'")
         return LLGLAnnotation.UNDEFINED
 
     def parseParameter(self):
@@ -453,7 +453,7 @@ class Parser:
                 typeDecl = self.parseType()
 
                 if self.scanner.match('('):
-                    # Parse delegate delcaration
+                    # Parse delegate declaration
                     mod.delegates.append(self.parseDelegateDecl(typeDecl))
                 else:
                     # Ignore type definition
@@ -473,7 +473,7 @@ class Parser:
 
                 # Ignore deprecated records
                 ignoreRecord = self.tryParseDeprecated() is not None
-                
+
                 # Parse record name and trim 'LLGL' prefix (occurs in custom structs of C99 wrapper such as LLGLWindowEventListener)
                 name = self.scanner.accept()
                 if name.startswith('LLGL'):

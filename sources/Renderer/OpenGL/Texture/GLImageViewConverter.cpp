@@ -38,7 +38,7 @@ void GLImageViewConverter::Assign(const ImageView* initialImage, GLSwizzleFormat
         {
             case GLSwizzleFormat::RGBA:
             {
-                /* Nothign to convert, just use input view */
+                /* Nothing to convert, just use input view */
             }
             break;
 

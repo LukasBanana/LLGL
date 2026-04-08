@@ -505,7 +505,7 @@ void VKResourceHeap::AllocateBarrierSlots(std::uint32_t numDescriptorSets)
         }
     }
 
-    /* Allocate all imge barrier slots next */
+    /* Allocate all image barrier slots next */
     for (VKLayoutHeapBinding& binding : bindings_)
     {
         if (binding.barrierSlot != ~0u)

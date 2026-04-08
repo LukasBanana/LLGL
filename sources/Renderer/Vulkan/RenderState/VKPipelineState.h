@@ -52,7 +52,7 @@ class VKPipelineState : public PipelineState
         // Binds the specified descriptor set to the dynamic descriptor set binding point.
         void BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
 
-        // Binds the specified descriptor set to teh heap descriptor set binding point.
+        // Binds the specified descriptor set to the heap descriptor set binding point.
         void BindHeapDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
 
         // Pushes the specified values to the command buffer as push-constants.

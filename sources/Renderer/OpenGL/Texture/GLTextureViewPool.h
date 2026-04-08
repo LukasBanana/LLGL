@@ -52,8 +52,8 @@ class GLTextureViewPool
         void ReleaseTextureView(GLuint texID);
 
         /*
-        Notifes the texture view pool that the specified source texture was released.
-        Tthis will also release all texture views derived from the specified texture.
+        Notifies the texture view pool that the specified source texture was released.
+        This will also release all texture views derived from the specified texture.
         */
         void NotifyTextureRelease(GLuint sourceTexID);
 
@@ -81,7 +81,7 @@ class GLTextureViewPool
         // Deletes the specified GL texture view.
         void DeleteGLTextureView(GLTextureView& texView);
 
-        // Assignes the specified texture view a new GL texture ID and reclaims it as a reusable entry.
+        // Assigns the specified texture view a new GL texture ID and reclaims it as a reusable entry.
         void RetainSharedGLTextureView(GLTextureView& texView, GLuint texID);
 
         // Release the specified GL texture object and marks the entry as reusable.

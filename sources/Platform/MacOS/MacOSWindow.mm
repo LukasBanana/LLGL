@@ -83,7 +83,7 @@ bool Surface::ProcessEvents()
                 platformWindow->ProcessEvent(event);
             }
         }
-        
+
         /* Filter events we handle ourselves to avoid 'failure sounds' when keys are pressed */
         if (IsFilteredNSEventType([event type]))
             continue;
@@ -154,7 +154,7 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
 
 MacOSWindow::~MacOSWindow()
 {
-#if 0 //TODO: Remove entirely? Crahes on MacOSX 10.6, likely because of NSAutoreleasePool.
+#if 0 //TODO: Remove entirely? Crashes on MacOSX 10.6, likely because of NSAutoreleasePool.
     if (wnd_ != nullptr)
     {
         [wnd_ setDelegate:nil];
@@ -320,7 +320,7 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
             [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         #endif
 
-        //TOOD: incomplete -> must be ignored right now, otherwise window is moved on a resize event
+        //TODO: incomplete -> must be ignored right now, otherwise window is moved on a resize event
         #if 0
         if ((desc.flags & WindowFlags::Centered) != 0)
             [wnd_ center];

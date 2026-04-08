@@ -39,7 +39,7 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
         flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-    /* Sampeld or storage buffer usage */
+    /* Sampled or storage buffer usage */
     if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
     {
         if (desc.format != Format::Undefined)
@@ -213,7 +213,7 @@ void* VKBuffer::Map(VKDevice& device, const CPUAccess access, VkDeviceSize offse
 {
     if (VkBuffer stagingBuffer = GetStagingVkBuffer())
     {
-        /* Copy GPU local buffer into staging buffer for read accces */
+        /* Copy GPU local buffer into staging buffer for read access */
         if (HasReadAccess(access))
             device.CopyBuffer(GetVkBuffer(), stagingBuffer, GetSize());
 

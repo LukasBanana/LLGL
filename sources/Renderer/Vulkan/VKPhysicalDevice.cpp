@@ -256,7 +256,7 @@ void VKPhysicalDevice::QueryRendererInfo(RendererInfo& info)
 
 void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
 {
-    /* Map limits to output rendering capabilites */
+    /* Map limits to output rendering capabilities */
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Query common attributes */
@@ -357,10 +357,10 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
 
 void VKPhysicalDevice::QueryPipelineLimits(VKGraphicsPipelineLimits& pipelineLimits)
 {
-    /* Map limits to output rendering capabilites */
+    /* Map limits to output rendering capabilities */
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
-    /* Store graphics pipeline spcific limitations */
+    /* Store graphics pipeline specific limitations */
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];
     pipelineLimits.lineWidthRange[1]    = limits.lineWidthRange[1];
     pipelineLimits.lineWidthGranularity = limits.lineWidthGranularity;

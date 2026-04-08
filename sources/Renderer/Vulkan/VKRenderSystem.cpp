@@ -53,7 +53,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     isDebugLayerEnabled_   { LLGL::IsDebugLayerEnabled(renderSystemDesc.flags)        },
     isBreakOnErrorEnabled_ { LLGL::IsDebugBreakOnErrorEnabled(renderSystemDesc.flags) }
 {
-    /* Extract optional renderer configuartion */
+    /* Extract optional renderer configuration */
     auto* rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
 
     constexpr long preferredDeviceMask = (RenderSystemFlags::PreferNVIDIA | RenderSystemFlags::PreferAMD | RenderSystemFlags::PreferIntel);

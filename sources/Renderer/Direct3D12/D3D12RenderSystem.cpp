@@ -574,7 +574,7 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
     {
         if (preferredAdapter != nullptr)
         {
-            /* Try to create device with perferred adapter */
+            /* Try to create device with preferred adapter */
             hr = device_.CreateDXDevice(featureLevels, flags, preferredAdapter);
             if (SUCCEEDED(hr))
                 return hr;
@@ -636,7 +636,7 @@ static D3D_SHADER_MODEL FindHighestShaderModel(ID3D12Device* device)
         D3D_SHADER_MODEL_5_1,
     };
 
-    for (D3D_SHADER_MODEL model : shaderModles)
+    for (D3D_SHADER_MODEL model : shaderModels)
     {
         feature.HighestShaderModel = model;
         HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));

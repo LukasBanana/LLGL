@@ -1,6 +1,6 @@
 /*
  * WasmKeyCodes.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -170,7 +170,7 @@ static std::map<int, Key> GenerateEmscriptenKeyCodeMap()
         KEYPAIR(DOM_PK_CONTEXT_MENU         , Apps), /* "ContextMenu"        */
         //KEYPAIR(DOM_PK_POWER                , Any), /* "Power"              */
         KEYPAIR(DOM_PK_BROWSER_SEARCH       , BrowserSearch), /* "BrowserSearch"      */
-        KEYPAIR(DOM_PK_BROWSER_FAVORITES    , BrowserFavorits), /* "BrowserFavorites"   */
+        KEYPAIR(DOM_PK_BROWSER_FAVORITES    , BrowserFavorites), /* "BrowserFavorites"   */
         KEYPAIR(DOM_PK_BROWSER_REFRESH      , BrowserRefresh), /* "BrowserRefresh"     */
         KEYPAIR(DOM_PK_BROWSER_STOP         , BrowserStop), /* "BrowserStop"        */
         KEYPAIR(DOM_PK_BROWSER_FORWARD      , BrowserForward), /* "BrowserForward"     */
@@ -178,7 +178,7 @@ static std::map<int, Key> GenerateEmscriptenKeyCodeMap()
         KEYPAIR(DOM_PK_LAUNCH_APP_1         , LaunchApp1), /* "LaunchApp1"         */
         KEYPAIR(DOM_PK_LAUNCH_MAIL          , LaunchMail), /* "LaunchMail"         */
         //KEYPAIR(DOM_PK_LAUNCH_MEDIA_PLAYER  , Any), /* "LaunchMediaPlayer"  */
-        KEYPAIR(DOM_PK_MEDIA_SELECT         , LaunchMediaSelect), /* "MediaSelect"        */        
+        KEYPAIR(DOM_PK_MEDIA_SELECT         , LaunchMediaSelect), /* "MediaSelect"        */
     };
 };
 

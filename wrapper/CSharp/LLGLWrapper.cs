@@ -343,7 +343,7 @@ namespace LLGL
         BrowserRefresh,
         BrowserStop,
         BrowserSearch,
-        BrowserFavorits,
+        BrowserFavorites,
         BrowserHome,
         VolumeMute,
         VolumeDown,

@@ -580,7 +580,7 @@ LLGL_STATIC_ASSERT_ENUM(Key, BrowserForward);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserRefresh);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserStop);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserSearch);
-LLGL_STATIC_ASSERT_ENUM(Key, BrowserFavorits);
+LLGL_STATIC_ASSERT_ENUM(Key, BrowserFavorites);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserHome);
 LLGL_STATIC_ASSERT_ENUM(Key, VolumeMute);
 LLGL_STATIC_ASSERT_ENUM(Key, VolumeDown);

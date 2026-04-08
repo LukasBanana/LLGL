@@ -70,7 +70,7 @@ class VKPtr
             };
         }
 
-        // Constructs the hanlder with bypassing the deleter. Only used for custom native handle support, in which case the object is interpreted as a weak reference.
+        // Constructs the handler with bypassing the deleter. Only used for custom native handle support, in which case the object is interpreted as a weak reference.
         explicit VKPtr(T obj) :
             object_  { obj                },
             deleter_ { [](T){ /*dummy*/ } }

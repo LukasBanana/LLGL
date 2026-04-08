@@ -169,7 +169,7 @@ Display* Window::FindResidentDisplay() const
         int x2 = x1 + static_cast<int>(winSize.width);
         int y2 = y1 + static_cast<int>(winSize.height);
 
-        /* Is window fully or partially inside the dispaly? */
+        /* Is window fully or partially inside the display? */
         if (x2 >= 0 && x1 <= scrX &&
             y2 >= 0 && y1 <= scrY)
         {

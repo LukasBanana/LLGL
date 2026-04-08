@@ -28,7 +28,7 @@ LLGL_EXPORT std::uint64_t Tick()
     mach_timebase_info_data_t timebase;
     mach_timebase_info(&timebase);
     if (timebase.denom > 0)
-        return (mach_absolute_time() * timebase.numer) / timebase.denom;
+        return (mach_absolute_time() * timebase.number) / timebase.denom;
     else
         return 0;
 }

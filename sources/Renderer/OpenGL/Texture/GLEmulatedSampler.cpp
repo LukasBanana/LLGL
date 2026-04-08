@@ -33,7 +33,7 @@ bool GLEmulatedSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
 
 static bool IsGLTextureWrapUsingBorder(GLenum mode)
 {
-    /* Accroding to GL2.x spec: "Border texture elements are accessed only if wrapping is set to GL_CLAMP or GL_CLAMP_TO_BORDER" */
+    /* According to GL2.x spec: "Border texture elements are accessed only if wrapping is set to GL_CLAMP or GL_CLAMP_TO_BORDER" */
     return (mode == GL_CLAMP || mode == GL_CLAMP_TO_BORDER);
 }
 

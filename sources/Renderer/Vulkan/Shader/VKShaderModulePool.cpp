@@ -81,7 +81,7 @@ void VKShaderModulePool::NotifyReleaseShader(VKShader* shader)
 
 void VKShaderModulePool::NotifyReleasePipelineLayout(VKPipelineLayout* pipelineLayout)
 {
-    /* Since pipeline layout is the first key, we can search for the first occurance and then delete all consecutive entries that match the key */
+    /* Since pipeline layout is the first key, we can search for the first occurrence and then delete all consecutive entries that match the key */
     RemoveAllConsecutiveFromListIf(
         permutations_,
         [pipelineLayout](const ShaderModulePermutation& entry) -> bool

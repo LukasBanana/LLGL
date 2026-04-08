@@ -204,7 +204,7 @@ endif()
 
 # === Functions ===
 
-# Filters sources files with a variadic argument for all directores:
+# Filters sources files with a variadic argument for all directories:
 # Example:
 #   find_source_files(OutputFiles "*.h;*.cpp" ${MyProjectDir}/Base ${MyProjectDir}/Extensions)
 function(find_source_files OUTPUT_LIST FILTERS)
@@ -995,7 +995,7 @@ if(LLGL_BUILD_WRAPPER_CSHARP)
 endif()
 
 if(LLGL_BUILD_WRAPPER_GO)
-    message(STATUS "Bulid Wrapper: Go")
+    message(STATUS "Build Wrapper: Go")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)

@@ -164,7 +164,7 @@ DisplayMode LinuxDisplayX11::GetDisplayMode() const
         displayMode.resolution.width    = static_cast<std::uint32_t>(scr->width);
         displayMode.resolution.height   = static_cast<std::uint32_t>(scr->height);
 
-        /* Get refresh reate from X11 extension Xrandr */
+        /* Get refresh create from X11 extension Xrandr */
         if (XRRScreenConfiguration* scrCfg = XRRGetScreenInfo(dpy, rootWnd))
         {
             displayMode.refreshRate = static_cast<std::uint32_t>(XRRConfigCurrentRate(scrCfg));
@@ -202,7 +202,7 @@ std::vector<DisplayMode> LinuxDisplayX11::GetSupportedDisplayModes() const
         }
     }
 
-    /* Sort final display mode list and remove duplciate entries */
+    /* Sort final display mode list and remove duplicate entries */
     FinalizeDisplayModes(displayModes);
 
     return displayModes;

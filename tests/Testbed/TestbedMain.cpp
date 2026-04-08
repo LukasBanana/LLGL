@@ -128,7 +128,7 @@ static void PrintHelpDocs()
         "  -i, --icontext ..................... Create immediate context\n"
         "  -p, --pedantic ..................... Disable diff-checking threshold\n"
         "  -run=LIST .......................... Only run tests in comma separated list\n"
-        "  -s, --santiy-check ................. Print some test results even on success\n"
+        "  -s, --sanity-check ................. Print some test results even on success\n"
         "  -t, --timing ....................... Print timing results\n"
         "  -v, --verbose ...................... Print more information\n"
         "  --amd .............................. Prefer AMD device\n"

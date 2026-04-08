@@ -36,7 +36,7 @@ class VKPredicateQueryHeap final : public VKQueryHeap
         // Copies all query predicates into the result buffer if not already done.
         void FlushDirtyRange(VkCommandBuffer commandBuffer);
 
-        // Makrs the specified range of queries as 'dirty', i.e. they need to be resolved before their predicate can be used for conditional rendering.
+        // Marks the specified range of queries as 'dirty', i.e. they need to be resolved before their predicate can be used for conditional rendering.
         void MarkDirtyRange(std::uint32_t firstQuery, std::uint32_t numQueries);
 
         // Returns true if this query heap has a dirty range that must be resolved before the query data can be retrieved.

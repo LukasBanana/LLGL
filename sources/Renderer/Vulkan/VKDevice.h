@@ -57,7 +57,7 @@ class VKDevice
         VkCommandBuffer AllocCommandBuffer(bool begin = true);
         void FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release = true);
 
-        /* ----- Buffer/Image operatons ----- */
+        /* ----- Buffer/Image operations ----- */
 
         void CopyBuffer(
             VkBuffer        srcBuffer,

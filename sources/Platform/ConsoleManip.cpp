@@ -36,7 +36,7 @@ static int FormatColorCodesVT100Base(char* outFormat, int formatSize, long color
 
     if (colorFlags == Log::ColorFlags::Default)
     {
-        /* Append code to reset to deafult */
+        /* Append code to reset to default */
         APPEND_FORMAT("\x1B[%dm", (baseCode + k_virtualConsoleCodeReset));
     }
     else

@@ -170,7 +170,7 @@ VkResult VKCommandBuffer::SubmitToQueue(VKSharedCommandQueue& cmdQueue)
         submitInfo.pWaitDstStageMask    = 0;
         if (isAnyQueryReset_)
         {
-            /* Submit command buffer for resetting query pools first, then the primary command buffer, and syncrhonize with event signal */
+            /* Submit command buffer for resetting query pools first, then the primary command buffer, and synchronize with event signal */
             cmdBuffers[0] = commandBufferRing_.GetVkCommandBuffer(VKCommandBufferRing::CommandType_ResetQuery);
             cmdBuffers[1] = commandBuffer_;
             submitInfo.commandBufferCount   = 2;
@@ -651,7 +651,7 @@ void VKCommandBuffer::ResourceBarrier(
     SmallVector<VkBufferMemoryBarrier, 32u>  bufferBarriers;
     SmallVector<VkImageMemoryBarrier, 32u>   imageBarriers;
 
-    /* Preapre buffer barriers for read.write access */
+    /* Prepare buffer barriers for read.write access */
     bufferBarriers.resize(numBuffers);
 
     for_range(i, numBuffers)

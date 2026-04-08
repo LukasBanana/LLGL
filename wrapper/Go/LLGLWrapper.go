@@ -345,7 +345,7 @@ const (
     KeyBrowserRefresh
     KeyBrowserStop
     KeyBrowserSearch
-    KeyBrowserFavorits
+    KeyBrowserFavorites
     KeyBrowserHome
     KeyVolumeMute
     KeyVolumeDown

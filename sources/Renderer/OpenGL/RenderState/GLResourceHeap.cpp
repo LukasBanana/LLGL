@@ -127,7 +127,7 @@ LLGL_ASSERT_POD_TYPE(GLResourceHeapSegment);
 // Returns true if the specified buffer view is enabled for OpenGL bindings
 static bool IsGLBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
 {
-    /* For OpenGL buffer binding, only the range is relevant, no format is considerd */
+    /* For OpenGL buffer binding, only the range is relevant, no format is considered */
     return (bufferViewDesc.size != LLGL_WHOLE_SIZE);
 }
 

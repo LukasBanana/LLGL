@@ -55,7 +55,7 @@ void GL3PlusSharedContextVertexArray::SetDebugName(const char* name)
     for (GLContextVAO& contextVAO : contextDependentVAOs_)
         contextVAO.isObjectLabelDirty = true;
 
-    /* If this vertex array already has its attributes set, get the current VAO to cause invaldiated labels to be updated */
+    /* If this vertex array already has its attributes set, get the current VAO to cause invalidated labels to be updated */
     if (!inputLayout_.GetAttribs().empty())
         (void)GetVAOForCurrentContext();
 }
@@ -96,7 +96,7 @@ GLVertexArrayObject& GL3PlusSharedContextVertexArray::GetVAOForCurrentContext()
         }
         if (contextDependentVAOs_[vaoIndex].isObjectLabelDirty)
         {
-            /* Udpate debug label if it has been invalidated */
+            /* Update debug label if it has been invalidated */
             if (!debugName_.empty())
                 contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
         }

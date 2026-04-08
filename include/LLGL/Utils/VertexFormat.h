@@ -23,7 +23,7 @@ namespace LLGL
 
 /**
 \brief Utility structure to store vertex attributes.
-\remarks A vertex format is required to describe how the vertex attributes are layed out inside a vertex buffer.
+\remarks A vertex format is required to describe how the vertex attributes are laid out inside a vertex buffer.
 \see BufferDescriptor::VertexBuffer::format
 */
 struct VertexFormat
