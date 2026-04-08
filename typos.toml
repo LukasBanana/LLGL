@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["*.data", "external"]
+extend-exclude = ["*.data", "external", "LLGLWrapper.*"]
 
 [default.extend-words]
 lod = "lod"
