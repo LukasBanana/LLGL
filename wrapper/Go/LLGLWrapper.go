@@ -345,7 +345,7 @@ const (
     KeyBrowserRefresh
     KeyBrowserStop
     KeyBrowserSearch
-    KeyBrowserFavorites
+    KeyBrowserFavorits // TODO: replace with BrowserFavorites
     KeyBrowserHome
     KeyVolumeMute
     KeyVolumeDown

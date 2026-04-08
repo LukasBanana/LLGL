@@ -170,7 +170,7 @@ static std::map<int, Key> GenerateEmscriptenKeyCodeMap()
         KEYPAIR(DOM_PK_CONTEXT_MENU         , Apps), /* "ContextMenu"        */
         //KEYPAIR(DOM_PK_POWER                , Any), /* "Power"              */
         KEYPAIR(DOM_PK_BROWSER_SEARCH       , BrowserSearch), /* "BrowserSearch"      */
-        KEYPAIR(DOM_PK_BROWSER_FAVORITES    , BrowserFavorites), /* "BrowserFavorites"   */
+        KEYPAIR(DOM_PK_BROWSER_FAVORITES    , BrowserFavorits), /* "BrowserFavorites"   */ // TODO: replace with BrowserFavorites
         KEYPAIR(DOM_PK_BROWSER_REFRESH      , BrowserRefresh), /* "BrowserRefresh"     */
         KEYPAIR(DOM_PK_BROWSER_STOP         , BrowserStop), /* "BrowserStop"        */
         KEYPAIR(DOM_PK_BROWSER_FORWARD      , BrowserForward), /* "BrowserForward"     */

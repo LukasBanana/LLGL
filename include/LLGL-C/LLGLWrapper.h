@@ -356,7 +356,7 @@ typedef enum LLGLKey
     LLGLKeyBrowserRefresh,
     LLGLKeyBrowserStop,
     LLGLKeyBrowserSearch,
-    LLGLKeyBrowserFavorites,
+    LLGLKeyBrowserFavorits, // TODO: replace with LLGLKeyBrowserFavorites
     LLGLKeyBrowserHome,
     LLGLKeyVolumeMute,
     LLGLKeyVolumeDown,
