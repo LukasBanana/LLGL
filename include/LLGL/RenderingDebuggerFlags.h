@@ -108,7 +108,7 @@ struct ProfileCommandQueueRecord
     \see CommandQueue::Submit(CommandBuffer&)
     \see CommandQueue::Submit(std::uint32_t, CommandBuffer* const *)
     */
-    std::uint32_t commandBufferSubmissions  = 0;
+    std::uint32_t commandBufferSubmittions  = 0; // TODO: replace with commandBufferSubmissions
 
     /**
     \brief Counter for all fences that were submitted to the queue.

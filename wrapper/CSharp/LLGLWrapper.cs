@@ -1336,7 +1336,7 @@ namespace LLGL
         public int BufferMappings { get; set; }           = 0;
         public int TextureWrites { get; set; }            = 0;
         public int TextureReads { get; set; }             = 0;
-        public int CommandBufferSubmissions { get; set; } = 0;
+        public int CommandBufferSubmittions { get; set; } = 0; // TODO: replace with commandBufferSubmissions
         public int FenceSubmissions { get; set; }         = 0;
 
         public ProfileCommandQueueRecord() { }
@@ -1355,7 +1355,7 @@ namespace LLGL
                 BufferMappings           = value.bufferMappings;
                 TextureWrites            = value.textureWrites;
                 TextureReads             = value.textureReads;
-                CommandBufferSubmissions = value.commandBufferSubmissions;
+                CommandBufferSubmittions = value.commandBufferSubmittions;
                 FenceSubmissions         = value.fenceSubmissions;
             }
         }
@@ -3779,7 +3779,7 @@ namespace LLGL
             public int bufferMappings;           /* = 0 */
             public int textureWrites;            /* = 0 */
             public int textureReads;             /* = 0 */
-            public int commandBufferSubmissions; /* = 0 */
+            public int commandBufferSubmittions; /* = 0 */ // TODO: replace with commandBufferSubmissions
             public int fenceSubmissions;         /* = 0 */
         }
 

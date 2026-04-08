@@ -237,7 +237,7 @@ void DbgCommandBuffer::End()
         FlushProfile(profile);
 
         RenderingDebugger::MergeProfiles(commonProfile_, profile);
-        commonProfile_.commandQueueRecord.commandBufferSubmissions++;
+        commonProfile_.commandQueueRecord.commandBufferSubmittions++;
     }
 }
 

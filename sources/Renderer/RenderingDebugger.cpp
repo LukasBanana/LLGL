@@ -165,7 +165,7 @@ static void MergeProfileCommandQueueRecords(ProfileCommandQueueRecord& dst, cons
     dst.bufferMappings              += src.bufferMappings           ;
     dst.textureWrites               += src.textureWrites            ;
     dst.textureReads                += src.textureReads             ;
-    dst.commandBufferSubmissions    += src.commandBufferSubmissions ;
+    dst.commandBufferSubmittions    += src.commandBufferSubmittions ;
     dst.fenceSubmissions            += src.fenceSubmissions         ;
 }
 
