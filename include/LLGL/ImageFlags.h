@@ -133,7 +133,7 @@ struct ImageView
 
 \param[in] srcImageView Specifies the source image view.
 \param[out] dstImageView Specifies the destination image view.
-\param[in] extent Specifies the extent of the image. This is required
+\param[in] extent Specifies the extent of the image. This is required.
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
@@ -181,12 +181,12 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
 );
 
 /**
-\brief Convert the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
+\brief Converts the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
 
 \param[in] srcImageView Specifies the source image view.
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination image data type.
-\param[in] extent Specifies the extent of the image. This is required
+\param[in] extent Specifies the extent of the image. This is required.
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
