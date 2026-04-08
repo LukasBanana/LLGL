@@ -345,7 +345,7 @@ const (
     KeyBrowserRefresh
     KeyBrowserStop
     KeyBrowserSearch
-    KeyBrowserFavorits // TODO: replace with BrowserFavorites
+    KeyBrowserFavorits
     KeyBrowserHome
     KeyVolumeMute
     KeyVolumeDown
@@ -1082,7 +1082,7 @@ type ProfileCommandQueueRecord struct {
     BufferMappings           uint32 /* = 0 */
     TextureWrites            uint32 /* = 0 */
     TextureReads             uint32 /* = 0 */
-    CommandBufferSubmittions uint32 /* = 0 */ // TODO: replace with commandBufferSubmissions
+    CommandBufferSubmittions uint32 /* = 0 */
     FenceSubmissions         uint32 /* = 0 */
 }
 

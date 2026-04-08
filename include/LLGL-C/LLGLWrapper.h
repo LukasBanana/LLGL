@@ -356,7 +356,7 @@ typedef enum LLGLKey
     LLGLKeyBrowserRefresh,
     LLGLKeyBrowserStop,
     LLGLKeyBrowserSearch,
-    LLGLKeyBrowserFavorits, // TODO: replace with LLGLKeyBrowserFavorites
+    LLGLKeyBrowserFavorits,
     LLGLKeyBrowserHome,
     LLGLKeyVolumeMute,
     LLGLKeyVolumeDown,
@@ -1171,7 +1171,7 @@ typedef struct LLGLProfileCommandQueueRecord
     uint32_t bufferMappings;           /* = 0 */
     uint32_t textureWrites;            /* = 0 */
     uint32_t textureReads;             /* = 0 */
-    uint32_t commandBufferSubmittions; /* = 0 */ // TODO: replace with commandBufferSubmissions
+    uint32_t commandBufferSubmittions; /* = 0 */
     uint32_t fenceSubmissions;         /* = 0 */
 }
 LLGLProfileCommandQueueRecord;
