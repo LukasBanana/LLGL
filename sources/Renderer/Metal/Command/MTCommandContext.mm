@@ -6,12 +6,14 @@
  */
 
 #include "MTCommandContext.h"
+#include "../Buffer/MTBuffer.h"
 #include "../RenderState/MTDescriptorCache.h"
 #include "../RenderState/MTConstantsCache.h"
 #include "../RenderState/MTResourceHeap.h"
 #include "../RenderState/MTGraphicsPSO.h"
 #include "../RenderState/MTComputePSO.h"
 #include "../RenderState/MTRenderPass.h"
+#include "../RenderState/MTBuiltinPSOFactory.h"
 #include "../Shader/MTShader.h"
 #include "../MTSwapChain.h"
 #include "../Texture/MTRenderTarget.h"
@@ -297,6 +299,38 @@ id<MTLRenderCommandEncoder> MTCommandContext::DispatchTessellationAndGetRenderEn
     ];
 
     return renderEncoder;
+}
+
+void MTCommandContext::CmdFillBuffer(MTBuffer& dstBufferMT, std::uint64_t dstOffset, std::uint32_t value, std::uint64_t fillSize)
+{
+    /* Check if native "fillBuffer" command can be used */
+    const bool valueBytesAreEqual =
+    (
+        ((value >> 24) & 0x000000FF) == (value & 0x000000FF) &&
+        ((value >> 16) & 0x000000FF) == (value & 0x000000FF) &&
+        ((value >>  8) & 0x000000FF) == (value & 0x000000FF)
+    );
+
+    /* Determine buffer range for fill command */
+    NSRange range;
+    if (fillSize == LLGL_WHOLE_SIZE)
+    {
+        NSUInteger bufferSize = [dstBufferMT.GetNative() length];
+        range = NSMakeRange(0, bufferSize);
+    }
+    else
+    {
+        range = NSMakeRange(
+            static_cast<NSUInteger>(dstOffset),
+            static_cast<NSUInteger>(fillSize)
+        );
+    }
+
+    /* Fill with native command if all four bytes are equal, otherwise use blit and comput commands */
+    if (valueBytesAreEqual)
+        FillBufferByte1(dstBufferMT, range, static_cast<std::uint8_t>(value & 0x000000FF));
+    else
+        FillBufferByte4(dstBufferMT, range, value);
 }
 
 static void ConvertMTLViewport(MTLViewport& dst, const Viewport& src)
@@ -756,6 +790,30 @@ NSUInteger MTCommandContext::GetMaxLocalThreads(id<MTLComputePipelineState> comp
         maxThreadgroupSizeX_,
         computePSO.maxTotalThreadsPerThreadgroup
     );
+}
+
+void MTCommandContext::FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value)
+{
+    auto blitEncoder = BindBlitEncoder();
+    [blitEncoder fillBuffer:bufferMT.GetNative() range:range value:value];
+}
+
+//TODO: manage binding of compute PSO in MTCommandContext
+void MTCommandContext::FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
+{
+    auto computeEncoder = BindComputeEncoder();
+
+    /* Bind compute PSO with kernel to fill buffer */
+    id<MTLComputePipelineState> pso = MTBuiltinPSOFactory::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
+    [computeEncoder setComputePipelineState:pso];
+
+    /* Bind destination buffer range and store clear value as input constant buffer */
+    [computeEncoder setBuffer:bufferMT.GetNative() offset:range.location atIndex:0];
+    [computeEncoder setBytes:&value length:sizeof(value) atIndex:1];
+
+    /* Dispatch compute kernels */
+    const NSUInteger numValues = range.length / sizeof(std::uint32_t);
+    DispatchThreads1D(computeEncoder, pso, numValues);
 }
 
 

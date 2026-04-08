@@ -6,6 +6,7 @@
  */
 
 #include "MTTypes.h"
+#include "MTFeatureSet.h"
 #include "../../Core/Exception.h"
 
 
@@ -145,7 +146,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RGB10A2UInt:       return MTLPixelFormatRGB10A2Uint;
         case Format::RG11B10Float:      return MTLPixelFormatRG11B10Float;
         case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
-        case Format::BGR5A1UNorm:       return MTLPixelFormatBGR5A1Unorm;
+        case Format::BGR5A1UNorm:       break; //return MTLPixelFormatBGR5A1Unorm;
 
         /* --- Depth-stencil formats --- */
         #ifdef LLGL_OS_IOS
@@ -157,7 +158,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         #ifdef LLGL_OS_IOS
         case Format::D24UNormS8UInt:    return MTLPixelFormatDepth32Float_Stencil8;
         #else
-        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth24Unorm_Stencil8;
+        case Format::D24UNormS8UInt:    return (MTFormatCapabilities::Get().hasD24S8UIntFormat ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8);
         #endif
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
@@ -617,7 +618,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatRGB10A2Uint:             return Format::RGB10A2UInt;
         case MTLPixelFormatRG11B10Float:            return Format::RG11B10Float;
         case MTLPixelFormatRGB9E5Float:             return Format::RGB9E5Float;
-        case MTLPixelFormatBGR5A1Unorm:             return Format::BGR5A1UNorm;
+        //case MTLPixelFormatBGR5A1Unorm:             return Format::BGR5A1UNorm;
 
         /* --- Depth-stencil formats --- */
         #ifndef LLGL_OS_IOS

@@ -1167,13 +1167,13 @@ bool TestbedContext::LoadShaders()
 //      shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
-        if (IsShadingLanguageSupported(ShadingLanguage::Metal_1_2))
+        /*if (IsShadingLanguageSupported(ShadingLanguage::Metal_1_2))
         {
             shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.metal",   ShaderType::Compute,  "CSMain",  "1.2"); // access::read_write requires Metal 1.2
-        }
+        }*/
         shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout0);
         shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout1);
-        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout2);
+        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", definesVerexFormat1, VertFmtLayout2);
         shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout3);
         shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Fragment, "PSMain",  "1.1");
     }

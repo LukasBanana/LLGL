@@ -18,6 +18,13 @@ namespace LLGL
 {
 
 
+static MTFormatCapabilities g_formatCaps;
+
+const MTFormatCapabilities& MTFormatCapabilities::Get()
+{
+    return g_formatCaps;
+}
+
 // Converts the specified Metal feature set into a fixed version number
 static int FeatureSetToVersion(MTLFeatureSet fset)
 {
@@ -62,7 +69,7 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
         Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
         Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
 
-        Format::D16UNorm,           Format::D24UNormS8UInt,     Format::D32Float,           Format::D32FloatS8X24UInt,
+        Format::D16UNorm,           Format::D32Float,           Format::D32FloatS8X24UInt,
 
         #ifndef LLGL_OS_IOS
         Format::BC1UNorm,           Format::BC1UNorm_sRGB,
@@ -106,12 +113,25 @@ static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
 // see https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf
 void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapabilities& caps)
 {
+    g_formatCaps = {};
+
     /* Set clipping origin and depth range */
     caps.screenOrigin   = ScreenOrigin::UpperLeft;
     caps.clippingRange  = ClippingRange::ZeroToOne;
 
     /* Query supported hardware texture formats */
     caps.textureFormats = GetDefaultSupportedMTTextureFormats();
+
+    #ifndef LLGL_OS_IOS
+    if (@available(macOS 10.13, *))
+    {
+        if ([device isDepth24Stencil8PixelFormatSupported])
+        {
+            caps.textureFormats.push_back(Format::D24UNormS8UInt);
+            g_formatCaps.hasD24S8UIntFormat = true;
+        }
+    }
+    #endif
 
     /* Specify supported shading languages */
     const int version = FeatureSetToVersion(fset);

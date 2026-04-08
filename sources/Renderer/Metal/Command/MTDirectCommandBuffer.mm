@@ -17,7 +17,6 @@
 #include "../RenderState/MTComputePSO.h"
 #include "../RenderState/MTQueryHeap.h"
 #include "../RenderState/MTResourceHeap.h"
-#include "../RenderState/MTBuiltinPSOFactory.h"
 #include "../RenderState/MTDescriptorCache.h"
 #include "../RenderState/MTConstantsCache.h"
 #include "../Shader/MTShader.h"
@@ -38,12 +37,6 @@
 namespace LLGL
 {
 
-
-/*
-Minimum size for the "FillBuffer" command to use a GPU kernel.
-for smaller buffers an emulated CPU copy operation will be used.
-*/
-static const NSUInteger g_minFillBufferForKernel = 64;
 
 MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueue& cmdQueue, const CommandBufferDescriptor& desc) :
     MTCommandBuffer    { device, desc.flags },
@@ -208,39 +201,11 @@ void MTDirectCommandBuffer::FillBuffer(
     std::uint32_t   value,
     std::uint64_t   fillSize)
 {
-    if (fillSize == 0)
-        return;
-
-    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
-
-    /* Check if native "fillBuffer" command can be used */
-    const bool valueBytesAreEqual =
-    (
-        ((value >> 24) & 0x000000FF) == (value & 0x000000FF) &&
-        ((value >> 16) & 0x000000FF) == (value & 0x000000FF) &&
-        ((value >>  8) & 0x000000FF) == (value & 0x000000FF)
-    );
-
-    /* Determine buffer range for fill command */
-    NSRange range;
-    if (fillSize == LLGL_WHOLE_SIZE)
+    if (fillSize > 0)
     {
-        NSUInteger bufferSize = [dstBufferMT.GetNative() length];
-        range = NSMakeRange(0, bufferSize);
+        auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+        context_.CmdFillBuffer(dstBufferMT, dstOffset, value, fillSize);
     }
-    else
-    {
-        range = NSMakeRange(
-            static_cast<NSUInteger>(dstOffset),
-            static_cast<NSUInteger>(fillSize)
-        );
-    }
-
-    /* Fill with native command if all four bytes are equal, otherwise use blit and compute commands */
-    if (valueBytesAreEqual)
-        FillBufferByte1(dstBufferMT, range, static_cast<std::uint8_t>(value & 0x000000FF));
-    else
-        FillBufferByte4(dstBufferMT, range, value);
 }
 
 void MTDirectCommandBuffer::CopyTexture(
@@ -1143,49 +1108,6 @@ id<MTLTexture> MTDirectCommandBuffer::GetCurrentDrawableTexture() const
             return [drawable texture];
     }
     return nil;
-}
-
-void MTDirectCommandBuffer::FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value)
-{
-    auto blitEncoder = context_.BindBlitEncoder();
-    [blitEncoder fillBuffer:bufferMT.GetNative() range:range value:value];
-}
-
-void MTDirectCommandBuffer::FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
-{
-    /* Use emulated fill command if buffer range is small enough to avoid having both a blit and compute encoder */
-    if (range.length > g_minFillBufferForKernel)
-        FillBufferByte4Accelerated(bufferMT, range, value);
-    else
-        FillBufferByte4Emulated(bufferMT, range, value);
-}
-
-void MTDirectCommandBuffer::FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
-{
-    /* Copy value into stack local buffer */
-    std::uint32_t localBuffer[g_minFillBufferForKernel / sizeof(std::uint32_t)];
-    std::fill(std::begin(localBuffer), std::end(localBuffer), value);
-
-    /* Write clear value into first range of destination buffer */
-    UpdateBuffer(bufferMT, range.location, localBuffer, range.length);
-}
-
-//TODO: manage binding of compute PSO in MTCommandContext
-void MTDirectCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
-{
-    auto computeEncoder = context_.BindComputeEncoder();
-
-    /* Bind compute PSO with kernel to fill buffer */
-    id<MTLComputePipelineState> pso = MTBuiltinPSOFactory::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
-    [computeEncoder setComputePipelineState:pso];
-
-    /* Bind destination buffer range and store clear value as input constant buffer */
-    [computeEncoder setBuffer:bufferMT.GetNative() offset:range.location atIndex:0];
-    [computeEncoder setBytes:&value length:sizeof(value) atIndex:1];
-
-    /* Dispatch compute kernels */
-    const NSUInteger numValues = range.length / sizeof(std::uint32_t);
-    context_.DispatchThreads1D(computeEncoder, pso, numValues);
 }
 
 

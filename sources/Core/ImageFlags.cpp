@@ -628,8 +628,8 @@ static void ReadDepthStencilValue(
     else if (srcFormat == ImageFormat::DepthStencil && dataType == DataType::Float32)
     {
         /* Read D32FloatS8X24UInt format: Copy 32-bit float and 8-bit unsigned integer */
-        value.depth   = srcBuffer.real32[idx*2];
-        value.stencil = srcBuffer.uint32[idx*2 + 1] >> 24;
+        value.depth   = srcBuffer.real32[idx*2 + 1];
+        value.stencil = srcBuffer.uint32[idx*2] & 0xFF;
     }
     else if (srcFormat == ImageFormat::Stencil && dataType == DataType::UInt8)
     {

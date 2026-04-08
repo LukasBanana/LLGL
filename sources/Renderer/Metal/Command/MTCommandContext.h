@@ -27,6 +27,7 @@ struct Viewport;
 struct Scissor;
 class Resource;
 class RenderTarget;
+class MTBuffer;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
@@ -99,6 +100,9 @@ class MTCommandContext
 
         // Dispatches the current tessellation compute shader and returns the respective render encoder.
         id<MTLRenderCommandEncoder> DispatchTessellationAndGetRenderEncoder(NSUInteger numPatches, NSUInteger numInstances = 1);
+
+        // High-level function to encode the FillBuffer() command.
+        void CmdFillBuffer(MTBuffer& dstBufferMT, std::uint64_t dstOffset, std::uint32_t value, std::uint64_t fillSize);
 
     public:
 
@@ -237,6 +241,9 @@ class MTCommandContext
         void ResetContextState();
 
         NSUInteger GetMaxLocalThreads(id<MTLComputePipelineState> computePSO) const;
+
+        void FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value);
+        void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
 
     private:
 

@@ -40,6 +40,12 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             ExecuteMTMultiSubmitCommandBuffer(*(cmd->commandBuffer), context);
             return sizeof(*cmd);
         }
+        case MTOpcodeFillBuffer:
+        {
+            auto* cmd = static_cast<const MTCmdFillBuffer*>(pc);
+            context.CmdFillBuffer(*(cmd->dstBufferMT), cmd->dstOffset, cmd->value, cmd->fillSize);
+            return sizeof(*cmd);
+        }
         case MTOpcodeCopyBuffer:
         {
             auto* cmd = static_cast<const MTCmdCopyBuffer*>(pc);

@@ -348,14 +348,15 @@ int main(int argc, char* argv[])
             renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[3].get()
         };
         #elif defined __APPLE__
-        LLGL::RenderSystemPtr renderers[2] =
+        LLGL::RenderSystemPtr renderers[3] =
         {
             LLGL::RenderSystem::Load("OpenGL"),
             LLGL::RenderSystem::Load("Metal"),
+            LLGL::RenderSystem::Load("Vulkan"),
         };
         LLGL::RenderSystem* rendererRefs[4] =
         {
-            renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
+            renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[0].get()
         };
         #elif defined __linux__
         LLGL::RenderSystemPtr renderers[2] =

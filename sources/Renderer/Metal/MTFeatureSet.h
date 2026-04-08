@@ -18,6 +18,13 @@ namespace LLGL
 {
 
 
+struct MTFormatCapabilities
+{
+    bool hasD24S8UIntFormat;
+
+    static const MTFormatCapabilities& Get();
+};
+
 void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapabilities& caps);
 
 
