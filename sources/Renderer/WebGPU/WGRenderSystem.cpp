@@ -8,6 +8,7 @@
 #include "WGRenderSystem.h"
 #include "WGCore.h"
 #include "WGTypes.h"
+#include "Buffer/WGIndexBuffer.h"
 #include "RenderState/WGComputePipeline.h"
 #include "RenderState/WGRenderPipeline.h"
 #include "Shader/WGShaderModulePool.h"
@@ -59,9 +60,18 @@ void WGRenderSystem::Release(CommandBuffer& commandBuffer)
     commandBuffers_.erase(&commandBuffer);
 }
 
+//private
+WGBuffer* WGRenderSystem::CreateUninitializedBuffer(const BufferDescriptor& bufferDesc)
+{
+    if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0)
+        return buffers_.emplace<WGIndexBuffer>(device_, bufferDesc);
+    else
+        return buffers_.emplace<WGBuffer>(device_, bufferDesc);
+}
+
 Buffer* WGRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    WGBuffer* buffer = buffers_.emplace<WGBuffer>(device_, bufferDesc);
+    WGBuffer* buffer = CreateUninitializedBuffer(bufferDesc);
     if (initialData != nullptr)
         wgpuQueueWriteBuffer(commandQueue_->GetNative(), buffer->GetNative(), 0, initialData, bufferDesc.size);
     return buffer;
@@ -315,7 +325,7 @@ static void QueryWebGpuRenderingCaps(WGPUAdapter adapter, RenderingCapabilities&
     outCaps.limits.maxViewports         = 1;
     outCaps.limits.maxViewportSize[0]   = 16384;
     outCaps.limits.maxViewportSize[1]   = 16384;
-    outCaps.shadingLanguages            = { ShadingLanguage::WGSL };
+    outCaps.shadingLanguages            = { ShadingLanguage::WGSL/*, ShadingLanguage::SPIRV*/ };
     outCaps.textureFormats              = QueryWebGpuSupportedTextureFormats(adapter);
 }
 

@@ -78,6 +78,8 @@ class WGRenderSystem final : public RenderSystem
         bool RequestWebGpuDevice(long renderSystemFlags);
         void CreateCommandQueue();
 
+        WGBuffer* CreateUninitializedBuffer(const BufferDescriptor& bufferDesc);
+
     private:
 
         /* ----- Common objects ----- */
