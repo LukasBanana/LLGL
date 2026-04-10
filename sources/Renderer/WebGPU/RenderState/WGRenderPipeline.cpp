@@ -6,6 +6,7 @@
  */
 
 #include "WGRenderPipeline.h"
+#include "WGRenderPass.h"
 #include "../WGCore.h"
 #include "../WGTypes.h"
 #include "../Shader/WGShader.h"
@@ -97,6 +98,9 @@ static void ConvertDepthStencilState(WGPUDepthStencilState& dst, const DepthBias
 WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDescriptor& desc) :
     WGPipelineState { /*isRenderPipeline:*/ true }
 {
+    /* Get number of render-target attachments */
+    const WGRenderPass* renderPassWG = (desc.renderPass != nullptr ? LLGL_CAST(const WGRenderPass*, desc.renderPass) : nullptr);
+
     const WGShader* vertexShaderWG = LLGL_CAST(const WGShader*, desc.vertexShader);
     if (vertexShaderWG == nullptr)
     {
@@ -105,29 +109,34 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
     }
 
     WGPUBlendState blendTargetStates[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
-    for_range(i, (desc.blend.independentBlendEnabled ? LLGL_MAX_NUM_COLOR_ATTACHMENTS : 1u))
-        ConvertBlendState(blendTargetStates[i], desc.blend.targets[i]);
-
     WGPUColorTargetState colorTargetStates[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
-    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-    {
-        colorTargetStates[i].nextInChain    = nullptr;
-        colorTargetStates[i].format         = WGPUTextureFormat_BGRA8Unorm;
-        colorTargetStates[i].blend          = &(blendTargetStates[desc.blend.independentBlendEnabled ? i : 0]);
-        colorTargetStates[i].writeMask      = ToWGColorWriteMask(desc.blend.targets[i].colorMask);
-    }
-
     WGPUFragmentState fragmentState;
+
     if (desc.fragmentShader != nullptr)
     {
         const WGShader* fragmentShaderWG = LLGL_CAST(const WGShader*, desc.fragmentShader);
+
+        const std::size_t numColorTargetStates = (renderPassWG != nullptr ? renderPassWG->GetColorTargetFormats().size() : 1u);
+        LLGL_ASSERT(numColorTargetStates <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+
+        const std::size_t numBlendTargets = (desc.blend.independentBlendEnabled ? numColorTargetStates : 1u);
+        for_range(i, numBlendTargets)
+            ConvertBlendState(blendTargetStates[i], desc.blend.targets[i]);
+
+        for_range(i, numColorTargetStates)
+        {
+            colorTargetStates[i].nextInChain    = nullptr;
+            colorTargetStates[i].format         = (renderPassWG != nullptr ? renderPassWG->GetColorTargetFormats()[i] : WGPUTextureFormat_BGRA8Unorm);
+            colorTargetStates[i].blend          = &(blendTargetStates[desc.blend.independentBlendEnabled ? i : 0]);
+            colorTargetStates[i].writeMask      = ToWGColorWriteMask(desc.blend.targets[i].colorMask);
+        }
 
         fragmentState.nextInChain   = nullptr;
         fragmentState.module        = fragmentShaderWG->GetNative();
         fragmentState.entryPoint    = fragmentShaderWG->GetEntryPointNameView();
         fragmentState.constantCount = 0;
         fragmentState.constants     = nullptr;
-        fragmentState.targetCount   = 1;
+        fragmentState.targetCount   = numColorTargetStates;
         fragmentState.targets       = colorTargetStates;
     }
 
@@ -145,8 +154,17 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
         renderPipelineDesc.vertex.entryPoint    = vertexShaderWG->GetEntryPointNameView();
         renderPipelineDesc.vertex.constantCount = 0;
         renderPipelineDesc.vertex.constants     = nullptr;
-        renderPipelineDesc.vertex.bufferCount   = 0;
-        renderPipelineDesc.vertex.buffers       = nullptr;
+
+        if (const WGVertexInputLayout* vertexInputLayout = vertexShaderWG->GetVertexInputLayout())
+        {
+            renderPipelineDesc.vertex.bufferCount   = vertexInputLayout->GetVertexBufferLayouts().size();
+            renderPipelineDesc.vertex.buffers       = vertexInputLayout->GetVertexBufferLayouts().data();
+        }
+        else
+        {
+            renderPipelineDesc.vertex.bufferCount   = 0;
+            renderPipelineDesc.vertex.buffers       = nullptr;
+        }
 
         renderPipelineDesc.primitive.nextInChain        = nullptr;
         renderPipelineDesc.primitive.topology           = WGTypes::ToWGPrimitiveTopology(desc.primitiveTopology);

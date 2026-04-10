@@ -205,6 +205,69 @@ WGPUTextureFormat ToWGTextureFormatOrDefault(const Format format)
     return WGPUTextureFormat_Undefined;
 }
 
+WGPUVertexFormat ToWGVertexFormat(const Format format)
+{
+    switch (format)
+    {
+        case Format::R8UInt:        return WGPUVertexFormat_Uint8;
+        case Format::RG8UInt:       return WGPUVertexFormat_Uint8x2;
+        case Format::RGBA8UInt:     return WGPUVertexFormat_Uint8x4;
+
+        case Format::R8SInt:        return WGPUVertexFormat_Sint8;
+        case Format::RG8SInt:       return WGPUVertexFormat_Sint8x2;
+        case Format::RGBA8SInt:     return WGPUVertexFormat_Sint8x4;
+
+        case Format::R8UNorm:       return WGPUVertexFormat_Unorm8;
+        case Format::RG8UNorm:      return WGPUVertexFormat_Unorm8x2;
+        case Format::RGBA8UNorm:    return WGPUVertexFormat_Unorm8x4;
+
+        case Format::R8SNorm:       return WGPUVertexFormat_Snorm8;
+        case Format::RG8SNorm:      return WGPUVertexFormat_Snorm8x2;
+        case Format::RGBA8SNorm:    return WGPUVertexFormat_Snorm8x4;
+
+        case Format::R16UInt:       return WGPUVertexFormat_Uint16;
+        case Format::RG16UInt:      return WGPUVertexFormat_Uint16x2;
+        case Format::RGBA16UInt:    return WGPUVertexFormat_Uint16x4;
+
+        case Format::R16SInt:       return WGPUVertexFormat_Sint16;
+        case Format::RG16SInt:      return WGPUVertexFormat_Sint16x2;
+        case Format::RGBA16SInt:    return WGPUVertexFormat_Sint16x4;
+
+        case Format::R16UNorm:      return WGPUVertexFormat_Unorm16;
+        case Format::RG16UNorm:     return WGPUVertexFormat_Unorm16x2;
+        case Format::RGBA16UNorm:   return WGPUVertexFormat_Unorm16x4;
+
+        case Format::R16SNorm:      return WGPUVertexFormat_Snorm16;
+        case Format::RG16SNorm:     return WGPUVertexFormat_Snorm16x2;
+        case Format::RGBA16SNorm:   return WGPUVertexFormat_Snorm16x4;
+
+        case Format::R16Float:      return WGPUVertexFormat_Float16;
+        case Format::RG16Float:     return WGPUVertexFormat_Float16x2;
+        case Format::RGBA16Float:   return WGPUVertexFormat_Float16x4;
+
+        case Format::R32Float:      return WGPUVertexFormat_Float32;
+        case Format::RG32Float:     return WGPUVertexFormat_Float32x2;
+        case Format::RGB32Float:    return WGPUVertexFormat_Float32x3;
+        case Format::RGBA32Float:   return WGPUVertexFormat_Float32x4;
+
+        case Format::R32UInt:       return WGPUVertexFormat_Uint32;
+        case Format::RG32UInt:      return WGPUVertexFormat_Uint32x2;
+        case Format::RGB32UInt:     return WGPUVertexFormat_Uint32x3;
+        case Format::RGBA32UInt:    return WGPUVertexFormat_Uint32x4;
+
+        case Format::R32SInt:       return WGPUVertexFormat_Sint32;
+        case Format::RG32SInt:      return WGPUVertexFormat_Sint32x2;
+        case Format::RGB32SInt:     return WGPUVertexFormat_Sint32x3;
+        case Format::RGBA32SInt:    return WGPUVertexFormat_Sint32x4;
+
+        case Format::RGB10A2UNorm:  return WGPUVertexFormat_Unorm10_10_10_2;
+        case Format::BGRA8UNorm:    return WGPUVertexFormat_Unorm8x4BGRA;
+
+        default:                    break;
+    }
+    MapFailed("Format", "WGPUVertexFormat");
+}
+
 WGPUCullMode ToWGCullMode(const CullMode mode)
 {
     switch (mode)

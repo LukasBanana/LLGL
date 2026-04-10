@@ -12,6 +12,7 @@
 #include <LLGL/Shader.h>
 #include <LLGL/ShaderFlags.h>
 #include "WGShaderModule.h"
+#include "WGVertexInputLayout.h"
 #include <webgpu/webgpu.h>
 
 
@@ -44,14 +45,22 @@ class WGShader final : public Shader
             return WGPUStringView{ entryPoint_.data(), entryPoint_.size() };
         }
 
+        // Returns the vertex input layout or null if there is none.
+        inline const WGVertexInputLayout* GetVertexInputLayout() const
+        {
+            return vertexInputLayout_.get();
+        }
+
     private:
 
         void BuildShader(WGPUInstance instance, WGPUDevice device, const ShaderDescriptor& shaderDesc);
 
     private:
 
-        WGShaderModuleSPtr  shaderModule_;
-        std::string         entryPoint_;
+        WGShaderModuleSPtr      shaderModule_;
+        WGVertexInputLayoutPtr  vertexInputLayout_;
+        std::string             entryPoint_;
+        Report                  report_;
 
 };
 

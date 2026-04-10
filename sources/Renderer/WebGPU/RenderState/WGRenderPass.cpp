@@ -13,7 +13,10 @@ namespace LLGL
 {
 
 
-/* WGRenderPass::WGRenderPass(const RenderPassDescriptor& desc) { ... } */
+WGRenderPass::WGRenderPass(const RenderPassDescriptor& desc)
+{
+    //TODO
+}
 
 
 } // /namespace LLGL

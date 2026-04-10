@@ -10,6 +10,7 @@
 #include "../WGCore.h"
 #include "../../ShaderUtils.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 
 
@@ -22,6 +23,8 @@ WGShader::WGShader(WGPUInstance instance, WGPUDevice device, const ShaderDescrip
     entryPoint_ { (desc.entryPoint != nullptr ? desc.entryPoint : "main") }
 {
     BuildShader(instance, device, desc);
+    if (!desc.vertex.inputAttribs.empty())
+        vertexInputLayout_ = MakeUnique<WGVertexInputLayout>(desc.vertex.inputAttribs, &report_);
 }
 
 WGShader::~WGShader()
@@ -31,7 +34,7 @@ WGShader::~WGShader()
 
 const Report* WGShader::GetReport() const
 {
-    return shaderModule_->GetReport();
+    return (report_ ? &report_ : nullptr);
 }
 
 bool WGShader::Reflect(ShaderReflection& reflection) const
@@ -86,8 +89,11 @@ void WGShader::BuildShader(WGPUInstance instance, WGPUDevice device, const Shade
             break;
     }
 
-    /* Build shader module */
+    /* Build shader module and copy report */
     shaderModule_ = WGShaderModulePool::Get().CreateShaderModule(instance, device, sourceContext);
+
+    if (const Report* report = shaderModule_->GetReport())
+        report_ = *report;
 }
 
 

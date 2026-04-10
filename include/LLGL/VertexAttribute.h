@@ -182,7 +182,7 @@ struct LLGL_EXPORT VertexAttribute
     \brief Instance data divisor (or instance data step rate).
     \remarks If this is 0, this attribute is considered to be stored per vertex.
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
-    \note For Vulkan, this must only be 0 or 1.
+    \note For Vulkan and WebGPU, this must only be 0 or 1.
     */
     std::uint32_t   instanceDivisor = 0;
 };

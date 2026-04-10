@@ -31,6 +31,7 @@ namespace WGTypes
 WGPUIndexFormat ToWGIndexFormat(const Format format);
 WGPUTextureFormat ToWGTextureFormat(const Format format);
 WGPUTextureFormat ToWGTextureFormatOrDefault(const Format format);
+WGPUVertexFormat ToWGVertexFormat(const Format format);
 WGPUCullMode ToWGCullMode(const CullMode mode);
 WGPULoadOp ToWGLoadOp(const AttachmentLoadOp loadOp);
 WGPUStoreOp ToWGStoreOp(const AttachmentStoreOp storeOp);
