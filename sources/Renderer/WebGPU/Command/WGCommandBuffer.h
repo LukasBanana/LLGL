@@ -41,12 +41,16 @@ class WGCommandBuffer final : public CommandBuffer
             DirtyBit_Viewports      = (1 << 0),
             DirtyBit_Scissors       = (1 << 1),
             DirtyBit_VertexBuffers  = (1 << 2),
+            DirtyBit_IndexBuffer    = (1 << 3),
         };
 
         struct WGRenderEncoderState
         {
-            WGPUBuffer      vertexBuffers[maxNumVertexBuffers];
+            WGPUBuffer      vertexBuffers[maxNumVertexBuffers]  = {};
             std::uint32_t   vertexBufferCount                   = 0;
+            WGPUBuffer      indexBuffer                         = nullptr;
+            std::uint64_t   indexBufferOffset                   = 0;
+            WGPUIndexFormat indexBufferFormat                   = WGPUIndexFormat_Undefined;
             Scissor         scissor;
             Viewport        viewport;
         };
@@ -57,6 +61,10 @@ class WGCommandBuffer final : public CommandBuffer
         void FlushPassEncoders();
         void FlushRenderEncoderStates();
         void ResetRenderStates();
+
+        void EmplaceVertexBuffer(WGPUBuffer wgpuBuffer);
+        void EmplaceVertexBuffers(const WGPUBuffer* wgpuBuffers, std::size_t count);
+        void EmplaceIndexBuffer(WGPUBuffer wgpuBuffer, WGPUIndexFormat indexFormat, std::uint64_t offset);
 
     private:
 

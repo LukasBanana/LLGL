@@ -9,7 +9,10 @@
 #define LLGL_WG_BUFFER_ARRAY_H
 
 
+#include <LLGL/Buffer.h>
 #include <LLGL/BufferArray.h>
+#include <webgpu/webgpu.h>
+#include <vector>
 
 
 namespace LLGL
@@ -21,11 +24,16 @@ class WGBufferArray final : public BufferArray
 
     public:
 
-        /* WGBufferArray(const BufferArrayDescriptor& desc); */
+        WGBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+
+        inline const std::vector<WGPUBuffer>& GetNativeBuffers() const
+        {
+            return wgpuBuffers_;
+        }
 
     private:
 
-        // private fields ...
+        std::vector<WGPUBuffer> wgpuBuffers_;
 
 };
 

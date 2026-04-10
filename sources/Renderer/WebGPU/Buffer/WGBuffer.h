@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class WGBuffer final : public Buffer
+class WGBuffer : public Buffer
 {
 
     public:

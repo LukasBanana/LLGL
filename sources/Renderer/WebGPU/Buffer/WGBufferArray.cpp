@@ -6,14 +6,23 @@
  */
 
 #include "WGBufferArray.h"
-#include "../../../Core/Assertion.h"
+#include "WGBuffer.h"
+#include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
 {
 
 
-/* WGBufferArray::WGBufferArray(const BufferArrayDescriptor& desc) { ... } */
+WGBufferArray::WGBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+{
+    wgpuBuffers_.resize(numBuffers);
+    for (std::size_t i = 0; WGBuffer* next = NextArrayResource<WGBuffer>(numBuffers, bufferArray); ++i)
+        wgpuBuffers_[i] = next->GetNative();
+}
 
 
 } // /namespace LLGL

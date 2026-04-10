@@ -7,7 +7,10 @@
 
 #include "WGCommandBuffer.h"
 #include "../WGCore.h"
+#include "../WGTypes.h"
 #include "../Buffer/WGBuffer.h"
+#include "../Buffer/WGIndexBuffer.h"
+#include "../Buffer/WGBufferArray.h"
 #include "../RenderState/WGRenderPipeline.h"
 #include "../RenderState/WGComputePipeline.h"
 #include "../../CheckedCast.h"
@@ -15,6 +18,7 @@
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/WebGPU/NativeHandle.h>
+#include <string.h>
 
 
 namespace LLGL
@@ -83,7 +87,16 @@ void WGCommandBuffer::CopyBufferFromTexture(Buffer& dstBuffer, std::uint64_t dst
 
 void WGCommandBuffer::FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std::uint32_t value, std::uint64_t fillSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& dstBufferWG = LLGL_CAST(WGBuffer&, dstBuffer);
+    if (value == 0)
+    {
+        /* Use ClearBuffer command when filling the buffer with zeroes */
+        wgpuCommandEncoderClearBuffer(commandEncoder_, dstBufferWG.GetNative(), dstOffset, fillSize);
+    }
+    else
+    {
+        LLGL_TRAP_NOT_IMPLEMENTED();
+    }
 }
 
 void WGCommandBuffer::CopyTexture(Texture& dstTexture, const TextureLocation& dstLocation, Texture& srcTexture, const TextureLocation& srcLocation, const Extent3D& extent)
@@ -119,7 +132,12 @@ void WGCommandBuffer::SetViewport(const Viewport& viewport)
 
 void WGCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    /* WebGPU only supports a single viewport */
+    if (numViewports == 1)
+    {
+        renderEncoderState_.viewport = viewports[0];
+        renderDirtyBits_ |= DirtyBit_Viewports;
+    }
 }
 
 void WGCommandBuffer::SetScissor(const Scissor& scissor)
@@ -130,35 +148,45 @@ void WGCommandBuffer::SetScissor(const Scissor& scissor)
 
 void WGCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    /* WebGPU only supports a single viewport */
+    if (numScissors == 1)
+    {
+        renderEncoderState_.scissor = scissors[0];
+        renderDirtyBits_ |= DirtyBit_Scissors;
+    }
 }
 
 void WGCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferWG = LLGL_CAST(WGBuffer&, buffer);
-    renderEncoderState_.vertexBuffers[0] = bufferWG.GetNative();
-    renderEncoderState_.vertexBufferCount = 1;
-    renderDirtyBits_ |= DirtyBit_VertexBuffers;
+    EmplaceVertexBuffer(bufferWG.GetNative());
 }
 
-void WGCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+void WGCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& bufferWG = LLGL_CAST(WGBuffer&, buffer);
+    EmplaceVertexBuffer(bufferWG.GetNative());
 }
 
 void WGCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& bufferArrayWG = LLGL_CAST(WGBufferArray&, bufferArray);
+    EmplaceVertexBuffers(bufferArrayWG.GetNativeBuffers().data(), bufferArrayWG.GetNativeBuffers().size());
 }
 
 void WGCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if ((buffer.GetBindFlags() & BindFlags::IndexBuffer) == 0)
+        return /*Invalid input*/;
+
+    auto& indexBufferWG = LLGL_CAST(WGIndexBuffer&, buffer);
+    EmplaceIndexBuffer(indexBufferWG.GetNative(), indexBufferWG.GetWGIndexFormat(), 0);
 }
 
 void WGCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& bufferWG = LLGL_CAST(WGBuffer&, buffer);
+    EmplaceIndexBuffer(bufferWG.GetNative(), WGTypes::ToWGIndexFormat(format), offset);
 }
 
 void WGCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
@@ -171,9 +199,9 @@ void WGCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     LLGL_TRAP_NOT_IMPLEMENTED();
 }
 
-void WGCommandBuffer::ResourceBarrier(std::uint32_t numBuffers, Buffer* const * buffers, std::uint32_t numTextures, Texture* const * textures)
+void WGCommandBuffer::ResourceBarrier(std::uint32_t /*numBuffers*/, Buffer* const * /*buffers*/, std::uint32_t /*numTextures*/, Texture* const * /*textures*/)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    // dummy - WebGPU does not expose explicit resource barriers
 }
 
 void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPass* renderPass, std::uint32_t numClearValues, const ClearValue* clearValues, std::uint32_t swapBufferIndex)
@@ -184,6 +212,7 @@ void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPa
 
         WGFramebuffer framebuffer = swapChainWG.GetCurrentFramebuffer();
 
+        //TODO
         WGPURenderPassColorAttachment colorAttachment;
         {
             colorAttachment.nextInChain     = nullptr;
@@ -491,6 +520,16 @@ void WGCommandBuffer::FlushRenderEncoderStates()
                 );
             }
         }
+        if ((renderDirtyBits_ & DirtyBit_IndexBuffer) != 0 && renderEncoderState_.indexBuffer != nullptr)
+        {
+            wgpuRenderPassEncoderSetIndexBuffer(
+                renderPassEncoder_,
+                renderEncoderState_.indexBuffer,
+                renderEncoderState_.indexBufferFormat,
+                renderEncoderState_.indexBufferOffset,
+                WGPU_WHOLE_SIZE
+            );
+        }
         renderDirtyBits_ = 0;
     }
 }
@@ -499,6 +538,32 @@ void WGCommandBuffer::ResetRenderStates()
 {
     renderDirtyBits_    = 0;
     computeDirtyBits_   = 0;
+}
+
+void WGCommandBuffer::EmplaceVertexBuffer(WGPUBuffer wgpuBuffer)
+{
+    renderEncoderState_.vertexBuffers[0] = wgpuBuffer;
+    renderEncoderState_.vertexBufferCount = 1;
+    renderDirtyBits_ |= DirtyBit_VertexBuffers;
+}
+
+void WGCommandBuffer::EmplaceVertexBuffers(const WGPUBuffer* wgpuBuffers, std::size_t count)
+{
+    LLGL_ASSERT(count <= WGCommandBuffer::maxNumVertexBuffers);
+    ::memcpy(renderEncoderState_.vertexBuffers, wgpuBuffers, count*sizeof(WGPUBuffer));
+    renderEncoderState_.vertexBufferCount = static_cast<std::uint32_t>(count);
+    renderDirtyBits_ |= DirtyBit_VertexBuffers;
+}
+
+void WGCommandBuffer::EmplaceIndexBuffer(WGPUBuffer wgpuBuffer, WGPUIndexFormat indexFormat, std::uint64_t offset)
+{
+    if (indexFormat == WGPUIndexFormat_Undefined)
+        return /*Undefined index format*/;
+
+    renderEncoderState_.indexBuffer         = wgpuBuffer;
+    renderEncoderState_.indexBufferFormat   = indexFormat;
+    renderEncoderState_.indexBufferOffset   = offset;
+    renderDirtyBits_ |= DirtyBit_IndexBuffer;
 }
 
 
