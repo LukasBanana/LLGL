@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
+#include <LLGL/RenderSystemFlags.h>
 #include <string>
 
 
@@ -26,7 +27,9 @@ struct ShaderSourceLine
 
 struct ShaderSourceContext
 {
-    StringView sourceText;
+    ShadingLanguage inputLanguage;
+    StringView      sourceName;
+    StringView      sourceText;
 
     LLGL_EXPORT ShaderSourceLine GetSourceLine(unsigned lineNum, unsigned markerOffset, unsigned markerLength) const;
 };

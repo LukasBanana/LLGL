@@ -10,6 +10,10 @@
 
 
 #include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
+#include <webgpu/webgpu.h>
 
 
 namespace LLGL
@@ -21,11 +25,17 @@ class WGRenderPass final : public RenderPass
 
     public:
 
-        /* WGRenderPass(const RenderPassDescriptor& desc); */
+        WGRenderPass(const RenderPassDescriptor& desc);
+
+        // Returns the WebGPU color target formats.
+        inline ArrayView<WGPUTextureFormat> GetColorTargetFormats() const
+        {
+            return colorTargetFormats_;
+        }
 
     private:
 
-        // private fields ...
+        SmallVector<WGPUTextureFormat, 1> colorTargetFormats_;
 
 };
 

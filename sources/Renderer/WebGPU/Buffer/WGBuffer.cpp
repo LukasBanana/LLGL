@@ -17,7 +17,7 @@ namespace LLGL
 
 static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
 {
-    WGPUBufferUsage usage = 0;
+    WGPUBufferUsage usage = WGPUBufferUsage_CopyDst;
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
         usage |= WGPUBufferUsage_Vertex;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
@@ -30,6 +30,10 @@ static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
         usage |= WGPUBufferUsage_Storage;
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
         usage |= WGPUBufferUsage_Indirect;
+    if ((bindFlags & BindFlags::CopySrc) != 0)
+        usage |= WGPUBufferUsage_CopySrc;
+    if ((bindFlags & BindFlags::CopyDst) != 0)
+        usage |= WGPUBufferUsage_CopyDst;
     if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
         usage |= WGPUBufferUsage_MapRead;
     if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)

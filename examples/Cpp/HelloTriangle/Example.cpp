@@ -146,12 +146,16 @@ int main(int argc, char* argv[])
         LLGL::Shader* fragShader = nullptr;
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        auto Supports = [&languages](LLGL::ShadingLanguage requestedLanguage) -> bool
+        {
+            return (std::find(languages.begin(), languages.end(), requestedLanguage) != languages.end());
+        };
 
         LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
 
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
+        if (Supports(LLGL::ShadingLanguage::GLSL))
         {
-            if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL_140) != languages.end())
+            if (Supports(LLGL::ShadingLanguage::GLSL_140))
             {
                 #ifdef __APPLE__
                 vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.140core.vert" };
@@ -167,22 +171,27 @@ int main(int argc, char* argv[])
                 fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
             }
         }
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+        else if (Supports(LLGL::ShadingLanguage::SPIRV))
         {
             vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
             fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
         }
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        else if (Supports(LLGL::ShadingLanguage::HLSL))
         {
             vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" };
             fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" };
         }
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
+        else if (Supports(LLGL::ShadingLanguage::Metal))
         {
             vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" };
             fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" };
             vertShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
             fragShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
+        }
+        else if (Supports(LLGL::ShadingLanguage::WGSL))
+        {
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.wgsl", "VS", nullptr };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.wgsl", "PS", nullptr };
         }
 
         // Specify vertex attributes for vertex shader

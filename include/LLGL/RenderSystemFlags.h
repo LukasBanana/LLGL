@@ -248,7 +248,7 @@ struct RenderSystemFlags
         /**
         \brief Specifies that a software device is requested such as "Microsoft Basic Render Driver" as a reference device for Direct3D.
         \remarks This can be used for debugging or if the hardware does not support the respective API.
-        \note Only supported with: Direct3D 11.
+        \note Only supported with: Direct3D 12, Direct3D 11.
         */
         SoftwareDevice      = (1 << 4),
 

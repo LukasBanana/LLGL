@@ -22,6 +22,11 @@ LLGL_EXPORT bool IsShaderSourceBinary(const ShaderSourceType type)
     return (type == ShaderSourceType::BinaryBuffer || type == ShaderSourceType::BinaryFile);
 }
 
+LLGL_EXPORT bool IsShaderSourceFile(const ShaderSourceType type)
+{
+    return (type == ShaderSourceType::CodeFile || type == ShaderSourceType::BinaryFile);
+}
+
 LLGL_EXPORT long GetStageFlags(const ShaderType type)
 {
     switch (type)
