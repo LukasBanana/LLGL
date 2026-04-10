@@ -26,6 +26,8 @@ like an array of vertex buffers for instance.
 class LLGL_EXPORT BufferArray : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::BufferArray );
+
     public:
 
         /**
