@@ -390,6 +390,43 @@ WGPUPrimitiveTopology ToWGPrimitiveTopology(const PrimitiveTopology topology)
     MapFailed("PrimitiveTopology", "WGPUPrimitiveTopology");
 }
 
+WGPUAddressMode ToWGAddressMode(const SamplerAddressMode mode)
+{
+    switch (mode)
+    {
+        case SamplerAddressMode::Repeat:        return WGPUAddressMode_Repeat;
+        case SamplerAddressMode::Mirror:        return WGPUAddressMode_MirrorRepeat;
+        case SamplerAddressMode::Clamp:         return WGPUAddressMode_ClampToEdge;
+        case SamplerAddressMode::Border:        break; // unsupported
+        case SamplerAddressMode::MirrorOnce:    break; // unsupported
+        default:                                break;
+    }
+    MapFailed("SamplerAddressMode", "WGPUAddressMode");
+}
+
+WGPUFilterMode ToWGFilterMode(const SamplerFilter filter)
+{
+    switch (filter)
+    {
+        case SamplerFilter::Nearest:    return WGPUFilterMode_Nearest;
+        case SamplerFilter::Linear:     return WGPUFilterMode_Linear;
+        default:                        break;
+    }
+    MapFailed("SamplerFilter", "WGPUFilterMode");
+}
+
+WGPUMipmapFilterMode ToWGMipmapFilterMode(const SamplerFilter filter)
+{
+    switch (filter)
+    {
+        case SamplerFilter::Nearest:    return WGPUMipmapFilterMode_Nearest;
+        case SamplerFilter::Linear:     return WGPUMipmapFilterMode_Linear;
+        default:                        break;
+    }
+    MapFailed("SamplerFilter", "WGPUMipmapFilterMode");
+}
+
+
 bool IsWGTextureFormatBC(WGPUTextureFormat format)
 {
     switch (format)
@@ -460,6 +497,140 @@ bool IsWGTextureFormatETC2(WGPUTextureFormat format)
         default:
             return false;
     }
+}
+
+
+Format FromWGTextureFormat(WGPUTextureFormat format)
+{
+    Format outFormat = FromWGTextureFormatOrDefault(format);
+    if (outFormat != Format::Undefined)
+        return outFormat;
+    MapFailed("WGPUTextureFormat", "Format");
+}
+
+Format FromWGTextureFormatOrDefault(WGPUTextureFormat format)
+{
+    switch (format)
+    {
+        /* --- Red channel color formats --- */
+        case WGPUTextureFormat_R8Unorm:                 return Format::R8UNorm;
+        case WGPUTextureFormat_R8Snorm:                 return Format::R8SNorm;
+        case WGPUTextureFormat_R8Uint:                  return Format::R8UInt;
+        case WGPUTextureFormat_R8Sint:                  return Format::R8SInt;
+
+        case WGPUTextureFormat_R16Unorm:                return Format::R16UNorm;
+        case WGPUTextureFormat_R16Snorm:                return Format::R16SNorm;
+        case WGPUTextureFormat_R16Uint:                 return Format::R16UInt;
+        case WGPUTextureFormat_R16Sint:                 return Format::R16SInt;
+        case WGPUTextureFormat_R16Float:                return Format::R16Float;
+
+        case WGPUTextureFormat_R32Uint:                 return Format::R32UInt;
+        case WGPUTextureFormat_R32Sint:                 return Format::R32SInt;
+        case WGPUTextureFormat_R32Float:                return Format::R32Float;
+
+        /* --- RG color formats --- */
+        case WGPUTextureFormat_RG8Unorm:                return Format::RG8UNorm;
+        case WGPUTextureFormat_RG8Snorm:                return Format::RG8SNorm;
+        case WGPUTextureFormat_RG8Uint:                 return Format::RG8UInt;
+        case WGPUTextureFormat_RG8Sint:                 return Format::RG8SInt;
+
+        case WGPUTextureFormat_RG16Unorm:               return Format::RG16UNorm;
+        case WGPUTextureFormat_RG16Snorm:               return Format::RG16SNorm;
+        case WGPUTextureFormat_RG16Uint:                return Format::RG16UInt;
+        case WGPUTextureFormat_RG16Sint:                return Format::RG16SInt;
+        case WGPUTextureFormat_RG16Float:               return Format::RG16Float;
+
+        case WGPUTextureFormat_RG32Uint:                return Format::RG32UInt;
+        case WGPUTextureFormat_RG32Sint:                return Format::RG32SInt;
+        case WGPUTextureFormat_RG32Float:               return Format::RG32Float;
+
+        /* --- RGBA color formats --- */
+        case WGPUTextureFormat_RGBA8Unorm:              return Format::RGBA8UNorm;
+        case WGPUTextureFormat_RGBA8UnormSrgb:          return Format::RGBA8UNorm_sRGB;
+        case WGPUTextureFormat_RGBA8Snorm:              return Format::RGBA8SNorm;
+        case WGPUTextureFormat_RGBA8Uint:               return Format::RGBA8UInt;
+        case WGPUTextureFormat_RGBA8Sint:               return Format::RGBA8SInt;
+
+        case WGPUTextureFormat_RGBA16Unorm:             return Format::RGBA16UNorm;
+        case WGPUTextureFormat_RGBA16Snorm:             return Format::RGBA16SNorm;
+        case WGPUTextureFormat_RGBA16Uint:              return Format::RGBA16UInt;
+        case WGPUTextureFormat_RGBA16Sint:              return Format::RGBA16SInt;
+        case WGPUTextureFormat_RGBA16Float:             return Format::RGBA16Float;
+
+        case WGPUTextureFormat_RGBA32Uint:              return Format::RGBA32UInt;
+        case WGPUTextureFormat_RGBA32Sint:              return Format::RGBA32SInt;
+        case WGPUTextureFormat_RGBA32Float:             return Format::RGBA32Float;
+
+        /* --- BGRA color formats --- */
+        case WGPUTextureFormat_BGRA8Unorm:              return Format::BGRA8UNorm;
+        case WGPUTextureFormat_BGRA8UnormSrgb:          return Format::BGRA8UNorm_sRGB;
+
+        /* --- Packed formats --- */
+        case WGPUTextureFormat_RGB10A2Unorm:            return Format::RGB10A2UNorm;
+        case WGPUTextureFormat_RGB10A2Uint:             return Format::RGB10A2UInt;
+        case WGPUTextureFormat_RG11B10Ufloat:           return Format::RG11B10Float;
+        case WGPUTextureFormat_RGB9E5Ufloat:            return Format::RGB9E5Float;
+
+        /* --- Depth-stencil formats --- */
+        case WGPUTextureFormat_Depth16Unorm:            return Format::D16UNorm;
+        case WGPUTextureFormat_Depth24PlusStencil8:     return Format::D24UNormS8UInt;
+        case WGPUTextureFormat_Depth32Float:            return Format::D32Float;
+        case WGPUTextureFormat_Depth32FloatStencil8:    return Format::D32FloatS8X24UInt;
+        case WGPUTextureFormat_Stencil8:                break; // unsupported
+
+        /* --- Block compression (BC) formats --- */
+        case WGPUTextureFormat_BC1RGBAUnorm:            return Format::BC1UNorm;
+        case WGPUTextureFormat_BC1RGBAUnormSrgb:        return Format::BC1UNorm_sRGB;
+        case WGPUTextureFormat_BC2RGBAUnorm:            return Format::BC2UNorm;
+        case WGPUTextureFormat_BC2RGBAUnormSrgb:        return Format::BC2UNorm_sRGB;
+        case WGPUTextureFormat_BC3RGBAUnorm:            return Format::BC3UNorm;
+        case WGPUTextureFormat_BC3RGBAUnormSrgb:        return Format::BC3UNorm_sRGB;
+        case WGPUTextureFormat_BC4RUnorm:               return Format::BC4UNorm;
+        case WGPUTextureFormat_BC4RSnorm:               return Format::BC4SNorm;
+        case WGPUTextureFormat_BC5RGUnorm:              return Format::BC5UNorm;
+        case WGPUTextureFormat_BC5RGSnorm:              return Format::BC5SNorm;
+        case WGPUTextureFormat_BC6HRGBUfloat:           return Format::BC6HUFloat;
+        case WGPUTextureFormat_BC6HRGBFloat:            return Format::BC6HSFloat;
+        case WGPUTextureFormat_BC7RGBAUnorm:            return Format::BC7UNorm;
+        case WGPUTextureFormat_BC7RGBAUnormSrgb:        return Format::BC7UNorm_sRGB;
+
+        /* --- ASTC formats --- */
+        case WGPUTextureFormat_ASTC4x4Unorm:            return Format::ASTC4x4;
+        case WGPUTextureFormat_ASTC4x4UnormSrgb:        return Format::ASTC4x4_sRGB;
+        case WGPUTextureFormat_ASTC5x4Unorm:            return Format::ASTC5x4;
+        case WGPUTextureFormat_ASTC5x4UnormSrgb:        return Format::ASTC5x4_sRGB;
+        case WGPUTextureFormat_ASTC5x5Unorm:            return Format::ASTC5x5;
+        case WGPUTextureFormat_ASTC5x5UnormSrgb:        return Format::ASTC5x5_sRGB;
+        case WGPUTextureFormat_ASTC6x5Unorm:            return Format::ASTC6x5;
+        case WGPUTextureFormat_ASTC6x5UnormSrgb:        return Format::ASTC6x5_sRGB;
+        case WGPUTextureFormat_ASTC6x6Unorm:            return Format::ASTC6x6;
+        case WGPUTextureFormat_ASTC6x6UnormSrgb:        return Format::ASTC6x6_sRGB;
+        case WGPUTextureFormat_ASTC8x5Unorm:            return Format::ASTC8x5;
+        case WGPUTextureFormat_ASTC8x5UnormSrgb:        return Format::ASTC8x5_sRGB;
+        case WGPUTextureFormat_ASTC8x6Unorm:            return Format::ASTC8x6;
+        case WGPUTextureFormat_ASTC8x6UnormSrgb:        return Format::ASTC8x6_sRGB;
+        case WGPUTextureFormat_ASTC8x8Unorm:            return Format::ASTC8x8;
+        case WGPUTextureFormat_ASTC8x8UnormSrgb:        return Format::ASTC8x8_sRGB;
+        case WGPUTextureFormat_ASTC10x5Unorm:           return Format::ASTC10x5;
+        case WGPUTextureFormat_ASTC10x5UnormSrgb:       return Format::ASTC10x5_sRGB;
+        case WGPUTextureFormat_ASTC10x6Unorm:           return Format::ASTC10x6;
+        case WGPUTextureFormat_ASTC10x6UnormSrgb:       return Format::ASTC10x6_sRGB;
+        case WGPUTextureFormat_ASTC10x8Unorm:           return Format::ASTC10x8;
+        case WGPUTextureFormat_ASTC10x8UnormSrgb:       return Format::ASTC10x8_sRGB;
+        case WGPUTextureFormat_ASTC10x10Unorm:          return Format::ASTC10x10;
+        case WGPUTextureFormat_ASTC10x10UnormSrgb:      return Format::ASTC10x10_sRGB;
+        case WGPUTextureFormat_ASTC12x10Unorm:          return Format::ASTC12x10;
+        case WGPUTextureFormat_ASTC12x10UnormSrgb:      return Format::ASTC12x10_sRGB;
+        case WGPUTextureFormat_ASTC12x12Unorm:          return Format::ASTC12x12;
+        case WGPUTextureFormat_ASTC12x12UnormSrgb:      return Format::ASTC12x12_sRGB;
+
+        /* --- ETC formats --- */
+        case WGPUTextureFormat_ETC2RGB8Unorm:           return Format::ETC2UNorm; // Map ETC1 to ETC2 RGB8 format because it's compatible and more widely supported in WebGPU
+        case WGPUTextureFormat_ETC2RGB8UnormSrgb:       return Format::ETC2UNorm_sRGB;
+
+        default:                                        break;
+    }
+    return Format::Undefined;
 }
 
 

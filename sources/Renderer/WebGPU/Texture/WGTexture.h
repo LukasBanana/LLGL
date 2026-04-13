@@ -10,6 +10,8 @@
 
 
 #include <LLGL/Texture.h>
+#include <LLGL/ImageFlags.h>
+#include <webgpu/webgpu.h>
 
 
 namespace LLGL
@@ -25,11 +27,20 @@ class WGTexture final : public Texture
 
     public:
 
-        /* WGTexture(const TextureDescriptor& desc); */
+        WGTexture(WGPUDevice device, const TextureDescriptor& desc);
+        ~WGTexture();
+
+        void Write(WGPUQueue queue, const TextureRegion& textureRegion, const ImageView& imageView);
+
+        // Returns the native WebGPU texture handle.
+        inline WGPUTexture GetNative() const
+        {
+            return texture_;
+        }
 
     private:
 
-        // private fields ...
+        WGPUTexture texture_ = nullptr;
 
 };
 

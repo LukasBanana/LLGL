@@ -79,7 +79,7 @@ Buffer* WGRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
 
 BufferArray* WGRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    return bufferArrays_.emplace<WGBufferArray>(numBuffers, bufferArray);
 }
 
 void WGRenderSystem::Release(Buffer& buffer)
@@ -89,7 +89,7 @@ void WGRenderSystem::Release(Buffer& buffer)
 
 void WGRenderSystem::Release(BufferArray& bufferArray)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    bufferArrays_.erase(&bufferArray);
 }
 
 void WGRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
@@ -120,17 +120,33 @@ void WGRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* WGRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    WGTexture* textureWG = textures_.emplace<WGTexture>(device_, textureDesc);
+    if (initialImage != nullptr)
+    {
+        const std::uint32_t numMipLevels = NumMipLevels(textureDesc);
+        for_range(mipLevel, numMipLevels)
+        {
+            TextureRegion fullMipRegion;
+            {
+                fullMipRegion.extent                        = LLGL::GetMipExtent(textureDesc, mipLevel);
+                fullMipRegion.subresource.numArrayLayers    = textureDesc.arrayLayers;
+                fullMipRegion.subresource.baseMipLevel      = mipLevel;
+            }
+            textureWG->Write(commandQueue_->GetNative(), fullMipRegion, *initialImage);
+        }
+    }
+    return textureWG;
 }
 
 void WGRenderSystem::Release(Texture& texture)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    textures_.erase(&texture);
 }
 
 void WGRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& textureWG = LLGL_CAST(WGTexture&, texture);
+    textureWG.Write(commandQueue_->GetNative(), textureRegion, srcImageView);
 }
 
 void WGRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
@@ -140,12 +156,12 @@ void WGRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 Sampler* WGRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    return samplers_.emplace<WGSampler>(device_, samplerDesc);
 }
 
 void WGRenderSystem::Release(Sampler& sampler)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    samplers_.erase(&sampler);
 }
 
 ResourceHeap* WGRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
