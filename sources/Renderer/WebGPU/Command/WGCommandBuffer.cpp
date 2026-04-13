@@ -11,10 +11,12 @@
 #include "../Buffer/WGBuffer.h"
 #include "../Buffer/WGIndexBuffer.h"
 #include "../Buffer/WGBufferArray.h"
+#include "../Texture/WGTexture.h"
 #include "../RenderState/WGRenderPipeline.h"
 #include "../RenderState/WGComputePipeline.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
+#include "../../TextureUtils.h"
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/WebGPU/NativeHandle.h>
@@ -82,7 +84,35 @@ void WGCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
 
 void WGCommandBuffer::CopyBufferFromTexture(Buffer& dstBuffer, std::uint64_t dstOffset, Texture& srcTexture, const TextureRegion& srcRegion, std::uint32_t rowStride, std::uint32_t layerStride)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& dstBufferWG = LLGL_CAST(WGBuffer&, dstBuffer);
+    auto& srcTextureWG = LLGL_CAST(WGTexture&, srcTexture);
+
+    const Format format = srcTexture.GetFormat();
+    const SubresourceLayout layout = CalcSubresourceLayout(format, srcRegion.extent, srcRegion.subresource.numArrayLayers);
+    const Offset3D texOffset = CalcTextureOffset(srcTextureWG.GetType(), srcRegion.offset, srcRegion.subresource.baseArrayLayer);
+
+    rowStride = std::max(rowStride, layout.rowStride);
+    LLGL_ASSERT(rowStride > 0);
+
+    layerStride = std::max(layerStride, layout.layerStride);
+    LLGL_ASSERT(layerStride > 0);
+
+    WGPUTexelCopyTextureInfo srcTexInfo;
+    {
+        srcTexInfo.texture  = srcTextureWG.GetNative();
+        srcTexInfo.mipLevel = srcRegion.subresource.baseMipLevel;
+        srcTexInfo.origin   = WGTypes::ToWGOrigin3D(texOffset);
+        srcTexInfo.aspect   = WGPUTextureAspect_All;
+    }
+    WGPUTexelCopyBufferInfo dstBufInfo;
+    {
+        dstBufInfo.layout.offset        = dstOffset;
+        dstBufInfo.layout.bytesPerRow   = rowStride;
+        dstBufInfo.layout.rowsPerImage  = layerStride / rowStride;
+        dstBufInfo.buffer               = dstBufferWG.GetNative();
+    }
+    const WGPUExtent3D copySize = WGTypes::ToWGExtent3D(srcRegion.extent);
+    wgpuCommandEncoderCopyTextureToBuffer(commandEncoder_, &srcTexInfo, &dstBufInfo, &copySize);
 }
 
 void WGCommandBuffer::FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std::uint32_t value, std::uint64_t fillSize)
@@ -101,12 +131,58 @@ void WGCommandBuffer::FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std
 
 void WGCommandBuffer::CopyTexture(Texture& dstTexture, const TextureLocation& dstLocation, Texture& srcTexture, const TextureLocation& srcLocation, const Extent3D& extent)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& dstTextureWG = LLGL_CAST(WGTexture&, dstTexture);
+    auto& srcTextureWG = LLGL_CAST(WGTexture&, srcTexture);
+
+    WGPUTexelCopyTextureInfo dstTexInfo;
+    {
+        dstTexInfo.texture  = srcTextureWG.GetNative();
+        dstTexInfo.mipLevel = dstLocation.mipLevel;
+        dstTexInfo.origin   = WGTypes::ToWGOrigin3D(dstLocation.offset);
+        dstTexInfo.aspect   = WGPUTextureAspect_All;
+    }
+    WGPUTexelCopyTextureInfo srcTexInfo;
+    {
+        srcTexInfo.texture  = srcTextureWG.GetNative();
+        srcTexInfo.mipLevel = srcLocation.mipLevel;
+        srcTexInfo.origin   = WGTypes::ToWGOrigin3D(srcLocation.offset);
+        srcTexInfo.aspect   = WGPUTextureAspect_All;
+    }
+    const WGPUExtent3D copySize = WGTypes::ToWGExtent3D(extent);
+    wgpuCommandEncoderCopyTextureToTexture(commandEncoder_, &srcTexInfo, &dstTexInfo, &copySize);
 }
 
 void WGCommandBuffer::CopyTextureFromBuffer(Texture& dstTexture, const TextureRegion& dstRegion, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint32_t rowStride, std::uint32_t layerStride)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& dstTextureWG = LLGL_CAST(WGTexture&, dstTexture);
+    auto& srcBufferWG = LLGL_CAST(WGBuffer&, srcBuffer);
+
+    const Format format = dstTexture.GetFormat();
+    const SubresourceLayout layout = CalcSubresourceLayout(format, dstRegion.extent, dstRegion.subresource.numArrayLayers);
+    const Offset3D texOffset = CalcTextureOffset(dstTextureWG.GetType(), dstRegion.offset, dstRegion.subresource.baseArrayLayer);
+
+    rowStride = std::max(rowStride, layout.rowStride);
+    LLGL_ASSERT(rowStride > 0);
+
+    layerStride = std::max(layerStride, layout.layerStride);
+    LLGL_ASSERT(layerStride > 0);
+
+    WGPUTexelCopyTextureInfo dstTexInfo;
+    {
+        dstTexInfo.texture  = dstTextureWG.GetNative();
+        dstTexInfo.mipLevel = dstRegion.subresource.baseMipLevel;
+        dstTexInfo.origin   = WGTypes::ToWGOrigin3D(texOffset);
+        dstTexInfo.aspect   = WGPUTextureAspect_All;
+    }
+    WGPUTexelCopyBufferInfo srcBufInfo;
+    {
+        srcBufInfo.layout.offset        = srcOffset;
+        srcBufInfo.layout.bytesPerRow   = rowStride;
+        srcBufInfo.layout.rowsPerImage  = layerStride / rowStride;
+        srcBufInfo.buffer               = srcBufferWG.GetNative();
+    }
+    const WGPUExtent3D copySize = WGTypes::ToWGExtent3D(dstRegion.extent);
+    wgpuCommandEncoderCopyBufferToTexture(commandEncoder_, &srcBufInfo, &dstTexInfo, &copySize);
 }
 
 void WGCommandBuffer::CopyTextureFromFramebuffer(Texture& dstTexture, const TextureRegion& dstRegion, const Offset2D& srcOffset)

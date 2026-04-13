@@ -10,6 +10,7 @@
 
 
 #include <webgpu/webgpu.h>
+#include <LLGL/Types.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -19,6 +20,7 @@
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/QueryHeapFlags.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -40,10 +42,31 @@ WGPUStencilOperation ToWGStencilOperation(const StencilOp stencilOp);
 WGPUBlendFactor ToWGBlendFactor(const BlendOp blendOp);
 WGPUBlendOperation ToWGBlendOperation(const BlendArithmetic blendArithmetic);
 WGPUPrimitiveTopology ToWGPrimitiveTopology(const PrimitiveTopology topology);
+WGPUAddressMode ToWGAddressMode(const SamplerAddressMode mode);
+WGPUFilterMode ToWGFilterMode(const SamplerFilter filter);
+WGPUMipmapFilterMode ToWGMipmapFilterMode(const SamplerFilter filter);
 
 bool IsWGTextureFormatBC(WGPUTextureFormat format);
 bool IsWGTextureFormatASTC(WGPUTextureFormat format);
 bool IsWGTextureFormatETC2(WGPUTextureFormat format);
+
+Format FromWGTextureFormat(WGPUTextureFormat format);
+Format FromWGTextureFormatOrDefault(WGPUTextureFormat format);
+
+inline WGPUExtent3D ToWGExtent3D(const Extent3D& extent)
+{
+    return WGPUExtent3D{ extent.width, extent.height, extent.depth };
+}
+
+inline WGPUOrigin3D ToWGOrigin3D(const Offset3D& offset)
+{
+    return WGPUOrigin3D
+    {
+        static_cast<std::uint32_t>(std::max<std::int32_t>(0, offset.x)),
+        static_cast<std::uint32_t>(std::max<std::int32_t>(0, offset.y)),
+        static_cast<std::uint32_t>(std::max<std::int32_t>(0, offset.z))
+    };
+}
 
 
 } // /namespace WGTypes

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Sampler.h>
+#include <webgpu/webgpu.h>
 
 
 namespace LLGL
@@ -25,11 +26,18 @@ class WGSampler final : public Sampler
 
     public:
 
-        /* WGSampler(const SamplerDescriptor& desc); */
+        WGSampler(WGPUDevice device, const SamplerDescriptor& desc);
+        ~WGSampler();
+
+        // Returns the native WebGPU sampler handle.
+        inline WGPUSampler GetNative() const
+        {
+            return sampler_;
+        }
 
     private:
 
-        // private fields ...
+        WGPUSampler sampler_ = nullptr;
 
 };
 

@@ -6,6 +6,8 @@
  */
 
 #include "WGSampler.h"
+#include "../WGCore.h"
+#include "../WGTypes.h"
 #include "../../../Core/Assertion.h"
 
 
@@ -13,7 +15,31 @@ namespace LLGL
 {
 
 
-/* WGSampler::WGSampler(const SamplerDescriptor& desc) { ... } */
+WGSampler::WGSampler(WGPUDevice device, const SamplerDescriptor& desc)
+{
+    WGPUSamplerDescriptor wgpuSamplerDesc;
+    {
+        wgpuSamplerDesc.nextInChain     = nullptr;
+        wgpuSamplerDesc.label           = ToWGStringView(desc.debugName);
+        wgpuSamplerDesc.addressModeU    = WGTypes::ToWGAddressMode(desc.addressModeU);
+        wgpuSamplerDesc.addressModeV    = WGTypes::ToWGAddressMode(desc.addressModeV);
+        wgpuSamplerDesc.addressModeW    = WGTypes::ToWGAddressMode(desc.addressModeW);
+        wgpuSamplerDesc.magFilter       = WGTypes::ToWGFilterMode(desc.magFilter);
+        wgpuSamplerDesc.minFilter       = WGTypes::ToWGFilterMode(desc.minFilter);
+        wgpuSamplerDesc.mipmapFilter    = WGTypes::ToWGMipmapFilterMode(desc.mipMapFilter);
+        wgpuSamplerDesc.lodMinClamp     = desc.minLOD;
+        wgpuSamplerDesc.lodMaxClamp     = desc.maxLOD;
+        wgpuSamplerDesc.compare         = WGTypes::ToWGCompareFunc(desc.compareOp);
+        wgpuSamplerDesc.maxAnisotropy   = static_cast<std::uint16_t>(desc.maxAnisotropy);
+    }
+    sampler_ = wgpuDeviceCreateSampler(device, &wgpuSamplerDesc);
+    LLGL_ASSERT_PTR(sampler_);
+}
+
+WGSampler::~WGSampler()
+{
+    wgpuSamplerRelease(sampler_);
+}
 
 bool WGSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {

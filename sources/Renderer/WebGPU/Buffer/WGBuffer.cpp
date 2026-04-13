@@ -18,6 +18,7 @@ namespace LLGL
 static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
 {
     WGPUBufferUsage usage = WGPUBufferUsage_CopyDst;
+
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
         usage |= WGPUBufferUsage_Vertex;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
@@ -38,8 +39,8 @@ static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
         usage |= WGPUBufferUsage_MapRead;
     if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
         usage |= WGPUBufferUsage_MapWrite;
-    return usage;
 
+    return usage;
 }
 
 WGBuffer::WGBuffer(WGPUDevice device, const BufferDescriptor& bufferDesc) :
@@ -55,6 +56,11 @@ WGBuffer::WGBuffer(WGPUDevice device, const BufferDescriptor& bufferDesc) :
     }
     buffer_ = wgpuDeviceCreateBuffer(device, &wgpuBufferDesc);
     LLGL_ASSERT_PTR(buffer_);
+}
+
+WGBuffer::~WGBuffer()
+{
+    wgpuBufferRelease(buffer_);
 }
 
 BufferDescriptor WGBuffer::GetDesc() const

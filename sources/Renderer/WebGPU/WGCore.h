@@ -29,7 +29,10 @@ inline StringView ToStringView(WGPUStringView str)
 
 inline WGPUStringView ToWGStringView(const char* text)
 {
-    return WGPUStringView{ text, ::strlen(text) };
+    if (text != nullptr)
+        return WGPUStringView{ text, ::strlen(text) };
+    else
+        return WGPU_STRING_VIEW_INIT;
 }
 
 
