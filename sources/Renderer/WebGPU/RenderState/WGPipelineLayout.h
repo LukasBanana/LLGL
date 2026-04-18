@@ -10,6 +10,8 @@
 
 
 #include <LLGL/PipelineLayout.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <webgpu/webgpu.h>
 
 
 namespace LLGL
@@ -25,11 +27,23 @@ class WGPipelineLayout final : public PipelineLayout
 
     public:
 
-        /* WGPipelineLayout(const PipelineLayoutDescriptor& desc); */
+        WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc);
+        ~WGPipelineLayout();
+
+        // Returns the native WebGPU pipeline layout object.
+        inline WGPUPipelineLayout GetNative() const
+        {
+            return pipelineLayout_;
+        }
 
     private:
 
-        // private fields ...
+        WGPUPipelineLayout  pipelineLayout_     = nullptr;
+        WGPUBindGroupLayout bindGroupLayout_    = nullptr;
+        std::uint32_t       numHeapBindings_    = 0;
+        std::uint32_t       numBindings_        = 0;
+        std::uint32_t       numStaticSamplers_  = 0;
+        std::uint32_t       numUniforms_        = 0;
 
 };
 

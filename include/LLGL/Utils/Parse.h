@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Export.h>
-#include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/DynamicVector.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/UTF8String.h>
 #include <LLGL/PipelineLayoutFlags.h>
@@ -47,8 +47,8 @@ class LLGL_EXPORT ParseContext
 
     public:
 
-        using StringType        = SmallVector<char, 0>;
-        using TokenArrayType    = SmallVector<StringView, 0>;
+        using StringType        = DynamicVector<char>;
+        using TokenArrayType    = DynamicVector<StringView>;
 
     public:
 

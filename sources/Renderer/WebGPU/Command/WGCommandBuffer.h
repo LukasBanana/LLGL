@@ -31,6 +31,11 @@ class WGCommandBuffer final : public CommandBuffer
 
         WGCommandBuffer(WGPUDevice device, WGPUQueue queue, const CommandBufferDescriptor& desc);
 
+        inline const WGPUCommandBuffer* GetAddressOfNative() const
+        {
+            return &commandBuffer_;
+        }
+
     private:
 
         static constexpr std::uint32_t maxNumVertexBuffers  = 16;

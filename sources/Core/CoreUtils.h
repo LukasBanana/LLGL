@@ -211,11 +211,19 @@ T* FindInSortedArray(
     return nullptr;
 }
 
+// Returns true if 'val' has exactly a single bit set to 1, i.e. 'val' is a power-of-two value.
+template <typename T>
+constexpr bool IsPowerOfTwo(T val)
+{
+    static_assert(std::is_integral<T>::value, "IsPowerOfTwo<T>: template parameter `T` must be an integral type");
+    return (val > 0 && (val & (val - 1)) == 0);
+}
+
 // Returns 'numerator' divided by 'denominator' while always rounding up.
 template <typename T>
 constexpr T DivideRoundUp(T numerator, T denominator)
 {
-    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: template parameter 'T' must be an integral type");
+    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: template parameter `T` must be an integral type");
     return ((numerator + denominator - T(1)) / denominator);
 }
 
@@ -223,7 +231,8 @@ constexpr T DivideRoundUp(T numerator, T denominator)
 template <typename T>
 constexpr T GetAlignedSize(T size, T alignment)
 {
-    return (alignment > 1 ? DivideRoundUp<T>(size, alignment) * alignment : size);
+    static_assert(std::is_integral<T>::value, "GetAlignedSize<T>: template parameter `T` must be an integral type");
+    return (alignment > 1 ? (size + (alignment - T(1))) & ~(alignment - T(1)) : size);
 }
 
 /*
@@ -238,9 +247,9 @@ constexpr T GetAlignedImageSize(const Extent3D& extent, T rowSize, T alignedRowS
 
 // Clamps value x into the range [minimum, maximum].
 template <typename T>
-const T& Clamp(const T& x, const T& minimum, const T& maximum)
+constexpr const T& Clamp(const T& x, const T& minimum, const T& maximum)
 {
-    return std::max<T>(minimum, std::min<T>(x, maximum));
+    return (x < minimum ? minimum : (x > maximum ? maximum : x));
 }
 
 // Casts the input raw pointer to the typed pointer if the input size matches.

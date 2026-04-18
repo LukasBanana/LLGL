@@ -882,6 +882,8 @@ LLGL::Shader* ExampleBase::LoadStandardVertexShader(
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, vertexFormats, {}, defines);
+    if (Supported(LLGL::ShadingLanguage::WGSL))
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.wgsl", entryPoint, "" }, vertexFormats, {}, defines);
     return nullptr;
 }
 
@@ -898,6 +900,8 @@ LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, fragmentAttribs, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, fragmentAttribs, defines);
+    if (Supported(LLGL::ShadingLanguage::WGSL))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.wgsl", entryPoint, "" }, fragmentAttribs, defines);
     return nullptr;
 }
 

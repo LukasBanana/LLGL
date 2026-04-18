@@ -272,7 +272,7 @@ void WGCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t 
 
 void WGCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    //LLGL_TRAP_NOT_IMPLEMENTED();
 }
 
 void WGCommandBuffer::ResourceBarrier(std::uint32_t /*numBuffers*/, Buffer* const * /*buffers*/, std::uint32_t /*numTextures*/, Texture* const * /*textures*/)
@@ -373,7 +373,15 @@ void WGCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
 
 void WGCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    //TODO
+    if (renderPassEncoder_ != nullptr)
+    {
+        wgpuRenderPassEncoderSetImmediates(renderPassEncoder_, first, static_cast<const std::uint32_t*>(data), dataSize / 4);
+    }
+    else if (computePassEncoder_ != nullptr)
+    {
+        wgpuComputePassEncoderSetImmediates(computePassEncoder_, first, static_cast<const std::uint32_t*>(data), dataSize / 4);
+    }
 }
 
 void WGCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
