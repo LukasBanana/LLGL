@@ -9,10 +9,12 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Report.h>
+#include "BasicParser.h"
 #include <vector>
 #include <string>
 #include <cstring>
 #include <cmath>
+#include "Ascii.h"
 #include "Exception.h"
 #include "StringUtils.h"
 
@@ -21,30 +23,7 @@ namespace LLGL
 {
 
 
-static bool IsCharAlpha(char c)
-{
-    return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
-}
-
-static bool IsCharNumeric(char c)
-{
-    return (c >= '0' && c <= '9');
-}
-
-static bool IsCharNumericHex(char c)
-{
-    return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
-}
-
-static bool IsCharIdentifier(char c)
-{
-    return (IsCharAlpha(c) || IsCharNumeric(c) || c == '_');
-}
-
-static bool IsCharWhitespace(char c)
-{
-    return (c == ' ' || c == '\t' || c == '\v' || c == '\n' || c == '\r');
-}
+using namespace Ascii;
 
 #if 0 //UNUSED
 // Return name of ASCII character.
@@ -75,7 +54,7 @@ static const char* GetASCIIName(char c)
 }
 #endif
 
-static void ScanTokens(const char* start, const char* end, ParseContext::TokenArrayType& outTokens)
+static void ScanLLGLTokensInternal(const char* start, const char* end, ParseContext::TokenArrayType& outTokens)
 {
     /* Stores the current token */
     auto NextToken = [&start, &outTokens](const char* s)
@@ -112,7 +91,7 @@ static void ReserveAndScanTokens(ParseContext::StringType& source, ParseContext:
     /* Reserve token array with average token length */
     constexpr std::size_t averageTokenLength = 8;
     outTokens.reserve(source.size() / averageTokenLength);
-    ScanTokens(source.begin(), source.end(), outTokens);
+    ScanLLGLTokensInternal(source.begin(), source.end(), outTokens);
 }
 
 
@@ -125,22 +104,16 @@ class Parser;
 static bool ReturnWithParseError(Parser& parser, const char* format);
 static bool ReturnWithParseError(Parser& parser, const char* format, const StringView& tok);
 
-class Parser
+class Parser : public BasicParser<StringView>
 {
 
     public:
 
         Parser() = default;
 
-        Parser(const ArrayView<StringView>& tokens);
+        Parser(ArrayView<StringView> tokens);
 
     public:
-
-        // Resets the internal token iterator.
-        void Reset();
-
-        // Returns the current token with an optional offset.
-        StringView Token(int offset = 0) const;
 
         // Returns true if the current token (with optional offset) matches the specified string.
         bool Match(const StringView& match, int offset = 0) const;
@@ -151,14 +124,14 @@ class Parser
         // Returns the base of the current token (with optional offset) if it matches a number. Otherwise, returns 0.
         int MatchNumeric(int offset = 0) const;
 
-        // Accepts and returns the current token, then moves to the next token.
-        StringView Accept();
+        // Forward to BasicParser::Accept().
+        inline const StringView& Accept()
+        {
+            return BasicParser::Accept();
+        }
 
         // Accepts the current token if it matches the specified string.
         bool Accept(const StringView& match);
-
-        // Returns true if there are further tokens to parse.
-        bool Feed() const;
 
         // Returns a new parser with a sub region until the specified matching end token.
         bool Fork(const StringView& matchEnd, Parser& outForkedParser);
@@ -168,43 +141,11 @@ class Parser
         // Error report.
         Report report;
 
-    private:
-
-        ArrayView<StringView>   tokens_;
-        std::size_t             iter_   = 0;
-
 };
 
-Parser::Parser(const ArrayView<StringView>& tokens) :
-    tokens_ { tokens }
+Parser::Parser(ArrayView<StringView> tokens) :
+    BasicParser{ tokens }
 {
-}
-
-void Parser::Reset()
-{
-    iter_ = 0;
-}
-
-StringView Parser::Token(int offset) const
-{
-    if (offset < 0)
-    {
-        unsigned uOffset = static_cast<unsigned>(-offset);
-        if (uOffset < iter_ && iter_ - uOffset < tokens_.size())
-            return tokens_[iter_ - uOffset];
-    }
-    else if (offset > 0)
-    {
-        unsigned uOffset = static_cast<unsigned>(offset);
-        if (iter_ + uOffset < tokens_.size())
-            return tokens_[iter_ + uOffset];
-    }
-    else if (iter_ < tokens_.size())
-    {
-        /* Return current token */
-        return tokens_[iter_];
-    }
-    return {};
 }
 
 bool Parser::Match(const StringView& match, int offset) const
@@ -254,41 +195,28 @@ int Parser::MatchNumeric(int offset) const
     }
 }
 
-StringView Parser::Accept()
-{
-    if (iter_ < tokens_.size())
-    {
-        StringView s = Token();
-        ++iter_;
-        return s;
-    }
-    return {};
-}
-
 bool Parser::Accept(const StringView& match)
 {
     if (Match(match))
     {
-        ++iter_;
+        (void)Accept();
         return true;
     }
     return false;
 }
 
-bool Parser::Feed() const
-{
-    return (iter_ < tokens_.size());
-}
-
 bool Parser::Fork(const StringView& matchEnd, Parser& outForkedParser)
 {
     /* Find matching end token */
-    for (std::size_t start = iter_; Feed(); Accept())
+    for (std::size_t start = GetIterator(); Feed(); (void)Accept())
     {
         if (Match(matchEnd))
         {
-            outForkedParser = Parser{ ArrayView<StringView>{ (tokens_.data() + start), (iter_ - start) } };
-            Accept();
+            outForkedParser = ArrayView<StringView>{
+                (GetTokens().data() + start),
+                (GetIterator() - start)
+            };
+            (void)Accept();
             return true;
         }
     }

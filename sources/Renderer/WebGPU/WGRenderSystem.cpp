@@ -211,12 +211,12 @@ void WGRenderSystem::Release(Shader& shader)
 
 PipelineLayout* WGRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    return pipelineLayouts_.emplace<WGPipelineLayout>(device_, pipelineLayoutDesc);
 }
 
 void WGRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 PipelineCache* WGRenderSystem::CreatePipelineCache(const Blob& initialBlob)

@@ -6,6 +6,8 @@
  */
 
 #include "WGCommandQueue.h"
+#include "WGCommandBuffer.h"
+#include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 
 
@@ -26,7 +28,8 @@ WGCommandQueue::~WGCommandQueue()
 
 void WGCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    auto& commandBufferWG = LLGL_CAST(WGCommandBuffer&, commandBuffer);
+    wgpuQueueSubmit(queue_, 1, commandBufferWG.GetAddressOfNative());
 }
 
 bool WGCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)

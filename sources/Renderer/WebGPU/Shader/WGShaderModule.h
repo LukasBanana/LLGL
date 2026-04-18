@@ -11,6 +11,7 @@
 
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/Report.h>
+#include "WGSLResourceReflection.h"
 #include "../WGPtr.h"
 #include <memory>
 #include <webgpu/webgpu.h>
@@ -49,6 +50,7 @@ class WGShaderModule
     private:
 
         WGPtr<WGPUShaderModule> shaderModule_;
+        WGSLResourceReflection  reflection_;
         Report                  report_;
 
 };

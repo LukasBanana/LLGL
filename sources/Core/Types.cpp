@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Types.h>
+#include "CoreUtils.h"
 #include <stdint.h>
 #include <algorithm>
 
@@ -18,23 +19,17 @@ namespace LLGL
 
 static std::uint32_t AddUInt32Clamped(std::uint32_t lhs, std::uint32_t rhs)
 {
-    const std::uint32_t xMax = UINT32_MAX;
-
-    std::uint64_t x = lhs;
-    x += rhs;
-
-    if (x > static_cast<std::uint64_t>(xMax))
-        return xMax;
-    else
-        return lhs + rhs;
+    return static_cast<std::uint32_t>(
+        std::min<std::uint64_t>(
+            static_cast<std::uint64_t>(lhs) + static_cast<std::uint64_t>(rhs),
+            UINT32_MAX
+        )
+    );
 }
 
-static std::uint32_t SubUInt32Clamped(std::uint32_t lhs, std::uint32_t rhs)
+static constexpr std::uint32_t SubUInt32Clamped(std::uint32_t lhs, std::uint32_t rhs)
 {
-    if (rhs < lhs)
-        return lhs - rhs;
-    else
-        return 0;
+    return (rhs < lhs ? lhs - rhs : 0u);
 }
 
 LLGL_EXPORT Extent2D operator + (const Extent2D& lhs, const Extent2D& rhs)
@@ -77,28 +72,19 @@ LLGL_EXPORT Extent3D operator - (const Extent3D& lhs, const Extent3D& rhs)
 
 /* ----- Offset Operators ----- */
 
-static std::int32_t ClampToInt32(std::int64_t x)
+static constexpr std::int32_t ClampToInt32(std::int64_t x)
 {
-    const std::int64_t xMin = INT32_MIN;
-    const std::int64_t xMax = INT32_MAX;
-
-    x = std::max(xMin, std::min(x, xMax));
-
-    return static_cast<std::int32_t>(x);
+    return static_cast<std::int32_t>(Clamp<std::int64_t>(x, INT32_MIN, INT32_MAX));
 }
 
-static std::int32_t AddInt32Clamped(std::int32_t lhs, std::int32_t rhs)
+static constexpr std::int32_t AddInt32Clamped(std::int32_t lhs, std::int32_t rhs)
 {
-    std::int64_t x = lhs;
-    x += rhs;
-    return ClampToInt32(x);
+    return ClampToInt32(static_cast<std::int64_t>(lhs) + static_cast<std::int64_t>(rhs));
 }
 
-static std::int32_t SubInt32Clamped(std::int32_t lhs, std::int32_t rhs)
+static constexpr std::int32_t SubInt32Clamped(std::int32_t lhs, std::int32_t rhs)
 {
-    std::int64_t x = lhs;
-    x -= rhs;
-    return ClampToInt32(x);
+    return ClampToInt32(static_cast<std::int64_t>(lhs) - static_cast<std::int64_t>(rhs));
 }
 
 LLGL_EXPORT Offset2D operator + (const Offset2D& lhs, const Offset2D& rhs)
