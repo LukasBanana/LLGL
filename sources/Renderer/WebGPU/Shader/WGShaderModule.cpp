@@ -98,7 +98,7 @@ void WGShaderModule::BuildShader(WGPUInstance instance, WGPUDevice device, const
         sourceWGSL.code.data    = sourceContext.sourceText.data();
         sourceWGSL.code.length  = sourceContext.sourceText.size();
 
-        if (!reflection_.Reflect(sourceContext.sourceText, &report_))
+        if (!ReflectWGSLShaderSource(resourceReflectionTable_, sourceContext.sourceText, &report_))
             report_.Errorf("WGSL shader resource reflection failed\n");
     }
     else

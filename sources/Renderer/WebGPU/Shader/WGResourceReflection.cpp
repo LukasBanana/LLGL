@@ -1,11 +1,12 @@
 /*
- * WGSLResourceReflection.cpp
+ * WGResourceReflection.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "WGSLResourceReflection.h"
+#include "WGResourceReflection.h"
+#include "WGResourceReflectionTable.h"
 #include "WGSLScanner.h"
 #include "../WGCore.h"
 #include "../../../Core/Assertion.h"
@@ -39,20 +40,6 @@ using WGSLAcceptTokenFunction = const std::function<bool(const WGSLToken& tok)>;
  * WGSLResourceParser class
  */
 
-struct WGSLResourceTable
-{
-    std::vector<WGSLResourceType>       resourceTypes;
-    std::map<std::string, std::size_t>  resources;
-    std::map<std::string, std::size_t>  typeAliases;
-
-    std::size_t RegisterResourceType(WGSLResourceType&& resourceType)
-    {
-        const std::size_t outIndex = resourceTypes.size();
-        resourceTypes.push_back(std::move(resourceType));
-        return outIndex;
-    }
-};
-
 class WGSLResourceParser : public BasicParser<WGSLToken>
 {
 
@@ -76,7 +63,7 @@ class WGSLResourceParser : public BasicParser<WGSLToken>
 
     public:
 
-        WGSLResourceTable resourceTable;
+        WGResourceReflectionTable resourceTable;
 
 };
 
@@ -160,7 +147,7 @@ int WGSLResourceParser::AcceptUntil(const std::function<bool(const WGSLToken& to
 
 
 /*
- * WGSLResourceReflection class
+ * Internal WGSL parsing functions
  */
 
 static bool IsWGSLTokenLCurly(const WGSLToken& tok)
@@ -291,7 +278,7 @@ static bool ParseVariableDecl(WGSLResourceParser& parser, Report* outReport, boo
 }
 
 // See https://www.w3.org/TR/WGSL/#sampled-texture-type
-static WGPUTextureSampleType MapTypenameToSampleType(const WGSLResourceTable& resourceTable, StringView ident)
+static WGPUTextureSampleType MapTypenameToSampleType(const WGResourceReflectionTable& resourceTable, StringView ident)
 {
     /* Try to map to basic types */
     if (ident == "f32") { return WGPUTextureSampleType_Float; }
@@ -303,14 +290,14 @@ static WGPUTextureSampleType MapTypenameToSampleType(const WGSLResourceTable& re
     if (typeAliasIt != resourceTable.typeAliases.end() &&
         typeAliasIt->second < resourceTable.resourceTypes.size())
     {
-        const WGSLResourceType& aliasedResourceType = resourceTable.resourceTypes[typeAliasIt->second];
+        const WGResourceReflection& aliasedResourceType = resourceTable.resourceTypes[typeAliasIt->second];
         return aliasedResourceType.textureSampleType;
     }
 
     return WGPUTextureSampleType_Undefined;
 }
 
-static bool ParseTextureTypeArgs(WGSLResourceParser& parser, Report* outReport, WGSLResourceType& outResourceType)
+static bool ParseTextureTypeArgs(WGSLResourceParser& parser, Report* outReport, WGResourceReflection& outResource)
 {
     /* Parse texture subtype `< SUBTYPE >` */
     if (parser.AcceptIf(WGSLTokenType::Punctuation, "<", outReport) == nullptr)
@@ -324,8 +311,8 @@ static bool ParseTextureTypeArgs(WGSLResourceParser& parser, Report* outReport, 
         return false;
 
     /* Map typename to sample type */
-    outResourceType.textureSampleType = MapTypenameToSampleType(parser.resourceTable, tokSubtype->spell);
-    if (outResourceType.textureSampleType == WGPUTextureSampleType_Undefined)
+    outResource.textureSampleType = MapTypenameToSampleType(parser.resourceTable, tokSubtype->spell);
+    if (outResource.textureSampleType == WGPUTextureSampleType_Undefined)
     {
         LLGL_ERRORF(
             outReport, "failed to map typename '%.*s' to texture sample type\n",
@@ -400,7 +387,7 @@ static WGPUStorageTextureAccess MapIdentToStorageTextureAccess(StringView ident)
     return WGPUStorageTextureAccess_Undefined;
 }
 
-static bool ParseStorageTextureTypeArgs(WGSLResourceParser& parser, Report* outReport, WGSLResourceType& outResourceType)
+static bool ParseStorageTextureTypeArgs(WGSLResourceParser& parser, Report* outReport, WGResourceReflection& outResource)
 {
     /* Parse storagE texture format and access `< FORMAT , ACCESS >` */
     if (parser.AcceptIf(WGSLTokenType::Punctuation, "<", outReport) == nullptr)
@@ -421,8 +408,8 @@ static bool ParseStorageTextureTypeArgs(WGSLResourceParser& parser, Report* outR
         return false;
 
     /* Map identifiers to eumeration values */
-    outResourceType.storageTextureFormat = MapIdentToTextureFormat(tokFormat->spell);
-    if (outResourceType.storageTextureFormat == WGPUTextureFormat_Undefined)
+    outResource.storageTextureFormat = MapIdentToTextureFormat(tokFormat->spell);
+    if (outResource.storageTextureFormat == WGPUTextureFormat_Undefined)
     {
         LLGL_ERRORF(
             outReport, "failed to map identifier '%.*s' to storage texture format\n",
@@ -431,8 +418,8 @@ static bool ParseStorageTextureTypeArgs(WGSLResourceParser& parser, Report* outR
         return false;
     }
 
-    outResourceType.storageTextureAccess = MapIdentToStorageTextureAccess(tokAccess->spell);
-    if (outResourceType.storageTextureAccess == WGPUStorageTextureAccess_Undefined)
+    outResource.storageTextureAccess = MapIdentToStorageTextureAccess(tokAccess->spell);
+    if (outResource.storageTextureAccess == WGPUStorageTextureAccess_Undefined)
     {
         LLGL_ERRORF(
             outReport, "failed to map identifier '%.*s' to storage texture access mode\n",
@@ -444,7 +431,7 @@ static bool ParseStorageTextureTypeArgs(WGSLResourceParser& parser, Report* outR
     return false;
 }
 
-static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGSLResourceType& outResourceType)
+static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGResourceReflection& outResource)
 {
     const WGSLToken* tokIdent = parser.AcceptIf(WGSLTokenType::Identifier, outReport);
     if (tokIdent == nullptr)
@@ -456,12 +443,12 @@ static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGS
 
     if (ident == "sampler")
     {
-        outResourceType.samplerBindingType = WGPUSamplerBindingType_Filtering;
+        outResource.samplerBindingType = WGPUSamplerBindingType_Filtering;
         return true;
     }
     else if (ident == "sampler_comparison")
     {
-        outResourceType.samplerBindingType = WGPUSamplerBindingType_Comparison;
+        outResource.samplerBindingType = WGPUSamplerBindingType_Comparison;
         return true;
     }
 
@@ -469,53 +456,53 @@ static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGS
 
     else if (ident == "texture_1d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_1D;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_1D;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_1d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_1D;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_1D;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_2d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_2D;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_2D;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_2d_array")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_2DArray;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_2DArray;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_3d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_3D;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_3D;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_cube")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_Cube;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_Cube;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_cube_array")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_CubeArray;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_CubeArray;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
 
     /* --- Multisampled textures --- */
 
     else if (ident == "texture_multisampled_2d")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_2D;
-        outResourceType.multisampled            = WGPU_TRUE;
-        return ParseTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension    = WGPUTextureViewDimension_2D;
+        outResource.multisampled            = WGPU_TRUE;
+        return ParseTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_depth_multisampled_2d")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_2D;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Depth;
-        outResourceType.multisampled            = WGPU_TRUE;
+        outResource.textureViewDimension    = WGPUTextureViewDimension_2D;
+        outResource.textureSampleType       = WGPUTextureSampleType_Depth;
+        outResource.multisampled            = WGPU_TRUE;
         return true;
     }
 
@@ -523,8 +510,8 @@ static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGS
 
     else if (ident == "texture_external")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_2D;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Float; //???
+        outResource.textureViewDimension    = WGPUTextureViewDimension_2D;
+        outResource.textureSampleType       = WGPUTextureSampleType_Float; //???
         return true;
     }
 
@@ -532,49 +519,49 @@ static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGS
 
     else if (ident == "texture_storage_1d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_1D;
-        return ParseStorageTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_1D;
+        return ParseStorageTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_storage_2d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_2D;
-        return ParseStorageTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_2D;
+        return ParseStorageTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_storage_2d_array")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_2DArray;
-        return ParseStorageTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_2DArray;
+        return ParseStorageTextureTypeArgs(parser, outReport, outResource);
     }
     else if (ident == "texture_storage_3d")
     {
-        outResourceType.textureViewDimension = WGPUTextureViewDimension_3D;
-        return ParseStorageTextureTypeArgs(parser, outReport, outResourceType);
+        outResource.textureViewDimension = WGPUTextureViewDimension_3D;
+        return ParseStorageTextureTypeArgs(parser, outReport, outResource);
     }
 
     /* --- Depth textures --- */
 
     else if (ident == "texture_depth_2d")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_2D;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Depth;
+        outResource.textureViewDimension    = WGPUTextureViewDimension_2D;
+        outResource.textureSampleType       = WGPUTextureSampleType_Depth;
         return true;
     }
     else if (ident == "texture_depth_2d_array")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_2DArray;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Depth;
+        outResource.textureViewDimension    = WGPUTextureViewDimension_2DArray;
+        outResource.textureSampleType       = WGPUTextureSampleType_Depth;
         return true;
     }
     else if (ident == "texture_depth_cube")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_Cube;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Depth;
+        outResource.textureViewDimension    = WGPUTextureViewDimension_Cube;
+        outResource.textureSampleType       = WGPUTextureSampleType_Depth;
         return true;
     }
     else if (ident == "texture_depth_cube_array")
     {
-        outResourceType.textureViewDimension    = WGPUTextureViewDimension_CubeArray;
-        outResourceType.textureSampleType       = WGPUTextureSampleType_Depth;
+        outResource.textureViewDimension    = WGPUTextureViewDimension_CubeArray;
+        outResource.textureSampleType       = WGPUTextureSampleType_Depth;
         return true;
     }
 
@@ -613,7 +600,7 @@ static bool ParseBindingDecl(WGSLResourceParser& parser, Report* outReport)
     if (!parser.AcceptIf(WGSLTokenType::Punctuation, ":", outReport))
         return false;
 
-    WGSLResourceType resourceType;
+    WGResourceReflection resourceType;
     if (!ParseResourceType(parser, outReport, resourceType))
         return false;
     const std::size_t resourceTypeIndex = parser.resourceTable.RegisterResourceType(std::move(resourceType));
@@ -655,6 +642,10 @@ static bool ParseGlobalStatement(WGSLResourceParser& parser, Report* outReport)
     if (parser.Match(WGSLTokenType::Identifier, "struct"))
         return ParseStructDecl(parser, outReport);
 
+    /* Common function (non-entry-point) */
+    if (parser.Match(WGSLTokenType::Identifier, "fn"))
+        return ParseFunctionDecl(parser, outReport);
+
     /* Empty statement */
     if (parser.AcceptIf(WGSLTokenType::Punctuation, ";"))
         return true;
@@ -663,7 +654,14 @@ static bool ParseGlobalStatement(WGSLResourceParser& parser, Report* outReport)
     return false;
 }
 
-bool WGSLResourceReflection::Reflect(StringView sourceWGSL, Report* outReport)
+#undef LLGL_ERRORF
+
+
+/*
+ * WGResourceReflection class
+ */
+
+bool ReflectWGSLShaderSource(WGResourceReflectionTable& outReflectionTable, StringView sourceWGSL, Report* outReport)
 {
     /* Scan tokens from WGSL source */
     DynamicVector<WGSLToken> tokens;
@@ -680,21 +678,10 @@ bool WGSLResourceReflection::Reflect(StringView sourceWGSL, Report* outReport)
     }
 
     /* Take ownership of parsed resources */
-    resourceTypes_  = std::move(parser.resourceTable.resourceTypes);
-    resources_      = std::move(parser.resourceTable.resources);
-    typeAliases_    = std::move(parser.resourceTable.typeAliases);
+    outReflectionTable = std::move(parser.resourceTable);
 
     return true;
 }
-
-const WGSLResourceType* WGSLResourceReflection::FindResource(const char* name) const
-{
-    auto it = resources_.find(name);
-    return (it != resources_.end() ? &(resourceTypes_[it->second]) : nullptr);
-}
-
-
-#undef LLGL_ERRORF
 
 
 } // /namespace LLGL
