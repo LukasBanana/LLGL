@@ -7,6 +7,7 @@
 
 #include "WGRenderPipeline.h"
 #include "WGRenderPass.h"
+#include "WGPipelineLayout.h"
 #include "../WGCore.h"
 #include "../WGTypes.h"
 #include "../Shader/WGShader.h"
@@ -100,22 +101,22 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
 {
     /* Get number of render-target attachments */
     const WGRenderPass* renderPassWG = (desc.renderPass != nullptr ? LLGL_CAST(const WGRenderPass*, desc.renderPass) : nullptr);
+    const WGPipelineLayout* pipelineLayoutWG = (desc.pipelineLayout != nullptr ? LLGL_CAST(const WGPipelineLayout*, desc.pipelineLayout) : nullptr);
 
-    const WGShader* vertexShaderWG = LLGL_CAST(const WGShader*, desc.vertexShader);
-    if (vertexShaderWG == nullptr)
+    if (desc.vertexShader == nullptr)
     {
         GetMutableReport().Errorf("cannot create WebGPU render pipeline without vertex shader\n");
         return;
     }
+    const WGShader* vertexShaderWG = LLGL_CAST(const WGShader*, desc.vertexShader);
 
     WGPUBlendState blendTargetStates[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     WGPUColorTargetState colorTargetStates[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     WGPUFragmentState fragmentState;
 
-    if (desc.fragmentShader != nullptr)
+    const WGShader* fragmentShaderWG = (desc.fragmentShader != nullptr ? LLGL_CAST(const WGShader*, desc.fragmentShader) : nullptr);
+    if (fragmentShaderWG != nullptr)
     {
-        const WGShader* fragmentShaderWG = LLGL_CAST(const WGShader*, desc.fragmentShader);
-
         const std::size_t numColorTargetStates = (renderPassWG != nullptr ? renderPassWG->GetColorTargetFormats().size() : 1u);
         LLGL_ASSERT(numColorTargetStates <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
 
@@ -147,7 +148,21 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
     {
         renderPipelineDesc.nextInChain  = nullptr;
         renderPipelineDesc.label        = WGPU_STRING_VIEW_INIT;
-        renderPipelineDesc.layout       = nullptr; //TODO
+
+        if (pipelineLayoutWG != nullptr)
+        {
+            /* Create a pipeline layout permutation that depends on the shader resource reflections */
+            SmallVector<const WGResourceReflectionTable*, 2> shaderResourceReflections;
+
+            shaderResourceReflections.push_back(&(vertexShaderWG->GetResourceReflectionTable()));
+            if (fragmentShaderWG != nullptr)
+                shaderResourceReflections.push_back(&(fragmentShaderWG->GetResourceReflectionTable()));
+
+            pipelineLayoutPermutation_ = pipelineLayoutWG->CreatePermutation(device, shaderResourceReflections, GetMutableReport());
+            renderPipelineDesc.layout = (pipelineLayoutPermutation_ ? pipelineLayoutPermutation_->GetNative() : nullptr);
+        }
+        else
+            renderPipelineDesc.layout = nullptr;
 
         renderPipelineDesc.vertex.nextInChain   = nullptr;
         renderPipelineDesc.vertex.module        = vertexShaderWG->GetNative();

@@ -9,6 +9,7 @@
 #include "../WGCore.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -94,20 +95,26 @@ WGPipelineLayout::WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescri
     numHeapBindings_    { static_cast<std::uint32_t>(desc.heapBindings.size())   },
     numBindings_        { static_cast<std::uint32_t>(desc.bindings.size())       },
     numStaticSamplers_  { static_cast<std::uint32_t>(desc.staticSamplers.size()) },
-    numUniforms_        { static_cast<std::uint32_t>(desc.uniforms.size())       }
+    numUniforms_        { static_cast<std::uint32_t>(desc.uniforms.size())       },
+    immediateSize_      { AccumulateUniformSizes(desc.uniforms)                  }
 {
     /*
     Create one bind group layout per PipelineLayout.
     This can be improved by either pooling and auto-derivation or new binding flags from the LLGL interface.
     */
-    std::vector<WGPUBindGroupLayoutEntry> bindGroupEntries;
-    bindGroupEntries.resize(desc.heapBindings.size() + desc.bindings.size() + desc.staticSamplers.size());
-    std::size_t bindGroupEntryIndex = 0;
+    const std::size_t numTotalBindings = desc.heapBindings.size() + desc.bindings.size() + desc.staticSamplers.size();
+    bindGroupEntriesTemplate_.resize(numTotalBindings);
+    bindingNames_.resize(numTotalBindings);
 
+    std::size_t bindGroupEntryIndex = 0;
     if (!desc.bindings.empty())
     {
-        for (const BindingDescriptor& binding : desc.bindings)
-            ConvertBindGroupLayoutEntry(bindGroupEntries[bindGroupEntryIndex++], binding);
+        for_range(i, desc.bindings.size())
+        {
+            ConvertBindGroupLayoutEntry(bindGroupEntriesTemplate_[bindGroupEntryIndex], desc.bindings[i]);
+            bindingNames_[bindGroupEntryIndex] = desc.bindings[i].name.c_str();
+            ++bindGroupEntryIndex;
+        }
     }
 
     //TODO: heap bindings and static samplers
@@ -119,46 +126,22 @@ WGPipelineLayout::WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescri
     {
         LLGL_TRAP_NOT_IMPLEMENTED("static samplers");
     }
-
-    if (!bindGroupEntries.empty())
-    {
-        WGPUBindGroupLayoutDescriptor wgpuBindGroupDesc;
-        {
-            wgpuBindGroupDesc.nextInChain   = nullptr;
-            wgpuBindGroupDesc.label         = ToWGStringView(desc.debugName);
-            wgpuBindGroupDesc.entryCount    = bindGroupEntries.size();
-            wgpuBindGroupDesc.entries       = bindGroupEntries.data();
-        }
-        bindGroupLayout_ = wgpuDeviceCreateBindGroupLayout(device, &wgpuBindGroupDesc);
-        LLGL_ASSERT_PTR(bindGroupLayout_);
-    }
-
-    /* Create native WebGPU pipeline layout wiht a single bind group */
-    WGPUPipelineLayoutDescriptor wgpuLayoutDesc;
-    {
-        wgpuLayoutDesc.nextInChain  = nullptr;
-        wgpuLayoutDesc.label        = ToWGStringView(desc.debugName);
-        if (bindGroupLayout_ != nullptr)
-        {
-            wgpuLayoutDesc.bindGroupLayoutCount = 1;
-            wgpuLayoutDesc.bindGroupLayouts     = &bindGroupLayout_;
-        }
-        else
-        {
-            wgpuLayoutDesc.bindGroupLayoutCount = 0;
-            wgpuLayoutDesc.bindGroupLayouts     = nullptr;
-        }
-        wgpuLayoutDesc.immediateSize = AccumulateUniformSizes(desc.uniforms);
-    }
-    pipelineLayout_ = wgpuDeviceCreatePipelineLayout(device, &wgpuLayoutDesc);
-    LLGL_ASSERT_PTR(pipelineLayout_);
 }
 
-WGPipelineLayout::~WGPipelineLayout()
+WGPipelineLayoutPermutationSPtr WGPipelineLayout::CreatePermutation(
+    WGPUDevice                                  device,
+    ArrayView<const WGResourceReflectionTable*> resourceTables,
+    Report&                                     outReport) const
 {
-    if (bindGroupLayout_ != nullptr)
-        wgpuBindGroupLayoutRelease(bindGroupLayout_);
-    wgpuPipelineLayoutRelease(pipelineLayout_);
+    return std::make_shared<WGPipelineLayoutPermutation>(
+        device,
+        bindGroupEntriesTemplate_,
+        bindingNames_,
+        resourceTables,
+        immediateSize_,
+        debugName_.c_str(),
+        outReport
+    );
 }
 
 std::uint32_t WGPipelineLayout::GetNumHeapBindings() const

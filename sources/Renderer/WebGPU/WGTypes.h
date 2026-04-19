@@ -30,21 +30,21 @@ namespace WGTypes
 {
 
 
-WGPUIndexFormat ToWGIndexFormat(const Format format);
-WGPUTextureFormat ToWGTextureFormat(const Format format);
-WGPUTextureFormat ToWGTextureFormatOrDefault(const Format format);
-WGPUVertexFormat ToWGVertexFormat(const Format format);
-WGPUCullMode ToWGCullMode(const CullMode mode);
-WGPULoadOp ToWGLoadOp(const AttachmentLoadOp loadOp);
-WGPUStoreOp ToWGStoreOp(const AttachmentStoreOp storeOp);
-WGPUCompareFunction ToWGCompareFunc(const CompareOp compareOp);
-WGPUStencilOperation ToWGStencilOperation(const StencilOp stencilOp);
-WGPUBlendFactor ToWGBlendFactor(const BlendOp blendOp);
-WGPUBlendOperation ToWGBlendOperation(const BlendArithmetic blendArithmetic);
-WGPUPrimitiveTopology ToWGPrimitiveTopology(const PrimitiveTopology topology);
-WGPUAddressMode ToWGAddressMode(const SamplerAddressMode mode);
-WGPUFilterMode ToWGFilterMode(const SamplerFilter filter);
-WGPUMipmapFilterMode ToWGMipmapFilterMode(const SamplerFilter filter);
+WGPUIndexFormat         ToWGIndexFormat             ( const Format               format          );
+WGPUTextureFormat       ToWGTextureFormat           ( const Format               format          );
+WGPUTextureFormat       ToWGTextureFormatOrDefault  ( const Format               format          );
+WGPUVertexFormat        ToWGVertexFormat            ( const Format               format          );
+WGPUCullMode            ToWGCullMode                ( const CullMode             mode            );
+WGPULoadOp              ToWGLoadOp                  ( const AttachmentLoadOp     loadOp          );
+WGPUStoreOp             ToWGStoreOp                 ( const AttachmentStoreOp    storeOp         );
+WGPUCompareFunction     ToWGCompareFunc             ( const CompareOp            compareOp       );
+WGPUStencilOperation    ToWGStencilOperation        ( const StencilOp            stencilOp       );
+WGPUBlendFactor         ToWGBlendFactor             ( const BlendOp              blendOp         );
+WGPUBlendOperation      ToWGBlendOperation          ( const BlendArithmetic      blendArithmetic );
+WGPUPrimitiveTopology   ToWGPrimitiveTopology       ( const PrimitiveTopology    topology        );
+WGPUAddressMode         ToWGAddressMode             ( const SamplerAddressMode   mode            );
+WGPUFilterMode          ToWGFilterMode              ( const SamplerFilter        filter          );
+WGPUMipmapFilterMode    ToWGMipmapFilterMode        ( const SamplerFilter        filter          );
 
 bool IsWGTextureFormatBC(WGPUTextureFormat format);
 bool IsWGTextureFormatASTC(WGPUTextureFormat format);

@@ -38,6 +38,12 @@ class WGShader final : public Shader
             return shaderModule_->GetNative();
         }
 
+        // Returns the WGSL resource reflection of the shared shader module.
+        inline const WGResourceReflectionTable& GetResourceReflectionTable() const
+        {
+            return shaderModule_->GetResourceReflectionTable();
+        }
+
         // Returns a WebGPU string view of the entry point name for this shader.
         // This is used when the shared shader module is bound to a render or compute pipeline.
         inline WGPUStringView GetEntryPointNameView() const
