@@ -11,7 +11,7 @@
 
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/Report.h>
-#include "WGSLResourceReflection.h"
+#include "WGResourceReflectionTable.h"
 #include "../WGPtr.h"
 #include <memory>
 #include <webgpu/webgpu.h>
@@ -43,15 +43,21 @@ class WGShaderModule
             return shaderModule_;
         }
 
+        // Returns the WGSL resource reflection.
+        inline const WGResourceReflectionTable& GetResourceReflectionTable() const
+        {
+            return resourceReflectionTable_;
+        }
+
     private:
 
         void BuildShader(WGPUInstance instance, WGPUDevice device, const ShaderSourceContext& sourceContext);
 
     private:
 
-        WGPtr<WGPUShaderModule> shaderModule_;
-        WGSLResourceReflection  reflection_;
-        Report                  report_;
+        WGPtr<WGPUShaderModule>     shaderModule_;
+        WGResourceReflectionTable   resourceReflectionTable_;
+        Report                      report_;
 
 };
 

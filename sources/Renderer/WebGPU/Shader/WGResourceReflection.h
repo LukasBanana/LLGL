@@ -1,12 +1,12 @@
 /*
- * WGSLResourceReflection.h
+ * WGResourceReflection.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_WG_SL_RESOURCE_REFLECTION_H
-#define LLGL_WG_SL_RESOURCE_REFLECTION_H
+#ifndef LLGL_WG_RESOURCE_REFLECTION_H
+#define LLGL_WG_RESOURCE_REFLECTION_H
 
 
 #include <LLGL/Report.h>
@@ -21,7 +21,9 @@ namespace LLGL
 {
 
 
-struct WGSLResourceType
+struct WGResourceReflectionTable;
+
+struct WGResourceReflection
 {
     WGPUTextureViewDimension    textureViewDimension    = WGPUTextureViewDimension_Undefined;
     WGPUTextureSampleType       textureSampleType       = WGPUTextureSampleType_Undefined;
@@ -31,22 +33,7 @@ struct WGSLResourceType
     WGPUBool                    multisampled            = WGPU_FALSE;
 };
 
-class WGSLResourceReflection
-{
-
-    public:
-
-        bool Reflect(StringView sourceWGSL, Report* outReport = nullptr);
-
-        const WGSLResourceType* FindResource(const char* name) const;
-
-    private:
-
-        std::vector<WGSLResourceType>       resourceTypes_;
-        std::map<std::string, std::size_t>  resources_;
-        std::map<std::string, std::size_t>  typeAliases_;
-
-};
+bool ReflectWGSLShaderSource(WGResourceReflectionTable& outReflectionTable, StringView sourceWGSL, Report* outReport = nullptr);
 
 
 } // /namespace LLGL
