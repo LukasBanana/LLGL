@@ -25,11 +25,13 @@ struct WGResourceReflectionTable;
 
 struct WGResourceReflection
 {
+    std::uint32_t               groupIndex              = 0;
+    std::uint32_t               bindingIndex            = 0;
     WGPUTextureViewDimension    textureViewDimension    = WGPUTextureViewDimension_Undefined;
-    WGPUTextureSampleType       textureSampleType       = WGPUTextureSampleType_Undefined;
+    WGPUTextureSampleType       textureSampleType       = WGPUTextureSampleType_BindingNotUsed;
     WGPUTextureFormat           storageTextureFormat    = WGPUTextureFormat_Undefined;
-    WGPUStorageTextureAccess    storageTextureAccess    = WGPUStorageTextureAccess_Undefined;
-    WGPUSamplerBindingType      samplerBindingType      = WGPUSamplerBindingType_Undefined;
+    WGPUStorageTextureAccess    storageTextureAccess    = WGPUStorageTextureAccess_BindingNotUsed;
+    WGPUSamplerBindingType      samplerBindingType      = WGPUSamplerBindingType_BindingNotUsed;
     WGPUBool                    multisampled            = WGPU_FALSE;
 };
 

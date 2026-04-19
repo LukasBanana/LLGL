@@ -578,14 +578,18 @@ static bool ParseResourceType(WGSLResourceParser& parser, Report* outReport, WGR
 
 static bool ParseBindingDecl(WGSLResourceParser& parser, Report* outReport)
 {
+    WGResourceReflection resourceType;
+
     /* Parse group and binding attributes */
     std::uint64_t groupValue = 0;
     if (!ParseIntAttribute(parser, outReport, "group", groupValue))
         return false;
+    resourceType.groupIndex = static_cast<std::uint32_t>(groupValue);
 
     std::uint64_t bindingValue = 0;
     if (!ParseIntAttribute(parser, outReport, "binding", bindingValue))
         return false;
+    resourceType.bindingIndex = static_cast<std::uint32_t>(bindingValue);
 
     /* Parse uniform variable declaration */
     bool isUniformDecl = false;
@@ -600,7 +604,6 @@ static bool ParseBindingDecl(WGSLResourceParser& parser, Report* outReport)
     if (!parser.AcceptIf(WGSLTokenType::Punctuation, ":", outReport))
         return false;
 
-    WGResourceReflection resourceType;
     if (!ParseResourceType(parser, outReport, resourceType))
         return false;
     const std::size_t resourceTypeIndex = parser.resourceTable.RegisterResourceType(std::move(resourceType));

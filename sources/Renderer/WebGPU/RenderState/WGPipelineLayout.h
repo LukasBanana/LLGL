@@ -11,12 +11,19 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Report.h>
+#include <LLGL/Container/ArrayView.h>
+#include "WGPipelineLayoutPermutation.h"
 #include <webgpu/webgpu.h>
+#include <string>
+#include <vector>
 
 
 namespace LLGL
 {
 
+
+struct WGResourceReflectionTable;
 
 class WGPipelineLayout final : public PipelineLayout
 {
@@ -28,22 +35,25 @@ class WGPipelineLayout final : public PipelineLayout
     public:
 
         WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc);
-        ~WGPipelineLayout();
 
-        // Returns the native WebGPU pipeline layout object.
-        inline WGPUPipelineLayout GetNative() const
-        {
-            return pipelineLayout_;
-        }
+        // Creates a native WebGPU pipeline layout permutation using the specified resource reflection tables.
+        WGPipelineLayoutPermutationSPtr CreatePermutation(
+            WGPUDevice                                  device,
+            ArrayView<const WGResourceReflectionTable*> resourceTables,
+            Report&                                     outReport
+        ) const;
 
     private:
 
-        WGPUPipelineLayout  pipelineLayout_     = nullptr;
-        WGPUBindGroupLayout bindGroupLayout_    = nullptr;
-        std::uint32_t       numHeapBindings_    = 0;
-        std::uint32_t       numBindings_        = 0;
-        std::uint32_t       numStaticSamplers_  = 0;
-        std::uint32_t       numUniforms_        = 0;
+        std::uint32_t                           numHeapBindings_            = 0;
+        std::uint32_t                           numBindings_                = 0;
+        std::uint32_t                           numStaticSamplers_          = 0;
+        std::uint32_t                           numUniforms_                = 0;
+
+        std::string                             debugName_;
+        std::uint32_t                           immediateSize_              = 0;
+        std::vector<WGPUBindGroupLayoutEntry>   bindGroupEntriesTemplate_;
+        std::vector<std::string>                bindingNames_;
 
 };
 
