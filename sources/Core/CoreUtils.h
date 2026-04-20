@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <functional>
+#include <utility>
 
 
 namespace LLGL
@@ -31,7 +32,7 @@ namespace LLGL
 template <typename T>
 struct EnumHasher
 {
-    std::size_t operator() (const T& key) const
+    inline std::size_t operator() (const T& key) const
     {
         return std::hash<typename std::underlying_type<T>::type>{}(static_cast<typename std::underlying_type<T>::type>(key));
     }
@@ -231,8 +232,7 @@ constexpr T DivideRoundUp(T numerator, T denominator)
 template <typename T>
 constexpr T GetAlignedSize(T size, T alignment)
 {
-    static_assert(std::is_integral<T>::value, "GetAlignedSize<T>: template parameter `T` must be an integral type");
-    return (alignment > 1 ? (size + (alignment - T(1))) & ~(alignment - T(1)) : size);
+    return (alignment > 1 ? DivideRoundUp<T>(size, alignment) * alignment : size);
 }
 
 /*
@@ -268,6 +268,29 @@ void HashCombine(std::size_t& seed, const T& value)
 {
     constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
     seed ^= std::hash<T>{}(value) + approxGoldenRatio + (seed << 6) + (seed >> 2);
+}
+
+struct AlignedAllocationBlock
+{
+    void* basePtr;
+    void* alignedPtr;
+};
+
+// Allocates a block of memory with the specified alignment. An optional header size can be specified for memory right before the returned and aligned address.
+inline AlignedAllocationBlock AlignedMalloc(const std::function<void*(std::size_t)>& allocator, std::size_t size, std::size_t alignment, std::size_t header = 0)
+{
+    LLGL_ASSERT(IsPowerOfTwo(alignment), "AlignedMalloc<T>: `alignment` must be a power-of-two and non-zero");
+
+    const std::size_t totalSize = size + (alignment - 1) + header;
+
+    void* basePtr = allocator(totalSize);
+
+    const std::uintptr_t baseAddr       = reinterpret_cast<std::uintptr_t>(basePtr);
+    const std::uintptr_t alignedAddr    = GetAlignedSize<std::uintptr_t>(baseAddr + header, alignment);
+
+    void* alignedPtr = reinterpret_cast<void*>(alignedAddr);
+
+    return AlignedAllocationBlock{ basePtr, alignedPtr };
 }
 
 
