@@ -13,14 +13,20 @@
 #include "RenderState/WGRenderPipeline.h"
 #include "Shader/WGShaderModulePool.h"
 #include "../../Core/Assertion.h"
+#include "../../Platform/Debug.h"
 #include <LLGL/Utils/ForRange.h>
+
+#ifdef _WIN32
+#include <Windows.h> //TEST
+#endif
 
 
 namespace LLGL
 {
 
 
-WGRenderSystem::WGRenderSystem(const RenderSystemDescriptor& desc)
+WGRenderSystem::WGRenderSystem(const RenderSystemDescriptor& desc) :
+    isBreakOnErrorEnabled_ { ((desc.flags & RenderSystemFlags::DebugBreakOnError) != 0) }
 {
     CreateWebGpuInstance();
     if (!RequestWebGpuAdapter())
@@ -467,19 +473,58 @@ static void OnWebGpuRequestDevice(WGPURequestDeviceStatus status, WGPUDevice dev
     *reinterpret_cast<WGPUDevice*>(userdata1) = device;
 }
 
+static void OnWebGpuLogging(WGPULoggingType type, WGPUStringView message, void* userdata1, void* userdata2)
+{
+    const WGPULoggingType logVerbosity = *static_cast<const WGPULoggingType*>(userdata2);
+    if (type >= logVerbosity)
+    {
+        const std::string messageCstr{ message.data, message.length };
+        DebugPuts(messageCstr.c_str());
+    }
+
+    if (type == WGPULoggingType_Error)
+    {
+        WGRenderSystem* renderSystemWG = static_cast<WGRenderSystem*>(userdata1);
+        if (renderSystemWG->IsBreakOnErrorEnabled())
+            DebugBreakOnError();
+    }
+}
+
 bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
 {
+    const bool isDebugDevice = ((renderSystemFlags & RenderSystemFlags::DebugDevice) != 0);
+
+    #ifdef _WIN32
+    ::SetEnvironmentVariable(TEXT("DAWN_DEBUG_BREAK_ON_ERROR"), TEXT("1"));
+    #endif
+
     /* Enable Dawn toggles depending on render system flags */
     SmallVector<const char*, 8> enabledToggles;
-    if ((renderSystemFlags & RenderSystemFlags::DebugDevice) != 0)
-        enabledToggles.push_back("dump_shaders");
+    if (isDebugDevice)
+    {
+        enabledToggles =
+        {
+            "dump_shaders_on_failure",
+            "use_user_defined_labels_in_backend",
+            "disable_symbol_renaming",
+            "emit_hlsl_debug_symbols",
+        };
+    }
     else
-        enabledToggles.push_back("skip_validation");
+    {
+        enabledToggles =
+        {
+            "skip_validation",
+        };
+    }
 
     /* Request WebGPU device and wait for result */
     const WGPUFeatureName requiredFeatures[] =
     {
         WGPUFeatureName_CoreFeaturesAndLimits, //TODO
+        #ifndef LLGL_OS_WASM
+        WGPUFeatureName_TextureCompressionBC,
+        #endif
     };
 
     WGPUDawnTogglesDescriptor dawnToggleDesc;
@@ -501,17 +546,17 @@ bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
         deviceDesc.deviceLostCallbackInfo       = WGPU_DEVICE_LOST_CALLBACK_INFO_INIT; //WGPUDeviceLostCallbackInfo
         deviceDesc.uncapturedErrorCallbackInfo  = WGPU_UNCAPTURED_ERROR_CALLBACK_INFO_INIT; //WGPUUncapturedErrorCallbackInfo
     }
-    WGPURequestDeviceCallbackInfo callbackInfo;
+    WGPURequestDeviceCallbackInfo deviceCallbackInfo;
     {
-        callbackInfo.nextInChain    = nullptr;
-        callbackInfo.mode           = WGPUCallbackMode_WaitAnyOnly;
-        callbackInfo.callback       = OnWebGpuRequestDevice;
-        callbackInfo.userdata1      = &device_;
-        callbackInfo.userdata2      = nullptr;
+        deviceCallbackInfo.nextInChain  = nullptr;
+        deviceCallbackInfo.mode         = WGPUCallbackMode_WaitAnyOnly;
+        deviceCallbackInfo.callback     = OnWebGpuRequestDevice;
+        deviceCallbackInfo.userdata1    = &device_;
+        deviceCallbackInfo.userdata2    = nullptr;
     }
     WGPUFutureWaitInfo waitInfo;
     {
-        waitInfo.future     = wgpuAdapterRequestDevice(adapter_, &deviceDesc, callbackInfo);
+        waitInfo.future     = wgpuAdapterRequestDevice(adapter_, &deviceDesc, deviceCallbackInfo);
         waitInfo.completed  = WGPU_FALSE;
     }
     const WGPUWaitStatus waitStatus = wgpuInstanceWaitAny(instance_, 1, &waitInfo, UINT64_MAX);
@@ -520,6 +565,22 @@ bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
     {
         GetMutableReport().Errorf("failed to request WebGPU adapter (%s)", ToString(waitStatus));
         return false;
+    }
+
+    /* Enable debug logging handler */
+    if (isDebugDevice || isBreakOnErrorEnabled_)
+    {
+        if (isDebugDevice)
+            logVerbosity_ = WGPULoggingType_Warning;
+
+        WGPULoggingCallbackInfo loggingCallbackInfo;
+        {
+            loggingCallbackInfo.nextInChain = nullptr;
+            loggingCallbackInfo.callback    = OnWebGpuLogging;
+            loggingCallbackInfo.userdata1   = this;
+            loggingCallbackInfo.userdata2   = &logVerbosity_;
+        }
+        wgpuDeviceSetLoggingCallback(device_, loggingCallbackInfo);
     }
 
     return true;

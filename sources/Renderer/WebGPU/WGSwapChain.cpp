@@ -74,7 +74,7 @@ void WGSwapChain::Present()
     {
         /* Present surface and release transient framebuffer targets  */
         wgpuSurfacePresent(surface_);
-        ReleaseTransientFramebuffer();
+        AcquireNextFramebuffer();
     }
 }
 
@@ -113,26 +113,6 @@ bool WGSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     const bool isVsyncEnabled = (vsyncInterval != 0);
     UpdateWebGpuSurface(resolution_, (isVsyncEnabled ? WGPUPresentMode_Fifo : WGPUPresentMode_Mailbox));
     return true;
-}
-
-WGFramebuffer WGSwapChain::GetCurrentFramebuffer()
-{
-    if (framebuffer_.colorTexture == nullptr)
-    {
-        WGPUSurfaceTexture surfaceTexture = {};
-        wgpuSurfaceGetCurrentTexture(surface_, &surfaceTexture);
-
-        if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
-            surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
-        {
-            // Handle error (e.g., window resized or lost)
-            return {};
-        }
-
-        framebuffer_.colorTexture       = surfaceTexture.texture;
-        framebuffer_.colorTextureView   = wgpuTextureCreateView(surfaceTexture.texture, NULL);
-    }
-    return framebuffer_;
 }
 
 
@@ -190,7 +170,7 @@ void WGSwapChain::UpdateWebGpuSurface(const Extent2D& resolution, WGPUPresentMod
             config.height           = resolution.height;
             config.viewFormatCount  = 0;
             config.viewFormats      = nullptr;
-            config.alphaMode        = WGPUCompositeAlphaMode_Opaque;
+            config.alphaMode        = WGPUCompositeAlphaMode_Auto;
             config.presentMode      = presentMode;
         }
         wgpuSurfaceConfigure(surface_, &config);
@@ -198,6 +178,9 @@ void WGSwapChain::UpdateWebGpuSurface(const Extent2D& resolution, WGPUPresentMod
         /* Create depth-stencil texture if enabled */
         if (depthStencilFormat_ != WGPUTextureFormat_Undefined)
             CreateDepthStencilTexture(resolution);
+
+        /* Acquire initial framebuffer */
+        AcquireNextFramebuffer();
     }
 }
 
@@ -231,26 +214,13 @@ void WGSwapChain::CreateDepthStencilTexture(const Extent2D& resolution)
         depthStencilDesc.mipLevelCount              = 1;
         depthStencilDesc.sampleCount                = 1;
         depthStencilDesc.viewFormatCount            = 0;
-        depthStencilDesc.viewFormats                = nullptr; //???
+        depthStencilDesc.viewFormats                = nullptr;
     }
     framebuffer_.depthStencil = wgpuDeviceCreateTexture(device_, &depthStencilDesc);
     WGThrowIfCreateFailed(framebuffer_.depthStencil, "WGPUTexture");
 
     /* Create WebGPU texture view for depth-stencil */
-    WGPUTextureViewDescriptor depthStencilViewDesc;
-    {
-        depthStencilViewDesc.nextInChain        = nullptr;
-        depthStencilViewDesc.label              = WGPU_STRING_VIEW_INIT;
-        depthStencilViewDesc.format             = depthStencilFormat_;
-        depthStencilViewDesc.dimension          = WGPUTextureViewDimension_2D;
-        depthStencilViewDesc.baseMipLevel       = 0;
-        depthStencilViewDesc.mipLevelCount      = 1;
-        depthStencilViewDesc.baseArrayLayer     = 0;
-        depthStencilViewDesc.arrayLayerCount    = 1;
-        depthStencilViewDesc.aspect             = WGPUTextureAspect_All;
-        depthStencilViewDesc.usage              = WGPUTextureUsage_RenderAttachment;
-    }
-    framebuffer_.depthStencilView = wgpuTextureCreateView(framebuffer_.depthStencil, &depthStencilViewDesc);
+    framebuffer_.depthStencilView = wgpuTextureCreateView(framebuffer_.depthStencil, nullptr);
     WGThrowIfCreateFailed(framebuffer_.depthStencilView, "WGPUTextureView");
 }
 
@@ -266,6 +236,26 @@ void WGSwapChain::ReleaseDepthStencilTexture()
         wgpuTextureRelease(framebuffer_.depthStencil);
         framebuffer_.depthStencil = nullptr;
     }
+}
+
+void WGSwapChain::AcquireNextFramebuffer()
+{
+    ReleaseTransientFramebuffer();
+
+    /* Get current surface texture */
+    WGPUSurfaceTexture surfaceTexture = WGPU_SURFACE_TEXTURE_INIT;
+    wgpuSurfaceGetCurrentTexture(surface_, &surfaceTexture);
+
+    if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+        surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+    {
+        //TODO: Handle error (e.g., window resized or lost)
+        return;
+    }
+
+    /* Create texture view for surface texture */
+    framebuffer_.colorTexture       = surfaceTexture.texture;
+    framebuffer_.colorTextureView   = wgpuTextureCreateView(surfaceTexture.texture, NULL);
 }
 
 
