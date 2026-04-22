@@ -6,6 +6,7 @@
  */
 
 #include "WGRenderPass.h"
+#include "../WGTypes.h"
 #include "../../../Core/Assertion.h"
 
 
@@ -13,7 +14,17 @@ namespace LLGL
 {
 
 
-WGRenderPass::WGRenderPass(const RenderPassDescriptor& desc)
+static Format PickDepthStencilFormat(const RenderPassDescriptor& desc)
+{
+    if (desc.depthAttachment.format != Format::Undefined)
+        return desc.depthAttachment.format;
+    if (desc.stencilAttachment.format != Format::Undefined)
+        return desc.stencilAttachment.format;
+    return Format::Undefined;
+}
+
+WGRenderPass::WGRenderPass(const RenderPassDescriptor& desc) :
+    depthStencilFormat_ { WGTypes::ToWGTextureFormat(PickDepthStencilFormat(desc)) }
 {
     //TODO
 }

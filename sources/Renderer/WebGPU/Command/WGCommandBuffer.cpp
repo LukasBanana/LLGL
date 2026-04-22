@@ -300,13 +300,29 @@ void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPa
             colorAttachment.view            = framebuffer.colorTextureView;
             colorAttachment.depthSlice      = 0;
             colorAttachment.resolveTarget   = nullptr;
-            colorAttachment.loadOp          = WGPULoadOp_Undefined;
+            colorAttachment.loadOp          = WGPULoadOp_Clear;
             colorAttachment.storeOp         = WGPUStoreOp_Store;
             colorAttachment.clearValue.r    = 0.0;
             colorAttachment.clearValue.g    = 0.0;
             colorAttachment.clearValue.b    = 0.0;
             colorAttachment.clearValue.a    = 0.0;
         };
+
+        WGPURenderPassDepthStencilAttachment depthStencilAttachment;
+
+        if (framebuffer.depthStencilView != nullptr)
+        {
+            depthStencilAttachment.nextInChain          = nullptr;
+            depthStencilAttachment.view                 = framebuffer.depthStencilView;
+            depthStencilAttachment.depthLoadOp          = WGPULoadOp_Clear;
+            depthStencilAttachment.depthStoreOp         = WGPUStoreOp_Store;
+            depthStencilAttachment.depthClearValue      = 1.0f;
+            depthStencilAttachment.depthReadOnly        = WGPU_FALSE;
+            depthStencilAttachment.stencilLoadOp        = WGPULoadOp_Clear;
+            depthStencilAttachment.stencilStoreOp       = WGPUStoreOp_Store;
+            depthStencilAttachment.stencilClearValue    = 0;
+            depthStencilAttachment.stencilReadOnly      = WGPU_FALSE;
+        }
 
         LLGL_ASSERT(renderPassEncoder_ == nullptr);
         WGPURenderPassDescriptor renderPassDesc;
@@ -315,7 +331,7 @@ void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPa
             renderPassDesc.label                    = WGPU_STRING_VIEW_INIT;
             renderPassDesc.colorAttachmentCount     = 1;
             renderPassDesc.colorAttachments         = &colorAttachment;
-            renderPassDesc.depthStencilAttachment   = nullptr;
+            renderPassDesc.depthStencilAttachment   = (framebuffer.depthStencilView != nullptr ? &depthStencilAttachment : nullptr);
             renderPassDesc.occlusionQuerySet        = nullptr;
             renderPassDesc.timestampWrites          = nullptr;
         }

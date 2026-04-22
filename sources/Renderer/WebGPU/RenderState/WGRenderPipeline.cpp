@@ -80,14 +80,35 @@ static void ConvertStencilFaceState(WGPUStencilFaceState& dst, const StencilFace
     dst.passOp      = WGTypes::ToWGStencilOperation(src.depthPassOp);
 }
 
-static void ConvertDepthStencilState(WGPUDepthStencilState& dst, const DepthBiasDescriptor& srcDepthBias, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil)
+static void DisableStencilFaceState(WGPUStencilFaceState& dst)
+{
+    dst.compare     = WGPUCompareFunction_Undefined;
+    dst.failOp      = WGPUStencilOperation_Undefined;
+    dst.depthFailOp = WGPUStencilOperation_Undefined;
+    dst.passOp      = WGPUStencilOperation_Undefined;
+}
+
+static void ConvertDepthStencilState(
+    WGPUDepthStencilState&      dst,
+    const DepthBiasDescriptor&  srcDepthBias,
+    const DepthDescriptor&      srcDepth,
+    const StencilDescriptor&    srcStencil,
+    WGPUTextureFormat           depthStencilFormat)
 {
     dst.nextInChain         = nullptr;
-    dst.format              = WGPUTextureFormat_Undefined;
+    dst.format              = depthStencilFormat;
     dst.depthWriteEnabled   = (srcDepth.writeEnabled ? WGPUOptionalBool_True : WGPUOptionalBool_False);
-    dst.depthCompare        = WGTypes::ToWGCompareFunc(srcDepth.compareOp);
-    ConvertStencilFaceState(dst.stencilFront, srcStencil.front);
-    ConvertStencilFaceState(dst.stencilBack, srcStencil.back);
+    dst.depthCompare        = (srcDepth.testEnabled ? WGTypes::ToWGCompareFunc(srcDepth.compareOp) : WGPUCompareFunction_Always);
+    if (srcStencil.testEnabled)
+    {
+        ConvertStencilFaceState(dst.stencilFront, srcStencil.front);
+        ConvertStencilFaceState(dst.stencilBack, srcStencil.back);
+    }
+    else
+    {
+        DisableStencilFaceState(dst.stencilFront);
+        DisableStencilFaceState(dst.stencilBack);
+    }
     dst.stencilReadMask     = srcStencil.front.readMask;
     dst.stencilWriteMask    = srcStencil.front.writeMask;
     dst.depthBias           = static_cast<std::int32_t>(srcDepthBias.constantFactor);
@@ -134,13 +155,15 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
         fragmentState.module        = fragmentShaderWG->GetNative();
         fragmentState.entryPoint    = fragmentShaderWG->GetEntryPointNameView();
         fragmentState.constantCount = 0;
-        fragmentState.constants     = nullptr;
+        fragmentState.constants     = nullptr; //???
         fragmentState.targetCount   = numColorTargetStates;
         fragmentState.targets       = colorTargetStates;
     }
 
+    //TODO: use default render pass for swap-chains
+    const WGPUTextureFormat depthStencilFormat = (renderPassWG != nullptr ? renderPassWG->GetDepthStencilFormat() : WGPUTextureFormat_Depth24PlusStencil8);
     WGPUDepthStencilState depthStencilState;
-    ConvertDepthStencilState(depthStencilState, desc.rasterizer.depthBias, desc.depth, desc.stencil);
+    ConvertDepthStencilState(depthStencilState, desc.rasterizer.depthBias, desc.depth, desc.stencil, depthStencilFormat);
 
     WGPURenderPipelineDescriptor renderPipelineDesc;
     {
