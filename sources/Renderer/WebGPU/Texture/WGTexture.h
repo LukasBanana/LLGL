@@ -38,9 +38,21 @@ class WGTexture final : public Texture
             return texture_;
         }
 
+        // Returns the default WebGPU texture view that 
+        inline WGPUTextureView GetDefaultTextureView() const
+        {
+            return textureView_;
+        }
+
     private:
 
-        WGPUTexture texture_ = nullptr;
+        void CreateWebGpuTexture(WGPUDevice device, const TextureDescriptor& desc);
+        void CreateWebGpuTextureView(const TextureViewDescriptor& desc);
+
+    private:
+
+        WGPUTexture     texture_        = nullptr;
+        WGPUTextureView textureView_    = nullptr;
 
 };
 

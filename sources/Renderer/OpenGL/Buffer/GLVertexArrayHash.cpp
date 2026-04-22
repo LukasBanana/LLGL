@@ -16,17 +16,17 @@ namespace LLGL
 
 static std::size_t HashGLVertexAttribute(const GLVertexAttribute& attrib)
 {
-    std::size_t seed = 0;
-    HashCombine(seed, attrib.buffer); // for the hash, buffer is interpreted as binding slot index, not the GL buffer object
-    HashCombine(seed, attrib.index);
-    HashCombine(seed, attrib.size);
-    HashCombine(seed, attrib.type);
-    HashCombine(seed, attrib.normalized);
-    HashCombine(seed, attrib.stride);
-    HashCombine(seed, attrib.offsetPtrSized);
-    HashCombine(seed, attrib.divisor);
-    HashCombine(seed, attrib.isInteger);
-    return seed;
+    return Hash(
+        attrib.buffer, // for the hash, buffer is interpreted as binding slot index, not the GL buffer object
+        attrib.index,
+        attrib.size,
+        attrib.type,
+        attrib.normalized,
+        attrib.stride,
+        attrib.offsetPtrSized,
+        attrib.divisor,
+        attrib.isInteger
+    );
 }
 
 GLVertexArrayHash::GLVertexArrayHash(const ArrayView<GLVertexAttribute>& attributes)

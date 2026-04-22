@@ -44,7 +44,8 @@ static WGPUBufferUsage GetWebGpuBufferUsage(long bindFlags, long cpuAccessFlags)
 }
 
 WGBuffer::WGBuffer(WGPUDevice device, const BufferDescriptor& bufferDesc) :
-    Buffer { bufferDesc.bindFlags }
+    Buffer { bufferDesc.bindFlags },
+    size_  { bufferDesc.size      }
 {
     WGPUBufferDescriptor wgpuBufferDesc;
     {

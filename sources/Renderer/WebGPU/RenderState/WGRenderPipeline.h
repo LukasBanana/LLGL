@@ -10,7 +10,6 @@
 
 
 #include "WGPipelineState.h"
-#include "WGPipelineLayoutPermutation.h"
 
 
 namespace LLGL
@@ -33,7 +32,6 @@ class WGRenderPipeline final : public WGPipelineState
     private:
 
         WGPURenderPipeline                  renderPipeline_             = nullptr;
-        WGPipelineLayoutPermutationSPtr     pipelineLayoutPermutation_;
 
 };
 

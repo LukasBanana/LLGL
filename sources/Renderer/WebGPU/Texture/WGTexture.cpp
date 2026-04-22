@@ -6,6 +6,7 @@
  */
 
 #include "WGTexture.h"
+#include "../WGCore.h"
 #include "../WGTypes.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Assertion.h"
@@ -16,90 +17,30 @@ namespace LLGL
 {
 
 
-static WGPUTextureUsage GetWebGpuTextureUsage(long bindFlags)
+static void MakeDefaultTextureViewDesc(TextureViewDescriptor& outDesc, const TextureDescriptor& inDesc)
 {
-    WGPUTextureUsage usage = WGPUTextureUsage_CopyDst;
-
-    if ((bindFlags & BindFlags::CopySrc) != 0)
-        usage |= WGPUTextureUsage_CopySrc;
-    if ((bindFlags & BindFlags::CopyDst) != 0)
-        usage |= WGPUTextureUsage_CopyDst;
-    if ((bindFlags & BindFlags::Sampled) != 0)
-        usage |= WGPUTextureUsage_TextureBinding;
-    if ((bindFlags & BindFlags::Storage) != 0)
-        usage |= WGPUTextureUsage_StorageBinding;
-    if ((bindFlags & BindFlags::ColorAttachment) != 0)
-        usage |= WGPUTextureUsage_RenderAttachment;
-    //if ((bindFlags & BindFlags) != 0)
-    //    usage |= WGPUTextureUsage_TransientAttachment;
-    //if ((bindFlags & BindFlags::Storage) != 0)
-    //    usage |= WGPUTextureUsage_StorageAttachment;
-
-    return usage;
-}
-
-static long GetWebGpuBindFlags(WGPUTextureUsage usage)
-{
-    long bindFlags = 0;
-
-    if ((usage & WGPUTextureUsage_CopySrc) != 0)
-        bindFlags |= BindFlags::CopySrc;
-    if ((usage & WGPUTextureUsage_CopyDst) != 0)
-        bindFlags |= BindFlags::CopyDst;
-    if ((usage & WGPUTextureUsage_TextureBinding) != 0)
-        bindFlags |= BindFlags::Sampled;
-    if ((usage & WGPUTextureUsage_StorageBinding) != 0)
-        bindFlags |= BindFlags::Storage;
-    if ((usage & WGPUTextureUsage_RenderAttachment) != 0)
-        bindFlags |= BindFlags::ColorAttachment;
-
-    return bindFlags;
-}
-
-static WGPUTextureDimension GetWebGpuTextureDimension(TextureType type)
-{
-    switch (type)
-    {
-        case TextureType::Texture1D:
-            return WGPUTextureDimension_1D;
-
-        case TextureType::Texture2D:
-        case TextureType::Texture2DMS:
-        case TextureType::Texture1DArray:
-            return WGPUTextureDimension_2D;
-
-        case TextureType::Texture3D:
-        case TextureType::TextureCube:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-        case TextureType::Texture2DMSArray:
-            return WGPUTextureDimension_3D;
-    }
-    return WGPUTextureDimension_Undefined;
+    outDesc.type                        = inDesc.type;
+    outDesc.format                      = inDesc.format;
+    outDesc.subresource.baseArrayLayer  = 0;
+    outDesc.subresource.numMipLevels    = NumMipLevels(inDesc);
+    outDesc.subresource.baseArrayLayer  = 0;
+    outDesc.subresource.numArrayLayers  = inDesc.arrayLayers;
 }
 
 WGTexture::WGTexture(WGPUDevice device, const TextureDescriptor& desc) :
     Texture { desc.type, desc.bindFlags }
 {
-    WGPUTextureDescriptor wgpuTextureDesc;
-    {
-        wgpuTextureDesc.nextInChain     = nullptr;
-        wgpuTextureDesc.label           = WGPU_STRING_VIEW_INIT;
-        wgpuTextureDesc.usage           = GetWebGpuTextureUsage(desc.bindFlags);
-        wgpuTextureDesc.dimension       = GetWebGpuTextureDimension(desc.type);
-        wgpuTextureDesc.size            = WGTypes::ToWGExtent3D(desc.extent);
-        wgpuTextureDesc.format          = WGTypes::ToWGTextureFormat(desc.format);
-        wgpuTextureDesc.mipLevelCount   = desc.mipLevels;
-        wgpuTextureDesc.sampleCount     = desc.samples;
-        wgpuTextureDesc.viewFormatCount = 0;
-        wgpuTextureDesc.viewFormats     = nullptr;
-    }
-    texture_ = wgpuDeviceCreateTexture(device, &wgpuTextureDesc);
-    LLGL_ASSERT_PTR(texture_);
+    CreateWebGpuTexture(device, desc);
+
+    /* Create default texture view that covers the entire resource */
+    TextureViewDescriptor fullTexViewDesc;
+    MakeDefaultTextureViewDesc(fullTexViewDesc, desc);
+    CreateWebGpuTextureView(fullTexViewDesc);
 }
 
 WGTexture::~WGTexture()
 {
+    wgpuTextureViewRelease(textureView_);
     wgpuTextureRelease(texture_);
 }
 
@@ -154,6 +95,24 @@ static Extent3D GetWebGpuTextureExtent3D(WGPUTexture texture)
     };
 }
 
+static long GetWebGpuBindFlags(WGPUTextureUsage usage)
+{
+    long bindFlags = 0;
+
+    if ((usage & WGPUTextureUsage_CopySrc) != 0)
+        bindFlags |= BindFlags::CopySrc;
+    if ((usage & WGPUTextureUsage_CopyDst) != 0)
+        bindFlags |= BindFlags::CopyDst;
+    if ((usage & WGPUTextureUsage_TextureBinding) != 0)
+        bindFlags |= BindFlags::Sampled;
+    if ((usage & WGPUTextureUsage_StorageBinding) != 0)
+        bindFlags |= BindFlags::Storage;
+    if ((usage & WGPUTextureUsage_RenderAttachment) != 0)
+        bindFlags |= BindFlags::ColorAttachment;
+
+    return bindFlags;
+}
+
 TextureDescriptor WGTexture::GetDesc() const
 {
     TextureDescriptor outDesc;
@@ -188,6 +147,110 @@ Extent3D WGTexture::GetMipExtent(std::uint32_t mipLevel) const
 SubresourceFootprint WGTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
 {
     LLGL_TRAP_NOT_IMPLEMENTED();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+static WGPUTextureUsage GetWebGpuTextureUsage(long bindFlags)
+{
+    WGPUTextureUsage usage = WGPUTextureUsage_CopyDst;
+
+    if ((bindFlags & BindFlags::CopySrc) != 0)
+        usage |= WGPUTextureUsage_CopySrc;
+    if ((bindFlags & BindFlags::CopyDst) != 0)
+        usage |= WGPUTextureUsage_CopyDst;
+    if ((bindFlags & BindFlags::Sampled) != 0)
+        usage |= WGPUTextureUsage_TextureBinding;
+    if ((bindFlags & BindFlags::Storage) != 0)
+        usage |= WGPUTextureUsage_StorageBinding;
+    if ((bindFlags & BindFlags::ColorAttachment) != 0)
+        usage |= WGPUTextureUsage_RenderAttachment;
+    //if ((bindFlags & BindFlags) != 0)
+    //    usage |= WGPUTextureUsage_TransientAttachment;
+    //if ((bindFlags & BindFlags::Storage) != 0)
+    //    usage |= WGPUTextureUsage_StorageAttachment;
+
+    return usage;
+}
+
+static WGPUTextureDimension GetWebGpuTextureDimension(TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+            return WGPUTextureDimension_1D;
+
+        case TextureType::Texture2D:
+        case TextureType::Texture2DMS:
+        case TextureType::Texture1DArray:
+            return WGPUTextureDimension_2D;
+
+        case TextureType::Texture3D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMSArray:
+            return WGPUTextureDimension_3D;
+    }
+    return WGPUTextureDimension_Undefined;
+}
+
+void WGTexture::CreateWebGpuTexture(WGPUDevice device, const TextureDescriptor& desc)
+{
+    WGPUTextureDescriptor wgpuTextureDesc;
+    {
+        wgpuTextureDesc.nextInChain     = nullptr;
+        wgpuTextureDesc.label           = WGPU_STRING_VIEW_INIT;
+        wgpuTextureDesc.usage           = GetWebGpuTextureUsage(desc.bindFlags);
+        wgpuTextureDesc.dimension       = GetWebGpuTextureDimension(desc.type);
+        wgpuTextureDesc.size            = WGTypes::ToWGExtent3D(desc.extent);
+        wgpuTextureDesc.format          = WGTypes::ToWGTextureFormat(desc.format);
+        wgpuTextureDesc.mipLevelCount   = desc.mipLevels;
+        wgpuTextureDesc.sampleCount     = desc.samples;
+        wgpuTextureDesc.viewFormatCount = 0;
+        wgpuTextureDesc.viewFormats     = nullptr;
+    }
+    texture_ = wgpuDeviceCreateTexture(device, &wgpuTextureDesc);
+    WGThrowIfCreateFailed(texture_, "WGPUTexture");
+}
+
+static WGPUTextureViewDimension GetWebGpuTextureViewDimension(TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return WGPUTextureViewDimension_1D;
+        case TextureType::Texture2D:        /*pass*/
+        case TextureType::Texture2DMS:      return WGPUTextureViewDimension_2D;
+        case TextureType::Texture1DArray:   break; // Not supported
+        case TextureType::Texture3D:        return WGPUTextureViewDimension_3D;
+        case TextureType::TextureCube:      return WGPUTextureViewDimension_Cube;
+        case TextureType::Texture2DArray:   return WGPUTextureViewDimension_2DArray;
+        case TextureType::TextureCubeArray: /*pass*/
+        case TextureType::Texture2DMSArray: return WGPUTextureViewDimension_CubeArray;
+    }
+    return WGPUTextureViewDimension_Undefined;
+}
+
+void WGTexture::CreateWebGpuTextureView(const TextureViewDescriptor& desc)
+{
+    WGPUTextureViewDescriptor wgpuTexViewDesc;
+    {
+        wgpuTexViewDesc.nextInChain     = nullptr;
+        wgpuTexViewDesc.label           = WGPU_STRING_VIEW_INIT;
+        wgpuTexViewDesc.format          = WGTypes::ToWGTextureFormat(desc.format);
+        wgpuTexViewDesc.dimension       = GetWebGpuTextureViewDimension(desc.type);
+        wgpuTexViewDesc.baseMipLevel    = desc.subresource.baseMipLevel;
+        wgpuTexViewDesc.mipLevelCount   = desc.subresource.numMipLevels;
+        wgpuTexViewDesc.baseArrayLayer  = desc.subresource.baseArrayLayer;
+        wgpuTexViewDesc.arrayLayerCount = desc.subresource.numArrayLayers;
+        wgpuTexViewDesc.aspect          = WGPUTextureAspect_All;
+        wgpuTexViewDesc.usage           = GetWebGpuTextureUsage(GetBindFlags());
+    }
+    textureView_ = wgpuTextureCreateView(texture_, &wgpuTexViewDesc);
+    WGThrowIfCreateFailed(textureView_, "WGPUTextureView");
 }
 
 

@@ -23,6 +23,7 @@ namespace LLGL
 {
 
 
+struct WGCoreLimits;
 struct WGResourceReflectionTable;
 
 class WGPipelineLayout final : public PipelineLayout
@@ -34,7 +35,7 @@ class WGPipelineLayout final : public PipelineLayout
 
     public:
 
-        WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc);
+        WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc, const WGCoreLimits& coreLimits);
 
         // Creates a native WebGPU pipeline layout permutation using the specified resource reflection tables.
         WGPipelineLayoutPermutationSPtr CreatePermutation(
@@ -44,6 +45,8 @@ class WGPipelineLayout final : public PipelineLayout
         ) const;
 
     private:
+
+        const WGCoreLimits&                     coreLimits_;
 
         std::uint32_t                           numHeapBindings_            = 0;
         std::uint32_t                           numBindings_                = 0;

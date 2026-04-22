@@ -91,7 +91,8 @@ static void ConvertBindGroupLayoutEntry(WGPUBindGroupLayoutEntry& dst, const Bin
     }
 }
 
-WGPipelineLayout::WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc) :
+WGPipelineLayout::WGPipelineLayout(WGPUDevice device, const PipelineLayoutDescriptor& desc, const WGCoreLimits& coreLimits) :
+    coreLimits_         { coreLimits                                             },
     numHeapBindings_    { static_cast<std::uint32_t>(desc.heapBindings.size())   },
     numBindings_        { static_cast<std::uint32_t>(desc.bindings.size())       },
     numStaticSamplers_  { static_cast<std::uint32_t>(desc.staticSamplers.size()) },
@@ -139,6 +140,7 @@ WGPipelineLayoutPermutationSPtr WGPipelineLayout::CreatePermutation(
         bindingNames_,
         resourceTables,
         immediateSize_,
+        coreLimits_,
         debugName_.c_str(),
         outReport
     );

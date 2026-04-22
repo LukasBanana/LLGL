@@ -6,6 +6,7 @@
  */
 
 #include "WGCore.h"
+#include "../../Core/Exception.h"
 #include "../../Core/StringUtils.h"
 
 
@@ -52,6 +53,25 @@ const char* ToString(WGPUWaitStatus status)
         case WGPUWaitStatus_TimedOut:   return "TimedOut";
         case WGPUWaitStatus_Error:      return "Error";
         default:                        return IntToHex(static_cast<std::uint32_t>(status));
+    }
+}
+
+void WGThrowIfCreateFailed(void* ptr, const char* interfaceName, const char* contextInfo)
+{
+    if (ptr == nullptr)
+    {
+        std::string s;
+        {
+            s = "failed to create instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
+        }
+        LLGL_TRAP("%s", s.c_str());
     }
 }
 

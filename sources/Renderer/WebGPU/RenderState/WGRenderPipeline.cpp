@@ -7,7 +7,6 @@
 
 #include "WGRenderPipeline.h"
 #include "WGRenderPass.h"
-#include "WGPipelineLayout.h"
 #include "../WGCore.h"
 #include "../WGTypes.h"
 #include "../Shader/WGShader.h"
@@ -101,7 +100,6 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
 {
     /* Get number of render-target attachments */
     const WGRenderPass* renderPassWG = (desc.renderPass != nullptr ? LLGL_CAST(const WGRenderPass*, desc.renderPass) : nullptr);
-    const WGPipelineLayout* pipelineLayoutWG = (desc.pipelineLayout != nullptr ? LLGL_CAST(const WGPipelineLayout*, desc.pipelineLayout) : nullptr);
 
     if (desc.vertexShader == nullptr)
     {
@@ -149,7 +147,7 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
         renderPipelineDesc.nextInChain  = nullptr;
         renderPipelineDesc.label        = WGPU_STRING_VIEW_INIT;
 
-        if (pipelineLayoutWG != nullptr)
+        if (desc.pipelineLayout != nullptr)
         {
             /* Create a pipeline layout permutation that depends on the shader resource reflections */
             SmallVector<const WGResourceReflectionTable*, 2> shaderResourceReflections;
@@ -158,8 +156,7 @@ WGRenderPipeline::WGRenderPipeline(WGPUDevice device, const GraphicsPipelineDesc
             if (fragmentShaderWG != nullptr)
                 shaderResourceReflections.push_back(&(fragmentShaderWG->GetResourceReflectionTable()));
 
-            pipelineLayoutPermutation_ = pipelineLayoutWG->CreatePermutation(device, shaderResourceReflections, GetMutableReport());
-            renderPipelineDesc.layout = (pipelineLayoutPermutation_ ? pipelineLayoutPermutation_->GetNative() : nullptr);
+            renderPipelineDesc.layout = CreatePipelineLayoutPermutation(desc.pipelineLayout, device, shaderResourceReflections);
         }
         else
             renderPipelineDesc.layout = nullptr;

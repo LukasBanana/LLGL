@@ -12,6 +12,7 @@
 #include "../Buffer/WGIndexBuffer.h"
 #include "../Buffer/WGBufferArray.h"
 #include "../Texture/WGTexture.h"
+#include "../RenderState/WGBindGroupCache.h"
 #include "../RenderState/WGRenderPipeline.h"
 #include "../RenderState/WGComputePipeline.h"
 #include "../../CheckedCast.h"
@@ -272,7 +273,11 @@ void WGCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t 
 
 void WGCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    //LLGL_TRAP_NOT_IMPLEMENTED();
+    if (boundBindGroupCache_ != nullptr)
+    {
+        if (boundBindGroupCache_->EmplaceResource(resource, descriptor))
+            renderDirtyBits_ |= DirtyBit_BindGroups;
+    }
 }
 
 void WGCommandBuffer::ResourceBarrier(std::uint32_t /*numBuffers*/, Buffer* const * /*buffers*/, std::uint32_t /*numTextures*/, Texture* const * /*textures*/)
@@ -354,6 +359,9 @@ void WGCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         EnsureComputeEncoder();
         wgpuComputePassEncoderSetPipeline(computePassEncoder_, computePipelineWG.GetNative());
     }
+
+    /* Store bind group cache to emplace resource descriptors for the active pipeline layout permutation */
+    boundBindGroupCache_ = pipelineStateWG.GetBindGroupCache();
 }
 
 void WGCommandBuffer::SetBlendFactor(const float color[4])
@@ -506,6 +514,7 @@ void WGCommandBuffer::DrawStreamOutput()
 void WGCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
     EnsureComputeEncoder();
+    FlushComputeEncoderStates();
     wgpuComputePassEncoderDispatchWorkgroups(computePassEncoder_, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
@@ -513,6 +522,7 @@ void WGCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferWG = LLGL_CAST(WGBuffer&, buffer);
     EnsureComputeEncoder();
+    FlushComputeEncoderStates();
     wgpuComputePassEncoderDispatchWorkgroupsIndirect(computePassEncoder_, bufferWG.GetNative(), offset);
 }
 
@@ -569,6 +579,10 @@ void WGCommandBuffer::FlushRenderEncoderStates()
 {
     if (renderDirtyBits_ != 0)
     {
+        if ((renderDirtyBits_ & DirtyBit_BindGroups) != 0)
+        {
+            boundBindGroupCache_->FlushRenderPassBindGroups(device_, renderPassEncoder_);
+        }
         if ((renderDirtyBits_ & DirtyBit_Viewports) != 0)
         {
             wgpuRenderPassEncoderSetViewport(
@@ -618,10 +632,23 @@ void WGCommandBuffer::FlushRenderEncoderStates()
     }
 }
 
+void WGCommandBuffer::FlushComputeEncoderStates()
+{
+    if (computeDirtyBits_ != 0)
+    {
+        if ((renderDirtyBits_ & DirtyBit_BindGroups) != 0)
+        {
+            boundBindGroupCache_->FlushComputePassBindGroups(device_, computePassEncoder_);
+        }
+        computeDirtyBits_ = 0;
+    }
+}
+
 void WGCommandBuffer::ResetRenderStates()
 {
-    renderDirtyBits_    = 0;
-    computeDirtyBits_   = 0;
+    renderDirtyBits_        = 0;
+    computeDirtyBits_       = 0;
+    boundBindGroupCache_    = nullptr;
 }
 
 void WGCommandBuffer::EmplaceVertexBuffer(WGPUBuffer wgpuBuffer)

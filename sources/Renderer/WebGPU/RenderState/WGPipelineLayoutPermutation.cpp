@@ -8,7 +8,9 @@
 #include "WGPipelineLayoutPermutation.h"
 #include "../WGCore.h"
 #include "../Shader/WGResourceReflectionTable.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/Container/SmallVector.h>
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -29,7 +31,7 @@ static const WGResourceReflection* FindResourceReflection(ArrayView<const WGReso
 static void UpdateBindGroupLayoutEntry(
     std::uint32_t                               entryIndex,
     WGPUBindGroupLayoutEntry&                   outEntry,
-    std::uint64_t&                              outGroupIndex,
+    std::uint32_t&                              outGroupIndex,
     const char*                                 entryName,
     ArrayView<const WGResourceReflectionTable*> resourceTables,
     const char*                                 debugName,
@@ -80,45 +82,84 @@ WGPipelineLayoutPermutation::WGPipelineLayoutPermutation(
     ArrayView<std::string>                      bindGroupEntryNames,
     ArrayView<const WGResourceReflectionTable*> resourceTables,
     std::uint32_t                               immediateSize,
+    const WGCoreLimits&                         coreLimits,
     const char*                                 debugName,
     Report&                                     outReport)
 {
-    /*
-    Temporary container to store group indices for each entry.
-    Used to sort and determine how many bind groups must be allocated.
-    */
-    std::vector<std::uint64_t> bindGroupIndices;
-    bindGroupIndices.resize(bindGroupEntries.size());
+    LLGL_ASSERT(bindGroupEntries.size() == bindGroupEntryNames.size());
 
     /* Update bind group layout entries for this permutation depending on resource reflection tables */
     const char* debugNameExt = (*debugName != '\0' ? debugName : "<unnamed>");
 
-    std::vector<WGPUBindGroupLayoutEntry> bindGroupEntryPermutations{ bindGroupEntries.begin(), bindGroupEntries.end() };
+    descriptorMap_.resize(bindGroupEntries.size());
     for_range(i, bindGroupEntries.size())
     {
+        WGPUBindGroupLayoutEntry groupEntry = bindGroupEntries[i];
+
+        std::uint32_t groupIndex = 0;
         UpdateBindGroupLayoutEntry(
             static_cast<std::uint32_t>(i),
-            bindGroupEntryPermutations[i],
-            bindGroupIndices[i],
+            groupEntry,
+            groupIndex,
             bindGroupEntryNames[i].c_str(),
             resourceTables,
             debugNameExt,
             outReport
         );
+
+        /* Append entry to bind group layout */
+        if (!(groupIndex < coreLimits.maxBindGroups))
+        {
+            outReport.Errorf(
+                "descriptor group index (%u) out of bounds; upper bound is %u\n",
+                groupIndex, coreLimits.maxBindGroups
+            );
+        }
+        else if (!(groupEntry.binding < coreLimits.maxBindingsPerBindGroup))
+        {
+            outReport.Errorf(
+                "descriptor binding index (%u) out of bounds; upper bound is %u\n",
+                groupEntry.binding, coreLimits.maxBindingsPerBindGroup
+            );
+        }
+        else
+        {
+            if (!(groupIndex < layoutGroups_.size()))
+                layoutGroups_.resize(groupIndex + 1);
+
+            const std::size_t entryIndex = layoutGroups_[groupIndex].entries.size();
+            layoutGroups_[groupIndex].entries.push_back(groupEntry);
+
+            /* Store descriptor mapping to bind-group entry */
+            descriptorMap_[i].groupIndex = groupIndex;
+            descriptorMap_[i].entryIndex = static_cast<std::uint32_t>(entryIndex);
+        }
     }
 
-    /* Create bind group layout */
-    if (!bindGroupEntryPermutations.empty())
+    /* Create bind group layouts */
+    std::vector<WGPUBindGroupLayout> bindGroupLayouts;
+    bindGroupLayouts.resize(layoutGroups_.size());
+
+    for_range(group, layoutGroups_.size())
     {
+        if (layoutGroups_[group].entries.empty())
+        {
+            outReport.Errorf("cannot create WGPUBindGroupLayout without bind-group entries (group=%u)\n", group);
+            return;
+        }
+
         WGPUBindGroupLayoutDescriptor wgpuBindGroupDesc;
         {
             wgpuBindGroupDesc.nextInChain   = nullptr;
             wgpuBindGroupDesc.label         = ToWGStringView(debugName);
-            wgpuBindGroupDesc.entryCount    = bindGroupEntryPermutations.size();
-            wgpuBindGroupDesc.entries       = bindGroupEntryPermutations.data();
+            wgpuBindGroupDesc.entryCount    = layoutGroups_[group].entries.size();
+            wgpuBindGroupDesc.entries       = layoutGroups_[group].entries.data();
         }
-        bindGroupLayout_ = wgpuDeviceCreateBindGroupLayout(device, &wgpuBindGroupDesc);
-        LLGL_ASSERT_PTR(bindGroupLayout_);
+        WGPUBindGroupLayout bindGroupLayout = wgpuDeviceCreateBindGroupLayout(device, &wgpuBindGroupDesc);
+        WGThrowIfCreateFailed(bindGroupLayout, "WGPUBindGroupLayout");
+
+        bindGroupLayouts[group] = bindGroupLayout;
+        layoutGroups_[group].bindGroupLayout = bindGroupLayout;
     }
 
     /* Create native WebGPU pipeline layout wiht a single bind group */
@@ -126,10 +167,10 @@ WGPipelineLayoutPermutation::WGPipelineLayoutPermutation(
     {
         wgpuLayoutDesc.nextInChain  = nullptr;
         wgpuLayoutDesc.label        = ToWGStringView(debugName);
-        if (bindGroupLayout_ != nullptr)
+        if (!bindGroupLayouts.empty())
         {
-            wgpuLayoutDesc.bindGroupLayoutCount = 1;
-            wgpuLayoutDesc.bindGroupLayouts     = &bindGroupLayout_;
+            wgpuLayoutDesc.bindGroupLayoutCount = bindGroupLayouts.size();
+            wgpuLayoutDesc.bindGroupLayouts     = bindGroupLayouts.data();
         }
         else
         {
@@ -140,12 +181,16 @@ WGPipelineLayoutPermutation::WGPipelineLayoutPermutation(
     }
     pipelineLayout_ = wgpuDeviceCreatePipelineLayout(device, &wgpuLayoutDesc);
     LLGL_ASSERT_PTR(pipelineLayout_);
+
+    /* Allocate bind group cache if this pipeline layout contains any bind groups */
+    if (!bindGroupLayouts.empty())
+        bindGroupCache_ = MakeUnique<WGBindGroupCache>(this);
 }
 
 WGPipelineLayoutPermutation::~WGPipelineLayoutPermutation()
 {
-    if (bindGroupLayout_ != nullptr)
-        wgpuBindGroupLayoutRelease(bindGroupLayout_);
+    for (WGPipelineLayoutGroup& layoutGroup : layoutGroups_)
+        wgpuBindGroupLayoutRelease(layoutGroup.bindGroupLayout);
     wgpuPipelineLayoutRelease(pipelineLayout_);
 }
 

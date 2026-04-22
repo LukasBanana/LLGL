@@ -262,14 +262,46 @@ T* GetTypedNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
         return nullptr;
 }
 
-// Applies a new hash for value to the existing seed.
-template <typename T>
-void HashCombine(std::size_t& seed, const T& value)
+// Forward declare recursion terminator for variadic templates of Hash().
+template <typename TArg0>
+void HashCombine(std::size_t& outHash, const TArg0& value0);
+
+// Applies a new hash for the specified values to the existing hash.
+template <typename TArg0, typename... TArgs>
+void HashCombine(std::size_t& outHash, const TArg0& value0, const TArgs&... valuesN)
 {
-    constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
-    seed ^= std::hash<T>{}(value) + approxGoldenRatio + (seed << 6) + (seed >> 2);
+    HashCombine(outHash, value0);
+    HashCombine(outHash, valuesN...);
 }
 
+// Primary implementation of the Hash() function. This uses std::hash<>.
+template <typename TArg0>
+void HashCombine(std::size_t& outHash, const TArg0& value0)
+{
+    constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
+    outHash ^= std::hash<TArg0>{}(value0) + approxGoldenRatio + (outHash << 6) + (outHash >> 2);
+}
+
+// Returns a hash over the specified vector of values.
+template <typename... TArgs>
+std::size_t Hash(const TArgs&... valuesN)
+{
+    std::size_t outHash = 0;
+    HashCombine(outHash, valuesN...);
+    return outHash;
+}
+
+// Returns a hash over the specified range.
+template <typename It>
+std::size_t HashRange(It first, It last)
+{
+    std::size_t outHash = 0;
+    for (; first != last; ++first)
+        HashCombine(outHash, *first);
+    return outHash;
+}
+
+// Helper structure for aligned memory allocations.
 struct AlignedAllocationBlock
 {
     void* basePtr;

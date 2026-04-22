@@ -35,9 +35,16 @@ class WGBuffer : public Buffer
             return buffer_;
         }
 
+        // Returns the total size (in bytes) of the native WebGPU buffer.
+        inline std::uint64_t GetSize() const
+        {
+            return size_;
+        }
+
     private:
 
-        WGPUBuffer buffer_ = nullptr;
+        WGPUBuffer      buffer_ = nullptr;
+        std::uint64_t   size_   = 0;
 
 };
 
