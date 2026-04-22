@@ -298,7 +298,7 @@ void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPa
         {
             colorAttachment.nextInChain     = nullptr;
             colorAttachment.view            = framebuffer.colorTextureView;
-            colorAttachment.depthSlice      = 0;
+            colorAttachment.depthSlice      = WGPU_DEPTH_SLICE_UNDEFINED;
             colorAttachment.resolveTarget   = nullptr;
             colorAttachment.loadOp          = WGPULoadOp_Clear;
             colorAttachment.storeOp         = WGPUStoreOp_Store;
@@ -309,7 +309,6 @@ void WGCommandBuffer::BeginRenderPass(RenderTarget& renderTarget, const RenderPa
         };
 
         WGPURenderPassDepthStencilAttachment depthStencilAttachment;
-
         if (framebuffer.depthStencilView != nullptr)
         {
             depthStencilAttachment.nextInChain          = nullptr;

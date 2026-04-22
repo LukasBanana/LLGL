@@ -11,6 +11,7 @@
 
 #include <LLGL/Texture.h>
 #include <LLGL/ImageFlags.h>
+#include "../WGPtr.h"
 #include <webgpu/webgpu.h>
 
 
@@ -32,6 +33,8 @@ class WGTexture final : public Texture
 
         void Write(WGPUQueue queue, const TextureRegion& textureRegion, const ImageView& imageView);
 
+        WGPtr<WGPUTextureView> CreateWebGpuTextureView(const TextureViewDescriptor& desc);
+
         // Returns the native WebGPU texture handle.
         inline WGPUTexture GetNative() const
         {
@@ -47,7 +50,6 @@ class WGTexture final : public Texture
     private:
 
         void CreateWebGpuTexture(WGPUDevice device, const TextureDescriptor& desc);
-        void CreateWebGpuTextureView(const TextureViewDescriptor& desc);
 
     private:
 

@@ -163,7 +163,7 @@ void WGBindGroupCache::FlushRenderPassBindGroup(WGPUDevice device, WGPURenderPas
     const BindGroupInfo& groupInfo = bindGroups_[groupIndex];
 
     /* Hash bind group entries memory as 64-bit integers (equal to alignment of WGPUBindGroupEntry) */
-    static_assert(alignof(WGPUBindGroupEntry) == sizeof(std::uint64_t));
+    static_assert(alignof(WGPUBindGroupEntry) == sizeof(std::uint64_t), "alignment of WGPUBindGroupEntry must be equal to size of uint64_t");
     const WGPUBindGroupEntry* firstEntry = &(bindGroupEntries_[groupInfo.firstEntry]);
     BindGroupKey key = HashRange(
         reinterpret_cast<const std::uint64_t*>(firstEntry),
@@ -197,8 +197,11 @@ void WGBindGroupCache::SetRenderPassBindGroup(WGPURenderPassEncoder renderPassEn
 
 void WGBindGroupCache::InvalidateBindGroup(std::uint32_t groupIndex)
 {
-    bindGroups_[groupIndex].dirtyBit = 1;
-    Invalidate(static_cast<std::uint16_t>(groupIndex), static_cast<std::uint16_t>(groupIndex + 1));
+    if (bindGroups_[groupIndex].dirtyBit == 0)
+    {
+        bindGroups_[groupIndex].dirtyBit = 1;
+        Invalidate(static_cast<std::uint16_t>(groupIndex), static_cast<std::uint16_t>(groupIndex + 1));
+    }
 }
 
 

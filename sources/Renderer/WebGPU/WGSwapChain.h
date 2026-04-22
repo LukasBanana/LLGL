@@ -40,7 +40,10 @@ class WGSwapChain final : public SwapChain
         ~WGSwapChain();
 
         // Creates a new transient texture view for the current back buffer. This is used for render pass attachments.
-        WGFramebuffer GetCurrentFramebuffer();
+        inline const WGFramebuffer& GetCurrentFramebuffer() const
+        {
+            return framebuffer_;
+        }
 
     private:
 
@@ -53,6 +56,8 @@ class WGSwapChain final : public SwapChain
 
         void CreateDepthStencilTexture(const Extent2D& resolution);
         void ReleaseDepthStencilTexture();
+
+        void AcquireNextFramebuffer();
 
     private:
 

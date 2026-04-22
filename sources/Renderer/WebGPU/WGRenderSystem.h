@@ -68,6 +68,11 @@ class WGRenderSystem final : public RenderSystem
             return device_;
         }
 
+        inline bool IsBreakOnErrorEnabled() const
+        {
+            return isBreakOnErrorEnabled_;
+        }
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>
@@ -85,10 +90,12 @@ class WGRenderSystem final : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        WGPUInstance                            instance_           = nullptr;
-        WGPUAdapter                             adapter_            = nullptr;
-        WGPUDevice                              device_             = nullptr;
-        WGCoreLimits                            coreLimits_         = {};
+        WGPUInstance                            instance_               = nullptr;
+        WGPUAdapter                             adapter_                = nullptr;
+        WGPUDevice                              device_                 = nullptr;
+        WGCoreLimits                            coreLimits_             = {};
+        WGPULoggingType                         logVerbosity_           = WGPULoggingType_Error;
+        bool                                    isBreakOnErrorEnabled_  = false;
 
         /* ----- Hardware object containers ----- */
 
