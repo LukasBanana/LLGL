@@ -17,12 +17,14 @@ namespace LLGL
 {
 
 
+struct D3D12DeviceCaps;
+
 class D3D12SignatureFactory
 {
 
     public:
 
-        void CreateDefaultSignatures(ID3D12Device* device);
+        void CreateDefaultSignatures(ID3D12Device* device, const D3D12DeviceCaps& deviceCaps);
 
         inline ID3D12CommandSignature* GetSignatureDrawIndirect() const
         {

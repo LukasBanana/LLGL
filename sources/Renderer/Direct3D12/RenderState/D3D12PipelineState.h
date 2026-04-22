@@ -43,7 +43,7 @@ class D3D12PipelineState : public PipelineState
 
     public:
 
-        // Binds the natvie PSO to the specified command context.
+        // Binds the native PSO to the specified command context.
         virtual void Bind(D3D12CommandContext& commandContext) = 0;
 
         // Returns true if this is a graphics PSO.

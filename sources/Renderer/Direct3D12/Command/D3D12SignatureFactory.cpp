@@ -6,6 +6,7 @@
  */
 
 #include "D3D12SignatureFactory.h"
+#include "../D3D12RenderSystem.h"
 #include "../../DXCommon/DXCore.h"
 
 
@@ -31,13 +32,14 @@ static void DXCreateCommandSignature(ID3D12Device* device, ComPtr<ID3D12CommandS
     DXThrowIfCreateFailed(hr, "ID3D12CommandSignature");
 }
 
-void D3D12SignatureFactory::CreateDefaultSignatures(ID3D12Device* device)
+void D3D12SignatureFactory::CreateDefaultSignatures(ID3D12Device* device, const D3D12DeviceCaps& deviceCaps)
 {
     DXCreateCommandSignature(device, signatureDrawIndirect_,        D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,          sizeof(D3D12_DRAW_ARGUMENTS         ));
     DXCreateCommandSignature(device, signatureDrawIndexedIndirect_, D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,  sizeof(D3D12_DRAW_INDEXED_ARGUMENTS ));
     DXCreateCommandSignature(device, signatureDispatchIndirect_,    D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH,      sizeof(D3D12_DISPATCH_ARGUMENTS     ));
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-    DXCreateCommandSignature(device, signatureDrawMeshIndirect_,    D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH, sizeof(D3D12_DISPATCH_MESH_ARGUMENTS));
+    if (deviceCaps.meshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
+        DXCreateCommandSignature(device, signatureDrawMeshIndirect_, D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH, sizeof(D3D12_DISPATCH_MESH_ARGUMENTS));
     #endif
 }
 

@@ -51,7 +51,7 @@ class LLGL_EXPORT RenderingDebugger
         void SetDebugGroup(const char* name);
 
         /**
-        \brief Enables or disbales time recording. By default disabled.
+        \brief Enables or disables time recording. By default disabled.
         \see FrameProfile::timeRecords
         */
         void SetTimeRecording(bool enabled);

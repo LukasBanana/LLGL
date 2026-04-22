@@ -20,6 +20,7 @@ enum MTOpcode : std::uint8_t
 {
     MTOpcodeNop = 0,
     MTOpcodeExecute,
+    MTOpcodeFillBuffer,
     MTOpcodeCopyBuffer,
     MTOpcodeCopyBufferFromTexture,
     MTOpcodeCopyTexture,

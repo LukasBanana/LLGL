@@ -17,6 +17,9 @@ E.g. use binding flags BindFlags::Sampled and let LLGL determine how to bind to 
 */
 DEF_TEST( SamplerBuffer )
 {
+    if (!caps.features.hasComputeShaders)
+        return TestResult::Skipped;
+
     //TODO: not supported for Metal yet
     if (renderer->GetRendererID() == RendererID::Metal)
         return TestResult::Skipped;

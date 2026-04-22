@@ -14,12 +14,6 @@ namespace LLGL
 {
 
 
-D3D11MipGenerator& D3D11MipGenerator::Get()
-{
-    static D3D11MipGenerator instance;
-    return instance;
-}
-
 void D3D11MipGenerator::InitializeDevice(const ComPtr<ID3D11Device>& device)
 {
     device_ = device;

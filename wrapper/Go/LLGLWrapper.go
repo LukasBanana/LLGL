@@ -214,8 +214,8 @@ const (
 
 type ReportType int
 const (
-    ReportTypeDefault ReportType = iota
-    ReportTypeError
+    ReportTypeDefault = 0
+    ReportTypeError   = iota - 1
 )
 
 type Key int
@@ -345,8 +345,9 @@ const (
     KeyBrowserRefresh
     KeyBrowserStop
     KeyBrowserSearch
-    KeyBrowserFavorits
-    KeyBrowserHome
+    KeyBrowserFavorites
+    KeyBrowserFavorits   = KeyBrowserFavorites
+    KeyBrowserHome       = iota - 1
     KeyVolumeMute
     KeyVolumeDown
     KeyVolumeUp
@@ -606,56 +607,56 @@ const (
 
 type ShadingLanguage int
 const (
-    ShadingLanguageGLSL ShadingLanguage = iota
-    ShadingLanguageGLSL_110
-    ShadingLanguageGLSL_120
-    ShadingLanguageGLSL_130
-    ShadingLanguageGLSL_140
-    ShadingLanguageGLSL_150
-    ShadingLanguageGLSL_330
-    ShadingLanguageGLSL_400
-    ShadingLanguageGLSL_410
-    ShadingLanguageGLSL_420
-    ShadingLanguageGLSL_430
-    ShadingLanguageGLSL_440
-    ShadingLanguageGLSL_450
-    ShadingLanguageGLSL_460
-    ShadingLanguageESSL
-    ShadingLanguageESSL_100
-    ShadingLanguageESSL_300
-    ShadingLanguageESSL_310
-    ShadingLanguageESSL_320
-    ShadingLanguageHLSL
-    ShadingLanguageHLSL_2_0
-    ShadingLanguageHLSL_2_0a
-    ShadingLanguageHLSL_2_0b
-    ShadingLanguageHLSL_3_0
-    ShadingLanguageHLSL_4_0
-    ShadingLanguageHLSL_4_1
-    ShadingLanguageHLSL_5_0
-    ShadingLanguageHLSL_5_1
-    ShadingLanguageHLSL_6_0
-    ShadingLanguageHLSL_6_1
-    ShadingLanguageHLSL_6_2
-    ShadingLanguageHLSL_6_3
-    ShadingLanguageHLSL_6_4
-    ShadingLanguageHLSL_6_5
-    ShadingLanguageHLSL_6_6
-    ShadingLanguageHLSL_6_7
-    ShadingLanguageHLSL_6_8
-    ShadingLanguageMetal
-    ShadingLanguageMetal_1_0
-    ShadingLanguageMetal_1_1
-    ShadingLanguageMetal_1_2
-    ShadingLanguageMetal_2_0
-    ShadingLanguageMetal_2_1
-    ShadingLanguageMetal_2_2
-    ShadingLanguageMetal_2_3
-    ShadingLanguageMetal_2_4
-    ShadingLanguageMetal_3_0
-    ShadingLanguageSPIRV
-    ShadingLanguageSPIRV_100
-    ShadingLanguageVersionBitmask
+    ShadingLanguageGLSL           = (0x10000)
+    ShadingLanguageGLSL_110       = (0x10000|110)
+    ShadingLanguageGLSL_120       = (0x10000|120)
+    ShadingLanguageGLSL_130       = (0x10000|130)
+    ShadingLanguageGLSL_140       = (0x10000|140)
+    ShadingLanguageGLSL_150       = (0x10000|150)
+    ShadingLanguageGLSL_330       = (0x10000|330)
+    ShadingLanguageGLSL_400       = (0x10000|400)
+    ShadingLanguageGLSL_410       = (0x10000|410)
+    ShadingLanguageGLSL_420       = (0x10000|420)
+    ShadingLanguageGLSL_430       = (0x10000|430)
+    ShadingLanguageGLSL_440       = (0x10000|440)
+    ShadingLanguageGLSL_450       = (0x10000|450)
+    ShadingLanguageGLSL_460       = (0x10000|460)
+    ShadingLanguageESSL           = (0x20000)
+    ShadingLanguageESSL_100       = (0x20000|100)
+    ShadingLanguageESSL_300       = (0x20000|300)
+    ShadingLanguageESSL_310       = (0x20000|310)
+    ShadingLanguageESSL_320       = (0x20000|320)
+    ShadingLanguageHLSL           = (0x30000)
+    ShadingLanguageHLSL_2_0       = (0x30000|200)
+    ShadingLanguageHLSL_2_0a      = (0x30000|201)
+    ShadingLanguageHLSL_2_0b      = (0x30000|202)
+    ShadingLanguageHLSL_3_0       = (0x30000|300)
+    ShadingLanguageHLSL_4_0       = (0x30000|400)
+    ShadingLanguageHLSL_4_1       = (0x30000|410)
+    ShadingLanguageHLSL_5_0       = (0x30000|500)
+    ShadingLanguageHLSL_5_1       = (0x30000|510)
+    ShadingLanguageHLSL_6_0       = (0x30000|600)
+    ShadingLanguageHLSL_6_1       = (0x30000|610)
+    ShadingLanguageHLSL_6_2       = (0x30000|620)
+    ShadingLanguageHLSL_6_3       = (0x30000|630)
+    ShadingLanguageHLSL_6_4       = (0x30000|640)
+    ShadingLanguageHLSL_6_5       = (0x30000|650)
+    ShadingLanguageHLSL_6_6       = (0x30000|660)
+    ShadingLanguageHLSL_6_7       = (0x30000|670)
+    ShadingLanguageHLSL_6_8       = (0x30000|680)
+    ShadingLanguageMetal          = (0x40000)
+    ShadingLanguageMetal_1_0      = (0x40000|100)
+    ShadingLanguageMetal_1_1      = (0x40000|110)
+    ShadingLanguageMetal_1_2      = (0x40000|120)
+    ShadingLanguageMetal_2_0      = (0x40000|200)
+    ShadingLanguageMetal_2_1      = (0x40000|210)
+    ShadingLanguageMetal_2_2      = (0x40000|220)
+    ShadingLanguageMetal_2_3      = (0x40000|230)
+    ShadingLanguageMetal_2_4      = (0x40000|240)
+    ShadingLanguageMetal_3_0      = (0x40000|300)
+    ShadingLanguageSPIRV          = (0x50000)
+    ShadingLanguageSPIRV_100      = (0x50000|100)
+    ShadingLanguageVersionBitmask = 0x0000ffff
 )
 
 type ScreenOrigin int
@@ -712,7 +713,7 @@ const (
     ShaderTypeCompute
     ShaderTypeTask
     ShaderTypeMesh
-    ShaderTypeAmplification
+    ShaderTypeAmplification  = ShaderTypeTask
 )
 
 type ShaderSourceType int
@@ -1082,7 +1083,8 @@ type ProfileCommandQueueRecord struct {
     BufferMappings           uint32 /* = 0 */
     TextureWrites            uint32 /* = 0 */
     TextureReads             uint32 /* = 0 */
-    CommandBufferSubmittions uint32 /* = 0 */
+    CommandBufferSubmissions uint32 /* = 0 */
+    CommandBufferSubmittions uint32 /* Identifier `commandBufferSubmittions` is deprecated since 0.05b; Use `commandBufferSubmissions` instead! */
     FenceSubmissions         uint32 /* = 0 */
 }
 

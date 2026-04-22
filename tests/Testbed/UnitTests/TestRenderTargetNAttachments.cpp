@@ -12,7 +12,7 @@ DEF_TEST( RenderTargetNAttachments )
 {
     ////////////// SINGLE SAMPLING //////////////
 
-    // Create render target with 1 attachemnt
+    // Create render target with 1 attachment
     RenderTargetDescriptor target1Desc;
     {
         target1Desc.resolution          = Extent2D{ 512, 512 };

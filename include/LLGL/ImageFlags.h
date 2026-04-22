@@ -25,7 +25,7 @@ namespace LLGL
 
 
 /* ----- Structures ----- */
-    
+
 /**
 \brief Mutable image view structure used as destination when reading the image data from a hardware texture.
 \remarks This kind of image is mainly used to fill the image data of a hardware texture.
@@ -133,14 +133,14 @@ struct ImageView
 
 \param[in] srcImageView Specifies the source image view.
 \param[out] dstImageView Specifies the destination image view.
-\param[in] extent Specifies the extent of the image. This is required 
+\param[in] extent Specifies the extent of the image. This is required.
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
 Note that this does not guarantee the maximum number of threads the system supports if the workload does not demand it. By default 0.
 \param[in] copyUnchangedImage Specifies whether to copy the source buffer into the destination buffer if no conversion was necessary. By default false.
-\param[in] depthMask Specifies a bitmask for the depth components. This determines what depth bits will be overrideen in the destination buffer. By default 0xFFFFFFFF.
-\param[in] stencilMask Specifies a bitmask for the stencil components. This determines what stencil bits will be overrideen in the destination buffer. By default 0xFFFFFFFF.
+\param[in] depthMask Specifies a bitmask for the depth components. This determines what depth bits will be overridden in the destination buffer. By default 0xFFFFFFFF.
+\param[in] stencilMask Specifies a bitmask for the stencil components. This determines what stencil bits will be overridden in the destination buffer. By default 0xFFFFFFFF.
 
 \return Number of bytes that have been written to the destination buffer.
 If this is 0, no conversion was necessary and the destination buffer is not modified.
@@ -181,12 +181,12 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
 );
 
 /**
-\brief Converst the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
+\brief Converts the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
 
 \param[in] srcImageView Specifies the source image view.
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination image data type.
-\param[in] extent Specifies the extent of the image. This is required 
+\param[in] extent Specifies the extent of the image. This is required.
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).

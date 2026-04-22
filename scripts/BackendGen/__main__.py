@@ -34,6 +34,12 @@ def query_yes_no(question, default="no"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
+
+def fatal(msg):
+    print(f"Error: {msg}")
+    sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="LLGL Backend Scaffolder")
     parser.add_argument("--name", required=True, help="Internal name (e.g., WebGPU)")
@@ -48,6 +54,10 @@ def main():
     root_path = os.path.abspath(args.root)
     backend_dir = os.path.join(root_path, "sources/Renderer", args.name)
     inl_base_path = os.path.join(root_path, "include/LLGL/Backend")
+
+    # Ensure the script is run from the correct directory
+    if not os.path.exists(inl_base_path):
+        fatal(f"Failed to find include directory: {inl_base_path}")
 
     # Check if destination exists
     if os.path.exists(backend_dir):

@@ -13,6 +13,7 @@ import "C"
 
 type SwapChain interface {
 	RenderTarget
+	IsPresentable() bool
 	Present()
 	GetCurrentSwapIndex() uint32
 	GetNumSwapBuffers() uint32
@@ -63,6 +64,10 @@ func (self swapChainImpl) HasStencilAttachment() bool {
 
 func (self swapChainImpl) GetRenderPass() RenderPass {
 	return renderPassImpl{} //TODO
+}
+
+func (self swapChainImpl) IsPresentable() bool {
+	return bool(C.llglIsPresentable(self.native))
 }
 
 func (self swapChainImpl) Present() {

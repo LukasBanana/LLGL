@@ -40,7 +40,7 @@ class Glyph:
     @property
     def width(self):
         return self.bbox[2] - self.bbox[0] + border*2
-    
+
     @property
     def height(self):
         return self.bbox[3] - self.bbox[1] + border*2
@@ -58,11 +58,11 @@ class GlyphNode:
     @property
     def width(self):
         return self.bbox[2] - self.bbox[0]
-    
+
     @property
     def height(self):
         return self.bbox[3] - self.bbox[1]
-    
+
     def putGlyph(self, glyph):
         if self.width < glyph.width or self.height < glyph.height:
             # Image does not fit into this node at all
@@ -96,7 +96,7 @@ class GlyphNode:
             )
 
         return self.subnodes[0].putGlyph(glyph)
-        
+
     def draw(self, context, font):
         if self.glyph is not None:
             glyphOrigin = (
@@ -108,9 +108,9 @@ class GlyphNode:
             self.subnodes[0].draw(context, font)
             self.subnodes[1].draw(context, font)
 
-    def collectLeafs(self):
+    def collectLeaves(self):
         if self.subnodes is not None:
-            return self.subnodes[0].collectLeafs() + self.subnodes[1].collectLeafs()
+            return self.subnodes[0].collectLeaves() + self.subnodes[1].collectLeaves()
         if self.glyph is not None:
             return [self]
         return []
@@ -120,7 +120,7 @@ class FontAtlas:
     context = None
     font = None
     glyphTree = None
-    glyphLeafs = []
+    glyphLeaves = []
 
     def __init__(self, filename, size = 15, bgColor = (0, 0, 0), glyphSet = range(32, 128)):
         self.font = ImageFont.truetype(filename, size=size)
@@ -147,8 +147,8 @@ class FontAtlas:
                     break
 
         # Collect ordered list of all glyphs
-        self.glyphLeafs = self.glyphTree.collectLeafs()
-        self.glyphLeafs.sort(key=lambda g: ord(g.glyph.char))
+        self.glyphLeaves = self.glyphTree.collectLeaves()
+        self.glyphLeaves.sort(key=lambda g: ord(g.glyph.char))
 
         # Draw font atlas
         self.image = Image.new(mode='RGB', size=atlasSize, color=bgColor)
@@ -170,7 +170,7 @@ class FontAtlas:
         print(f' - Save dataset:  {filename}')
         with open(filename, 'w') as file:
             print('# char x0 y0 x1 y1 x_offset y_offset spacing', file=file)
-            for glyph in self.glyphLeafs:
+            for glyph in self.glyphLeaves:
                 print(
                     f'{ord(glyph.glyph.char)} ' +
                     f'{glyph.bbox[0] + border} {glyph.bbox[1] + border} {glyph.bbox[2] - border} {glyph.bbox[3] - border} ' +

@@ -24,7 +24,7 @@ class GLShaderSourcePatcher
 
     public:
 
-        // Initialies the patcher with the specified shader source.
+        // Initializes the patcher with the specified shader source.
         GLShaderSourcePatcher(const char* source);
 
         // Overrides the version directive (or adds it if it's missing), e.g "300 es" turns into "#version 300 es".

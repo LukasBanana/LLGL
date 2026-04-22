@@ -19,12 +19,6 @@ namespace LLGL
 {
 
 
-D3D12MipGenerator& D3D12MipGenerator::Get()
-{
-    static D3D12MipGenerator instance;
-    return instance;
-}
-
 void D3D12MipGenerator::InitializeDevice(ID3D12Device* device)
 {
     /* Store device object and GPU descriptor handle size */

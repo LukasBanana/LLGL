@@ -17,6 +17,9 @@ Erroneous PSOs must report their failure in the LLGL::Report object.
 */
 DEF_TEST( ShaderErrors )
 {
+    if (!caps.features.hasComputeShaders)
+        return TestResult::Skipped;
+
     TestResult result = TestResult::Passed;
 
     auto LoadShaderFile = [this, &result](const std::string& filename, ShaderType type, const char* entry, const char* profile, bool isFileBinary) -> Shader*

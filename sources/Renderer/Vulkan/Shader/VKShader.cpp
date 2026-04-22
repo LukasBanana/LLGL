@@ -142,7 +142,7 @@ VKPtr<VkShaderModule> VKShader::CreateVkShaderModulePermutation(const Permutatio
             modified = true;
     }
 
-    /* Create shader module permuation if there is at least one modified binding slot */
+    /* Create shader module permutation if there is at least one modified binding slot */
     if (modified)
     {
         VKShaderCode shaderCodePerm = shaderCode_;

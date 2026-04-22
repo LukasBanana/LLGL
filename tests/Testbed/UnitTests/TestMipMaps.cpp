@@ -11,17 +11,7 @@
 // Returns true if 'x' has only a single bit set to 1, i.e. 'x' is a power-of-two value
 static bool IsPowerOfTwo(std::uint32_t x)
 {
-    bool firstBitSet = false;
-    for (std::uint32_t i = 1; i != 0; i <<= 1)
-    {
-        if ((x & i) != 0)
-        {
-            if (firstBitSet)
-                return false;
-            firstBitSet = true;
-        }
-    }
-    return firstBitSet;
+    return (x > 0 && (x & (x - 1)) == 0);
 }
 
 static bool IsPowerOfTwoExtent(const Extent3D& extent)

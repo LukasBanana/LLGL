@@ -6,7 +6,7 @@
  */
 
 /*
-This example demonstates how to render offscreen, i.e. into a render-target without showing anything on the screen.
+This example demonstrates how to render offscreen, i.e. into a render-target without showing anything on the screen.
 The rendered result will be written to a PNG file called "Offscreen.Results.png" in the same directory as this source file.
 This image should look identical to the "Offscreen.png" image.
 */
@@ -291,7 +291,7 @@ int ExampleInit()
         // Set vertex buffer
         llglSetVertexBuffer(vertexBuffer);
 
-        // Set the swap-chain as the initial render target
+        // Start render pass that draws into the render target
         llglBeginRenderPass(renderTarget);
         {
             // Clear color buffer

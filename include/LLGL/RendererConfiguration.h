@@ -124,14 +124,14 @@ struct RendererConfigurationOpenGL
 
     /**
     \brief Specifies the requested OpenGL context major version. By default 0.
-    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be chosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     majorVersion                = 0;
 
     /**
     \brief Specifies the requested OpenGL context minor version. By default 0.
-    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be chosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     minorVersion                = 0;

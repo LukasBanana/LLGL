@@ -88,7 +88,7 @@ DEF_TEST( BufferMap )
         return TestResult::FailedErrors;
     }
 
-    // Map buf3 into CPU memory space and write to
+    // Map buf3 into CPU memory space and write to it
     for (std::uint64_t buf3Off = 0; buf3Off + sizeof(buf1Initial) < buf3Desc.size; buf3Off += sizeof(buf1Initial))
     {
         if (void* buf3Data = renderer->MapBuffer(*buf3, CPUAccess::WriteOnly, buf3Off, sizeof(buf1Initial)))

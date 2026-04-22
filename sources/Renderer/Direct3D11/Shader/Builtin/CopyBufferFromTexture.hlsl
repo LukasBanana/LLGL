@@ -1,6 +1,6 @@
 /*
  * CopyBufferFromTexture.hlsl
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -25,7 +25,7 @@ uint4 ReadSourceTexture(uint3 coord)
 {
     /* Calculate texture coordinate from linear index */
     uint3 pos = texOffset + coord;
-    
+
     /* Read components from source texture */
     #if TEXTURE_DIM == 1
     return srcTexture[pos.xy];
@@ -57,7 +57,7 @@ void WriteDestinationBufferR(uint addr, uint idx, uint4 value)
             WritePartialDWORD(addr, bitmask, result);
         }
         break;
-        
+
         case 16:
         {
             /* Write single WORD into a DWORD using atomics */
@@ -68,7 +68,7 @@ void WriteDestinationBufferR(uint addr, uint idx, uint4 value)
             WritePartialDWORD(addr, bitmask, result);
         }
         break;
-        
+
         case 32:
         {
             dstBuffer.Store(addr + idx * bufIndexStride, value.r);
@@ -95,7 +95,7 @@ void WriteDestinationBufferRG(uint addr, uint idx, uint4 value)
             WritePartialDWORD(addr, bitmask, result);
         }
         break;
-        
+
         case 16:
         {
             uint result =
@@ -106,7 +106,7 @@ void WriteDestinationBufferRG(uint addr, uint idx, uint4 value)
             dstBuffer.Store(addr + idx * bufIndexStride, result);
         }
         break;
-        
+
         case 32:
         {
             dstBuffer.Store2(addr + idx * bufIndexStride, value.rg);
@@ -143,7 +143,7 @@ void WriteDestinationBufferRGBA(uint addr, uint idx, uint4 value)
             dstBuffer.Store(addr + idx * bufIndexStride, result);
         }
         break;
-        
+
         case 16:
         {
             uint2 result;
@@ -160,7 +160,7 @@ void WriteDestinationBufferRGBA(uint addr, uint idx, uint4 value)
             dstBuffer.Store2(addr + idx * bufIndexStride, result);
         }
         break;
-        
+
         case 32:
         {
             dstBuffer.Store4(addr + idx * bufIndexStride, value);
@@ -174,32 +174,32 @@ void WriteDestinationBuffer(uint idx, uint3 coord, uint4 value)
 {
     /* Start reading address at buffer offset */
     uint addr = bufOffset;
-    
+
     /* Add row padding */
     uint rowSize    = texExtent.x * formatSize;
     uint rowPadding = (rowStride > rowSize ? rowStride - rowSize : 0);
     addr += rowPadding * coord.y;
-    
+
     /* Add layer padding */
     uint layerSize      = (rowSize + rowPadding) * texExtent.y;
     uint layerPadding   = (layerStride > layerSize ? layerStride - layerSize : 0);
     addr += layerPadding * coord.z;
-    
+
     /* Write destination value */
     switch (components)
     {
         case 1:
             WriteDestinationBufferR(addr, idx, value);
             break;
-        
+
         case 2:
             WriteDestinationBufferRG(addr, idx, value);
             break;
-        
+
         case 3:
             WriteDestinationBufferRGB(addr, idx, value);
             break;
-        
+
         case 4:
             WriteDestinationBufferRGBA(addr, idx, value);
             break;
@@ -212,10 +212,10 @@ void CopyBufferFromTexture(uint3 threadID : SV_DispatchThreadID)
 {
     /* Flatten global thread ID */
     uint groupIndex = threadID.x + (threadID.y + threadID.z * texExtent.y) * texExtent.x;
-    
+
     /* Read value from source texture */
     uint4 value = ReadSourceTexture(threadID);
-    
+
     /* Write value to destination buffer */
     WriteDestinationBuffer(groupIndex, threadID, value);
 }

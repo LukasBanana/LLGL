@@ -42,11 +42,10 @@ class D3D12BufferConstantsPool
 
     public:
 
+        D3D12BufferConstantsPool() = default;
+
         D3D12BufferConstantsPool(const D3D12BufferConstantsPool&) = delete;
         D3D12BufferConstantsPool& operator = (const D3D12BufferConstantsPool&) = delete;
-
-        // Returns the instance of this singleton.
-        static D3D12BufferConstantsPool& Get();
 
         // Initializes the device object and creates the internal immutable buffer.
         void InitializeDevice(
@@ -71,8 +70,6 @@ class D3D12BufferConstantsPool
         };
 
     private:
-
-        D3D12BufferConstantsPool() = default;
 
         std::uint32_t* AllocConstants(
             const D3D12BufferConstants  id,

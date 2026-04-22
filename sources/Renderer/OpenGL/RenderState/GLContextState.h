@@ -121,7 +121,7 @@ struct GLContextState
 };
 
 
-// Querys the entire context state from OpenGL.
+// Queries the entire context state from OpenGL.
 LLGL_EXPORT void GLGetContextState(GLContextState& outContextState);
 
 // Sets the entire context state to OpenGL.

@@ -16,6 +16,9 @@ The test must validate that the correct memory barriers are inserted between the
 */
 DEF_TEST( BarrierReadAfterWrite )
 {
+    if (!caps.features.hasComputeShaders)
+        return TestResult::Skipped;
+
     if (shaders[CSReadAfterWrite] == nullptr)
     {
         if (renderer->GetRendererID() == RendererID::Metal)

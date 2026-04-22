@@ -47,7 +47,7 @@ bool VKCommandQueue::QueryResult(
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
     /*
-    We currenlty simply flush the whole queue for query readbacks,
+    We currently simply flush the whole queue for query readbacks,
     because resetting query pools are encoded in a concurrent VkCommandBuffer.
     A reset from a previous native command encoding could have become stale,
     which lets QueryResult() return too early before the updated query results are ready.

@@ -30,6 +30,14 @@ struct MTCmdExecute
     MTMultiSubmitCommandBuffer* commandBuffer;
 };
 
+struct MTCmdFillBuffer
+{
+    MTBuffer*       dstBufferMT;
+    std::uint64_t   dstOffset;
+    std::uint32_t   value;
+    std::uint64_t   fillSize;
+};
+
 struct MTCmdCopyBuffer
 {
     id<MTLBuffer>   sourceBuffer;

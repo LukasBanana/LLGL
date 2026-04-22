@@ -58,10 +58,10 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
         /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
         CreateFactory(isDebugDevice);
 
-        ComPtr<IDXGIAdapter> preferredAdatper;
-        QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+        ComPtr<IDXGIAdapter> preferredAdapter;
+        QueryVideoAdapters(renderSystemDesc.flags, preferredAdapter);
 
-        HRESULT hr = CreateDevice(preferredAdatper.Get(), renderSystemDesc.flags);
+        HRESULT hr = CreateDevice(preferredAdapter.Get(), renderSystemDesc.flags);
         DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
 
@@ -74,12 +74,12 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
-    cmdSignatureFactory_.CreateDefaultSignatures(device_.GetNative());
+    cmdSignatureFactory_.CreateDefaultSignatures(device_.GetNative(), deviceCaps_);
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
-    D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
-    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, *commandQueue_, stagingBufferPool_);
-    D3D12BuiltinShaderFactory::Get().CreateBuiltinPSOs(device_.GetNative());
+    sharedDeviceObjects_.mipGenerator.InitializeDevice(device_.GetNative());
+    sharedDeviceObjects_.bufferConstantsPool.InitializeDevice(device_.GetNative(), *commandContext_, *commandQueue_, stagingBufferPool_);
+    sharedDeviceObjects_.builtinShaderFactory.CreateBuiltinPSOs(device_.GetNative());
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -96,9 +96,9 @@ D3D12RenderSystem::~D3D12RenderSystem()
     shaders_.clear();
 
     /* Clear resources of singletons */
-    D3D12MipGenerator::Get().Clear();
-    D3D12BufferConstantsPool::Get().Clear();
-    D3D12BuiltinShaderFactory::Get().Clear();
+    sharedDeviceObjects_.mipGenerator.Clear();
+    sharedDeviceObjects_.bufferConstantsPool.Clear();
+    sharedDeviceObjects_.builtinShaderFactory.Clear();
 }
 
 /* ----- Swap-chain ----- */
@@ -212,7 +212,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
         /* Generate MIP-maps if enabled */
         if (MustGenerateMipsOnCreate(textureDesc))
-            D3D12MipGenerator::Get().GenerateMips(*commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
+            sharedDeviceObjects_.mipGenerator.GenerateMips(*commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
     }
 
     return textureD3D;
@@ -531,7 +531,7 @@ void D3D12RenderSystem::CreateFactory(bool debugDevice)
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 
-void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
+void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter)
 {
     if ((flags & RenderSystemFlags::SoftwareDevice) != 0)
     {
@@ -543,10 +543,10 @@ void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& out
         hr = adapter->GetDesc(&desc);
         DXThrowIfFailed(hr, "failed to get DXGI_ADAPTER_DESC from DXGI adapter");
 
-        DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdatperInfo_);
+        DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdapterInfo_);
     }
     else
-        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
+        videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdapter.ReleaseAndGetAddressOf());
 }
 
 HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long flags)
@@ -574,7 +574,7 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
     {
         if (preferredAdapter != nullptr)
         {
-            /* Try to create device with perferred adatper */
+            /* Try to create device with preferred adapter */
             hr = device_.CreateDXDevice(featureLevels, flags, preferredAdapter);
             if (SUCCEEDED(hr))
                 return hr;
@@ -585,7 +585,7 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
         if (SUCCEEDED(hr))
         {
             /* Update video adapter info with default adapter */
-            videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+            videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get());
             return hr;
         }
     }
@@ -612,7 +612,7 @@ HRESULT D3D12RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D12::R
     hr = dxgiAdapter->GetDesc(&dxgiAdapterDesc);
     DXThrowIfFailed(hr, "failed to get descriptor from DXGI adapter");
 
-    DXConvertVideoAdapterInfo(dxgiAdapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+    DXConvertVideoAdapterInfo(dxgiAdapter.Get(), dxgiAdapterDesc, videoAdapterInfo_);
 
     return device_.ShareDXDevice(nativeHandle.device, flags);
 }
@@ -621,7 +621,7 @@ static D3D_SHADER_MODEL FindHighestShaderModel(ID3D12Device* device)
 {
     D3D12_FEATURE_DATA_SHADER_MODEL feature;
 
-    const D3D_SHADER_MODEL shaderModles[] =
+    const D3D_SHADER_MODEL shaderModels[] =
     {
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
         D3D_SHADER_MODEL_6_7,
@@ -636,7 +636,7 @@ static D3D_SHADER_MODEL FindHighestShaderModel(ID3D12Device* device)
         D3D_SHADER_MODEL_5_1,
     };
 
-    for (D3D_SHADER_MODEL model : shaderModles)
+    for (D3D_SHADER_MODEL model : shaderModels)
     {
         feature.HighestShaderModel = model;
         HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
@@ -700,8 +700,8 @@ void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
     info.shadingLanguageName += DXShaderModelToString(shaderModel);
 
     /* Get device and vendor name from adapter */
-    info.deviceName = videoAdatperInfo_.name.c_str();
-    info.vendorName = GetVendorName(videoAdatperInfo_.vendor);
+    info.deviceName = videoAdapterInfo_.name.c_str();
+    info.vendorName = GetVendorName(videoAdapterInfo_.vendor);
 }
 
 // Returns the HLSL version for the specified Direct3D feature level.

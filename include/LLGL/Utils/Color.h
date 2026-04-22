@@ -154,7 +154,7 @@ class LLGL_EXPORT Color
             return *this;
         }
 
-        //! Substracts the specified color (component wise) from this color.
+        //! Subtracts the specified color (component wise) from this color.
         Color<T, N>& operator -= (const Color<T, N>& rhs)
         {
             for (std::size_t i = 0; i < N; ++i)

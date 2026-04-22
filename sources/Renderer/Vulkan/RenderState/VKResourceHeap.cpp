@@ -247,7 +247,7 @@ void VKResourceHeap::CreateDescriptorSets(
     std::uint32_t           numDescriptorSets,
     VkDescriptorSetLayout   globalSetLayout)
 {
-    /* Use copy of descritpor set layout for each descriptor set */
+    /* Use copy of descriptor set layout for each descriptor set */
     std::vector<VkDescriptorSetLayout> setLayouts;
     setLayouts.resize(numDescriptorSets, globalSetLayout);
 
@@ -505,7 +505,7 @@ void VKResourceHeap::AllocateBarrierSlots(std::uint32_t numDescriptorSets)
         }
     }
 
-    /* Allocate all imge barrier slots next */
+    /* Allocate all image barrier slots next */
     for (VKLayoutHeapBinding& binding : bindings_)
     {
         if (binding.barrierSlot != ~0u)

@@ -268,9 +268,9 @@ bool VKLoadInstanceExtensions(VkInstance instance, const ArrayView<const char*>&
 
     #endif // /LLGL_OS_WIN32
 
-    LOAD_VKEXT( EXT_debug_marker     );
-    LOAD_VKEXT( EXT_debug_utils      );
-    LOAD_VKEXT( EXT_headless_surface );
+    LOAD_VKEXT( EXT_debug_marker          );
+    LOAD_VKEXT( EXT_debug_utils           );
+    LOAD_VKEXT( EXT_headless_surface      );
     LOAD_VKEXT( KHR_fragment_shading_rate );
 
     #undef LOAD_VKEXT

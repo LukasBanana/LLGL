@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/Container/ArrayView.h>
 
+#include "D3D11SharedDeviceObjects.h"
 #include "Command/D3D11CommandQueue.h"
 #include "Command/D3D11CommandBuffer.h"
 #include "D3D11SwapChain.h"
@@ -107,6 +108,12 @@ class D3D11RenderSystem final : public RenderSystem
             return tearingSupported_;
         }
 
+        // Returns a raw pointer to the shared device objects.
+        inline D3D11SharedDeviceObjects* GetSharedDeviceObjects()
+        {
+            return &sharedDeviceObjects_;
+        }
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>
@@ -114,7 +121,7 @@ class D3D11RenderSystem final : public RenderSystem
     private:
 
         void CreateFactory();
-        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter);
         HRESULT CreateDevice(IDXGIAdapter* adapter, bool isDebugDevice = false, bool isSoftwareDevice = false);
         HRESULT CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isSoftwareDevice = false, UINT flags = 0);
         HRESULT CreateDeviceWithFlagsAndDriverType(IDXGIAdapter* adapter, D3D_DRIVER_TYPE driverType, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags);
@@ -191,6 +198,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         std::shared_ptr<D3D11StateManager>      stateMngr_;
         std::vector<D3D11StateManager*>         deferredStateMngrRefs_;
+        D3D11SharedDeviceObjects                sharedDeviceObjects_;
 
         /* ----- Hardware object containers ----- */
 
@@ -213,7 +221,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        VideoAdapterInfo                        videoAdatperInfo_;
+        VideoAdapterInfo                        videoAdapterInfo_;
 
 };
 

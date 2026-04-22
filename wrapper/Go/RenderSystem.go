@@ -11,7 +11,6 @@ package llgl
 // #include <stdlib.h>
 // #include <LLGL-C/LLGL.h>
 import "C"
-
 import "unsafe"
 
 type RenderSystem interface {
@@ -140,16 +139,16 @@ func (self renderSystemImpl) GetRendererReport() Report {
 func (self renderSystemImpl) CreateSwapChain(swapChainDesc SwapChainDescriptor) SwapChain {
 	var nativeSwapChainDesc C.LLGLSwapChainDescriptor
 	convertSwapChainDescriptor(&nativeSwapChainDesc, &swapChainDesc)
+	defer freeSwapChainDescriptor(&nativeSwapChainDesc)
 	swapChain := swapChainImpl{ C.llglCreateSwapChain(&nativeSwapChainDesc) }
-	freeSwapChainDescriptor(&nativeSwapChainDesc)
 	return swapChain
 }
 
 func (self renderSystemImpl) CreateSwapChainExt(swapChainDesc SwapChainDescriptor, surface Surface) SwapChain {
 	var nativeSwapChainDesc C.LLGLSwapChainDescriptor
 	convertSwapChainDescriptor(&nativeSwapChainDesc, &swapChainDesc)
+	defer freeSwapChainDescriptor(&nativeSwapChainDesc)
 	swapChain := swapChainImpl{ C.llglCreateSwapChainExt(&nativeSwapChainDesc, surface.(surfaceImpl).native) }
-	freeSwapChainDescriptor(&nativeSwapChainDesc)
 	return swapChain
 }
 
@@ -160,8 +159,8 @@ func (self renderSystemImpl) ReleaseSwapChain(swapChain SwapChain) {
 func (self renderSystemImpl) CreateCommandBuffer(commandBufferDesc CommandBufferDescriptor) CommandBuffer {
 	var nativeCommandBufferDesc C.LLGLCommandBufferDescriptor
 	convertCommandBufferDescriptor(&nativeCommandBufferDesc, &commandBufferDesc)
+	defer freeCommandBufferDescriptor(&nativeCommandBufferDesc)
 	commandBuffer := commandBufferImpl{ C.llglCreateCommandBuffer(&nativeCommandBufferDesc) }
-	freeCommandBufferDescriptor(&nativeCommandBufferDesc)
 	return commandBuffer
 }
 
@@ -172,8 +171,8 @@ func (self renderSystemImpl) ReleaseCommandBuffer(commandBuffer CommandBuffer) {
 func (self renderSystemImpl) CreateBuffer(bufferDesc BufferDescriptor, initialData unsafe.Pointer) Buffer {
 	var nativeBufferDesc C.LLGLBufferDescriptor
 	convertBufferDescriptor(&nativeBufferDesc, &bufferDesc)
+	defer freeBufferDescriptor(&nativeBufferDesc)
 	buffer := bufferImpl{ C.llglCreateBuffer(&nativeBufferDesc, initialData) }
-	freeBufferDescriptor(&nativeBufferDesc)
 	return buffer
 }
 
@@ -203,11 +202,11 @@ func (self renderSystemImpl) UnmapBuffer(buffer Buffer) {
 
 func (self renderSystemImpl) CreateBufferArray(buffers []Buffer) BufferArray {
 	nativeBuffers := unsafeAllocArray[C.LLGLBuffer](C.size_t(len(buffers)))
+	defer C.free(unsafe.Pointer(nativeBuffers))
 	for i, buffer := range buffers {
 		*unsafePointerSubscript(nativeBuffers, C.size_t(i)) = buffer.(bufferImpl).native
 	}
 	bufferArray := bufferArrayImpl{ C.llglCreateBufferArray(C.uint32_t(len(buffers)), nativeBuffers) }
-	C.free(unsafe.Pointer(nativeBuffers))
 	return bufferArray
 }
 
@@ -218,13 +217,16 @@ func (self renderSystemImpl) ReleaseBufferArray(bufferArray BufferArray) {
 func (self renderSystemImpl) CreateTexture(textureDesc TextureDescriptor, initialImage *ImageView) Texture {
 	var nativeTextureDesc C.LLGLTextureDescriptor
 	convertTextureDescriptor(&nativeTextureDesc, &textureDesc)
+	defer freeTextureDescriptor(&nativeTextureDesc)
+
 	var texture Texture
 	if initialImage != nil {
-		texture = textureImpl{ C.llglCreateTexture(&nativeTextureDesc, (*C.LLGLImageView)(unsafe.Pointer(initialImage))) }
+		var nativeInitialImage C.LLGLImageView
+		convertImageView(&nativeInitialImage, initialImage)
+		texture = textureImpl{ C.llglCreateTexture(&nativeTextureDesc, &nativeInitialImage) }
 	} else {
 		texture = textureImpl{ C.llglCreateTexture(&nativeTextureDesc, nil) }
 	}
-	freeTextureDescriptor(&nativeTextureDesc)
 	return texture
 }
 
@@ -289,8 +291,8 @@ func (self renderSystemImpl) ReleaseRenderTarget(renderTarget RenderTarget) {
 func (self renderSystemImpl) CreateShader(shaderDesc ShaderDescriptor) Shader {
 	var nativeShaderDesc C.LLGLShaderDescriptor
 	convertShaderDescriptor(&nativeShaderDesc, &shaderDesc)
+	defer freeShaderDescriptor(&nativeShaderDesc)
 	shader := shaderImpl{ C.llglCreateShader(&nativeShaderDesc) }
-	freeShaderDescriptor(&nativeShaderDesc)
 	return shader
 }
 
@@ -299,8 +301,11 @@ func (self renderSystemImpl) ReleaseShader(shader Shader) {
 }
 
 func (self renderSystemImpl) CreatePipelineLayout(pipelineLayoutDesc PipelineLayoutDescriptor) PipelineLayout {
-	//C.llglCreatePipelineLayout()
-	return pipelineLayoutImpl{} //todo
+	var nativePipelineLayoutDesc C.LLGLPipelineLayoutDescriptor
+	convertPipelineLayoutDescriptor(&nativePipelineLayoutDesc, &pipelineLayoutDesc)
+	defer freePipelineLayoutDescriptor(&nativePipelineLayoutDesc)
+	pipelineLayout := pipelineLayoutImpl{ C.llglCreatePipelineLayout(&nativePipelineLayoutDesc) }
+	return pipelineLayout
 }
 
 func (self renderSystemImpl) ReleasePipelineLayout(pipelineLayout PipelineLayout) {
@@ -319,8 +324,8 @@ func (self renderSystemImpl) ReleasePipelineCache(pipelineCache PipelineCache) {
 func (self renderSystemImpl) CreateGraphicsPipelineState(pipelineStateDesc GraphicsPipelineDescriptor) PipelineState {
 	var nativePipelineStateDesc C.LLGLGraphicsPipelineDescriptor
 	convertGraphicsPipelineDescriptor(&nativePipelineStateDesc, &pipelineStateDesc)
+	defer freeGraphicsPipelineDescriptor(&nativePipelineStateDesc)
 	pipelineState := pipelineStateImpl{ C.llglCreateGraphicsPipelineState(&nativePipelineStateDesc) }
-	freeGraphicsPipelineDescriptor(&nativePipelineStateDesc)
 	return pipelineState
 }
 

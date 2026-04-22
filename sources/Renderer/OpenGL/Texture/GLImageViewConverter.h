@@ -25,7 +25,7 @@ enum class GLSwizzleFormat
     Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
 };
 
-// Wrapper class to handle GL image data conversion for fomrats with component swizzling.
+// Wrapper class to handle GL image data conversion for formats with component swizzling.
 class GLImageViewConverter
 {
 

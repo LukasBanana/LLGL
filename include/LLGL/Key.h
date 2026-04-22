@@ -9,6 +9,9 @@
 #define LLGL_KEY_H
 
 
+#include <LLGL/Deprecated.h>
+
+
 namespace LLGL
 {
 
@@ -158,7 +161,8 @@ enum class Key
     BrowserRefresh,
     BrowserStop,
     BrowserSearch,
-    BrowserFavorits,
+    BrowserFavorites,
+    BrowserFavorits LLGL_DEPRECATED_ENUMCASE("Identifier `BrowserFavorits` is deprecated since 0.05b; Use `BrowserFavorites` instead!", "BrowserFavorites") = BrowserFavorites,
     BrowserHome,
 
     VolumeMute,

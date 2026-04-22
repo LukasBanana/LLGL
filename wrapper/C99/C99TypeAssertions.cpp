@@ -580,7 +580,7 @@ LLGL_STATIC_ASSERT_ENUM(Key, BrowserForward);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserRefresh);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserStop);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserSearch);
-LLGL_STATIC_ASSERT_ENUM(Key, BrowserFavorits);
+LLGL_STATIC_ASSERT_ENUM(Key, BrowserFavorites);
 LLGL_STATIC_ASSERT_ENUM(Key, BrowserHome);
 LLGL_STATIC_ASSERT_ENUM(Key, VolumeMute);
 LLGL_STATIC_ASSERT_ENUM(Key, VolumeDown);
@@ -1114,7 +1114,7 @@ LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, bufferReads);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, bufferMappings);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, textureWrites);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, textureReads);
-LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, commandBufferSubmittions);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, commandBufferSubmissions);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, fenceSubmissions);
 
 LLGL_STATIC_ASSERT_SIZE(ProfileCommandBufferRecord);

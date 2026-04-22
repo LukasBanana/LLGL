@@ -34,9 +34,9 @@ namespace LLGL
 MTRenderSystem::MTRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
     if (auto* customNativeHandle = GetRendererNativeHandle<Metal::RenderSystemNativeHandle>(renderSystemDesc))
-        CreateDeviceResources(customNativeHandle->device);
+        CreateDeviceResources(renderSystemDesc.flags, customNativeHandle->device);
     else
-        CreateDeviceResources();
+        CreateDeviceResources(renderSystemDesc.flags);
 }
 
 MTRenderSystem::~MTRenderSystem()
@@ -352,17 +352,43 @@ bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-void MTRenderSystem::CreateDeviceResources(id<MTLDevice> sharedDevice)
+id<MTLDevice> MTRenderSystem::CreateMetalDevice(long renderSystemFlags)
+{
+    id<MTLDevice> outDevice = nil;
+
+    /* Try to create default device first */
+    outDevice = MTLCreateSystemDefaultDevice();
+    #ifdef LLGL_OS_MACOS
+    if (outDevice == nil)
+    {
+        /* Otherwise, try to find headless device */
+        NSArray<id<MTLDevice>>* allDevices = MTLCopyAllDevices();
+        for (id<MTLDevice> device in allDevices)
+        {
+            if ([device isHeadless])
+            {
+                outDevice = device;
+                break;
+            }
+        }
+        [allDevices release];
+    }
+    #endif // /LLGL_OS_MACOS
+
+    return outDevice;
+}
+
+void MTRenderSystem::CreateDeviceResources(long renderSystemFlags, id<MTLDevice> sharedDevice)
 {
     if (sharedDevice != nil)
     {
-        /* Take shard Metal device and increment reference counter */
+        /* Take shared Metal device and increment reference counter */
         device_ = [sharedDevice retain];
     }
     else
     {
         /* Create Metal device */
-        device_ = MTLCreateSystemDefaultDevice();
+        device_ = CreateMetalDevice(renderSystemFlags);
         if (device_ == nil)
             LLGL_TRAP("failed to create Metal device");
     }

@@ -184,7 +184,7 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
     shaderAttribs_.clear();
     shaderAttribNames_.Clear();
 
-    /* Reserve names for vertex attributs */
+    /* Reserve names for vertex attributes */
     for (const auto& attr : desc.vertex.inputAttribs)
     {
         if (attr.semanticIndex == 0)

@@ -41,7 +41,7 @@ void D3D12Sampler::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR
 template <typename TNativeSamplerDesc>
 static void D3DConvertBaseSamplerDesc(TNativeSamplerDesc& outDesc, const SamplerDescriptor& inDesc)
 {
-    /* Translate and store to native sampler desctiptor */
+    /* Translate and store to native sampler descriptor */
     outDesc.Filter          = D3D12Types::Map(inDesc);
     outDesc.AddressU        = D3D12Types::Map(inDesc.addressModeU);
     outDesc.AddressV        = D3D12Types::Map(inDesc.addressModeV);

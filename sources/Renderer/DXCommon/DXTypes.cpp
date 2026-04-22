@@ -791,7 +791,7 @@ bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT va
         case DXGI_FORMAT_R8G8_SNORM:
         case DXGI_FORMAT_R8G8_SINT:
         {
-            /* Only supported if lower and upper 16-bit halfs are equal */
+            /* Only supported if lower and upper 16-bit halves are equal */
             if (((value >> 16) & 0x0000FFFF) == (value & 0x0000FFFF))
             {
                 const UINT v0 = (value >> 8) & 0x000000FF;
@@ -811,7 +811,7 @@ bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT va
         case DXGI_FORMAT_R16_SNORM:
         case DXGI_FORMAT_R16_SINT:
         {
-            /* Only supported if lower and upper 16-bit halfs are equal */
+            /* Only supported if lower and upper 16-bit halves are equal */
             if (((value >> 16) & 0x0000FFFF) == (value & 0x0000FFFF))
             {
                 const UINT v0 = value & 0x0000FFFF;
@@ -851,9 +851,9 @@ bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT va
     return false;
 }
 
-const char* SystemValueToString(SystemValue sytemValue)
+const char* SystemValueToString(SystemValue systemValue)
 {
-    switch (sytemValue)
+    switch (systemValue)
     {
         case SystemValue::Undefined:            break;
         case SystemValue::ClipDistance:         return "SV_ClipDistance";

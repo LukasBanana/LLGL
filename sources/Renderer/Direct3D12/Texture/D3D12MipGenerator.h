@@ -25,22 +25,16 @@ class D3D12CommandContext;
 struct D3D12Resource;
 struct TextureSubresource;
 
-// Direct3D 12 MIP-map generator singleton.
+// Direct3D 12 MIP-map generator.
 class D3D12MipGenerator
 {
 
     public:
 
-        // Returns the singleton instance.
-        static D3D12MipGenerator& Get();
-
-    public:
+        D3D12MipGenerator() = default;
 
         D3D12MipGenerator(const D3D12MipGenerator&) = delete;
         D3D12MipGenerator& operator = (const D3D12MipGenerator&) = delete;
-
-        D3D12MipGenerator(D3D12MipGenerator&&) = delete;
-        D3D12MipGenerator& operator = (D3D12MipGenerator&&) = delete;
 
         void InitializeDevice(ID3D12Device* device);
         void Clear();
@@ -52,8 +46,6 @@ class D3D12MipGenerator
         );
 
     private:
-
-        D3D12MipGenerator() = default;
 
         ComPtr<ID3D12PipelineState> CreateComputePSO(
             ID3D12Device*           device,

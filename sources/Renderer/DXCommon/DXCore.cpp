@@ -388,7 +388,7 @@ void DXConvertVideoAdapterInfo(IDXGIAdapter* adapter, const DXGI_ADAPTER_DESC& i
     outInfo.outputs     = GetDXGIAdapterOutputInfos(adapter);
 }
 
-static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, VideoAdapterInfo& outInfo, IDXGIAdapter** outPreferredAdatper)
+static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, VideoAdapterInfo& outInfo, IDXGIAdapter** outPreferredAdapter)
 {
     /* Enumerate over all video adapters */
     ComPtr<IDXGIAdapter> adapter;
@@ -405,29 +405,29 @@ static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags
         if (preferredAdapterFlags == 0 || isPreferredAdapter)
         {
             DXConvertVideoAdapterInfo(adapter.Get(), desc, outInfo);
-            if (isPreferredAdapter && outPreferredAdatper != nullptr)
-                *outPreferredAdatper = adapter.Detach();
+            if (isPreferredAdapter && outPreferredAdapter != nullptr)
+                *outPreferredAdapter = adapter.Detach();
             return true;
         }
     }
     return false;
 }
 
-VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, IDXGIAdapter** outPreferredAdatper)
+VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, IDXGIAdapter** outPreferredAdapter)
 {
     LLGL_ASSERT_PTR(factory);
 
-    constexpr long preferrenceFlags = (RenderSystemFlags::PreferNVIDIA | RenderSystemFlags::PreferAMD | RenderSystemFlags::PreferIntel);
+    constexpr long preferenceFlags = (RenderSystemFlags::PreferNVIDIA | RenderSystemFlags::PreferAMD | RenderSystemFlags::PreferIntel);
 
     VideoAdapterInfo info;
 
-    if ((preferredAdapterFlags & preferrenceFlags) != 0)
+    if ((preferredAdapterFlags & preferenceFlags) != 0)
     {
-        if (GetDXGIAdapterInfo(factory, preferredAdapterFlags, info, outPreferredAdatper))
+        if (GetDXGIAdapterInfo(factory, preferredAdapterFlags, info, outPreferredAdapter))
             return info;
     }
 
-    if (GetDXGIAdapterInfo(factory, 0, info, outPreferredAdatper))
+    if (GetDXGIAdapterInfo(factory, 0, info, outPreferredAdapter))
         return info;
 
     return VideoAdapterInfo{};
@@ -441,7 +441,7 @@ One and two component shader attributes can be shared with other input/ouput reg
     float2 TC  : TEXCOORD; // Components __ZW
   };
 This function counts how many bits are in the input value and return it as the component count,
-assuming that components are always consequtive, i.e. XY_W for instance is not considered a valid component mask for shader attributes.
+assuming that components are always consecutive, i.e. XY_W for instance is not considered a valid component mask for shader attributes.
 */
 static BYTE ComponentMaskToCount(BYTE v)
 {

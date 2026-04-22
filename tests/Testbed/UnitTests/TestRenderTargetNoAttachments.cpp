@@ -10,14 +10,14 @@
 
 DEF_TEST( RenderTargetNoAttachments )
 {
-    // Create render target with no attachemnts
+    // Create render target with no attachments
     RenderTargetDescriptor target1Desc;
     {
         target1Desc.resolution = Extent2D{ 512, 512 };
     }
     CREATE_RENDER_TARGET(target1, target1Desc, "target1{512x512}");
 
-    // Create render target with no attachemnts and multi-sampling
+    // Create render target with no attachments and multi-sampling
     RenderTargetDescriptor target2Desc;
     {
         target2Desc.resolution  = Extent2D{ 512, 512 };

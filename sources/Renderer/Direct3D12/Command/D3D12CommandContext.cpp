@@ -732,6 +732,7 @@ void D3D12CommandContext::DispatchMeshIndirect(
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (commandList6_)
     {
+        LLGL_ASSERT_PTR(commandSignature);
         FlushResourceBarriers();
         FlushGraphicsStagingDescriptorTables();
         commandList6_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);

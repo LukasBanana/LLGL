@@ -16,7 +16,7 @@ There is an optional lowercase j available by pressing Option-j, if you prefer a
 BlackChancery is great for headlines, letterheads, greeting cards. Wherever used, it adds an old-world elegance to your printed page.
 
 
-11/19/91 Revisons:
+11/19/91 Revisions:
 Replaced all accented characters with composites
 Changed ', ", ¾, a, d, g, q; f, Þ, ß; ¦, §; reduced size of most accents by 15%.
 Moved to right by 5 ems: p  (1250 ems to the em-square)

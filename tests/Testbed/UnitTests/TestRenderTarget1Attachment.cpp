@@ -12,7 +12,7 @@ DEF_TEST( RenderTarget1Attachment )
 {
     ////////////// SINGLE SAMPLING //////////////
 
-    // Create render target with 1 attachemnt
+    // Create render target with 1 attachment
     RenderTargetDescriptor target1Desc;
     {
         target1Desc.resolution          = Extent2D{ 512, 512 };
@@ -65,7 +65,7 @@ DEF_TEST( RenderTarget1Attachment )
     }
     CREATE_RENDER_TARGET(targetMS1, targetMS1Desc, "targetMS1{d24s8,8msaa}");
 
-    // Create render target with 1 attachemnt and multi-sampling
+    // Create render target with 1 attachment and multi-sampling
     RenderTargetDescriptor targetMS2Desc;
     {
         targetMS2Desc.resolution    = Extent2D{ 512, 512 };

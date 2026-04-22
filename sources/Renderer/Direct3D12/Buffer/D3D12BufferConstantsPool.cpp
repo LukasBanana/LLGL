@@ -20,12 +20,6 @@ namespace LLGL
 {
 
 
-D3D12BufferConstantsPool& D3D12BufferConstantsPool::Get()
-{
-    static D3D12BufferConstantsPool g_instance;
-    return g_instance;
-}
-
 void D3D12BufferConstantsPool::InitializeDevice(
     ID3D12Device*           device,
     D3D12CommandContext&    commandContext,

@@ -52,7 +52,7 @@ class VKPipelineState : public PipelineState
         // Binds the specified descriptor set to the dynamic descriptor set binding point.
         void BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
 
-        // Binds the specified descriptor set to teh heap descriptor set binding point.
+        // Binds the specified descriptor set to the heap descriptor set binding point.
         void BindHeapDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
 
         // Pushes the specified values to the command buffer as push-constants.
@@ -89,7 +89,7 @@ class VKPipelineState : public PipelineState
 
         /*
         Fills the native shader stage descriptor for the specified shader:
-        - If the pipeline layout constaints uniforms, the shader module will be parsed for push constants.
+        - If the pipeline layout contains uniforms, the shader module will be parsed for push constants.
         - If the shader module has a binding set mismatch with the pipeline layout,
           a permutation of the shader module will be created to match the internal binding set layout of the Vulkan backend.
         */

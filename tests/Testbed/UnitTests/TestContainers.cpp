@@ -248,7 +248,7 @@ DEF_RITEST( ContainerSmallVector )
 
 DEF_RITEST( ContainerUTF8String )
 {
-    // Test UTF8String concatentation
+    // Test UTF8String concatenation
     UTF8String sa1 = "Hello";
     UTF8String sa2 = " ";
     UTF8String sa3 = "World";

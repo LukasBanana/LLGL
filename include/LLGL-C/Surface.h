@@ -21,9 +21,6 @@ LLGL_C_EXPORT bool llglAdaptSurfaceForVideoMode(LLGLSurface surface, LLGLExtent2
 LLGL_C_EXPORT bool llglProcessSurfaceEvents();
 LLGL_C_EXPORT LLGLDisplay llglFindSurfaceResidentDisplay(LLGLSurface surface);
 
-//! \deprecated Since 0.04b; No need to reset pixel format anymore.
-LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface);
-
 
 #endif
 

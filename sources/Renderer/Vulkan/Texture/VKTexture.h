@@ -60,7 +60,7 @@ class VKTexture final : public Texture
             VKPtr<VkImageView>&         outImageView
         );
 
-        // Creates an additional texture view with the specififed view descriptor.
+        // Creates an additional texture view with the specified view descriptor.
         void CreateImageView(
             VkDevice                        device,
             const TextureViewDescriptor&    textureViewDesc,

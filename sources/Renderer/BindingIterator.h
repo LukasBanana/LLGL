@@ -84,7 +84,7 @@ class LLGL_EXPORT BindingIterator
 using BindingDescriptorIterator = BindingIterator<BindingDescriptor>;
 
 
-// Returns the specified resource as Buffer and throws an excpetion if the type does not match or a null pointer is passed.
+// Returns the specified resource as Buffer and throws an exception if the type does not match or a null pointer is passed.
 LLGL_EXPORT Buffer* GetAsExpectedBuffer(Resource* resource, long anyBindFlags = 0);
 LLGL_EXPORT Texture* GetAsExpectedTexture(Resource* resource, long anyBindFlags = 0);
 LLGL_EXPORT Sampler* GetAsExpectedSampler(Resource* resource);

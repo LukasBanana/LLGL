@@ -11,7 +11,7 @@ layout(std140) uniform SOScene
 {
     mat4    vsMatrix;
     mat4    gsMatrices[3];
-    vec4 	lightVec;
+    vec4    lightVec;
     float   normalizeFactorVS;
     float   normalizeFactorDS;
     float   tessLevelOuter;

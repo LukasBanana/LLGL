@@ -180,13 +180,13 @@ endif()
 # Use bitcode or not
 if (NOT DEFINED ENABLE_BITCODE)
   # Unless specified, enable bitcode support by default
-  set(ENABLE_BITCODE TRUE CACHE BOOL "Wheter or not to enable bitcode")
+  set(ENABLE_BITCODE TRUE CACHE BOOL "Whether or not to enable bitcode")
   message(STATUS "Enabling bitcode support by default. ENABLE_BITCODE not provided!")
 endif()
 # Use ARC or not
 if (NOT DEFINED ENABLE_ARC)
   # Unless specified, enable ARC support by default
-  set(ENABLE_ARC TRUE CACHE BOOL "Wheter or not to enable ARC")
+  set(ENABLE_ARC TRUE CACHE BOOL "Whether or not to enable ARC")
   message(STATUS "Enabling ARC support by default. ENABLE_ARC not provided!")
 endif()
 # Get the SDK version information.
@@ -314,7 +314,7 @@ endif()
 
 set(CMAKE_C_FLAGS
 "${XCODE_IOS_PLATFORM_VERSION_FLAGS} ${BITCODE} -fobjc-abi-version=2 ${FOBJC_ARC} ${C_FLAGS}")
-# Hidden visibilty is required for C++ on iOS.
+# Hidden visibility is required for C++ on iOS.
 set(CMAKE_CXX_FLAGS
 "${XCODE_IOS_PLATFORM_VERSION_FLAGS} ${BITCODE} -fvisibility=hidden -fvisibility-inlines-hidden -fobjc-abi-version=2 ${FOBJC_ARC} ${CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG -Os -fomit-frame-pointer -ffast-math ${BITCODE} ${CXX_FLAGS_MINSIZEREL}")

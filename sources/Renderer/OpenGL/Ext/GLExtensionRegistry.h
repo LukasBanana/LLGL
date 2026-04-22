@@ -117,7 +117,7 @@ enum class GLExt
     NV_conservative_raster,             // no procedures
     NV_transform_feedback,
 
-    /* Intel sepcific extensions (INTEL) */
+    /* Intel specific extensions (INTEL) */
     INTEL_conservative_rasterization,   // no procedures
 
     /* Substitute extensions for GL 2.x only - do *not* used in HasExtension() calls! */
@@ -133,13 +133,13 @@ void RegisterExtension(GLExt extension);
 
 // Disables GL extensions that are incompatible with other unsupported extensions.
 // For example, if GL_ARB_texture_storage is not supported, GL_ARB_direct_state_access cannot be supported either.
-// Such mismatches can occurr when individual extensions are disbaled either for debugging purposes or due to other external input.
+// Such mismatches can occur when individual extensions are disabled either for debugging purposes or due to other external input.
 void DisableIncompatibleExtensions();
 
 // Returns true if the specified OpenGL extension is supported.
 bool HasExtension(const GLExt extension);
 
-// Returns ture if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
+// Returns true if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
 bool HasNativeSamplers();
 
 

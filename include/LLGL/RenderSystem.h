@@ -482,7 +482,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         \see ResourceHeap::GetNumDescriptorSets
         \see PipelineLayout::GetNumHeapBindings
-        \see CommandBUffer::SetResourceHeap
+        \see CommandBuffer::SetResourceHeap
         */
         virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
 
@@ -561,7 +561,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Releases the specified PipelineCache object. After this call, the specified object must no longer be used.
         \remarks Backends that do not support pipeline caching might be using only a single pipeline cache object with a reference counter,
-        in which case releaseing such object will only decrement its internal counter and only delete the object until this counter reaches zero.
+        in which case releasing such object will only decrement its internal counter and only delete the object until this counter reaches zero.
         */
         virtual void Release(PipelineCache& pipelineCache)  = 0;
 
@@ -639,7 +639,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Returns the native device handle.
 
         \param[out] nativeHandle Raw pointer to the backend specific structure to store the native handle.
-        Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
+        Obtain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
         where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Vulkan, \c Metal, or \c OpenGL.
         OpenGL does not have a native handle as it uses the current platform specific GL context.
 

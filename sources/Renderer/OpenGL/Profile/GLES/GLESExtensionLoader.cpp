@@ -23,7 +23,7 @@ namespace LLGL
 {
 
 
-// OpenGLES extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successully.
+// OpenGLES extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successfully.
 using GLESExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */

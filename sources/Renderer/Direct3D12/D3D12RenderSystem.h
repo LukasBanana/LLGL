@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 
 #include "D3D12Device.h"
+#include "D3D12SharedDeviceObjects.h"
 #include "D3D12SwapChain.h"
 #include "Command/D3D12CommandQueue.h"
 #include "Command/D3D12CommandBuffer.h"
@@ -55,16 +56,16 @@ struct RenderSystemNativeHandle;
 
 class D3D12SubresourceContext;
 
+struct D3D12DeviceCaps
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    D3D12_MESH_SHADER_TIER  meshShaderTier      = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
+    #endif
+    bool                    isTearingSupported  = false;
+};
+
 class D3D12RenderSystem final : public RenderSystem
 {
-
-        struct D3DDeviceCaps
-        {
-            #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-            D3D12_MESH_SHADER_TIER  meshShaderTier      = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
-            #endif
-            bool                    isTearingSupported  = false;
-        };
 
     public:
 
@@ -121,10 +122,16 @@ class D3D12RenderSystem final : public RenderSystem
             return cmdSignatureFactory_;
         }
 
-        // Returns whether the D3D12 device supports tearing (DXGI_FEATURE_PRESENT_ALLOW_TEARING).
-        inline bool IsTearingSupported() const
+        // Returns the D3D12 device capabilities such as tearing support (DXGI_FEATURE_PRESENT_ALLOW_TEARING).
+        inline const D3D12DeviceCaps& GetDeviceCaps() const
         {
-            return deviceCaps_.isTearingSupported;
+            return deviceCaps_;
+        }
+
+        // Returns a raw pointer to the shared device objects.
+        inline D3D12SharedDeviceObjects* GetSharedDeviceObjects()
+        {
+            return &sharedDeviceObjects_;
         }
 
     private:
@@ -136,7 +143,7 @@ class D3D12RenderSystem final : public RenderSystem
         void EnableDebugLayer();
 
         void CreateFactory(bool debugDevice = false);
-        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter);
 
         HRESULT CreateDevice(IDXGIAdapter* preferredAdapter, long flags);
         HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle, long flags);
@@ -183,7 +190,8 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12PipelineLayout                     defaultPipelineLayout_;
         D3D12SignatureFactory                   cmdSignatureFactory_;
         D3D12StagingBufferPool                  stagingBufferPool_;
-        D3DDeviceCaps                           deviceCaps_;
+        D3D12DeviceCaps                         deviceCaps_;
+        D3D12SharedDeviceObjects                sharedDeviceObjects_;
 
         /* ----- Hardware object containers ----- */
 
@@ -206,7 +214,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        VideoAdapterInfo                        videoAdatperInfo_;
+        VideoAdapterInfo                        videoAdapterInfo_;
 
 };
 

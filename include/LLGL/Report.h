@@ -41,7 +41,7 @@ class LLGL_EXPORT Report final
         //! Constructs the report with the specified text and flag.
         Report(const StringView& text, bool hasErrors);
 
-        //! Constructs the report by taking the ownersip of the specified string.
+        //! Constructs the report by taking the ownership of the specified string.
         Report(std::string&& text, bool hasErrors);
 
         //! Copy constructor.

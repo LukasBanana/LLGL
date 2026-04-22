@@ -53,7 +53,7 @@ After:
 bool Shader::HasErrors() const;
 
 // Usage:
-LLGL::ShaderDescritpor myShaderDesc;
+LLGL::ShaderDescriptor myShaderDesc;
 myShaderDesc.type       = LLGL::ShaderType::Vertex;
 myShaderDesc.source     = myShaderSource.c_str();
 myShaderDesc.sourceSize = myShaderSource.size();
@@ -197,7 +197,7 @@ int                  ProfileOpenGLDescriptor::minorVersion;
 // Usage:
 LLGL::RenderContextDescriptor myContextDesc;
 /* ... */
-myContextDesc.profileOpenGL.contextProflie = LLGL::OpenGLContextProfile::CoreProfile;
+myContextDesc.profileOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
 myContextDesc.profileOpenGL.majorVersion   = 4;
 myContextDesc.profileOpenGL.minorVersion   = 6;
 myRenderer->CreateRenderContext(myContextDesc);
@@ -723,7 +723,7 @@ myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
 
 ## Array layers for cube textures
 
-The number of array layers for cube textures is no longer automatically multiplied by 6, but the client programmer must specifiy the correct number of array layers himself.
+The number of array layers for cube textures is no longer automatically multiplied by 6, but the client programmer must specify the correct number of array layers himself.
 
 Before:
 ```cpp
@@ -950,9 +950,9 @@ auto myRenderer = LLGL::RenderSystem::Load("OpenGL", &myProfile);
 
 while (/* ... */) {
     /* Render ... */
-    
+
     /* Evaluate frame profile (e.g. 'myProfile.setVertexBuffer') ... */
-    
+
     // Reset counters
     myProfile.ResetCounters();
 }
@@ -972,11 +972,11 @@ auto myRenderer = LLGL::RenderSystem::Load("OpenGL", &myProfile);
 
 while (/* ... */) {
     /* Render ... */
-    
+
     // Get frame profile and reset counters
     LLGL::FrameProfile myFrameProfile;
     myProfile.NextProfile(&myFrameProfile);
-    
+
     /* Evaluate frame profile (e.g. 'myFrameProfile.vertexBufferBindings') ... */
 }
 ```

@@ -24,7 +24,7 @@ namespace LLGL
 /**
 \brief Canvas interface for mobile platforms.
 \remarks This is the main interface for the windowing system in LLGL on mobile platforms.
-The couterpart is the Window interface for desktop platforms.
+The counterpart is the Window interface for desktop platforms.
 \see Window
 */
 class LLGL_EXPORT Canvas : public Surface

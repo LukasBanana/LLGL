@@ -92,7 +92,7 @@ get_realpath()
     fi
 }
 
-# Checkout external depenencies
+# Checkout external dependencies
 GAUSSIAN_LIB_DIR="GaussianLib/include"
 
 if [ -f "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR/Gauss/Gauss.h" ]; then
@@ -127,7 +127,7 @@ if [ ! -f "$EMSCRIPTEN_CMAKE_TOOLCHAIN" ]; then
     exit 1
 fi
 
-# Build into output directory (this syntax requried CMake 3.13+)
+# Build into output directory (this syntax required CMake 3.13+)
 OPTIONS=(
     -DCMAKE_TOOLCHAIN_FILE="$EMSCRIPTEN_CMAKE_TOOLCHAIN"
     -DLLGL_BUILD_RENDERER_WEBGL=ON
@@ -153,7 +153,7 @@ else
     cmake ${OPTIONS[@]} -G "$GENERATOR"
 fi
 
-# Copys the input file to the output and removes '\r' EOL characters from text files.
+# Copies the input file to the output and removes '\r' EOL characters from text files.
 # Web page will run on Linux server and Git must not convert EOL for this output file.
 # Otherwise, data offsets in the *.data.js script won't match with the *.data file after Git uploaded it.
 copy_file_preserve_linux_eol()

@@ -2461,8 +2461,8 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
         if (shader->instance.Reflect(reflection))
         {
             /* Insert reflected uniform names to match against names for all stages */
-            for (const UniformDescriptor& unfiromDesc : reflection.uniforms)
-                reflectedUniformNames.insert(unfiromDesc.name.c_str());
+            for (const UniformDescriptor& uniformDesc : reflection.uniforms)
+                reflectedUniformNames.insert(uniformDesc.name.c_str());
         }
         else
         {

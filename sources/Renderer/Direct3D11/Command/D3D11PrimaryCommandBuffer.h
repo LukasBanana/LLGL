@@ -11,11 +11,16 @@
 
 #include "D3D11CommandBuffer.h"
 #include "D3D11CommandContext.h"
+#include "../Shader/D3D11BuiltinShaderFactory.h"
 
 
 namespace LLGL
 {
 
+
+struct D3D11SharedDeviceObjects;
+
+class D3D11RenderSystem;
 
 class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
 {
@@ -27,7 +32,7 @@ class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
     public:
 
         D3D11PrimaryCommandBuffer(
-            ID3D11Device*                               device,
+            D3D11RenderSystem&                          renderSystem,
             const ComPtr<ID3D11DeviceContext>&          context,
             const std::shared_ptr<D3D11StateManager>&   stateMngr,
             const CommandBufferDescriptor&              desc
@@ -83,13 +88,16 @@ class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );
 
+        void DispatchBuiltinCS(D3D11BuiltinShader bultinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
+
     private:
 
         // Device object to create on-demand objects like temporary SRVs and UAVs
-        ID3D11Device*                       device_             = nullptr;
+        ID3D11Device*                       device_                 = nullptr;
         D3D11CommandContext                 context_;
         ComPtr<ID3D11CommandList>           commandList_;
-        bool                                hasDeferredContext_ = false;
+        bool                                hasDeferredContext_     = false;
+        D3D11SharedDeviceObjects*           sharedDeviceObjects_    = nullptr;
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3DUserDefinedAnnotation>   annotation_;

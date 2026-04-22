@@ -32,11 +32,6 @@ LLGL_C_EXPORT bool llglAdaptSurfaceForVideoMode(LLGLSurface surface, LLGLExtent2
     return LLGL_PTR(Surface, surface)->AdaptForVideoMode((Extent2D*)outResolution, outFullscreen);
 }
 
-LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface)
-{
-    // dummy
-}
-
 LLGL_C_EXPORT bool llglProcessSurfaceEvents()
 {
     return LLGL::Surface::ProcessEvents();

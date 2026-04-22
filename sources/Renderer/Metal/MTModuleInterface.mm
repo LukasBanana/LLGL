@@ -9,7 +9,7 @@
 #include "MTRenderSystem.h"
 
 
-LLGL_IMPLEMENT_RENDERER_MODULE(Metal, "Metal", LLGL::RendererID::Metal, LLGL::MTRenderSystem, 200);
+LLGL_IMPLEMENT_RENDERER_MODULE(Metal, "Metal", LLGL::RendererID::Metal, LLGL::MTRenderSystem, 300);
 
 
 

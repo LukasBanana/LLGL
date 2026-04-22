@@ -31,13 +31,12 @@ class D3D12BuiltinShaderFactory
 
     public:
 
+        D3D12BuiltinShaderFactory() = default;
+
         D3D12BuiltinShaderFactory(const D3D12BuiltinShaderFactory&) = delete;
         D3D12BuiltinShaderFactory& operator = (const D3D12BuiltinShaderFactory&) = delete;
 
-        // Returns the instance of this singleton.
-        static D3D12BuiltinShaderFactory& Get();
-
-        // Creats all builtin shaders with the specified D3D device.
+        // Creates all builtin shaders with the specified D3D device.
         void CreateBuiltinPSOs(ID3D12Device* device);
 
         // Releases all builtin shaders.
@@ -47,8 +46,6 @@ class D3D12BuiltinShaderFactory
         bool GetBulitinPSO(const D3D12BuiltinPSO builtin, ID3D12PipelineState*& outPipelineState, ID3D12RootSignature*& outRootSignature) const;
 
     private:
-
-        D3D12BuiltinShaderFactory() = default;
 
         void CreateComputePSO(
             ID3D12Device*           device,

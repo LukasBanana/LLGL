@@ -20,7 +20,7 @@ namespace LLGL
 
 /*
 Pool of D3D12 staging descriptor heaps.
-The number of chunks in this pools is preferrably always 1, so the initial chunk should be allocated with a decent size.
+The number of chunks in this pools is preferably always 1, so the initial chunk should be allocated with a decent size.
 */
 class D3D12StagingDescriptorHeapPool
 {
@@ -57,7 +57,7 @@ class D3D12StagingDescriptorHeapPool
         // Allocates a new chunk with the specified minimal size.
         void AllocChunk(UINT minNumDescriptors);
 
-        // Restes all previously allocated chunks.
+        // Resets all previously allocated chunks.
         void ResetChunks();
 
         // Increments the offset for the next range of descriptor handles.

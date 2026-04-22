@@ -135,7 +135,7 @@ DEF_TEST( CommandBufferMultiThreading )
     {
         threadEnterOrder.Append(threadID);
 
-        // Initialie scene constants
+        // Initialize scene constants
         SceneConstants localSceneConstants;
 
         Gs::Matrix4f vMatrix;

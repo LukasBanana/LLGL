@@ -26,7 +26,7 @@ class GLVertexInputLayout
 
         GLVertexInputLayout() = default;
 
-        // Restes all vertex attributes and the hash.
+        // Resets all vertex attributes and the hash.
         void Reset();
 
         // Appends the specified vertex attributes and the hash over all of them.

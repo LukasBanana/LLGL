@@ -7,6 +7,7 @@
 
 #include "D3D12CommandBuffer.h"
 #include "D3D12SignatureFactory.h"
+#include "../D3D12SharedDeviceObjects.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3D12SwapChain.h"
 #include "../D3D12RenderSystem.h"
@@ -54,6 +55,7 @@ namespace LLGL
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
     cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                         },
+    sharedDeviceObjects_ { renderSystem.GetSharedDeviceObjects()                         },
     isImmediateSubmit_   { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)     },
     isBundle_            { ((desc.flags & CommandBufferFlags::Secondary) != 0)           },
     commandQueue_        { LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue()) }
@@ -407,13 +409,13 @@ void D3D12CommandBuffer::CopyTextureFromFramebuffer(
 void D3D12CommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
-    D3D12MipGenerator::Get().GenerateMips(commandContext_, textureD3D, textureD3D.GetWholeSubresource());
+    sharedDeviceObjects_->mipGenerator.GenerateMips(commandContext_, textureD3D, textureD3D.GetWholeSubresource());
 }
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
-    D3D12MipGenerator::Get().GenerateMips(commandContext_, textureD3D, subresource);
+    sharedDeviceObjects_->mipGenerator.GenerateMips(commandContext_, textureD3D, subresource);
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -909,7 +911,7 @@ void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_
     /* Set specified query as predicate */
     GetNative()->SetPredication(
         queryHeapD3D.GetResultResource(),
-        queryHeapD3D.GetAlignedBufferOffest(query),
+        queryHeapD3D.GetAlignedBufferOffset(query),
         GetDXPredicateOp(mode)
     );
 }
@@ -939,7 +941,7 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
     commandContext_.FlushResourceBarriers();
 
     /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
-    const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstantsView(D3D12BufferConstants::ZeroUInt64);
+    const D3D12BufferConstantsView srcBufferView = sharedDeviceObjects_->bufferConstantsPool.FetchConstantsView(D3D12BufferConstants::ZeroUInt64);
 
     for_range(i, numSOBuffers_)
     {
@@ -1089,7 +1091,7 @@ void D3D12CommandBuffer::DrawStreamOutput()
 
     ID3D12PipelineState* soDrawArgsPSO = nullptr;
     ID3D12RootSignature* soDrawArgsRootSig = nullptr;
-    D3D12BuiltinShaderFactory::Get().GetBulitinPSO(D3D12BuiltinPSO::StreamOutputDrawArgsCS, soDrawArgsPSO, soDrawArgsRootSig);
+    sharedDeviceObjects_->builtinShaderFactory.GetBulitinPSO(D3D12BuiltinPSO::StreamOutputDrawArgsCS, soDrawArgsPSO, soDrawArgsRootSig);
 
     ID3D12GraphicsCommandList* commandList = commandContext_.GetCommandList();
     ID3D12PipelineState* oldGraphicsPSO = commandContext_.GetCurrentPipelineState();

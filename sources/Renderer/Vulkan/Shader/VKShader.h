@@ -43,7 +43,7 @@ class VKShader final : public Shader
 
     public:
 
-        // Function interface which returns a binding slot ierator to re-assign bindings slots for a permuation of the SPIR-V module.
+        // Function interface which returns a binding slot ierator to re-assign bindings slots for a permutation of the SPIR-V module.
         using PermutationBindingFunc = std::function<bool(unsigned index, ConstFieldRangeIterator<BindingSlot>& iter, std::uint32_t& dstSet)>;
 
     public:

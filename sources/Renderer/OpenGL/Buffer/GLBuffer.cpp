@@ -219,7 +219,7 @@ void GLBuffer::ClearBufferData(std::uint32_t data)
         /* Allocate intermediate buffer to fill the GPU buffer with */
         std::vector<std::uint32_t> intermediateBuffer(static_cast<std::size_t>(bufferSize + 3) / 4, data);
 
-        /* Submit intermeidate buffer to GPU buffer */
+        /* Submit intermediate buffer to GPU buffer */
         glBufferSubData(bufferTarget, 0, static_cast<GLintptr>(bufferSize), intermediateBuffer.data());
     }
 }
@@ -250,7 +250,7 @@ void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_
         /* Allocate intermediate buffer to fill the GPU buffer with */
         std::vector<std::uint32_t> intermediateBuffer(static_cast<std::size_t>(size + 3) / 4, data);
 
-        /* Submit intermeidate buffer to GPU buffer */
+        /* Submit intermediate buffer to GPU buffer */
         glBufferSubData(GetGLTarget(), offset, size, intermediateBuffer.data());
     }
 }

@@ -10,11 +10,18 @@ package main
 import (
 	"log"
 	"unsafe"
+	"runtime"
 
 	"../../../wrapper/Go"
 )
 
 func main() {
+
+	// Lock the current goroutine to its current OS thread.
+	// This ensures all CGO calls happen on the same thread,
+	// which is mandatory for the LLGL wrapper.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	// Load renderer and create swap chain
 	renderer := llgl.LoadRenderSystem("OpenGL")
@@ -107,14 +114,15 @@ func main() {
 	}
 
 	// Main loop
-	for llgl.ProcessSurfaceEvents() {
+	window := llgl.AsWindow(swapChain.GetSurface())
+	for llgl.ProcessSurfaceEvents() && !window.HasQuit() {
 		cmdBuffer.Begin()
 		cmdBuffer.BeginRenderPass(swapChain)
 
 		resolution := swapChain.GetResolution()
-		cmdBuffer.Clear(llgl.ClearColor, llgl.ClearValue{ Color: [4]float32{ 0.1, 0.1, 0.2, 1.0} })
 		cmdBuffer.SetPipelineState(pso)
 		cmdBuffer.SetViewport(llgl.Viewport{ X: 0.0, Y: 0.0, Width: float32(resolution.Width), Height: float32(resolution.Height), MinDepth: 0.0, MaxDepth: 1.0 })
+		cmdBuffer.Clear(llgl.ClearColor, llgl.ClearValue{ Color: [4]float32{ 0.1, 0.1, 0.2, 1.0} })
 
 		cmdBuffer.SetVertexBuffer(vertexBuffer)
 		cmdBuffer.Draw(3, 0)

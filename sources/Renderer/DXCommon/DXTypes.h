@@ -78,7 +78,7 @@ bool IsDXGIFormatSRGB(const DXGI_FORMAT format);
 bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT value);
 
 // Converts a vertex output system value to its HLSL semantic identifier or null if there is no such semantic.
-const char* SystemValueToString(SystemValue sytemValue);
+const char* SystemValueToString(SystemValue systemValue);
 
 
 } // /namespace DXTypes

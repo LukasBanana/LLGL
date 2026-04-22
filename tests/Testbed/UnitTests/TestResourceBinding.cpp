@@ -35,6 +35,9 @@ DEF_TEST( ResourceBinding )
     }
     #endif
 
+    if (!caps.features.hasComputeShaders)
+        return TestResult::Skipped;
+
     // This shader writes to a UAV in the vertex shader
     if ((caps.limits.storageResourceStageFlags & StageFlags::VertexStage) == 0)
         return TestResult::Skipped;

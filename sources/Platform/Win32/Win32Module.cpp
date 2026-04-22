@@ -30,15 +30,23 @@ std::string Module::GetModuleFilename(const char* moduleName)
     return s;
 }
 
+static HMODULE LoadLibraryOrLibraryImage(LPCSTR filename, bool loadAsImageResource)
+{
+    if (loadAsImageResource)
+        return LoadLibraryExA(filename, nullptr, (LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+    else
+        return LoadLibraryA(filename);
+}
+
 // Call Win32 function 'LoadLibrary' but with dialog error messages disabled
-static HMODULE LoadLibrarySafe(LPCSTR filename)
+static HMODULE LoadLibrarySafe(LPCSTR filename, bool loadAsImageResource = false)
 {
     /* Disable dialog error messages */
-    UINT prevMode = SetErrorMode(0);
+    const UINT prevMode = SetErrorMode(0);
     SetErrorMode(prevMode | SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
     /* Load library */
-    HMODULE module = LoadLibraryA(filename);
+    HMODULE module = LoadLibraryOrLibraryImage(filename, loadAsImageResource);
 
     /* Reset previous error mode */
     SetErrorMode(prevMode);
@@ -49,7 +57,8 @@ static HMODULE LoadLibrarySafe(LPCSTR filename)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Win32 dynamic link library can be loaded properly */
-    if (HMODULE handle = LoadLibrarySafe(moduleFilename))
+    constexpr bool loadAsImageResource = true;
+    if (HMODULE handle = LoadLibrarySafe(moduleFilename, loadAsImageResource))
     {
         FreeLibrary(handle);
         return true;

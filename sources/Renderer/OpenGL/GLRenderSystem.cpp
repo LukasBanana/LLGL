@@ -122,7 +122,7 @@ static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
 
     GLbitfield flagsGL = 0;
 
-    /* Allways enable dynamic storage, to enable usage of 'glBufferSubData' */
+    /* Always enable dynamic storage, to enable usage of 'glBufferSubData' */
     flagsGL |= GL_DYNAMIC_STORAGE_BIT;
 
     if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
@@ -165,7 +165,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
         bufferGL->SetIndexType(bufferDesc.format);
 
-    /* If this buffer could be used a 'samplerBuffer' in GLSL, create its proxy texture */
+    /* If this buffer could be used as 'samplerBuffer' in GLSL, create its proxy texture */
     if ((bufferDesc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0 && bufferDesc.format != Format::Undefined)
     {
         GLenum internalFormat = GLTypes::Map(bufferDesc.format);
@@ -178,7 +178,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
 // private
 GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
         /* Create buffer with VAO and transform feedback object */
@@ -190,7 +190,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         return bufferGL;
     }
     else
-    #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
@@ -277,7 +277,7 @@ static GLbitfield ToGLMapBufferAccess(CPUAccess access)
 {
     switch (access)
     {
-        #if GL_ARB_buffer_storage
+        #if GL_ARB_map_buffer_range
         case CPUAccess::ReadOnly:       return GL_MAP_READ_BIT;
         case CPUAccess::WriteOnly:      return GL_MAP_WRITE_BIT;
         case CPUAccess::WriteDiscard:   return GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT;

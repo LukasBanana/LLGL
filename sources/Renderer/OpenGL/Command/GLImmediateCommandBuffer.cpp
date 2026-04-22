@@ -291,9 +291,9 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
         vertexBufferGL.GetVertexArray()->Bind(*stateMngr_);
 
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
     }
 }
 
@@ -306,9 +306,9 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t num
         vertexBufferGL.BuildVertexArray(ArrayView<VertexAttribute>{ vertexAttribs, numVertexAttribs });
         vertexBufferGL.GetVertexArray()->Bind(*stateMngr_);
 
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
     }
 }
 
@@ -943,14 +943,14 @@ void GLImmediateCommandBuffer::DrawStreamOutput()
     if (GLBufferWithXFB* bufferWithXfbGL = GetRenderState().boundBufferWithFxb)
     {
         LLGL_FLUSH_MEMORY_BARRIERS();
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         if (HasExtension(GLExt::ARB_transform_feedback2))
         {
             /* Draw primitives with internal number of vertices */
             glDrawTransformFeedback(GetDrawMode(), bufferWithXfbGL->GetTransformFeedbackID());
         }
         else
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
         {
             /* Draw primitives with the queried number of vertices */
             glDrawArrays(GetDrawMode(), 0, bufferWithXfbGL->QueryVertexCount());

@@ -150,7 +150,7 @@ def write_interface_header(dest_path: str, prefix: str, interface: LLGLInterface
         dest_path=f"{base_file}.h",
         content=HEADER_TEMPLATE.format(
             file=os.path.basename(base_file),
-            guard=f"LLGL_{prefix.upper()}_{interface.name.upper()}_H",
+            guard=f"LLGL_{prefix.upper()}_{to_header_guard(interface.name)}_H",
             include_directives=to_include_directives([f"<LLGL/{interface.name}.h>"] + interface.additional_include_files, prefix=prefix),
             content=forward_decls + header_template.format(
                 prefix=prefix,

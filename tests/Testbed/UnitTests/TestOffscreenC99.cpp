@@ -207,7 +207,7 @@ DEF_TEST( OffscreenC99 )
     }
     LLGLShader vertShader = llglCreateShader(&vertShaderDesc);
 
-    // Create vertex shader
+    // Create fragment shader
     LLGLShaderDescriptor fragShaderDesc = {};
     {
         fragShaderDesc.debugName    = "C99.FragmentShader";

@@ -359,7 +359,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
         GLGetValue(GL_PROGRAM_PIPELINE_BINDING, outContextState.boundProgramPipeline);
     #endif
 
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (HasExtension(GLExt::ARB_transform_feedback2))
         GLGetValue(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, outContextState.boundTransformFeedback);
     #endif
@@ -529,7 +529,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
         glBindProgramPipeline(inContextState.boundProgramPipeline);
     #endif
 
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (HasExtension(GLExt::ARB_transform_feedback2))
         glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, inContextState.boundTransformFeedback);
     #endif

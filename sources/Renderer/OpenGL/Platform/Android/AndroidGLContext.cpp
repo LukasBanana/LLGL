@@ -188,7 +188,7 @@ void AndroidGLContext::CreateContext(
         major = profile.majorVersion;
         minor = profile.minorVersion;
         if (!IsSupportedGLESVersion(GetGLESVersionNo(major, minor)))
-            LLGL_TRAP("cannot create GLES contex for version %d.%d; supported versions are 3.2, 3.1, 3.0, and 2.0", major, minor);
+            LLGL_TRAP("cannot create GLES context for version %d.%d; supported versions are 3.2, 3.1, 3.0, and 2.0", major, minor);
     }
 
     /* Create EGL context with optional shared EGL context */

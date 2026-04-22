@@ -48,7 +48,7 @@ class D3D12QueryHeap final : public QueryHeap
         void Unmap();
 
         // Returns the aligend buffer offset within the result resource for the specified query.
-        UINT64 GetAlignedBufferOffest(UINT query) const;
+        UINT64 GetAlignedBufferOffset(UINT query) const;
 
         // Returns the native D3D12_QUERY_TYPE type.
         inline D3D12_QUERY_TYPE GetNativeType() const

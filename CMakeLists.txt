@@ -87,7 +87,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # XCODE_SCHEME_WORKING_DIRECTORY (used per target) requires CMake 3.17.5
 if(APPLE AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
-    # Once Xcode schemes are generated for example, we also have to enable them globally or the main projects will disappear
+    # Once Xcode schemes are generated, we also have to enable them globally or the main projects will disappear
     set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
 endif()
 
@@ -205,7 +205,7 @@ endif()
 
 # === Functions ===
 
-# Filters sources files with a variadic argument for all directores:
+# Filters sources files with a variadic argument for all directories:
 # Example:
 #   find_source_files(OutputFiles "*.h;*.cpp" ${MyProjectDir}/Base ${MyProjectDir}/Extensions)
 function(find_source_files OUTPUT_LIST FILTERS)
@@ -941,9 +941,17 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
     list(APPEND LLGL_ALL_TARGETS LLGL_DXCommon)
 endif()
 
-install(TARGETS ${LLGL_ALL_TARGETS} EXPORT LLGLTargets RUNTIME LIBRARY ARCHIVE)
+# Use explicit destinations for RUNTIME, LIBRARY, and ARCHIVE to support older CMake versions (such as 3.13)
+install(
+    TARGETS ${LLGL_ALL_TARGETS}
+    EXPORT LLGLTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 install(DIRECTORY "${PROJECT_INCLUDE_DIR}/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(EXPORT LLGLTargets NAMESPACE LLGL:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LLGL")
+
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
@@ -1004,7 +1012,7 @@ if(LLGL_BUILD_WRAPPER_CSHARP)
 endif()
 
 if(LLGL_BUILD_WRAPPER_GO)
-    message(STATUS "Bulid Wrapper: Go")
+    message(STATUS "Build Wrapper: Go")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)

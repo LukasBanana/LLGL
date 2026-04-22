@@ -76,7 +76,7 @@ DEF_TEST( NativeHandle )
         buf2Desc.bindFlags  = BindFlags::Storage | BindFlags::Sampled;
         buf2Desc.stride     = 60;
     }
-    CREATE_BUFFER(buf2, buf2Desc, buf2Desc.debugName, nullptr);
+    CREATE_BUFFER_COND(caps.features.hasStorageBuffers, buf2, buf2Desc, buf2Desc.debugName, nullptr);
 
     BufferDescriptor buf3Desc;
     {
@@ -133,17 +133,27 @@ DEF_TEST( NativeHandle )
     // Test resource with native handles
     const int rendererID = renderer->GetRendererID();
 
-    #define GET_NATIVE_HANDLE(BACKEND, RES)                                     \
-        BACKEND::ResourceNativeHandle RES ## _handle;                           \
-        if (!(RES)->GetNativeHandle(&(RES ## _handle), sizeof(RES ## _handle))) \
-        {                                                                       \
-            Log::Errorf(                                                        \
-                Log::ColorFlags::StdError,                                      \
-                "LLGL::Resource::GetNativeHandle() failed for \"%s\"\n",        \
-                #RES                                                            \
-            );                                                                  \
-            result = TestResult::FailedMismatch;                                \
-        }                                                                       \
+    #define GET_NATIVE_HANDLE(BACKEND, RES)                                             \
+        BACKEND::ResourceNativeHandle RES ## _handle;                                   \
+        if (!(RES))                                                                     \
+        {                                                                               \
+            if (opt.verbose)                                                            \
+            {                                                                           \
+                Log::Printf(                                                            \
+                    "Skipped LLGL::Resource::GetNativeHandle() for \"%s\"\n",           \
+                    #RES                                                                \
+                );                                                                      \
+            }                                                                           \
+        }                                                                               \
+        else if (!(RES)->GetNativeHandle(&(RES ## _handle), sizeof(RES ## _handle)))    \
+        {                                                                               \
+            Log::Errorf(                                                                \
+                Log::ColorFlags::StdError,                                              \
+                "LLGL::Resource::GetNativeHandle() failed for \"%s\"\n",                \
+                #RES                                                                    \
+            );                                                                          \
+            result = TestResult::FailedMismatch;                                        \
+        }                                                                               \
         else
 
     #if LLGL_TEST_NATIVEHANDLE_D3D

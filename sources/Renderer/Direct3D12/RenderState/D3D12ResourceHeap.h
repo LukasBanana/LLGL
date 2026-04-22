@@ -51,10 +51,10 @@ class D3D12ResourceHeap final : public ResourceHeap
             const ArrayView<ResourceViewDescriptor>&    resourceViews
         );
 
-        // Inserts the resource barriers for the specified descritpor set into the command context.
+        // Inserts the resource barriers for the specified descriptor set into the command context.
         void TransitionResources(D3D12CommandContext& context, std::uint32_t descriptorSet);
 
-        // Inserts the resource barriers for the specified descritpor set into the command list.
+        // Inserts the resource barriers for the specified descriptor set into the command list.
         void InsertUAVBarriers(D3D12CommandContext& context, std::uint32_t descriptorSet);
 
         // Returns the CPU descriptor handle for heap start of the specified descriptor set.

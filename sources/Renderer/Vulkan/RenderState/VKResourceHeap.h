@@ -56,7 +56,7 @@ class VKResourceHeap final : public ResourceHeap
         // Sets all the barrier slots in the specified pipeline barrier.
         void SetBarrierSlots(VKPipelineBarrier& barrier, std::uint32_t descriptorSet);
 
-        // Returns the native Vulkan descritpor pool.
+        // Returns the native Vulkan descriptor pool.
         inline VkDescriptorPool GetVkDescriptorPool() const
         {
             return descriptorPool_.Get();
@@ -157,7 +157,7 @@ class VKResourceHeap final : public ResourceHeap
         // Allocates the buffer/image barrier slots for all descriptor sets.
         void AllocateBarrierSlots(std::uint32_t numDescriptorSets);
 
-        // Adds the specified vaLUe to the barrier slots and returns the index to that barrier slot.
+        // Adds the specified value to the barrier slots and returns the index to that barrier slot.
         std::uint32_t AddBarrierSlot(std::uint32_t slot);
 
     private:

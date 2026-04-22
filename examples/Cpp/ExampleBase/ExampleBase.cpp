@@ -394,6 +394,8 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.immediateSubmit = true;
     if (HasArgument("-r", argc, argv) || HasArgument("--right-handed", argc, argv))
         g_Config.rightHandedProj = true;
+    if (HasArgument("-b", argc, argv) || HasArgument("--break", argc, argv))
+        g_Config.flags |= LLGL::RenderSystemFlags::DebugBreakOnError;
     if (HasArgument("--nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
     if (HasArgument("--amd", argc, argv))

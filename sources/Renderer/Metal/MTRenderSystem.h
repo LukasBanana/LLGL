@@ -61,7 +61,9 @@ class MTRenderSystem final : public RenderSystem
 
     private:
 
-        void CreateDeviceResources(id<MTLDevice> sharedDevice = nil);
+        id<MTLDevice> CreateMetalDevice(long renderSystemFlags);
+
+        void CreateDeviceResources(long renderSystemFlags, id<MTLDevice> sharedDevice = nil);
         void QueryRendererInfo(RendererInfo& outInfo);
 
         const char* QueryMetalVersion() const;

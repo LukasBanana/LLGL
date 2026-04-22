@@ -486,9 +486,8 @@ void D3D11StateManager::SetConstants(UINT slot, const void* data, UINT dataSize,
     SetConstantBuffersRange(slot, 1, buffers, firstConstants, numConstants, stageFlags);
 }
 
-void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
+void D3D11StateManager::DispatchBuiltinCS(ID3D11ComputeShader* cs, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
 {
-    ID3D11ComputeShader* cs = D3D11BuiltinShaderFactory::Get().GetBulitinComputeShader(builtinShader);
     context_->CSSetShader(cs, nullptr, 0);
     context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
     context_->CSSetShader(shaderState_.cs, nullptr, 0);

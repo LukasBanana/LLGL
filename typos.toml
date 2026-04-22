@@ -1,0 +1,7 @@
+[files]
+extend-exclude = ["*.data", "external", "LLGLWrapper.*"]
+
+[default.extend-words]
+lod = "lod"
+tese = "tese"
+rto = "rto"

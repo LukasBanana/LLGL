@@ -118,7 +118,7 @@ IOSGLSwapChainContext::IOSGLSwapChainContext(IOSGLContext& context, Surface& sur
     /* Allocate GLKit view */
     view_ = [[GLKView alloc] initWithFrame:canvasView.frame context:context_];
 
-    /* Allocate view controller (also inherts from GLKViewDelegate) to handle re-draw events */
+    /* Allocate view controller (also inherits from GLKViewDelegate) to handle re-draw events */
     viewController_ = [[IOSGLSwapChainViewController alloc] initWithEAGLContext:context_ withCanvas:canvas];
     [viewController_ setView:view_];
 

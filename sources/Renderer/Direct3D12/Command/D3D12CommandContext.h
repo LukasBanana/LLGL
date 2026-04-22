@@ -67,7 +67,7 @@ class D3D12CommandContext
 
         D3D12CommandContext(D3D12Device& device);
 
-        // Creats the command list and internal command allocators.
+        // Creates the command list and internal command allocators.
         void Create(
             D3D12Device&            device,
             D3D12_COMMAND_LIST_TYPE commandListType         = D3D12_COMMAND_LIST_TYPE_DIRECT,

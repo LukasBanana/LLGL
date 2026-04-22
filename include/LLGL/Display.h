@@ -93,7 +93,7 @@ class LLGL_EXPORT Display : public Interface
         //! Sets the cursor to the specified screen coordinate and returns true on success. Otherwise, cursor relocation is not supported.
         static bool SetCursorPosition(const Offset2D& position);
 
-        //! Returns the screen coordiante of the cursor.
+        //! Returns the screen coordinate of the cursor.
         static Offset2D GetCursorPosition();
 
     public:
@@ -114,7 +114,7 @@ class LLGL_EXPORT Display : public Interface
         /**
         \brief Returns the scale factor for this display.
         \remarks This value is used to convert between screen resolution coordinates (see SwapChainDescriptor::resolution) and window coordinates (see WindowDescriptor::size).
-        \remarks For high resolution displays, this may have a value of 3 or 2. Otherwise, 1 is the most common value if no extra scaling is necessariy.
+        \remarks For high resolution displays, this may have a value of 3 or 2. Otherwise, 1 is the most common value if no extra scaling is necessary.
         \see SwapChainDescriptor::resolution
         \see WindowDescriptor::size
         */

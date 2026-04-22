@@ -27,8 +27,8 @@ class D3D12RootSignature
         D3D12RootSignature() = default;
 
         void Clear();
-        void Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers);
-        void ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers);
+        void Reset(UINT maxNumRootParameters, UINT maxNumStaticSamplers);
+        void ResetAndAlloc(UINT maxNumRootParameters, UINT maxNumStaticSamplers);
 
         D3D12RootParameter* AppendRootParameter(UINT* outRootParameterIndex = nullptr);
 

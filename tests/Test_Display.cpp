@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
         display->ResetDisplayMode();
     }
 
-    LLGL::Log::Printf("Wainting");
+    LLGL::Log::Printf("Waiting");
     for (int i = 0; i < 5; ++i)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));

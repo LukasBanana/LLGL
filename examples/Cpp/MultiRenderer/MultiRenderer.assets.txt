@@ -1,2 +1,3 @@
 Textures/Logo_Metal.png
 Textures/Logo_OpenGL.png
+Textures/Logo_Vulkan.png

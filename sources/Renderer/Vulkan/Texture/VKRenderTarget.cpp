@@ -177,7 +177,7 @@ void VKRenderTarget::CreateRenderPass(
     /* Initialize attachment descriptors for multi-sampled color attachments */
     if (HasMultiSampling())
     {
-        /* Take color attachment format descriptors for multi-sampled attachemnts */
+        /* Take color attachment format descriptors for multi-sampled attachments */
         for_range(i, numColorAttachments_)
         {
             const AttachmentDescriptor& resolveAttachment = desc.resolveAttachments[i];
@@ -189,7 +189,7 @@ void VKRenderTarget::CreateRenderPass(
             }
             else
             {
-                /* Defualt initialize descriptor to disable this resolve attachment */
+                /* Default initialize descriptor to disable this resolve attachment */
                 InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], VK_FORMAT_UNDEFINED, bindFlags, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
             }
         }

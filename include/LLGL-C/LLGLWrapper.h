@@ -356,7 +356,8 @@ typedef enum LLGLKey
     LLGLKeyBrowserRefresh,
     LLGLKeyBrowserStop,
     LLGLKeyBrowserSearch,
-    LLGLKeyBrowserFavorits,
+    LLGLKeyBrowserFavorites,
+    LLGLKeyBrowserFavorits   = LLGLKeyBrowserFavorites,
     LLGLKeyBrowserHome,
     LLGLKeyVolumeMute,
     LLGLKeyVolumeDown,
@@ -1171,7 +1172,8 @@ typedef struct LLGLProfileCommandQueueRecord
     uint32_t bufferMappings;           /* = 0 */
     uint32_t textureWrites;            /* = 0 */
     uint32_t textureReads;             /* = 0 */
-    uint32_t commandBufferSubmittions; /* = 0 */
+    uint32_t commandBufferSubmissions; /* = 0 */
+    uint32_t commandBufferSubmittions; /* Identifier `commandBufferSubmittions` is deprecated since 0.05b; Use `commandBufferSubmissions` instead! */
     uint32_t fenceSubmissions;         /* = 0 */
 }
 LLGLProfileCommandQueueRecord;

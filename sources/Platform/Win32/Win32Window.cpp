@@ -270,7 +270,7 @@ bool Win32Window::IsShown() const
 
 WindowDescriptor Win32Window::GetDesc() const
 {
-    /* Get window flags and other information for comparision */
+    /* Get window flags and other information for comparison */
     const LONG      style       = GetWindowLong(wnd_, GWL_STYLE);
     const Extent2D  windowSize  = GetSize();
     const Offset2D  centerPoint = GetScreenCenteredPosition(windowSize);

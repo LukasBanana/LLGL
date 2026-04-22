@@ -103,6 +103,15 @@ func convertExtent3D(src Extent3D) C.LLGLExtent3D {
 	}
 }
 
+func convertImageView(dst *C.LLGLImageView, src *ImageView) {
+	dst.format		= C.LLGLImageFormat(src.Format)
+	dst.dataType	= C.LLGLDataType(src.DataType)
+	dst.data		= src.Data
+	dst.dataSize	= C.size_t(src.DataSize)
+	dst.rowStride	= C.uint32_t(src.RowStride)
+	dst.layerStride	= C.uint32_t(src.LayerStride)
+}
+
 func convertTextureDescriptor(dst *C.LLGLTextureDescriptor, src *TextureDescriptor) {
 	dst.debugName		= C.CString(src.DebugName)
 	dst._type			= C.LLGLTextureType(src.Type)
@@ -191,6 +200,139 @@ func freeShaderDescriptor(dst *C.LLGLShaderDescriptor) {
 
 func convertShaderReflectionOutput(dst *ShaderReflection, src *C.LLGLShaderReflection) {
 	//todo
+}
+
+func convertBindingSlot(dst *C.LLGLBindingSlot, src *BindingSlot) {
+	dst.index	= C.uint32_t(src.Index)
+	dst.set		= C.uint32_t(src.Set)
+}
+
+func convertBindingDescriptor(dst *C.LLGLBindingDescriptor, src *BindingDescriptor) {
+	dst.name		= C.CString(src.Name)
+	dst._type		= C.LLGLResourceType(src.Type)
+	dst.bindFlags	= C.long(src.BindFlags)
+	dst.stageFlags	= C.long(src.StageFlags)
+	convertBindingSlot(&dst.slot, &src.Slot)
+	dst.arraySize	= C.uint32_t(src.ArraySize)
+}
+
+func freeBindingDescriptor(dst *C.LLGLBindingDescriptor) {
+	C.free(unsafe.Pointer(dst.name))
+}
+
+func convertSamplerDescriptor(dst *C.LLGLSamplerDescriptor, src *SamplerDescriptor) {
+	dst.debugName		= C.CString(src.DebugName)
+	dst.addressModeU	= C.LLGLSamplerAddressMode(src.AddressModeU)
+	dst.addressModeV	= C.LLGLSamplerAddressMode(src.AddressModeV)
+	dst.addressModeW	= C.LLGLSamplerAddressMode(src.AddressModeW)
+	dst.minFilter		= C.LLGLSamplerFilter(src.MinFilter)
+	dst.magFilter		= C.LLGLSamplerFilter(src.MagFilter)
+	dst.mipMapFilter	= C.LLGLSamplerFilter(src.MipMapFilter)
+	dst.mipMapEnabled	= C.bool(src.MipMapEnabled)
+	dst.mipMapLODBias	= C.float(src.MipMapLODBias)
+	dst.minLOD			= C.float(src.MinLOD)
+	dst.maxLOD			= C.float(src.MaxLOD)
+	dst.maxAnisotropy	= C.uint32_t(src.MaxAnisotropy)
+	dst.compareEnabled	= C.bool(src.CompareEnabled)
+	dst.compareOp		= C.LLGLCompareOp(src.CompareOp)
+	dst.borderColor[0]	= C.float(src.BorderColor[0])
+	dst.borderColor[1]	= C.float(src.BorderColor[1])
+	dst.borderColor[2]	= C.float(src.BorderColor[2])
+	dst.borderColor[3]	= C.float(src.BorderColor[3])
+}
+
+func freeSamplerDescriptor(dst *C.LLGLSamplerDescriptor) {
+	C.free(unsafe.Pointer(dst.debugName))
+}
+
+func convertStaticSamplerDescriptor(dst *C.LLGLStaticSamplerDescriptor, src *StaticSamplerDescriptor) {
+	dst.name		= C.CString(src.Name)
+	dst.stageFlags	= C.long(src.StageFlags)
+	convertBindingSlot(&dst.slot, &src.Slot)
+	convertSamplerDescriptor(&dst.sampler, &src.Sampler)
+}
+
+func freeStaticSamplerDescriptor(dst *C.LLGLStaticSamplerDescriptor) {
+	C.free(unsafe.Pointer(dst.name))
+	freeSamplerDescriptor(&dst.sampler)
+}
+
+func convertUniformDescriptor(dst *C.LLGLUniformDescriptor, src *UniformDescriptor) {
+	dst.name		= C.CString(src.Name);
+	dst._type		= C.LLGLUniformType(src.Type)
+	dst.arraySize	= C.uint32_t(src.ArraySize)
+}
+
+func convertCombinedTextureSamplerDescriptor(dst *C.LLGLCombinedTextureSamplerDescriptor, src *CombinedTextureSamplerDescriptor) {
+	dst.name		= C.CString(src.Name)
+	dst.textureName	= C.CString(src.TextureName)
+	dst.samplerName	= C.CString(src.SamplerName)
+	convertBindingSlot(&dst.slot, &src.Slot)
+}
+
+func freeUniformDescriptor(dst *C.LLGLUniformDescriptor) {
+	C.free(unsafe.Pointer(dst.name))
+}
+
+func freeCombinedTextureSamplerDescriptor(dst *C.LLGLCombinedTextureSamplerDescriptor) {
+	C.free(unsafe.Pointer(dst.name))
+	C.free(unsafe.Pointer(dst.textureName))
+	C.free(unsafe.Pointer(dst.samplerName))
+}
+
+func convertPipelineLayoutDescriptor(dst *C.LLGLPipelineLayoutDescriptor, src *PipelineLayoutDescriptor) {
+    dst.debugName					= C.CString(src.DebugName)
+    dst.numHeapBindings				= C.size_t(len(src.HeapBindings))
+    dst.heapBindings				= unsafeAllocArray[C.LLGLBindingDescriptor](dst.numHeapBindings)
+    dst.numBindings					= C.size_t(len(src.Bindings))
+    dst.bindings					= unsafeAllocArray[C.LLGLBindingDescriptor](dst.numBindings)
+    dst.numStaticSamplers			= C.size_t(len(src.StaticSamplers))
+    dst.staticSamplers				= unsafeAllocArray[C.LLGLStaticSamplerDescriptor](dst.numStaticSamplers)
+    dst.numUniforms					= C.size_t(len(src.Uniforms))
+    dst.uniforms					= unsafeAllocArray[C.LLGLUniformDescriptor](dst.numUniforms)
+    dst.numCombinedTextureSamplers	= C.size_t(len(src.CombinedTextureSamplers))
+    dst.combinedTextureSamplers		= unsafeAllocArray[C.LLGLCombinedTextureSamplerDescriptor](dst.numCombinedTextureSamplers)
+    dst.barrierFlags				= C.long(src.BarrierFlags)
+
+	for i := range src.HeapBindings {
+		convertBindingDescriptor(unsafePointerSubscript(dst.heapBindings, C.size_t(i)), &src.HeapBindings[i])
+	}
+	for i := range src.Bindings {
+		convertBindingDescriptor(unsafePointerSubscript(dst.bindings, C.size_t(i)), &src.Bindings[i])
+	}
+	for i := range src.StaticSamplers {
+		convertStaticSamplerDescriptor(unsafePointerSubscript(dst.staticSamplers, C.size_t(i)), &src.StaticSamplers[i])
+	}
+	for i := range src.Uniforms {
+		convertUniformDescriptor(unsafePointerSubscript(dst.uniforms, C.size_t(i)), &src.Uniforms[i])
+	}
+	for i := range src.CombinedTextureSamplers {
+		convertCombinedTextureSamplerDescriptor(unsafePointerSubscript(dst.combinedTextureSamplers, C.size_t(i)), &src.CombinedTextureSamplers[i])
+	}
+}
+
+func freePipelineLayoutDescriptor(dst *C.LLGLPipelineLayoutDescriptor) {
+	for i := C.size_t(0); i < dst.numHeapBindings; i++ {
+		freeBindingDescriptor(unsafePointerSubscript(dst.heapBindings, i))
+	}
+	for i := C.size_t(0); i < dst.numBindings; i++ {
+		freeBindingDescriptor(unsafePointerSubscript(dst.bindings, i))
+	}
+	for i := C.size_t(0); i < dst.numStaticSamplers; i++ {
+		freeStaticSamplerDescriptor(unsafePointerSubscript(dst.staticSamplers, i))
+	}
+	for i := C.size_t(0); i < dst.numUniforms; i++ {
+		freeUniformDescriptor(unsafePointerSubscript(dst.uniforms, i))
+	}
+	for i := C.size_t(0); i < dst.numCombinedTextureSamplers; i++ {
+		freeCombinedTextureSamplerDescriptor(unsafePointerSubscript(dst.combinedTextureSamplers, i))
+	}
+	C.free(unsafe.Pointer(dst.debugName))
+	C.free(unsafe.Pointer(dst.heapBindings))
+	C.free(unsafe.Pointer(dst.bindings))
+	C.free(unsafe.Pointer(dst.staticSamplers))
+	C.free(unsafe.Pointer(dst.uniforms))
+	C.free(unsafe.Pointer(dst.combinedTextureSamplers))
 }
 
 func convertDepthDescriptor(dst *C.LLGLDepthDescriptor, src *DepthDescriptor) {

@@ -159,13 +159,13 @@ void RenderingDebugger::RecordProfile(const FrameProfile& profile)
 
 static void MergeProfileCommandQueueRecords(ProfileCommandQueueRecord& dst, const ProfileCommandQueueRecord& src)
 {
-    LLGL_ASSERT_STRUCT_FIELDS(ProfileCommandQueueRecord, 7);
+    LLGL_ASSERT_STRUCT_FIELDS(ProfileCommandQueueRecord, 8);
     dst.bufferWrites                += src.bufferWrites             ;
     dst.bufferReads                 += src.bufferReads              ;
     dst.bufferMappings              += src.bufferMappings           ;
     dst.textureWrites               += src.textureWrites            ;
     dst.textureReads                += src.textureReads             ;
-    dst.commandBufferSubmittions    += src.commandBufferSubmittions ;
+    dst.commandBufferSubmissions    += src.commandBufferSubmissions ;
     dst.fenceSubmissions            += src.fenceSubmissions         ;
 }
 

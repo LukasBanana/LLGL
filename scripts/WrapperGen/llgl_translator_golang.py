@@ -94,13 +94,19 @@ class GolangTranslator(Translator):
                     declList.append(Translator.Declaration('', f'{enum.name}{field.name}', field.init))
 
                 isFirstDecl = True
+                numOverrides = 0
                 for decl in declList.decls:
                     typeSpecifier = f' {enum.name} = iota' if isFirstDecl else ''
-                    #if decl.init:
-                    #    self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {decl.init}')
-                    #else:
-                    #    self.statement(f'{decl.name}{typeSpecifier}')
-                    self.statement(f'{decl.name}{typeSpecifier}')
+                    if decl.init:
+                        isInitValueMemberOfEnum = any(decl.init in otherDecl.name for otherDecl in declList.decls)
+                        initValue = f'{enum.name}{decl.init}' if isInitValueMemberOfEnum else decl.init
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {initValue}')
+                        numOverrides += 1
+                    elif numOverrides > 0:
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= iota - {numOverrides}')
+                        numOverrides = 0
+                    else:
+                        self.statement(f'{decl.name}{typeSpecifier}')
                     isFirstDecl = False
 
                 self.closeScope(')')

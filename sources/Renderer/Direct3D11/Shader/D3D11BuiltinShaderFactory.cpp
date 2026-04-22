@@ -16,12 +16,6 @@ namespace LLGL
 {
 
 
-D3D11BuiltinShaderFactory& D3D11BuiltinShaderFactory::Get()
-{
-    static D3D11BuiltinShaderFactory instance;
-    return instance;
-}
-
 void D3D11BuiltinShaderFactory::CreateBuiltinShaders(ID3D11Device* device)
 {
     LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture1DFromBufferCS,

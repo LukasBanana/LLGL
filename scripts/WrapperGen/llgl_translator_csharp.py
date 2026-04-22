@@ -159,7 +159,7 @@ class CsharpTranslator(Translator):
                     return 'byte*' if isInsideStruct else 'string'
                 else:
                     return typename
-                
+
             sanitizedTypename = sanitizeTypename(fieldType.typename)
 
             if fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.interfaces:
@@ -271,7 +271,7 @@ class CsharpTranslator(Translator):
                             else:
                                 return constant
                         return f'({type})0x{constant:X}'
-                    
+
                 return init
             else:
                 # Parameters in C# can only have compile-time default arguments
@@ -466,7 +466,7 @@ class CsharpTranslator(Translator):
                 structProperties = findRecordProperties(struct.name)
                 if structProperties and structProperties.fullCtor:
                     paramList = ''
-                    hasParamsWithoutDefualtArg = False
+                    hasParamsWithoutDefaultArg = False
                     defaultArgsStarted = False
                     for decl in declList.decls:
                         declType = 'string' if decl.type == CsharpTranslator.WrapperClasses.STRING else decl.type
@@ -478,12 +478,12 @@ class CsharpTranslator(Translator):
                             defaultArgsStarted = True
                             paramList += f' = {declInit}'
                         else:
-                            hasParamsWithoutDefualtArg = True
+                            hasParamsWithoutDefaultArg = True
                             if defaultArgsStarted:
                                 paramList += f' = new {declType}()'
                                 #fatal(f"error: no initializer defined for parameter '{decl.originalName}' in constructor '{struct.name}', but default argument list has already started")
 
-                    if hasParamsWithoutDefualtArg and len(paramList) > 0:
+                    if hasParamsWithoutDefaultArg and len(paramList) > 0:
                         self.statement(f'public {struct.name}() ' + '{ }')
                         self.statement()
                         hasDefaultCtor = True
@@ -506,7 +506,7 @@ class CsharpTranslator(Translator):
                 else:
                     if decl.fixedArray > 0:
                         hasUnsafeContext = True
-                        
+
                     if managedTypeProperties and decl.originalType.endswith('*') and decl.type != CsharpTranslator.WrapperClasses.STRING:
                         hasUnsafeContext = True
 

@@ -26,16 +26,10 @@ class D3D11MipGenerator
 
     public:
 
-        // Returns the instance of this singleton.
-        static D3D11MipGenerator& Get();
-
-    public:
+        D3D11MipGenerator() = default;
 
         D3D11MipGenerator(const D3D11MipGenerator&) = delete;
         D3D11MipGenerator& operator = (const D3D11MipGenerator&) = delete;
-
-        D3D11MipGenerator(D3D11MipGenerator&&) = delete;
-        D3D11MipGenerator& operator = (D3D11MipGenerator&&) = delete;
 
         void InitializeDevice(const ComPtr<ID3D11Device>& device);
         void Clear();
@@ -52,8 +46,6 @@ class D3D11MipGenerator
         );
 
     private:
-
-        D3D11MipGenerator() = default;
 
         void GenerateMipsWithSubresourceSRV(
             ID3D11DeviceContext*    context,

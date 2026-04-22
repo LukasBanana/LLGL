@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/DynamicVector.h>
 #include <LLGL/Container/StringLiteral.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 
 
@@ -72,6 +73,13 @@ struct ProfileTimeRecord
 
 struct ProfileCommandQueueRecord
 {
+    // Silence deprecation warnings in default constructors until `commandBufferSubmittions` is removed.
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    inline ProfileCommandQueueRecord() = default;
+    inline ProfileCommandQueueRecord(const ProfileCommandQueueRecord&) = default;
+    inline ProfileCommandQueueRecord& operator = (const ProfileCommandQueueRecord&) = default;
+    LLGL_DEPRECATED_IGNORE_POP()
+
     /**
     \brief Counter for all buffer write operations outside of command encoding.
     \see RenderSystem::WriteBuffer
@@ -108,6 +116,10 @@ struct ProfileCommandQueueRecord
     \see CommandQueue::Submit(CommandBuffer&)
     \see CommandQueue::Submit(std::uint32_t, CommandBuffer* const *)
     */
+    std::uint32_t commandBufferSubmissions  = 0;
+
+    //! \deprecated Since 0.05b; Use commandBufferSubmissions instead!
+    LLGL_DEPRECATED("Identifier `commandBufferSubmittions` is deprecated since 0.05b; Use `commandBufferSubmissions` instead!", "commandBufferSubmissions")
     std::uint32_t commandBufferSubmittions  = 0;
 
     /**

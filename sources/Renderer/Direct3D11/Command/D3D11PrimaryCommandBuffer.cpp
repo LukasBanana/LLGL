@@ -8,6 +8,7 @@
 #include "D3D11PrimaryCommandBuffer.h"
 #include "D3D11SecondaryCommandBuffer.h"
 #include "D3D11CommandExecutor.h"
+#include "../D3D11RenderSystem.h"
 #include "../D3D11SwapChain.h"
 #include "../D3D11Types.h"
 #include "../D3D11ResourceFlags.h"
@@ -49,15 +50,16 @@ namespace LLGL
 
 
 D3D11PrimaryCommandBuffer::D3D11PrimaryCommandBuffer(
-    ID3D11Device*                               device,
+    D3D11RenderSystem&                          renderSystem,
     const ComPtr<ID3D11DeviceContext>&          context,
     const std::shared_ptr<D3D11StateManager>&   stateMngr,
     const CommandBufferDescriptor&              desc)
 :
-    D3D11CommandBuffer  { /*isSecondaryCmdBuffer:*/ false                           },
-    device_             { device                                                    },
-    context_            { context, stateMngr                                        },
-    hasDeferredContext_ { ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0) }
+    D3D11CommandBuffer   { /*isSecondaryCmdBuffer:*/ false                           },
+    device_              { renderSystem.GetDevice()                                  },
+    context_             { context, stateMngr                                        },
+    hasDeferredContext_  { ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0) },
+    sharedDeviceObjects_ { renderSystem.GetSharedDeviceObjects()                     }
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     context->QueryInterface(IID_PPV_ARGS(&annotation_));
@@ -370,13 +372,13 @@ void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
     switch (textureArrayType)
     {
         case TextureType::Texture1DArray:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture1DCS, srcExtent.width, srcExtent.height, 1u);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyBufferFromTexture1DCS, srcExtent.width, srcExtent.height, 1u);
             break;
         case TextureType::Texture2DArray:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture2DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyBufferFromTexture2DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
             break;
         case TextureType::Texture3D:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture3DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyBufferFromTexture3DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
             break;
         default:
             break;
@@ -636,13 +638,13 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
     switch (textureArrayType)
     {
         case TextureType::Texture1DArray:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture1DFromBufferCS, dstExtent.width, dstExtent.height, 1u);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyTexture1DFromBufferCS, dstExtent.width, dstExtent.height, 1u);
             break;
         case TextureType::Texture2DArray:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture2DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyTexture2DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
             break;
         case TextureType::Texture3D:
-            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture3DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            DispatchBuiltinCS(D3D11BuiltinShader::CopyTexture3DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
             break;
         default:
             break;
@@ -720,13 +722,13 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromFramebuffer(
 void D3D11PrimaryCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    D3D11MipGenerator::Get().GenerateMips(GetNative(), textureD3D);
+    sharedDeviceObjects_->mipGenerator.GenerateMips(GetNative(), textureD3D);
 }
 
 void D3D11PrimaryCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    D3D11MipGenerator::Get().GenerateMipsRange(
+    sharedDeviceObjects_->mipGenerator.GenerateMipsRange(
         GetNative(),
         textureD3D,
         subresource.baseMipLevel,
@@ -851,7 +853,7 @@ void D3D11PrimaryCommandBuffer::BeginRenderPass(
 
 void D3D11PrimaryCommandBuffer::EndRenderPass()
 {
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    /* Resolve previously bound render target (in case multi-sampling is used) */
     context_.ResolveAndUnbindRenderTargets();
 }
 
@@ -1139,7 +1141,7 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
     if (uavOutput != nullptr)
         bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 
-    /* Create output buffer with raw view accesss */
+    /* Create output buffer with raw view access */
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = size;
@@ -1184,6 +1186,12 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
             DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "for RWByteAddressBuffer");
         }
     }
+}
+
+void D3D11PrimaryCommandBuffer::DispatchBuiltinCS(D3D11BuiltinShader bultinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
+{
+    ID3D11ComputeShader* cs = sharedDeviceObjects_->builtinShaderFactory.GetBulitinComputeShader(bultinComputeShader);
+    GetStateManager().DispatchBuiltinCS(cs, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 

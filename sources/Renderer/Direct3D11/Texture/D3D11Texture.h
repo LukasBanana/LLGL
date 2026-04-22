@@ -153,7 +153,7 @@ class D3D11Texture final : public Texture
             return numArrayLayers_;
         }
 
-        // Returnst the binding table locator for this object.
+        // Returns the binding table locator for this object.
         inline D3D11BindingLocator* GetBindingLocator()
         {
             return &bindingLocator_;

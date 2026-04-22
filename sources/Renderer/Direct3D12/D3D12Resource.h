@@ -30,7 +30,7 @@ struct D3D12Resource
     {
     }
 
-    // Sets both the resource state for common usage and the inital states.
+    // Sets both the resource state for common usage and the initial states.
     inline void SetInitialState(D3D12_RESOURCE_STATES initialState)
     {
         usageState      = initialState;
@@ -45,7 +45,7 @@ struct D3D12Resource
         return initialState;
     }
 
-    // Returns the natvie resource object.
+    // Returns the native resource object.
     inline ID3D12Resource* Get() const
     {
         return native.Get();

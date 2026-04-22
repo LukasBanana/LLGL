@@ -136,7 +136,7 @@ extern LLGLViewport         g_viewport;
 // Primary camera projection
 extern float                g_projection[4][4];
 
-// Render system configuraiton.
+// Render system configuration.
 extern ExampleConfig        g_config;
 
 // Android app glue structure. Only available on Android platform.
@@ -179,7 +179,7 @@ void matrix_rotate(float outMatrix[4][4], float x, float y, float z, float angle
 // Returns true if the specified key is currently pressed down.
 bool key_pressed(LLGLKey keyCode);
 
-// Returns true if the speciifed key was pushed down. Only true during one frame until the key is released again.
+// Returns true if the specified key was pushed down. Only true during one frame until the key is released again.
 bool key_pushed(LLGLKey keyCode);
 
 // Returns the mouse movement on the X-axis.

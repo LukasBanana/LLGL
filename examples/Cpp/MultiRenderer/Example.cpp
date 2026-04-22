@@ -10,12 +10,11 @@
 
 #include <LLGL/Platform/NativeHandle.h>
 
-#define MIXED_BG_COLORS 0
+// Whether to use the same rendering API but with different GPU devices.
+#define USE_MULTI_GPUS  0
 
-#define COLOR_BLUE      { 0.1f, 0.1f, 0.4f, 1.0f }
-#define COLOR_RED       { 0.4f, 0.1f, 0.1f, 1.0f }
-#define COLOR_GREEN     { 0.1f, 0.4f, 0.1f, 1.0f }
-#define COLOR_YELLOW    { 0.4f, 0.4f, 0.1f, 1.0f }
+// Whether to render the background with different colors for each renderer.
+#define MIXED_BG_COLORS 0
 
 
 struct Matrices
@@ -23,6 +22,7 @@ struct Matrices
     Gs::Matrix4f wvpMatrix;
     Gs::Matrix4f wMatrix;
 };
+
 
 /*
  * MyRenderer class
@@ -134,6 +134,15 @@ static std::string GetRendererModuleName(std::string rendererName)
 
 void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
 {
+    // Log information
+    const LLGL::RendererInfo& info = renderer->GetRendererInfo();
+    LLGL::Log::Printf(
+        "\n------------------------------------------\n"
+        "Creating resources for '%s' (%s)\n",
+        info.rendererName.c_str(),
+        info.deviceName.c_str()
+    );
+
     // Vertex format
     LLGL::VertexFormat vertexFormat;
     vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
@@ -299,6 +308,16 @@ LLGL::Window& MyRenderer::GetSubWindow()
     return *subWindow;
 }
 
+static LLGL::RenderSystemPtr LoadRenderer(const char* moduleName, long flags = 0)
+{
+    LLGL::RenderSystemDescriptor rendererDesc;
+    {
+        rendererDesc.moduleName = moduleName;
+        rendererDesc.flags      = flags;
+    }
+    return LLGL::RenderSystem::Load(rendererDesc);
+}
+
 
 /*
  * Main function
@@ -308,6 +327,8 @@ int main(int argc, char* argv[])
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         // Create main window
         const LLGL::Extent2D resolution{ 800, 600 };
 
@@ -325,6 +346,11 @@ int main(int argc, char* argv[])
         const int halfWidth     = static_cast<int>(subWindowSize.width);
         const int halfHeight    = static_cast<int>(subWindowSize.height);
 
+        #define COLOR_BLUE      { 0.1f, 0.1f, 0.4f, 1.0f }
+        #define COLOR_RED       { 0.4f, 0.1f, 0.1f, 1.0f }
+        #define COLOR_GREEN     { 0.1f, 0.4f, 0.1f, 1.0f }
+        #define COLOR_YELLOW    { 0.4f, 0.4f, 0.1f, 1.0f }
+
         const float bgColors[4][4] =
         {
             #if MIXED_BG_COLORS
@@ -338,30 +364,38 @@ int main(int argc, char* argv[])
         #if defined _WIN32
         LLGL::RenderSystemPtr renderers[4] =
         {
-            LLGL::RenderSystem::Load("OpenGL"),
-            LLGL::RenderSystem::Load("Vulkan"),
-            LLGL::RenderSystem::Load("Direct3D11"),
-            LLGL::RenderSystem::Load("Direct3D12"),
+            #if USE_MULTI_GPUS
+            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferNVIDIA),
+            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferAMD),
+            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferIntel),
+            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::SoftwareDevice),
+            #else
+            LoadRenderer("OpenGL"),
+            LoadRenderer("Vulkan"),
+            LoadRenderer("Direct3D11"),
+            LoadRenderer("Direct3D12"),
+            #endif
         };
         LLGL::RenderSystem* rendererRefs[4] =
         {
             renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[3].get()
         };
         #elif defined __APPLE__
-        LLGL::RenderSystemPtr renderers[2] =
+        LLGL::RenderSystemPtr renderers[3] =
         {
-            LLGL::RenderSystem::Load("OpenGL"),
-            LLGL::RenderSystem::Load("Metal"),
+            LoadRenderer("OpenGL"),
+            LoadRenderer("Metal"),
+            LoadRenderer("Vulkan"),
         };
         LLGL::RenderSystem* rendererRefs[4] =
         {
-            renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
+            renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[0].get()
         };
         #elif defined __linux__
         LLGL::RenderSystemPtr renderers[2] =
         {
-            LLGL::RenderSystem::Load("OpenGL"),
-            LLGL::RenderSystem::Load("Vulkan"),
+            LoadRenderer("OpenGL"),
+            LoadRenderer("Vulkan"),
         };
         LLGL::RenderSystem* rendererRefs[4] =
         {
@@ -370,7 +404,7 @@ int main(int argc, char* argv[])
         #else
         LLGL::RenderSystemPtr renderers[1] =
         {
-            LLGL::RenderSystem::Load("Null"),
+            LoadRenderer("Null"),
         };
         LLGL::RenderSystem* rendererRefs[4] =
         {

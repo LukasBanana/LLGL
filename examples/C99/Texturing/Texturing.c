@@ -110,7 +110,7 @@ int TexturingInit()
     const LLGLImageView imageView =
     {
         .format     = (formatAttribs->components == 4 ? LLGLImageFormatRGBA : LLGLImageFormatRGB), // Image color format (RGBA or RGB)
-        .dataType   = LLGLDataTypeUInt8, // Data tpye (unsigned char => 8-bit unsigned integer)
+        .dataType   = LLGLDataTypeUInt8, // Data type (unsigned char => 8-bit unsigned integer)
         .data       = imageBuffer, // Image source buffer
         .dataSize   = (size_t)(imageSize[0]*imageSize[1]*texComponents), // Image buffer size
     };

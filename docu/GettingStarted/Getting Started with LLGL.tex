@@ -100,7 +100,7 @@
 	\item \textbf{Unification} \\
 	\LLGL provides a unified interface across all supported renderers.
 	Write your graphics render passes once and use them across multiple rendering APIs and platforms.
-	
+
 	\item \textbf{Low Overhead} \\
 	\LLGL is meant to be a thin abstraction layer which only adds as less overhead between your application and the underlying rendering API as possible.
 	At best, a function is just a wrapper that passes the parameters on to the native rendering API.
@@ -110,25 +110,25 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
     context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 \end{lstlisting}
-	
+
 	\item \textbf{Compatibility} \\
 	\LLGL provides various compatibility functionalities between the renderers.
 	For example, some image formats that are supported by OpenGL but not by Direct3D are converted `on the fly' by \LLGL.
 	However, some compromises are inevitable, due to different hardware restrictions.
 	Having said that, all incompatibilities are well documented.
-	
+
 	\item \textbf{Simplification} \\
 	Where close access to the hardware is not necessary, \LLGL provides useful simplifications.
 	For example, creating a swap-chain as well as a device context across multiple platforms can be a high effort when done manually.
 	With \LLGL, this can be done with a few lines of code while maintaining a high degree of control thanks to the rich descriptor structures.
-	
+
 	\item \textbf{Debug Layer} \\
 	In debug mode, \LLGL makes use of the native debug layers for the respective renderer.
 	These debug layers, however, vary in quality depending on the API.
 	\LLGL offers another debug layer on top of it that can be easily enabled or disabled.
-	This layer performs extensive state-, parameter-, and descritpor validation before each draw call.
-	This can be a powerful tool to find invalid render states or erronous descriptors.
-	
+	This layer performs extensive state-, parameter-, and descriptor validation before each draw call.
+	This can be a powerful tool to find invalid render states or erroneous descriptors.
+
 	\item \textbf{Extension Support} \\
 	Especially OpenGL is a complex system due to its many extensions.
 	For texturing alone, \LLGL manages eight different extensions.
@@ -150,7 +150,7 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
 	\item hlsl2glsl (\href{https://github.com/aras-p/hlsl2glslfork}{github.com/aras-p/hlsl2glslfork}).
 	\item HLSLCrossCompiler (\href{https://github.com/James-Jones/HLSLCrossCompiler}{github.com/James-Jones/HLSLCrossCompiler})
 	\end{itemize}
-	
+
 	\item \textbf{Scene Management} \\
 	\LLGL is a low-level render system which does not provide any high-level scene management or animation system.
 	It provides you with a set of functions to submit draw commands and render states to the graphics hardware as well as managing raw hardware buffers.
@@ -175,16 +175,16 @@ To take advantage of this library you should be familiar with these subjects:
 	\item \textbf{Basic C++11 Programming} \\
 	Since the library is written in C++11, you should know something about \emph{smart pointers},
 	\emph{raw pointers}, and basic \emph{object-oriented programming} (OOP) in C++.
-	
+
 	\item \textbf{Basic Linear Algebra} \\
 	You should be familiar with at least \emph{Vectors} and \emph{Matrices}.
-	
+
 	\item \textbf{Fundamentals in Graphics Programming} \\
 	You should be familiar with the fundamentals of graphics programming, since this is only a low-level graphics library.
 	You should also be familiar with at least one of the major graphics APIs,
 	i.e. \emph{OpenGL}, \emph{Direct3D}, \emph{Vulkan}, or \emph{Metal},
 	because \LLGL does only little to no higher abstractions.
-	
+
 	\item \textbf{Shading Languages} \\
 	\LLGL requires you to always write your own shaders, so you should be familiar with
 	\href{https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language}{GLSL},
@@ -207,19 +207,19 @@ The best source to convince yourself of its capabilities is to take a look at th
 \begin{itemize}
 	\item \textbf{Windows} \\
 	Windows 10 is the main development environment of the author, so this platform has the best support.
-	
+
 	\item \textbf{GNU/Linux} \\
 	Ubuntu 17 (GNU/Linux) is used by the author to develop the linux port. GNU/Linux is supported for the most part.
 	Both OpenGL and the Vulkan back-end are available.
-	
+
 	\item \textbf{macOS} \\
 	The MacOS port is in its early steps, but a few tutorials are already running.
 	The development environment for the MacOS port is \emph{macOS Sierra}.
-	
+
 	\item \textbf{iOS} \\
 	Experimental state for the iOS mobile platform.
 \end{itemize}
-	
+
 \subsection{Renderers}
 \begin{itemize}
 	\item \textbf{Direct3D 12} on Windows only
@@ -257,7 +257,7 @@ git clone --recursive https://github.com/LukasBanana/LLGL.git
 
 \subsection{Dependencies}
 
-Since version 0.02, LLGL has no longer any required base dependencies except the one for the repsective renderers.
+Since version 0.02, LLGL has no longer any required base dependencies except the one for the respective renderers.
 Previously, the \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} was required but has been replaced by a few plain-old-data structures.
 The GaussianLib is now only required for the Examples and Test projects.
 
@@ -309,41 +309,41 @@ Then your project files should be located in the build directory you just set up
 There are several options you can enable or disable to build the project:
 \begin{itemize}
 	\item \texttt{LLGL\_BUILD\_(TESTS/EXAMPLES/RENDERER\_\dots)} \\
-	Specifies whether to include all test, all examples, or the repsective renderer projects.
-	
+	Specifies whether to include all test, all examples, or the respective renderer projects.
+
 	\item \texttt{LLGL\_D3D11\_ENABLE\_FEATURELEVEL} \\
 	Specifies which feature level is enabled in the Direct3D 11 renderer.
 	For example, feature level 11.1 requires that your development environment can find the \texttt{<d3d11\_1.h>} header file.
 	Feature level 11.1 enables logic fragment operations, and feature level 11.3 enables conservative rasterization for the D3D11 renderer.
-	
+
 	\item \texttt{LLGL\_ENABLE\_CHECKED\_CAST} \\
 	Specifies whether to enable or disable dynamic checked casts.
 	This is only available in debug mode.
-	
+
 	\item \texttt{LLGL\_ENABLE\_DEBUG\_LAYER} \\
 	Specifies whether to enable or disable the debug layer.
 	This is a wrapper around the render system and all other render objects for effective debugging.
-	
+
 	\item \texttt{LLGL\_ENABLE\_SPIRV\_REFLECT} \\
 	Specifies whether to include the submodule \texttt{external/SPIRV} to enable code reflection of SPIR-V shader modules for the Vulkan renderer.
-	
+
 	\item \texttt{LLGL\_ENABLE\_UTILITY} \\
 	Specifies whether to enable or disable utility functions, which can be used to easily initialize descriptor structures.
 	They must be included separately with the \texttt{LLGL/Utility.h} header file.
-	
+
 	\item \texttt{LLGL\_GL\_ENABLE\_DSA\_EXT} \\
 	Specifies whether to enable or disable the \texttt{GL\_ARB\_direct\_state\_access} extension that spans the entire render system.
-	
+
 	\item \texttt{LLGL\_GL\_ENABLE\_EXT\_PLACEHOLDERS} \\
 	Specifies whether OpenGL extensions should be replaced by placeholder procedures
 	when they are not available. This may help debugging and should not influence the runtime performance.
-	
+
 	\item \texttt{LLGL\_GL\_ENABLE\_VENDOR\_EXT} \\
 	Specifies whether vendor specific OpenGL extensions should be enabled or disabled.
 	One of these extensions is for conservative rasterization
 	(\texttt{GL\_NV\_conservative\_raster} and \texttt{GL\_INTEL\_conservative\_rasterization}) for instance.
 	These extensions will only be loaded and used by the runtime if they are available on the host platform.
-	
+
 	\item \texttt{LLGL\_GL\_INCLUDE\_EXTERNAL} \\
 	Specifies whether to include the OpenGL header files from the \texttt{external/GL/} directory of the LLGL repository.
 	Otherwise the \texttt{GL/} directory must be elsewhere specified in your include search paths.
@@ -492,7 +492,7 @@ Moreover, most functions use enumerations instead of strings to specify some typ
 a module can be loaded dynamically at runtime and further modules can be added or removed independently.
 Therefore the renderer module is specified by a string (here ``OpenGL''). Other modules are
 named ``Direct3D11'', ``Direct3D12'', and ``Vulkan''.
-Whenver you load a new renderer, there must not remain any references to this shared object,
+Whenever you load a new renderer, there must not remain any references to this shared object,
 because only a single renderer can be loaded at a time.
 When this shared object expires, all objects allocated by this renderer will be deleted automatically.
 
@@ -500,7 +500,7 @@ If loading the renderer failed, an \texttt{std::runtime\_error} exception will b
 which can be cached to show an error message and/or load another renderer module instead.
 This can be very handy if a specific Direct3D version is not installed on the host Windows platform,
 so another Direct3D version or OpenGL renderer can be loaded as fallback
-without disturbing the user with akward error messages and program crashes.
+without disturbing the user with awkward error messages and program crashes.
 
 After we created the renderer we need a framebuffer to draw into and present the result on the screen.
 This is done by the \texttt{CreateSwapChain} function which takes the following descriptor structure:
@@ -515,7 +515,7 @@ This is a minimal example for the swap-chain descriptor. There are several more 
 to specify multi-sampled anti-aliasing, bit depth, etc.
 See the API documentation for more information about these attributes.
 
-This swap-chain will create its own surface, but we could also specifiy our own one.
+This swap-chain will create its own surface, but we could also specify our own one.
 However, in this example we keep it simple. To access this surface and change the title,
 we use the \texttt{GetSurface} function of the \texttt{SwapChain} interface
 and interpret it as a \texttt{Window} on desktop platforms:
@@ -593,7 +593,7 @@ vertexShaderDesc.source = "vertex.glsl";
 // CodeFile and BinaryFile denotes that our source must be a null terminated string.
 vertexShaderDesc.sourceType	= LLGL::ShaderSourceType::CodeFile;
 
-// Specifiy the vertex input attributes. This is obviously only necessary for the vertex shader.
+// Specify the vertex input attributes. This is obviously only necessary for the vertex shader.
 vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 \end{lstlisting}
 Now can create our vertex shader. For simplicity, we just create our fragment shader
@@ -759,20 +759,20 @@ public:
 	// Constructor and destructor
 	CustomSurface(const LLGL::Extent2D& size, const char* title);
 	~CustomSurface();
-	
+
 	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
 	LLGL::Extent2D GetContentSize() const override;
 	bool AdaptForVideoMode(LLGL::Extent2D* resolution, bool* fullscreen) override;
 	void ResetPixelFormat() override;
 	LLGL::Display* FindResidentDisplay() const override;
-	
+
 	// Additional class functions
 	void PollEvents();
-	
+
 private:
 	GLFWwindow* CreateGLFWWindow();
-	
+
 	std::string    title_;
 	LLGL::Extent2D size_;
 	GLFWwindow*    wnd_ = nullptr; // GLFW window pointer
@@ -856,7 +856,7 @@ clicked the close button to terminate the application:
 bool CustomSurface::PollEvents() {
 	// Poll events from GLFW windowing system
 	glfwPollEvents();
-	
+
 	// Return true until the user pressed the close button
 	return !glfwWindowShouldClose(wnd_);
 }
@@ -903,22 +903,22 @@ FIND_PACKAGE(OpenGL)
 IF(OpenGL_FOUND)
 	# Add OpenGL include path
 	INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
-	
+
 	# Add "LLGL_CustomOpenGL" library project to the solution,
 	# where "FilesGL" denotes the variable containing all filenames for this render system.
 	# The render system can later be loaded with the name "CustomOpenGL".
 	ADD_LIBRARY(LLGL_CustomOpenGL SHARED "${FilesGL}")
-	
+
 	# Add "D" postfix to debug mode (this is required so that LLGL loads the correct module)
 	SET_TARGET_PROPERTIES(
 		LLGL_CustomOpenGL PROPERTIES
 		LINKER_LANGUAGE CXX # CXX is for C++
 		DEBUG_POSTFIX "D" # Postfix "D" for debug mode
 	)
-	
+
 	# Add library dependencies (On Win32 this is LLGL.lib and opengl32.lib)
 	TARGET_LINK_LIBRARIES(LLGL_CustomOpenGL LLGL "${OPENGL_LIBRARIES}")
-	
+
 	# Tell CMake to build a project with C++11 support
 	TARGET_COMPILE_FEATURES(LLGL_CustomOpenGL PRIVATE cxx_range_for)
 ELSE()

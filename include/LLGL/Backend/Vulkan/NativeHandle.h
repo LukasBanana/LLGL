@@ -98,7 +98,7 @@ struct ResourceNativeHandle
         std::uint32_t           numMipLevels;       //!< Number of MIP-map levels.
         std::uint32_t           numArrayLayers;     //!< Number of array layers.
         VkSampleCountFlagBits   sampleCountBits;    //!< Sample count bitmask for multi-sampled textures.
-        VkImageUsageFlags       imageUsageFlags;    //!< Image usag flags the texture was created with.
+        VkImageUsageFlags       imageUsageFlags;    //!< Image usage flags the texture was created with.
     };
 
     struct NativeSampler
@@ -114,13 +114,13 @@ struct ResourceNativeHandle
 
     union
     {
-        //! Buffer specific attriubtes.
+        //! Buffer specific attributes.
         NativeBuffer    buffer;
 
-        //! Texture specific attriubtes.
+        //! Texture specific attributes.
         NativeImage     image;
 
-        //! Sampler specific attriubtes.
+        //! Sampler specific attributes.
         NativeSampler   sampler;
     };
 };

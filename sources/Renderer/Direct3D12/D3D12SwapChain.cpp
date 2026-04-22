@@ -38,7 +38,7 @@ D3D12SwapChain::D3D12SwapChain(
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits)     },
     frameFence_         { renderSystem.GetDXDevice()                                     },
     numColorBuffers_    { Clamp<UINT>(desc.swapBuffers, 2u, DXGI_MAX_SWAP_CHAIN_BUFFERS) },
-    tearingSupported_   { renderSystem.IsTearingSupported()                              }
+    tearingSupported_   { renderSystem.GetDeviceCaps().isTearingSupported                }
 {
     /* Store reference to command queue */
     commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());

@@ -322,10 +322,10 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
         auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
         cmd->vertexArray = vertexBufferGL.GetVertexArray();
-        
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
     }
 }
 
@@ -349,10 +349,10 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numV
         {
             cmdBindVertexArray->vertexArray = vertexBufferGL.GetVertexArray();
         }
-        
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
     }
 }
 
@@ -1036,7 +1036,7 @@ void GLDeferredCommandBuffer::DrawStreamOutput()
     LLGL_FLUSH_MEMORY_BARRIERS();
     if (GLBufferWithXFB* bufferWithXfbGL = GetRenderState().boundBufferWithFxb)
     {
-        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         if (HasExtension(GLExt::ARB_transform_feedback2))
         {
             auto cmd = AllocCommand<GLCmdDrawTransformFeedback>(GLOpcodeDrawTransformFeedback);
@@ -1046,7 +1046,7 @@ void GLDeferredCommandBuffer::DrawStreamOutput()
             }
         }
         else
-        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
         {
             auto cmd = AllocCommand<GLCmdDrawEmulatedTransformFeedback>(GLOpcodeDrawEmulatedTransformFeedback);
             {

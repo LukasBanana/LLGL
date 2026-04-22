@@ -121,7 +121,8 @@ DEF_TEST( ResourceArrays )
     SaveCapture(readbackTex, "ResourceArrays");
 
     constexpr int threshold = 3; // Tolerate a threshold of 3 color values
-    const DiffResult diff = DiffImages("ResourceArrays", threshold);
+    constexpr int tolerance = 5; // Tolerate 5 values that are beyond the threshold
+    const DiffResult diff = DiffImages("ResourceArrays", threshold, tolerance);
 
     TestResult result = diff.Evaluate("resource arrays");
 

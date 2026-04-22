@@ -199,7 +199,7 @@ static const Key g_win32KeyCodeMap[256] =
     Key::BrowserRefresh,    // 0xa8
     Key::BrowserStop,       // 0xa9
     Key::BrowserSearch,     // 0xaa
-    Key::BrowserFavorits,   // 0xab
+    Key::BrowserFavorites,  // 0xab
     Key::BrowserHome,       // 0xac
 
     Key::VolumeMute,        // 0xad

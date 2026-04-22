@@ -59,7 +59,7 @@ void D3D11RenderTargetHandles::Release()
 {
     if (data_ != nullptr)
     {
-        /* Release reosurce views and free buffer */
+        /* Release resource views and free buffer */
         ReleaseResourceViews();
         delete [] data_;
         data_ = nullptr;

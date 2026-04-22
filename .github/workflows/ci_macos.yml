@@ -60,3 +60,20 @@ jobs:
           ${{ github.workspace }}/macOS-x64/build/Example_*.app
           ${{ github.workspace }}/macOS-x64/build/Testbed*.app
       
+    - name: Testbed
+      working-directory: tests/Testbed
+      run: |
+        ${{github.workspace}}/macOS-x64/build/Testbed.app/Contents/MacOS/Testbed mt -vftgi ${{ matrix.config == 'Debug' && '-d' || '' }}
+        CURRENT_TIME=$(date)
+        echo "LLGL built with Clang for macOS on $CURRENT_TIME." > ${{ env.README }}
+        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
+
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v6
+      if: ${{ always() && matrix.lib == 'Shared' }}
+      with:
+        name: LLGL-macOS-Test_Report-${{ matrix.config }}
+        path: |
+          tests/Testbed/Output/Metal/*.png
+          tests/Testbed/Output/Metal/Report.txt
+

@@ -8,7 +8,7 @@
 
 "Dear ImGui", from now on simply "ImGui", is a popular C++ library to render UI elements and handle their user events with minimal dependencies and setup.
 ImGui rendering directly, or "immediate" rather, into the current device context, which means it will interact directly with the underlying rendering API.
-While this is against the philosophy of an ecapsulated abstraction layer, i.e. a library that hides all the low-level details,
+While this is against the philosophy of an encapsulated abstraction layer, i.e. a library that hides all the low-level details,
 LLGL does provide a few functions to access the API specific device objects for interoperability purposes.
 
 ## ImGui Setup

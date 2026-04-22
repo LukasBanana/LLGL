@@ -17,12 +17,6 @@ namespace LLGL
 {
 
 
-D3D12BuiltinShaderFactory& D3D12BuiltinShaderFactory::Get()
-{
-    static D3D12BuiltinShaderFactory instance;
-    return instance;
-}
-
 void D3D12BuiltinShaderFactory::CreateBuiltinPSOs(ID3D12Device* device)
 {
     D3D12RootSignature rootSignature;

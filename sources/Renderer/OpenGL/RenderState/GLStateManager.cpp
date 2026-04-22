@@ -1327,7 +1327,7 @@ GLenum GLStateManager::ToGLTextureTarget(const GLTextureTarget target)
 
 void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 {
-    /* Only bind texutre if the texture has changed */
+    /* Only bind texture if the texture has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     GLContextState::TextureLayer* textureLayer = GetActiveTextureLayer();
     if (textureLayer->boundTextures[targetIdx] != texture)
@@ -1343,7 +1343,7 @@ void GLStateManager::BindTexture(GLuint layer, GLTextureTarget target, GLuint te
     LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
 
-    /* Only bind texutre if the texture has changed */
+    /* Only bind texture if the texture has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     GLContextState::TextureLayer& textureLayer = contextState_.textureLayers[layer];
     if (textureLayer.boundTextures[targetIdx] != texture)
@@ -1860,7 +1860,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
 
 void GLStateManager::BindTransformFeedback(GLuint transformFeedback)
 {
-    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
     if (contextState_.boundTransformFeedback != transformFeedback)
     {
         contextState_.boundTransformFeedback = transformFeedback;
@@ -1991,7 +1991,7 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 {
     #if GL_NV_conservative_raster || GL_INTEL_conservative_rasterization
 
-    /* Initialize extenstion states */
+    /* Initialize extension states */
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
         auto idx = static_cast<std::size_t>(state);

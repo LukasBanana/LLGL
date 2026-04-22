@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-// Helper class to manage the single HWND that is the active recepient of the WM_INPUT message
+// Helper class to manage the single HWND that is the active recipient of the WM_INPUT message
 class Win32RawInputRegistry
 {
 
