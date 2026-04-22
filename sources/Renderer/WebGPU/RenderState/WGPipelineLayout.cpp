@@ -65,7 +65,7 @@ static void ConvertBindGroupLayoutEntry(WGPUBindGroupLayoutEntry& dst, const Bin
         dst.buffer.nextInChain      = nullptr;
         dst.buffer.type             = ToWGBufferBindingType(src.bindFlags);
         dst.buffer.hasDynamicOffset = WGPU_FALSE; //???
-        dst.buffer.minBindingSize   = WGPU_WHOLE_SIZE; //???
+        dst.buffer.minBindingSize   = 0; // No minimum size required, allow any size
     }
     else if (src.type == ResourceType::Sampler)
     {

@@ -29,7 +29,7 @@ WGSampler::WGSampler(WGPUDevice device, const SamplerDescriptor& desc)
         wgpuSamplerDesc.mipmapFilter    = WGTypes::ToWGMipmapFilterMode(desc.mipMapFilter);
         wgpuSamplerDesc.lodMinClamp     = desc.minLOD;
         wgpuSamplerDesc.lodMaxClamp     = desc.maxLOD;
-        wgpuSamplerDesc.compare         = WGTypes::ToWGCompareFunc(desc.compareOp);
+        wgpuSamplerDesc.compare         = (desc.compareEnabled ? WGTypes::ToWGCompareFunc(desc.compareOp) : WGPUCompareFunction_Undefined);
         wgpuSamplerDesc.maxAnisotropy   = static_cast<std::uint16_t>(desc.maxAnisotropy);
     }
     sampler_ = wgpuDeviceCreateSampler(device, &wgpuSamplerDesc);
