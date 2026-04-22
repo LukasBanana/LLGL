@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderSystem.h>
 
+#include "WGCore.h"
 #include "WGSwapChain.h"
 #include "Command/WGCommandBuffer.h"
 #include "Command/WGCommandQueue.h"
@@ -87,6 +88,7 @@ class WGRenderSystem final : public RenderSystem
         WGPUInstance                            instance_           = nullptr;
         WGPUAdapter                             adapter_            = nullptr;
         WGPUDevice                              device_             = nullptr;
+        WGCoreLimits                            coreLimits_         = {};
 
         /* ----- Hardware object containers ----- */
 

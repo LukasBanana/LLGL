@@ -211,7 +211,7 @@ void WGRenderSystem::Release(Shader& shader)
 
 PipelineLayout* WGRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return pipelineLayouts_.emplace<WGPipelineLayout>(device_, pipelineLayoutDesc);
+    return pipelineLayouts_.emplace<WGPipelineLayout>(device_, pipelineLayoutDesc, coreLimits_);
 }
 
 void WGRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -334,24 +334,69 @@ static std::vector<Format> QueryWebGpuSupportedTextureFormats(WGPUAdapter adapte
     return outFormats;
 }
 
-static void QueryWebGpuRenderingCaps(WGPUAdapter adapter, RenderingCapabilities& outCaps)
+static void QueryWebGpuRenderingCaps(WGPUAdapter adapter, RenderingCapabilities& outCaps, WGCoreLimits& outCoreLimits)
 {
-    //TODO
-    outCaps.limits.maxBufferSize        = 1ull << 30; // 1 GB
+    WGPULimits adapterLimits = {};
+    wgpuAdapterGetLimits(adapter, &adapterLimits);
+
+    outCaps.limits.max1DTextureSize                 = adapterLimits.maxTextureDimension1D;
+    outCaps.limits.max2DTextureSize                 = adapterLimits.maxTextureDimension2D;
+    outCaps.limits.max3DTextureSize                 = adapterLimits.maxTextureDimension3D;
+    outCaps.limits.maxTextureArrayLayers            = adapterLimits.maxTextureArrayLayers;
+    //adapterLimits.maxBindGroups;
+    //adapterLimits.maxBindGroupsPlusVertexBuffers;
+    //adapterLimits.maxBindingsPerBindGroup;
+    //adapterLimits.maxDynamicUniformBuffersPerPipelineLayout;
+    //adapterLimits.maxDynamicStorageBuffersPerPipelineLayout;
+    //adapterLimits.maxSampledTexturesPerShaderStage;
+    //adapterLimits.maxSamplersPerShaderStage;
+    //adapterLimits.maxStorageBuffersPerShaderStage;
+    //adapterLimits.maxStorageTexturesPerShaderStage;
+    //adapterLimits.maxUniformBuffersPerShaderStage;
+    //adapterLimits.maxUniformBufferBindingSize;
+    //adapterLimits.maxStorageBufferBindingSize;
+    outCaps.limits.minConstantBufferAlignment       = adapterLimits.minUniformBufferOffsetAlignment;
+    outCaps.limits.minStorageBufferAlignment        = adapterLimits.minStorageBufferOffsetAlignment;
+    //uint32_t maxVertexBuffers;
+    outCaps.limits.maxBufferSize                    = adapterLimits.maxBufferSize;
+    //adapterLimits.maxVertexAttributes;
+    //adapterLimits.maxVertexBufferArrayStride;
+    //adapterLimits.maxInterStageShaderVariables;
+    outCaps.limits.maxColorAttachments              = adapterLimits.maxColorAttachments;
+    //adapterLimits.maxColorAttachmentBytesPerSample;
+    //adapterLimits.maxComputeWorkgroupStorageSize;
+    //adapterLimits.maxComputeInvocationsPerWorkgroup;
+    outCaps.limits.maxComputeShaderWorkGroupSize[0] = adapterLimits.maxComputeWorkgroupsPerDimension;
+    outCaps.limits.maxComputeShaderWorkGroupSize[1] = adapterLimits.maxComputeWorkgroupsPerDimension;
+    outCaps.limits.maxComputeShaderWorkGroupSize[2] = adapterLimits.maxComputeWorkgroupsPerDimension;
+    outCaps.limits.maxComputeShaderWorkGroups[0]    = adapterLimits.maxComputeWorkgroupSizeX;
+    outCaps.limits.maxComputeShaderWorkGroups[1]    = adapterLimits.maxComputeWorkgroupSizeY;
+    outCaps.limits.maxComputeShaderWorkGroups[2]    = adapterLimits.maxComputeWorkgroupSizeZ;
+    //adapterLimits.maxImmediateSize;
+
     outCaps.limits.maxViewports         = 1;
     outCaps.limits.maxViewportSize[0]   = 16384;
     outCaps.limits.maxViewportSize[1]   = 16384;
+
     outCaps.shadingLanguages            = { ShadingLanguage::WGSL/*, ShadingLanguage::SPIRV*/ };
     outCaps.textureFormats              = QueryWebGpuSupportedTextureFormats(adapter);
+
+    /* Store core limits in render system */
+    outCoreLimits.maxBindGroups             = adapterLimits.maxBindGroups;
+    outCoreLimits.maxBindingsPerBindGroup   = adapterLimits.maxBindingsPerBindGroup;
 }
 
 bool WGRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
-    if (outInfo != nullptr)
-        QueryWebGpuRendererInfo(adapter_, *outInfo);
-    if (outCaps != nullptr)
-        QueryWebGpuRenderingCaps(adapter_, *outCaps);
-    return false; //todo
+    if (adapter_)
+    {
+        if (outInfo != nullptr)
+            QueryWebGpuRendererInfo(adapter_, *outInfo);
+        if (outCaps != nullptr)
+            QueryWebGpuRenderingCaps(adapter_, *outCaps, coreLimits_);
+        return true;
+    }
+    return false;
 }
 
 

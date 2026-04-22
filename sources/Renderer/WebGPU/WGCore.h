@@ -18,9 +18,17 @@ namespace LLGL
 {
 
 
+struct WGCoreLimits
+{
+    std::uint32_t maxBindGroups;
+    std::uint32_t maxBindingsPerBindGroup;
+};
+
 const char* ToString(WGPUAdapterType type);
 const char* ToString(WGPUBackendType type);
 const char* ToString(WGPUWaitStatus status);
+
+void WGThrowIfCreateFailed(void* ptr, const char* interfaceName, const char* contextInfo = nullptr);
 
 inline StringView ToStringView(WGPUStringView str)
 {

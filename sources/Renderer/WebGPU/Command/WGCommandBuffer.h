@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class WGBindGroupCache;
+
 class WGCommandBuffer final : public CommandBuffer
 {
 
@@ -42,11 +44,14 @@ class WGCommandBuffer final : public CommandBuffer
 
         enum DirtyBits
         {
+            // All encoders
+            DirtyBit_BindGroups     = (1 << 0),
+
             // Render encoder
-            DirtyBit_Viewports      = (1 << 0),
-            DirtyBit_Scissors       = (1 << 1),
-            DirtyBit_VertexBuffers  = (1 << 2),
-            DirtyBit_IndexBuffer    = (1 << 3),
+            DirtyBit_Viewports      = (1 << 1),
+            DirtyBit_Scissors       = (1 << 2),
+            DirtyBit_VertexBuffers  = (1 << 3),
+            DirtyBit_IndexBuffer    = (1 << 4),
         };
 
         struct WGRenderEncoderState
@@ -65,6 +70,7 @@ class WGCommandBuffer final : public CommandBuffer
         void EnsureComputeEncoder();
         void FlushPassEncoders();
         void FlushRenderEncoderStates();
+        void FlushComputeEncoderStates();
         void ResetRenderStates();
 
         void EmplaceVertexBuffer(WGPUBuffer wgpuBuffer);
@@ -73,19 +79,21 @@ class WGCommandBuffer final : public CommandBuffer
 
     private:
 
-        WGPUDevice              device_             = nullptr;
-        WGPUQueue               queue_              = nullptr;
-        WGPUCommandEncoder      commandEncoder_     = nullptr;
-        WGPURenderPassEncoder   renderPassEncoder_  = nullptr;
-        WGPUComputePassEncoder  computePassEncoder_ = nullptr;
-        WGPUCommandBuffer       commandBuffer_      = nullptr;
+        WGPUDevice              device_                 = nullptr;
+        WGPUQueue               queue_                  = nullptr;
+        WGPUCommandEncoder      commandEncoder_         = nullptr;
+        WGPURenderPassEncoder   renderPassEncoder_      = nullptr;
+        WGPUComputePassEncoder  computePassEncoder_     = nullptr;
+        WGPUCommandBuffer       commandBuffer_          = nullptr;
 
         WGRenderEncoderState    renderEncoderState_;
 
-        std::uint32_t           renderDirtyBits_    = 0;
-        std::uint32_t           computeDirtyBits_   = 0;
+        std::uint32_t           renderDirtyBits_        = 0;
+        std::uint32_t           computeDirtyBits_       = 0;
 
-        const bool              isImmediateSubmit_  = false;
+        WGBindGroupCache*       boundBindGroupCache_    = nullptr;
+
+        const bool              isImmediateSubmit_      = false;
 
 };
 
