@@ -23,6 +23,8 @@ struct WGFramebuffer
 {
     WGPUTexture     colorTexture;
     WGPUTextureView colorTextureView;
+    WGPUTexture     depthStencil;
+    WGPUTextureView depthStencilView;
 };
 
 class WGSwapChain final : public SwapChain
@@ -49,15 +51,19 @@ class WGSwapChain final : public SwapChain
 
         void ReleaseTransientFramebuffer();
 
+        void CreateDepthStencilTexture(const Extent2D& resolution);
+        void ReleaseDepthStencilTexture();
+
     private:
 
-        WGPUDevice          device_         = nullptr;
-        WGPUSurface         surface_        = nullptr;
-        WGPUTextureFormat   colorFormat_    = WGPUTextureFormat_BGRA8Unorm;
-        WGPUPresentMode     presentMode_    = WGPUPresentMode_Mailbox;
+        WGPUDevice          device_             = nullptr;
+        WGPUSurface         surface_            = nullptr;
+        WGPUTextureFormat   colorFormat_        = WGPUTextureFormat_BGRA8Unorm;
+        WGPUTextureFormat   depthStencilFormat_ = WGPUTextureFormat_Undefined;
+        WGPUPresentMode     presentMode_        = WGPUPresentMode_Mailbox;
         Extent2D            resolution_;
 
-        WGFramebuffer       framebuffer_    = {};
+        WGFramebuffer       framebuffer_        = {};
 
 };
 

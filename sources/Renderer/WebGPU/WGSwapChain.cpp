@@ -7,6 +7,7 @@
 
 #include "WGSwapChain.h"
 #include "WGRenderSystem.h"
+#include "WGCore.h"
 #include "../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -15,8 +16,35 @@ namespace LLGL
 {
 
 
+static WGPUTextureFormat PickDepthStencilFormat(int depthBits, int stencilBits)
+{
+    if (depthBits > 0 || stencilBits > 0)
+    {
+        if (stencilBits == 0)
+        {
+            if (depthBits <= 16)
+                return WGPUTextureFormat_Depth16Unorm;
+            else if (depthBits <= 24)
+                return WGPUTextureFormat_Depth24Plus;
+            else
+                return WGPUTextureFormat_Depth32Float;
+        }
+        else
+        {
+            if (depthBits == 0)
+                return WGPUTextureFormat_Stencil8;
+            else if (depthBits <= 24)
+                return WGPUTextureFormat_Depth24PlusStencil8;
+            else
+                return WGPUTextureFormat_Depth32FloatStencil8;
+        }
+    }
+    return WGPUTextureFormat_Undefined;
+}
+
 WGSwapChain::WGSwapChain(WGRenderSystem& renderSystem, const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface) :
-    device_ { renderSystem.GetNativeDevice() }
+    device_             { renderSystem.GetNativeDevice()                           },
+    depthStencilFormat_ { PickDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc);
@@ -32,6 +60,7 @@ WGSwapChain::~WGSwapChain()
         surface_ = nullptr;
     }
     ReleaseTransientFramebuffer();
+    ReleaseDepthStencilTexture();
 }
 
 bool WGSwapChain::IsPresentable() const
@@ -165,16 +194,77 @@ void WGSwapChain::UpdateWebGpuSurface(const Extent2D& resolution, WGPUPresentMod
             config.presentMode      = presentMode;
         }
         wgpuSurfaceConfigure(surface_, &config);
+
+        /* Create depth-stencil texture if enabled */
+        if (depthStencilFormat_ != WGPUTextureFormat_Undefined)
+            CreateDepthStencilTexture(resolution);
     }
 }
 
 void WGSwapChain::ReleaseTransientFramebuffer()
 {
-    if (framebuffer_.colorTexture != nullptr)
+    if (framebuffer_.colorTextureView != nullptr)
     {
         wgpuTextureViewRelease(framebuffer_.colorTextureView);
+        framebuffer_.colorTextureView = nullptr;
+    }
+    if (framebuffer_.colorTexture != nullptr)
+    {
         wgpuTextureRelease(framebuffer_.colorTexture);
-        framebuffer_ = {};
+        framebuffer_.colorTexture = nullptr;
+    }
+}
+
+void WGSwapChain::CreateDepthStencilTexture(const Extent2D& resolution)
+{
+    /* Create WebGPU texture for depth-stencil */
+    WGPUTextureDescriptor depthStencilDesc;
+    {
+        depthStencilDesc.nextInChain                = nullptr;
+        depthStencilDesc.label                      = WGPU_STRING_VIEW_INIT;
+        depthStencilDesc.usage                      = WGPUTextureUsage_RenderAttachment;
+        depthStencilDesc.dimension                  = WGPUTextureDimension_2D;
+        depthStencilDesc.size.width                 = resolution.width;
+        depthStencilDesc.size.height                = resolution.height;
+        depthStencilDesc.size.depthOrArrayLayers    = 1;
+        depthStencilDesc.format                     = depthStencilFormat_;
+        depthStencilDesc.mipLevelCount              = 1;
+        depthStencilDesc.sampleCount                = 1;
+        depthStencilDesc.viewFormatCount            = 0;
+        depthStencilDesc.viewFormats                = nullptr; //???
+    }
+    framebuffer_.depthStencil = wgpuDeviceCreateTexture(device_, &depthStencilDesc);
+    WGThrowIfCreateFailed(framebuffer_.depthStencil, "WGPUTexture");
+
+    /* Create WebGPU texture view for depth-stencil */
+    WGPUTextureViewDescriptor depthStencilViewDesc;
+    {
+        depthStencilViewDesc.nextInChain        = nullptr;
+        depthStencilViewDesc.label              = WGPU_STRING_VIEW_INIT;
+        depthStencilViewDesc.format             = depthStencilFormat_;
+        depthStencilViewDesc.dimension          = WGPUTextureViewDimension_2D;
+        depthStencilViewDesc.baseMipLevel       = 0;
+        depthStencilViewDesc.mipLevelCount      = 1;
+        depthStencilViewDesc.baseArrayLayer     = 0;
+        depthStencilViewDesc.arrayLayerCount    = 1;
+        depthStencilViewDesc.aspect             = WGPUTextureAspect_All;
+        depthStencilViewDesc.usage              = WGPUTextureUsage_RenderAttachment;
+    }
+    framebuffer_.depthStencilView = wgpuTextureCreateView(framebuffer_.depthStencil, &depthStencilViewDesc);
+    WGThrowIfCreateFailed(framebuffer_.depthStencilView, "WGPUTextureView");
+}
+
+void WGSwapChain::ReleaseDepthStencilTexture()
+{
+    if (framebuffer_.depthStencilView != nullptr)
+    {
+        wgpuTextureViewRelease(framebuffer_.depthStencilView);
+        framebuffer_.depthStencilView = nullptr;
+    }
+    if (framebuffer_.depthStencil != nullptr)
+    {
+        wgpuTextureRelease(framebuffer_.depthStencil);
+        framebuffer_.depthStencil = nullptr;
     }
 }
 

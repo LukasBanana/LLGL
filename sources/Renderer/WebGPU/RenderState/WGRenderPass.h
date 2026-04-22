@@ -33,9 +33,16 @@ class WGRenderPass final : public RenderPass
             return colorTargetFormats_;
         }
 
+        // Returns the WebGPU depth-stencil format.
+        inline WGPUTextureFormat GetDepthStencilFormat() const
+        {
+            return depthStencilFormat_;
+        }
+
     private:
 
-        SmallVector<WGPUTextureFormat, 1> colorTargetFormats_;
+        SmallVector<WGPUTextureFormat, 1>   colorTargetFormats_;
+        WGPUTextureFormat                   depthStencilFormat_ = WGPUTextureFormat_Undefined;
 
 };
 

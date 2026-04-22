@@ -71,7 +71,7 @@ class WGBindGroupCache
         std::uint16_t                       bindGroupDirtyRange_[2]     = { 0, 0 };
         std::vector<WGPUBindGroupEntry>     bindGroupEntries_; // Same number of elements as WGPipelineLayoutPermutation::GetDescriptorMap()
 
-        BindGroupMap                        cachedBindGroups_;
+        BindGroupMap                        cachedBindGroups_; //TODO: this can be a global map, since it's independent of WGPUBindGroupLayoutEntry
 
 };
 
