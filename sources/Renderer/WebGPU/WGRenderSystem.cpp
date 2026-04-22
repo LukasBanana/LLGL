@@ -16,10 +16,6 @@
 #include "../../Platform/Debug.h"
 #include <LLGL/Utils/ForRange.h>
 
-#ifdef _WIN32
-#include <Windows.h> //TEST
-#endif
-
 
 namespace LLGL
 {
@@ -365,6 +361,7 @@ static void QueryWebGpuRenderingCaps(WGPUAdapter adapter, RenderingCapabilities&
     outCaps.limits.minStorageBufferAlignment        = adapterLimits.minStorageBufferOffsetAlignment;
     //uint32_t maxVertexBuffers;
     outCaps.limits.maxBufferSize                    = adapterLimits.maxBufferSize;
+    outCaps.limits.maxConstantBufferSize            = adapterLimits.maxBufferSize; // ???
     //adapterLimits.maxVertexAttributes;
     //adapterLimits.maxVertexBufferArrayStride;
     //adapterLimits.maxInterStageShaderVariables;
@@ -473,8 +470,36 @@ static void OnWebGpuRequestDevice(WGPURequestDeviceStatus status, WGPUDevice dev
     *reinterpret_cast<WGPUDevice*>(userdata1) = device;
 }
 
+static void OnWebGpuDeviceLost(const WGPUDevice* device, WGPUDeviceLostReason reason, WGPUStringView message, void* userdata1, void* userdata2)
+{
+    /* Always log device-lost error */
+    const std::string messageCstr{ message.data, message.length };
+    DebugPuts(messageCstr.c_str());
+
+    /* Check for break-on-error */
+    WGRenderSystem* renderSystemWG = static_cast<WGRenderSystem*>(userdata1);
+    if (renderSystemWG->IsBreakOnErrorEnabled())
+        DebugBreakOnError();
+}
+
+static void OnWebGpuUncapturedError(const WGPUDevice* device, WGPUErrorType type, WGPUStringView message, void* userdata1, void* userdata2)
+{
+    if (type != WGPUErrorType_NoError)
+    {
+        /* Always log uncaptured errors */
+        const std::string messageCstr{ message.data, message.length };
+        DebugPuts(messageCstr.c_str());
+
+        /* Check for break-on-error */
+        WGRenderSystem* renderSystemWG = static_cast<WGRenderSystem*>(userdata1);
+        if (renderSystemWG->IsBreakOnErrorEnabled())
+            DebugBreakOnError();
+    }
+}
+
 static void OnWebGpuLogging(WGPULoggingType type, WGPUStringView message, void* userdata1, void* userdata2)
 {
+    /* Kog message if verbosity level allows it */
     const WGPULoggingType logVerbosity = *static_cast<const WGPULoggingType*>(userdata2);
     if (type >= logVerbosity)
     {
@@ -484,6 +509,7 @@ static void OnWebGpuLogging(WGPULoggingType type, WGPUStringView message, void* 
 
     if (type == WGPULoggingType_Error)
     {
+        /* Check for break-on-error */
         WGRenderSystem* renderSystemWG = static_cast<WGRenderSystem*>(userdata1);
         if (renderSystemWG->IsBreakOnErrorEnabled())
             DebugBreakOnError();
@@ -493,15 +519,14 @@ static void OnWebGpuLogging(WGPULoggingType type, WGPUStringView message, void* 
 bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
 {
     const bool isDebugDevice = ((renderSystemFlags & RenderSystemFlags::DebugDevice) != 0);
-
-    #ifdef _WIN32
-    ::SetEnvironmentVariable(TEXT("DAWN_DEBUG_BREAK_ON_ERROR"), TEXT("1"));
-    #endif
+    const bool isValidationErrorHandlingEnabled = (isDebugDevice || isBreakOnErrorEnabled_);
 
     /* Enable Dawn toggles depending on render system flags */
     SmallVector<const char*, 8> enabledToggles;
     if (isDebugDevice)
     {
+        logVerbosity_ = WGPULoggingType_Warning;
+
         enabledToggles =
         {
             "dump_shaders_on_failure",
@@ -535,6 +560,25 @@ bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
         dawnToggleDesc.disabledToggleCount  = 0;
         dawnToggleDesc.disabledToggles      = nullptr;
     }
+
+    /* Enable erorr and device-lost handlers */
+    WGPUDeviceLostCallbackInfo deviceLostCallbackInfo = WGPU_DEVICE_LOST_CALLBACK_INFO_INIT;
+    WGPUUncapturedErrorCallbackInfo uncapturedErrorCallbackInfo = WGPU_UNCAPTURED_ERROR_CALLBACK_INFO_INIT;
+
+    if (isValidationErrorHandlingEnabled)
+    {
+        deviceLostCallbackInfo.nextInChain  = nullptr;
+        deviceLostCallbackInfo.mode         = WGPUCallbackMode_WaitAnyOnly;
+        deviceLostCallbackInfo.callback     = OnWebGpuDeviceLost;
+        deviceLostCallbackInfo.userdata1    = this;
+        deviceLostCallbackInfo.userdata2    = &logVerbosity_;
+
+        uncapturedErrorCallbackInfo.nextInChain = nullptr;
+        uncapturedErrorCallbackInfo.callback    = OnWebGpuUncapturedError;
+        uncapturedErrorCallbackInfo.userdata1   = this;
+        uncapturedErrorCallbackInfo.userdata2   = &logVerbosity_;
+    }
+
     WGPUDeviceDescriptor deviceDesc;
     {
         deviceDesc.nextInChain                  = &(dawnToggleDesc.chain);
@@ -543,8 +587,8 @@ bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
         deviceDesc.requiredFeatures             = requiredFeatures;
         deviceDesc.requiredLimits               = nullptr;
         deviceDesc.defaultQueue                 = WGPU_QUEUE_DESCRIPTOR_INIT;
-        deviceDesc.deviceLostCallbackInfo       = WGPU_DEVICE_LOST_CALLBACK_INFO_INIT; //WGPUDeviceLostCallbackInfo
-        deviceDesc.uncapturedErrorCallbackInfo  = WGPU_UNCAPTURED_ERROR_CALLBACK_INFO_INIT; //WGPUUncapturedErrorCallbackInfo
+        deviceDesc.deviceLostCallbackInfo       = deviceLostCallbackInfo;
+        deviceDesc.uncapturedErrorCallbackInfo  = uncapturedErrorCallbackInfo;
     }
     WGPURequestDeviceCallbackInfo deviceCallbackInfo;
     {
@@ -568,11 +612,8 @@ bool WGRenderSystem::RequestWebGpuDevice(long renderSystemFlags)
     }
 
     /* Enable debug logging handler */
-    if (isDebugDevice || isBreakOnErrorEnabled_)
+    if (isValidationErrorHandlingEnabled)
     {
-        if (isDebugDevice)
-            logVerbosity_ = WGPULoggingType_Warning;
-
         WGPULoggingCallbackInfo loggingCallbackInfo;
         {
             loggingCallbackInfo.nextInChain = nullptr;
