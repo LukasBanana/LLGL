@@ -8,7 +8,8 @@
 #include "WGSampler.h"
 #include "../WGCore.h"
 #include "../WGTypes.h"
-#include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/WebGPU/NativeHandle.h>
 
 
 namespace LLGL
@@ -33,7 +34,7 @@ WGSampler::WGSampler(WGPUDevice device, const SamplerDescriptor& desc)
         wgpuSamplerDesc.maxAnisotropy   = static_cast<std::uint16_t>(desc.maxAnisotropy);
     }
     sampler_ = wgpuDeviceCreateSampler(device, &wgpuSamplerDesc);
-    LLGL_ASSERT_PTR(sampler_);
+    WGThrowIfCreateFailed(sampler_, "WGPUSampler");
 }
 
 WGSampler::~WGSampler()
@@ -43,7 +44,13 @@ WGSampler::~WGSampler()
 
 bool WGSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if (auto* nativeHandleWG = GetTypedNativeHandle<WebGPU::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleWG->type    = WebGPU::ResourceNativeType::Sampler;
+        nativeHandleWG->sampler = GetNative();
+        return true;
+    }
+    return false;
 }
 
 

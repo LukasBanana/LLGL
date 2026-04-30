@@ -10,7 +10,9 @@
 #include "../WGTypes.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/TextureFlags.h>
+#include <LLGL/Backend/WebGPU/NativeHandle.h>
 
 
 namespace LLGL
@@ -31,7 +33,13 @@ WGTexture::~WGTexture()
 
 bool WGTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    if (auto* nativeHandleWG = GetTypedNativeHandle<WebGPU::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleWG->type    = WebGPU::ResourceNativeType::Texture;
+        nativeHandleWG->texture = GetNative();
+        return true;
+    }
+    return false;
 }
 
 static Extent3D GetWebGpuTextureExtent2D(WGPUTexture texture)
@@ -92,20 +100,36 @@ Format WGTexture::GetFormat() const
     return WGTypes::FromWGTextureFormat(wgpuTextureGetFormat(texture_));
 }
 
+static Extent3D GetWebGpuTextureExtent(WGPUTexture texture)
+{
+    return Extent3D
+    {
+        wgpuTextureGetWidth(texture),
+        wgpuTextureGetHeight(texture),
+        wgpuTextureGetDepthOrArrayLayers(texture)
+    };
+}
+
 Extent3D WGTexture::GetMipExtent(std::uint32_t mipLevel) const
 {
-    const Extent3D texExtent
-    {
-        wgpuTextureGetWidth(texture_),
-        wgpuTextureGetHeight(texture_),
-        wgpuTextureGetDepthOrArrayLayers(texture_)
-    };
+    const Extent3D texExtent{ GetWebGpuTextureExtent(texture_) };
     return LLGL::GetMipExtent(GetType(), texExtent, mipLevel);
 }
 
 SubresourceFootprint WGTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
 {
-    LLGL_TRAP_NOT_IMPLEMENTED();
+    const bool isArrayTexture = IsArrayTexture(GetType());
+    const Extent3D texExtent{ GetWebGpuTextureExtent(texture_) };
+    SubresourceFootprint footprint = CalcPackedSubresourceFootprint(
+        GetType(),
+        GetFormat(),
+        (isArrayTexture ? Extent3D{ texExtent.width, texExtent.height, 1u } : texExtent),
+        mipLevel,
+        (isArrayTexture ? texExtent.depth : 1)
+    );
+    constexpr std::uint64_t kWebGpuTextureAlignment = 256;
+    footprint.size = GetAlignedSize(footprint.size, kWebGpuTextureAlignment);
+    return footprint;
 }
 
 void WGTexture::Write(WGPUQueue queue, const TextureRegion& textureRegion, const ImageView& imageView)

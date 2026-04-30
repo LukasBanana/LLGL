@@ -1,0 +1,51 @@
+/*
+ * GenerateMips.wgsli
+ * 
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+/* Separate color channels into different groupshared arrays for better cache utilization */
+var<workgroup> sharedColorR : array<f32, 64>;
+var<workgroup> sharedColorG : array<f32, 64>;
+var<workgroup> sharedColorB : array<f32, 64>;
+var<workgroup> sharedColorA : array<f32, 64>;
+
+/* Utility functions */
+fn StoreColor(idx : u32, color : vec4f)
+{
+    sharedColorR[idx] = color.r;
+    sharedColorG[idx] = color.g;
+    sharedColorB[idx] = color.b;
+    sharedColorA[idx] = color.a;
+}
+
+fn LoadColor(idx : u32) -> vec4f
+{
+    return vec4f(
+        sharedColorR[idx],
+        sharedColorG[idx],
+        sharedColorB[idx],
+        sharedColorA[idx]
+    );
+}
+
+fn LinearToSRGB(linearColor : vec3f) -> vec3f
+{
+    /* Use approximation for sRGB curve */
+    return select(
+        1.13005 * sqrt(abs(linearColor - 0.00228)) - 0.13448 * linearColor + 0.005719,
+        12.92 * linearColor,
+        linearColor < vec3f(0.0031308)
+    );
+}
+
+fn PackLinearColorSRGB(linearColor : vec4f) -> vec4f
+{
+    return vec4f(LinearToSRGB(linearColor.rgb), linearColor.a);
+}
+
+fn PackLinearColor(linearColor : vec4f) -> vec4f
+{
+    return linearColor;
+}
