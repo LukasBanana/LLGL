@@ -142,6 +142,8 @@ class D3D12CommandBuffer final : public CommandBufferTier1
         UINT                                    rtvDescSize_                                = 0;
         D3D12_CPU_DESCRIPTOR_HANDLE             dsvDescHandle_                              = {};
         UINT                                    dsvDescSize_                                = 0;
+        bool                                    hasDepthAttachment_                         = false;
+        bool                                    hasStencilAttachment_                       = false;
 
         bool                                    scissorEnabled_                             = false;
         UINT                                    numDefaultScissorRects_                     = 0;

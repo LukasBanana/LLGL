@@ -12,6 +12,10 @@
 #define LLGL_ASSERT_VK_EXT(EXT) \
     if (!LLGL::HasExtension(LLGL::VKExt::EXT)) { LLGL::TrapVKExtensionNotSupported(__FUNCTION__, "VK_" #EXT); }
 
+#ifndef VK_LAYER_KHRONOS_VALIDATION_NAME
+#define VK_LAYER_KHRONOS_VALIDATION_NAME "VK_LAYER_KHRONOS_validation"
+#endif
+
 
 namespace LLGL
 {
@@ -71,6 +75,21 @@ const char** GetOptionalExtensions();
 
 // Returns the type of support for the specified Vulkan instance extension.
 VKExtSupport GetVulkanInstanceExtensionSupport(const char* extensionName);
+
+// Returns true if `layerName` is a Vulkan instance layer the engine wants enabled
+// for debugging (currently VK_LAYER_KHRONOS_validation).
+bool VKIsInstanceDebugLayer(const char* layerName);
+
+// Returns true if Vulkan instance extension `extensionName` is recognized by the engine
+// and should be enabled. `debugLayerEnabled` gates DebugOnly-tagged extensions like
+// VK_EXT_debug_report and VK_EXT_debug_utils.
+bool VKIsInstanceExtensionEnabled(const char* extensionName, bool debugLayerEnabled);
+
+// Returns a pointer to a null-terminated array of Vulkan device extension names that the LLGL
+// Vulkan backend requires (VK_KHR_swapchain, VK_KHR_maintenance1, ...). Used by both the non-XR
+// device-picking path and the OpenXR Vulkan binding so a device created either way ends up with
+// the same set of LLGL-required extensions enabled. Return type matches GetOptionalExtensions().
+const char** VKGetRequiredDeviceExtensions();
 
 
 } // /namespace LLGL

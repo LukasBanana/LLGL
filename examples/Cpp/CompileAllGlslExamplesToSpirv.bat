@@ -25,6 +25,11 @@ call :CompileGlslToSpirv HelloGame/HelloGame.VSGround.450core.vert
 call :CompileGlslToSpirv HelloGame/HelloGame.PSGround.450core.frag
 echo DONE
 
+echo ####### HelloOpenXR #######
+call :CompileGlslToSpirv HelloOpenXR/Example.450core.vert
+call :CompileGlslToSpirv HelloOpenXR/Example.450core.frag
+echo DONE
+
 echo ####### HelloTriangle #######
 call :CompileGlslToSpirv HelloTriangle/Example.450core.vert
 call :CompileGlslToSpirv HelloTriangle/Example.450core.frag

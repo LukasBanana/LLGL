@@ -432,7 +432,7 @@ void VKCommandContext::GenerateMips(
 {
     ImageMemoryBarrier(
         image,
-        VK_FORMAT_UNDEFINED,
+        format,
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         subresource,

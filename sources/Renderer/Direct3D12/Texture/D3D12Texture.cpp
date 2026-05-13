@@ -42,6 +42,29 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
+D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture)
+    : Texture{type, bindFlags}
+{
+    // ComPtr::operator= AddRef's the new pointer; the externally-owned resource stays alive
+    // via its own ref-counts and we add one more for the lifetime of this wrapper.
+    resource_.native = externalTexture;
+    resource_.SetInitialState(initialState);
+
+    // Query the resource's actual D3D12 description (the runtime may have substituted a
+    // typeless format for the requested typed one).
+    const D3D12_RESOURCE_DESC actualDesc = externalTexture->GetDesc();
+    format_         = actualDesc.Format;
+    numMipLevels_   = actualDesc.MipLevels;
+    numArrayLayers_ = actualDesc.DepthOrArraySize;
+    extent_         = Extent3D{
+        static_cast<std::uint32_t>(actualDesc.Width),
+        actualDesc.Height,
+        1u
+    };
+
+    baseFormat_ = DXTypes::Unmap(format_);
+}
+
 bool D3D12Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D12::ResourceNativeHandle>(nativeHandle, nativeHandleSize))

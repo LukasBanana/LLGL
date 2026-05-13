@@ -36,6 +36,7 @@ class D3D12Texture final : public Texture
     public:
 
         D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
+        D3D12Texture(ID3D12Device *device, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture);
 
         // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresource(

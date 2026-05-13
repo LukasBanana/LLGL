@@ -86,8 +86,13 @@ static void InitDepthStencilVkAttachmentDesc(
     dst.storeOp         = VKTypes::Map(srcDepth.storeOp);
     dst.stencilLoadOp   = VKTypes::Map(srcStencil.loadOp);
     dst.stencilStoreOp  = VKTypes::Map(srcStencil.storeOp);
-    dst.initialLayout   = (srcDepth.loadOp == AttachmentLoadOp::Load || srcStencil.loadOp == AttachmentLoadOp::Load ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_UNDEFINED);
-    dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    // Depth/stencil attachments never transition to PRESENT_SRC_KHR — that layout is for color
+    // images being presented via VK_KHR_swapchain. Using it here also requires VK_KHR_swapchain to
+    // be enabled on the device, and is incompatible with the depth-stencil-attachment usage flag
+    // even when the extension is enabled.
+    const bool loadingExistingContent = (srcDepth.loadOp == AttachmentLoadOp::Load || srcStencil.loadOp == AttachmentLoadOp::Load);
+    dst.initialLayout   = (loadingExistingContent ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
+    dst.finalLayout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 }
 
 void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescriptor& desc)

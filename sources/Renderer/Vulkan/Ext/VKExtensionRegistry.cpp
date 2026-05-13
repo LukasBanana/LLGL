@@ -9,6 +9,7 @@
 #include "../Vulkan.h"
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Platform/Platform.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -146,6 +147,35 @@ VKExtSupport GetVulkanInstanceExtensionSupport(const char* extensionName)
     if (IsVulkanInstanceExtDebugOnly(name))
         return VKExtSupport::DebugOnly;
     return VKExtSupport::Unsupported;
+}
+
+bool VKIsInstanceDebugLayer(const char* layerName)
+{
+    return (layerName != nullptr && std::strcmp(layerName, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0);
+}
+
+bool VKIsInstanceExtensionEnabled(const char* extensionName, bool debugLayerEnabled)
+{
+    if (extensionName == nullptr)
+        return false;
+    const VKExtSupport extSupport = GetVulkanInstanceExtensionSupport(extensionName);
+    return
+    (
+        extSupport == VKExtSupport::Required ||
+        extSupport == VKExtSupport::Optional ||
+        (debugLayerEnabled && extSupport == VKExtSupport::DebugOnly)
+    );
+}
+
+const char** VKGetRequiredDeviceExtensions()
+{
+    static const char* required[] =
+    {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+        nullptr,
+    };
+    return required;
 }
 
 

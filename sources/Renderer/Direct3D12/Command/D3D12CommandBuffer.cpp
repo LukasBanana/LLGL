@@ -35,6 +35,7 @@
 
 #include "../Shader/D3D12BuiltinShaderFactory.h"
 
+#include <LLGL/Format.h>
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
@@ -459,13 +460,13 @@ void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
 
 /* ----- Clear ----- */
 
-static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags)
+static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags, bool hasDepth, bool hasStencil)
 {
     UINT clearFlagsDSV = 0;
 
-    if ((flags & ClearFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0 && hasDepth)
         clearFlagsDSV |= D3D12_CLEAR_FLAG_DEPTH;
-    if ((flags & ClearFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0 && hasStencil)
         clearFlagsDSV |= D3D12_CLEAR_FLAG_STENCIL;
 
     return static_cast<D3D12_CLEAR_FLAGS>(clearFlagsDSV);
@@ -489,8 +490,10 @@ void D3D12CommandBuffer::Clear(long flags, const ClearValue& clearValue)
 
     if (dsvDescHandle_.ptr != 0)
     {
-        /* Clear depth-stencil buffer */
-        if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(flags))
+        /* Clear depth-stencil buffer. Mask requested aspects against what the bound DSV
+           actually has — ClearDepthStencilView rejects e.g. a stencil clear on a depth-only
+           DSV under the D3D12 debug layer. */
+        if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(flags, hasDepthAttachment_, hasStencilAttachment_))
         {
             GetNative()->ClearDepthStencilView(
                 dsvDescHandle_,
@@ -523,8 +526,8 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 
         if (dsvDescHandle_.ptr != 0)
         {
-            /* Clear depth-stencil buffer */
-            if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(clearOp.flags))
+            /* Clear depth-stencil buffer (see Clear() above for the aspect-mask rationale). */
+            if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(clearOp.flags, hasDepthAttachment_, hasStencilAttachment_))
             {
                 GetNative()->ClearDepthStencilView(
                     dsvDescHandle_,
@@ -1380,8 +1383,10 @@ void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
     /* Set current back buffer as RTV and optional DSV */
     numColorBuffers_ = renderTargetD3D.GetNumColorAttachments();
 
-    rtvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForRTV();
-    dsvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForDSV();
+    rtvDescHandle_          = renderTargetD3D.GetCPUDescriptorHandleForRTV();
+    dsvDescHandle_          = renderTargetD3D.GetCPUDescriptorHandleForDSV();
+    hasDepthAttachment_     = renderTargetD3D.HasDepthAttachment();
+    hasStencilAttachment_   = renderTargetD3D.HasStencilAttachment();
 
     if (dsvDescHandle_.ptr != 0)
         GetNative()->OMSetRenderTargets(numColorBuffers_, &rtvDescHandle_, TRUE, &dsvDescHandle_);
@@ -1404,8 +1409,10 @@ void D3D12CommandBuffer::BindSwapChain(D3D12SwapChain& swapChainD3D, std::uint32
     /* Set current back buffer as RTV and optional DSV */
     numColorBuffers_ = 1;
 
-    rtvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForRTV(currentColorBuffer_);
-    dsvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForDSV();
+    rtvDescHandle_          = swapChainD3D.GetCPUDescriptorHandleForRTV(currentColorBuffer_);
+    dsvDescHandle_          = swapChainD3D.GetCPUDescriptorHandleForDSV();
+    hasDepthAttachment_     = swapChainD3D.HasDepthBuffer();
+    hasStencilAttachment_   = (hasDepthAttachment_ && IsStencilFormat(swapChainD3D.GetDepthStencilFormat()));
 
     if (dsvDescHandle_.ptr != 0)
         GetNative()->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);
@@ -1439,8 +1446,15 @@ std::uint32_t D3D12CommandBuffer::ClearAttachmentsWithRenderPass(
         while (clearValueIndex < numColorClearValues && colorBuffers[clearValueIndex] != 0xFF)
             ++clearValueIndex;
 
-        /* Clear active DSV with specified clear value */
-        if (D3D12_CLEAR_FLAGS clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
+        /* Clear active DSV with specified clear value. Mask the render-pass-derived flags against
+           the bound DSV's actual aspects so a mismatched stencil-clear loadOp on a depth-only
+           target doesn't trip the D3D12 debug layer. */
+        D3D12_CLEAR_FLAGS clearFlagsDSV = renderPassD3D.GetClearFlagsDSV();
+        if (!hasDepthAttachment_)
+            clearFlagsDSV &= ~D3D12_CLEAR_FLAG_DEPTH;
+        if (!hasStencilAttachment_)
+            clearFlagsDSV &= ~D3D12_CLEAR_FLAG_STENCIL;
+        if (clearFlagsDSV != 0)
             ClearDepthStencilView(clearFlagsDSV, numClearValues, clearValues, clearValueIndex, numRects, rects);
     }
 

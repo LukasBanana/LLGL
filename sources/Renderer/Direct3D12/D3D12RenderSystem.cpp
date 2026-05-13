@@ -15,6 +15,7 @@
 #include "../../Core/Vendor.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
+#include "../../Core/MacroUtils.h"
 #include "D3DX12/d3dx12.h"
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Platform/NativeHandle.h>
@@ -47,7 +48,8 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     if (isDebugDevice)
         EnableDebugLayer();
 
-    if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D12::RenderSystemNativeHandle>(renderSystemDesc))
+    auto* customNativeHandle = GetRendererNativeHandle<Direct3D12::RenderSystemNativeHandle>(renderSystemDesc);
+    if (customNativeHandle != nullptr && customNativeHandle->device != nullptr)
     {
         /* Query all DXGI interfaces from native handle */
         HRESULT hr = QueryDXInterfacesFromNativeHandle(*customNativeHandle, renderSystemDesc.flags);
@@ -55,13 +57,26 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     }
     else
     {
+        /*
+        Constraint-driven path: the caller may pass a native handle with device==nullptr to
+        request normal device creation under additional constraints (e.g. the OpenXR binding
+        supplies an adapter LUID and minimum feature level).
+        */
+        LUID preferredLuid{};
+        D3D_FEATURE_LEVEL minFeatureLevel = static_cast<D3D_FEATURE_LEVEL>(0);
+        if (customNativeHandle != nullptr)
+        {
+            preferredLuid   = customNativeHandle->preferredAdapterLuid;
+            minFeatureLevel = customNativeHandle->minFeatureLevel;
+        }
+
         /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
         CreateFactory(isDebugDevice);
 
         ComPtr<IDXGIAdapter> preferredAdapter;
-        QueryVideoAdapters(renderSystemDesc.flags, preferredAdapter);
+        QueryVideoAdapters(renderSystemDesc.flags, preferredLuid, preferredAdapter);
 
-        HRESULT hr = CreateDevice(preferredAdapter.Get(), renderSystemDesc.flags);
+        HRESULT hr = CreateDevice(preferredAdapter.Get(), renderSystemDesc.flags, minFeatureLevel);
         DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
 
@@ -531,7 +546,7 @@ void D3D12RenderSystem::CreateFactory(bool debugDevice)
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 
-void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter)
+void D3D12RenderSystem::QueryVideoAdapters(long flags, const LUID& preferredAdapterLuid, ComPtr<IDXGIAdapter>& outPreferredAdapter)
 {
     if ((flags & RenderSystemFlags::SoftwareDevice) != 0)
     {
@@ -544,14 +559,32 @@ void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& out
         DXThrowIfFailed(hr, "failed to get DXGI_ADAPTER_DESC from DXGI adapter");
 
         DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdapterInfo_);
+        return;
     }
-    else
-        videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdapter.ReleaseAndGetAddressOf());
+
+    /* When an explicit LUID is provided, locate that adapter via the factory's LUID lookup. */
+    if (preferredAdapterLuid.LowPart != 0 || preferredAdapterLuid.HighPart != 0)
+    {
+        ComPtr<IDXGIAdapter> adapter;
+        if (SUCCEEDED(factory_->EnumAdapterByLuid(preferredAdapterLuid, IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()))))
+        {
+            DXGI_ADAPTER_DESC desc{};
+            if (SUCCEEDED(adapter->GetDesc(&desc)))
+            {
+                DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdapterInfo_);
+                outPreferredAdapter = adapter;
+                return;
+            }
+        }
+        /* Fall through to the generic picker if the LUID didn't match (CreateDevice will then fail). */
+    }
+
+    videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdapter.ReleaseAndGetAddressOf());
 }
 
-HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long flags)
+HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long flags, D3D_FEATURE_LEVEL minFeatureLevel)
 {
-    const D3D_FEATURE_LEVEL featureLevels[] =
+    const D3D_FEATURE_LEVEL allFeatureLevels[] =
     {
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 2
         D3D_FEATURE_LEVEL_12_2,
@@ -568,6 +601,19 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
         D3D_FEATURE_LEVEL_9_2,
         D3D_FEATURE_LEVEL_9_1,
     };
+
+    /* If a minimum feature level is requested, filter the ladder down to entries >= minFeatureLevel. */
+    const D3D_FEATURE_LEVEL* featureLevelsPtr = allFeatureLevels;
+    std::size_t              featureLevelsLen = LLGL_ARRAY_LENGTH(allFeatureLevels);
+    if (minFeatureLevel != static_cast<D3D_FEATURE_LEVEL>(0))
+    {
+        while (featureLevelsLen > 0 && featureLevelsPtr[featureLevelsLen - 1] < minFeatureLevel)
+            --featureLevelsLen;
+        if (featureLevelsLen == 0)
+            return E_INVALIDARG;
+    }
+    const ArrayView<D3D_FEATURE_LEVEL> featureLevels{ featureLevelsPtr, featureLevelsLen };
+
     HRESULT hr = S_OK;
 
     if ((flags & RenderSystemFlags::SoftwareDevice) == 0)
@@ -580,17 +626,22 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, long fla
                 return hr;
         }
 
-        /* Try to create device with default adapter */
-        hr = device_.CreateDXDevice(featureLevels, flags);
-        if (SUCCEEDED(hr))
+        /* Try to create device with default adapter (skipped when a LUID was pinned). */
+        if (minFeatureLevel == static_cast<D3D_FEATURE_LEVEL>(0))
         {
-            /* Update video adapter info with default adapter */
-            videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get());
-            return hr;
+            hr = device_.CreateDXDevice(featureLevels, flags);
+            if (SUCCEEDED(hr))
+            {
+                /* Update video adapter info with default adapter */
+                videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+                return hr;
+            }
         }
     }
 
-    /* Use software adapter as fallback */
+    /* Use software adapter as fallback (skipped when a LUID was pinned). */
+    if (minFeatureLevel != static_cast<D3D_FEATURE_LEVEL>(0))
+        return hr;
     ComPtr<IDXGIAdapter> adapter;
     factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
     return device_.CreateDXDevice(featureLevels, flags, adapter.Get());

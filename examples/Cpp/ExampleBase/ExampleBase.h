@@ -75,6 +75,7 @@ public:
 
     #if defined LLGL_OS_ANDROID
     static void SetAndroidApp(android_app* androidApp);
+    static android_app* GetAndroidApp();
     #endif
 
     virtual ~ExampleBase() = default;

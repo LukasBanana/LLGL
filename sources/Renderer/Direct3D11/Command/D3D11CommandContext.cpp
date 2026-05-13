@@ -12,6 +12,7 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceUtils.h"
+#include <LLGL/Format.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/TypeInfo.h>
 #include "../../../Core/CoreUtils.h"
@@ -63,6 +64,8 @@ void D3D11CommandContext::ResetBindingStates()
 {
     boundRenderTarget_      = nullptr;
     boundSwapChain_         = nullptr;
+    hasDepthAttachment_     = false;
+    hasStencilAttachment_   = false;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;
     boundConstantsCache_    = nullptr;
@@ -71,13 +74,18 @@ void D3D11CommandContext::ResetBindingStates()
 void D3D11CommandContext::BindSwapChainRenderTargets(D3D11SwapChain& swapChainD3D)
 {
     SetRenderTargets(swapChainD3D.GetRenderTargetHandles());
-    boundSwapChain_ = &swapChainD3D;
+    boundSwapChain_         = &swapChainD3D;
+    const Format dsFormat   = swapChainD3D.GetDepthStencilFormat();
+    hasDepthAttachment_     = IsDepthFormat(dsFormat);
+    hasStencilAttachment_   = IsStencilFormat(dsFormat);
 }
 
 void D3D11CommandContext::BindOffscreenRenderTargets(D3D11RenderTarget& renderTargetD3D)
 {
     SetRenderTargets(renderTargetD3D.GetRenderTargetHandles());
-    boundRenderTarget_ = &renderTargetD3D;
+    boundRenderTarget_      = &renderTargetD3D;
+    hasDepthAttachment_     = renderTargetD3D.HasDepthAttachment();
+    hasStencilAttachment_   = renderTargetD3D.HasStencilAttachment();
 }
 
 void D3D11CommandContext::ResolveAndUnbindRenderTargets()
@@ -95,15 +103,18 @@ void D3D11CommandContext::ResolveAndUnbindRenderTargets()
         boundSwapChain_->ResolveSubresources(context_.Get());
         boundSwapChain_ = nullptr;
     }
+
+    hasDepthAttachment_     = false;
+    hasStencilAttachment_   = false;
 }
 
-static UINT GetClearFlagsDSV(long flags)
+static UINT GetClearFlagsDSV(long flags, bool hasDepth, bool hasStencil)
 {
     UINT clearFlagsDSV = 0;
 
-    if ((flags & ClearFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0 && hasDepth)
         clearFlagsDSV |= D3D11_CLEAR_DEPTH;
-    if ((flags & ClearFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0 && hasStencil)
         clearFlagsDSV |= D3D11_CLEAR_STENCIL;
 
     return clearFlagsDSV;
@@ -118,10 +129,11 @@ void D3D11CommandContext::ClearFramebufferViewsSimple(long flags, const ClearVal
             context_->ClearRenderTargetView(framebufferView_.renderTargetViews[i], clearValue.color);
     }
 
-    /* Clear depth-stencil buffer */
+    /* Clear depth-stencil buffer. Mask requested aspects against what the bound DSV actually
+       has — ClearDepthStencilView rejects e.g. a stencil clear on a depth-only DSV. */
     if (framebufferView_.depthStencilView != nullptr)
     {
-        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
+        if (auto clearFlagsDSV = GetClearFlagsDSV(flags, hasDepthAttachment_, hasStencilAttachment_))
         {
             context_->ClearDepthStencilView(
                 framebufferView_.depthStencilView,
@@ -150,8 +162,9 @@ void D3D11CommandContext::ClearFramebufferViewsIndexed(std::uint32_t numAttachme
         }
         else if (framebufferView_.depthStencilView != nullptr)
         {
-            /* Clear depth and stencil buffer simultaneously */
-            if (auto clearFlagsDSV = GetClearFlagsDSV(attachments->flags))
+            /* Clear depth and stencil buffer simultaneously (see ClearFramebufferViewsSimple
+               above for the aspect-mask rationale). */
+            if (auto clearFlagsDSV = GetClearFlagsDSV(attachments->flags, hasDepthAttachment_, hasStencilAttachment_))
             {
                 context_->ClearDepthStencilView(
                     framebufferView_.depthStencilView,
@@ -173,21 +186,31 @@ void D3D11CommandContext::ClearFramebufferViewsOrdered(
     /* Clear color attachments */
     const std::uint32_t clearValueIndex = ClearColorBuffers(colorBuffers, numClearValues, clearValues);
 
-    /* Clear depth-stencil attachment */
+    /* Clear depth-stencil attachment. Mask the render-pass-derived flags against the bound DSV's
+       actual aspects so a mismatched stencil-clear loadOp on a depth-only target doesn't trip
+       the D3D11 debug layer. */
     if (framebufferView_.depthStencilView != nullptr && depthStencilClearFlags != 0)
     {
-        /* Get clear values */
-        FLOAT depth     = 1.0f;
-        UINT8 stencil   = 0;
+        if (!hasDepthAttachment_)
+            depthStencilClearFlags &= ~D3D11_CLEAR_DEPTH;
+        if (!hasStencilAttachment_)
+            depthStencilClearFlags &= ~D3D11_CLEAR_STENCIL;
 
-        if (clearValueIndex < numClearValues)
+        if (depthStencilClearFlags != 0)
         {
-            depth   = clearValues[clearValueIndex].depth;
-            stencil = static_cast<UINT8>(clearValues[clearValueIndex].stencil & 0xff);
-        }
+            /* Get clear values */
+            FLOAT depth     = 1.0f;
+            UINT8 stencil   = 0;
 
-        /* Clear depth-stencil view */
-        context_->ClearDepthStencilView(framebufferView_.depthStencilView, depthStencilClearFlags, depth, stencil);
+            if (clearValueIndex < numClearValues)
+            {
+                depth   = clearValues[clearValueIndex].depth;
+                stencil = static_cast<UINT8>(clearValues[clearValueIndex].stencil & 0xff);
+            }
+
+            /* Clear depth-stencil view */
+            context_->ClearDepthStencilView(framebufferView_.depthStencilView, depthStencilClearFlags, depth, stencil);
+        }
     }
 }
 

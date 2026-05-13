@@ -162,6 +162,8 @@ class D3D11CommandContext
         D3D11BindingTable*                  bindingTable_           = nullptr;
 
         D3D11FramebufferView                framebufferView_;
+        bool                                hasDepthAttachment_     = false;
+        bool                                hasStencilAttachment_   = false;
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
         D3D11SwapChain*                     boundSwapChain_         = nullptr;
         const D3D11PipelineLayout*          boundPipelineLayout_    = nullptr;

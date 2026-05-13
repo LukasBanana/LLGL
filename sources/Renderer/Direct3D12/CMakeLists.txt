@@ -51,6 +51,11 @@ set(
     ${FilesIncludeD3D12}
 )
 
+if(LLGL_BUILD_XR_OPENXR)
+    find_source_files(FilesRendererD3D12OpenXR CXX "${PROJECT_SOURCE_DIR}/OpenXR")
+    list(APPEND FilesD3D12 ${FilesRendererD3D12OpenXR})
+endif()
+
 
 # === Source group folders ===
 
@@ -61,6 +66,7 @@ source_group("Direct3D12\\RenderState"      FILES ${FilesRendererD3D12RenderStat
 source_group("Direct3D12\\Shader"           FILES ${FilesRendererD3D12Shader})
 source_group("Direct3D12\\Shader\\Builtin"  FILES ${FilesRendererD3D12ShaderBuiltin})
 source_group("Direct3D12\\Texture"          FILES ${FilesRendererD3D12Texture})
+source_group("Direct3D12\\OpenXR"           FILES ${FilesRendererD3D12OpenXR})
 source_group("Include\\Platform"            FILES ${FilesIncludeD3D12})
 
 
@@ -75,6 +81,13 @@ if(LLGL_BUILD_RENDERER_DIRECT3D12)
     # Direct3D 12 Renderer
     add_llgl_module(LLGL_Direct3D12 LLGL_BUILD_RENDERER_DIRECT3D12 "${FilesD3D12}")
     target_link_libraries(LLGL_Direct3D12 LLGL LLGL_DXCommon d3d12 dxgi D3DCompiler)
+
+    if(LLGL_BUILD_XR_OPENXR)
+        # XR-D3D12 glue files need OpenXR headers and the loader; XR_USE_* opt-ins are
+        # handled by the binding header.
+        target_link_libraries(LLGL_Direct3D12 ${OPENXR_HEADER_TARGET} ${OPENXR_LOADER_TARGET})
+        target_compile_definitions(LLGL_Direct3D12 PRIVATE LLGL_BUILD_XR_OPENXR)
+    endif()
 endif()
 
 

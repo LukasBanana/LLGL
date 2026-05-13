@@ -23,7 +23,6 @@
 namespace LLGL
 {
 
-
 D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type, desc.bindFlags             },
     baseFormat_     { desc.format                           },
@@ -50,6 +49,32 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+}
+
+D3D11Texture::D3D11Texture(ID3D11Device* device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture) :
+    Texture         { type, bindFlags                  },
+    bindingLocator_ { ResourceType::Texture, bindFlags }
+{
+    // ComPtr::operator= calls AddRef on the new pointer; the externally-owned texture stays
+    // alive via its own ref-counts and we add one more for the lifetime of this wrapper.
+    native_ = externalTexture;
+
+    // Query the texture's *actual* DXGI format - OpenXR runtimes commonly back swap-chain
+    // images with the typeless variant of the requested format (e.g. B8G8R8A8_TYPELESS for
+    // a B8G8R8A8_UNORM_SRGB request) so the same image can be reused for sRGB and linear views.
+    // Using the actual format here lets D3D11Texture's view-creation paths detect the typeless
+    // case and create an explicit-format SRV instead of the default one (which fails on typeless).
+    D3D11_TEXTURE2D_DESC actualDesc{};
+    externalTexture->GetDesc(&actualDesc);
+
+    baseFormat_ = DXTypes::Unmap(actualDesc.Format);
+
+    SetResourceParams(
+        actualDesc.Format,
+        Extent3D{actualDesc.Width, actualDesc.Height, 1u},
+        actualDesc.MipLevels,
+        actualDesc.ArraySize);
+    CreateDefaultResourceViews(device, bindFlags);
 }
 
 bool D3D11Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)

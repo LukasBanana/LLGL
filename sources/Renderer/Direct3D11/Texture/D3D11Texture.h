@@ -36,6 +36,7 @@ class D3D11Texture final : public Texture
     public:
 
         D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);
+        D3D11Texture(ID3D11Device *device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture);
 
         HRESULT UpdateSubresource(
             ID3D11DeviceContext*    context,

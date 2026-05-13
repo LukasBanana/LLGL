@@ -24,12 +24,14 @@ namespace LLGL
 {
 
 
-static const char* g_requiredVulkanExtensions[] =
+// LLGL's required device extensions are shared with the XR Vulkan binding via VKGetRequiredDeviceExtensions().
+static std::size_t CountRequiredDeviceExtensions()
 {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-    nullptr,
-};
+    std::size_t count = 0;
+    for (const char** p = VKGetRequiredDeviceExtensions(); *p != nullptr; ++p)
+        ++count;
+    return count;
+}
 
 static bool CheckDeviceExtensionSupport(
     VkPhysicalDevice                    physicalDevice,
@@ -61,8 +63,8 @@ static bool IsPhysicalDeviceSuitable(
     std::vector<VkExtensionProperties> extensions;
     bool suitable = CheckDeviceExtensionSupport(
         physicalDevice,
-        g_requiredVulkanExtensions,
-        (sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0]) - 1),
+        VKGetRequiredDeviceExtensions(),
+        CountRequiredDeviceExtensions(),
         extensions
     );
 
@@ -104,7 +106,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<c
         for (const VkExtensionProperties& extension : supportedExtensions_)
             supportedExtensionNames_.insert(extension.extensionName);
 
-        if (!EnableExtensions(g_requiredVulkanExtensions, true))
+        if (!EnableExtensions(VKGetRequiredDeviceExtensions(), true))
         {
             /* Stop considering this physical device, because some required extensions are not supported */
             supportedExtensionNames_.clear();

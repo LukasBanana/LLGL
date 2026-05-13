@@ -31,6 +31,24 @@ enum class VKSwizzleFormat
     Alpha,  // VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_R
 };
 
+// Wraps an externally-owned VkImage (e.g. from an XR runtime
+// or another swap-chain implementation). The VkImage is not destroyed by this object.
+// The caller is responsible for ensuring the image outlives this texture.
+struct VKExternalImageInfo
+{
+    TextureType type;
+    long bindFlags;
+    VkImage image;
+    VkFormat format;
+    VkExtent3D extent;
+    std::uint32_t numMipLevels;
+    std::uint32_t numArrayLayers;
+    VkSampleCountFlagBits sampleCountBits;
+    VkImageUsageFlags usageFlags;
+    VkImageLayout initialLayout;
+};
+
+
 class VKTexture final : public Texture
 {
 
@@ -45,6 +63,9 @@ class VKTexture final : public Texture
             VKDeviceMemoryManager&      deviceMemoryMngr,
             const TextureDescriptor&    desc
         );
+
+
+        VKTexture(VkDevice device, const VKExternalImageInfo& params);
 
     public:
 
