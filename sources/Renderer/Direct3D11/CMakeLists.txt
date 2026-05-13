@@ -53,6 +53,11 @@ set(
     ${FilesIncludeD3D11}
 )
 
+if(LLGL_BUILD_XR_OPENXR)
+    find_source_files(FilesRendererD3D11OpenXR CXX "${PROJECT_SOURCE_DIR}/OpenXR")
+    list(APPEND FilesD3D11 ${FilesRendererD3D11OpenXR})
+endif()
+
 
 # === Source group folders ===
 
@@ -63,6 +68,7 @@ source_group("Direct3D11\\RenderState"      FILES ${FilesRendererD3D11RenderStat
 source_group("Direct3D11\\Shader"           FILES ${FilesRendererD3D11Shader})
 source_group("Direct3D11\\Shader\\Builtin"  FILES ${FilesRendererD3D11ShaderBuiltin})
 source_group("Direct3D11\\Texture"          FILES ${FilesRendererD3D11Texture})
+source_group("Direct3D11\\OpenXR"           FILES ${FilesRendererD3D11OpenXR})
 source_group("Include\\Platform"            FILES ${FilesIncludeD3D11})
 
 
@@ -72,6 +78,13 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11)
     # Direct3D 11 Renderer
     add_llgl_module(LLGL_Direct3D11 LLGL_BUILD_RENDERER_DIRECT3D11 "${FilesD3D11}")
     target_link_libraries(LLGL_Direct3D11 LLGL LLGL_DXCommon d3d11 dxgi D3DCompiler)
+
+    if(LLGL_BUILD_XR_OPENXR)
+        # XR-D3D11 glue files need OpenXR headers and the loader. The XR_USE_* opt-ins
+        # are handled by the binding header itself (matches the pattern in the Vulkan backend).
+        target_link_libraries(LLGL_Direct3D11 ${OPENXR_HEADER_TARGET} ${OPENXR_LOADER_TARGET})
+        target_compile_definitions(LLGL_Direct3D11 PRIVATE LLGL_BUILD_XR_OPENXR)
+    endif()
 endif()
 
 

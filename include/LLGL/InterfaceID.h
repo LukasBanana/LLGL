@@ -54,6 +54,9 @@ struct InterfaceID
         Shader,                 //!< Extends RenderSystemChild. \see Shader
         RenderTarget,           //!< Extends RenderSystemChild. \see RenderTarget
         SwapChain,              //!< Extends RenderTarget. \see SwapChain
+        XRSystem,               //!< Extends Interface. \see XRSystem
+        XRSession,              //!< Extends Interface. \see XRSession
+        XRSwapChain,            //!< Extends Interface. \see XRSwapChain
 
         /**
         \brief Maximum reserved ID for interfaces.
