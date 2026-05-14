@@ -37,6 +37,23 @@ class D3D11Texture final : public Texture
 
         D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);
 
+        // Adoption parameters for wrapping an externally-owned ID3D11Texture2D
+        // (e.g. an XR-runtime-owned swap-chain image).
+        struct AdoptionParams
+        {
+            TextureType         type;
+            long                bindFlags;
+            ID3D11Texture2D*    texture;
+            Format              llglFormat;
+            DXGI_FORMAT         dxgiFormat;
+            UINT                width;
+            UINT                height;
+            UINT                arraySize;
+            UINT                mipLevels;
+        };
+
+        D3D11Texture(ID3D11Device* device, const AdoptionParams& params);
+
         HRESULT UpdateSubresource(
             ID3D11DeviceContext*    context,
             UINT                    mipLevel,

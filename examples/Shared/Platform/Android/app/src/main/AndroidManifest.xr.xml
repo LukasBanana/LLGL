@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AndroidManifest variant for OpenXR (immersive HMD) example apps.
+    BuildAndroid.sh substitutes this in place of the standard AndroidManifest.xml when
+    LLGL_BUILD_XR_OPENXR is enabled. The differences from the standard manifest:
+      - Declares the Khronos OpenXR feature dependency so non-XR devices reject install
+      - Adds the OpenXR runtime/system broker queries (Android 11+ package visibility)
+      - Adds the immersive_hmd intent category so the headset shell launches the activity
+      - Drops the OpenGLES feature requirement (XR apps render via Vulkan-on-XR)
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- The headset's OpenXR runtime is required. -->
+  <uses-feature android:name="org.khronos.openxr.immersive_hmd" android:required="true" />
+
+  <!-- Permissions to talk to the system OpenXR runtime broker. -->
+  <uses-permission android:name="org.khronos.openxr.permission.OPENXR" />
+  <uses-permission android:name="org.khronos.openxr.permission.OPENXR_SYSTEM" />
+
+  <!-- Android 11+ package visibility: declare the OpenXR runtime broker content providers
+       so the loader can discover the system runtime via getContentResolver().query(). -->
+  <queries>
+    <provider android:authorities="org.khronos.openxr.runtime_broker;org.khronos.openxr.system_runtime_broker" />
+  </queries>
+
+  <!-- This .apk has no Java code itself, so set hasCode to false. -->
+  <application
+      android:icon="@mipmap/ic_launcher"
+      android:label="@string/app_name"
+      android:hasCode="false">
+
+    <!-- Our activity is the built-in NativeActivity framework class.
+         This will take care of integrating with our NDK code. -->
+    <activity android:name="android.app.NativeActivity"
+              android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+              android:launchMode="singleTask"
+              android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|uiMode|navigation"
+              android:exported="true"
+              android:resizeableActivity="false"
+              android:excludeFromRecents="false">
+      <!-- Tell NativeActivity the name of our .so -->
+      <meta-data android:name="android.app.lib_name"
+                 android:value="LLGL_PROJECT_NAME" />
+
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+        <!-- Tells the headset shell that this is an immersive XR application. -->
+        <category android:name="org.khronos.openxr.intent.category.IMMERSIVE_HMD" />
+      </intent-filter>
+    </activity>
+  </application>
+
+</manifest>

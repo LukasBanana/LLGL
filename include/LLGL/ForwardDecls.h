@@ -36,6 +36,9 @@ class Surface;
 class SwapChain;
 class Texture;
 class Window;
+class XRSession;
+class XRSwapChain;
+class XRSystem;
 
 struct ApplicationDescriptor;
 struct AttachmentClear;
@@ -95,6 +98,12 @@ struct VertexAttribute;
 struct VertexFormat;
 struct Viewport;
 struct WindowDescriptor;
+struct XRRenderSystemDescriptor;
+struct XRSessionDescriptor;
+struct XRSwapChainDescriptor;
+struct XRSystemDescriptor;
+struct XRViewConfigurationView;
+struct XRViewPose;
 
 
 } // /namespace LLGL

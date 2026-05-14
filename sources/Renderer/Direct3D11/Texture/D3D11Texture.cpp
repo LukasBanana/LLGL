@@ -52,6 +52,32 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
+D3D11Texture::D3D11Texture(ID3D11Device* device, const AdoptionParams& params) :
+    Texture         { params.type, params.bindFlags                },
+    baseFormat_     { params.llglFormat                            },
+    bindingLocator_ { ResourceType::Texture, params.bindFlags      }
+{
+    // ComPtr::operator= calls AddRef on the new pointer; the externally-owned texture stays
+    // alive via its own ref-counts and we add one more for the lifetime of this wrapper.
+    native_ = params.texture;
+
+    // Query the texture's *actual* DXGI format - OpenXR runtimes commonly back swap-chain
+    // images with the typeless variant of the requested format (e.g. B8G8R8A8_TYPELESS for
+    // a B8G8R8A8_UNORM_SRGB request) so the same image can be reused for sRGB and linear views.
+    // Using the actual format here lets D3D11Texture's view-creation paths detect the typeless
+    // case and create an explicit-format SRV instead of the default one (which fails on typeless).
+    D3D11_TEXTURE2D_DESC actualDesc{};
+    params.texture->GetDesc(&actualDesc);
+
+    SetResourceParams(
+        actualDesc.Format,
+        Extent3D{ actualDesc.Width, actualDesc.Height, 1u },
+        actualDesc.MipLevels,
+        actualDesc.ArraySize
+    );
+    CreateDefaultResourceViews(device, params.bindFlags);
+}
+
 bool D3D11Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D11::ResourceNativeHandle>(nativeHandle, nativeHandleSize))

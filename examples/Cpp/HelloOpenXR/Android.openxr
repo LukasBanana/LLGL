@@ -1,0 +1,3 @@
+marker file: presence indicates the example is an OpenXR app, so BuildAndroid.sh
+substitutes the XR-flavored AndroidManifest (immersive_hmd feature, OPENXR
+permissions, runtime-broker queries) and bundles libopenxr_loader.so into the APK.
