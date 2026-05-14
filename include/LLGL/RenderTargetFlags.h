@@ -163,6 +163,17 @@ struct RenderTargetDescriptor
     \see TextureDescriptor::samples
     */
     AttachmentDescriptor    depthStencilAttachment;
+
+    /**
+    \brief Bitmask of view indices for multiview rendering. By default 0 (no multiview).
+    \remarks Forwarded to the render pass created implicitly for this render target when
+    \c RenderTargetDescriptor::renderPass is null. Ignored if an explicit \c renderPass is supplied
+    (the render pass's own \c viewMask wins). Each set bit \c i requires every attachment texture
+    to have at least \c i+1 array layers.
+    \see RenderPassDescriptor::viewMask
+    \see RenderingFeatures::hasMultiview
+    */
+    std::uint32_t           viewMask    = 0;
 };
 
 

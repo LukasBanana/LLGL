@@ -34,6 +34,9 @@ void D3D12RenderPass::BuildAttachments(
     const D3D12Device&          device,
     const RenderPassDescriptor& desc)
 {
+    /* Forward the descriptor's view mask so PSOs created against this render pass can opt in to view instancing. */
+    viewMask_               = desc.viewMask;
+
     /* Check which color attachment must be cleared */
     numColorAttachments_    = NumEnabledColorAttachments(desc);
     clearFlagsDSV_          = 0;

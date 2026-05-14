@@ -58,6 +58,10 @@ class VKDeviceImage
             VkImageUsageFlags       usageFlags
         );
 
+        // Adopts an externally-owned VkImage. The image is held as a weak reference;
+        // this VKDeviceImage will not destroy it.
+        void AdoptVkImage(VkImage externalImage, VkImageLayout initialLayout);
+
         void ReleaseVkImage();
 
         void CreateVkImageView(

@@ -677,6 +677,16 @@ struct RenderingFeatures
     \see CommandBuffer:BeginRenderCondition
     */
     bool hasRenderCondition             = false;
+
+    /**
+    \brief Specifies whether multiview rendering is supported.
+    \remarks When true, RenderPassDescriptor::viewMask (and RenderTargetDescriptor::viewMask) may be
+    set to a non-zero bitmask to render to multiple array-layer views in a single draw. The shader
+    must consume the active view index via \c gl_ViewIndex (GLSL/SPIR-V) or \c SV_ViewID (HLSL SM 6.1+).
+    \note Only supported with: Vulkan (core in 1.1 via VK_KHR_multiview), Direct3D 12 (View Instancing).
+    \see RenderPassDescriptor::viewMask
+    */
+    bool hasMultiview                   = false;
 };
 
 /**

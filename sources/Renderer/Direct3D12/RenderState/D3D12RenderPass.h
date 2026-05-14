@@ -92,6 +92,19 @@ class D3D12RenderPass final : public RenderPass
             return sampleDesc_;
         }
 
+        // Returns the multiview view mask this render pass was created with (0 = no multiview).
+        inline std::uint32_t GetViewMask() const
+        {
+            return viewMask_;
+        }
+
+        // Sets the multiview view mask. Used by D3D12RenderTarget after the formats-only
+        // BuildAttachments overload to forward the descriptor's viewMask through.
+        inline void SetViewMask(std::uint32_t viewMask)
+        {
+            viewMask_ = viewMask;
+        }
+
     private:
 
         void SetDSVFormat(DXGI_FORMAT format);
@@ -109,6 +122,8 @@ class D3D12RenderPass final : public RenderPass
         DXGI_FORMAT         dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
 
         DXGI_SAMPLE_DESC    sampleDesc_                                             = { 1, 0 };
+
+        std::uint32_t       viewMask_                                               = 0;
 
 };
 

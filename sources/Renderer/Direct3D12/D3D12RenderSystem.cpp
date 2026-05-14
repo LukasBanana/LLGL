@@ -825,6 +825,14 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasPipelineStatistics             = true;
     caps.features.hasRenderCondition                = true;
 
+    /* Query view-instancing tier (D3D12 multiview support). Tier 1 is software-emulated, Tier 2+
+       is hardware-accelerated; both look identical to the application via SV_ViewID. */
+    {
+        D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3{};
+        if (SUCCEEDED(device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3))))
+            caps.features.hasMultiview = (options3.ViewInstancingTier >= D3D12_VIEW_INSTANCING_TIER_1);
+    }
+
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;
     caps.limits.lineWidthRange[1]                   = 1.0f;

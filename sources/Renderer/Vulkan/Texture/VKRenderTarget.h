@@ -89,7 +89,8 @@ class VKRenderTarget final : public RenderTarget
             VkDevice                    device,
             VKTexture*                  textureVK,
             Format                      format,
-            const AttachmentDescriptor& attachmentDesc
+            const AttachmentDescriptor& attachmentDesc,
+            std::uint32_t               viewMask        = 0
         );
 
         VkImageView CreateColorBuffer(VKDeviceMemoryManager& deviceMemoryMngr, Format format);

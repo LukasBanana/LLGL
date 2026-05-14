@@ -20,6 +20,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/Container/SmallVector.h>
 
 
 namespace LLGL
@@ -210,28 +211,170 @@ void D3D12GraphicsPSO::CreateNativePSO(
     if (pipelineCache != nullptr)
         stateDesc.CachedPSO = pipelineCache->GetCachedPSO();
 
+    /* Pick up the render pass's view mask for multiview rendering (0 = no multiview). */
+    const std::uint32_t viewMask = (renderPass != nullptr ? renderPass->GetViewMask() : 0u);
+
     /* Create native PSO */
     ComPtr<ID3D12PipelineState> primaryPSO;
 
     if (isStripTopology && desc.indexFormat == Format::Undefined)
     {
         /* Create primary PSO with 32-bit index cut off value */
-        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
+        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName, viewMask);
 
         /* Create secondary PSO with 16-bit index cut off value */
         stateDesc.IBStripCutValue   = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
         stateDesc.CachedPSO         = {};
-        secondaryPSO_ = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
+        secondaryPSO_ = CreateNativePSOWithDesc(device, stateDesc, desc.debugName, viewMask);
     }
     else
-        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
+        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName, viewMask);
 
     SetNativeAndUpdateCache(std::move(primaryPSO), pipelineCache);
 }
 
-ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName)
+// Minimal stream-PSO subobject helper. Each subobject in a D3D12_PIPELINE_STATE_STREAM_DESC is a
+// (type-tag, value) pair, each starting on a void*-aligned boundary - which alignas(void*) gives us.
+namespace
+{
+    template <typename Inner, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TypeTag>
+    struct alignas(void*) StreamSubobject
+    {
+        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type    = TypeTag;
+        Inner                               value   {};
+
+        StreamSubobject() = default;
+        StreamSubobject(const Inner& v) : value(v) {}
+        StreamSubobject& operator = (const Inner& v) { value = v; return *this; }
+    };
+
+    using Stream_RootSignature   = StreamSubobject<ID3D12RootSignature*,         D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE>;
+    using Stream_VS              = StreamSubobject<D3D12_SHADER_BYTECODE,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS>;
+    using Stream_PS              = StreamSubobject<D3D12_SHADER_BYTECODE,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS>;
+    using Stream_DS              = StreamSubobject<D3D12_SHADER_BYTECODE,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DS>;
+    using Stream_HS              = StreamSubobject<D3D12_SHADER_BYTECODE,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_HS>;
+    using Stream_GS              = StreamSubobject<D3D12_SHADER_BYTECODE,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_GS>;
+    using Stream_StreamOutput    = StreamSubobject<D3D12_STREAM_OUTPUT_DESC,     D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_STREAM_OUTPUT>;
+    using Stream_Blend           = StreamSubobject<D3D12_BLEND_DESC,             D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_BLEND>;
+    using Stream_SampleMask      = StreamSubobject<UINT,                         D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_SAMPLE_MASK>;
+    using Stream_Rasterizer      = StreamSubobject<D3D12_RASTERIZER_DESC,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_RASTERIZER>;
+    using Stream_DepthStencil    = StreamSubobject<D3D12_DEPTH_STENCIL_DESC,     D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL>;
+    using Stream_InputLayout     = StreamSubobject<D3D12_INPUT_LAYOUT_DESC,      D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_INPUT_LAYOUT>;
+    using Stream_StripCut        = StreamSubobject<D3D12_INDEX_BUFFER_STRIP_CUT_VALUE, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_IB_STRIP_CUT_VALUE>;
+    using Stream_PrimitiveTopo   = StreamSubobject<D3D12_PRIMITIVE_TOPOLOGY_TYPE,D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PRIMITIVE_TOPOLOGY>;
+    using Stream_RTVFormats      = StreamSubobject<D3D12_RT_FORMAT_ARRAY,        D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_RENDER_TARGET_FORMATS>;
+    using Stream_DSVFormat       = StreamSubobject<DXGI_FORMAT,                  D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL_FORMAT>;
+    using Stream_SampleDesc      = StreamSubobject<DXGI_SAMPLE_DESC,             D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_SAMPLE_DESC>;
+    using Stream_NodeMask        = StreamSubobject<UINT,                         D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_NODE_MASK>;
+    using Stream_CachedPSO       = StreamSubobject<D3D12_CACHED_PIPELINE_STATE,  D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CACHED_PSO>;
+    using Stream_ViewInstancing  = StreamSubobject<D3D12_VIEW_INSTANCING_DESC,   D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VIEW_INSTANCING>;
+
+    // Bundles every subobject we want to forward from the legacy desc, plus the new view instancing entry.
+    struct GraphicsPipelineStream
+    {
+        Stream_RootSignature    rootSignature;
+        Stream_VS               vs;
+        Stream_PS               ps;
+        Stream_DS               ds;
+        Stream_HS               hs;
+        Stream_GS               gs;
+        Stream_StreamOutput     streamOutput;
+        Stream_Blend            blend;
+        Stream_SampleMask       sampleMask;
+        Stream_Rasterizer       rasterizer;
+        Stream_DepthStencil     depthStencil;
+        Stream_InputLayout      inputLayout;
+        Stream_StripCut         stripCut;
+        Stream_PrimitiveTopo    primitiveTopology;
+        Stream_RTVFormats       rtvFormats;
+        Stream_DSVFormat        dsvFormat;
+        Stream_SampleDesc       sampleDesc;
+        Stream_NodeMask         nodeMask;
+        Stream_CachedPSO        cachedPso;
+        Stream_ViewInstancing   viewInstancing;
+    };
+}
+
+ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(
+    ID3D12Device*                               device,
+    const D3D12_GRAPHICS_PIPELINE_STATE_DESC&   desc,
+    const char*                                 debugName,
+    std::uint32_t                               viewMask)
 {
     ComPtr<ID3D12PipelineState> pipelineState;
+
+    if (viewMask != 0)
+    {
+        // View Instancing is only available via the pipeline-state-stream API on ID3D12Device2.
+        ComPtr<ID3D12Device2> device2;
+        if (FAILED(device->QueryInterface(IID_PPV_ARGS(device2.GetAddressOf()))))
+        {
+            GetMutableReport().Errorf(
+                "Failed to create D3D12 graphics pipeline state [%s]: multiview (View Instancing) requires ID3D12Device2 which is unavailable on this device\n",
+                GetOptionalDebugName(debugName));
+            return nullptr;
+        }
+
+        // Build one ViewInstanceLocation per set bit. The render-target-array-index is the bit position;
+        // viewport-array-index stays at 0 (LLGL doesn't expose multi-viewport in PSO state today).
+        std::uint32_t numLocations = 0;
+        for (std::uint32_t mask = viewMask; mask != 0; mask &= (mask - 1))
+            ++numLocations;
+        SmallVector<D3D12_VIEW_INSTANCE_LOCATION, 8> locations;
+        locations.reserve(numLocations);
+        for (std::uint32_t bit = 0; bit < 32; ++bit)
+        {
+            if ((viewMask & (1u << bit)) != 0)
+                locations.push_back({ /*ViewportArrayIndex=*/0u, /*RenderTargetArrayIndex=*/bit });
+        }
+
+        D3D12_VIEW_INSTANCING_DESC viDesc{};
+        viDesc.ViewInstanceCount        = static_cast<UINT>(locations.size());
+        viDesc.pViewInstanceLocations   = locations.data();
+        viDesc.Flags                    = D3D12_VIEW_INSTANCING_FLAG_NONE;
+
+        D3D12_RT_FORMAT_ARRAY rtvFormatArray{};
+        rtvFormatArray.NumRenderTargets = desc.NumRenderTargets;
+        for (UINT i = 0; i < desc.NumRenderTargets; ++i)
+            rtvFormatArray.RTFormats[i] = desc.RTVFormats[i];
+
+        GraphicsPipelineStream stream{};
+        stream.rootSignature        = desc.pRootSignature;
+        stream.vs                   = desc.VS;
+        stream.ps                   = desc.PS;
+        stream.ds                   = desc.DS;
+        stream.hs                   = desc.HS;
+        stream.gs                   = desc.GS;
+        stream.streamOutput         = desc.StreamOutput;
+        stream.blend                = desc.BlendState;
+        stream.sampleMask           = desc.SampleMask;
+        stream.rasterizer           = desc.RasterizerState;
+        stream.depthStencil         = desc.DepthStencilState;
+        stream.inputLayout          = desc.InputLayout;
+        stream.stripCut             = desc.IBStripCutValue;
+        stream.primitiveTopology    = desc.PrimitiveTopologyType;
+        stream.rtvFormats           = rtvFormatArray;
+        stream.dsvFormat            = desc.DSVFormat;
+        stream.sampleDesc           = desc.SampleDesc;
+        stream.nodeMask             = desc.NodeMask;
+        stream.cachedPso            = desc.CachedPSO;
+        stream.viewInstancing       = viDesc;
+
+        D3D12_PIPELINE_STATE_STREAM_DESC streamDesc{};
+        streamDesc.SizeInBytes                  = sizeof(stream);
+        streamDesc.pPipelineStateSubobjectStream = &stream;
+
+        HRESULT hr = device2->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
+        if (FAILED(hr))
+        {
+            GetMutableReport().Errorf(
+                "Failed to create D3D12 graphics pipeline state [%s] with view instancing (HRESULT = %s)\n",
+                GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
+            return nullptr;
+        }
+        return pipelineState;
+    }
+
     HRESULT hr = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
