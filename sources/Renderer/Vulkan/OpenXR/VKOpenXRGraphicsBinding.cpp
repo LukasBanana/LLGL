@@ -227,11 +227,19 @@ RenderSystemPtr VKOpenXRGraphicsBinding::CreateRenderSystem(
     queueCreateInfo.queueCount       = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
 
-    VkPhysicalDeviceFeatures features{};
+    // Request the multiview feature so XR consumers can use multiview rendering. The runtime
+    // will silently ignore the feature if not available; LLGL's hasMultiview capability flag
+    // reflects what the physical device supports either way.
+    VkPhysicalDeviceMultiviewFeatures multiviewFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES };
+    multiviewFeatures.multiview = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+    features2.pNext = &multiviewFeatures;
+
     VkDeviceCreateInfo deviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    deviceCreateInfo.pNext                = &features2; // pEnabledFeatures must be null when using features2.
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos    = &queueCreateInfo;
-    deviceCreateInfo.pEnabledFeatures     = &features;
 
     XrVulkanDeviceCreateInfoKHR xrDeviceCreate{ XR_TYPE_VULKAN_DEVICE_CREATE_INFO_KHR };
     xrDeviceCreate.systemId                 = systemId;
@@ -424,7 +432,9 @@ bool VKOpenXRGraphicsBinding::EnumerateSwapchainImages(
     outImages.reserve(imageCount);
 
     VKTexture::AdoptionParams params{};
-    params.type             = TextureType::Texture2D;
+    /* Use Texture2DArray when more than one layer (e.g. multiview swapchains have arrayLayers == numViews)
+       so the internal image view is created as VK_IMAGE_VIEW_TYPE_2D_ARRAY and can cover all layers. */
+    params.type             = (swapChainDesc.arrayLayers > 1 ? TextureType::Texture2DArray : TextureType::Texture2D);
     params.format           = static_cast<VkFormat>(nativeFormat);
     params.extent           = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
     params.numMipLevels     = 1;

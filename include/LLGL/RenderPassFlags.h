@@ -158,6 +158,25 @@ struct RenderPassDescriptor
     \see RenderingLimits::maxNoAttachmentSamples
     */
     std::uint32_t               samples             = 1;
+
+    /**
+    \brief Bitmask of view indices to render to in a single pass (multiview).
+    \remarks Each set bit \c i indicates that the render pass will write to array layer \c i of every
+    attachment. The shader must select per-view state using the backend-appropriate input semantic
+    (\c gl_ViewIndex in GLSL/SPIR-V, \c SV_ViewID in HLSL SM 6.1+). Default 0 means no multiview - the
+    render pass renders to a single view, equivalent to the legacy non-multiview behaviour.
+
+    \remarks Multiview is useful for stereo / XR (\c viewMask = 0b11 for left+right eyes), cubemap
+    rendering (\c 0b00111111 for the six faces), cascaded shadow maps, etc. It is also exposed via
+    XR composition for the eye-array swap-chain case where one image holds both eyes.
+
+    \remarks Requires the renderer to advertise \c RenderingFeatures::hasMultiview.
+
+    \remarks Render-target attachments referenced by a render pass with a non-zero \c viewMask must
+    have at least one array layer per set bit (e.g. \c arrayLayers >= 2 for \c viewMask = 0b11).
+    \see RenderingFeatures::hasMultiview
+    */
+    std::uint32_t               viewMask            = 0;
 };
 
 

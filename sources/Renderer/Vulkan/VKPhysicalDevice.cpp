@@ -320,6 +320,9 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     #if VK_EXT_conditional_rendering
     caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
     #endif
+    #if VK_KHR_multiview
+    caps.features.hasMultiview                      = (features_.multiview.multiview != VK_FALSE);
+    #endif
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
@@ -427,9 +430,11 @@ bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
 
 void VKPhysicalDevice::QueryDeviceInfo()
 {
-    /* Query physical device features and properties with extensions */
-    QueryDeviceFeatures();
+    /* Query properties first so QueryDeviceFeatures can branch on apiVersion (e.g. to know
+       whether core-1.1 feature structs like VkPhysicalDeviceMultiviewFeatures should be chained
+       into the features2 query). */
     QueryDeviceProperties();
+    QueryDeviceFeatures();
     QueryDeviceMemoryProperties();
 }
 
@@ -477,7 +482,10 @@ void VKPhysicalDevice::QueryDeviceFeatures()
     #endif
 
     #if VK_KHR_multiview
-    if (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME))
+    // Multiview was promoted from VK_KHR_multiview to core in Vulkan 1.1. Drivers expose the
+    // feature in either form: query it whenever the API version is at least 1.1 even if the KHR
+    // extension isn't separately listed.
+    if (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME) || properties_.apiVersion >= VK_API_VERSION_1_1)
         AppendFeaturesDesc(&(features_.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR);
     #endif
 

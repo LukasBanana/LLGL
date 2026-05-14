@@ -36,6 +36,8 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
     CreateDescriptorHeaps(device.GetNative(), numColorFormats);
     CreateAttachments(device.GetNative(), desc, colorFormats);
     defaultRenderPass_.BuildAttachments(numColorFormats, colorFormats.data(), depthStencilFormat_, sampleDesc_);
+    // Forward the descriptor's view mask so PSOs created against this target opt in to View Instancing.
+    defaultRenderPass_.SetViewMask(desc.viewMask);
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
@@ -241,7 +243,7 @@ void D3D12RenderTarget::CreateAttachments(
         const UINT rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         for_range(i, colorFormats.size())
         {
-            CreateColorAttachment(device, desc.colorAttachments[i], desc.resolveAttachments[i], colorFormats[i], cpuDescHandle);
+            CreateColorAttachment(device, desc.colorAttachments[i], desc.resolveAttachments[i], colorFormats[i], cpuDescHandle, desc.viewMask);
             cpuDescHandle.ptr += rtvDescSize;
         }
     }
@@ -249,7 +251,7 @@ void D3D12RenderTarget::CreateAttachments(
     {
         auto* renderPassD3D = GetD3DRenderPass(desc.renderPass);
         const D3D12_DSV_FLAGS dsvFlags = (renderPassD3D != nullptr ? renderPassD3D->GetAttachmentFlagsDSV() : D3D12_DSV_FLAG_NONE);
-        CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart(), dsvFlags);
+        CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart(), dsvFlags, desc.viewMask);
     }
 }
 
@@ -258,7 +260,8 @@ void D3D12RenderTarget::CreateColorAttachment(
     const AttachmentDescriptor&     colorAttachment,
     const AttachmentDescriptor&     resolveAttachment,
     DXGI_FORMAT                     format,
-    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle)
+    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
+    std::uint32_t                   viewMask)
 {
     D3D12Resource* colorBuffer = nullptr;
 
@@ -275,7 +278,8 @@ void D3D12RenderTarget::CreateColorAttachment(
             textureD3D.GetType(),
             colorAttachment.mipLevel,
             colorAttachment.arrayLayer,
-            cpuDescHandle
+            cpuDescHandle,
+            viewMask
         );
     }
     else
@@ -302,7 +306,8 @@ void D3D12RenderTarget::CreateDepthStencilAttachment(
     ID3D12Device*                   device,
     const AttachmentDescriptor&     depthStenciAttachment,
     D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
-    D3D12_DSV_FLAGS                 dsvFlags)
+    D3D12_DSV_FLAGS                 dsvFlags,
+    std::uint32_t                   viewMask)
 {
     /* Create depth-stencil attachment */
     if (Texture* texture = depthStenciAttachment.texture)
@@ -317,7 +322,8 @@ void D3D12RenderTarget::CreateDepthStencilAttachment(
             textureD3D.GetType(),
             depthStenciAttachment.mipLevel,
             depthStenciAttachment.arrayLayer,
-            dsvFlags
+            dsvFlags,
+            viewMask
         );
     }
     else
@@ -379,11 +385,29 @@ void D3D12RenderTarget::CreateRenderTargetView(
     const TextureType           type,
     UINT                        mipLevel,
     UINT                        arrayLayer,
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+    std::uint32_t               viewMask)
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
     rtvDesc.Format = DXTypes::ToDXGIFormatRTV(format);
+
+    if (viewMask != 0)
+    {
+        // Multiview: build an array-view that covers every layer up to the highest set bit so
+        // View Instancing can target each layer through its RenderTargetArrayIndex.
+        UINT highestBit = 0;
+        for (std::uint32_t bit = 0; bit < 32; ++bit)
+            if ((viewMask & (1u << bit)) != 0)
+                highestBit = bit;
+        rtvDesc.ViewDimension                       = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+        rtvDesc.Texture2DArray.MipSlice             = mipLevel;
+        rtvDesc.Texture2DArray.FirstArraySlice      = 0;
+        rtvDesc.Texture2DArray.ArraySize            = highestBit + 1;
+        rtvDesc.Texture2DArray.PlaneSlice           = 0;
+        device->CreateRenderTargetView(resource.Get(), &rtvDesc, cpuDescHandle);
+        return;
+    }
 
     switch (type)
     {
@@ -445,12 +469,28 @@ void D3D12RenderTarget::CreateDepthStencilView(
     const TextureType   type,
     UINT                mipLevel,
     UINT                arrayLayer,
-    D3D12_DSV_FLAGS     dsvFlags)
+    D3D12_DSV_FLAGS     dsvFlags,
+    std::uint32_t       viewMask)
 {
-    /* Initialize D3D12 RTV descriptor */
+    /* Initialize D3D12 DSV descriptor */
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
     dsvDesc.Format  = DXTypes::ToDXGIFormatDSV(format);
     dsvDesc.Flags   = dsvFlags;
+
+    if (viewMask != 0)
+    {
+        // Multiview: array-view covering every layer up to the highest set bit, matching the RTV.
+        UINT highestBit = 0;
+        for (std::uint32_t bit = 0; bit < 32; ++bit)
+            if ((viewMask & (1u << bit)) != 0)
+                highestBit = bit;
+        dsvDesc.ViewDimension                       = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+        dsvDesc.Texture2DArray.MipSlice             = mipLevel;
+        dsvDesc.Texture2DArray.FirstArraySlice      = 0;
+        dsvDesc.Texture2DArray.ArraySize            = highestBit + 1;
+        device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+        return;
+    }
 
     switch (type)
     {

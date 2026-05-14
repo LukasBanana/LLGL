@@ -164,7 +164,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     }
 
     /* Create render pass with native attachment descriptors */
-    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits);
+    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits, desc.viewMask);
 }
 
 void VKRenderPass::CreateVkRenderPassWithDescriptors(
@@ -172,7 +172,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     std::uint32_t                   numAttachments,
     std::uint32_t                   numColorAttachments,
     const VkAttachmentDescription*  attachmentDescs,
-    VkSampleCountFlagBits           sampleCountBits)
+    VkSampleCountFlagBits           sampleCountBits,
+    std::uint32_t                   viewMask)
 {
     LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -263,11 +264,27 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         subpassDep.dependencyFlags  = 0;
     }
 
+    /* Optional multiview chain: tell Vulkan which array-layer views the single subpass writes to. */
+    VkRenderPassMultiviewCreateInfo multiviewCreateInfo;
+    const std::uint32_t subpassViewMask = viewMask;
+    viewMask_ = viewMask;
+    if (subpassViewMask != 0)
+    {
+        multiviewCreateInfo.sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
+        multiviewCreateInfo.pNext                   = nullptr;
+        multiviewCreateInfo.subpassCount            = 1;
+        multiviewCreateInfo.pViewMasks              = &subpassViewMask;
+        multiviewCreateInfo.dependencyCount         = 0;
+        multiviewCreateInfo.pViewOffsets            = nullptr;
+        multiviewCreateInfo.correlationMaskCount    = 0;
+        multiviewCreateInfo.pCorrelationMasks       = nullptr;
+    }
+
     /* Create swap-chain render pass */
     VkRenderPassCreateInfo createInfo;
     {
         createInfo.sType            = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext            = nullptr;
+        createInfo.pNext            = (subpassViewMask != 0 ? &multiviewCreateInfo : nullptr);
         createInfo.flags            = 0;
         createInfo.attachmentCount  = static_cast<std::uint32_t>(sanitizedAttachmentDescs.size());
         createInfo.pAttachments     = sanitizedAttachmentDescs.data();

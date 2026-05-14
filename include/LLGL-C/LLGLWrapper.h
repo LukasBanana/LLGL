@@ -1252,6 +1252,7 @@ typedef struct LLGLRenderingFeatures
     bool hasPipelineCaching;           /* = false */
     bool hasPipelineStatistics;        /* = false */
     bool hasRenderCondition;           /* = false */
+    bool hasMultiview;                 /* = false */
 }
 LLGLRenderingFeatures;
 
@@ -1720,6 +1721,7 @@ typedef struct LLGLRenderPassDescriptor
     LLGLAttachmentFormatDescriptor depthAttachment;
     LLGLAttachmentFormatDescriptor stencilAttachment;
     uint32_t                       samples;             /* = 1 */
+    uint32_t                       viewMask;            /* = 0 */
 }
 LLGLRenderPassDescriptor;
 
@@ -1732,6 +1734,7 @@ typedef struct LLGLRenderTargetDescriptor
     LLGLAttachmentDescriptor colorAttachments[8];
     LLGLAttachmentDescriptor resolveAttachments[8];
     LLGLAttachmentDescriptor depthStencilAttachment;
+    uint32_t                 viewMask;               /* = 0 */
 }
 LLGLRenderTargetDescriptor;
 

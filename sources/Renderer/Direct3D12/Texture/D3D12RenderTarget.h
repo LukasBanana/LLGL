@@ -72,14 +72,16 @@ class D3D12RenderTarget final : public RenderTarget
             const AttachmentDescriptor&     colorAttachment,
             const AttachmentDescriptor&     resolveAttachment,
             DXGI_FORMAT                     format,
-            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle
+            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
+            std::uint32_t                   viewMask                = 0
         );
 
         void CreateDepthStencilAttachment(
             ID3D12Device*                   device,
             const AttachmentDescriptor&     depthStenciAttachment,
             D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
-            D3D12_DSV_FLAGS                 dsvFlags                = D3D12_DSV_FLAG_NONE
+            D3D12_DSV_FLAGS                 dsvFlags                = D3D12_DSV_FLAG_NONE,
+            std::uint32_t                   viewMask                = 0
         );
 
         D3D12Resource* CreateInternalTexture(
@@ -97,7 +99,8 @@ class D3D12RenderTarget final : public RenderTarget
             const TextureType           type,
             UINT                        mipLevel,
             UINT                        arrayLayer,
-            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            std::uint32_t               viewMask        = 0
         );
 
         void CreateDepthStencilView(
@@ -107,7 +110,8 @@ class D3D12RenderTarget final : public RenderTarget
             const TextureType   type,
             UINT                mipLevel,
             UINT                arrayLayer,
-            D3D12_DSV_FLAGS     dsvFlags    = D3D12_DSV_FLAG_NONE
+            D3D12_DSV_FLAGS     dsvFlags    = D3D12_DSV_FLAG_NONE,
+            std::uint32_t       viewMask    = 0
         );
 
         void CreateResolveTarget(

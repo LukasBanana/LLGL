@@ -328,6 +328,13 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
         if (depthSubmissionEnabled_)
             depthInfos.resize(viewCount_, XrCompositionLayerDepthInfoKHR{ XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR });
 
+        // For multiview submission, multiple views may share a single XR swap-chain whose images
+        // have arrayLayers >= viewCount; each view's subImage.imageArrayIndex needs to point at a
+        // distinct slice. Count how many times we've seen each swap-chain so far and assign the
+        // n-th occurrence layer index n.
+        SmallVector<OpenXRSwapChain*, 4> seenSwapChains;
+        SmallVector<std::uint32_t, 4>    seenCounts;
+
         bool allValid = true;
         for (std::uint32_t i = 0; i < viewCount_; ++i)
         {
@@ -337,6 +344,24 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
                 allValid = false;
                 break;
             }
+
+            std::uint32_t layer = 0;
+            bool found = false;
+            for (std::size_t k = 0; k < seenSwapChains.size(); ++k)
+            {
+                if (seenSwapChains[k] == sc)
+                {
+                    layer = ++seenCounts[k];
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                seenSwapChains.push_back(sc);
+                seenCounts.push_back(0u);
+            }
+
             const XRViewPose& view = frameState.views[i];
             XrCompositionLayerProjectionView& pv = projectionViews[i];
 
@@ -356,10 +381,12 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
             pv.subImage.imageRect.offset        = { 0, 0 };
             pv.subImage.imageRect.extent.width  = static_cast<std::int32_t>(sc->GetResolution().width);
             pv.subImage.imageRect.extent.height = static_cast<std::int32_t>(sc->GetResolution().height);
-            pv.subImage.imageArrayIndex         = 0;
+            pv.subImage.imageArrayIndex         = layer;
 
             // If the runtime supports composition_layer_depth and the application paired a depth
-            // swap-chain with this color swap-chain, chain XrCompositionLayerDepthInfoKHR.
+            // swap-chain with this color swap-chain, chain XrCompositionLayerDepthInfoKHR. The
+            // depth swap-chain's array layer mirrors the color one (same multiview layout, since
+            // a multiview app submits depth+color from the same draw with the same view index).
             if (depthSubmissionEnabled_)
             {
                 if (auto* depthCompanion = static_cast<OpenXRSwapChain*>(sc->GetDepthCompanion()))
@@ -369,7 +396,7 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
                     di.subImage.imageRect.offset        = { 0, 0 };
                     di.subImage.imageRect.extent.width  = static_cast<std::int32_t>(depthCompanion->GetResolution().width);
                     di.subImage.imageRect.extent.height = static_cast<std::int32_t>(depthCompanion->GetResolution().height);
-                    di.subImage.imageArrayIndex         = 0;
+                    di.subImage.imageArrayIndex         = layer;
                     di.minDepth                         = 0.0f;
                     di.maxDepth                         = 1.0f;
                     di.nearZ                            = frameState.nearZ;

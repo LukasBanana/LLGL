@@ -261,7 +261,7 @@ static void PumpAndroidEvents(android_app* state, bool blockUntilEvent)
 
 struct ShaderPair { LLGL::Shader* vs = nullptr; LLGL::Shader* fs = nullptr; };
 
-static ShaderPair LoadCubeShaders(LLGL::RenderSystem& renderer, const LLGL::VertexFormat& vertexFormat)
+static ShaderPair LoadCubeShaders(LLGL::RenderSystem& renderer, const LLGL::VertexFormat& vertexFormat, bool multiview)
 {
     const auto& langs = renderer.GetRenderingCaps().shadingLanguages;
     const auto has = [&](LLGL::ShadingLanguage l) {
@@ -271,15 +271,31 @@ static ShaderPair LoadCubeShaders(LLGL::RenderSystem& renderer, const LLGL::Vert
     LLGL::ShaderDescriptor vsDesc, fsDesc;
     if (has(LLGL::ShadingLanguage::HLSL))
     {
-        // Direct3D 11 / Direct3D 12: compile HLSL at runtime.
-        vsDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" };
-        fsDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" };
+        // Direct3D 11 / Direct3D 12: compile HLSL at runtime. SV_ViewID requires SM 6.1+.
+        if (multiview)
+        {
+            vsDesc = { LLGL::ShaderType::Vertex,   "Example.multiview.hlsl", "VS", "vs_6_1" };
+            fsDesc = { LLGL::ShaderType::Fragment, "Example.multiview.hlsl", "PS", "ps_6_1" };
+        }
+        else
+        {
+            vsDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" };
+            fsDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" };
+        }
     }
     else if (has(LLGL::ShadingLanguage::SPIRV))
     {
         // Vulkan: pre-compiled SPIR-V.
-        vsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
-        fsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
+        if (multiview)
+        {
+            vsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.multiview.450core.vert.spv");
+            fsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.multiview.450core.frag.spv");
+        }
+        else
+        {
+            vsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
+            fsDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
+        }
     }
     else
     {
@@ -315,7 +331,8 @@ static int RunHelloOpenXR(
 #if defined LLGL_OS_ANDROID
     android_app* androidApp,
 #endif
-    const char* rendererModule
+    const char* rendererModule,
+    bool multiview
     )
 {
     LLGL::Log::RegisterCallbackStd();
@@ -358,6 +375,13 @@ static int RunHelloOpenXR(
     }
     LLGL_HELLO_LOG("Renderer: %s\n", renderer->GetName());
 
+    if (multiview && !renderer->GetRenderingCaps().features.hasMultiview)
+    {
+        LLGL_HELLO_ERR("Multiview requested via --multiview but renderer reports hasMultiview=false; aborting.\n");
+        return EXIT_FAILURE;
+    }
+    LLGL_HELLO_LOG("Multiview: %s\n", multiview ? "enabled" : "disabled");
+
     // 3. Create the XR session.
     LLGL::XRSession* session = xrSystem->CreateSession(LLGL::XRSessionDescriptor{}, *renderer);
     if (session == nullptr)
@@ -386,92 +410,112 @@ static int RunHelloOpenXR(
         depthFormat = depthFormats[0];
     LLGL_HELLO_LOG("Depth submission: %s (format %d)\n", depthSubmission ? "enabled" : "disabled (runtime does not support XR_KHR_composition_layer_depth)", static_cast<int>(depthFormat));
 
-    std::vector<LLGL::XRSwapChain*> colorSwapChains(views.size(), nullptr);
-    std::vector<LLGL::XRSwapChain*> depthSwapChains(views.size(), nullptr);
-    std::vector<LLGL::Texture*>     depthTextures  (views.size(), nullptr); // only used when depth submission unsupported
-    // Render-target lookup is two-level: [eye][colorImageIdx][depthImageIdx].
-    // When depth submission is enabled and the color/depth chains have the same image count,
-    // colorImageIdx==depthImageIdx in practice, but we pre-build the full grid so any acquired
-    // pair works correctly.
-    std::vector<std::vector<std::vector<LLGL::RenderTarget*>>> renderTargets(views.size());
+    // Render-group model: each "group" owns a color swap-chain (and optional paired depth chain).
+    // - non-multiview: one group per eye, each with arrayLayers=1.
+    // - multiview:     one group total, with arrayLayers=viewCount; the same group/chain serves
+    //                  all views, distinguished by the imageArrayIndex EndFrame assigns.
+    const std::uint32_t viewCount = static_cast<std::uint32_t>(views.size());
+    const std::uint32_t groupCount = multiview ? 1u : viewCount;
+    const std::uint32_t arrayLayers = multiview ? viewCount : 1u;
 
-    for (std::size_t eye = 0; eye < views.size(); ++eye)
+    // For multiview we render both eyes into a single image; pick the larger of the per-eye
+    // resolutions so both fit comfortably.
+    LLGL::Extent2D resolution{ views[0].recommendedImageWidth, views[0].recommendedImageHeight };
+    if (multiview)
     {
-        const LLGL::Extent2D resolution{ views[eye].recommendedImageWidth, views[eye].recommendedImageHeight };
+        for (const auto& v : views)
+        {
+            resolution.width  = std::max(resolution.width,  v.recommendedImageWidth);
+            resolution.height = std::max(resolution.height, v.recommendedImageHeight);
+        }
+    }
+
+    std::vector<LLGL::XRSwapChain*> colorSwapChains(groupCount, nullptr);
+    std::vector<LLGL::XRSwapChain*> depthSwapChains(groupCount, nullptr);
+    std::vector<LLGL::Texture*>     depthTextures  (groupCount, nullptr); // only used when depth submission unsupported
+    // Render-target lookup is two-level: [group][colorImageIdx][depthImageIdx].
+    std::vector<std::vector<std::vector<LLGL::RenderTarget*>>> renderTargets(groupCount);
+
+    const std::uint32_t viewMask = multiview ? ((1u << viewCount) - 1u) : 0u; // e.g. 0b11 for stereo
+
+    for (std::uint32_t g = 0; g < groupCount; ++g)
+    {
+        const LLGL::Extent2D thisResolution =
+            multiview ? resolution
+                      : LLGL::Extent2D{ views[g].recommendedImageWidth, views[g].recommendedImageHeight };
 
         LLGL::XRSwapChainDescriptor colorDesc;
         colorDesc.format        = colorFormat;
-        colorDesc.resolution    = resolution;
+        colorDesc.resolution    = thisResolution;
         colorDesc.sampleCount   = 1;
-        colorDesc.arrayLayers   = 1;
-        colorSwapChains[eye] = session->CreateSwapChain(colorDesc);
-        if (colorSwapChains[eye] == nullptr)
+        colorDesc.arrayLayers   = arrayLayers;
+        colorSwapChains[g] = session->CreateSwapChain(colorDesc);
+        if (colorSwapChains[g] == nullptr)
         {
-            LLGL_HELLO_ERR("Failed to create XR color swap-chain for eye %zu\n", eye);
+            LLGL_HELLO_ERR("Failed to create XR color swap-chain for group %u\n", g);
             if (auto* report = session->GetReport())
                 LLGL_HELLO_ERR("%s", report->GetText());
             return EXIT_FAILURE;
         }
 
-        auto colorImages = colorSwapChains[eye]->GetImages();
+        auto colorImages = colorSwapChains[g]->GetImages();
         LLGL::ArrayView<LLGL::Texture*> depthImages{};
 
         if (depthSubmission)
         {
             LLGL::XRSwapChainDescriptor depthDesc;
             depthDesc.format        = depthFormat;
-            depthDesc.resolution    = resolution;
+            depthDesc.resolution    = thisResolution;
             depthDesc.sampleCount   = 1;
-            depthDesc.arrayLayers   = 1;
-            depthSwapChains[eye] = session->CreateSwapChain(depthDesc);
-            if (depthSwapChains[eye] == nullptr)
+            depthDesc.arrayLayers   = arrayLayers;
+            depthSwapChains[g] = session->CreateSwapChain(depthDesc);
+            if (depthSwapChains[g] == nullptr)
             {
-                LLGL_HELLO_ERR("Failed to create XR depth swap-chain for eye %zu\n", eye);
+                LLGL_HELLO_ERR("Failed to create XR depth swap-chain for group %u\n", g);
                 if (auto* report = session->GetReport())
                     LLGL_HELLO_ERR("%s", report->GetText());
                 return EXIT_FAILURE;
             }
-            // Pair: EndFrame will chain XrCompositionLayerDepthInfoKHR for this view.
-            colorSwapChains[eye]->SetDepthCompanion(depthSwapChains[eye]);
-            depthImages = depthSwapChains[eye]->GetImages();
+            colorSwapChains[g]->SetDepthCompanion(depthSwapChains[g]);
+            depthImages = depthSwapChains[g]->GetImages();
         }
         else
         {
-            // Application-owned depth texture (single, reused every frame).
             LLGL::TextureDescriptor td;
             td.type          = LLGL::TextureType::Texture2D;
             td.bindFlags     = LLGL::BindFlags::DepthStencilAttachment;
             td.format        = LLGL::Format::D32Float;
-            td.extent        = { resolution.width, resolution.height, 1u };
+            td.extent        = { thisResolution.width, thisResolution.height, 1u };
             td.mipLevels     = 1;
-            td.arrayLayers   = 1;
-            depthTextures[eye] = renderer->CreateTexture(td);
+            td.arrayLayers   = arrayLayers;
+            depthTextures[g] = renderer->CreateTexture(td);
         }
 
-        renderTargets[eye].resize(colorImages.size());
+        renderTargets[g].resize(colorImages.size());
         for (std::size_t ci = 0; ci < colorImages.size(); ++ci)
         {
             if (depthSubmission)
             {
-                renderTargets[eye][ci].resize(depthImages.size(), nullptr);
+                renderTargets[g][ci].resize(depthImages.size(), nullptr);
                 for (std::size_t di = 0; di < depthImages.size(); ++di)
                 {
                     LLGL::RenderTargetDescriptor rtDesc;
-                    rtDesc.resolution               = resolution;
+                    rtDesc.resolution               = thisResolution;
                     rtDesc.colorAttachments[0]      = LLGL::AttachmentDescriptor{ colorImages[ci] };
                     rtDesc.depthStencilAttachment   = LLGL::AttachmentDescriptor{ depthImages[di] };
-                    renderTargets[eye][ci][di] = renderer->CreateRenderTarget(rtDesc);
+                    rtDesc.viewMask                 = viewMask;
+                    renderTargets[g][ci][di] = renderer->CreateRenderTarget(rtDesc);
                 }
             }
             else
             {
-                // Just one slot per color image, paired with the shared app-owned depth.
-                renderTargets[eye][ci].resize(1, nullptr);
+                renderTargets[g][ci].resize(1, nullptr);
                 LLGL::RenderTargetDescriptor rtDesc;
-                rtDesc.resolution               = resolution;
+                rtDesc.resolution               = thisResolution;
                 rtDesc.colorAttachments[0]      = LLGL::AttachmentDescriptor{ colorImages[ci] };
-                rtDesc.depthStencilAttachment   = LLGL::AttachmentDescriptor{ depthTextures[eye] };
-                renderTargets[eye][ci][0] = renderer->CreateRenderTarget(rtDesc);
+                rtDesc.depthStencilAttachment   = LLGL::AttachmentDescriptor{ depthTextures[g] };
+                rtDesc.viewMask                 = viewMask;
+                renderTargets[g][ci][0] = renderer->CreateRenderTarget(rtDesc);
             }
         }
     }
@@ -494,8 +538,11 @@ static int RunHelloOpenXR(
     ibDesc.format     = LLGL::Format::R16UInt;
     LLGL::Buffer* indexBuffer = renderer->CreateBuffer(ibDesc, kCubeIndices);
 
+    // Constant buffer: in non-multiview mode, one Mat4 per draw. In multiview mode, an array of
+    // viewCount Mat4s indexed in the shader by gl_ViewIndex / SV_ViewID.
+    const std::size_t cbvSize = multiview ? (sizeof(Mat4) * viewCount) : sizeof(Mat4);
     LLGL::BufferDescriptor cbDesc;
-    cbDesc.size       = sizeof(Mat4);
+    cbDesc.size       = cbvSize;
     cbDesc.bindFlags  = LLGL::BindFlags::ConstantBuffer;
     LLGL::Buffer* viewProjBuffer = renderer->CreateBuffer(cbDesc);
 
@@ -503,7 +550,7 @@ static int RunHelloOpenXR(
     LLGL::PipelineLayout* layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Globals@0):vert}"));
     LLGL::ResourceHeap* resourceHeap = renderer->CreateResourceHeap(layout, { viewProjBuffer });
 
-    ShaderPair shaders = LoadCubeShaders(*renderer, vertexFormat);
+    ShaderPair shaders = LoadCubeShaders(*renderer, vertexFormat, multiview);
     if (shaders.vs == nullptr || shaders.fs == nullptr)
         return EXIT_FAILURE;
 
@@ -569,10 +616,13 @@ static int RunHelloOpenXR(
 
         if (frameState.shouldRender)
         {
-            for (std::size_t eye = 0; eye < views.size(); ++eye)
+            // Render each group. In non-multiview mode this is one group per eye (2 iterations).
+            // In multiview mode this is the single shared group that holds both eyes' layers, with
+            // one draw covering both eyes courtesy of viewMask + SV_ViewID/gl_ViewIndex.
+            for (std::uint32_t g = 0; g < groupCount; ++g)
             {
-                auto* color = colorSwapChains[eye];
-                auto* depth = depthSwapChains[eye];   // null if depth submission disabled
+                auto* color = colorSwapChains[g];
+                auto* depth = depthSwapChains[g];
 
                 std::uint32_t colorIdx = color->AcquireImage();
                 if (colorIdx == UINT32_MAX)
@@ -595,23 +645,42 @@ static int RunHelloOpenXR(
                     }
                 }
 
-                // Build view-proj for this eye, with the cube's world translation baked in.
-                const LLGL::XRViewPose& view = frameState.views[eye];
-                const Mat4 viewMat = ViewFromPose(view);
-                const Mat4 projMat = ProjectionFromFov(view, frameState.nearZ, frameState.farZ);
-
+                // Build the view-proj matrix (or matrices, for multiview) we'll upload this frame.
                 Mat4 modelMat;
                 modelMat.m[12] = kCubeWorldOffset[0];
                 modelMat.m[13] = kCubeWorldOffset[1];
                 modelMat.m[14] = kCubeWorldOffset[2];
-                const Mat4 viewProj = Multiply(projMat, Multiply(viewMat, modelMat));
 
-                const float clearColor[4] = { 0.05f, 0.05f, 0.08f, 1.0f }; // dark-grey background
+                std::vector<Mat4> viewProjs;
+                viewProjs.reserve(multiview ? viewCount : 1u);
+                if (multiview)
+                {
+                    for (std::uint32_t v = 0; v < viewCount; ++v)
+                    {
+                        const LLGL::XRViewPose& view = frameState.views[v];
+                        const Mat4 viewMat = ViewFromPose(view);
+                        const Mat4 projMat = ProjectionFromFov(view, frameState.nearZ, frameState.farZ);
+                        viewProjs.push_back(Multiply(projMat, Multiply(viewMat, modelMat)));
+                    }
+                }
+                else
+                {
+                    const LLGL::XRViewPose& view = frameState.views[g];
+                    const Mat4 viewMat = ViewFromPose(view);
+                    const Mat4 projMat = ProjectionFromFov(view, frameState.nearZ, frameState.farZ);
+                    viewProjs.push_back(Multiply(projMat, Multiply(viewMat, modelMat)));
+                }
+
+                const float clearColor[4] = { 0.05f, 0.05f, 0.08f, 1.0f };
 
                 cmdBuffer->Begin();
                 {
-                    cmdBuffer->UpdateBuffer(*viewProjBuffer, 0, viewProj.m, sizeof(viewProj.m));
-                    cmdBuffer->BeginRenderPass(*renderTargets[eye][colorIdx][depthIdx]);
+                    cmdBuffer->UpdateBuffer(
+                        *viewProjBuffer, 0,
+                        viewProjs.data(),
+                        static_cast<std::uint16_t>(viewProjs.size() * sizeof(Mat4))
+                    );
+                    cmdBuffer->BeginRenderPass(*renderTargets[g][colorIdx][depthIdx]);
                     {
                         cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ clearColor[0], clearColor[1], clearColor[2], clearColor[3], 1.0f });
                         cmdBuffer->SetViewport(color->GetResolution());
@@ -632,7 +701,13 @@ static int RunHelloOpenXR(
             }
         }
 
-        session->EndFrame(frameState, LLGL::ArrayView<LLGL::XRSwapChain*>{ colorSwapChains.data(), colorSwapChains.size() });
+        // EndFrame wants one swap-chain pointer per view. In multiview mode the single shared
+        // swap-chain appears viewCount times - OpenXRSession's layer-assignment logic gives each
+        // occurrence a distinct imageArrayIndex.
+        std::vector<LLGL::XRSwapChain*> viewSubmission(viewCount);
+        for (std::uint32_t v = 0; v < viewCount; ++v)
+            viewSubmission[v] = multiview ? colorSwapChains[0] : colorSwapChains[v];
+        session->EndFrame(frameState, LLGL::ArrayView<LLGL::XRSwapChain*>{ viewSubmission.data(), viewSubmission.size() });
 
         if ((++frameCounter % 90) == 0)
             LLGL_HELLO_LOG("Frame %d, session state = %d\n", frameCounter, static_cast<int>(state));
@@ -667,8 +742,10 @@ void android_main(android_app* state)
 {
     try
     {
-        // Vulkan is the only XR-compatible LLGL backend on Android.
-        RunHelloOpenXR(state, "Vulkan");
+        // Vulkan is the only XR-compatible LLGL backend on Android. Multiview is disabled by
+        // default - the application can flip it on by recompiling with this constant changed.
+        constexpr bool kMultiview = false;
+        RunHelloOpenXR(state, "Vulkan", kMultiview);
     }
     catch (const std::exception& e)
     {
@@ -680,15 +757,22 @@ void android_main(android_app* state)
 
 int main(int argc, char* argv[])
 {
-    // Pass the renderer module name on the command line; defaults to Vulkan if unset.
+    // Defaults: Vulkan renderer, no multiview. Override via CLI:
+    //   Example_HelloOpenXR.exe [renderer] [--multiview]
     // Examples: "Vulkan", "Direct3D11", "Direct3D12".
     const char* rendererModule = "Vulkan";
-    if (argc > 1)
-        rendererModule = argv[1];
+    bool multiview = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (std::strcmp(argv[i], "--multiview") == 0)
+            multiview = true;
+        else
+            rendererModule = argv[i];
+    }
 
     try
     {
-        return RunHelloOpenXR(rendererModule);
+        return RunHelloOpenXR(rendererModule, multiview);
     }
     catch (const std::exception& e)
     {

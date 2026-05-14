@@ -43,7 +43,12 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
             D3D12PipelineCache*                 pipelineCache   = nullptr
         );
 
-        ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName);
+        ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(
+            ID3D12Device*                               device,
+            const D3D12_GRAPHICS_PIPELINE_STATE_DESC&   desc,
+            const char*                                 debugName,
+            std::uint32_t                               viewMask    = 0
+        );
 
     private:
 
