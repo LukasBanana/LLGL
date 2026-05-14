@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Format.h>
 #include <LLGL/Types.h>
+#include <LLGL/RenderingDebugger.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <LLGL/Container/UTF8String.h>
 
@@ -125,7 +126,10 @@ struct XRSystemDescriptor
     //! Combination of XRSystemFlags entries. By default 0.
     long                    flags               = 0;
 
-    #ifdef LLGL_OS_ANDROID
+    //! Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
+    RenderingDebugger*      debugger = nullptr;
+
+#ifdef LLGL_OS_ANDROID
 
     /**
     \brief Android-specific application descriptor. \b Required on Android.

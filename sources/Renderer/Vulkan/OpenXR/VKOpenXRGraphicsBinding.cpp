@@ -275,9 +275,10 @@ RenderSystemPtr VKOpenXRGraphicsBinding::CreateRenderSystem(
     rsDesc.rendererConfigSize   = renderSystemDesc.rendererConfigSize;
     rsDesc.nativeHandle         = &nativeHandle;
     rsDesc.nativeHandleSize     = sizeof(nativeHandle);
+    rsDesc.debugger             = renderSystemDesc.debugger;
 #ifdef LLGL_OS_ANDROID
-    // The Vulkan backend's AndroidApp::Initialize traps if this is null on Android.
-    rsDesc.androidApp           = renderSystemDesc.androidApp;
+        // The Vulkan backend's AndroidApp::Initialize traps if this is null on Android.
+        rsDesc.androidApp = renderSystemDesc.androidApp;
 #endif
 
     RenderSystemPtr renderSystem = RenderSystem::Load(rsDesc, report);

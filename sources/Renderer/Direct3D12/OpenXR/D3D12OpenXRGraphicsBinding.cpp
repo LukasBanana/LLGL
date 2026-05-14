@@ -185,6 +185,7 @@ RenderSystemPtr D3D12OpenXRGraphicsBinding::CreateRenderSystem(
     rsDesc.rendererConfigSize   = renderSystemDesc.rendererConfigSize;
     rsDesc.nativeHandle         = &nativeHandle;
     rsDesc.nativeHandleSize     = sizeof(nativeHandle);
+    rsDesc.debugger             = renderSystemDesc.debugger;
 
     RenderSystemPtr renderSystem = RenderSystem::Load(rsDesc, report);
     if (!renderSystem)
