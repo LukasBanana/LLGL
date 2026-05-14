@@ -37,6 +37,19 @@ class D3D12Texture final : public Texture
 
         D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
 
+        // Adoption parameters for wrapping an externally-owned ID3D12Resource
+        // (e.g. an XR-runtime-owned swap-chain image).
+        struct AdoptionParams
+        {
+            TextureType             type;
+            long                    bindFlags;
+            ID3D12Resource*         resource;
+            Format                  llglFormat;
+            D3D12_RESOURCE_STATES   initialState;
+        };
+
+        D3D12Texture(ID3D12Device* device, const AdoptionParams& params);
+
         // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresource(
             D3D12SubresourceContext&        context,

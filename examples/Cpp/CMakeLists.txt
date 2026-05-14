@@ -62,6 +62,10 @@ find_project_source_files( FilesExample_VolumeRendering     "${EXAMPLE_CPP_PROJE
 
 find_project_source_files( FilesExample_HelloUWP            "${EXAMPLE_CPP_PROJECTS_DIR}/HelloUWP"         )
 
+if(LLGL_BUILD_XR_OPENXR)
+    find_project_source_files( FilesExample_HelloOpenXR     "${EXAMPLE_CPP_PROJECTS_DIR}/HelloOpenXR"      )
+endif()
+
 
 # === Source group folders ===
 
@@ -136,6 +140,11 @@ if(LLGL_BUILD_EXAMPLES)
         if(NOT LLGL_MOBILE_PLATFORM)
             add_llgl_example_project(Example_MultiContext   CXX "${FilesExample_MultiContext}"      "${EXAMPLE_PROJECT_LIBS}")
             add_llgl_example_project(Example_MultiRenderer  CXX "${FilesExample_MultiRenderer}"     "${EXAMPLE_PROJECT_LIBS}")
+        endif()
+
+        # OpenXR example - drives an XR runtime, no display window or GaussianLib needed.
+        if(LLGL_BUILD_XR_OPENXR)
+            add_llgl_example_project(Example_HelloOpenXR    CXX "${FilesExample_HelloOpenXR}"       "LLGL_XR_OpenXR;${EXAMPLE_PROJECT_LIBS}")
         endif()
     endif()
 endif(LLGL_BUILD_EXAMPLES)

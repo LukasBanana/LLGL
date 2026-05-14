@@ -116,6 +116,16 @@ void VKDeviceImage::CreateVkImage(
     VKThrowIfCreateFailed(result, "VkImage");
 }
 
+void VKDeviceImage::AdoptVkImage(VkImage externalImage, VkImageLayout initialLayout)
+{
+    // Replace the deleter-bound smart pointer with a weak reference - this object will not
+    // destroy the externally-owned image. Used for adopting swap-chain or XR-runtime owned images.
+    image_ = VKPtr<VkImage>{ externalImage };
+    layout_ = initialLayout;
+    memoryRegion_ = nullptr;
+    memoryRequirements_ = {};
+}
+
 void VKDeviceImage::ReleaseVkImage()
 {
     image_.Release();

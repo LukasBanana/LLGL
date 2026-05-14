@@ -46,6 +46,25 @@ class VKTexture final : public Texture
             const TextureDescriptor&    desc
         );
 
+        // Adoption constructor. Wraps an externally-owned VkImage (e.g. from an XR runtime
+        // or another swap-chain implementation). The VkImage is not destroyed by this object.
+        // The caller is responsible for ensuring the image outlives this texture.
+        struct AdoptionParams
+        {
+            TextureType             type;
+            long                    bindFlags;
+            VkImage                 image;
+            VkFormat                format;
+            VkExtent3D              extent;
+            std::uint32_t           numMipLevels;
+            std::uint32_t           numArrayLayers;
+            VkSampleCountFlagBits   sampleCountBits;
+            VkImageUsageFlags       usageFlags;
+            VkImageLayout           initialLayout;
+        };
+
+        VKTexture(VkDevice device, const AdoptionParams& params);
+
     public:
 
         void SetDebugName(const char* name) override;
