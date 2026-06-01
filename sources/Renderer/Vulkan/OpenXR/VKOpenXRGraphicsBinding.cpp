@@ -255,6 +255,18 @@ RenderSystemPtr VKOpenXRGraphicsBinding::CreateRenderSystem(
         }
     }
 
+    for (const char **required = GetOptionalExtensions(); *required != nullptr; ++required)
+    {
+        for (const VkExtensionProperties &available : availableDeviceExts)
+        {
+            if (std::strcmp(available.extensionName, *required) == 0)
+            {
+                enabledDeviceExts.push_back(*required);
+                break;
+            }
+        }
+    }
+
     VkPhysicalDeviceFeatures features{};
     VkDeviceCreateInfo deviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount    = 1;

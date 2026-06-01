@@ -19,53 +19,71 @@ namespace LLGL
 static bool g_VKRegisteredExtensions[static_cast<std::size_t>(VKExt::Count)] = {};
 
 static const char* g_VKOptionalExtensions[] =
-{
+    {
     #if VK_EXT_conditional_rendering
-    VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
+        VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
     #endif
     #if VK_EXT_conservative_rasterization
-    VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME,
+        VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME,
     #endif
     #if VK_EXT_debug_marker
-    VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
+        VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
     #endif
     #if VK_EXT_debug_report
-    VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+        VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
     #endif
     #if VK_EXT_debug_utils
-    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
     #endif
     #if VK_KHR_get_physical_device_properties2
-    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     #endif
     #if VK_KHR_imageless_framebuffer
-    VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME,
+        VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_image_format_list    // Required for VK_KHR_imageless_framebuffer
+        VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME,
     #endif
     #if VK_KHR_portability_enumeration
-    VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+        VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
     #endif
     #if VK_KHR_sampler_mirror_clamp_to_edge
-    VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
+        VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
     #endif
     #if VK_EXT_transform_feedback
-    VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+        VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
     #endif
     #if VK_EXT_nested_command_buffer
-    VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
+        VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
     #endif
     #if VK_EXT_headless_surface
-    VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME,
+        VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME,
     #endif
     #if VK_KHR_fragment_shading_rate
-    VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
+        VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_create_renderpass2 // Required by VK_KHR_fragment_shading_rate
+        VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
     #endif
     #if VK_KHR_multiview
-    VK_KHR_MULTIVIEW_EXTENSION_NAME,
+        VK_KHR_MULTIVIEW_EXTENSION_NAME,
     #endif
     #if VK_EXT_mesh_shader
-    VK_EXT_MESH_SHADER_EXTENSION_NAME,
+        VK_EXT_MESH_SHADER_EXTENSION_NAME,
     #endif
-    nullptr,
+    #if VK_KHR_spirv_1_4 // Required for VK_EXT_mesh_shader
+        VK_KHR_SPIRV_1_4_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_shader_float_controls // Required by VK_KHR_spirv_1_4
+        VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
+    #endif
+    #if VK_GOOGLE_hlsl_functionality1 // Adds support for HLSL shaders cross-compiled to SPIR-V
+        VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME,
+    #endif
+    #if VK_GOOGLE_user_type
+        VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
+    #endif
+        nullptr,
 };
 
 void RegisterExtension(VKExt extension)
