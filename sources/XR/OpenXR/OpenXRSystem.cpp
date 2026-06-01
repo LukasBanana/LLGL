@@ -11,6 +11,7 @@
 #include "OpenXRError.h"
 
 #include <LLGL/Backend/OpenXR/NativeHandle.h>
+#include <LLGL/XR/XRConfiguration.h>
 
 #include <cstring>
 #include <cstdio>
@@ -124,6 +125,15 @@ bool OpenXRSystem::CreateInstance(const XRSystemDescriptor& desc, Report* report
     for (auto& binding : bindings_)
     {
         for (const char* ext : binding->GetRequiredXrExtensions())
+            requiredExts.push_back(ext);
+    }
+
+    // Also include any application-requested extensions from the desc.xrConfig, if it's an OpenXR-specific config structure.
+    if (desc.xrConfig && desc.xrConfigSize == sizeof(XRConfigurationOpenXR))
+    {
+        const LLGL::XRConfigurationOpenXR *config = reinterpret_cast<const LLGL::XRConfigurationOpenXR *>(desc.xrConfig);
+
+        for (const char* ext : config->instanceExtensions)
             requiredExts.push_back(ext);
     }
 
@@ -443,6 +453,15 @@ bool OpenXRSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleS
         auto* h = static_cast<OpenXR::SystemNativeHandle*>(nativeHandle);
         h->instance = instance_;
         h->systemId = systemId_;
+
+        XrSystemProperties sysProps{ XR_TYPE_SYSTEM_PROPERTIES };
+        XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT};
+        sysProps.next = &handTrackingSystemProperties;
+        if (XR_SUCCEEDED(xrGetSystemProperties(instance_, systemId_, &sysProps)))
+        {
+            h->supportsHandTracking = (handTrackingSystemProperties.supportsHandTracking != 0);
+        }
+
         return true;
     }
     return false;

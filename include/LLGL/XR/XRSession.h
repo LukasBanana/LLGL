@@ -36,23 +36,6 @@ struct XRFrameState
 
     //! True if the application should render this frame. If false, BeginFrame/EndFrame must still be paired but no rendering work is needed.
     bool                        shouldRender            = false;
-
-    //! Per-view pose and projection parameters sampled at frame begin. Size matches XRSystem::GetViewConfigurations().
-    DynamicVector<XRViewPose>   views;
-
-    /**
-    \brief Near clipping plane (in meters) the application used to render this frame.
-    \remarks Only used when a depth swap-chain has been paired with the color swap-chains via XRSwapChain::SetDepthCompanion.
-    The OpenXR runtime uses this together with the depth swap-chain to reconstruct world-space depth for reprojection.
-    Must match the near plane the application baked into its projection matrix.
-    */
-    float                       nearZ                   = 0.05f;
-
-    /**
-    \brief Far clipping plane (in metres) the application used to render this frame.
-    \remarks See \c nearZ for context. Pass \c INFINITY to indicate an infinite far plane (some runtimes support this; others clamp).
-    */
-    float                       farZ                    = 100.0f;
 };
 
 /**
@@ -147,21 +130,41 @@ class LLGL_EXPORT XRSession : public Interface
         virtual bool IsRunning() const = 0;
 
         /**
-        \brief Begins a new XR frame.
-        \param[out] frameState Receives the predicted display time, view poses, and a flag indicating whether the application should render.
+         \brief Waits for the previous frame to finish and retrieves the next frame state. Must be called before BeginFrame
+         at the beginning of the app's update.
+         \param[out] frameState Receives the predicted display time and a flag indicating whether the application should render.
+         \return True on success
+         */
+        virtual bool WaitFrame(XRFrameState &frameState) = 0;
+
+        /**
+        \brief Begins a new XR frame.  Must be called after WaitFrame()
         \return True on success. On failure, the frame must be skipped (do not call EndFrame).
         */
-        virtual bool BeginFrame(XRFrameState& frameState) = 0;
+        virtual bool BeginFrame() = 0;
 
         /**
         \brief Submits a frame to the runtime.
-        \param[in] frameState The state returned by the corresponding BeginFrame call.
+        \param[in] nearZ Near clipping plane (in meters) the application used to render this frame.
+        \param[in] farZ Far clipping plane (in metres) the application used to render this frame.
         \param[in] swapChains One swap-chain per view, in the same order as XRSystem::GetViewConfigurations().
         \return True on success.
         \remarks This submits a projection composition layer using the swap-chains' currently released images.
-        If \c frameState.shouldRender is false, an empty layer set is submitted instead (the runtime still requires a paired EndFrame call).
+        If WaitFrame returned false in \c frameState.shouldRender, an empty layer set is submitted instead (the runtime still requires a paired EndFrame call).
         */
-        virtual bool EndFrame(const XRFrameState& frameState, ArrayView<XRSwapChain*> swapChains) = 0;
+        virtual bool EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain*> swapChains) = 0;
+
+        /**
+         \brief Sample and return the latest predicted poses for the session's views.
+         \param[out] viewsOut Receives the view poses and projection parameters. The size of this array matches the view count
+         returned by XRSystem::GetViewConfigurations().
+         \return True on success.
+         \remarks Each time this is called, the runtime updates the view poses based on the latest predicted display time. The
+         application should call this at least once per frame after WaitFrame() to get the latest view poses for rendering and
+         reprojection. If EndFrame is called with a non-empty swap-chain array, the runtime also uses these poses for reprojection
+         of the submitted layer.
+         */
+        virtual bool GetViewState(DynamicVector<XRViewPose> &viewsOut) = 0;
 
     public:
 

@@ -30,6 +30,9 @@ struct SystemNativeHandle
 
     //! Native handle to the OpenXR system id.
     XrSystemId      systemId;
+
+    //! Whether the system supports hand tracking (XR_EXT_hand_tracking extension).
+    bool            supportsHandTracking = false;
 };
 
 /**

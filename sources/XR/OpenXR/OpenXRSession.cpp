@@ -75,7 +75,7 @@ OpenXRSession::OpenXRSession(
     depthSubmissionEnabled_     { depthSubmissionEnabled },
     state_                      { XR_SESSION_STATE_IDLE }
 {
-    lastViews_.resize(viewCount_, XrView{ XR_TYPE_VIEW });
+    currentViews_.resize(viewCount_, XrView{XR_TYPE_VIEW});
 
     // Bucket the runtime's mixed list of swap-chain formats into the LLGL-format views the
     // application can pick from: color formats via SelectColorFormat, depth formats via SelectDepthFormat.
@@ -223,13 +223,13 @@ bool OpenXRSession::IsRunning() const
     return running_;
 }
 
-bool OpenXRSession::BeginFrame(XRFrameState& frameState)
+bool OpenXRSession::WaitFrame(XRFrameState &frameState)
 {
     if (!running_)
         return false;
 
-    XrFrameWaitInfo waitInfo{ XR_TYPE_FRAME_WAIT_INFO };
-    XrFrameState xrFrame{ XR_TYPE_FRAME_STATE };
+    XrFrameWaitInfo waitInfo{XR_TYPE_FRAME_WAIT_INFO};
+    XrFrameState xrFrame{XR_TYPE_FRAME_STATE};
     XrResult result = xrWaitFrame(session_, &waitInfo, &xrFrame);
     if (Failed(result))
     {
@@ -237,72 +237,39 @@ bool OpenXRSession::BeginFrame(XRFrameState& frameState)
         return false;
     }
 
+    currentFrameState_ = xrFrame;
+
+    frameState.predictedDisplayTimeNs = xrFrame.predictedDisplayTime;
+    frameState.shouldRender = xrFrame.shouldRender;
+
+    return true;
+}
+
+bool OpenXRSession::BeginFrame()
+{
+    if (!running_)
+        return false;
+
     XrFrameBeginInfo beginInfo{ XR_TYPE_FRAME_BEGIN_INFO };
-    result = xrBeginFrame(session_, &beginInfo);
+    XrResult result = xrBeginFrame(session_, &beginInfo);
     if (Failed(result) && result != XR_FRAME_DISCARDED)
     {
         ReportXrError(&report_, XR_NULL_HANDLE, result, "xrBeginFrame");
         return false;
     }
 
-    lastFrameState_ = xrFrame;
     frameStarted_ = true;
 
-    XrViewState viewState{ XR_TYPE_VIEW_STATE };
-    XrViewLocateInfo locateInfo{ XR_TYPE_VIEW_LOCATE_INFO };
-    locateInfo.viewConfigurationType = viewConfigurationType_;
-    locateInfo.displayTime           = xrFrame.predictedDisplayTime;
-    locateInfo.space                 = referenceSpace_;
-
-    std::uint32_t actualViews = 0;
-    result = xrLocateViews(
-        session_,
-        &locateInfo,
-        &viewState,
-        viewCount_,
-        &actualViews,
-        lastViews_.data()
-    );
-    if (Failed(result))
-    {
-        ReportXrError(&report_, XR_NULL_HANDLE, result, "xrLocateViews");
-        return false;
-    }
-
-    const bool posesValid =
-        (viewState.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) != 0 &&
-        (viewState.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) != 0;
-
-    frameState.predictedDisplayTimeNs   = xrFrame.predictedDisplayTime;
-    frameState.shouldRender             = (xrFrame.shouldRender == XR_TRUE) && posesValid;
-
-    frameState.views.resize(actualViews);
-    for (std::uint32_t i = 0; i < actualViews; ++i)
-    {
-        const XrView& v = lastViews_[i];
-        XRViewPose& outView = frameState.views[i];
-        outView.orientation[0]  = v.pose.orientation.x;
-        outView.orientation[1]  = v.pose.orientation.y;
-        outView.orientation[2]  = v.pose.orientation.z;
-        outView.orientation[3]  = v.pose.orientation.w;
-        outView.position[0]     = v.pose.position.x;
-        outView.position[1]     = v.pose.position.y;
-        outView.position[2]     = v.pose.position.z;
-        outView.fovAngleLeft    = v.fov.angleLeft;
-        outView.fovAngleRight   = v.fov.angleRight;
-        outView.fovAngleUp      = v.fov.angleUp;
-        outView.fovAngleDown    = v.fov.angleDown;
-    }
     return true;
 }
 
-bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapChain*> swapChains)
+bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> swapChains)
 {
     if (!frameStarted_)
         return false;
 
     XrFrameEndInfo endInfo{ XR_TYPE_FRAME_END_INFO };
-    endInfo.displayTime          = static_cast<XrTime>(frameState.predictedDisplayTimeNs);
+    endInfo.displayTime = currentFrameState_.predictedDisplayTime;
     endInfo.environmentBlendMode = environmentBlendMode_;
 
     XrCompositionLayerProjection projectionLayer{ XR_TYPE_COMPOSITION_LAYER_PROJECTION };
@@ -312,7 +279,7 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
     SmallVector<XrCompositionLayerDepthInfoKHR> depthInfos;
     const XrCompositionLayerBaseHeader* layers[1] = { nullptr };
 
-    if (frameState.shouldRender && swapChains.size() == viewCount_ && frameState.views.size() == viewCount_)
+    if (currentFrameState_.shouldRender && swapChains.size() == viewCount_ && currentViews_.size() == viewCount_)
     {
         projectionViews.resize(viewCount_, XrCompositionLayerProjectionView{ XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW });
         if (depthSubmissionEnabled_)
@@ -327,20 +294,10 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
                 allValid = false;
                 break;
             }
-            const XRViewPose& view = frameState.views[i];
+            const XrView &view = currentViews_[i];
             XrCompositionLayerProjectionView& pv = projectionViews[i];
-
-            pv.pose.orientation.x       = view.orientation[0];
-            pv.pose.orientation.y       = view.orientation[1];
-            pv.pose.orientation.z       = view.orientation[2];
-            pv.pose.orientation.w       = view.orientation[3];
-            pv.pose.position.x          = view.position[0];
-            pv.pose.position.y          = view.position[1];
-            pv.pose.position.z          = view.position[2];
-            pv.fov.angleLeft            = view.fovAngleLeft;
-            pv.fov.angleRight           = view.fovAngleRight;
-            pv.fov.angleUp              = view.fovAngleUp;
-            pv.fov.angleDown            = view.fovAngleDown;
+            pv.pose = view.pose;
+            pv.fov  = view.fov;
 
             pv.subImage.swapchain               = sc->GetSwapchain();
             pv.subImage.imageRect.offset        = { 0, 0 };
@@ -362,8 +319,8 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
                     di.subImage.imageArrayIndex         = 0;
                     di.minDepth                         = 0.0f;
                     di.maxDepth                         = 1.0f;
-                    di.nearZ                            = frameState.nearZ;
-                    di.farZ                             = frameState.farZ;
+                    di.nearZ                            = nearZ;
+                    di.farZ                             = farZ;
                     pv.next = &di;
                 }
             }
@@ -387,6 +344,58 @@ bool OpenXRSession::EndFrame(const XRFrameState& frameState, ArrayView<XRSwapCha
         ReportXrError(&report_, XR_NULL_HANDLE, result, "xrEndFrame");
         return false;
     }
+    return true;
+}
+
+bool OpenXRSession::GetViewState(DynamicVector<XRViewPose> &viewsOut)
+{
+    // Sample the poses of the views again to get updated estimates for the current display time.
+    // The runtime may have updated its internal tracking data since the last xrWaitFrame call,
+    // so this can improve the accuracy of the view poses used for rendering and hit-testing.
+
+    XrViewState viewState{XR_TYPE_VIEW_STATE};
+    XrViewLocateInfo locateInfo{XR_TYPE_VIEW_LOCATE_INFO};
+    locateInfo.viewConfigurationType    = viewConfigurationType_;
+    locateInfo.displayTime              = currentFrameState_.predictedDisplayTime;
+    locateInfo.space                    = referenceSpace_;
+
+    std::uint32_t actualViews = 0;
+
+    XrResult result = xrLocateViews(
+        session_,
+        &locateInfo,
+        &viewState,
+        viewCount_,
+        &actualViews,
+        currentViews_.data());
+    if (Failed(result))
+    {
+        ReportXrError(&report_, XR_NULL_HANDLE, result, "xrLocateViews");
+        return false;
+    }
+
+    const bool posesValid =
+        (viewState.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) != 0 &&
+        (viewState.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) != 0;
+
+    viewsOut.resize(actualViews);
+    for (std::uint32_t i = 0; i < actualViews; ++i)
+    {
+        const XrView &v = currentViews_[i];
+        XRViewPose &outView = viewsOut[i];
+        outView.orientation[0] = v.pose.orientation.x;
+        outView.orientation[1] = v.pose.orientation.y;
+        outView.orientation[2] = v.pose.orientation.z;
+        outView.orientation[3] = v.pose.orientation.w;
+        outView.position[0] = v.pose.position.x;
+        outView.position[1] = v.pose.position.y;
+        outView.position[2] = v.pose.position.z;
+        outView.fovAngleLeft = v.fov.angleLeft;
+        outView.fovAngleRight = v.fov.angleRight;
+        outView.fovAngleUp = v.fov.angleUp;
+        outView.fovAngleDown = v.fov.angleDown;
+    }
+
     return true;
 }
 

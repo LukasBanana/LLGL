@@ -67,9 +67,11 @@ class OpenXRSession final : public XRSession
         void                        Release(XRSwapChain& swapChain) override;
 
         bool                        IsRunning() const override;
-        bool                        BeginFrame(XRFrameState& frameState) override;
-        bool                        EndFrame(const XRFrameState& frameState, ArrayView<XRSwapChain*> swapChains) override;
+        bool                        WaitFrame(XRFrameState &frameState) override;
+        bool                        BeginFrame() override;
+        bool                        EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> swapChains) override;
 
+        bool                        GetViewState(DynamicVector<XRViewPose> &viewsOut) override;
         bool                        GetNativeHandle(void *nativeHandle, std::size_t nativeHandleSize) override;
 
         const Report*               GetReport() const override;
@@ -105,9 +107,8 @@ class OpenXRSession final : public XRSession
         XrSessionState                                      state_                  = XR_SESSION_STATE_UNKNOWN;
         bool                                                running_                = false;
         bool                                                frameStarted_           = false;
-        XrFrameState                                        lastFrameState_         = { XR_TYPE_FRAME_STATE };
-        SmallVector<XrView>                                 lastViews_;
-
+        XrFrameState                                        currentFrameState_;
+        SmallVector<XrView>                                 currentViews_;
 };
 
 

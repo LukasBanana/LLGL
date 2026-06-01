@@ -119,6 +119,35 @@ struct XRSystemDescriptor
     //! Combination of XRSystemFlags entries. By default 0.
     long                    flags               = 0;
 
+    /**
+     \brief Optional raw pointer to a XR backend-specific configuration structure.
+     \remarks This can be used to pass some refinement configurations to the XR system when the module is loaded.
+     Example usage (for OpenXR runtime):
+     \code
+     // Initialize OpenXR specific configurations (e.g. always allocate at least 1GB of VRAM for each device memory chunk).
+     LLGL::XRConfigurationOpenXR config;
+     config.instanceExtensions = { "XR_EXT_HAND_TRACKING_EXTENSION_NAME" };
+
+     // Initialize XR system descriptor
+     LLGL::XRSystemDescriptor xrDesc;
+     xrDesc.xrConfig     = &config;
+     xrDesc.xrConfigSize = sizeof(config);
+
+     // Load OpenXR system
+     auto xrSystem = LLGL::XRSystem::Load(xrDesc);
+     \endcode
+     \see xrConfigSize
+     \see XRConfigurationOpenXR
+     */
+    const void *xrConfig = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the structure \c xrConfig points to (use \c sizeof with the respective structure). By default 0.
+    \remarks If \c xrConfig is null then this field is ignored.
+    \see xrConfig
+    */
+    std::size_t xrConfigSize = 0;
+
     #ifdef LLGL_OS_ANDROID
 
     /**

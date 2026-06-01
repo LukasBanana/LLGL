@@ -474,6 +474,11 @@ Gs::Matrix4f MyXRRenderer::BuildProjectionMatrix(const LLGL::XRViewPose& pose, f
 
 bool MyXRRenderer::RenderFrame()
 {
+    // The runtime needs the near/far planes to convert submitted depth into world-space depth for
+    // reprojection; they must match the planes baked into the projection matrix below.
+    const float nearZ = 0.05f;
+    const float farZ = 100.0f;
+
     xrSystem->PollEvents();
 
     const LLGL::XRSessionState state = session->GetState();
@@ -484,16 +489,28 @@ bool MyXRRenderer::RenderFrame()
     if (!session->IsRunning())
         return true;
 
+    // WaitFrame keeps the app in sync with the runtime's frame loop and provides the frame state for this frame.
+    // It calculates the predicted display time for this frame, and the runtime uses that to determine the headset
+    // pose and view/projection for each eye. WaitFrame also throttles the app's frame loop to match the runtime's
+    // display refresh rate, so it should be called once per frame and the app should render one frame for each successful WaitFrame.
     LLGL::XRFrameState frameState;
-    // The runtime needs the near/far planes to convert submitted depth into world-space depth for
-    // reprojection; they must match the planes baked into the projection matrix below.
-    frameState.nearZ = 0.05f;
-    frameState.farZ  = 100.0f;
-    if (!session->BeginFrame(frameState))
+    if (!session->WaitFrame(frameState))
+        return true;
+
+    // In a real application the non-rendering update code would go here (e.g. game logic, physics, etc.). The sampled locations
+    // of tracked devices (headset, controllers, etc.) are predicted based on the frameState.predictedDisplayTime, so that the app
+    // can use them to update the scene in sync with the runtime's frame loop.
+
+    // BeginFrame must be called after WaitFrame succeeds, and EndFrame must be called once per successful BeginFrame.
+    if (!session->BeginFrame())
         return true;
 
     if (frameState.shouldRender)
     {
+        LLGL::DynamicVector<LLGL::XRViewPose> views;
+        if (!session->GetViewState(views))
+            return false;
+
         for (std::size_t eye = 0; eye < eyes.size(); ++eye)
         {
             EyeTarget& target = eyes[eye];
@@ -523,9 +540,9 @@ bool MyXRRenderer::RenderFrame()
             }
 
             // World-view-projection for this eye, with the cube's model transform baked in.
-            const LLGL::XRViewPose& view = frameState.views[eye];
+            const LLGL::XRViewPose& view = views[eye];
             const Gs::Matrix4f wvpMatrix =
-                BuildProjectionMatrix(view, frameState.nearZ, frameState.farZ) *
+                BuildProjectionMatrix(view, nearZ, farZ) *
                 BuildViewMatrix(view) *
                 cubeModelMatrix;
 
@@ -553,7 +570,7 @@ bool MyXRRenderer::RenderFrame()
         }
     }
 
-    session->EndFrame(frameState, LLGL::ArrayView<LLGL::XRSwapChain*>{ colorSwapChains.data(), colorSwapChains.size() });
+    session->EndFrame(nearZ, farZ, LLGL::ArrayView<LLGL::XRSwapChain*>{ colorSwapChains.data(), colorSwapChains.size() });
 
     if ((++frameCounter % 90) == 0)
         LLGL::Log::Printf("Frame %u, session state = %d\n", frameCounter, static_cast<int>(state));
