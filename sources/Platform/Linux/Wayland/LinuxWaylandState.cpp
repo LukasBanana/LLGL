@@ -139,6 +139,23 @@ void LinuxWaylandState::HandleRegistryGlobal(
 
 void LinuxWaylandState::HandleRegistryRemove(void* userData, wl_registry* registry, uint32_t name)
 {
+    LinuxWaylandState& state = GetInstance();
+
+    // Check if the name corresponds to any wl_output, if so destroy it
+    for (auto it = state.displayList_.begin(); it != state.displayList_.end();)
+    {
+        LinuxDisplayWayland* display = *it;
+
+        if (display->GetData().name == name)
+        {
+            wl_output_destroy(display->GetData().output);
+            delete display;
+            it = state.displayList_.erase(it);
+            continue;
+        }
+
+        ++it;
+    }
 }
 
 void LinuxWaylandState::HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial)
