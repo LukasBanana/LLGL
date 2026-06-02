@@ -657,6 +657,7 @@ LinuxWaylandState::~LinuxWaylandState()
 {
     for (LinuxDisplayWayland* display : displayList_) {
         wl_output_destroy(display->GetData().output);
+        delete display;
     }
 
     displayList_.clear();
