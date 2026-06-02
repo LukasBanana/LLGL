@@ -830,7 +830,7 @@ void LinuxWaylandState::HandleWaylandEventsInternal(double* timeout)
 {
     bool event = false;
 
-    enum { DISPLAY_FD, KEYREPEAT_FD, LIBDECOR_FD };
+    enum : uint8_t { DISPLAY_FD, KEYREPEAT_FD, LIBDECOR_FD };
     pollfd fds[3];
     fds[DISPLAY_FD] = { wl_display_get_fd(display_), POLLIN };
     fds[KEYREPEAT_FD] = { keyRepeatTimerfd_, POLLIN };
