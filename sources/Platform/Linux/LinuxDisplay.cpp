@@ -162,6 +162,9 @@ Offset2D Display::GetCursorPosition()
     return Offset2D{ 0, 0 };
 }
 
+void LinuxDisplay::ClearCache()
+{
+}
 
 } // /namespace LLGL
 
