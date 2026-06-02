@@ -80,6 +80,8 @@ class LinuxWaylandState
         static void AddWindow(LinuxWindowWayland* window);
         static void RemoveWindow(LinuxWindowWayland* window);
 
+        static void RemoveDisplay(LinuxDisplayWayland* display);
+
     private:
 
         static LinuxWaylandState& GetInstance();

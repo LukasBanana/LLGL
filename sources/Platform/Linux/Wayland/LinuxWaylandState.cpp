@@ -20,6 +20,7 @@
 #include "LLGL/DisplayFlags.h"
 #include "LLGL/Timer.h"
 #include "LinuxDisplayWayland.h"
+#include "LinuxWindowWayland.h"
 #include "protocols/viewporter-client-protocol.h"
 #include "protocols/xdg-decoration-client-protocol.h"
 #include "protocols/xdg-shell-client-protocol.h"
@@ -95,23 +96,27 @@ void LinuxWaylandState::HandleRegistryGlobal(
     }
     else if ((strcmp(interface, wl_seat_interface.name) == 0))
     {
-        GetInstance().seat_ = static_cast<wl_seat*>(
+        LinuxWaylandState& state = GetInstance();
+
+        state.seat_ = static_cast<wl_seat*>(
             wl_registry_bind(registry, name, &wl_seat_interface, std::min(4u, version))
         );
 
-        wl_seat_add_listener(GetInstance().seat_, &seatListener_, nullptr);
+        wl_seat_add_listener(state.seat_, &seatListener_, nullptr);
 
-        if (wl_seat_get_version(GetInstance().seat_) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
+        if (wl_seat_get_version(state.seat_) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
         {
-            GetInstance().keyRepeatTimerfd_ = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
+            state.keyRepeatTimerfd_ = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
         }
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
-        GetInstance().xdgWmBase_ = static_cast<xdg_wm_base*>(
+        LinuxWaylandState& state = GetInstance();
+
+        state.xdgWmBase_ = static_cast<xdg_wm_base*>(
             wl_registry_bind(registry, name, &xdg_wm_base_interface, 1)
         );
-        xdg_wm_base_add_listener(GetInstance().xdgWmBase_, &xdgWmBaseListener_, nullptr);
+        xdg_wm_base_add_listener(state.xdgWmBase_, &xdgWmBaseListener_, nullptr);
     }
     else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
     {
@@ -142,19 +147,15 @@ void LinuxWaylandState::HandleRegistryRemove(void* userData, wl_registry* regist
     LinuxWaylandState& state = GetInstance();
 
     // Check if the name corresponds to any wl_output, if so destroy it
-    for (auto it = state.displayList_.begin(); it != state.displayList_.end();)
+    for (auto it = state.displayList_.begin(); it != state.displayList_.end(); ++it)
     {
         LinuxDisplayWayland* display = *it;
 
-        if (display->GetData().name == name)
+        if (name == display->GetData().name)
         {
-            wl_output_destroy(display->GetData().output);
             delete display;
-            it = state.displayList_.erase(it);
-            continue;
+            break;
         }
-
-        ++it;
     }
 }
 
@@ -165,26 +166,28 @@ void LinuxWaylandState::HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_
 
 void LinuxWaylandState::HandleSeatCapabilities(void* userData, wl_seat* seat, uint32_t caps)
 {
-    if ((caps & WL_SEAT_CAPABILITY_POINTER) && !GetInstance().pointer_)
+    LinuxWaylandState& state = GetInstance();
+
+    if ((caps & WL_SEAT_CAPABILITY_POINTER) && !state.pointer_)
     {
-        GetInstance().pointer_ = wl_seat_get_pointer(seat);
-        wl_pointer_add_listener(GetInstance().pointer_, &pointerListener_, nullptr);
+        state.pointer_ = wl_seat_get_pointer(seat);
+        wl_pointer_add_listener(state.pointer_, &pointerListener_, nullptr);
     }
-    else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && GetInstance().pointer_)
+    else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && state.pointer_)
     {
-        wl_pointer_destroy(GetInstance().pointer_);
-        GetInstance().pointer_ = nullptr;
+        wl_pointer_destroy(state.pointer_);
+        state.pointer_ = nullptr;
     }
 
-    if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !GetInstance().keyboard_)
+    if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !state.keyboard_)
     {
-        GetInstance().keyboard_ = wl_seat_get_keyboard(seat);
-        wl_keyboard_add_listener(GetInstance().keyboard_, &keyboardListener_, nullptr);
+        state.keyboard_ = wl_seat_get_keyboard(seat);
+        wl_keyboard_add_listener(state.keyboard_, &keyboardListener_, nullptr);
     }
-    else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && GetInstance().keyboard_)
+    else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && state.keyboard_)
     {
-        wl_keyboard_destroy(GetInstance().keyboard_);
-        GetInstance().keyboard_ = nullptr;
+        wl_keyboard_destroy(state.keyboard_);
+        state.keyboard_ = nullptr;
     }
 }
 
@@ -194,10 +197,12 @@ void LinuxWaylandState::HandleSeatName(void* userData, wl_seat* seat, const char
 
 void LinuxWaylandState::HandleLibdecorReady(void* userData, wl_callback* callback, uint32_t time)
 {
-    GetInstance().libdecor_.ready = true;
-    LLGL_ASSERT(GetInstance().libdecor_.callback == callback);
-    wl_callback_destroy(GetInstance().libdecor_.callback);
-    GetInstance().libdecor_.callback = NULL;
+    LinuxWaylandState& state = GetInstance();
+
+    state.libdecor_.ready = true;
+    LLGL_ASSERT(state.libdecor_.callback == callback);
+    wl_callback_destroy(state.libdecor_.callback);
+    state.libdecor_.callback = NULL;
 }
 
 void LibdecorHandleError(libdecor* context,
@@ -217,68 +222,72 @@ static libdecor_interface LIBDECOR_INTERFACE =
 // ================================
 
 void LinuxWaylandState::HandlePointerEnter(
-    void*               userData,
-    wl_pointer*  pointer,
-    uint32_t            serial,
-    wl_surface*  surface,
-    wl_fixed_t          surface_x,
-    wl_fixed_t          surface_y)
+    void*          userData,
+    wl_pointer*    pointer,
+    uint32_t       serial,
+    wl_surface*    surface,
+    wl_fixed_t     surface_x,
+    wl_fixed_t     surface_y)
 {
     if (!surface)
         return;
 
-    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != GetInstance().GetTag())
+    LinuxWaylandState& state = GetInstance();
+
+    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != state.GetTag())
         return;
 
     LinuxWindowWayland* window = static_cast<LinuxWindowWayland*>(wl_surface_get_user_data(surface));
     if (!window)
         return;
 
-    GetInstance().serial_ = serial;
-    GetInstance().pointerEnterSerial_ = serial;
-    GetInstance().pointerFocus_ = window;
+    state.serial_ = serial;
+    state.pointerEnterSerial_ = serial;
+    state.pointerFocus_ = window;
 
-    LinuxWindowWayland::State& state = window->GetState();
+    LinuxWindowWayland::State& windowState = window->GetState();
 
-    if (surface == state.wl.surface)
+    if (surface == windowState.wl.surface)
     {
-        state.hovered = true;
+        windowState.hovered = true;
     }
 }
 
 void LinuxWaylandState::HandlePointerLeave(
-    void*              userData,
-    wl_pointer* pointer,
-    uint32_t           serial,
-    wl_surface* surface)
+    void*          userData,
+    wl_pointer*    pointer,
+    uint32_t       serial,
+    wl_surface*    surface)
 {
     if (!surface)
         return;
 
-    LinuxWindowWayland* window = GetInstance().pointerFocus_;
+    LinuxWaylandState& state = GetInstance();
+
+    LinuxWindowWayland* window = state.pointerFocus_;
     if (!window)
         return;
 
-    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != GetInstance().GetTag())
+    if (wl_proxy_get_tag(reinterpret_cast<wl_proxy*>(surface)) != state.GetTag())
         return;
 
-    GetInstance().serial_ = serial;
-    GetInstance().pointerFocus_ = nullptr;
+    state.serial_ = serial;
+    state.pointerFocus_ = nullptr;
 
-    LinuxWindowWayland::State& state = window->GetState();
+    LinuxWindowWayland::State& windowState = window->GetState();
 
-    if (state.hovered)
+    if (windowState.hovered)
     {
-        state.hovered = false;
+        windowState.hovered = false;
     }
 }
 
 void LinuxWaylandState::HandlePointerMotion(
-    void*               userData,
-    wl_pointer*  pointer,
-    uint32_t            time,
-    wl_fixed_t          surface_x,
-    wl_fixed_t          surface_y)
+    void*          userData,
+    wl_pointer*    pointer,
+    uint32_t       time,
+    wl_fixed_t     surface_x,
+    wl_fixed_t     surface_y)
 {
     LinuxWindowWayland* window = GetInstance().pointerFocus_;
     if (!window)
@@ -296,14 +305,16 @@ void LinuxWaylandState::HandlePointerMotion(
 }
 
 void LinuxWaylandState::HandlePointerButton(
-    void*               userData,
-    wl_pointer*  pointer,
-    uint32_t            serial,
-    uint32_t            time,
-    uint32_t            button,
-    uint32_t            state)
+    void*          userData,
+    wl_pointer*    pointer,
+    uint32_t       serial,
+    uint32_t       time,
+    uint32_t       button,
+    uint32_t       buttonState)
 {
-    LinuxWindowWayland* window = GetInstance().pointerFocus_;
+    LinuxWaylandState& state = GetInstance();
+
+    LinuxWindowWayland* window = state.pointerFocus_;
     if (!window)
         return;
 
@@ -312,17 +323,17 @@ void LinuxWaylandState::HandlePointerButton(
     if (!windowState.hovered)
         return;
 
-    GetInstance().serial_ = serial;
+    state.serial_ = serial;
 
-    window->ProcessMouseKeyEvent(button, state == WL_POINTER_BUTTON_STATE_PRESSED);
+    window->ProcessMouseKeyEvent(button, buttonState == WL_POINTER_BUTTON_STATE_PRESSED);
 }
 
 void LinuxWaylandState::HandlePointerAxis(
-    void*               userData,
-    wl_pointer*  pointer,
-    uint32_t            time,
-    uint32_t            axis,
-    wl_fixed_t          value)
+    void*          userData,
+    wl_pointer*    pointer,
+    uint32_t       time,
+    uint32_t       axis,
+    wl_fixed_t     value)
 {
     LinuxWindowWayland* window = GetInstance().pointerFocus_;
     if (!window)
@@ -337,11 +348,11 @@ void LinuxWaylandState::HandlePointerAxis(
 }
 
 void LinuxWaylandState::HandleKeyboardEnter(
-    void*               userData,
-    wl_keyboard* keyboard,
-    uint32_t            serial,
-    wl_surface*  surface,
-    wl_array*    keys)
+    void*           userData,
+    wl_keyboard*    keyboard,
+    uint32_t        serial,
+    wl_surface*     surface,
+    wl_array*       keys)
 {
     // Happens in the case we just destroyed the surface.
     if (!surface)
@@ -357,8 +368,10 @@ void LinuxWaylandState::HandleKeyboardEnter(
     if (surface != window->GetState().wl.surface)
         return;
 
-    GetInstance().serial_ = serial;
-    GetInstance().keyboardFocus_ = window;
+    LinuxWaylandState& state = GetInstance();
+
+    state.serial_ = serial;
+    state.keyboardFocus_ = window;
 
     window->ProcessFocusEvent(true);
 }
@@ -374,52 +387,58 @@ void LinuxWaylandState::HandleKeyboardLeave(
     if (!window)
         return;
 
-    GetInstance().serial_ = serial;
-    GetInstance().keyboardFocus_ = nullptr;
+    LinuxWaylandState& state = GetInstance();
+
+    state.serial_ = serial;
+    state.keyboardFocus_ = nullptr;
 
     window->ProcessFocusEvent(false);
 }
 
 Key LinuxWaylandState::TranslateKey(uint32_t scancode)
 {
-    if (scancode < GetInstance().GetKeycodes().size())
-        return GetInstance().GetKeycodes()[scancode];
+    LinuxWaylandState& state = GetInstance();
+
+    if (scancode < state.GetKeycodes().size())
+        return state.GetKeycodes()[scancode];
 
     return Key::Any;
 }
 
 void LinuxWaylandState::HandleKeyboardKey(
-    void* userData,
+    void*        userData,
     wl_keyboard* keyboard,
-    uint32_t serial,
-    uint32_t time,
-    uint32_t scancode,
-    uint32_t state)
+    uint32_t     serial,
+    uint32_t     time,
+    uint32_t     scancode,
+    uint32_t     keyState)
 {
-    LinuxWindowWayland* window = GetInstance().keyboardFocus_;
+    LinuxWaylandState& state = GetInstance();
+
+    LinuxWindowWayland* window = state.keyboardFocus_;
     if (!window)
         return;
 
-    GetInstance().serial_ = serial;
+    state.serial_ = serial;
 
     itimerspec timer = {0};
 
-    const bool down = state == WL_KEYBOARD_KEY_STATE_PRESSED;
+    const bool down = (keyState == WL_KEYBOARD_KEY_STATE_PRESSED);
 
     if (down)
     {
         const xkb_keycode_t keycode = scancode + 8;
 
-        if (xkb_keymap_key_repeats(GetInstance().xkb_.keymap, keycode) && GetInstance().keyRepeatRate_ > 0)
+        if (xkb_keymap_key_repeats(state.xkb_.keymap, keycode) && state.keyRepeatRate_ > 0)
         {
-            GetInstance().keyRepeatScancode_ = scancode;
-            if (GetInstance().keyRepeatRate_ > 1)
-                timer.it_interval.tv_nsec = 1000000000 / GetInstance().keyRepeatRate_;
+            state.keyRepeatScancode_ = scancode;
+            if (state.keyRepeatRate_ > 1)
+                timer.it_interval.tv_nsec = 1000000000 / state.keyRepeatRate_;
             else
                 timer.it_interval.tv_sec = 1;
 
-            timer.it_value.tv_sec = GetInstance().keyRepeatDelay_ / 1000;
-            timer.it_value.tv_nsec = (GetInstance().keyRepeatDelay_ % 1000) * 1000000;
+            timer.it_value.tv_sec = state.keyRepeatDelay_ / 1000;
+            timer.it_value.tv_nsec = (state.keyRepeatDelay_ % 1000) * 1000000;
         }
     }
 
@@ -427,24 +446,26 @@ void LinuxWaylandState::HandleKeyboardKey(
 }
 
 void LinuxWaylandState::HandleKeyboardModifiers(
-    void* userData,
+    void*        userData,
     wl_keyboard* keyboard,
-    uint32_t serial,
-    uint32_t modsDepressed,
-    uint32_t modsLatched,
-    uint32_t modsLocked,
-    uint32_t group)
+    uint32_t     serial,
+    uint32_t     modsDepressed,
+    uint32_t     modsLatched,
+    uint32_t     modsLocked,
+    uint32_t     group)
 {
-    GetInstance().serial_ = serial;
+    LinuxWaylandState& state = GetInstance();
+    
+    state.serial_ = serial;
 
-    if (!GetInstance().xkb_.keymap)
+    if (!state.xkb_.keymap)
         return;
 
-    xkb_state_update_mask(GetInstance().xkb_.state, modsDepressed, modsLatched, modsLocked, 0, 0, group);
+    xkb_state_update_mask(state.xkb_.state, modsDepressed, modsLatched, modsLocked, 0, 0, group);
 
     // TODO: LLGL doesn't support modifiers?
 
-    // GetInstance().xkb_.modifiers = 0;
+    // state.xkb_.modifiers = 0;
 
     // struct
     // {
@@ -452,21 +473,21 @@ void LinuxWaylandState::HandleKeyboardModifiers(
     //     LLGL::Key bit;
     // } modifiers[] =
     // {
-    //     { g_waylandState.xkb.controlIndex,  Key::Control },
-    //     // { g_waylandState.xkb.altIndex,      Key::Alt },
-    //     { g_waylandState.xkb.shiftIndex,    Key::Shift },
-    //     // { g_waylandState.xkb.superIndex,    Key::Win },
-    //     // { g_waylandState.xkb.capsLockIndex, Key::CapsLock },
-    //     { g_waylandState.xkb.numLockIndex,  Key::NumLock }
+    //     { state.xkb_.controlIndex,  Key::Control },
+    //     // { state.xkb_.altIndex,      Key::Alt },
+    //     { state.xkb_.shiftIndex,    Key::Shift },
+    //     // { state.xkb_.superIndex,    Key::Win },
+    //     // { state.xkb_.capsLockIndex, Key::CapsLock },
+    //     { state.xkb_.numLockIndex,  Key::NumLock }
     // };
 
     // for (size_t i = 0; i < sizeof(modifiers) / sizeof(modifiers[0]); i++)
     // {
-    //     if (xkb_state_mod_index_is_active(g_waylandState.xkb.state,
+    //     if (xkb_state_mod_index_is_active(state.xkb_.state,
     //                                       modifiers[i].index,
     //                                       XKB_STATE_MODS_EFFECTIVE) == 1)
     //     {
-    //         g_waylandState.xkb.modifiers |= modifiers[i].bit;
+    //         state.xkb_.modifiers |= modifiers[i].bit;
     //     }
     // }
 }
@@ -477,11 +498,13 @@ void LinuxWaylandState::HandleKeyboardRepeatInfo(
     int32_t rate,
     int32_t delay)
 {
-    if (keyboard != GetInstance().keyboard_)
+    LinuxWaylandState& state = GetInstance();
+
+    if (keyboard != state.keyboard_)
         return;
 
-    GetInstance().keyRepeatRate_ = rate;
-    GetInstance().keyRepeatDelay_ = delay;
+    state.keyRepeatRate_ = rate;
+    state.keyRepeatDelay_ = delay;
 }
 
 void LinuxWaylandState::HandleKeyboardKeymap(
@@ -492,7 +515,7 @@ void LinuxWaylandState::HandleKeyboardKeymap(
     uint32_t        size)
 {
     xkb_keymap* keymap;
-    xkb_state* state;
+    xkb_state* xkbState;
     xkb_compose_table* composeTable;
     xkb_compose_state* composeState;
 
@@ -512,7 +535,9 @@ void LinuxWaylandState::HandleKeyboardKeymap(
         return;
     }
 
-    keymap = xkb_keymap_new_from_string(GetInstance().xkb_.context,
+    LinuxWaylandState& state = GetInstance();
+
+    keymap = xkb_keymap_new_from_string(state.xkb_.context,
                                         mapStr,
                                         XKB_KEYMAP_FORMAT_TEXT_V1,
                                         XKB_KEYMAP_COMPILE_NO_FLAGS);
@@ -522,8 +547,8 @@ void LinuxWaylandState::HandleKeyboardKeymap(
     if (!keymap)
         LLGL_TRAP("Failed to compile keymap");
 
-    state = xkb_state_new(keymap);
-    if (!state)
+    xkbState = xkb_state_new(keymap);
+    if (!xkbState)
     {
         xkb_keymap_unref(keymap);
         LLGL_TRAP("Failed to create XKB state");
@@ -538,13 +563,13 @@ void LinuxWaylandState::HandleKeyboardKeymap(
     if (!locale)
         locale = "C";
 
-    composeTable = xkb_compose_table_new_from_locale(GetInstance().xkb_.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
+    composeTable = xkb_compose_table_new_from_locale(state.xkb_.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
     if (composeTable)
     {
         composeState = xkb_compose_state_new(composeTable, XKB_COMPOSE_STATE_NO_FLAGS);
         xkb_compose_table_unref(composeTable);
         if (composeState)
-            GetInstance().xkb_.composeState = composeState;
+            state.xkb_.composeState = composeState;
         else
             LLGL_TRAP("Failed to create XKB compose state");
     }
@@ -553,17 +578,17 @@ void LinuxWaylandState::HandleKeyboardKeymap(
         LLGL_TRAP("Failed to create XKB compose table");
     }
 
-    xkb_keymap_unref(GetInstance().xkb_.keymap);
-    xkb_state_unref(GetInstance().xkb_.state);
-    GetInstance().xkb_.keymap = keymap;
-    GetInstance().xkb_.state = state;
+    xkb_keymap_unref(state.xkb_.keymap);
+    xkb_state_unref(state.xkb_.state);
+    state.xkb_.keymap = keymap;
+    state.xkb_.state = xkbState;
 
-    GetInstance().xkb_.controlIndex  = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Control");
-    GetInstance().xkb_.altIndex      = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Mod1");
-    GetInstance().xkb_.shiftIndex    = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Shift");
-    GetInstance().xkb_.superIndex    = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Mod4");
-    GetInstance().xkb_.capsLockIndex = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Lock");
-    GetInstance().xkb_.numLockIndex  = xkb_keymap_mod_get_index(GetInstance().xkb_.keymap, "Mod2");
+    state.xkb_.controlIndex  = xkb_keymap_mod_get_index(state.xkb_.keymap, "Control");
+    state.xkb_.altIndex      = xkb_keymap_mod_get_index(state.xkb_.keymap, "Mod1");
+    state.xkb_.shiftIndex    = xkb_keymap_mod_get_index(state.xkb_.keymap, "Shift");
+    state.xkb_.superIndex    = xkb_keymap_mod_get_index(state.xkb_.keymap, "Mod4");
+    state.xkb_.capsLockIndex = xkb_keymap_mod_get_index(state.xkb_.keymap, "Lock");
+    state.xkb_.numLockIndex  = xkb_keymap_mod_get_index(state.xkb_.keymap, "Mod2");
 }
 
 void LinuxWaylandState::HandleOutputGeometry(
@@ -665,6 +690,19 @@ void LinuxWaylandState::RemoveWindow(LinuxWindowWayland *window)
         if ((*it) == window)
         {
             instance.windowList_.erase(it);
+            break;
+        }
+    }
+}
+
+void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display) {
+    LinuxWaylandState& instance = GetInstance();
+
+    for (auto it = instance.displayList_.begin(); it != instance.displayList_.end(); ++it)
+    {
+        if ((*it) == display)
+        {
+            instance.displayList_.erase(it);
             break;
         }
     }

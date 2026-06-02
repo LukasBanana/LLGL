@@ -46,6 +46,7 @@ class LinuxDisplayWayland final : public LinuxDisplay
     public:
 
         LinuxDisplayWayland(const WaylandDisplayData& data);
+        ~LinuxDisplayWayland();
 
         bool IsPrimary() const override;
 
