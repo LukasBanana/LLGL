@@ -22,7 +22,11 @@ LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
 
 LinuxDisplayWayland::~LinuxDisplayWayland() {
     LinuxWaylandState::RemoveDisplay(this);
-    wl_output_destroy(data_.output);
+    if (data_.output != nullptr)
+    {
+        wl_output_destroy(data_.output);
+        data_.output = nullptr;
+    }
 }
 
 bool LinuxDisplayWayland::IsPrimary() const

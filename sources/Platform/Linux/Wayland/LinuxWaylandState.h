@@ -75,6 +75,7 @@ class LinuxWaylandState
         static const LibdecorContext& GetLibdecor() noexcept;
         static LLGL::ArrayView<Key> GetKeycodes() noexcept;
         static const LLGL::DynamicVector<LinuxDisplayWayland*>& GetDisplayList() noexcept;
+        static const LLGL::DynamicVector<Display*>& GetDisplayRefList() noexcept;
         static const LLGL::DynamicVector<LinuxWindowWayland*>& GetWindowList() noexcept;
 
         static void AddWindow(LinuxWindowWayland* window);
@@ -161,6 +162,7 @@ class LinuxWaylandState
         LibdecorContext libdecor_;
 
         DynamicVector<LinuxDisplayWayland*> displayList_;
+        DynamicVector<Display*> displayRefList_;
         DynamicVector<LinuxWindowWayland*> windowList_;
 
         bool initialized_ = false;

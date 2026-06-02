@@ -706,16 +706,25 @@ void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display) {
             break;
         }
     }
+
+    for (auto it = instance.displayRefList_.begin(); it != instance.displayRefList_.end(); ++it)
+    {
+        if ((*it) == display)
+        {
+            instance.displayRefList_.erase(it);
+            break;
+        }
+    }
 }
 
 LinuxWaylandState::~LinuxWaylandState()
 {
     for (LinuxDisplayWayland* display : displayList_) {
-        wl_output_destroy(display->GetData().output);
         delete display;
     }
 
     displayList_.clear();
+    displayRefList_.clear();
 
     if (libdecor_.context)
     {
@@ -814,6 +823,7 @@ void LinuxWaylandState::AddWaylandOutput(wl_output* output, uint32_t name, uint3
 
     LinuxDisplayWayland* display = new LinuxDisplayWayland(data);
     displayList_.push_back(display);
+    displayRefList_.push_back(display);
 
     wl_output_add_listener(output, &outputListener_, &display->GetData());
 }
@@ -1141,6 +1151,10 @@ LLGL::ArrayView<Key> LinuxWaylandState::GetKeycodes() noexcept
 const LLGL::DynamicVector<LinuxDisplayWayland*>& LinuxWaylandState::GetDisplayList() noexcept
 {
     return GetInstance().displayList_;
+}
+
+const LLGL::DynamicVector<Display*>& LinuxWaylandState::GetDisplayRefList() noexcept {
+    return GetInstance().displayRefList_;
 }
 
 const LLGL::DynamicVector<LinuxWindowWayland*>& LinuxWaylandState::GetWindowList() noexcept

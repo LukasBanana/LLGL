@@ -118,23 +118,23 @@ namespace LLGL
 
 std::size_t Display::Count()
 {
-    return LinuxWaylandState::GetDisplayList().size();
+    return LinuxWaylandState::GetDisplayRefList().size();
 }
 
 Display* const * Display::GetList()
 {
-    return reinterpret_cast<LLGL::Display* const *>(LinuxWaylandState::GetDisplayList().data());
+    return LinuxWaylandState::GetDisplayRefList().data();
 }
 
 Display* Display::Get(std::size_t index)
 {
-    const LLGL::DynamicVector<LinuxDisplayWayland*>& displayList = LinuxWaylandState::GetDisplayList();
+    const LLGL::DynamicVector<Display*>& displayList = LinuxWaylandState::GetDisplayRefList();
     return (index < displayList.size() ? displayList[index] : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    return LinuxWaylandState::GetDisplayList()[0];
+    return LinuxWaylandState::GetDisplayRefList()[0];
 }
 
 bool Display::ShowCursor(bool show)
