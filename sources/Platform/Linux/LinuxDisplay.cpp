@@ -123,8 +123,7 @@ std::size_t Display::Count()
 
 Display* const * Display::GetList()
 {
-    // TODO
-    return nullptr;
+    return reinterpret_cast<LLGL::Display* const *>(LinuxWaylandState::GetDisplayList().data());
 }
 
 Display* Display::Get(std::size_t index)
