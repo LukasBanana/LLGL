@@ -20,7 +20,8 @@ LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
 {
 }
 
-LinuxDisplayWayland::~LinuxDisplayWayland() {
+LinuxDisplayWayland::~LinuxDisplayWayland()
+{
     LinuxWaylandState::RemoveDisplay(this);
     if (data_.output != nullptr)
     {

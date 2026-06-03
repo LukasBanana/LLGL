@@ -128,7 +128,8 @@ void LinuxWaylandState::HandleRegistryGlobal(
     }
     else if (strcmp(interface, wl_output_interface.name) == 0)
     {
-        if (version < 2) {
+        if (version < 2)
+        {
             LLGL::Log::Errorf("Wayland: Unsupported output interface version");
             return;
         }
@@ -455,7 +456,7 @@ void LinuxWaylandState::HandleKeyboardModifiers(
     uint32_t     group)
 {
     LinuxWaylandState& state = GetInstance();
-    
+
     state.serial_ = serial;
 
     if (!state.xkb_.keymap)
@@ -695,7 +696,8 @@ void LinuxWaylandState::RemoveWindow(LinuxWindowWayland *window)
     }
 }
 
-void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display) {
+void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display)
+{
     LinuxWaylandState& instance = GetInstance();
 
     for (auto it = instance.displayList_.begin(); it != instance.displayList_.end(); ++it)
@@ -719,7 +721,8 @@ void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display) {
 
 LinuxWaylandState::~LinuxWaylandState()
 {
-    for (LinuxDisplayWayland* display : displayList_) {
+    for (LinuxDisplayWayland* display : displayList_)
+    {
         delete display;
     }
 
@@ -1084,7 +1087,8 @@ void LinuxWaylandState::InitKeyTables()
     // keycodes_[KEY_KPENTER]    = Key::KeypadEnter;
 }
 
-void LinuxWaylandState::HandleWaylandEvents(double* timeout) {
+void LinuxWaylandState::HandleWaylandEvents(double* timeout)
+{
     return GetInstance().HandleWaylandEventsInternal(timeout);
 }
 
