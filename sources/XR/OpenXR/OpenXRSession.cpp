@@ -11,9 +11,11 @@
 #include "OpenXRError.h"
 
 #include <LLGL/RenderSystem.h>
+#include <LLGL/Texture.h>
 #include <LLGL/Backend/OpenXR/NativeHandle.h>
 
 #include <cstring>
+#include <memory>
 
 
 namespace LLGL
@@ -135,7 +137,12 @@ ArrayView<Format> OpenXRSession::GetSupportedDepthFormats() const
     return ArrayView<Format>{ supportedDepthFormats_.data(), supportedDepthFormats_.size() };
 }
 
-XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapChainDesc)
+bool OpenXRSession::CreateNativeSwapChain(
+    const XRSwapChainDescriptor&    swapChainDesc,
+    XrSwapchain&                    outSwapchain,
+    std::int64_t&                   outNativeFormat,
+    XRSwapChainDescriptor&          outEffectiveDesc,
+    std::vector<XRSwapchainImage>&  outImages)
 {
     // The runtime returns one combined list of swap-chain formats; whether the requested format
     // is color or depth determines the XR usage flags and the LLGL bind flags we'll set later.
@@ -160,19 +167,13 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
         {
             kind = GraphicsBinding::SwapchainKind::DepthStencil;
             usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-            if (!depthSubmissionEnabled_)
-            {
-                report_.Errorf(
-                    "XRSession::CreateSwapChain warning: depth format requested but runtime does not support "
-                    "XR_KHR_composition_layer_depth - depth swap-chain will not be submitted to the runtime\n");
-            }
         }
     }
 
     if (selected == Format::Undefined)
     {
         report_.Errorf("XRSession::CreateSwapChain failed: requested format is not supported by runtime\n");
-        return nullptr;
+        return false;
     }
 
     XrSwapchainCreateInfo createInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
@@ -190,7 +191,7 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
     if (Failed(result))
     {
         ReportXrError(&report_, XR_NULL_HANDLE, result, "xrCreateSwapchain");
-        return nullptr;
+        return false;
     }
 
     XRSwapChainDescriptor effectiveDesc = swapChainDesc;
@@ -200,15 +201,84 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
     if (!binding_.EnumerateSwapchainImages(renderSystem_, xrSwapchain, effectiveDesc, nativeFormat, kind, images, &report_))
     {
         xrDestroySwapchain(xrSwapchain);
-        return nullptr;
+        return false;
     }
 
-    OpenXRSwapChain *swapChain = ownedSwapChains_.emplace<OpenXRSwapChain>(binding_,
-                                                                            renderSystem_,
-                                                                            xrSwapchain,
-                                                                            effectiveDesc,
-                                                                            nativeFormat,
-                                                                            std::move(images));
+    outSwapchain     = xrSwapchain;
+    outNativeFormat  = nativeFormat;
+    outEffectiveDesc = effectiveDesc;
+    outImages        = std::move(images);
+    return true;
+}
+
+XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapChainDesc)
+{
+    // 1. Create the color swap-chain (the runtime owns its images).
+    XrSwapchain                     colorSwapchain      = XR_NULL_HANDLE;
+    std::int64_t                    colorNativeFormat   = 0;
+    XRSwapChainDescriptor           colorEffectiveDesc;
+    std::vector<XRSwapchainImage>   colorImages;
+    if (!CreateNativeSwapChain(swapChainDesc, colorSwapchain, colorNativeFormat, colorEffectiveDesc, colorImages))
+        return nullptr;
+
+    OpenXRSwapChain* swapChain = ownedSwapChains_.emplace<OpenXRSwapChain>(
+        binding_, renderSystem_, colorSwapchain, colorEffectiveDesc, colorNativeFormat, std::move(colorImages));
+
+    // 2. Provision a managed depth buffer if one was requested.
+    if (swapChainDesc.depthStencilFormat != Format::Undefined)
+    {
+        bool depthReady = false;
+
+        // Prefer a depth swap-chain submitted to the runtime for reprojection, if the runtime supports it.
+        if (depthSubmissionEnabled_)
+        {
+            XRSwapChainDescriptor depthDesc;
+            depthDesc.format        = swapChainDesc.depthStencilFormat;
+            depthDesc.resolution    = swapChainDesc.resolution;
+            depthDesc.sampleCount   = swapChainDesc.sampleCount;
+            depthDesc.arrayLayers   = swapChainDesc.arrayLayers;
+
+            XrSwapchain                     depthSwapchain      = XR_NULL_HANDLE;
+            std::int64_t                    depthNativeFormat   = 0;
+            XRSwapChainDescriptor           depthEffectiveDesc;
+            std::vector<XRSwapchainImage>   depthImages;
+            if (CreateNativeSwapChain(depthDesc, depthSwapchain, depthNativeFormat, depthEffectiveDesc, depthImages))
+            {
+                std::unique_ptr<OpenXRSwapChain> depthCompanion{ new OpenXRSwapChain(
+                    binding_, renderSystem_, depthSwapchain, depthEffectiveDesc, depthNativeFormat, std::move(depthImages)) };
+                swapChain->AttachDepthCompanion(std::move(depthCompanion));
+                depthReady = true;
+            }
+        }
+
+        // Otherwise fall back to a private depth texture (depth is not submitted to the runtime for reprojection).
+        if (!depthReady)
+        {
+            TextureDescriptor depthTexDesc;
+            depthTexDesc.type       = TextureType::Texture2D;
+            depthTexDesc.bindFlags  = BindFlags::DepthStencilAttachment;
+            depthTexDesc.format     = swapChainDesc.depthStencilFormat;
+            depthTexDesc.extent     = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
+            depthTexDesc.mipLevels  = 1;
+
+            if (Texture* depthTexture = renderSystem_.CreateTexture(depthTexDesc))
+                swapChain->AttachDepthTexture(depthTexture);
+            else
+            {
+                report_.Errorf("XRSession::CreateSwapChain failed: could not create fallback depth texture\n");
+                ownedSwapChains_.erase(swapChain);
+                return nullptr;
+            }
+        }
+    }
+
+    // 3. Build the render targets that wrap the color images (paired with the managed depth, if any).
+    if (!swapChain->BuildRenderTargets())
+    {
+        report_.Errorf("XRSession::CreateSwapChain failed: could not create render targets\n");
+        ownedSwapChains_.erase(swapChain);
+        return nullptr;
+    }
 
     return swapChain;
 }
@@ -309,7 +379,7 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
             // swap-chain with this color swap-chain, chain XrCompositionLayerDepthInfoKHR.
             if (depthSubmissionEnabled_)
             {
-                if (auto* depthCompanion = static_cast<OpenXRSwapChain*>(sc->GetDepthCompanion()))
+                if (auto* depthCompanion = sc->GetDepthCompanion())
                 {
                     XrCompositionLayerDepthInfoKHR& di = depthInfos[i];
                     di.subImage.swapchain               = depthCompanion->GetSwapchain();
@@ -337,6 +407,14 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
         }
     }
 
+    // Release every image acquired for this frame back to the runtime before submitting. The application has
+    // already submitted its render commands by now, so the released images hold the finished frame.
+    for (XRSwapChain* swapChain : swapChains)
+    {
+        if (auto* sc = static_cast<OpenXRSwapChain*>(swapChain))
+            sc->ReleaseImage();
+    }
+
     const XrResult result = xrEndFrame(session_, &endInfo);
     frameStarted_ = false;
     if (Failed(result))
@@ -344,6 +422,16 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
         ReportXrError(&report_, XR_NULL_HANDLE, result, "xrEndFrame");
         return false;
     }
+
+    // Acquire-ahead: immediately acquire and wait for the next frame's image on each swap-chain so the next
+    // frame's XRSwapChain::GetRenderTarget is a pure accessor. This mirrors how LLGL::SwapChain::Present
+    // acquires its next image at the tail of present, and lets the wait overlap the gap before the next WaitFrame.
+    for (XRSwapChain* swapChain : swapChains)
+    {
+        if (auto* sc = static_cast<OpenXRSwapChain*>(swapChain))
+            sc->AcquireNextImage();
+    }
+
     return true;
 }
 

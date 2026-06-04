@@ -42,7 +42,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
-D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture)
+D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture, Format logicalFormat)
     : Texture{type, bindFlags}
 {
     // ComPtr::operator= AddRef's the new pointer; the externally-owned resource stays alive
@@ -51,7 +51,8 @@ D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bin
     resource_.SetInitialState(initialState);
 
     // Query the resource's actual D3D12 description (the runtime may have substituted a
-    // typeless format for the requested typed one).
+    // typeless format for the requested typed one). Keep the actual (possibly typeless) DXGI format
+    // as format_ for the resource itself.
     const D3D12_RESOURCE_DESC actualDesc = externalTexture->GetDesc();
     format_         = actualDesc.Format;
     numMipLevels_   = actualDesc.MipLevels;
@@ -62,7 +63,11 @@ D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bin
         1u
     };
 
-    baseFormat_ = DXTypes::Unmap(format_);
+    // The explicit view format comes from the caller-supplied logical (typed) format. Unmap cannot
+    // resolve a typeless DXGI format to a concrete LLGL format (it would yield Format::Undefined ->
+    // DXGI_FORMAT_UNKNOWN, which faults SRV/RTV creation), so the logical format is required for
+    // typeless images; fall back to Unmap only when the caller didn't supply one.
+    baseFormat_ = (logicalFormat != Format::Undefined ? logicalFormat : DXTypes::Unmap(format_));
 }
 
 bool D3D12Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)

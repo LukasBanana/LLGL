@@ -46,7 +46,7 @@ struct XRSwapchainImage
 
 /**
 \brief Pure-virtual seam between the backend-agnostic OpenXR core and a graphics-API-specific binding.
-\remarks One implementation per supported LLGL renderer (currently only Vulkan).
+\remarks One implementation per supported LLGL renderer (Vulkan, Direct3D 11, and Direct3D 12).
 The graphics binding is responsible for: declaring which OpenXR extensions it needs, creating the LLGL
 RenderSystem with the runtime-required device, providing the XrSessionCreateInfo graphics binding chain,
 selecting and translating swap-chain formats, and wrapping runtime-owned swap-chain images as LLGL::Texture objects.

@@ -885,8 +885,8 @@ endif()
 # Resolve OpenXR dependency before adding renderer/XR subdirectories so the variables
 # (OPENXR_HEADER_TARGET, OPENXR_LOADER_TARGET) are visible to backends that link them.
 if(LLGL_BUILD_XR_OPENXR)
-    if(NOT LLGL_BUILD_RENDERER_VULKAN)
-        message(FATAL_ERROR "LLGL_BUILD_XR_OPENXR requires LLGL_BUILD_RENDERER_VULKAN in this build (no other XR-compatible backend is wired up yet).")
+    if(NOT (LLGL_BUILD_RENDERER_VULKAN OR LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12))
+        message(FATAL_ERROR "LLGL_BUILD_XR_OPENXR requires at least one XR-compatible renderer backend to be enabled: LLGL_BUILD_RENDERER_VULKAN, LLGL_BUILD_RENDERER_DIRECT3D11, or LLGL_BUILD_RENDERER_DIRECT3D12.")
     endif()
     include("${EXTERNAL_MODULE_DIR}/FindOpenXRDeps.cmake")
 endif()

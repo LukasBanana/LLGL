@@ -218,7 +218,7 @@ bool D3D12OpenXRGraphicsBinding::EnumerateSwapchainImages(
     for (auto& xrImg : xrImages)
     {
         XRSwapchainImage entry;
-        entry.texture = std::unique_ptr<D3D12Texture>(new D3D12Texture(native.device, TextureType::Texture2D, bindFlags, initialState, xrImg.texture));
+        entry.texture = std::unique_ptr<D3D12Texture>(new D3D12Texture(native.device, TextureType::Texture2D, bindFlags, initialState, xrImg.texture, swapChainDesc.format));
         outImages.emplace_back(std::move(entry));
     }
     if (native.device) native.device->Release();

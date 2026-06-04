@@ -103,9 +103,10 @@ class LLGL_EXPORT XRSession : public Interface
         /**
         \brief Returns the list of depth-stencil formats supported by this session for swap-chains, in runtime-preferred order.
         \remarks Empty if the runtime doesn't support depth swap-chain submission (i.e. \c XR_KHR_composition_layer_depth is unavailable).
-        Use the returned format in XRSwapChainDescriptor::format when creating a depth companion swap-chain.
+        When non-empty, pass the chosen format in XRSwapChainDescriptor::depthStencilFormat to have the swap-chain submit depth to the
+        runtime for reprojection; otherwise the swap-chain falls back to a private depth texture that is not submitted.
         \see CreateSwapChain
-        \see XRSwapChain::SetDepthCompanion
+        \see XRSwapChainDescriptor::depthStencilFormat
         */
         virtual ArrayView<Format> GetSupportedDepthFormats() const = 0;
 

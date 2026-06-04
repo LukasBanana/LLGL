@@ -10,6 +10,7 @@
 #include "OpenXRError.h"
 
 #include <LLGL/RenderSystem.h>
+#include <LLGL/RenderTarget.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Backend/OpenXR/NativeHandle.h>
 
@@ -42,6 +43,24 @@ OpenXRSwapChain::OpenXRSwapChain(
 
 OpenXRSwapChain::~OpenXRSwapChain()
 {
+    // Render targets reference both the color and depth image views, so they must be destroyed before any of the
+    // textures (our color images, the depth companion's images, or the private depth texture) are freed.
+    for (auto& row : renderTargets_)
+    {
+        for (RenderTarget* renderTarget : row)
+        {
+            if (renderTarget != nullptr)
+                renderSystem_.Release(*renderTarget);
+        }
+    }
+    renderTargets_.clear();
+
+    if (depthTexture_ != nullptr)
+        renderSystem_.Release(*depthTexture_);
+
+    // Destroy the depth companion (its images + XR swap-chain) before our own images.
+    depthCompanion_.reset();
+
     // Destroy the textures before destroying the swap-chain in case underlying runtime requires it
     images_.clear();
 
@@ -69,12 +88,33 @@ std::uint32_t OpenXRSwapChain::GetArrayLayers() const
     return desc_.arrayLayers;
 }
 
-ArrayView<Texture*> OpenXRSwapChain::GetImages() const
+RenderTarget* OpenXRSwapChain::GetRenderTarget()
 {
-    return ArrayView<Texture*>{ texturePtrs_.data(), texturePtrs_.size() };
+    // Pure accessor: the image was acquired and waited ahead of time (in BuildRenderTargets, then by
+    // XRSession::EndFrame for each subsequent frame), so this just maps the current color/depth image pair to its
+    // render target. Returns null if no image is currently ready (the view should then be skipped this frame).
+    if (acquiredIndex_ == UINT32_MAX || acquiredIndex_ >= renderTargets_.size())
+        return nullptr;
+
+    // The depth axis has a single slot unless a depth companion provides per-frame depth images.
+    std::uint32_t depthIndex = 0;
+    if (depthCompanion_ != nullptr)
+    {
+        depthIndex = depthCompanion_->GetAcquiredIndex();
+        if (depthIndex == UINT32_MAX)
+            return nullptr;
+    }
+
+    SmallVector<RenderTarget*>& row = renderTargets_[acquiredIndex_];
+    return (depthIndex < row.size() ? row[depthIndex] : nullptr);
 }
 
-std::uint32_t OpenXRSwapChain::AcquireImage()
+const RenderPass* OpenXRSwapChain::GetRenderPass() const
+{
+    return renderPass_;
+}
+
+std::uint32_t OpenXRSwapChain::AcquireImageHandle()
 {
     XrSwapchainImageAcquireInfo acquireInfo{ XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO };
     std::uint32_t index = 0;
@@ -88,7 +128,7 @@ std::uint32_t OpenXRSwapChain::AcquireImage()
     return index;
 }
 
-bool OpenXRSwapChain::WaitImage(std::uint64_t timeoutNs)
+bool OpenXRSwapChain::WaitImageHandle(std::uint64_t timeoutNs)
 {
     XrSwapchainImageWaitInfo waitInfo{ XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO };
     waitInfo.timeout = static_cast<XrDuration>(timeoutNs);
@@ -96,27 +136,125 @@ bool OpenXRSwapChain::WaitImage(std::uint64_t timeoutNs)
     return XR_SUCCEEDED(result);
 }
 
-bool OpenXRSwapChain::ReleaseImage()
+bool OpenXRSwapChain::ReleaseImageHandle()
 {
-    // Ensure all rendering commands targeting this swap-chain image have reached the GPU before
-    // handing the image back to the runtime. Required for D3D11 (no implicit submission); a no-op
-    // for D3D12 / Vulkan where the binding has nothing to do here.
-    binding_.FlushPendingGpuWork(renderSystem_);
-
     XrSwapchainImageReleaseInfo releaseInfo{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
     const XrResult result = xrReleaseSwapchainImage(swapchain_, &releaseInfo);
     acquiredIndex_ = UINT32_MAX;
     return XR_SUCCEEDED(result);
 }
 
-void OpenXRSwapChain::SetDepthCompanion(XRSwapChain* depthSwapChain)
+std::uint32_t OpenXRSwapChain::AcquireImage()
 {
-    depthCompanion_ = depthSwapChain;
+    const std::uint32_t index = AcquireImageHandle();
+    if (index == UINT32_MAX)
+        return UINT32_MAX;
+
+    // Acquire the managed depth image in lockstep; on failure hand the color image back so the pair stays balanced.
+    if (depthCompanion_ != nullptr && depthCompanion_->AcquireImageHandle() == UINT32_MAX)
+    {
+        ReleaseImageHandle();
+        return UINT32_MAX;
+    }
+
+    return index;
 }
 
-XRSwapChain* OpenXRSwapChain::GetDepthCompanion() const
+bool OpenXRSwapChain::WaitImage(std::uint64_t timeoutNs)
 {
-    return depthCompanion_;
+    if (!WaitImageHandle(timeoutNs))
+        return false;
+    if (depthCompanion_ != nullptr && !depthCompanion_->WaitImageHandle(timeoutNs))
+        return false;
+    return true;
+}
+
+bool OpenXRSwapChain::ReleaseImage()
+{
+    // Nothing was acquired this frame (e.g. the view was skipped); keep acquire/release balanced.
+    if (acquiredIndex_ == UINT32_MAX)
+        return true;
+
+    // Ensure all rendering commands targeting this swap-chain image have reached the GPU before
+    // handing the image back to the runtime. Required for D3D11 (no implicit submission); a no-op
+    // for D3D12 / Vulkan where the binding has nothing to do here. Flush once for the color/depth pair.
+    binding_.FlushPendingGpuWork(renderSystem_);
+
+    bool result = ReleaseImageHandle();
+    if (depthCompanion_ != nullptr)
+        result = depthCompanion_->ReleaseImageHandle() && result;
+    return result;
+}
+
+bool OpenXRSwapChain::AcquireNextImage()
+{
+    if (AcquireImage() == UINT32_MAX)
+        return false;
+    if (!WaitImage(UINT64_MAX))
+    {
+        // Hand the acquired image(s) back so the ring stays balanced; GetRenderTarget will report "not ready".
+        ReleaseImage();
+        return false;
+    }
+    return true;
+}
+
+void OpenXRSwapChain::AttachDepthCompanion(std::unique_ptr<OpenXRSwapChain>&& depthSwapChain)
+{
+    depthCompanion_ = std::move(depthSwapChain);
+}
+
+void OpenXRSwapChain::AttachDepthTexture(Texture* depthTexture)
+{
+    depthTexture_ = depthTexture;
+}
+
+bool OpenXRSwapChain::BuildRenderTargets()
+{
+    // Collect the depth attachments: one per companion image (per-frame depth submission), or a single private
+    // texture, or none. The depth axis of renderTargets_ has one slot per entry, or a single null-depth slot.
+    SmallVector<Texture*> depthTextures;
+    if (depthCompanion_ != nullptr)
+        depthTextures = depthCompanion_->texturePtrs_;
+    else if (depthTexture_ != nullptr)
+        depthTextures.push_back(depthTexture_);
+
+    const bool hasDepth = !depthTextures.empty();
+    const std::size_t depthSlots = (hasDepth ? depthTextures.size() : 1u);
+
+    renderTargets_.resize(texturePtrs_.size());
+    for (std::size_t colorIndex = 0; colorIndex < texturePtrs_.size(); ++colorIndex)
+    {
+        renderTargets_[colorIndex].resize(depthSlots, nullptr);
+        for (std::size_t depthIndex = 0; depthIndex < depthSlots; ++depthIndex)
+        {
+            RenderTargetDescriptor renderTargetDesc;
+            renderTargetDesc.resolution          = desc_.resolution;
+            renderTargetDesc.colorAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
+            if (hasDepth)
+                renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ depthTextures[depthIndex] };
+
+            // Every render target shares one render pass object (created by the first target): all targets have
+            // identical attachment formats, so reusing it avoids redundant render passes and guarantees GetRenderPass
+            // returns the exact pass these targets use, not merely a compatible one.
+            renderTargetDesc.renderPass = renderPass_;
+
+            RenderTarget* renderTarget = renderSystem_.CreateRenderTarget(renderTargetDesc);
+            if (renderTarget == nullptr)
+                return false;
+            renderTargets_[colorIndex][depthIndex] = renderTarget;
+
+            if (renderPass_ == nullptr)
+                renderPass_ = renderTarget->GetRenderPass();
+        }
+    }
+
+    // Acquire-ahead: prime the first image so the swap-chain is ready for the first frame, the same way
+    // LLGL::SwapChain acquires its initial image at construction. Subsequent images are acquired by EndFrame.
+    // A failure here is non-fatal: the first frame is skipped and EndFrame re-primes on the next iteration.
+    AcquireNextImage();
+
+    return true;
 }
 
 bool OpenXRSwapChain::GetNativeHandle(void *nativeHandle, std::size_t nativeHandleSize)

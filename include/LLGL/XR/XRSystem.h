@@ -108,7 +108,7 @@ class LLGL_EXPORT XRSystem : public Interface
         \param[in] renderSystemDesc Specifies the render system descriptor.
         \param[out] report Optional pointer to a report on failure.
         \return Unique pointer to a render system, or null on failure.
-        \remarks Currently only \c renderSystemDesc.rendererModule = "Vulkan" is supported. The returned render
+        \remarks Supported renderer modules are \c "Vulkan", \c "Direct3D11", and \c "Direct3D12". The returned render
         system must be used as the renderer parameter to CreateSession.
         \see RenderSystemDescriptor
         */

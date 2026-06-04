@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Interface.h>
-#include <LLGL/Container/ArrayView.h>
 #include <LLGL/XR/XRSystemFlags.h>
 
 #include <cstdint>
@@ -20,14 +19,16 @@ namespace LLGL
 {
 
 
-class Texture;
+class RenderTarget;
+class RenderPass;
 
 /**
 \brief XR swap-chain interface.
 \remarks Unlike LLGL::SwapChain, an XR swap-chain does not present to a window surface; it is consumed by the
 OpenXR runtime as a composition layer. The runtime owns the images and hands them back through the
-acquire/wait/release lifecycle. Each image is exposed as an LLGL::Texture so application code can build
-LLGL::RenderTarget objects from them and render with the normal CommandBuffer API.
+acquire/wait/release lifecycle. The swap-chain wraps each runtime image in an internally-managed
+LLGL::RenderTarget (combined with a managed depth buffer when one is requested), which the application renders
+into with the normal CommandBuffer API; the raw image textures are not exposed.
 \see XRSession::CreateSwapChain
 */
 class LLGL_EXPORT XRSwapChain : public Interface
@@ -58,61 +59,26 @@ class LLGL_EXPORT XRSwapChain : public Interface
         virtual std::uint32_t GetArrayLayers() const = 0;
 
         /**
-        \brief Returns the full set of textures backing this swap-chain.
-        \remarks The returned array is valid for the lifetime of the XRSwapChain. Use these textures to build
-        LLGL::RenderTarget objects once at startup; per-frame, AcquireImage returns the index into this array
-        that is safe to render into.
-        \see AcquireImage
+        \brief Returns the render target for this swap-chain's current-frame image.
+        \return Render target to render the current frame's view into, or null if no image is ready (in which case the
+        view should be skipped for this frame).
+        \remarks This is a pure accessor with no side effects: the runtime image (and its managed depth image, if any)
+        is acquired and waited on ahead of time by XRSession::EndFrame, and released by the next EndFrame, analogous to
+        how LLGL::SwapChain hides image acquisition behind Present. The render target combines the current color image
+        with the swap-chain's managed depth buffer (present when the swap-chain was created with a depth-stencil format).
+        \see GetRenderPass
+        \see XRSession::EndFrame
         */
-        virtual ArrayView<Texture*> GetImages() const = 0;
-
-    public:
+        virtual RenderTarget* GetRenderTarget() = 0;
 
         /**
-        \brief Acquires the next swap-chain image for rendering.
-        \return Index into the array returned by GetImages identifying the image the application may render into,
-        or UINT32_MAX on failure (in which case the frame should be skipped).
-        \remarks Must be followed by WaitImage before issuing render commands that target the image, and by
-        ReleaseImage after all such commands have been submitted.
-        \see WaitImage
-        \see ReleaseImage
+        \brief Returns a render pass compatible with this swap-chain's render targets.
+        \remarks All of a swap-chain's render targets share the same color/depth attachment formats, so the returned
+        render pass can be used to create an LLGL::PipelineState that renders into any image of this swap-chain (the
+        Vulkan backend requires a render pass at pipeline creation time). Returns null before any render target exists.
+        \see GetRenderTarget
         */
-        virtual std::uint32_t AcquireImage() = 0;
-
-        /**
-        \brief Waits until the acquired image is safe for the application to render into.
-        \param[in] timeoutNs Wait timeout in nanoseconds. Pass UINT64_MAX for an infinite wait.
-        \return True if the image is ready, false on timeout or failure.
-        \see AcquireImage
-        */
-        virtual bool WaitImage(std::uint64_t timeoutNs = UINT64_MAX) = 0;
-
-        /**
-        \brief Releases the acquired image back to the runtime for composition.
-        \remarks Must be called after the application has finished rendering and submitting commands that target the image.
-        \see AcquireImage
-        */
-        virtual bool ReleaseImage() = 0;
-
-    public:
-
-        /**
-        \brief Pairs a depth swap-chain with this color swap-chain so the runtime can use the rendered depth for reprojection.
-        \param[in] depthSwapChain Optional pointer to a depth-format XRSwapChain. Pass null to clear the pairing.
-        \remarks When set and the runtime supports \c XR_KHR_composition_layer_depth, XRSession::EndFrame chains an
-        XrCompositionLayerDepthInfoKHR for this view's projection layer entry, populated with the depth swap-chain's
-        currently-released image and the near/far values from XRFrameState.
-
-        Has no effect if the runtime doesn't support the extension (composition still uses the color swap-chain only).
-        The application is responsible for acquire/wait/release on the depth swap-chain in lockstep with its color
-        counterpart, and for rendering depth values that match the projection matrix specified by \c XRFrameState::nearZ/farZ.
-        \see XRSession::GetSupportedDepthFormats
-        \see XRFrameState::nearZ
-        */
-        virtual void SetDepthCompanion(XRSwapChain* depthSwapChain) = 0;
-
-        //! Returns the depth swap-chain paired via SetDepthCompanion, or null if none.
-        virtual XRSwapChain* GetDepthCompanion() const = 0;
+        virtual const RenderPass* GetRenderPass() const = 0;
 
     public:
 

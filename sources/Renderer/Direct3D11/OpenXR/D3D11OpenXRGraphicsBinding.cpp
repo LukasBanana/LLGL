@@ -210,7 +210,7 @@ bool D3D11OpenXRGraphicsBinding::EnumerateSwapchainImages(
     for (auto& xrImg : xrImages)
     {
         XRSwapchainImage entry;
-        entry.texture = std::unique_ptr<D3D11Texture>(new D3D11Texture(native.device, TextureType::Texture2D, bindFlags, xrImg.texture));
+        entry.texture = std::unique_ptr<D3D11Texture>(new D3D11Texture(native.device, TextureType::Texture2D, bindFlags, xrImg.texture, swapChainDesc.format));
         outImages.emplace_back(std::move(entry));
     }
     if (native.device) native.device->Release();

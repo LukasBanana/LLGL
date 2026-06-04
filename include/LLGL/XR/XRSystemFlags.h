@@ -202,16 +202,28 @@ struct XRViewConfigurationView
 struct XRSwapChainDescriptor
 {
     //! Color format for the swap-chain images. Must be supported by the runtime (see XRSession::GetSupportedColorFormats).
-    Format          format          = Format::BGRA8UNorm;
+    Format          format              = Format::BGRA8UNorm;
+
+    /**
+    \brief Optional depth-stencil format for an automatically managed depth buffer. Defaults to Format::Undefined (no depth buffer).
+    \remarks When set, the session provisions depth for this swap-chain and bakes it into the render targets returned by
+    XRSwapChain::GetRenderTarget: if the runtime supports depth submission (\c XR_KHR_composition_layer_depth) and this
+    format is supported, a depth swap-chain is created and submitted to the runtime for reprojection (and acquired/released
+    in lockstep with the color image); otherwise a private depth texture is used and depth is not submitted. The application
+    never accesses the depth resource directly.
+    \see XRSession::GetSupportedDepthFormats
+    \see XRSwapChain::GetRenderTarget
+    */
+    Format          depthStencilFormat  = Format::Undefined;
 
     //! Pixel resolution of the swap-chain.
     Extent2D        resolution;
 
     //! Sample count for multi-sampled targets. Defaults to 1.
-    std::uint32_t   sampleCount     = 1;
+    std::uint32_t   sampleCount         = 1;
 
     //! Number of array layers. Defaults to 1. Use 2 for multiview-style stacked targets if supported.
-    std::uint32_t   arrayLayers     = 1;
+    std::uint32_t   arrayLayers         = 1;
 };
 
 /**

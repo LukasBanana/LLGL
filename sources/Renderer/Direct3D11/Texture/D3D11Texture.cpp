@@ -51,7 +51,7 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
-D3D11Texture::D3D11Texture(ID3D11Device* device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture) :
+D3D11Texture::D3D11Texture(ID3D11Device* device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture, Format logicalFormat) :
     Texture         { type, bindFlags                  },
     bindingLocator_ { ResourceType::Texture, bindFlags }
 {
@@ -62,12 +62,16 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, TextureType type, long bindFlag
     // Query the texture's *actual* DXGI format - OpenXR runtimes commonly back swap-chain
     // images with the typeless variant of the requested format (e.g. B8G8R8A8_TYPELESS for
     // a B8G8R8A8_UNORM_SRGB request) so the same image can be reused for sRGB and linear views.
-    // Using the actual format here lets D3D11Texture's view-creation paths detect the typeless
-    // case and create an explicit-format SRV instead of the default one (which fails on typeless).
+    // Keeping the actual (typeless) DXGI format as format_ lets the view-creation paths detect the
+    // typeless case and create an explicit-format SRV/RTV instead of the default one.
     D3D11_TEXTURE2D_DESC actualDesc{};
     externalTexture->GetDesc(&actualDesc);
 
-    baseFormat_ = DXTypes::Unmap(actualDesc.Format);
+    // The explicit view format comes from the caller-supplied logical (typed) format. Unmap cannot
+    // resolve a typeless DXGI format to a concrete LLGL format (it would yield Format::Undefined ->
+    // DXGI_FORMAT_UNKNOWN, which fails SRV/RTV creation), so the logical format is required for
+    // typeless images; fall back to Unmap only when the caller didn't supply one.
+    baseFormat_ = (logicalFormat != Format::Undefined ? logicalFormat : DXTypes::Unmap(actualDesc.Format));
 
     SetResourceParams(
         actualDesc.Format,

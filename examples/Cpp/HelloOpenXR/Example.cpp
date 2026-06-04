@@ -4,14 +4,14 @@
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  *
- * Brings up an OpenXR session over the LLGL renderer of your choice (currently Vulkan) and
- * renders a small axis-coloured cube floating in front of where the user was standing at
- * startup. The headset's pose drives the per-eye view+projection matrices, so the user can
- * walk around and view the cube from any angle.
+ * Brings up an OpenXR session over the LLGL renderer of your choice (Vulkan, Direct3D 11, or
+ * Direct3D 12) and renders a small axis-coloured cube floating in front of where the user was
+ * standing at startup. The headset's pose drives the per-eye view+projection matrices, so the user
+ * can walk around and view the cube from any angle.
  *
  * Runs on:
  *   - Desktop (Windows) as a console app against any installed OpenXR runtime
- *     (SteamVR, WMR, Oculus, etc.). Renderer module name on argv[1].
+ *     (SteamVR, WMR, Oculus, etc.). Renderer module name on argv[1] (default Vulkan).
  *   - Android via NativeActivity, against the device's system OpenXR runtime
  *     (Quest, HTC Vive Focus, Pico, etc.). Vulkan backend only.
  */
@@ -40,21 +40,9 @@ static void ThrowWithReport(const char* message, const LLGL::Report* report)
  */
 
 // Owns the entire OpenXR pipeline: the XR runtime, an XR-compatible render system, the session,
-// the per-eye swap-chains/render targets, and the scene resources used to draw the cube.
+// the per-eye swap-chains, and the scene resources used to draw the cube.
 class MyXRRenderer
 {
-
-    // Color/depth swap-chains and render targets for a single XR view (eye).
-    struct EyeTarget
-    {
-        LLGL::XRSwapChain*  colorSwapChain  = nullptr;
-        LLGL::XRSwapChain*  depthSwapChain  = nullptr; // Null if the runtime does not support depth submission.
-        LLGL::Texture*      depthTexture    = nullptr; // Application-owned depth, used only when depthSwapChain is null.
-
-        // Render targets indexed [colorImageIndex][depthImageIndex].
-        // With an application-owned depth texture there is a single depth slot.
-        std::vector<std::vector<LLGL::RenderTarget*>> renderTargets;
-    };
 
     LLGL::XRSystemPtr               xrSystem;
     LLGL::RenderSystemPtr           renderer;
@@ -65,8 +53,8 @@ class MyXRRenderer
     LLGL::CommandQueue*             cmdQueue        = nullptr;
     LLGL::CommandBuffer*            cmdBuffer       = nullptr;
 
-    std::vector<EyeTarget>          eyes;
-    std::vector<LLGL::XRSwapChain*> colorSwapChains; // Flat list of all eyes' color swap-chains, for EndFrame.
+    // One swap-chain per XR view (eye). Each manages its own depth buffer and render targets internally.
+    std::vector<LLGL::XRSwapChain*> swapChains;
 
     LLGL::Buffer*                   vertexBuffer    = nullptr;
     LLGL::Buffer*                   indexBuffer     = nullptr;
@@ -175,22 +163,10 @@ MyXRRenderer::~MyXRRenderer()
 {
     // Release all render-system objects. CreateResources() may not have completed (if the
     // constructor or CreateResources() threw), so every pointer is checked before release.
+    // The XR swap-chains (and their internally-managed depth buffers and render targets) are owned
+    // by the session, which frees them when it is released below.
     if (renderer)
     {
-        for (EyeTarget& eye : eyes)
-        {
-            for (std::vector<LLGL::RenderTarget*>& row : eye.renderTargets)
-            {
-                for (LLGL::RenderTarget* renderTarget : row)
-                {
-                    if (renderTarget != nullptr)
-                        renderer->Release(*renderTarget);
-                }
-            }
-            if (eye.depthTexture != nullptr)
-                renderer->Release(*eye.depthTexture);
-        }
-
         if (pipeline       != nullptr) renderer->Release(*pipeline);
         if (resourceHeap   != nullptr) renderer->Release(*resourceHeap);
         if (layout         != nullptr) renderer->Release(*layout);
@@ -220,82 +196,29 @@ void MyXRRenderer::CreateSwapChains()
     const LLGL::ArrayView<LLGL::Format> colorFormats = session->GetSupportedColorFormats();
     const LLGL::Format colorFormat = (colorFormats.empty() ? LLGL::Format::BGRA8UNorm_sRGB : colorFormats[0]);
 
-    // Depth submission requires the runtime to support XR_KHR_composition_layer_depth. If it does
-    // not, GetSupportedDepthFormats returns empty and we fall back to an application-owned depth
-    // texture (depth is then not submitted to the runtime for reprojection).
+    // Pick a depth format. Depth submission (reprojection) requires the runtime to support
+    // XR_KHR_composition_layer_depth; if it does not, GetSupportedDepthFormats is empty and the
+    // swap-chain transparently falls back to a private depth texture that is not submitted.
     const LLGL::ArrayView<LLGL::Format> depthFormats = session->GetSupportedDepthFormats();
-    const bool depthSubmission = !depthFormats.empty();
-    const LLGL::Format depthFormat = (depthSubmission ? depthFormats[0] : LLGL::Format::D32Float);
+    const LLGL::Format depthFormat = (depthFormats.empty() ? LLGL::Format::D32Float : depthFormats[0]);
     LLGL::Log::Printf(
         "Depth submission: %s\n",
-        depthSubmission ? "enabled" : "disabled (runtime does not support XR_KHR_composition_layer_depth)"
+        depthFormats.empty() ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" : "enabled"
     );
 
-    eyes.resize(viewConfigs.size());
-    colorSwapChains.resize(viewConfigs.size());
-
+    // One swap-chain per view. Requesting a depth-stencil format makes the swap-chain provision and
+    // manage the depth buffer and per-image render targets internally (see XRSwapChain::GetRenderTarget).
+    swapChains.resize(viewConfigs.size());
     for (std::size_t eye = 0; eye < viewConfigs.size(); ++eye)
     {
-        EyeTarget& target = eyes[eye];
-        const LLGL::Extent2D resolution{ viewConfigs[eye].recommendedImageExtent.width, viewConfigs[eye].recommendedImageExtent.height };
+        LLGL::XRSwapChainDescriptor swapChainDesc;
+        swapChainDesc.format             = colorFormat;
+        swapChainDesc.depthStencilFormat = depthFormat;
+        swapChainDesc.resolution         = { viewConfigs[eye].recommendedImageExtent.width, viewConfigs[eye].recommendedImageExtent.height };
 
-        // Color swap-chain (the runtime owns the images).
-        LLGL::XRSwapChainDescriptor colorDesc;
-        colorDesc.format     = colorFormat;
-        colorDesc.resolution = resolution;
-        target.colorSwapChain = session->CreateSwapChain(colorDesc);
-        if (target.colorSwapChain == nullptr)
-            ThrowWithReport("failed to create XR color swap-chain", session->GetReport());
-        colorSwapChains[eye] = target.colorSwapChain;
-
-        const LLGL::ArrayView<LLGL::Texture*> colorImages = target.colorSwapChain->GetImages();
-        LLGL::ArrayView<LLGL::Texture*> depthImages;
-
-        if (depthSubmission)
-        {
-            LLGL::XRSwapChainDescriptor depthDesc;
-            depthDesc.format     = depthFormat;
-            depthDesc.resolution = resolution;
-            target.depthSwapChain = session->CreateSwapChain(depthDesc);
-            if (target.depthSwapChain == nullptr)
-                ThrowWithReport("failed to create XR depth swap-chain", session->GetReport());
-
-            // Pair the depth swap-chain so EndFrame chains XrCompositionLayerDepthInfoKHR for this view.
-            target.colorSwapChain->SetDepthCompanion(target.depthSwapChain);
-            depthImages = target.depthSwapChain->GetImages();
-        }
-        else
-        {
-            // Single application-owned depth texture, reused every frame.
-            LLGL::TextureDescriptor depthTexDesc;
-            depthTexDesc.type       = LLGL::TextureType::Texture2D;
-            depthTexDesc.bindFlags  = LLGL::BindFlags::DepthStencilAttachment;
-            depthTexDesc.format     = depthFormat;
-            depthTexDesc.extent     = { resolution.width, resolution.height, 1u };
-            depthTexDesc.mipLevels  = 1;
-            target.depthTexture = renderer->CreateTexture(depthTexDesc);
-        }
-
-        // Pre-build a render target for every (color image, depth image) pair, so any acquired
-        // image combination resolves to a valid render target.
-        const std::size_t depthSlots = (depthSubmission ? depthImages.size() : 1u);
-        target.renderTargets.resize(colorImages.size());
-
-        for (std::size_t colorIndex = 0; colorIndex < colorImages.size(); ++colorIndex)
-        {
-            target.renderTargets[colorIndex].resize(depthSlots, nullptr);
-            for (std::size_t depthIndex = 0; depthIndex < depthSlots; ++depthIndex)
-            {
-                LLGL::RenderTargetDescriptor renderTargetDesc;
-                renderTargetDesc.resolution             = resolution;
-                renderTargetDesc.colorAttachments[0]    = LLGL::AttachmentDescriptor{ colorImages[colorIndex] };
-                renderTargetDesc.depthStencilAttachment = LLGL::AttachmentDescriptor
-                {
-                    depthSubmission ? depthImages[depthIndex] : target.depthTexture
-                };
-                target.renderTargets[colorIndex][depthIndex] = renderer->CreateRenderTarget(renderTargetDesc);
-            }
-        }
+        swapChains[eye] = session->CreateSwapChain(swapChainDesc);
+        if (swapChains[eye] == nullptr)
+            ThrowWithReport("failed to create XR swap-chain", session->GetReport());
     }
 }
 
@@ -346,8 +269,8 @@ void MyXRRenderer::CreateResources()
     pipelineDesc.rasterizer.cullMode    = LLGL::CullMode::Back;
     pipelineDesc.rasterizer.frontCCW    = true;
     // Vulkan needs the PSO to know the render pass it'll be used with. All XR render targets share
-    // the same color/depth attachment formats, so any one render pass is compatible.
-    pipelineDesc.renderPass = eyes.front().renderTargets.front().front()->GetRenderPass();
+    // the same color/depth attachment formats, so any swap-chain's render pass is compatible.
+    pipelineDesc.renderPass = swapChains.front()->GetRenderPass();
 
     pipeline = renderer->CreatePipelineState(pipelineDesc);
     if (const LLGL::Report* report = pipeline->GetReport())
@@ -511,33 +434,15 @@ bool MyXRRenderer::RenderFrame()
         if (!session->GetViewState(views))
             return false;
 
-        for (std::size_t eye = 0; eye < eyes.size(); ++eye)
+        for (std::size_t eye = 0; eye < swapChains.size(); ++eye)
         {
-            EyeTarget& target = eyes[eye];
-            LLGL::XRSwapChain* color = target.colorSwapChain;
-            LLGL::XRSwapChain* depth = target.depthSwapChain; // Null if depth submission is disabled.
+            LLGL::XRSwapChain* swapChain = swapChains[eye];
 
-            const std::uint32_t colorIndex = color->AcquireImage();
-            if (colorIndex == UINT32_MAX)
+            // The frame's image is acquired ahead of time by EndFrame, so GetRenderTarget is a plain accessor
+            // (the managed depth image, if any, is handled in lockstep). A null result means skip this view.
+            LLGL::RenderTarget* renderTarget = swapChain->GetRenderTarget();
+            if (renderTarget == nullptr)
                 continue;
-            if (!color->WaitImage())
-            {
-                color->ReleaseImage();
-                continue;
-            }
-
-            std::uint32_t depthIndex = 0;
-            if (depth != nullptr)
-            {
-                depthIndex = depth->AcquireImage();
-                if (depthIndex == UINT32_MAX || !depth->WaitImage())
-                {
-                    if (depthIndex != UINT32_MAX)
-                        depth->ReleaseImage();
-                    color->ReleaseImage();
-                    continue;
-                }
-            }
 
             // World-view-projection for this eye, with the cube's model transform baked in.
             const LLGL::XRViewPose& view = views[eye];
@@ -549,10 +454,10 @@ bool MyXRRenderer::RenderFrame()
             cmdBuffer->Begin();
             {
                 cmdBuffer->UpdateBuffer(*viewProjBuffer, 0, wvpMatrix.Ptr(), sizeof(Gs::Matrix4f));
-                cmdBuffer->BeginRenderPass(*target.renderTargets[colorIndex][depthIndex]);
+                cmdBuffer->BeginRenderPass(*renderTarget);
                 {
                     cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.05f, 0.05f, 0.08f, 1.0f });
-                    cmdBuffer->SetViewport(color->GetResolution());
+                    cmdBuffer->SetViewport(swapChain->GetResolution());
                     cmdBuffer->SetPipelineState(*pipeline);
                     cmdBuffer->SetResourceHeap(*resourceHeap);
                     cmdBuffer->SetVertexBuffer(*vertexBuffer);
@@ -563,14 +468,10 @@ bool MyXRRenderer::RenderFrame()
             }
             cmdBuffer->End();
             cmdQueue->Submit(*cmdBuffer);
-
-            if (depth != nullptr)
-                depth->ReleaseImage();
-            color->ReleaseImage();
         }
     }
 
-    session->EndFrame(nearZ, farZ, LLGL::ArrayView<LLGL::XRSwapChain*>{ colorSwapChains.data(), colorSwapChains.size() });
+    session->EndFrame(nearZ, farZ, LLGL::ArrayView<LLGL::XRSwapChain*>{ swapChains.data(), swapChains.size() });
 
     if ((++frameCounter % 90) == 0)
         LLGL::Log::Printf("Frame %u, session state = %d\n", frameCounter, static_cast<int>(state));
@@ -625,7 +526,7 @@ int main(int argc, char* argv[])
     LLGL::Log::RegisterCallbackStd();
 
     // The renderer module name may be passed on the command line; defaults to Vulkan.
-    // Note: XRSystem currently only supports the Vulkan backend.
+    // Supported XR backends: "Vulkan", "Direct3D11", "Direct3D12".
     const char* rendererModule = (argc > 1 ? argv[1] : "Vulkan");
 
     try

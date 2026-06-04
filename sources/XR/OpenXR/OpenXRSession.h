@@ -89,6 +89,18 @@ class OpenXRSession final : public XRSession
 
     private:
 
+        //! Creates the native XR swap-chain for the requested format/resolution and enumerates its images as LLGL textures.
+        //! Returns false (and writes report_) if the format is unsupported or creation fails.
+        bool CreateNativeSwapChain(
+            const XRSwapChainDescriptor&    swapChainDesc,
+            XrSwapchain&                    outSwapchain,
+            std::int64_t&                   outNativeFormat,
+            XRSwapChainDescriptor&          outEffectiveDesc,
+            std::vector<XRSwapchainImage>&  outImages
+        );
+
+    private:
+
         OpenXRSystem&                                       owner_;
         GraphicsBinding&                                    binding_;
         RenderSystem&                                       renderSystem_;
