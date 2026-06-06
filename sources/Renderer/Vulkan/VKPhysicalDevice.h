@@ -16,6 +16,7 @@
 #include <vector>
 #include <set>
 #include <cstring>
+#include <functional>
 
 
 namespace LLGL
@@ -69,6 +70,23 @@ struct VKPhysicalDeviceFeaturesExt : VkPhysicalDeviceFeatures
     VkPhysicalDeviceImagelessFramebufferFeaturesKHR         imagelessFramebuffer;
     #endif
 };
+
+/*
+Queries the features of the specified Vulkan physical device and builds the chained VkPhysicalDeviceFeatures2
+used at device creation: every supported core feature is enabled, plus the LLGL-used extension features whose
+extension passes 'isExtensionEnabled'. The extension feature structs live in 'outFeaturesExt' and
+'outFeatures2.pNext' is chained into them, so 'outFeaturesExt' must outlive any use of 'outFeatures2'.
+On Vulkan 1.1+ the result is consumed via 'outFeatures2' (pNext chain); on 1.0 the chain is empty and only
+'outFeatures2.features' / 'outFeaturesExt' base are filled -- follow the same pNext-or-pEnabledFeatures
+convention as VKDevice::CreateLogicalDevice. Shared by the regular render system (VKPhysicalDevice) and the
+OpenXR graphics binding (which feeds 'outFeatures2' into the VkDeviceCreateInfo for xrCreateVulkanDeviceKHR).
+*/
+void VKQueryPhysicalDeviceFeatures(
+    VkPhysicalDevice                            physicalDevice,
+    const std::function<bool(const char*)>&     isExtensionEnabled,
+    VkPhysicalDeviceFeatures2&                  outFeatures2,
+    VKPhysicalDeviceFeaturesExt&                outFeaturesExt
+);
 
 class VKPhysicalDevice
 {

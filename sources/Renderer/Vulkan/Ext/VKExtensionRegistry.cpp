@@ -18,9 +18,9 @@ namespace LLGL
 
 static bool g_VKRegisteredExtensions[static_cast<std::size_t>(VKExt::Count)] = {};
 
-static const char* g_VKOptionalExtensions[] =
+static const char *g_VKOptionalExtensions[] =
     {
-    #if VK_EXT_conditional_rendering
+#if VK_EXT_conditional_rendering
         VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
     #endif
     #if VK_EXT_conservative_rasterization
@@ -41,7 +41,8 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_KHR_imageless_framebuffer
         VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME,
     #endif
-    #if VK_KHR_image_format_list    // Required for VK_KHR_imageless_framebuffer
+    #if VK_KHR_image_format_list
+        // Required for VK_KHR_imageless_framebuffer
         VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME,
     #endif
     #if VK_KHR_portability_enumeration
@@ -62,7 +63,8 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_KHR_fragment_shading_rate
         VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
     #endif
-    #if VK_KHR_create_renderpass2 // Required by VK_KHR_fragment_shading_rate
+    #if VK_KHR_create_renderpass2
+        // Required by VK_KHR_fragment_shading_rate
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
     #endif
     #if VK_KHR_multiview
@@ -71,17 +73,21 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_EXT_mesh_shader
         VK_EXT_MESH_SHADER_EXTENSION_NAME,
     #endif
-    #if VK_KHR_spirv_1_4 // Required for VK_EXT_mesh_shader
+    #if VK_KHR_spirv_1_4
+        // Required for VK_EXT_mesh_shader
         VK_KHR_SPIRV_1_4_EXTENSION_NAME,
     #endif
-    #if VK_KHR_shader_float_controls // Required by VK_KHR_spirv_1_4
+    #if VK_KHR_shader_float_controls
+        // Required by VK_KHR_spirv_1_4
         VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
     #endif
-    #if VK_GOOGLE_hlsl_functionality1 // Adds support for HLSL shaders cross-compiled to SPIR-V
+    #if VK_GOOGLE_hlsl_functionality1
+        // Adds support for reflection in HLSL shaders cross-compiled to SPIR-V
         VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME,
     #endif
-    #if VK_GOOGLE_user_type
-        VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
+    #if VK_EXT_shader_viewport_index_layer
+        // For enhanced shader control over viewport and layer selection in multiview and array rendering
+        VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME,
     #endif
         nullptr,
 };

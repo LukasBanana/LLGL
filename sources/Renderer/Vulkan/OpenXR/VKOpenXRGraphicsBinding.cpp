@@ -18,6 +18,7 @@
 #include "../Texture/VKTexture.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
+#include "../VKPhysicalDevice.h"
 #include "../Ext/VKExtensionRegistry.h"
 
 #include <vector>
@@ -267,13 +268,45 @@ RenderSystemPtr VKOpenXRGraphicsBinding::CreateRenderSystem(
         }
     }
 
-    VkPhysicalDeviceFeatures features{};
+    // Enable the device features LLGL needs. The OpenXR runtime creates the VkDevice from this
+    // VkDeviceCreateInfo and LLGL only adopts it as a weak ref, so it never enables features itself --
+    // this is where the XR path must do it. Reuse the same query the non-XR path uses so both enable an
+    // identical feature set: every supported core feature (so SPIR-V capabilities such as Geometry /
+    // Tessellation pass validation) plus the LLGL-used extension features whose extension we enabled
+    // above (e.g. multiview for single-pass stereo). 'features2'/'featuresExt' must outlive the
+    // xrCreateVulkanDeviceKHR call below, as the pNext chain references them.
+    auto IsDeviceExtEnabled = [&enabledDeviceExts](const char* name) -> bool
+    {
+        for (const char* ext : enabledDeviceExts)
+        {
+            if (std::strcmp(ext, name) == 0)
+                return true;
+        }
+        return false;
+    };
+
+    VkPhysicalDeviceFeatures2 features2{};
+    VKPhysicalDeviceFeaturesExt featuresExt{};
+    VKQueryPhysicalDeviceFeatures(vkPhysicalDevice, IsDeviceExtEnabled, features2, featuresExt);
+
     VkDeviceCreateInfo deviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount    = 1;
     deviceCreateInfo.pQueueCreateInfos       = &queueCreateInfo;
-    deviceCreateInfo.pEnabledFeatures        = &features;
     deviceCreateInfo.enabledExtensionCount   = static_cast<std::uint32_t>(enabledDeviceExts.size());
     deviceCreateInfo.ppEnabledExtensionNames = enabledDeviceExts.empty() ? nullptr : enabledDeviceExts.data();
+
+    // Feature flags travel through the pNext chain on Vulkan 1.1+, or through pEnabledFeatures on 1.0 --
+    // same convention as VKDevice::CreateLogicalDevice.
+    if (features2.pNext != nullptr)
+    {
+        deviceCreateInfo.pNext            = &features2;
+        deviceCreateInfo.pEnabledFeatures = nullptr;
+    }
+    else
+    {
+        deviceCreateInfo.pNext            = nullptr;
+        deviceCreateInfo.pEnabledFeatures = &features2.features;
+    }
 
     XrVulkanDeviceCreateInfoKHR xrDeviceCreate{ XR_TYPE_VULKAN_DEVICE_CREATE_INFO_KHR };
     xrDeviceCreate.systemId                 = systemId;
