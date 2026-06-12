@@ -180,6 +180,13 @@ if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
 
+# OpenXR support (requires at least one compatible renderer; currently Vulkan, D3D11, D3D12).
+# Available on desktop (Windows/Linux/macOS) and Android (e.g. Quest, HTC Vive Focus).
+# iOS has no OpenXR runtime, UWP and WASM use different XR APIs.
+if(NOT LLGL_IOS_PLATFORM AND NOT LLGL_UWP_PLATFORM AND NOT EMSCRIPTEN)
+    option(LLGL_BUILD_XR_OPENXR "Include OpenXR support (LLGL::XRSystem)" OFF)
+endif()
+
 if(UNIX AND NOT APPLE)
     option(LLGL_LINUX_ENABLE_WAYLAND "Enable support for Wayland protocol" OFF)
 endif()
@@ -875,6 +882,15 @@ if(LLGL_BUILD_RENDERER_OPENGL OR LLGL_BUILD_RENDERER_OPENGLES3 OR LLGL_BUILD_REN
     add_subdirectory(sources/Renderer/OpenGL)
 endif()
 
+# Resolve OpenXR dependency before adding renderer/XR subdirectories so the variables
+# (OPENXR_HEADER_TARGET, OPENXR_LOADER_TARGET) are visible to backends that link them.
+if(LLGL_BUILD_XR_OPENXR)
+    if(NOT (LLGL_BUILD_RENDERER_VULKAN OR LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12))
+        message(FATAL_ERROR "LLGL_BUILD_XR_OPENXR requires at least one XR-compatible renderer backend to be enabled: LLGL_BUILD_RENDERER_VULKAN, LLGL_BUILD_RENDERER_DIRECT3D11, or LLGL_BUILD_RENDERER_DIRECT3D12.")
+    endif()
+    include("${EXTERNAL_MODULE_DIR}/FindOpenXRDeps.cmake")
+endif()
+
 if(LLGL_BUILD_RENDERER_VULKAN)
     add_subdirectory(sources/Renderer/Vulkan)
 endif()
@@ -893,6 +909,11 @@ endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
     add_subdirectory(sources/Renderer/Direct3D12)
+endif()
+
+# OpenXR module - depends on FindOpenXRDeps.cmake having been included earlier.
+if(LLGL_BUILD_XR_OPENXR)
+    add_subdirectory(sources/XR/OpenXR)
 endif()
 
 # Static libs must all be linked to the final apps (LLGL_BUILD_STATIC_LIB).
@@ -992,6 +1013,10 @@ endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
     message(STATUS "Build Renderer: ${LLGL_D3D12_ENABLE_FEATURELEVEL}")
+endif()
+
+if(LLGL_BUILD_XR_OPENXR)
+    message(STATUS "Build XR Backend: OpenXR (${OPENXR_SOURCE})")
 endif()
 
 if(LLGL_BUILD_WRAPPER_C99)

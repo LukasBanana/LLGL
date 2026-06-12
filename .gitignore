@@ -34,3 +34,7 @@ LLGL.pc
 .vscode
 
 sources/Platform/Linux/Wayland/protocols/
+
+# Claude Code files
+*.claude
+CLAUDE.md

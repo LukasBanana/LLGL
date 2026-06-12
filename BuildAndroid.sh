@@ -6,6 +6,7 @@ OUTPUT_DIR="build_android"
 SKIP_VALIDATION=0
 CLEAR_CACHE=0
 ENABLE_VULKAN="OFF"
+ENABLE_OPENXR="OFF"
 ENABLE_EXAMPLES="ON"
 BUILD_TYPE="Release"
 PROJECT_ONLY=0
@@ -35,6 +36,7 @@ print_help()
     echo "  --apps .................... Generate Android Studio projects to build example apps (implies '--abi=all -s')"
     echo "  --gles=VER ................ Enables the maximum OpenGLES version: 300 (default), 310, or 320"
     echo "  --vk ...................... Include Vulkan renderer"
+    echo "  --xr ...................... Include OpenXR support (forces --vk and --api-level>=29)"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
     echo "  Default output directory is '$OUTPUT_DIR'"
@@ -76,6 +78,9 @@ for ARG in "$@"; do
         esac
     elif [ "$ARG" = "--vk" ] || [ "$ARG" = "--vulkan" ]; then # Accept '--vulkan' for backward compatibility
         ENABLE_VULKAN="ON"
+    elif [ "$ARG" = "--xr" ] || [ "$ARG" = "--openxr" ]; then
+        ENABLE_OPENXR="ON"
+        ENABLE_VULKAN="ON" # OpenXR support currently requires Vulkan
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
     elif [ "$ARG" = "--apps" ]; then
@@ -95,6 +100,17 @@ if [ "$ENABLE_VULKAN" = "ON" ]; then
             echo "Clamping API level to 28 for Vulkan support (--api-level=$ANDROID_API_LEVEL)"
         fi
         ANDROID_API_LEVEL=28
+    fi
+fi
+
+# OpenXR + content-provider broker queries (used to discover the system XR runtime) work
+# best on API 30+, and the Khronos loader expects at least API 29.
+if [ "$ENABLE_OPENXR" = "ON" ]; then
+    if [ $ANDROID_API_LEVEL -lt 29 ]; then
+        if [ $VERBOSE -ne 0 ]; then
+            echo "Clamping API level to 29 for OpenXR support (--api-level=$ANDROID_API_LEVEL)"
+        fi
+        ANDROID_API_LEVEL=29
     fi
 fi
 
@@ -169,6 +185,7 @@ BASE_OPTIONS=(
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_VK_ENABLE_SPIRV_REFLECT=$ENABLE_VULKAN
+    -DLLGL_BUILD_XR_OPENXR=$ENABLE_OPENXR
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=OFF
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
@@ -200,7 +217,9 @@ build_with_android_abi()
     fi
 
     if [ $PROJECT_ONLY -eq 0 ]; then
-        cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+        # Force Ninja: CMake's default on Windows is Visual Studio, which can't cross-compile
+        # to Android via the NDK toolchain file.
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
         cmake --build "$CURRENT_OUTPUT_DIR"
     else
         cmake ${OPTIONS[@]} -G "$GENERATOR"
@@ -226,16 +245,28 @@ copy_build_to_jnilibs()
     APP_ROOT=$2
     ABI=$3
     USE_MULTI_ABI=$4
+    NEEDS_OPENXR_LOADER=$5
 
     LIB_FILENAME="libExample_${CURRENT_PROJECT}.so"
     if [[ "$USE_MULTI_ABI" == "1" ]]; then
         SRC_LIB_PATH="$OUTPUT_DIR/$ABI/build"
+        OPENXR_LOADER_PATH="$OUTPUT_DIR/$ABI/_deps/openxr_sdk-build/src/loader/libopenxr_loader.so"
     else
         SRC_LIB_PATH="$OUTPUT_DIR/build"
+        OPENXR_LOADER_PATH="$OUTPUT_DIR/_deps/openxr_sdk-build/src/loader/libopenxr_loader.so"
     fi
     DST_LIB_PATH="$APP_ROOT/app/src/main/jniLibs/$ABI"
     mkdir -p "$DST_LIB_PATH"
     cp "$SRC_LIB_PATH/$LIB_FILENAME" "$DST_LIB_PATH/$LIB_FILENAME"
+
+    # XR projects also need to ship libopenxr_loader.so so the APK can find the runtime.
+    if [[ "$NEEDS_OPENXR_LOADER" == "1" ]]; then
+        if [ -f "$OPENXR_LOADER_PATH" ]; then
+            cp "$OPENXR_LOADER_PATH" "$DST_LIB_PATH/libopenxr_loader.so"
+        else
+            echo "Warning: OpenXR loader not found at '$OPENXR_LOADER_PATH'; APK will fail to find an XR runtime"
+        fi
+    fi
 }
 
 # Build project solutions for example apps
@@ -277,13 +308,22 @@ generate_app_project()
     mkdir -p "$APP_ROOT/gradle/wrapper"
     cp -r "$PLATFORM_SOURCE_DIR/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
 
+    # XR projects mark themselves with an Android.openxr file. When present, swap in the XR
+    # manifest variant (immersive_hmd feature, OPENXR permissions, broker queries, intent
+    # category) and remember to bundle the loader .so below.
+    NEEDS_OPENXR_LOADER=0
+    if [ -f "$PROJECT_SOURCE_DIR/Android.openxr" ]; then
+        NEEDS_OPENXR_LOADER=1
+        cp "$PLATFORM_SOURCE_DIR/app-xr/src/main/AndroidManifest.xml" "$APP_ROOT/app/src/main/AndroidManifest.xml"
+    fi
+
     # Copy binary files into JNI lib folders for respective ABI
     if [ $ANDROID_ABI = "all" ]; then
         for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
-            copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ABI" 1
+            copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ABI" 1 $NEEDS_OPENXR_LOADER
         done
     else
-        copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ANDROID_ABI" 0
+        copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ANDROID_ABI" 0 $NEEDS_OPENXR_LOADER
     fi
 
     # Replace meta data

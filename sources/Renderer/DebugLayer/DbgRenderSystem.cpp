@@ -433,7 +433,11 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
             {
                 if (debugger_)
                     ValidateAttachmentDesc(attachmentDesc, colorTarget, isResolveAttachment, isDepthStencilAttachment);
-                attachmentDesc.texture = DbgGetInstance<DbgTexture>(attachmentDesc.texture);
+                // Unwrap a DbgTexture to its underlying instance; leave externally-owned textures
+                // (e.g. XR runtime swap-chain images adopted by the XR binding) as-is so the inner
+                // renderer receives a handle it can cast back to its native texture type.
+                if (DbgTexture* textureDbg = dynamic_cast<DbgTexture*>(attachmentDesc.texture))
+                    attachmentDesc.texture = &textureDbg->instance;
             }
         };
 
@@ -1463,7 +1467,10 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
 {
     if (Texture* texture = attachmentDesc.texture)
     {
-        auto* textureDbg = LLGL_CAST(DbgTexture*, texture);
+        // Query the texture via the public virtual API so validation works regardless of
+        // whether the texture is a DbgTexture wrapper or a raw backend texture adopted from
+        // outside the debug layer (e.g. an XR runtime swap-chain image).
+        const TextureDescriptor desc = texture->GetDesc();
 
         /* Validate attachment type for this texture */
         const Format format = GetAttachmentFormat(attachmentDesc);
@@ -1476,7 +1483,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
                     "cannot use color format for depth-stencil attachment"
                 );
             }
-            else if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
+            else if ((desc.bindFlags & BindFlags::ColorAttachment) == 0)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
@@ -1503,7 +1510,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
                     colorTarget
                 );
             }
-            else if ((textureDbg->desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
+            else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
@@ -1513,22 +1520,22 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         }
 
         /* Validate MIP-level */
-        if (attachmentDesc.mipLevel >= textureDbg->mipLevels)
+        if (attachmentDesc.mipLevel >= desc.mipLevels)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "render-target attachment exceeded number of MIP-map levels: %u specified but upper bound is %u",
-                attachmentDesc.mipLevel, textureDbg->mipLevels
+                attachmentDesc.mipLevel, desc.mipLevels
             );
         }
 
         /* Validate array layer */
-        if (attachmentDesc.arrayLayer >= textureDbg->desc.arrayLayers)
+        if (attachmentDesc.arrayLayer >= desc.arrayLayers)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "render-target attachment exceeded number of array layers: %u specified but upper bound is %u",
-                attachmentDesc.arrayLayer, textureDbg->desc.arrayLayers
+                attachmentDesc.arrayLayer, desc.arrayLayers
             );
         }
     }

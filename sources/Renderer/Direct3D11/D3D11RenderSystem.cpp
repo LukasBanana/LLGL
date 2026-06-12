@@ -19,6 +19,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
+#include "../../Core/MacroUtils.h"
 #include "../../Platform/Module.h"
 #include "D3D11ObjectUtils.h"
 #include <limits.h>
@@ -51,7 +52,8 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
     const bool isDebugDevice    = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice   ) != 0);
     const bool isSoftwareDevice = ((renderSystemDesc.flags & RenderSystemFlags::SoftwareDevice) != 0);
 
-    if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D11::RenderSystemNativeHandle>(renderSystemDesc))
+    auto* customNativeHandle = GetRendererNativeHandle<Direct3D11::RenderSystemNativeHandle>(renderSystemDesc);
+    if (customNativeHandle != nullptr && customNativeHandle->device != nullptr)
     {
         /* Query all DXGI interfaces from native handle */
         HRESULT hr = QueryDXInterfacesFromNativeHandle(*customNativeHandle);
@@ -59,13 +61,26 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
     }
     else
     {
+        /*
+        Constraint-driven path: the caller may pass a native handle with device==nullptr to
+        request normal device creation under additional constraints (e.g. the OpenXR binding
+        supplies an adapter LUID and minimum feature level).
+        */
+        LUID preferredLuid{};
+        D3D_FEATURE_LEVEL minFeatureLevel = static_cast<D3D_FEATURE_LEVEL>(0);
+        if (customNativeHandle != nullptr)
+        {
+            preferredLuid   = customNativeHandle->preferredAdapterLuid;
+            minFeatureLevel = customNativeHandle->minFeatureLevel;
+        }
+
         /* Create DXGU factory, query video adapters, and create D3D11 device */
         CreateFactory();
 
         ComPtr<IDXGIAdapter> preferredAdapter;
-        QueryVideoAdapters(renderSystemDesc.flags, preferredAdapter);
+        QueryVideoAdapters(renderSystemDesc.flags, preferredLuid, preferredAdapter);
 
-        HRESULT hr = CreateDevice(preferredAdapter.Get(), isDebugDevice, isSoftwareDevice);
+        HRESULT hr = CreateDevice(preferredAdapter.Get(), minFeatureLevel, isDebugDevice, isSoftwareDevice);
         DXThrowIfFailed(hr, "failed to create D3D11 device");
         QueryDXDeviceVersion();
     }
@@ -638,13 +653,16 @@ void D3D11RenderSystem::CreateFactory()
     DXThrowIfCreateFailed(hr, "IDXGIFactory2");
     #endif
 
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1 || defined LLGL_BUILD_XR_OPENXR
     hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory1_));
     if (SUCCEEDED(hr))
     {
         factory1_.As(&factory_);
         return;
     }
+    #ifdef LLGL_BUILD_XR_OPENXR
+    DXThrowIfCreateFailed(hr, "IDXGIFactory1");
+    #endif
     #endif
 
     #ifdef LLGL_OS_WIN32
@@ -653,15 +671,34 @@ void D3D11RenderSystem::CreateFactory()
     #endif
 }
 
-void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdapter)
+void D3D11RenderSystem::QueryVideoAdapters(long flags, const LUID& preferredAdapterLuid, ComPtr<IDXGIAdapter>& outPreferredAdapter)
 {
+    /* When an explicit LUID is provided, locate that adapter and skip the vendor-preference flow. */
+    if (preferredAdapterLuid.LowPart != 0 || preferredAdapterLuid.HighPart != 0)
+    {
+        ComPtr<IDXGIAdapter> adapter;
+        for (UINT i = 0; factory_->EnumAdapters(i, adapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i)
+        {
+            DXGI_ADAPTER_DESC desc{};
+            if (SUCCEEDED(adapter->GetDesc(&desc)) &&
+                desc.AdapterLuid.LowPart  == preferredAdapterLuid.LowPart &&
+                desc.AdapterLuid.HighPart == preferredAdapterLuid.HighPart)
+            {
+                DXConvertVideoAdapterInfo(adapter.Get(), desc, videoAdapterInfo_);
+                outPreferredAdapter = adapter;
+                return;
+            }
+        }
+        /* Fall through to the generic picker if the LUID didn't match anything (caller will see this via CreateDevice failure). */
+    }
+
     videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdapter.ReleaseAndGetAddressOf());
 }
 
-HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevice, bool isSoftwareDevice)
+HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, bool isDebugDevice, bool isSoftwareDevice)
 {
     /* Find list of feature levels to select from, and statically determine maximal feature level */
-    const D3D_FEATURE_LEVEL featureLevels[] =
+    const D3D_FEATURE_LEVEL allFeatureLevels[] =
     {
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         D3D_FEATURE_LEVEL_11_1,
@@ -673,6 +710,18 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevic
         D3D_FEATURE_LEVEL_9_2,
         D3D_FEATURE_LEVEL_9_1,
     };
+
+    /* If a minimum feature level is requested, filter the ladder down to entries >= minFeatureLevel. */
+    const D3D_FEATURE_LEVEL* featureLevelsPtr = allFeatureLevels;
+    std::size_t              featureLevelsLen = LLGL_ARRAY_LENGTH(allFeatureLevels);
+    if (minFeatureLevel != static_cast<D3D_FEATURE_LEVEL>(0))
+    {
+        while (featureLevelsLen > 0 && featureLevelsPtr[featureLevelsLen - 1] < minFeatureLevel)
+            --featureLevelsLen;
+        if (featureLevelsLen == 0)
+            return E_INVALIDARG;
+    }
+    const ArrayView<D3D_FEATURE_LEVEL> featureLevels{ featureLevelsPtr, featureLevelsLen };
 
     HRESULT hr = S_OK;
 
@@ -689,8 +738,8 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevic
     if (SUCCEEDED(hr))
         return hr;
 
-    /* Try to create device with default adapter if preferred one failed */
-    if (adapter != nullptr)
+    /* Try to create device with default adapter if preferred one failed (skipped when a LUID was pinned). */
+    if (adapter != nullptr && minFeatureLevel == static_cast<D3D_FEATURE_LEVEL>(0))
     {
         /* Update video adapter info with default adapter */
         videoAdapterInfo_ = DXGetVideoAdapterInfo(factory_.Get());
@@ -724,6 +773,12 @@ HRESULT D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const Ar
 
 HRESULT D3D11RenderSystem::CreateDeviceWithFlagsAndDriverType(IDXGIAdapter* adapter, D3D_DRIVER_TYPE driverType, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags)
 {
+    // D3D11CreateDevice rejects a non-null adapter combined with any driver type other than
+    // D3D_DRIVER_TYPE_UNKNOWN (returns E_INVALIDARG). When an adapter is supplied the driver
+    // type is implicit in that adapter, so coerce to UNKNOWN.
+    if (adapter != nullptr)
+        driverType = D3D_DRIVER_TYPE_UNKNOWN;
+
     return D3D11CreateDevice(
         adapter,                                    // Video adapter
         driverType,                                 // Driver type
@@ -1014,6 +1069,7 @@ static void InitializeD3DDepthStencilTextureWithDSV(
     ID3D11Device*           device,
     ID3D11DeviceContext*    context,
     D3D11Texture&           textureD3D,
+    Format                  format,
     const ClearValue&       clearValue)
 {
     /* Create intermediate depth-stencil view for texture */
@@ -1029,10 +1085,15 @@ static void InitializeD3DDepthStencilTextureWithDSV(
         textureD3D.GetNumArrayLayers()
     );
 
-    /* Clear view with depth-stencil values */
+    /* Clear view with depth-stencil values; only set the stencil flag if the format actually
+       has a stencil aspect (D3D11 debug layer rejects stencil-clear on a depth-only DSV). */
+    UINT clearFlags = D3D11_CLEAR_DEPTH;
+    if (IsStencilFormat(format))
+        clearFlags |= D3D11_CLEAR_STENCIL;
+
     context->ClearDepthStencilView(
         dsv.Get(),
-        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+        clearFlags,
         clearValue.depth,
         static_cast<UINT8>(clearValue.stencil)
     );
@@ -1130,6 +1191,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
                     device_.Get(),
                     context_.Get(),
                     textureD3D,
+                    textureDesc.format,
                     textureDesc.clearValue
                 );
             }

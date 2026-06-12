@@ -693,7 +693,6 @@ void VKCommandBuffer::ResourceBarrier(
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.baseMipLevel   = 0;
         barrier.subresourceRange.levelCount     = textureVK->GetNumMipLevels();
-        barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount     = textureVK->GetNumArrayLayers();
     }
 
@@ -736,7 +735,8 @@ void VKCommandBuffer::BeginRenderPass(
         framebuffer_                    = swapChainVK.GetVkFramebuffer(currentColorBuffer_);
         framebufferRenderArea_.extent   = swapChainVK.GetVkExtent();
         numColorAttachments_            = swapChainVK.GetNumColorAttachments();
-        hasDepthStencilAttachment_      = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());
+        hasDepthAttachment_             = swapChainVK.HasDepthAttachment();
+        hasStencilAttachment_           = swapChainVK.HasStencilAttachment();
     }
     else
     {
@@ -749,7 +749,8 @@ void VKCommandBuffer::BeginRenderPass(
         framebuffer_                    = renderTargetVK.GetVkFramebuffer();
         framebufferRenderArea_.extent   = renderTargetVK.GetVkExtent();
         numColorAttachments_            = renderTargetVK.GetNumColorAttachments();
-        hasDepthStencilAttachment_      = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+        hasDepthAttachment_             = renderTargetVK.HasDepthAttachment();
+        hasStencilAttachment_           = renderTargetVK.HasStencilAttachment();
 
         renderTargetVK.OverrideImageLayoutsForRenderPass();
     }
@@ -821,13 +822,13 @@ static void ToVkClearColor(VkClearColorValue& dst, const float (&src)[4])
     dst.float32[3] = src[3];
 }
 
-static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
+static VkImageAspectFlags GetDepthStencilAspectMask(long flags, bool hasDepth, bool hasStencil)
 {
     VkImageAspectFlags aspectMask = 0;
 
-    if ((flags & ClearFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0 && hasDepth)
         aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
-    if ((flags & ClearFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0 && hasStencil)
         aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
     return aspectMask;
@@ -857,12 +858,15 @@ void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
         }
     }
 
-    /* Fill clear descriptor for depth-stencil attachment */
-    if ((flags & ClearFlags::DepthStencil) != 0 && hasDepthStencilAttachment_)
+    /* Fill clear descriptor for depth-stencil attachment. Mask the aspect bits against what the
+       bound attachment actually has — clearing the stencil aspect of a depth-only attachment
+       (e.g. an XR D32_SFLOAT depth swap-chain image) is a Vulkan validation error. */
+    const VkImageAspectFlags depthStencilAspectMask = GetDepthStencilAspectMask(flags, hasDepthAttachment_, hasStencilAttachment_);
+    if (depthStencilAspectMask != 0)
     {
         VkClearAttachment& attachment = attachments[numAttachments++];
         {
-            attachment.aspectMask                       = GetDepthStencilAspectMask(flags);
+            attachment.aspectMask                       = depthStencilAspectMask;
             attachment.colorAttachment                  = 0; // ignored
             attachment.clearValue.depthStencil.depth    = clearValue.depth;
             attachment.clearValue.depthStencil.stencil  = clearValue.stencil;
@@ -893,24 +897,27 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             ToVkClearColor(dst.clearValue.color, src.clearValue.color);
             ++numAttachmentsVK;
         }
-        else if (hasDepthStencilAttachment_)
+        else if (hasDepthAttachment_ || hasStencilAttachment_)
         {
-            /* Convert depth-stencil clear command */
+            /* Convert depth-stencil clear command. Mask requested aspects against the bound
+               attachment's actual aspects; vkCmdClearAttachments rejects e.g. stencil clears
+               on a depth-only attachment. */
             dst.aspectMask      = 0;
             dst.colorAttachment = 0;
 
-            if ((src.flags & ClearFlags::Depth) != 0)
+            if ((src.flags & ClearFlags::Depth) != 0 && hasDepthAttachment_)
             {
                 dst.aspectMask                      |= VK_IMAGE_ASPECT_DEPTH_BIT;
                 dst.clearValue.depthStencil.depth   = src.clearValue.depth;
             }
-            if ((src.flags & ClearFlags::Stencil) != 0)
+            if ((src.flags & ClearFlags::Stencil) != 0 && hasStencilAttachment_)
             {
                 dst.aspectMask                      |= VK_IMAGE_ASPECT_STENCIL_BIT;
                 dst.clearValue.depthStencil.stencil = src.clearValue.stencil;
             }
 
-            ++numAttachmentsVK;
+            if (dst.aspectMask != 0)
+                ++numAttachmentsVK;
         }
     }
 

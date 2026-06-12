@@ -1,0 +1,101 @@
+/*
+ * D3D11OpenXRGraphicsBinding.h
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#ifndef LLGL_D3D11_OPENXR_GRAPHICS_BINDING_H
+#define LLGL_D3D11_OPENXR_GRAPHICS_BINDING_H
+
+
+#ifdef LLGL_BUILD_XR_OPENXR
+
+
+// D3D11 must be visible to openxr_platform.h.
+#include <d3d11.h>
+#include "../../DXCommon/ComPtr.h"
+
+#ifndef XR_USE_GRAPHICS_API_D3D11
+#   define XR_USE_GRAPHICS_API_D3D11
+#endif
+
+#include "../../../XR/OpenXR/OpenXRPlatform.h"
+#include "../../../XR/OpenXR/OpenXRGraphicsBinding.h"
+
+
+namespace LLGL
+{
+
+namespace OpenXR
+{
+
+
+class D3D11OpenXRGraphicsBinding final : public GraphicsBinding
+{
+
+    public:
+
+        D3D11OpenXRGraphicsBinding();
+        ~D3D11OpenXRGraphicsBinding() override;
+
+        const char*             GetRendererModuleName() const override;
+        ArrayView<const char*>  GetRequiredXrExtensions() const override;
+
+        RenderSystemPtr CreateRenderSystem(
+            XrInstance                          instance,
+            XrSystemId                          systemId,
+            const RenderSystemDescriptor&       renderSystemDesc,
+            Report*                             report) override;
+
+        const void*     GetSessionGraphicsBinding(RenderSystem& renderSystem) override;
+
+        Format          SelectColorFormat(
+            ArrayView<std::int64_t>     runtimeFormats,
+            Format                      preferred,
+            std::int64_t&               outNativeFormat) const override;
+
+        Format          SelectDepthFormat(
+            ArrayView<std::int64_t>     runtimeFormats,
+            Format                      preferred,
+            std::int64_t&               outNativeFormat) const override;
+
+        bool            EnumerateSwapchainImages(
+            RenderSystem&                       renderSystem,
+            XrSwapchain                         swapchain,
+            const XRSwapChainDescriptor&        swapChainDesc,
+            std::int64_t                        nativeFormat,
+            SwapchainKind                       kind,
+            std::vector<XRSwapchainImage>&      outImages,
+            Report*                             report) override;
+
+        void            FlushPendingGpuWork(RenderSystem& renderSystem) override;
+
+    private:
+
+        XrGraphicsBindingD3D11KHR   graphicsBinding_    { XR_TYPE_GRAPHICS_BINDING_D3D11_KHR };
+
+        // The graphics binding chain returned by GetSessionGraphicsBinding() holds a bare device
+        // pointer that the runtime expects to remain valid until xrCreateSession() completes.
+        // We stash one outstanding AddRef in this ComPtr to bridge that window.
+        ComPtr<ID3D11Device>        device_;
+
+};
+
+// CreateD3D11GraphicsBinding() is declared (with LLGL_EXPORT for cross-DLL linkage) in
+// sources/XR/OpenXR/OpenXRGraphicsBinding.h.
+
+
+} // /namespace OpenXR
+
+} // /namespace LLGL
+
+
+#endif // LLGL_BUILD_XR_OPENXR
+
+
+#endif
+
+
+
+// ================================================================================

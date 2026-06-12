@@ -24,12 +24,14 @@ namespace LLGL
 {
 
 
-static const char* g_requiredVulkanExtensions[] =
+// LLGL's required device extensions are shared with the XR Vulkan binding via VKGetRequiredDeviceExtensions().
+static std::size_t CountRequiredDeviceExtensions()
 {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-    nullptr,
-};
+    std::size_t count = 0;
+    for (const char** p = VKGetRequiredDeviceExtensions(); *p != nullptr; ++p)
+        ++count;
+    return count;
+}
 
 static bool CheckDeviceExtensionSupport(
     VkPhysicalDevice                    physicalDevice,
@@ -61,8 +63,8 @@ static bool IsPhysicalDeviceSuitable(
     std::vector<VkExtensionProperties> extensions;
     bool suitable = CheckDeviceExtensionSupport(
         physicalDevice,
-        g_requiredVulkanExtensions,
-        (sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0]) - 1),
+        VKGetRequiredDeviceExtensions(),
+        CountRequiredDeviceExtensions(),
         extensions
     );
 
@@ -104,7 +106,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<c
         for (const VkExtensionProperties& extension : supportedExtensions_)
             supportedExtensionNames_.insert(extension.extensionName);
 
-        if (!EnableExtensions(g_requiredVulkanExtensions, true))
+        if (!EnableExtensions(VKGetRequiredDeviceExtensions(), true))
         {
             /* Stop considering this physical device, because some required extensions are not supported */
             supportedExtensionNames_.clear();
@@ -439,7 +441,11 @@ struct VKBaseStructureInfo
     void*           pNext;
 };
 
-void VKPhysicalDevice::QueryDeviceFeatures()
+void VKQueryPhysicalDeviceFeatures(
+    VkPhysicalDevice                            physicalDevice,
+    const std::function<bool(const char*)>&     isExtensionEnabled,
+    VkPhysicalDeviceFeatures2&                  outFeatures2,
+    VKPhysicalDeviceFeaturesExt&                outFeaturesExt)
 {
     #if VK_KHR_get_physical_device_properties2
 
@@ -458,47 +464,62 @@ void VKPhysicalDevice::QueryDeviceFeatures()
         currentDesc = baseDescPtr;
     };
 
-    features2_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&features2_);
+    outFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&outFeatures2);
 
     #if VK_EXT_nested_command_buffer
-    if (SupportsExtension(VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.nestedCmdBuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
+    if (isExtensionEnabled(VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.nestedCmdBuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
     #endif
 
     #if VK_EXT_transform_feedback
-    if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.transformFeedback), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+    if (isExtensionEnabled(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.transformFeedback), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
     #endif
 
     #if VK_KHR_fragment_shading_rate
-    if (SupportsExtension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.fragmentShadingRate), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR);
+    if (isExtensionEnabled(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.fragmentShadingRate), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR);
     #endif
 
     #if VK_KHR_multiview
-    if (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR);
+    if (isExtensionEnabled(VK_KHR_MULTIVIEW_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR);
     #endif
 
     #if VK_EXT_mesh_shader
-    if (SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.meshShader), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT);
+    if (isExtensionEnabled(VK_EXT_MESH_SHADER_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.meshShader), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT);
     #endif
 
     #if VK_KHR_imageless_framebuffer
-    if (SupportsExtension(VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME))
-        AppendFeaturesDesc(&(features_.imagelessFramebuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR);
+    if (isExtensionEnabled(VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME))
+        AppendFeaturesDesc(&(outFeaturesExt.imagelessFramebuffer), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR);
     #endif
 
-    vkGetPhysicalDeviceFeatures2(physicalDevice_, &features2_);
-    static_cast<VkPhysicalDeviceFeatures&>(features_) = features2_.features;
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &outFeatures2);
+    static_cast<VkPhysicalDeviceFeatures&>(outFeaturesExt) = outFeatures2.features;
 
     #else // VK_KHR_get_physical_device_properties2
 
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
+    /* Vulkan 1.0 fallback: core features only. Mirror them into outFeatures2 so callers can use the same
+       pNext-or-pEnabledFeatures convention; the empty pNext signals the 1.0 path. */
+    outFeatures2 = VkPhysicalDeviceFeatures2{};
+    outFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &outFeaturesExt);
+    outFeatures2.features = static_cast<const VkPhysicalDeviceFeatures&>(outFeaturesExt);
 
     #endif // /VK_KHR_get_physical_device_properties2
+}
+
+void VKPhysicalDevice::QueryDeviceFeatures()
+{
+    VKQueryPhysicalDeviceFeatures(
+        physicalDevice_,
+        [this](const char* name) { return SupportsExtension(name); },
+        features2_,
+        features_
+    );
 }
 
 void VKPhysicalDevice::QueryDeviceProperties()

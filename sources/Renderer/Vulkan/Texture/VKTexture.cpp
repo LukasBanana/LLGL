@@ -49,6 +49,22 @@ VKTexture::VKTexture(
         SetDebugName(desc.debugName);
 }
 
+VKTexture::VKTexture(VkDevice device, const VKExternalImageInfo &params)
+    : Texture{params.type, params.bindFlags},
+      device_{device},
+      image_{/* dummy deleter */},
+      imageView_{device, vkDestroyImageView},
+      format_{params.format},
+      extent_{params.extent},
+      numMipLevels_{params.numMipLevels},
+      numArrayLayers_{params.numArrayLayers},
+      sampleCountBits_{params.sampleCountBits},
+      usageFlags_{params.usageFlags}
+{
+    image_.TakeVkImageOwnership(params.image, params.initialLayout);
+    CreateInternalImageView(device);
+}
+
 bool VKTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (auto* nativeHandleVK = GetTypedNativeHandle<Vulkan::ResourceNativeHandle>(nativeHandle, nativeHandleSize))

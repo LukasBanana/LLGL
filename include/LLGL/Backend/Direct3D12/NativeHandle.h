@@ -31,15 +31,46 @@ struct RenderSystemNativeHandle
     \brief COM pointer to the DXGI factory version 4.
     \remarks Since Direct3D 12, the factory can no longer be backtracked from the device object that was used to create it.
     For LLGL to retrieve the adapter information, this factory must be of type \c IDXGIFactory4.
+    When passed to \c RenderSystemDescriptor::nativeHandle alongside a null \c device, this field is
+    ignored — the backend creates its own factory.
     \see https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/nf-dxgi1_4-idxgifactory4-enumadapterbyluid#remarks
     */
     IDXGIFactory4*      factory;
 
-    //! COM pointer to the native Direct3D device.
+    /**
+    \brief COM pointer to the native Direct3D device.
+    \remarks When passed to \c RenderSystemDescriptor::nativeHandle, the backend adopts this device.
+    When this is \c nullptr, the backend creates the device itself and the \c preferredAdapterLuid
+    and \c minFeatureLevel fields below may constrain that creation.
+    When returned from \c RenderSystem::GetNativeHandle, this is the device the backend is using.
+    */
     ID3D12Device*       device;
 
-    //! COM pointer to the native Direct3D command queue.
+    /**
+    \brief COM pointer to the native Direct3D command queue.
+    \remarks When passed to \c RenderSystemDescriptor::nativeHandle alongside a null \c device,
+    this field is ignored — the backend creates its own command queue. When returned from
+    \c RenderSystem::GetNativeHandle, this is the queue the backend submits on.
+    */
     ID3D12CommandQueue* commandQueue;
+
+    /**
+    \brief Optional adapter LUID the backend must use when creating the device.
+    \remarks Only consulted when \c device is null on input. A zero LUID (\c {0, 0}) means
+    "no LUID constraint" and the backend picks an adapter via the usual preference flags.
+    Primarily used by the OpenXR binding to honor \c xrGetD3D12GraphicsRequirementsKHR.
+    Ignored by \c RenderSystem::GetNativeHandle.
+    */
+    LUID                preferredAdapterLuid;
+
+    /**
+    \brief Optional minimum feature level the created device must satisfy.
+    \remarks Only consulted when \c device is null on input. A value of \c 0 means "no minimum".
+    When set, the backend's feature-level ladder is filtered to entries \c >= minFeatureLevel
+    and device creation fails if no entry succeeds. Primarily used by the OpenXR binding to honor
+    \c XrGraphicsRequirementsD3D12KHR::minFeatureLevel. Ignored by \c RenderSystem::GetNativeHandle.
+    */
+    D3D_FEATURE_LEVEL   minFeatureLevel;
 };
 
 /**

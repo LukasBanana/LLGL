@@ -152,8 +152,12 @@ void VKBuffer::SetDebugName(const char* name)
 
 bool VKBuffer::CreateBufferView(VkDevice device, VKPtr<VkBufferView>& outBufferView, VkDeviceSize offset, VkDeviceSize length)
 {
-    /* Create a buffer view if a typed-buffer with valid format is created */
-    if (format_ != VK_FORMAT_UNDEFINED)
+    /* A VkBufferView is only valid for buffers created with UNIFORM_TEXEL or STORAGE_TEXEL usage,
+       which GetVkBufferUsageFlags only sets for Sampled/Storage bind flags. Skip view creation for
+       formatted vertex/index buffers — otherwise Vulkan validation rejects the call. */
+    const long bindFlags = GetBindFlags();
+    const bool hasTexelBufferUsage = ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0);
+    if (format_ != VK_FORMAT_UNDEFINED && hasTexelBufferUsage)
     {
         VkBufferViewCreateInfo viewCreateInfo = {};
         {

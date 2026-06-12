@@ -180,7 +180,8 @@ class VKCommandBuffer final : public CommandBufferTier1
         VkFramebuffer                   framebuffer_                                    = VK_NULL_HANDLE; // active framebuffer handle
         VkRect2D                        framebufferRenderArea_                          = { { 0, 0 }, { 0, 0 } };
         std::uint32_t                   numColorAttachments_                            = 0;
-        bool                            hasDepthStencilAttachment_                      = false;
+        bool                            hasDepthAttachment_                             = false;
+        bool                            hasStencilAttachment_                           = false;
         VkSubpassContents               subpassContents_                                = VK_SUBPASS_CONTENTS_INLINE;
 
         std::uint32_t                   queuePresentFamily_                             = 0;

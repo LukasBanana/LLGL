@@ -416,6 +416,11 @@ void ExampleBase::SetAndroidApp(android_app* androidApp)
         AndroidSetAssetManager(androidApp->activity->assetManager);
 }
 
+android_app* ExampleBase::GetAndroidApp()
+{
+    return androidApp_;
+}
+
 #endif
 
 void ExampleBase::MainLoopWrapper(void* args)

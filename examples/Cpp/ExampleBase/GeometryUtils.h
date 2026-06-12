@@ -19,6 +19,12 @@
  * Global helper structures
  */
 
+struct ColoredVertex
+{
+    Gs::Vector3f position;
+    Gs::Vector3f color;
+};
+
 struct TexturedVertex
 {
     Gs::Vector3f position;
@@ -62,6 +68,9 @@ std::vector<Gs::Vector3f> GenerateCubeVertices(bool isRightHanded = false);
 // Generates 36 indices for a unit cube of 8 vertices
 // (36 = 3 indices per triangle * 2 triangles per cube face * 6 faces).
 std::vector<std::uint32_t> GenerateCubeTriangleIndices();
+
+// Generates 24 vertices for a unit cube with per-vertex colors.
+std::vector<ColoredVertex> GenerateColoredCubeVertices(bool isRightHanded = false);
 
 // Generates 24 vertices for a unit cube with texture coordinates.
 std::vector<TexturedVertex> GenerateTexturedCubeVertices(bool isRightHanded = false);

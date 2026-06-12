@@ -28,6 +28,8 @@
 #include "Shader/VKShaderModulePool.h"
 #include "../../Platform/Debug.h"
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Log.h>
+#include <cstring>
 #include <limits>
 
 #include <LLGL/Backend/Vulkan/NativeHandle.h>
@@ -66,7 +68,19 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         /* Store weak references to native handles */
         instance_ = VKPtr<VkInstance>{ customNativeHandle->instance };
         if (isDebugLayerEnabled_)
-            CreateDebugReportCallback();
+        {
+            // The instance was created externally (e.g. by the OpenXR graphics binding); we can only
+            // install the debug callback if that creator enabled VK_EXT_debug_report. Probe via the
+            // procaddr instead of throwing, so a debug-less external instance degrades to "no callback"
+            // rather than aborting startup.
+            if (vkGetInstanceProcAddr(instance_, "vkCreateDebugReportCallbackEXT") != nullptr)
+                CreateDebugReportCallback();
+            else
+                Log::Errorf(
+                    "RenderSystemFlags::DebugDevice was requested but the externally-supplied Vulkan instance "
+                    "lacks VK_EXT_debug_report; no Vulkan debug-report callback will be installed.\n"
+                );
+        }
         VKLoadInstanceExtensions(instance_, supportedInstanceExtensions_);
         if (!PickPhysicalDevice(preferredDeviceFlags, customNativeHandle->physicalDevice))
             return;
@@ -851,29 +865,14 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-#ifndef VK_LAYER_KHRONOS_VALIDATION_NAME
-#define VK_LAYER_KHRONOS_VALIDATION_NAME "VK_LAYER_KHRONOS_validation"
-#endif
-
 void VKRenderSystem::QuerySupportedInstanceExtensions()
 {
     /* Query instance extension properties */
     instanceExtensionProperties_ = VKQueryInstanceExtensionProperties();
 
-    auto IsVKExtSupportIncluded = [this](VKExtSupport extSupport)
-    {
-        return
-        (
-            extSupport == VKExtSupport::Required ||
-            extSupport == VKExtSupport::Optional ||
-            (this->isDebugLayerEnabled_ && extSupport == VKExtSupport::DebugOnly)
-        );
-    };
-
     for (const VkExtensionProperties& prop : instanceExtensionProperties_)
     {
-        const VKExtSupport extSupport = GetVulkanInstanceExtensionSupport(prop.extensionName);
-        if (IsVKExtSupportIncluded(extSupport))
+        if (VKIsInstanceExtensionEnabled(prop.extensionName, isDebugLayerEnabled_))
             supportedInstanceExtensions_.push_back(prop.extensionName);
     }
 }
@@ -969,6 +968,54 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     VKThrowIfFailed(result, "failed to create Vulkan instance");
 }
 
+// Suppresses DebugBreakOnError for validation messages caused by known third-party OpenXR-runtime
+// bugs that the application has no way to fix. The message is still logged through DebugPuts so
+// real problems remain visible.
+//
+// Filter pairs are (VUID, object-label) — both must appear in the message for the entry to match.
+// Use a null objectLabel for VUIDs where any object hit is a known false positive.
+//
+// Currently covers SteamVR's OpenXR-to-OpenVR translation layer (CSxrSwapchainVulkanOpenVR), which
+// emits depth-image barriers with aspectMask=0 and the wrong layouts of its own, plus its own
+// vkCreateImage call with PREINITIALIZED + EXTERNAL_MEMORY. Remove entries once the runtimes ship
+// a fix.
+static bool IsKnownXrRuntimeFalsePositive(const char* message)
+{
+    if (message == nullptr)
+        return false;
+
+    struct Pattern { const char* vuid; const char* objectLabel; };
+    static constexpr Pattern kPatterns[] =
+    {
+        // aspectMask=0 / depth-format-aspect mismatch — the first messages in each SteamVR-bug
+        // sequence don't include the object label, so we filter by VUID alone. Safe because LLGL's
+        // own barrier paths derive aspectMask from a non-UNDEFINED format and provably never
+        // produce aspectMask=0 (confirmed via traps at every vkCmdPipelineBarrier emit site).
+        { "VUID-VkImageSubresourceRange-aspectMask-requiredbitmask", nullptr },
+        { "VUID-VkImageMemoryBarrier-subresourceRange-09601",        nullptr },
+        // Layout/usage mismatches CAN legitimately come from LLGL bugs, so require the SteamVR
+        // image label to be sure we only suppress the runtime-side cases.
+        { "VUID-VkImageMemoryBarrier-oldLayout-01208",               "CSxrSwapchainVulkanOpenVR" },
+        { "VUID-VkImageMemoryBarrier-oldLayout-01212",               "CSxrSwapchainVulkanOpenVR" },
+        // SteamVR's own vkCreateImage with PREINITIALIZED + external-memory.
+        { "VUID-VkImageCreateInfo-pNext-01443",                      nullptr },
+        // SteamVR's internal BlankEyeBuffer (fallback texture used when the app submits no layer)
+        // tripping the descriptor-layout-mismatch VUID. We restrict on label so the same VUID will
+        // still trap on real LLGL bugs (where the image label is the app's own).
+        { "VUID-vkCmdDraw-None-09600",                               "BlankEyeBuffer" },
+    };
+
+    for (const Pattern& p : kPatterns)
+    {
+        if (std::strstr(message, p.vuid) != nullptr &&
+            (p.objectLabel == nullptr || std::strstr(message, p.objectLabel) != nullptr))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugReportFlagsEXT       flags,
     VkDebugReportObjectTypeEXT  objectType,
@@ -984,7 +1031,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
     {
         VKRenderSystem* renderSystemVK = static_cast<VKRenderSystem*>(userData);
-        if (renderSystemVK->IsBreakOnErrorEnabled())
+        if (renderSystemVK->IsBreakOnErrorEnabled()
+#if LLGL_BUILD_XR_OPENXR
+            && !IsKnownXrRuntimeFalsePositive(message)
+#endif // /LLGL_BUILD_XR_OPENXR
+        )
             DebugBreakOnError();
     }
 
@@ -1082,13 +1133,7 @@ bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurati
         }
     }
 
-    if (isDebugLayerEnabled_)
-    {
-        if (::strcmp(name, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0)
-            return true;
-    }
-
-    return false;
+    return (isDebugLayerEnabled_ && VKIsInstanceDebugLayer(name));
 }
 
 VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& createInfo)

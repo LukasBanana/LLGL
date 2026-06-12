@@ -156,6 +156,50 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     };
 }
 
+std::vector<ColoredVertex> GenerateColoredCubeVertices(bool isRightHanded)
+{
+    const float z = (isRightHanded ? -1.0f : +1.0f);
+    return
+    {
+        //   x   y   z      r  g  b
+        // -X face (cyan)
+         { { -1, -1,  z }, { 0, 1, 1 } },
+         { { -1,  1,  z }, { 0, 1, 1 } },
+         { { -1,  1, -z }, { 0, 1, 1 } },
+         { { -1, -1, -z }, { 0, 1, 1 } },
+
+        // +X face (red)
+         { {  1, -1, -z }, { 1, 0, 0 } },
+         { {  1,  1, -z }, { 1, 0, 0 } },
+         { {  1,  1,  z }, { 1, 0, 0 } },
+         { {  1, -1,  z }, { 1, 0, 0 } },
+
+        // +Y face (green)
+         { { -1,  1, -z }, { 0, 1, 0 } },
+         { { -1,  1,  z }, { 0, 1, 0 } },
+         { {  1,  1,  z }, { 0, 1, 0 } },
+         { {  1,  1, -z }, { 0, 1, 0 } },
+
+        // -Y face (magenta)
+         { { -1, -1,  z }, { 1, 0, 1 } },
+         { { -1, -1, -z }, { 1, 0, 1 } },
+         { {  1, -1, -z }, { 1, 0, 1 } },
+         { {  1, -1,  z }, { 1, 0, 1 } },
+
+        // +Z face (blue) - the face the user sees first since they start looking down -Z
+         { {  1, -1,  z }, { 0, 0, 1 } },
+         { {  1,  1,  z }, { 0, 0, 1 } },
+         { { -1,  1,  z }, { 0, 0, 1 } },
+         { { -1, -1,  z }, { 0, 0, 1 } },
+
+        // -Z face (yellow)
+         { { -1, -1, -z }, { 1, 1, 0 } },
+         { { -1,  1, -z }, { 1, 1, 0 } },
+         { {  1,  1, -z }, { 1, 1, 0 } },
+         { {  1, -1, -z }, { 1, 1, 0 } },
+    };
+}
+
 std::vector<TexturedVertex> GenerateTexturedCubeVertices(bool isRightHanded)
 {
     const float z = (isRightHanded ? -1.0f : +1.0f);

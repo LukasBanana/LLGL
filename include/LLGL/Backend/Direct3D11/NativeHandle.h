@@ -26,11 +26,35 @@ namespace Direct3D11
 */
 struct RenderSystemNativeHandle
 {
-    //! COM pointer to the native Direct3D device.
+    /**
+    \brief COM pointer to the native Direct3D device.
+    \remarks When passed to \c RenderSystemDescriptor::nativeHandle, the backend adopts this device
+    and \c deviceContext. When this is \c nullptr, the backend creates the device itself and the
+    \c preferredAdapterLuid and \c minFeatureLevel fields below may constrain that creation.
+    When returned from \c RenderSystem::GetNativeHandle, this is the device the backend is using.
+    */
     ID3D11Device*           device;
 
     //! COM pointer to the native Direct3D device context.
     ID3D11DeviceContext*    deviceContext;
+
+    /**
+    \brief Optional adapter LUID the backend must use when creating the device.
+    \remarks Only consulted when \c device is null on input. A zero LUID (\c {0, 0}) means
+    "no LUID constraint" and the backend picks an adapter via the usual preference flags.
+    Primarily used by the OpenXR binding to honor \c xrGetD3D11GraphicsRequirementsKHR.
+    Ignored by \c RenderSystem::GetNativeHandle.
+    */
+    LUID                    preferredAdapterLuid;
+
+    /**
+    \brief Optional minimum feature level the created device must satisfy.
+    \remarks Only consulted when \c device is null on input. A value of \c 0 means "no minimum".
+    When set, the backend's feature-level ladder is filtered to entries \c >= minFeatureLevel
+    and device creation fails if no entry succeeds. Primarily used by the OpenXR binding to honor
+    \c XrGraphicsRequirementsD3D11KHR::minFeatureLevel. Ignored by \c RenderSystem::GetNativeHandle.
+    */
+    D3D_FEATURE_LEVEL       minFeatureLevel;
 };
 
 /**
