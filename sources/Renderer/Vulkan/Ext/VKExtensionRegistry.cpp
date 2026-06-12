@@ -18,7 +18,7 @@ namespace LLGL
 
 static bool g_VKRegisteredExtensions[static_cast<std::size_t>(VKExt::Count)] = {};
 
-static const char *g_VKOptionalExtensions[] =
+static const char* g_VKOptionalExtensions[] =
     {
 #if VK_EXT_conditional_rendering
         VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
