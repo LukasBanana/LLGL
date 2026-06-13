@@ -16,7 +16,7 @@ jobs:
         config: [Release, Debug]
       fail-fast: false
 
-    runs-on: 'windows-latest'
+    runs-on: 'windows-2022'
 
     env:
       README: ${{ github.workspace }}/README.txt
