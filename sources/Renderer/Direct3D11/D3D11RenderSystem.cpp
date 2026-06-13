@@ -570,6 +570,8 @@ bool D3D11RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
         nativeHandleD3D->device->AddRef();
         nativeHandleD3D->deviceContext = context_.Get();
         nativeHandleD3D->deviceContext->AddRef();
+        nativeHandleD3D->preferredAdapterLuid = {};
+        nativeHandleD3D->minFeatureLevel = device_->GetFeatureLevel();
         return true;
     }
     return false;

@@ -13,16 +13,24 @@
 
 namespace LLGL
 {
-    /** \brief Configuration structure for OpenXR-specific settings.  */
-    struct XRConfigurationOpenXR
-    {
-        /**
-        \brief List of OpenXR instance extensions to enable when loading the XR system.
-        The ones that are not supported, will be ignored.
-        */
-        ArrayView<const char *> instanceExtensions;
-    };
+
+
+/** \brief Configuration structure for OpenXR-specific settings.  */
+struct XRConfigurationOpenXR
+{
+    /**
+    \brief List of OpenXR instance extensions to enable when loading the XR system.
+    The ones that are not supported, will be ignored.
+    */
+    ArrayView<const char*> instanceExtensions;
+};
+
 
 } // namespace LLGL
 
-#endif // LLGL_XR_CONFIGURATION_H
+
+#endif
+
+
+
+// ================================================================================

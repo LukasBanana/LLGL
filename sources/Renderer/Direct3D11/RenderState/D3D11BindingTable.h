@@ -32,6 +32,8 @@ D3D11_BIND_CONSTANT_BUFFER must not be combined with any other binding flag and 
 
 This class also does not evict RTVs and the DSV, because those will always be unbound at the end of a render pass.
 Moreover, depth textures can potentially be read from a shader while also bound as DSV during a render pass as long as depth-writing is disabled.
+
+Note that this class is *NOT* thread-safe.
 */
 class D3D11BindingTable
 {
@@ -236,6 +238,10 @@ class D3D11BindingTable
 
     private:
 
+        static constexpr int kUAVStartSlotBits          = 15;
+        static constexpr int kNumUAVBits                = 16;
+        static constexpr UINT kInvalidUAVStartBitmask   = ((1u << kUAVStartSlotBits) - 1u);
+
         ComPtr<ID3D11DeviceContext>                                                 context_;
 
         ResourceLocatorContainer<D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT>         vb_;    // D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT (32)
@@ -259,8 +265,8 @@ class D3D11BindingTable
         UINT                                                                        soCount_                                    = 0;
         UINT                                                                        rtvCount_                                   = 0;
 
-        UINT                                                                        omUAVStartSlot_ : 15;
-        UINT                                                                        omNumUAVs_      : 16; // Number of UAVs for the output-merger stage
+        UINT                                                                        omUAVStartSlot_ : kUAVStartSlotBits;
+        UINT                                                                        omNumUAVs_      : kNumUAVBits; // Number of UAVs for the output-merger stage
         UINT                                                                        omUAVDirtyBit_  : 1;
 
 };

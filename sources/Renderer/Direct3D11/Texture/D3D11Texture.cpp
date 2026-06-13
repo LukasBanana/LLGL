@@ -51,7 +51,13 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
-D3D11Texture::D3D11Texture(ID3D11Device* device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture, Format logicalFormat) :
+D3D11Texture::D3D11Texture(
+    ID3D11Device*       device,
+    TextureType         type,
+    long                bindFlags,
+    ID3D11Texture2D*    externalTexture,
+    Format              logicalFormat)
+:
     Texture         { type, bindFlags                  },
     bindingLocator_ { ResourceType::Texture, bindFlags }
 {

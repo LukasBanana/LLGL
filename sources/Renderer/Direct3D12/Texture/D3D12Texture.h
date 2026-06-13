@@ -43,7 +43,14 @@ class D3D12Texture final : public Texture
         cannot be resolved back to a concrete LLGL format and is needed for explicit-format SRV/RTV creation. Pass
         Format::Undefined to derive the format from the resource itself.
         */
-        D3D12Texture(ID3D12Device *device, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture, Format logicalFormat = Format::Undefined);
+        D3D12Texture(
+            ID3D12Device*           device,
+            TextureType             type,
+            long                    bindFlags,
+            D3D12_RESOURCE_STATES   initialState,
+            ID3D12Resource*         externalTexture,
+            Format                  logicalFormat   = Format::Undefined
+        );
 
         // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresource(

@@ -36,16 +36,16 @@ enum class VKSwizzleFormat
 // The caller is responsible for ensuring the image outlives this texture.
 struct VKExternalImageInfo
 {
-    TextureType type;
-    long bindFlags;
-    VkImage image;
-    VkFormat format;
-    VkExtent3D extent;
-    std::uint32_t numMipLevels;
-    std::uint32_t numArrayLayers;
-    VkSampleCountFlagBits sampleCountBits;
-    VkImageUsageFlags usageFlags;
-    VkImageLayout initialLayout;
+    TextureType             type;
+    long                    bindFlags;
+    VkImage                 image;
+    VkFormat                format;
+    VkExtent3D              extent;
+    std::uint32_t           numMipLevels;
+    std::uint32_t           numArrayLayers;
+    VkSampleCountFlagBits   sampleCountBits;
+    VkImageUsageFlags       usageFlags;
+    VkImageLayout           initialLayout;
 };
 
 
@@ -64,7 +64,7 @@ class VKTexture final : public Texture
             const TextureDescriptor&    desc
         );
 
-
+        // For OpenXR and other external image sources. The image is not owned by this object and will not be destroyed.
         VKTexture(VkDevice device, const VKExternalImageInfo& params);
 
     public:

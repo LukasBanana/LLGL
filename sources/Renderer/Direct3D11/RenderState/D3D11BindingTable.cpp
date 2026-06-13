@@ -19,11 +19,12 @@ namespace LLGL
 
 
 D3D11BindingTable::D3D11BindingTable(const ComPtr<ID3D11DeviceContext>& context) :
-    context_        { context },
-    omUAVStartSlot_ { ~0u     },
-    omNumUAVs_      { 0       },
-    omUAVDirtyBit_  { 0       }
+    context_        { context                 },
+    omUAVStartSlot_ { kInvalidUAVStartBitmask },
+    omNumUAVs_      { 0                       },
+    omUAVDirtyBit_  { 0                       }
 {
+    LLGL_ASSERT_PTR(context);
 }
 
 void D3D11BindingTable::SetVertexBuffer(
@@ -266,7 +267,7 @@ void D3D11BindingTable::ClearState()
     vbCount_        = 0;
     soCount_        = 0;
     rtvCount_       = 0;
-    omUAVStartSlot_ = ~0u;
+    omUAVStartSlot_ = kInvalidUAVStartBitmask;
     omNumUAVs_      = 0;
     omUAVDirtyBit_  = 0;
 }
@@ -1098,16 +1099,20 @@ void D3D11BindingTable::BindCachedOutputMergerUAVs()
 {
     /* Leading null UAVs must not override RTV slots, so start UAV range at least after number of RTVs */
     const UINT uavStartSlot = std::max<UINT>(rtvCount_, omUAVStartSlot_);
-    const UINT uavCount     = omNumUAVs_ - (uavStartSlot - omUAVStartSlot_);
-    context_->OMSetRenderTargetsAndUnorderedAccessViews(
-        /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
-        /*ppRenderTargetViews:*/    nullptr,
-        /*pDepthStencilView:*/      nullptr,
-        /*UAVStartSlot:*/           uavStartSlot,
-        /*NumUAVs:*/                uavCount,
-        /*ppUnorderedAccessViews:*/ &(uavOMRefs_[uavStartSlot]),
-        /*pUAVInitialCounts:*/      &(uavOMInitialCounts_[uavStartSlot])
-    );
+    const UINT uavRangeEnd = omNumUAVs_ + omUAVStartSlot_;
+    if (uavStartSlot < uavRangeEnd)
+    {
+        const UINT uavCount = uavRangeEnd - uavStartSlot;
+        context_->OMSetRenderTargetsAndUnorderedAccessViews(
+            /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+            /*ppRenderTargetViews:*/    nullptr,
+            /*pDepthStencilView:*/      nullptr,
+            /*UAVStartSlot:*/           uavStartSlot,
+            /*NumUAVs:*/                uavCount,
+            /*ppUnorderedAccessViews:*/ &(uavOMRefs_[uavStartSlot]),
+            /*pUAVInitialCounts:*/      &(uavOMInitialCounts_[uavStartSlot])
+        );
+    }
 }
 
 

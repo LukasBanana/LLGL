@@ -43,7 +43,13 @@ class D3D11Texture final : public Texture
         cannot be resolved back to a concrete LLGL format and is needed for explicit-format SRV/RTV creation. Pass
         Format::Undefined to derive the format from the texture itself.
         */
-        D3D11Texture(ID3D11Device *device, TextureType type, long bindFlags, ID3D11Texture2D * externalTexture, Format logicalFormat = Format::Undefined);
+        D3D11Texture(
+            ID3D11Device*       device,
+            TextureType         type,
+            long                bindFlags,
+            ID3D11Texture2D*    externalTexture,
+            Format              logicalFormat   = Format::Undefined
+        );
 
         HRESULT UpdateSubresource(
             ID3D11DeviceContext*    context,

@@ -467,12 +467,19 @@ bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D12::RenderSystemNativeHandle))
     {
         auto* nativeHandleD3D = static_cast<Direct3D12::RenderSystemNativeHandle*>(nativeHandle);
+
         nativeHandleD3D->factory = factory_.Get();
         nativeHandleD3D->factory->AddRef();
+
         nativeHandleD3D->device = device_.GetNative();
         nativeHandleD3D->device->AddRef();
+
         nativeHandleD3D->commandQueue = commandQueue_->GetNative();
         nativeHandleD3D->commandQueue->AddRef();
+
+        nativeHandleD3D->preferredAdapterLuid = {};
+        nativeHandleD3D->minFeatureLevel = device_.GetFeatureLevel();
+
         return true;
     }
     return false;

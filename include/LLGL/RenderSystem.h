@@ -301,7 +301,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \remarks This function, just like any other write operation from the RenderSystem, <b>should not</b> be interleaved with command buffer recording
         in which these resources are used, unless they are carefully organized to not override their content during such command recordings.
         This is because even an immediate context does not guarantee that any command is submitted to the GPU until the end of recording (i.e. CommandBuffer::End).
-        To update a small buffer (maximum of 65536 bytes) during command recording, use CommandBuffer::UpdateBuffer.
+        To update buffers during command recording, use CommandBuffer::UpdateBuffer.
 
         \see ReadBuffer
         */

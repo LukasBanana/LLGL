@@ -42,8 +42,15 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
         SetDebugName(desc.debugName);
 }
 
-D3D12Texture::D3D12Texture(ID3D12Device * /*device*/, TextureType type, long bindFlags, D3D12_RESOURCE_STATES initialState, ID3D12Resource *externalTexture, Format logicalFormat)
-    : Texture{type, bindFlags}
+D3D12Texture::D3D12Texture(
+    ID3D12Device*           device,
+    TextureType             type,
+    long                    bindFlags,
+    D3D12_RESOURCE_STATES   initialState,
+    ID3D12Resource*         externalTexture,
+    Format                  logicalFormat)
+:
+    Texture { type, bindFlags }
 {
     // ComPtr::operator= AddRef's the new pointer; the externally-owned resource stays alive
     // via its own ref-counts and we add one more for the lifetime of this wrapper.
