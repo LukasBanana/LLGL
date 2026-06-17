@@ -689,11 +689,11 @@ void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display)
 {
     LinuxWaylandState& instance = GetInstance();
 
-    LLGL::RemoveFromListIf(instance.displayList_, [display](LinuxDisplayWayland* it) {
-        return it == display;
+    LLGL::RemoveFromListIf(instance.displayList_, [display](const std::unique_ptr<LinuxDisplayWayland>& it) {
+        return it.get() == display;
     });
 
-    LLGL::RemoveFromListIf(instance.displayRefList_, [display](LinuxDisplayWayland* it) {
+    LLGL::RemoveFromListIf(instance.displayRefList_, [display](Display* it) {
         return it == display;
     });
 }
@@ -799,8 +799,8 @@ void LinuxWaylandState::AddWaylandOutput(wl_output* output, uint32_t name, uint3
     data.name = name;
 
     std::unique_ptr<LinuxDisplayWayland> display = MakeUnique<LinuxDisplayWayland>(data);
-    displayList_.push_back(display);
     displayRefList_.push_back(display.get());
+    displayList_.push_back(std::move(display));
 
     wl_output_add_listener(output, &outputListener_, &display->GetData());
 }

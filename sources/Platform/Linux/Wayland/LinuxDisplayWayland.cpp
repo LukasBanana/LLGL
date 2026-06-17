@@ -32,7 +32,7 @@ LinuxDisplayWayland::~LinuxDisplayWayland()
 
 bool LinuxDisplayWayland::IsPrimary() const
 {
-    return (this == LinuxWaylandState::GetDisplayList()[0]);
+    return (this == LinuxWaylandState::GetDisplayList()[0].get());
 }
 
 UTF8String LinuxDisplayWayland::GetDeviceName() const
