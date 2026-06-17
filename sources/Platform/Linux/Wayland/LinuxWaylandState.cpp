@@ -16,6 +16,7 @@
 
 #include "../../../Core/Exception.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 
 #include "LLGL/DisplayFlags.h"
 #include "LLGL/Timer.h"
@@ -686,37 +687,22 @@ void LinuxWaylandState::RemoveWindow(LinuxWindowWayland *window)
 {
     LinuxWaylandState& instance = GetInstance();
 
-    for (auto it = instance.windowList_.begin(); it != instance.windowList_.end(); ++it)
-    {
-        if ((*it) == window)
-        {
-            instance.windowList_.erase(it);
-            break;
-        }
-    }
+    LLGL::RemoveFromListIf(instance.windowList_, [window](LinuxWindowWayland* it) {
+        return it == window;
+    });
 }
 
 void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display)
 {
     LinuxWaylandState& instance = GetInstance();
 
-    for (auto it = instance.displayList_.begin(); it != instance.displayList_.end(); ++it)
-    {
-        if ((*it) == display)
-        {
-            instance.displayList_.erase(it);
-            break;
-        }
-    }
+    LLGL::RemoveFromListIf(instance.displayList_, [display](LinuxDisplayWayland* it) {
+        return it == display;
+    });
 
-    for (auto it = instance.displayRefList_.begin(); it != instance.displayRefList_.end(); ++it)
-    {
-        if ((*it) == display)
-        {
-            instance.displayRefList_.erase(it);
-            break;
-        }
-    }
+    LLGL::RemoveFromListIf(instance.displayRefList_, [display](LinuxDisplayWayland* it) {
+        return it == display;
+    });
 }
 
 LinuxWaylandState::~LinuxWaylandState()
