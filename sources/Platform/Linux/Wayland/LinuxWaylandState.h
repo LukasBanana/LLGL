@@ -82,6 +82,7 @@ class LinuxWaylandState
         static void RemoveWindow(LinuxWindowWayland* window);
 
         static void RemoveDisplay(LinuxDisplayWayland* display);
+        static void RemoveDisplayRef(LinuxDisplayWayland* display);
 
     private:
 

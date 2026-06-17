@@ -22,7 +22,7 @@ LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
 
 LinuxDisplayWayland::~LinuxDisplayWayland()
 {
-    LinuxWaylandState::RemoveDisplay(this);
+    LinuxWaylandState::RemoveDisplayRef(this);
     if (data_.output != nullptr)
     {
         wl_output_destroy(data_.output);
