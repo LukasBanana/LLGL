@@ -149,16 +149,9 @@ void LinuxWaylandState::HandleRegistryRemove(void* userData, wl_registry* regist
     LinuxWaylandState& state = GetInstance();
 
     // Check if the name corresponds to any wl_output, if so destroy it
-    for (auto it = state.displayList_.begin(); it != state.displayList_.end(); ++it)
-    {
-        LinuxDisplayWayland* display = *it;
-
-        if (name == display->GetData().name)
-        {
-            delete display;
-            break;
-        }
-    }
+    LLGL::RemoveFromListIf(state.displayList_, [name](const std::unique_ptr<LinuxDisplayWayland>& it) {
+        return name == it->GetData().name;
+    });
 }
 
 void LinuxWaylandState::HandleXdgWmBasePing(void* userData, xdg_wm_base* xdg_wm_base, uint32_t serial)
@@ -707,11 +700,6 @@ void LinuxWaylandState::RemoveDisplay(LinuxDisplayWayland* display)
 
 LinuxWaylandState::~LinuxWaylandState()
 {
-    for (LinuxDisplayWayland* display : displayList_)
-    {
-        delete display;
-    }
-
     displayList_.clear();
     displayRefList_.clear();
 
@@ -810,9 +798,9 @@ void LinuxWaylandState::AddWaylandOutput(wl_output* output, uint32_t name, uint3
     data.output = output;
     data.name = name;
 
-    LinuxDisplayWayland* display = new LinuxDisplayWayland(data);
+    std::unique_ptr<LinuxDisplayWayland> display = MakeUnique<LinuxDisplayWayland>(data);
     displayList_.push_back(display);
-    displayRefList_.push_back(display);
+    displayRefList_.push_back(display.get());
 
     wl_output_add_listener(output, &outputListener_, &display->GetData());
 }
@@ -1138,7 +1126,7 @@ LLGL::ArrayView<Key> LinuxWaylandState::GetKeycodes() noexcept
     return GetInstance().keycodes_;
 }
 
-const LLGL::DynamicVector<LinuxDisplayWayland*>& LinuxWaylandState::GetDisplayList() noexcept
+const std::vector<std::unique_ptr<LinuxDisplayWayland>>& LinuxWaylandState::GetDisplayList() noexcept
 {
     return GetInstance().displayList_;
 }
