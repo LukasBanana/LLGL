@@ -74,11 +74,15 @@ class LinuxWaylandState
         static const XkbContext& GetXkb() noexcept;
         static const LibdecorContext& GetLibdecor() noexcept;
         static LLGL::ArrayView<Key> GetKeycodes() noexcept;
-        static const LLGL::DynamicVector<LinuxDisplayWayland*>& GetDisplayList() noexcept;
+        static const std::vector<std::unique_ptr<LinuxDisplayWayland>>& GetDisplayList() noexcept;
+        static const LLGL::DynamicVector<Display*>& GetDisplayRefList() noexcept;
         static const LLGL::DynamicVector<LinuxWindowWayland*>& GetWindowList() noexcept;
 
         static void AddWindow(LinuxWindowWayland* window);
         static void RemoveWindow(LinuxWindowWayland* window);
+
+        static void RemoveDisplay(LinuxDisplayWayland* display);
+        static void RemoveDisplayRef(LinuxDisplayWayland* display);
 
     private:
 
@@ -158,7 +162,8 @@ class LinuxWaylandState
 
         LibdecorContext libdecor_;
 
-        DynamicVector<LinuxDisplayWayland*> displayList_;
+        std::vector<std::unique_ptr<LinuxDisplayWayland>> displayList_;
+        DynamicVector<Display*> displayRefList_;
         DynamicVector<LinuxWindowWayland*> windowList_;
 
         bool initialized_ = false;

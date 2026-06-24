@@ -20,9 +20,19 @@ LinuxDisplayWayland::LinuxDisplayWayland(const WaylandDisplayData& data) :
 {
 }
 
+LinuxDisplayWayland::~LinuxDisplayWayland()
+{
+    LinuxWaylandState::RemoveDisplayRef(this);
+    if (data_.output != nullptr)
+    {
+        wl_output_destroy(data_.output);
+        data_.output = nullptr;
+    }
+}
+
 bool LinuxDisplayWayland::IsPrimary() const
 {
-    return (this == LinuxWaylandState::GetDisplayList()[0]);
+    return (this == LinuxWaylandState::GetDisplayList()[0].get());
 }
 
 UTF8String LinuxDisplayWayland::GetDeviceName() const
