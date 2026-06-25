@@ -42,7 +42,9 @@ Macros for CPU architecture
 see https://sourceforge.net/p/predef/wiki/Architectures/
 */
 
-#if defined _M_ARM || defined __arm__
+#if defined _M_ARM64 || defined __aarch64__
+#   define LLGL_ARCH_ARM64
+#elif defined _M_ARM || defined __arm__
 #   define LLGL_ARCH_ARM
 #elif defined _M_X64 || defined __amd64__
 #   define LLGL_ARCH_AMD64

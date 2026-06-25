@@ -27,7 +27,10 @@ endif()
 
 # === Target platforms ===
 
-if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64")
+if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64" OR "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "ARM64")
+    set(LLGL_BUILD_64BIT ON)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    # Fallback for single-config generators (e.g. Ninja) that don't set CMAKE_GENERATOR_PLATFORM
     set(LLGL_BUILD_64BIT ON)
 else()
     set(LLGL_BUILD_64BIT OFF)
@@ -584,6 +587,9 @@ elseif(LLGL_MOBILE_PLATFORM)
         set(ARCH_ARM64 ON)
         set(SUMMARY_TARGET_ARCH "arm64")
     endif()
+elseif(WIN32 AND ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "ARM64" OR "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "[Aa][Rr][Mm]64|[Aa][Aa][Rr][Cc][Hh]64"))
+    set(ARCH_ARM64 ON)
+    set(SUMMARY_TARGET_ARCH "arm64")
 elseif(APPLE OR LLGL_BUILD_64BIT)
     set(ARCH_AMD64 ON)
     set(SUMMARY_TARGET_ARCH "x86-64")
