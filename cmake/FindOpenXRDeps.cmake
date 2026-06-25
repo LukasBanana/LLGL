@@ -44,7 +44,22 @@ if(NOT OPENXR_FOUND AND LLGL_OPENXR_ALLOW_FETCH)
         set(BUILD_TESTS              OFF CACHE BOOL "" FORCE)
         set(BUILD_CONFORMANCE_TESTS  OFF CACHE BOOL "" FORCE)
         set(BUILD_LOADER             ON  CACHE BOOL "" FORCE)
-        set(DYNAMIC_LOADER           ON  CACHE BOOL "" FORCE)
+
+        # Build the loader statically on desktop, dynamically on Android.
+        #
+        # The SDK's loader CMakeLists adds an unconditional Visual Studio POST_BUILD step that
+        # xcopies the built loader DLL from the loader target's *own* output dir into the SDK's
+        # sample/test dirs (hello_xr/loader_test/conformance). We never build those, and any
+        # consuming project that sets a global CMAKE_RUNTIME_OUTPUT_DIRECTORY redirects the DLL
+        # elsewhere, so that xcopy fails the whole build with "File not found - openxr_loader*.dll".
+        # A static loader skips that block entirely and removes the DLL-deployment burden on
+        # desktop consumers (the loader still discovers the active XR runtime via the registry).
+        # Android keeps the dynamic loader because the APK ships libopenxr_loader.so (see BuildAndroid.sh).
+        if(ANDROID)
+            set(DYNAMIC_LOADER       ON  CACHE BOOL "" FORCE)
+        else()
+            set(DYNAMIC_LOADER       OFF CACHE BOOL "" FORCE)
+        endif()
 
         FetchContent_Declare(
             openxr_sdk
