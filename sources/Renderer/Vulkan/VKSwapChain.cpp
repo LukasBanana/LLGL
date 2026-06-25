@@ -99,6 +99,16 @@ bool VKSwapChain::IsPresentable() const
 
 void VKSwapChain::Present()
 {
+    /*
+    If a previous Present/Acquire reported the swap-chain as out-of-date but it could not be
+    recreated yet (e.g. a zero-size/minimized window), retry the recreation and skip this frame.
+    */
+    if (swapChainOutOfDate_)
+    {
+        RecreateSwapChain();
+        return;
+    }
+
     /* Initialize semaphores */
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -131,6 +141,18 @@ void VKSwapChain::Present()
         presentInfo.pResults            = nullptr;
     }
     result = vkQueuePresentKHR(presentQueue_, &presentInfo);
+
+    /*
+    VK_ERROR_OUT_OF_DATE_KHR / VK_SUBOPTIMAL_KHR are not fatal: the surface no longer matches the
+    swap-chain (window resize, DPI change, or the first present on some drivers, e.g. Adreno).
+    Recreate the swap-chain instead of trapping. RecreateSwapChain() re-acquires the next image,
+    so we return here rather than falling through to AcquireNextColorBuffer().
+    */
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+    {
+        RecreateSwapChain();
+        return;
+    }
     VKThrowIfFailed(result, "failed to present Vulkan graphics queue");
 
     /* Move to next frame */
@@ -755,7 +777,7 @@ void VKSwapChain::AcquireNextColorBuffer()
     vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());
 
     /* Acquire next image from swap-chain and signal image available semaphore */
-    vkAcquireNextImageKHR(
+    VkResult result = vkAcquireNextImageKHR(
         device_,
         swapChain_,
         UINT64_MAX,
@@ -764,11 +786,51 @@ void VKSwapChain::AcquireNextColorBuffer()
         &currentColorBuffer_
     );
 
+    /*
+    A stale swap-chain reports VK_ERROR_OUT_OF_DATE_KHR here and leaves currentColorBuffer_
+    undefined. Flag it for recreation on the next Present() instead of asserting on the invalid
+    image index. VK_SUBOPTIMAL_KHR still returns a usable image, so it is treated as success.
+    */
+    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        swapChainOutOfDate_ = true;
+        return;
+    }
+
     LLGL_ASSERT(
         currentColorBuffer_ < numColorBuffers_,
         "next swap-chain image index (%u) exceeds upper bound (%u)",
         currentColorBuffer_, numColorBuffers_
     );
+}
+
+void VKSwapChain::RecreateSwapChain()
+{
+    /* Wait until the GPU is idle before in-flight resources are destroyed and recreated */
+    graphicsQueue_->WaitIdle();
+
+    /* Recreate the Vulkan surface so its capabilities (incl. current extent) are refreshed */
+    CreateGpuSurface();
+
+    /* Prefer the surface's reported current extent; fall back to the tracked resolution */
+    Extent2D resolution = GetResolution();
+    const VkExtent2D currentExtent = surfaceSupportDetails_.caps.currentExtent;
+    if (currentExtent.width != 0xFFFFFFFFu && currentExtent.height != 0xFFFFFFFFu)
+        resolution = Extent2D{ currentExtent.width, currentExtent.height };
+
+    /* A zero-area surface (e.g. minimized window) cannot host a swap-chain; defer recreation */
+    if (resolution.width == 0 || resolution.height == 0)
+    {
+        swapChainOutOfDate_ = true;
+        return;
+    }
+
+    /* Clear the flag before recreating so a nested AcquireNextColorBuffer() can re-set it */
+    swapChainOutOfDate_ = false;
+
+    /* Recreate color/depth-stencil buffers and the swap-chain (this re-acquires the next image) */
+    ReleaseRenderBuffers();
+    CreateResolutionDependentResources(resolution);
 }
 
 

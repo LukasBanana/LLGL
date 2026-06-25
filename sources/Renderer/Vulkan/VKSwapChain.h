@@ -123,6 +123,10 @@ class VKSwapChain final : public SwapChain
 
         void AcquireNextColorBuffer();
 
+        // Recreates the surface, swap-chain, and resolution-dependent resources after the
+        // swap-chain became out-of-date (e.g. resize, DPI change, or driver-reported staleness).
+        void RecreateSwapChain();
+
     private:
 
         VkInstance                          instance_                                   = VK_NULL_HANDLE;
@@ -148,6 +152,7 @@ class VKSwapChain final : public SwapChain
         std::uint32_t                       currentColorBuffer_                         = 0; // determined by vkAcquireNextImageKHR
         std::uint32_t                       currentFrameInFlight_                       = 0; // current index for maximum frames in flight
         std::uint32_t                       vsyncInterval_                              = 0;
+        bool                                swapChainOutOfDate_                         = false; // set when acquire/present report the swap-chain as stale
 
         VKRenderPass                        secondaryRenderPass_;
         VkFormat                            depthStencilFormat_                         = VK_FORMAT_UNDEFINED;
