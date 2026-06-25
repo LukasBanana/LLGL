@@ -3,7 +3,8 @@
 set SOURCE_DIR=%~dp0
 set OUTPUT_DIR=build_win64
 set BUILD_TYPE=Release
-set BUILD_ARCH=x64
+REM Target architecture can be overridden, e.g. "set BUILD_ARCH=ARM64" before invoking this script
+if "%BUILD_ARCH%" == "" set BUILD_ARCH=x64
 set ENABLE_EXAMPLES=ON
 set ENABLE_TESTS=ON
 set STATIC_LIB=OFF
