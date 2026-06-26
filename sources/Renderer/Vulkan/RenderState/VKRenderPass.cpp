@@ -8,6 +8,7 @@
 #include "VKRenderPass.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
+#include "../Ext/VKExtensionRegistry.h"
 #include "../../RenderPassUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
@@ -277,21 +278,28 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     */
     const void* createInfoNext = nullptr;
     #if VK_KHR_multiview
-    const std::uint32_t viewMask = (numViews_ > 1 ? ((1u << numViews_) - 1u) : 0u);
     VkRenderPassMultiviewCreateInfoKHR multiviewCreateInfo = {};
+    const std::uint32_t viewMask = (numViews_ > 1 ? ((1u << numViews_) - 1u) : 0u);
     if (numViews_ > 1)
     {
-        multiviewCreateInfo.sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
-        multiviewCreateInfo.pNext                   = nullptr;
-        multiviewCreateInfo.subpassCount            = 1;
-        multiviewCreateInfo.pViewMasks              = (&viewMask);
-        multiviewCreateInfo.dependencyCount         = 0;
-        multiviewCreateInfo.pViewOffsets            = nullptr;
-        multiviewCreateInfo.correlationMaskCount    = 1;
-        multiviewCreateInfo.pCorrelationMasks       = (&viewMask);
-        createInfoNext = (&multiviewCreateInfo);
+        if (HasExtension(VKExt::KHR_multiview))
+        {
+            multiviewCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
+            multiviewCreateInfo.pNext = nullptr;
+            multiviewCreateInfo.subpassCount = 1;
+            multiviewCreateInfo.pViewMasks = (&viewMask);
+            multiviewCreateInfo.dependencyCount = 0;
+            multiviewCreateInfo.pViewOffsets = nullptr;
+            multiviewCreateInfo.correlationMaskCount = 1;
+            multiviewCreateInfo.pCorrelationMasks = (&viewMask);
+            createInfoNext = (&multiviewCreateInfo);
+        }
+        else
+        {
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("A Vulkan render pass with multiple views was requested but the multiview extension is not supported");
+        }
     }
-    #endif // /VK_KHR_multiview
+#endif // /VK_KHR_multiview
 
     /* Create swap-chain render pass */
     VkRenderPassCreateInfo createInfo;

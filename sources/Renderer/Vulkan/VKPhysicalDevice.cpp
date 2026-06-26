@@ -359,7 +359,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     #if VK_KHR_multiview
-    caps.limits.maxViews                            = (caps.features.hasMultiView ? properties_.multiview.maxMultiviewViewCount : 0);
+    caps.limits.maxViews                            = (caps.features.hasMultiView ? properties_.multiview.maxMultiviewViewCount : 1u);
     #endif
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;

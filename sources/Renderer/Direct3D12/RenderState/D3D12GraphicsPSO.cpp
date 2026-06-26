@@ -20,7 +20,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
-
+#include "D3D12PSOUtils.h"
 
 namespace LLGL
 {
@@ -267,20 +267,6 @@ ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(ID3D12Devi
 
 #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
 
-template <D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TType, typename TObject>
-struct alignas(void*) D3DPipelineStreamSubobject
-{
-    D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type    = { TType };
-    TObject                             object  = {};
-
-    D3DPipelineStreamSubobject() = default;
-
-    inline D3DPipelineStreamSubobject& operator = (TObject object)
-    {
-        this->object = std::move(object);
-        return *this;
-    }
-};
 
 /*
 Stream layout for a view-instanced graphics PSO. Mirrors the fields of D3D12_GRAPHICS_PIPELINE_STATE_DESC and

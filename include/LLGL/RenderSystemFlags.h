@@ -785,13 +785,13 @@ struct RenderingLimits
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
 
     /**
-    \brief Specifies the maximum number of views for multiview (single-pass layered) rendering. By default 0.
-    \remarks If multiview is not supported, this is 0. Otherwise it is at least 2.
-    This is the upper limit for RenderPassDescriptor::views.
+    \brief Specifies the maximum number of views for multiview (single-pass layered) rendering. By default 1.
+    \remarks This is the upper limit for RenderPassDescriptor::views.  This values should only be more than 1
+        if hasMultiView is true.
     \see RenderPassDescriptor::views
     \see RenderingFeatures::hasMultiView
     */
-    std::uint32_t   maxViews                            = 0;
+    std::uint32_t   maxViews                            = 1;
 
     /**
     \brief Specifies the maximum size (in bytes) that is supported for hardware buffers (vertex, index, storage buffers).

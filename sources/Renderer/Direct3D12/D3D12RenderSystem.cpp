@@ -914,7 +914,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[0]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     caps.limits.maxViewportSize[1]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
-    caps.limits.maxViews                            = (caps.features.hasMultiView ? D3D12_MAX_VIEW_INSTANCE_COUNT : 0u);
+    caps.limits.maxViews                            = (caps.features.hasMultiView ? D3D12_MAX_VIEW_INSTANCE_COUNT : 1u);
     #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;
     caps.limits.maxConstantBufferSize               = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
