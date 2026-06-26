@@ -878,9 +878,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasViewportArrays                 = true;
     #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
     /*
-    Multiview is implemented with D3D12 view instancing, which requires SV_ViewID (Shader Model 6.1, i.e. DXC).
-    Gate the reported capability on the same macro that enables DXC so the build can actually compile the
-    required shaders; when DXC is disabled the view-instanced PSO path is also compiled out.
+    Multiview is implemented with D3D12 view instancing (SV_ViewID, Shader Model 6.1). The view-instanced PSO path
+    is compiled out unless LLGL_D3D12_ENABLE_DXCOMPILER, so the capability is reported under that macro. The cap
+    reflects the device's view-instancing support, NOT runtime shader compilation: an app that precompiles its
+    SV_ViewID shaders to DXIL can use multiview without dxcompiler.dll present, so it must not be gated on DXC
+    being loadable. (A consumer that compiles SM 6.1 shaders at runtime is responsible for shipping dxcompiler.dll.)
     */
     D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
