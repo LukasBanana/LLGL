@@ -413,6 +413,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
     {
         case spv::StorageClassUniform:
         case spv::StorageClassUniformConstant:
+        case spv::StorageClassStorageBuffer:
         {
             auto& var = uniforms_[instr.result];
             {
