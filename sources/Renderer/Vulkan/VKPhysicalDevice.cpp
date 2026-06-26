@@ -152,6 +152,18 @@ void VKPhysicalDevice::LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice
     LLGL_ASSERT(physicalDevice != VK_NULL_HANDLE);
     LLGL_ASSERT(physicalDevice_ == VK_NULL_HANDLE, "physical Vulkan device already set");
     physicalDevice_ = physicalDevice;
+
+    /*
+    Populate the supported-extension set for the adopted device, mirroring PickPhysicalDevice. SupportsExtension()
+    and the feature/property queries below (QueryDeviceInfo) read this set, so without it every device-extension-
+    gated capability (multiview, mesh shaders, conservative rasterization, ...) would be reported as unsupported
+    for a device created externally (e.g. by the OpenXR Vulkan binding) even though it advertises and enables them.
+    The name pointers reference the persistent supportedExtensions_ member, so store into that member directly.
+    */
+    supportedExtensions_ = VKQueryDeviceExtensionProperties(physicalDevice_);
+    for (const VkExtensionProperties& extension : supportedExtensions_)
+        supportedExtensionNames_.insert(extension.extensionName);
+
     QueryDeviceInfo();
 }
 
@@ -310,6 +322,9 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasOffsetInstancing               = true;
     caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
+    #if VK_KHR_multiview
+    caps.features.hasMultiView                      = (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME) && features_.multiview.multiview != VK_FALSE);
+    #endif
     #if VK_EXT_conservative_rasterization
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
     #endif
@@ -343,6 +358,9 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewports                        = std::min(limits.maxViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
     caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
+    #if VK_KHR_multiview
+    caps.limits.maxViews                            = (caps.features.hasMultiView ? properties_.multiview.maxMultiviewViewCount : 0);
+    #endif
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
     caps.limits.maxStreamOutputs                    = properties_.transformFeedback.maxTransformFeedbackBuffers;

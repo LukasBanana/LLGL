@@ -21,6 +21,7 @@
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "VKInitializers.h"
+#include "Command/VKCommandBufferRegistry.h"
 #include "Texture/VKImageUtils.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
@@ -70,15 +71,15 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         if (isDebugLayerEnabled_)
         {
             // The instance was created externally (e.g. by the OpenXR graphics binding); we can only
-            // install the debug callback if that creator enabled VK_EXT_debug_report. Probe via the
+            // install the debug messenger if that creator enabled VK_EXT_debug_utils. Probe via the
             // procaddr instead of throwing, so a debug-less external instance degrades to "no callback"
             // rather than aborting startup.
-            if (vkGetInstanceProcAddr(instance_, "vkCreateDebugReportCallbackEXT") != nullptr)
-                CreateDebugReportCallback();
+            if (vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT") != nullptr)
+                CreateDebugMessenger();
             else
                 Log::Errorf(
                     "RenderSystemFlags::DebugDevice was requested but the externally-supplied Vulkan instance "
-                    "lacks VK_EXT_debug_report; no Vulkan debug-report callback will be installed.\n"
+                    "lacks VK_EXT_debug_utils; no Vulkan debug messenger will be installed.\n"
                 );
         }
         VKLoadInstanceExtensions(instance_, supportedInstanceExtensions_);
@@ -91,7 +92,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         /* Create Vulkan instance and device objects */
         CreateInstance(rendererConfigVK);
         if (isDebugLayerEnabled_)
-            CreateDebugReportCallback();
+            CreateDebugMessenger();
         VKLoadInstanceExtensions(instance_, supportedInstanceExtensions_);
         if (!PickPhysicalDevice(preferredDeviceFlags))
             return;
@@ -968,126 +969,161 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     VKThrowIfFailed(result, "failed to create Vulkan instance");
 }
 
-// Suppresses DebugBreakOnError for validation messages caused by known third-party OpenXR-runtime
-// bugs that the application has no way to fix. The message is still logged through DebugPuts so
-// real problems remain visible.
-//
-// Filter pairs are (VUID, object-label) — both must appear in the message for the entry to match.
-// Use a null objectLabel for VUIDs where any object hit is a known false positive.
-//
-// Currently covers SteamVR's OpenXR-to-OpenVR translation layer (CSxrSwapchainVulkanOpenVR), which
-// emits depth-image barriers with aspectMask=0 and the wrong layouts of its own, plus its own
-// vkCreateImage call with PREINITIALIZED + EXTERNAL_MEMORY. Remove entries once the runtimes ship
-// a fix.
-static bool IsKnownXrRuntimeFalsePositive(const char* message)
+// Suppresses DebugBreakOnError for validation messages caused by known third-party OpenXR-runtime bugs that
+// the application cannot fix. This handles only errors NOT tied to a command buffer (e.g. object creation);
+// errors recorded into / submitted with a command buffer are attributed precisely by command-buffer ownership
+// in ShouldBreakOnValidationError below, so they don't need per-VUID entries here. The message is still logged
+// through DebugPuts so real problems remain visible. Remove entries once the runtimes ship a fix.
+static bool IsKnownXrRuntimeNonCommandFalsePositive(const char* message)
 {
     if (message == nullptr)
         return false;
 
-    struct Pattern { const char* vuid; const char* objectLabel; };
-    static constexpr Pattern kPatterns[] =
-    {
-        // aspectMask=0 / depth-format-aspect mismatch — the first messages in each SteamVR-bug
-        // sequence don't include the object label, so we filter by VUID alone. Safe because LLGL's
-        // own barrier paths derive aspectMask from a non-UNDEFINED format and provably never
-        // produce aspectMask=0 (confirmed via traps at every vkCmdPipelineBarrier emit site).
-        { "VUID-VkImageSubresourceRange-aspectMask-requiredbitmask", nullptr },
-        { "VUID-VkImageMemoryBarrier-subresourceRange-09601",        nullptr },
-        // Layout/usage mismatches CAN legitimately come from LLGL bugs, so require the SteamVR
-        // image label to be sure we only suppress the runtime-side cases.
-        { "VUID-VkImageMemoryBarrier-oldLayout-01208",               "CSxrSwapchainVulkanOpenVR" },
-        { "VUID-VkImageMemoryBarrier-oldLayout-01212",               "CSxrSwapchainVulkanOpenVR" },
-        // SteamVR's own vkCreateImage with PREINITIALIZED + external-memory.
-        { "VUID-VkImageCreateInfo-pNext-01443",                      nullptr },
-        // SteamVR's internal BlankEyeBuffer (fallback texture used when the app submits no layer)
-        // tripping the descriptor-layout-mismatch VUID. We restrict on label so the same VUID will
-        // still trap on real LLGL bugs (where the image label is the app's own).
-        { "VUID-vkCmdDraw-None-09600",                               "BlankEyeBuffer" },
-    };
+    // SteamVR's own vkCreateImage with PREINITIALIZED + external-memory (its compositor scene/eye textures).
+    // This is an object-creation error with no associated command buffer, so ownership can't attribute it.
+    return (std::strstr(message, "VUID-VkImageCreateInfo-pNext-01443") != nullptr);
+}
 
-    for (const Pattern& p : kPatterns)
+// Returns true if the named object belongs to the external XR runtime (e.g. SteamVR/OpenVR compositor) that
+// shares LLGL's VkDevice. Used to attribute validation errors whose object list contains only a runtime image
+// (and no command buffer) -- e.g. the runtime's own depth-image barriers with aspectMask=0 / wrong layouts.
+static bool IsKnownExternalRuntimeObjectName(const char* objectName)
+{
+    if (objectName == nullptr)
+        return false;
+    static const char* kNames[] =
     {
-        if (std::strstr(message, p.vuid) != nullptr &&
-            (p.objectLabel == nullptr || std::strstr(message, p.objectLabel) != nullptr))
-        {
+        "CSxrSwapchainVulkanOpenVR", // SteamVR/OpenVR swap-chain images (shared with LLGL)
+        "BlankEyeBuffer",            // SteamVR fallback texture submitted when the app provides no layer
+        "Scene create Vulkan",       // SteamVR compositor scene/eye textures
+    };
+    for (const char* name : kNames)
+    {
+        if (std::strstr(objectName, name) != nullptr)
             return true;
-        }
     }
     return false;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
-    VkDebugReportFlagsEXT       flags,
-    VkDebugReportObjectTypeEXT  objectType,
-    std::uint64_t               object,
-    std::size_t                 location,
-    std::int32_t                messageCode,
-    const char*                 layerPrefix,
-    const char*                 message,
-    void*                       userData)
+// Decides whether a validation error should trigger the debug break. The OpenXR runtime compositor shares
+// LLGL's VkDevice and records/submits its own command buffers on it, so the validation layer reports the
+// runtime's errors to our callback too. We only break for errors LLGL is responsible for: those tied to a
+// command buffer LLGL allocated. Errors tied only to command buffers we don't own (the runtime's) are skipped;
+// errors not tied to any command buffer (e.g. object creation) break unless they are a known runtime false
+// positive. This relies on the debug-utils object list, which the debug-report callback does not provide.
+static bool ShouldBreakOnValidationError(const VkDebugUtilsMessengerCallbackDataEXT* callbackData)
 {
-    DebugPuts(message);
+    bool hasCommandBuffer = false;
+#if LLGL_BUILD_XR_OPENXR
+    bool anyNamedObject                 = false;
+    bool allNamedObjectsAreRuntimeOwned = true;
+#endif // /LLGL_BUILD_XR_OPENXR
 
-    if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
+    if (callbackData->pObjects != nullptr)
+    {
+        for (std::uint32_t i = 0; i < callbackData->objectCount; ++i)
+        {
+            const VkDebugUtilsObjectNameInfoEXT& obj = callbackData->pObjects[i];
+            if (obj.objectType == VK_OBJECT_TYPE_COMMAND_BUFFER)
+            {
+                hasCommandBuffer = true;
+                if (VKIsLLGLCommandBuffer(reinterpret_cast<VkCommandBuffer>(obj.objectHandle)))
+                    return true; // LLGL recorded/submitted this command buffer -> our responsibility
+            }
+        #if LLGL_BUILD_XR_OPENXR
+            if (obj.pObjectName != nullptr)
+            {
+                anyNamedObject = true;
+                if (!IsKnownExternalRuntimeObjectName(obj.pObjectName))
+                    allNamedObjectsAreRuntimeOwned = false;
+            }
+        #endif // /LLGL_BUILD_XR_OPENXR
+        }
+    }
+
+    // The error references only command buffers LLGL does not own (e.g. an OpenXR runtime compositor's).
+    if (hasCommandBuffer)
+        return false;
+
+#if LLGL_BUILD_XR_OPENXR
+    // No (LLGL) command buffer in the object list. If every named object belongs to the external XR runtime --
+    // e.g. a standalone barrier on the runtime's own swap-chain/scene image whose validation message omits the
+    // recording command buffer -- the error is the runtime's, not LLGL's.
+    if (anyNamedObject && allNamedObjectsAreRuntimeOwned)
+        return false;
+
+    // Object-creation and other command-less errors the runtime is known to produce (unnamed at the time).
+    if (IsKnownXrRuntimeNonCommandFalsePositive(callbackData->pMessage))
+        return false;
+#endif // /LLGL_BUILD_XR_OPENXR
+
+    return true;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugUtilsCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+    void*                                       userData)
+{
+    if (callbackData == nullptr || callbackData->pMessage == nullptr)
+        return VK_FALSE;
+
+    DebugPuts(callbackData->pMessage);
+
+    if ((messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0)
     {
         VKRenderSystem* renderSystemVK = static_cast<VKRenderSystem*>(userData);
-        if (renderSystemVK->IsBreakOnErrorEnabled()
-#if LLGL_BUILD_XR_OPENXR
-            && !IsKnownXrRuntimeFalsePositive(message)
-#endif // /LLGL_BUILD_XR_OPENXR
-        )
+        if (renderSystemVK->IsBreakOnErrorEnabled() && ShouldBreakOnValidationError(callbackData))
             DebugBreakOnError();
     }
 
     return VK_FALSE;
 }
 
-static VkResult CreateDebugReportCallbackEXT(
+static VkResult CreateDebugUtilsMessengerEXT(
     VkInstance                                  instance,
-    const VkDebugReportCallbackCreateInfoEXT*   createInfo,
+    const VkDebugUtilsMessengerCreateInfoEXT*   createInfo,
     const VkAllocationCallbacks*                allocator,
-    VkDebugReportCallbackEXT*                   callback)
+    VkDebugUtilsMessengerEXT*                   messenger)
 {
-    auto func = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     if (func != nullptr)
-        return func(instance, createInfo, allocator, callback);
+        return func(instance, createInfo, allocator, messenger);
     else
         return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-static void DestroyDebugReportCallbackEXT(
+static void DestroyDebugUtilsMessengerEXT(
     VkInstance                      instance,
-    VkDebugReportCallbackEXT        callback,
+    VkDebugUtilsMessengerEXT        messenger,
     const VkAllocationCallbacks*    allocator)
 {
-    auto func = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
     if (func != nullptr)
-        func(instance, callback, allocator);
+        func(instance, messenger, allocator);
 }
 
-void VKRenderSystem::CreateDebugReportCallback()
+void VKRenderSystem::CreateDebugMessenger()
 {
-    /* Initialize flags */
-    VkDebugReportFlagsEXT flags = 0;
+    /*
+    Enable command-buffer tracking so the messenger can attribute validation errors to LLGL by command-buffer
+    ownership (see ShouldBreakOnValidationError). Done before any command buffers are allocated.
+    */
+    VKSetCommandBufferTrackingEnabled(true);
 
-    //flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-    flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
-    //flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-    flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
-    //flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-
-    /* Create report callback */
-    VkDebugReportCallbackCreateInfoEXT createInfo;
+    /* Create debug-utils messenger (used over debug-report so the callback receives the labeled object list) */
+    VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     {
-        createInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        createInfo.pNext        = nullptr;
-        createInfo.flags        = flags;
-        createInfo.pfnCallback  = VKDebugCallback;
-        createInfo.pUserData    = this;
+        createInfo.sType            = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity  = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType      = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback  = VKDebugUtilsCallback;
+        createInfo.pUserData        = this;
     }
-    debugReportCallback_ = VKPtr<VkDebugReportCallbackEXT>{ instance_, DestroyDebugReportCallbackEXT };
-    auto result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
+    debugMessenger_ = VKPtr<VkDebugUtilsMessengerEXT>{ instance_, DestroyDebugUtilsMessengerEXT };
+    auto result = CreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr, debugMessenger_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan debug utils messenger");
 }
 
 bool VKRenderSystem::PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice)

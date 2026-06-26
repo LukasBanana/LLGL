@@ -39,4 +39,6 @@ glslangValidator -V --target-env vulkan1.2 -DENABLE_SPIRV=1 -o Meshlet\Meshlet.4
 glslangValidator -V -DENABLE_SPIRV=1 -o Meshlet\Meshlet.450core.frag.spv Meshlet\Meshlet.450core.frag
 
 echo DONE
+glslangValidator -V -DENABLE_SPIRV=1 -o Multiview\Multiview.450core.vert.spv Multiview\Multiview.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -o Multiview\Multiview.450core.frag.spv Multiview\Multiview.450core.frag
 pause

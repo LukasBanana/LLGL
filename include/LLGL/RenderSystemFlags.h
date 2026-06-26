@@ -635,6 +635,18 @@ struct RenderingFeatures
     bool hasViewportArrays              = false;
 
     /**
+    \brief Specifies whether multiview (single-pass layered) rendering is supported.
+    \remarks If supported, a render pass can broadcast a single draw command to multiple array layers of the
+    render target, with each invocation reading its layer index via SystemValue::ViewIndex. This is commonly
+    used for single-pass stereo rendering (VR) and cascaded shadow maps.
+    \note Only supported with: Vulkan, Direct3D 12.
+    \see RenderPassDescriptor::views
+    \see RenderingLimits::maxViews
+    \see SystemValue::ViewIndex
+    */
+    bool hasMultiView                   = false;
+
+    /**
     \brief Specifies whether conservative rasterization is supported.
     \see RasterizerDescriptor::conservativeRasterization
     */
@@ -771,6 +783,15 @@ struct RenderingLimits
     \see Scissor::height
     */
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
+
+    /**
+    \brief Specifies the maximum number of views for multiview (single-pass layered) rendering. By default 0.
+    \remarks If multiview is not supported, this is 0. Otherwise it is at least 2.
+    This is the upper limit for RenderPassDescriptor::views.
+    \see RenderPassDescriptor::views
+    \see RenderingFeatures::hasMultiView
+    */
+    std::uint32_t   maxViews                            = 0;
 
     /**
     \brief Specifies the maximum size (in bytes) that is supported for hardware buffers (vertex, index, storage buffers).

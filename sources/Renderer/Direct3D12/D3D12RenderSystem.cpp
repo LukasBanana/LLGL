@@ -876,6 +876,16 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
     caps.features.hasViewportArrays                 = true;
+    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    /*
+    Multiview is implemented with D3D12 view instancing, which requires SV_ViewID (Shader Model 6.1, i.e. DXC).
+    Gate the reported capability on the same macro that enables DXC so the build can actually compile the
+    required shaders; when DXC is disabled the view-instanced PSO path is also compiled out.
+    */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
+    caps.features.hasMultiView                      = (options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED);
+    #endif
     caps.features.hasConservativeRasterization      = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
     caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
@@ -903,6 +913,9 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewports                        = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
     caps.limits.maxViewportSize[0]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     caps.limits.maxViewportSize[1]                  = D3D12_VIEWPORT_BOUNDS_MAX;
+    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    caps.limits.maxViews                            = (caps.features.hasMultiView ? D3D12_MAX_VIEW_INSTANCE_COUNT : 0u);
+    #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;
     caps.limits.maxConstantBufferSize               = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     caps.limits.maxStreamOutputs                    = 4u;

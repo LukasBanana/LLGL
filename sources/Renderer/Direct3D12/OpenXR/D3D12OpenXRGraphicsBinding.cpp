@@ -215,10 +215,14 @@ bool D3D12OpenXRGraphicsBinding::EnumerateSwapchainImages(
         initialState = D3D12_RESOURCE_STATE_RENDER_TARGET;
     }
 
+    // A multiview swap-chain (arrayLayers > 1) wraps each runtime image as a 2D array texture so render targets
+    // create array RTVs/DSVs spanning all views; view instance i is then routed to array layer i.
+    const TextureType textureType = (swapChainDesc.arrayLayers > 1 ? TextureType::Texture2DArray : TextureType::Texture2D);
+
     for (auto& xrImg : xrImages)
     {
         XRSwapchainImage entry;
-        entry.texture = std::unique_ptr<D3D12Texture>(new D3D12Texture(native.device, TextureType::Texture2D, bindFlags, initialState, xrImg.texture, swapChainDesc.format));
+        entry.texture = std::unique_ptr<D3D12Texture>(new D3D12Texture(native.device, textureType, bindFlags, initialState, xrImg.texture, swapChainDesc.format));
         outImages.emplace_back(std::move(entry));
     }
     if (native.device) native.device->Release();

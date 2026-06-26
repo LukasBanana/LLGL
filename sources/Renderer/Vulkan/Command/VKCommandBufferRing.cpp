@@ -6,6 +6,7 @@
  */
 
 #include "VKCommandBufferRing.h"
+#include "VKCommandBufferRegistry.h"
 #include "../VKPhysicalDevice.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
@@ -29,6 +30,7 @@ VKCommandBufferRing::VKCommandBufferRing(VkDevice device) :
 
 VKCommandBufferRing::~VKCommandBufferRing()
 {
+    VKUnregisterCommandBuffers(commandBuffers_, maxNumCommandBuffers);
     vkFreeCommandBuffers(device_, commandPool_, count_, commandBuffers_);
 }
 
@@ -107,6 +109,9 @@ void VKCommandBufferRing::CreateVkCommandBuffers(VkCommandBufferLevel cmdBufferL
     }
     VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBuffers_);
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
+
+    /* Track these command buffers so the debug messenger can attribute validation errors to LLGL (see registry) */
+    VKRegisterCommandBuffers(commandBuffers_, maxNumCommandBuffers);
 }
 
 void VKCommandBufferRing::CreateVkRecordingFences()

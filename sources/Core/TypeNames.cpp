@@ -395,6 +395,7 @@ LLGL_EXPORT const char* ToString(const SystemValue val)
         LLGL_CASE_TO_STR_TYPED( SystemValue, SampleID          );
         LLGL_CASE_TO_STR_TYPED( SystemValue, Stencil           );
         LLGL_CASE_TO_STR_TYPED( SystemValue, VertexID          );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, ViewIndex         );
         LLGL_CASE_TO_STR_TYPED( SystemValue, ViewportIndex     );
     }
     return nullptr;

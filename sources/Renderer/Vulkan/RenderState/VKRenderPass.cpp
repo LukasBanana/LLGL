@@ -169,7 +169,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     }
 
     /* Create render pass with native attachment descriptors */
-    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits);
+    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits, desc.views);
 }
 
 void VKRenderPass::CreateVkRenderPassWithDescriptors(
@@ -177,7 +177,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     std::uint32_t                   numAttachments,
     std::uint32_t                   numColorAttachments,
     const VkAttachmentDescription*  attachmentDescs,
-    VkSampleCountFlagBits           sampleCountBits)
+    VkSampleCountFlagBits           sampleCountBits,
+    std::uint32_t                   numViews)
 {
     LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -192,6 +193,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     /* Store sample count bits and number of color attachments (required for default blend states in VKGraphicsPipeline) */
     sampleCountBits_        = sampleCountBits;
     numColorAttachments_    = static_cast<std::uint8_t>(numColorAttachments);
+    numViews_               = (numViews > 1 ? numViews : 1);
 
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
@@ -268,11 +270,34 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         subpassDep.dependencyFlags  = 0;
     }
 
+    /*
+    For multiview (single-pass layered) rendering, broadcast the single subpass to 'numViews_' views via a
+    view mask. The correlation mask hints that all views are rendered from correlated geometry, which lets
+    drivers optimize. This requires VK_KHR_multiview (core in Vulkan 1.1).
+    */
+    const void* createInfoNext = nullptr;
+    #if VK_KHR_multiview
+    const std::uint32_t viewMask = (numViews_ > 1 ? ((1u << numViews_) - 1u) : 0u);
+    VkRenderPassMultiviewCreateInfoKHR multiviewCreateInfo = {};
+    if (numViews_ > 1)
+    {
+        multiviewCreateInfo.sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
+        multiviewCreateInfo.pNext                   = nullptr;
+        multiviewCreateInfo.subpassCount            = 1;
+        multiviewCreateInfo.pViewMasks              = (&viewMask);
+        multiviewCreateInfo.dependencyCount         = 0;
+        multiviewCreateInfo.pViewOffsets            = nullptr;
+        multiviewCreateInfo.correlationMaskCount    = 1;
+        multiviewCreateInfo.pCorrelationMasks       = (&viewMask);
+        createInfoNext = (&multiviewCreateInfo);
+    }
+    #endif // /VK_KHR_multiview
+
     /* Create swap-chain render pass */
     VkRenderPassCreateInfo createInfo;
     {
         createInfo.sType            = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext            = nullptr;
+        createInfo.pNext            = createInfoNext;
         createInfo.flags            = 0;
         createInfo.attachmentCount  = static_cast<std::uint32_t>(sanitizedAttachmentDescs.size());
         createInfo.pAttachments     = sanitizedAttachmentDescs.data();

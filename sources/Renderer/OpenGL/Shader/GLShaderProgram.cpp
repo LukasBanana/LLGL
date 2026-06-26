@@ -418,6 +418,7 @@ static SystemValue FindSystemValue(const StringView& name)
         { "gl_SampleID",        SystemValue::SampleID           },
         { "gl_VertexID",        SystemValue::VertexID           }, // GLSL
         { "gl_VertexIndex",     SystemValue::VertexID           }, // SPIR-V
+        { "gl_ViewIndex",       SystemValue::ViewIndex          },
         { "gl_ViewportIndex",   SystemValue::ViewportIndex      },
     };
 

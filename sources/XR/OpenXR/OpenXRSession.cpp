@@ -255,11 +255,14 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
         if (!depthReady)
         {
             TextureDescriptor depthTexDesc;
-            depthTexDesc.type       = TextureType::Texture2D;
-            depthTexDesc.bindFlags  = BindFlags::DepthStencilAttachment;
-            depthTexDesc.format     = swapChainDesc.depthStencilFormat;
-            depthTexDesc.extent     = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
-            depthTexDesc.mipLevels  = 1;
+            // For a multiview swap-chain the private depth must be an array texture with one layer per view so it can
+            // back the multiview render pass alongside the layered color images.
+            depthTexDesc.type        = (swapChainDesc.arrayLayers > 1 ? TextureType::Texture2DArray : TextureType::Texture2D);
+            depthTexDesc.bindFlags   = BindFlags::DepthStencilAttachment;
+            depthTexDesc.format      = swapChainDesc.depthStencilFormat;
+            depthTexDesc.extent      = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
+            depthTexDesc.arrayLayers = swapChainDesc.arrayLayers;
+            depthTexDesc.mipLevels   = 1;
 
             if (Texture* depthTexture = renderSystem_.CreateTexture(depthTexDesc))
                 swapChain->AttachDepthTexture(depthTexture);
@@ -349,7 +352,19 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
     SmallVector<XrCompositionLayerDepthInfoKHR> depthInfos;
     const XrCompositionLayerBaseHeader* layers[1] = { nullptr };
 
-    if (currentFrameState_.shouldRender && swapChains.size() == viewCount_ && currentViews_.size() == viewCount_)
+    // Multiview (single-pass stereo): a single swap-chain whose images carry one array layer per view. Each
+    // projection view then references that one swap-chain's image with its own array index. Otherwise the
+    // application uses the conventional layout of one swap-chain per view (each with array index 0).
+    auto* firstSwapChain = (swapChains.empty() ? nullptr : static_cast<OpenXRSwapChain*>(swapChains[0]));
+    const bool multiviewLayout =
+    (
+        swapChains.size() == 1 &&
+        firstSwapChain != nullptr &&
+        firstSwapChain->GetArrayLayers() == viewCount_
+    );
+    const bool swapChainLayoutValid = (multiviewLayout || swapChains.size() == viewCount_);
+
+    if (currentFrameState_.shouldRender && swapChainLayoutValid && currentViews_.size() == viewCount_)
     {
         projectionViews.resize(viewCount_, XrCompositionLayerProjectionView{ XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW });
         if (depthSubmissionEnabled_)
@@ -358,7 +373,9 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
         bool allValid = true;
         for (std::uint32_t i = 0; i < viewCount_; ++i)
         {
-            auto* sc = static_cast<OpenXRSwapChain*>(swapChains[i]);
+            // For multiview, every view shares the single swap-chain and selects its own array layer.
+            auto* sc = (multiviewLayout ? firstSwapChain : static_cast<OpenXRSwapChain*>(swapChains[i]));
+            const std::uint32_t imageArrayIndex = (multiviewLayout ? i : 0);
             if (sc == nullptr)
             {
                 allValid = false;
@@ -373,7 +390,7 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
             pv.subImage.imageRect.offset        = { 0, 0 };
             pv.subImage.imageRect.extent.width  = static_cast<std::int32_t>(sc->GetResolution().width);
             pv.subImage.imageRect.extent.height = static_cast<std::int32_t>(sc->GetResolution().height);
-            pv.subImage.imageArrayIndex         = 0;
+            pv.subImage.imageArrayIndex         = imageArrayIndex;
 
             // If the runtime supports composition_layer_depth and the application paired a depth
             // swap-chain with this color swap-chain, chain XrCompositionLayerDepthInfoKHR.
@@ -386,7 +403,7 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
                     di.subImage.imageRect.offset        = { 0, 0 };
                     di.subImage.imageRect.extent.width  = static_cast<std::int32_t>(depthCompanion->GetResolution().width);
                     di.subImage.imageRect.extent.height = static_cast<std::int32_t>(depthCompanion->GetResolution().height);
-                    di.subImage.imageArrayIndex         = 0;
+                    di.subImage.imageArrayIndex         = imageArrayIndex;
                     di.minDepth                         = 0.0f;
                     di.maxDepth                         = 1.0f;
                     di.nearZ                            = nearZ;
@@ -423,14 +440,9 @@ bool OpenXRSession::EndFrame(float nearZ, float farZ, ArrayView<XRSwapChain *> s
         return false;
     }
 
-    // Acquire-ahead: immediately acquire and wait for the next frame's image on each swap-chain so the next
-    // frame's XRSwapChain::GetRenderTarget is a pure accessor. This mirrors how LLGL::SwapChain::Present
-    // acquires its next image at the tail of present, and lets the wait overlap the gap before the next WaitFrame.
-    for (XRSwapChain* swapChain : swapChains)
-    {
-        if (auto* sc = static_cast<OpenXRSwapChain*>(swapChain))
-            sc->AcquireNextImage();
-    }
+    // The next frame's image is acquired on demand by XRSwapChain::AcquireRenderTarget (inside that frame), not
+    // ahead of time here -- acquiring between xrEndFrame and the next xrBeginFrame is rejected by some runtimes
+    // (XR_ERROR_CALL_ORDER_INVALID, e.g. VIVE WAVE).
 
     return true;
 }
