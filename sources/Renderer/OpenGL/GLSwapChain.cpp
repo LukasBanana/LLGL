@@ -57,33 +57,29 @@ GLSwapChain::GLSwapChain(
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
     #ifdef LLGL_OS_LINUX
-        #if LLGL_OPENGL_WAYLAND
-        NativeHandle nativeHandle = {};
-        if (surface)
-        {
-            surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-        }
 
-        if (nativeHandle.type == NativeType::Wayland)
-        {
-            /* Setup surface for the swap-chain */
-            SetOrCreateSurface(surface, UTF8String{}, desc);
-        }
-        else
-        {
-        #endif
-            /* Set up surface for the swap-chain and pass native context handle */
-            NativeHandle windowContext = {};
-            ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-            SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
-        #if LLGL_OPENGL_WAYLAND
-        }
-        #endif
-
-    #else
+    #if LLGL_OPENGL_WAYLAND
+    NativeHandle nativeHandle = {};
+    if (surface && surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle)) && nativeHandle.type == NativeType::Wayland)
+    {
         /* Setup surface for the swap-chain */
         SetOrCreateSurface(surface, UTF8String{}, desc);
-    #endif
+    }
+    else
+    #endif // /LLGL_OPENGL_WAYLAND
+    {
+        /* Set up surface for the swap-chain and pass native context handle */
+        NativeHandle windowContext = {};
+        ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
+        SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
+    }
+
+    #else // LLGL_OS_LINUX
+
+    /* Setup surface for the swap-chain */
+    SetOrCreateSurface(surface, UTF8String{}, desc);
+
+    #endif // /LLGL_OS_LINUX
 
     /*
     Cache resolution height after surface has been created,

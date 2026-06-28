@@ -277,7 +277,13 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
         {
             if (HGLRC extRenderContext = CreateExplicitWGLContext(hDC_, sharedContext))
             {
+                /*
+                Unset current WGL context to prevent issues with RenderDoc or other API hooks
+                that would deleted shared resources that are still needed for the new extended WGL context.
+                The new WGL context is made current again below.
+                */
                 MakeWGLContextCurrent(hDC_, nullptr);
+
                 /* Use the extended profile and delete the old standard render context */
                 DeleteWGLContext(hGLRC_);
                 hGLRC_ = extRenderContext;
