@@ -277,6 +277,7 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
         {
             if (HGLRC extRenderContext = CreateExplicitWGLContext(hDC_, sharedContext))
             {
+                MakeWGLContextCurrent(hDC_, nullptr);
                 /* Use the extended profile and delete the old standard render context */
                 DeleteWGLContext(hGLRC_);
                 hGLRC_ = extRenderContext;
