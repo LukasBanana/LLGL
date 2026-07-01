@@ -30,7 +30,7 @@ VKCommandBufferRing::VKCommandBufferRing(VkDevice device) :
 
 VKCommandBufferRing::~VKCommandBufferRing()
 {
-    VKUnregisterCommandBuffers(commandBuffers_, maxNumCommandBuffers);
+    VKUnregisterCommandBuffers(maxNumCommandBuffers, commandBuffers_);
     vkFreeCommandBuffers(device_, commandPool_, count_, commandBuffers_);
 }
 
@@ -111,7 +111,7 @@ void VKCommandBufferRing::CreateVkCommandBuffers(VkCommandBufferLevel cmdBufferL
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 
     /* Track these command buffers so the debug messenger can attribute validation errors to LLGL (see registry) */
-    VKRegisterCommandBuffers(commandBuffers_, maxNumCommandBuffers);
+    VKRegisterCommandBuffers(maxNumCommandBuffers, commandBuffers_);
 }
 
 void VKCommandBufferRing::CreateVkRecordingFences()

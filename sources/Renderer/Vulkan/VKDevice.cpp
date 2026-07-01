@@ -170,7 +170,7 @@ VkCommandBuffer VKDevice::AllocCommandBuffer(bool begin)
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffer");
 
     /* Track this command buffer so the debug messenger can attribute validation errors to LLGL (see registry) */
-    VKRegisterCommandBuffers(&cmdBuffer, 1);
+    VKRegisterCommandBuffers(1, &cmdBuffer);
 
     /* Begin command buffer recording (if enabled) */
     if (begin)
@@ -215,7 +215,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
     /* Release command buffer (if enabled) */
     if (release)
     {
-        VKUnregisterCommandBuffers(&cmdBuffer, 1);
+        VKUnregisterCommandBuffers(1, &cmdBuffer);
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmdBuffer);
     }
 }
