@@ -140,4 +140,11 @@ Example of a small puzzle game. Easy to add new levels via text files.
 <p align="center"><img src="HelloGame/HelloGame.gif" style="width:400px;height:auto;"/></p>
 
 
+### [HelloOpenXR](HelloOpenXR)
+
+Example of a small VR app using OpenXR that renders a single cube. Screenshot was captured on PC with PSVR2.
+
+<p align="center"><img src="HelloOpenXR/HelloOpenXR.png" style="width:400px;height:auto;"/></p>
+
+
 
