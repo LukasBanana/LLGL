@@ -26,7 +26,7 @@ void VKSetCommandBufferTrackingEnabled(bool enabled)
         g_commandBufferRegistry.clear();
 }
 
-void VKRegisterCommandBuffers(const VkCommandBuffer* commandBuffers, std::uint32_t count)
+void VKRegisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* commandBuffers)
 {
     if (commandBuffers == nullptr)
         return;
@@ -40,7 +40,7 @@ void VKRegisterCommandBuffers(const VkCommandBuffer* commandBuffers, std::uint32
     }
 }
 
-void VKUnregisterCommandBuffers(const VkCommandBuffer* commandBuffers, std::uint32_t count)
+void VKUnregisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* commandBuffers)
 {
     if (commandBuffers == nullptr)
         return;

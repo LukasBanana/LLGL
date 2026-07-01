@@ -29,10 +29,10 @@ is inert, so there is no overhead in release builds.
 void VKSetCommandBufferTrackingEnabled(bool enabled);
 
 // Registers command buffers LLGL just allocated. No-op while tracking is disabled.
-void VKRegisterCommandBuffers(const VkCommandBuffer* commandBuffers, std::uint32_t count);
+void VKRegisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* commandBuffers);
 
 // Unregisters command buffers LLGL is about to free.
-void VKUnregisterCommandBuffers(const VkCommandBuffer* commandBuffers, std::uint32_t count);
+void VKUnregisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* commandBuffers);
 
 // Returns true if the specified command buffer was allocated by LLGL while tracking was enabled.
 bool VKIsLLGLCommandBuffer(VkCommandBuffer commandBuffer);
