@@ -16,23 +16,31 @@ namespace LLGL
 
 static std::mutex                           g_commandBufferRegistryMutex;
 static std::unordered_set<VkCommandBuffer>  g_commandBufferRegistry;
-static bool                                 g_commandBufferTrackingEnabled = false;
+static std::atomic_bool                     g_commandBufferTrackingEnabled(false);
 
 void VKSetCommandBufferTrackingEnabled(bool enabled)
 {
-    std::lock_guard<std::mutex> guard{ g_commandBufferRegistryMutex };
     g_commandBufferTrackingEnabled = enabled;
     if (!enabled)
-        g_commandBufferRegistry.clear();
+    {
+        std::lock_guard<std::mutex> guard{g_commandBufferRegistryMutex};
+        if (!g_commandBufferTrackingEnabled)
+            g_commandBufferRegistry.clear();
+    }
 }
 
 void VKRegisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* commandBuffers)
 {
     if (commandBuffers == nullptr)
         return;
-    std::lock_guard<std::mutex> guard{ g_commandBufferRegistryMutex };
+
     if (!g_commandBufferTrackingEnabled)
         return;
+
+    std::lock_guard<std::mutex> guard{g_commandBufferRegistryMutex};
+    if (!g_commandBufferTrackingEnabled)
+        return;
+
     for (std::uint32_t i = 0; i < count; ++i)
     {
         if (commandBuffers[i] != VK_NULL_HANDLE)

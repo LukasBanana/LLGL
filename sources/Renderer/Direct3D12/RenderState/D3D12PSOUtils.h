@@ -27,7 +27,7 @@ struct alignas(void *) D3DPipelineStreamSubobject
     {
     }
 
-    inline D3DPipelineStreamSubobject &operator=(TObject object)
+    inline D3DPipelineStreamSubobject& operator=(TObject object)
     {
         this->object = std::move(object);
         return *this;
