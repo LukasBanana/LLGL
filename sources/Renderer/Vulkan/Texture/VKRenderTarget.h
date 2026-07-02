@@ -151,6 +151,7 @@ class VKRenderTarget final : public RenderTarget
 
         std::uint32_t                   numColorAttachments_    = 0;
         VkSampleCountFlagBits           sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;
+        std::uint32_t                   numViews_               = 1;    // Number of views for multiview rendering (from the render pass), or 1.
 
 };
 

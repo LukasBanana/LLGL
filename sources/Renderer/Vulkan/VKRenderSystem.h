@@ -75,7 +75,7 @@ class VKRenderSystem final : public RenderSystem
 
         void QuerySupportedInstanceExtensions();
         void CreateInstance(const RendererConfigurationVulkan* config);
-        void CreateDebugReportCallback();
+        void CreateDebugMessenger();
         bool PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
         void CreateLogicalDevice(VkDevice customLogicalDevice = VK_NULL_HANDLE);
 
@@ -115,7 +115,7 @@ class VKRenderSystem final : public RenderSystem
 
         bool                                    isDebugLayerEnabled_    = false;
         bool                                    isBreakOnErrorEnabled_  = false;
-        VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
+        VKPtr<VkDebugUtilsMessengerEXT>         debugMessenger_;
 
         std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 

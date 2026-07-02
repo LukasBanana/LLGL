@@ -55,7 +55,8 @@ class OpenXRSwapChain final : public XRSwapChain
         Extent2D            GetResolution() const override;
         std::uint32_t       GetSampleCount() const override;
         std::uint32_t       GetArrayLayers() const override;
-        RenderTarget*       GetRenderTarget() override;
+        RenderTarget*       AcquireRenderTarget() override;
+        RenderTarget*       GetRenderTarget() const override;
         const RenderPass*   GetRenderPass() const override;
 
         bool                GetNativeHandle(void *nativeHandle, std::size_t nativeHandleSize) override;
@@ -77,10 +78,10 @@ class OpenXRSwapChain final : public XRSwapChain
 
         /**
         \brief Acquires and waits for the next image (and the depth companion's, in lockstep) so it is ready to render into.
-        \remarks Acquire-ahead: called once when the swap-chain is built and then by OpenXRSession::EndFrame after each
-        submission, mirroring how LLGL::SwapChain acquires its next image at construction and at the tail of Present. This
-        keeps GetRenderTarget a pure accessor. On failure the swap-chain holds no acquired image and GetRenderTarget returns
-        null until a later call succeeds. Returns true if an image is ready.
+        \remarks Called on demand by AcquireRenderTarget (inside the frame, after XRSession::BeginFrame). The acquire is
+        kept within the begin/end-frame bracket because some OpenXR runtimes (e.g. VIVE WAVE) return
+        XR_ERROR_CALL_ORDER_INVALID from xrAcquireSwapchainImage when it is called between xrEndFrame and the next
+        xrBeginFrame. On failure the swap-chain holds no acquired image. Returns true if an image is ready.
         */
         bool AcquireNextImage();
 
@@ -142,7 +143,8 @@ class OpenXRSwapChain final : public XRSwapChain
         SmallVector<SmallVector<RenderTarget*>>     renderTargets_;
 
         // The single render pass shared by every render target above (and returned by GetRenderPass). Owned by the
-        // first render target. Null until BuildRenderTargets runs.
+        // first render target. Null until BuildRenderTargets runs. For a multiview swap-chain (arrayLayers > 1) this
+        // is that target's default multiview render pass (built from RenderTargetDescriptor::views).
         const RenderPass*                           renderPass_     = nullptr;
 
 };

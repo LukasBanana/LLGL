@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/RenderTarget.h>
 #include <LLGL/Texture.h>
+#include <LLGL/Log.h>
 #include <LLGL/Backend/OpenXR/NativeHandle.h>
 
 namespace LLGL
@@ -88,11 +89,26 @@ std::uint32_t OpenXRSwapChain::GetArrayLayers() const
     return desc_.arrayLayers;
 }
 
-RenderTarget* OpenXRSwapChain::GetRenderTarget()
+RenderTarget* OpenXRSwapChain::AcquireRenderTarget()
 {
-    // Pure accessor: the image was acquired and waited ahead of time (in BuildRenderTargets, then by
-    // XRSession::EndFrame for each subsequent frame), so this just maps the current color/depth image pair to its
-    // render target. Returns null if no image is currently ready (the view should then be skipped this frame).
+    // Acquire + wait this frame's image on demand, i.e. inside the frame (this is called after xrBeginFrame, just
+    // before rendering). The acquire/render/release cycle must stay within the runtime's frame bracket: some
+    // runtimes (e.g. VIVE WAVE) return XR_ERROR_CALL_ORDER_INVALID from xrAcquireSwapchainImage if it is called
+    // between xrEndFrame and the next xrBeginFrame (which an "acquire-ahead" scheme does). The image is released by
+    // XRSession::EndFrame. Returns null if the image could not be acquired (the view should be skipped this frame).
+    if (acquiredIndex_ == UINT32_MAX)
+    {
+        if (!AcquireNextImage())
+            return nullptr;
+    }
+    return GetRenderTarget();
+}
+
+RenderTarget* OpenXRSwapChain::GetRenderTarget() const
+{
+    // Pure accessor (no side effects): maps the image acquired by AcquireRenderTarget this frame to its color/depth
+    // render target. Returns null if no image is currently acquired (AcquireRenderTarget not yet called this frame,
+    // or the image was already released by XRSession::EndFrame).
     if (acquiredIndex_ == UINT32_MAX || acquiredIndex_ >= renderTargets_.size())
         return nullptr;
 
@@ -105,7 +121,7 @@ RenderTarget* OpenXRSwapChain::GetRenderTarget()
             return nullptr;
     }
 
-    SmallVector<RenderTarget*>& row = renderTargets_[acquiredIndex_];
+    const SmallVector<RenderTarget*>& row = renderTargets_[acquiredIndex_];
     return (depthIndex < row.size() ? row[depthIndex] : nullptr);
 }
 
@@ -121,6 +137,7 @@ std::uint32_t OpenXRSwapChain::AcquireImageHandle()
     const XrResult result = xrAcquireSwapchainImage(swapchain_, &acquireInfo, &index);
     if (Failed(result))
     {
+        Log::Errorf("xrAcquireSwapchainImage failed: result=%d\n", static_cast<int>(result));
         acquiredIndex_ = UINT32_MAX;
         return UINT32_MAX;
     }
@@ -133,6 +150,8 @@ bool OpenXRSwapChain::WaitImageHandle(std::uint64_t timeoutNs)
     XrSwapchainImageWaitInfo waitInfo{ XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO };
     waitInfo.timeout = static_cast<XrDuration>(timeoutNs);
     const XrResult result = xrWaitSwapchainImage(swapchain_, &waitInfo);
+    if (!XR_SUCCEEDED(result))
+        Log::Errorf("xrWaitSwapchainImage failed: result=%d\n", static_cast<int>(result));
     return XR_SUCCEEDED(result);
 }
 
@@ -222,6 +241,13 @@ bool OpenXRSwapChain::BuildRenderTargets()
     const bool hasDepth = !depthTextures.empty();
     const std::size_t depthSlots = (hasDepth ? depthTextures.size() : 1u);
 
+    // For a multiview swap-chain (one array layer per view), each render target renders to all array layers at
+    // once via a multiview render pass, so a single draw is broadcast to every view (single-pass stereo). The view
+    // count is passed through RenderTargetDescriptor::views below; the backend then creates a multiview render pass
+    // whose per-attachment final layouts are derived from the attachment textures (color images end in
+    // COLOR_ATTACHMENT_OPTIMAL, depth in DEPTH_STENCIL_ATTACHMENT_OPTIMAL), exactly like the single-view path.
+    const std::uint32_t numViews = (desc_.arrayLayers > 1 ? desc_.arrayLayers : 1);
+
     renderTargets_.resize(texturePtrs_.size());
     for (std::size_t colorIndex = 0; colorIndex < texturePtrs_.size(); ++colorIndex)
     {
@@ -230,13 +256,16 @@ bool OpenXRSwapChain::BuildRenderTargets()
         {
             RenderTargetDescriptor renderTargetDesc;
             renderTargetDesc.resolution          = desc_.resolution;
+            renderTargetDesc.views               = numViews;
             renderTargetDesc.colorAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
             if (hasDepth)
                 renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ depthTextures[depthIndex] };
 
             // Every render target shares one render pass object (created by the first target): all targets have
             // identical attachment formats, so reusing it avoids redundant render passes and guarantees GetRenderPass
-            // returns the exact pass these targets use, not merely a compatible one.
+            // returns the exact pass these targets use, not merely a compatible one. For multiview, the first target
+            // builds its default multiview render pass from renderTargetDesc.views above; the rest reuse it (and the
+            // view count is then read from that render pass, so renderTargetDesc.views is ignored for them).
             renderTargetDesc.renderPass = renderPass_;
 
             RenderTarget* renderTarget = renderSystem_.CreateRenderTarget(renderTargetDesc);
@@ -249,10 +278,8 @@ bool OpenXRSwapChain::BuildRenderTargets()
         }
     }
 
-    // Acquire-ahead: prime the first image so the swap-chain is ready for the first frame, the same way
-    // LLGL::SwapChain acquires its initial image at construction. Subsequent images are acquired by EndFrame.
-    // A failure here is non-fatal: the first frame is skipped and EndFrame re-primes on the next iteration.
-    AcquireNextImage();
+    // No acquire-ahead: each frame's image is acquired on demand by AcquireRenderTarget (inside the frame) and
+    // released by XRSession::EndFrame, keeping acquire/release within the runtime's begin/end-frame bracket.
 
     return true;
 }

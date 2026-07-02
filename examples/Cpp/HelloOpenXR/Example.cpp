@@ -19,6 +19,7 @@
 #include <ExampleBase.h>
 #include <FileUtils.h>
 #include <LLGL/XR/XRSystem.h>
+#include <cstring>
 
 /*
  * Helpers
@@ -53,8 +54,17 @@ class MyXRRenderer
     LLGL::CommandQueue*             cmdQueue        = nullptr;
     LLGL::CommandBuffer*            cmdBuffer       = nullptr;
 
-    // One swap-chain per XR view (eye). Each manages its own depth buffer and render targets internally.
+    // Swap-chains the scene is rendered into. Conventional path: one swap-chain per XR view (eye). Multiview path:
+    // a single swap-chain with one array layer per view, drawn in a single pass (see useMultiview).
     std::vector<LLGL::XRSwapChain*> swapChains;
+
+    // Number of XR views (2 for stereo). Drives the multiview array size and the per-view matrix updates.
+    std::uint32_t                   viewCount       = 1;
+
+    // When true, render both eyes in a single pass using multiview (VK_KHR_multiview / D3D12 view instancing)
+    // instead of looping over per-eye swap-chains. Requested on the command line and only enabled if the active
+    // renderer reports RenderingFeatures::hasMultiView.
+    bool                            useMultiview    = false;
 
     LLGL::Buffer*                   vertexBuffer    = nullptr;
     LLGL::Buffer*                   indexBuffer     = nullptr;
@@ -79,8 +89,9 @@ class MyXRRenderer
 
 public:
 
-    // Brings up the XR runtime, the render system, the session, and the per-eye swap-chains.
-    MyXRRenderer(const char* rendererModule);
+    // Brings up the XR runtime, the render system, the session, and the swap-chains.
+    // If requestMultiview is true and the renderer supports it, both eyes are rendered in a single pass.
+    MyXRRenderer(const char* rendererModule, bool requestMultiview);
 
     ~MyXRRenderer();
 
@@ -96,6 +107,15 @@ private:
     void LoadShaders(const LLGL::VertexFormat& vertexFormat);
     LLGL::Shader* LoadShader(LLGL::ShaderDescriptor shaderDesc, const std::string& assetName);
 
+    // Renders the scene once per eye into its own swap-chain (conventional path).
+    void RenderPerEye(const LLGL::DynamicVector<LLGL::XRViewPose>& views, float nearZ, float farZ);
+
+    // Renders the scene for all eyes in a single pass into the multiview swap-chain (single-pass stereo).
+    void RenderMultiview(const LLGL::DynamicVector<LLGL::XRViewPose>& views, float nearZ, float farZ);
+
+    // Builds the combined world-view-projection matrix for an XR view, with the cube's model transform baked in.
+    Gs::Matrix4f BuildWVPMatrix(const LLGL::XRViewPose& pose, float nearZ, float farZ) const;
+
     // Builds the world-to-camera matrix for an XR view from its pose.
     Gs::Matrix4f BuildViewMatrix(const LLGL::XRViewPose& pose) const;
 
@@ -104,7 +124,7 @@ private:
 
 };
 
-MyXRRenderer::MyXRRenderer(const char* rendererModule)
+MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview)
 {
     std::int32_t xrSystemDescFlags = 0;
 #if defined(_DEBUG)
@@ -155,7 +175,25 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule)
     if (session == nullptr)
         ThrowWithReport("failed to create XR session", xrSystem->GetReport());
 
-    // 4. Create per-eye swap-chains, depth buffers, and render targets.
+    viewCount = static_cast<std::uint32_t>(xrSystem->GetViewConfigurations().size());
+
+    // Enable multiview only if it was requested and the renderer supports it; otherwise fall back to the
+    // conventional per-eye path so the example still runs on any backend/runtime.
+    if (requestMultiview)
+    {
+        const LLGL::RenderingCapabilities& caps = renderer->GetRenderingCaps();
+        if (caps.features.hasMultiView && caps.limits.maxViews >= viewCount)
+        {
+            useMultiview = true;
+            LLGL::Log::Printf("Multiview: enabled (single-pass stereo, %u views)\n", viewCount);
+        }
+        else
+        {
+            LLGL::Log::Printf("Multiview: requested but not supported by this renderer; falling back to per-eye rendering\n");
+        }
+    }
+
+    // 4. Create the swap-chains, depth buffers, and render targets.
     CreateSwapChains();
 }
 
@@ -206,19 +244,38 @@ void MyXRRenderer::CreateSwapChains()
         depthFormats.empty() ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" : "enabled"
     );
 
-    // One swap-chain per view. Requesting a depth-stencil format makes the swap-chain provision and
-    // manage the depth buffer and per-image render targets internally (see XRSwapChain::GetRenderTarget).
-    swapChains.resize(viewConfigs.size());
-    for (std::size_t eye = 0; eye < viewConfigs.size(); ++eye)
+    // Requesting a depth-stencil format makes the swap-chain provision and manage the depth buffer and per-image
+    // render targets internally (see XRSwapChain::GetRenderTarget).
+    if (useMultiview)
     {
+        // Multiview: a single swap-chain whose images carry one array layer per view. Its render pass is a
+        // multiview render pass, so a single draw is broadcast to all views (single-pass stereo).
         LLGL::XRSwapChainDescriptor swapChainDesc;
         swapChainDesc.format             = colorFormat;
         swapChainDesc.depthStencilFormat = depthFormat;
-        swapChainDesc.resolution         = { viewConfigs[eye].recommendedImageExtent.width, viewConfigs[eye].recommendedImageExtent.height };
+        swapChainDesc.resolution         = { viewConfigs[0].recommendedImageExtent.width, viewConfigs[0].recommendedImageExtent.height };
+        swapChainDesc.arrayLayers        = viewCount;
 
-        swapChains[eye] = session->CreateSwapChain(swapChainDesc);
-        if (swapChains[eye] == nullptr)
-            ThrowWithReport("failed to create XR swap-chain", session->GetReport());
+        swapChains.resize(1);
+        swapChains[0] = session->CreateSwapChain(swapChainDesc);
+        if (swapChains[0] == nullptr)
+            ThrowWithReport("failed to create multiview XR swap-chain", session->GetReport());
+    }
+    else
+    {
+        // One swap-chain per view.
+        swapChains.resize(viewConfigs.size());
+        for (std::size_t eye = 0; eye < viewConfigs.size(); ++eye)
+        {
+            LLGL::XRSwapChainDescriptor swapChainDesc;
+            swapChainDesc.format             = colorFormat;
+            swapChainDesc.depthStencilFormat = depthFormat;
+            swapChainDesc.resolution         = { viewConfigs[eye].recommendedImageExtent.width, viewConfigs[eye].recommendedImageExtent.height };
+
+            swapChains[eye] = session->CreateSwapChain(swapChainDesc);
+            if (swapChains[eye] == nullptr)
+                ThrowWithReport("failed to create XR swap-chain", session->GetReport());
+        }
     }
 }
 
@@ -244,7 +301,10 @@ void MyXRRenderer::CreateResources()
         LLGL::IndexBufferDesc(indices.size() * sizeof(std::uint32_t), LLGL::Format::R32UInt),
         indices.data()
     );
-    viewProjBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Gs::Matrix4f)));
+    // Multiview needs one view-projection matrix per view (indexed by the view index in the shader); the
+    // conventional path uses a single matrix updated per eye.
+    const std::uint64_t viewProjBufferSize = sizeof(Gs::Matrix4f) * (useMultiview ? viewCount : 1u);
+    viewProjBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(viewProjBufferSize));
 
     // Model transform: scale the unit cube to its half-size, then place it in front of the user.
     cubeModelMatrix.LoadIdentity();
@@ -320,12 +380,13 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
 
     if (HasLanguage(LLGL::ShadingLanguage::SPIRV))
     {
-        // Vulkan: pre-compiled SPIR-V binary.
+        // Vulkan: pre-compiled SPIR-V binary. The multiview vertex shader indexes the per-view matrix by
+        // gl_ViewIndex (VK_KHR_multiview); the fragment shader is shared.
         LLGL::ShaderDescriptor vsDesc;
         vsDesc.type                 = LLGL::ShaderType::Vertex;
         vsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
         vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
-        vertShader = LoadShader(vsDesc, "Example.450core.vert.spv");
+        vertShader = LoadShader(vsDesc, useMultiview ? "Example.multiview.450core.vert.spv" : "Example.450core.vert.spv");
 
         LLGL::ShaderDescriptor fsDesc;
         fsDesc.type                 = LLGL::ShaderType::Fragment;
@@ -334,20 +395,23 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
     }
     else if (HasLanguage(LLGL::ShadingLanguage::HLSL))
     {
-        // Direct3D 11 / Direct3D 12: HLSL compiled at runtime.
+        // Direct3D 11 / Direct3D 12: HLSL compiled at runtime. The multiview vertex shader indexes the per-view
+        // matrix by SV_ViewID (D3D12 view instancing) and requires Shader Model 6.1 (DXC).
         LLGL::ShaderDescriptor vsDesc;
         vsDesc.type                 = LLGL::ShaderType::Vertex;
         vsDesc.sourceType           = LLGL::ShaderSourceType::CodeString;
-        vsDesc.entryPoint           = "VS";
-        vsDesc.profile              = "vs_5_0";
+        vsDesc.entryPoint           = (useMultiview ? "VSMultiview" : "VS");
+        vsDesc.profile              = (useMultiview ? "vs_6_1" : "vs_5_0");
         vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
         vertShader = LoadShader(vsDesc, "Example.hlsl");
 
+        // The pixel shader must use the same shader model tier as the vertex shader within one PSO: D3D12 rejects
+        // mixing SM 6.x (needed by the multiview vertex shader's SV_ViewID) with SM 5.x.
         LLGL::ShaderDescriptor fsDesc;
         fsDesc.type                 = LLGL::ShaderType::Fragment;
         fsDesc.sourceType           = LLGL::ShaderSourceType::CodeString;
         fsDesc.entryPoint           = "PS";
-        fsDesc.profile              = "ps_5_0";
+        fsDesc.profile              = (useMultiview ? "ps_6_1" : "ps_5_0");
         fragShader = LoadShader(fsDesc, "Example.hlsl");
     }
     else
@@ -395,6 +459,78 @@ Gs::Matrix4f MyXRRenderer::BuildProjectionMatrix(const LLGL::XRViewPose& pose, f
     return proj;
 }
 
+Gs::Matrix4f MyXRRenderer::BuildWVPMatrix(const LLGL::XRViewPose& pose, float nearZ, float farZ) const
+{
+    return BuildProjectionMatrix(pose, nearZ, farZ) * BuildViewMatrix(pose) * cubeModelMatrix;
+}
+
+void MyXRRenderer::RenderPerEye(const LLGL::DynamicVector<LLGL::XRViewPose>& views, float nearZ, float farZ)
+{
+    for (std::size_t eye = 0; eye < swapChains.size(); ++eye)
+    {
+        LLGL::XRSwapChain* swapChain = swapChains[eye];
+
+        // Acquire this view's image for the frame (the managed depth image, if any, is handled in lockstep).
+        // A null result means the image couldn't be acquired, so skip this view.
+        LLGL::RenderTarget* renderTarget = swapChain->AcquireRenderTarget();
+        if (renderTarget == nullptr)
+            continue;
+
+        const Gs::Matrix4f wvpMatrix = BuildWVPMatrix(views[eye], nearZ, farZ);
+
+        cmdBuffer->Begin();
+        {
+            cmdBuffer->UpdateBuffer(*viewProjBuffer, 0, wvpMatrix.Ptr(), sizeof(Gs::Matrix4f));
+            cmdBuffer->BeginRenderPass(*renderTarget);
+            {
+                cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.05f, 0.05f, 0.08f, 1.0f });
+                cmdBuffer->SetViewport(swapChain->GetResolution());
+                cmdBuffer->SetPipelineState(*pipeline);
+                cmdBuffer->SetResourceHeap(*resourceHeap);
+                cmdBuffer->SetVertexBuffer(*vertexBuffer);
+                cmdBuffer->SetIndexBuffer(*indexBuffer);
+                cmdBuffer->DrawIndexed(numIndices, 0);
+            }
+            cmdBuffer->EndRenderPass();
+        }
+        cmdBuffer->End();
+        cmdQueue->Submit(*cmdBuffer);
+    }
+}
+
+void MyXRRenderer::RenderMultiview(const LLGL::DynamicVector<LLGL::XRViewPose>& views, float nearZ, float farZ)
+{
+    LLGL::XRSwapChain* swapChain = swapChains[0];
+
+    LLGL::RenderTarget* renderTarget = swapChain->AcquireRenderTarget();
+    if (renderTarget == nullptr)
+        return;
+
+    // One world-view-projection matrix per view, uploaded as an array; the multiview vertex shader selects its
+    // matrix by the view index. The whole scene is then drawn once and broadcast to every view.
+    std::vector<Gs::Matrix4f> wvpMatrices(viewCount);
+    for (std::uint32_t view = 0; view < viewCount; ++view)
+        wvpMatrices[view] = BuildWVPMatrix(views[view], nearZ, farZ);
+
+    cmdBuffer->Begin();
+    {
+        cmdBuffer->UpdateBuffer(*viewProjBuffer, 0, wvpMatrices.data(), static_cast<std::uint16_t>(sizeof(Gs::Matrix4f) * viewCount));
+        cmdBuffer->BeginRenderPass(*renderTarget);
+        {
+            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.05f, 0.05f, 0.08f, 1.0f });
+            cmdBuffer->SetViewport(swapChain->GetResolution());
+            cmdBuffer->SetPipelineState(*pipeline);
+            cmdBuffer->SetResourceHeap(*resourceHeap);
+            cmdBuffer->SetVertexBuffer(*vertexBuffer);
+            cmdBuffer->SetIndexBuffer(*indexBuffer);
+            cmdBuffer->DrawIndexed(numIndices, 0);
+        }
+        cmdBuffer->EndRenderPass();
+    }
+    cmdBuffer->End();
+    cmdQueue->Submit(*cmdBuffer);
+}
+
 bool MyXRRenderer::RenderFrame()
 {
     // The runtime needs the near/far planes to convert submitted depth into world-space depth for
@@ -434,41 +570,10 @@ bool MyXRRenderer::RenderFrame()
         if (!session->GetViewState(views))
             return false;
 
-        for (std::size_t eye = 0; eye < swapChains.size(); ++eye)
-        {
-            LLGL::XRSwapChain* swapChain = swapChains[eye];
-
-            // The frame's image is acquired ahead of time by EndFrame, so GetRenderTarget is a plain accessor
-            // (the managed depth image, if any, is handled in lockstep). A null result means skip this view.
-            LLGL::RenderTarget* renderTarget = swapChain->GetRenderTarget();
-            if (renderTarget == nullptr)
-                continue;
-
-            // World-view-projection for this eye, with the cube's model transform baked in.
-            const LLGL::XRViewPose& view = views[eye];
-            const Gs::Matrix4f wvpMatrix =
-                BuildProjectionMatrix(view, nearZ, farZ) *
-                BuildViewMatrix(view) *
-                cubeModelMatrix;
-
-            cmdBuffer->Begin();
-            {
-                cmdBuffer->UpdateBuffer(*viewProjBuffer, 0, wvpMatrix.Ptr(), sizeof(Gs::Matrix4f));
-                cmdBuffer->BeginRenderPass(*renderTarget);
-                {
-                    cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.05f, 0.05f, 0.08f, 1.0f });
-                    cmdBuffer->SetViewport(swapChain->GetResolution());
-                    cmdBuffer->SetPipelineState(*pipeline);
-                    cmdBuffer->SetResourceHeap(*resourceHeap);
-                    cmdBuffer->SetVertexBuffer(*vertexBuffer);
-                    cmdBuffer->SetIndexBuffer(*indexBuffer);
-                    cmdBuffer->DrawIndexed(numIndices, 0);
-                }
-                cmdBuffer->EndRenderPass();
-            }
-            cmdBuffer->End();
-            cmdQueue->Submit(*cmdBuffer);
-        }
+        if (useMultiview)
+            RenderMultiview(views, nearZ, farZ);
+        else
+            RenderPerEye(views, nearZ, farZ);
     }
 
     session->EndFrame(nearZ, farZ, LLGL::ArrayView<LLGL::XRSwapChain*>{ swapChains.data(), swapChains.size() });
@@ -484,11 +589,11 @@ bool MyXRRenderer::RenderFrame()
  * Main function
  */
 
-static void RunHelloOpenXR(const char* rendererModule)
+static void RunHelloOpenXR(const char* rendererModule, bool requestMultiview)
 {
     LLGL::Log::Printf("Requesting renderer module: %s\n", rendererModule);
 
-    MyXRRenderer xrRenderer{ rendererModule };
+    MyXRRenderer xrRenderer{ rendererModule, requestMultiview };
     xrRenderer.CreateResources();
 
     // Main loop: Surface::ProcessEvents drives the OS/Android application lifecycle, while
@@ -501,6 +606,24 @@ static void RunHelloOpenXR(const char* rendererModule)
 
 #if defined LLGL_OS_ANDROID
 
+#include <sys/system_properties.h>
+
+// Reads whether to request multiview from the "debug.llgl.multiview" system property so it can be toggled on the
+// headset without rebuilding (e.g. to A/B multiview vs per-eye rendering):
+//   adb shell setprop debug.llgl.multiview 0   # per-eye
+//   adb shell setprop debug.llgl.multiview 1   # multiview (also the default when the property is unset)
+// The property must be set before the app launches (it is read once at startup).
+static bool AndroidRequestMultiview()
+{
+    char value[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.llgl.multiview", value) > 0)
+    {
+        if (std::strcmp(value, "0") == 0 || std::strcmp(value, "false") == 0 || std::strcmp(value, "off") == 0)
+            return false;
+    }
+    return true; // default: request multiview (falls back to per-eye if unsupported)
+}
+
 void android_main(android_app* state)
 {
     LLGL::Log::RegisterCallbackStd();
@@ -510,8 +633,12 @@ void android_main(android_app* state)
 
     try
     {
-        // Vulkan is the only XR-compatible LLGL backend on Android.
-        RunHelloOpenXR("Vulkan");
+        // Vulkan is the only XR-compatible LLGL backend on Android. Multiview (single-pass stereo) is requested by
+        // default and transparently falls back to per-eye if the device/runtime does not support it; it can also be
+        // forced off via the debug.llgl.multiview system property (see AndroidRequestMultiview).
+        const bool requestMultiview = AndroidRequestMultiview();
+        LLGL::Log::Printf("Android multiview request: %s (debug.llgl.multiview)\n", requestMultiview ? "on" : "off (per-eye)");
+        RunHelloOpenXR("Vulkan", requestMultiview);
     }
     catch (const std::exception& e)
     {
@@ -525,13 +652,22 @@ int main(int argc, char* argv[])
 {
     LLGL::Log::RegisterCallbackStd();
 
-    // The renderer module name may be passed on the command line; defaults to Vulkan.
-    // Supported XR backends: "Vulkan", "Direct3D11", "Direct3D12".
-    const char* rendererModule = (argc > 1 ? argv[1] : "Vulkan");
+    // Command line: an optional renderer module name and an optional "--multiview" (or "-mv") flag, in any order.
+    // The renderer module defaults to Vulkan. Supported XR backends: "Vulkan", "Direct3D11", "Direct3D12".
+    // Multiview (single-pass stereo) is supported by Vulkan and Direct3D12; it falls back to per-eye otherwise.
+    const char* rendererModule = "Vulkan";
+    bool requestMultiview = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (std::strcmp(argv[i], "--multiview") == 0 || std::strcmp(argv[i], "-mv") == 0)
+            requestMultiview = true;
+        else
+            rendererModule = argv[i];
+    }
 
     try
     {
-        RunHelloOpenXR(rendererModule);
+        RunHelloOpenXR(rendererModule, requestMultiview);
     }
     catch (const std::exception& e)
     {

@@ -792,6 +792,7 @@ typedef enum LLGLSystemValue
     LLGLSystemValueSampleID,
     LLGLSystemValueStencil,
     LLGLSystemValueVertexID,
+    LLGLSystemValueViewIndex,
     LLGLSystemValueViewportIndex,
 }
 LLGLSystemValue;
@@ -1246,6 +1247,7 @@ typedef struct LLGLRenderingFeatures
     bool hasOffsetInstancing;          /* = false */
     bool hasIndirectDrawing;           /* = false */
     bool hasViewportArrays;            /* = false */
+    bool hasMultiView;                 /* = false */
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */
@@ -1270,6 +1272,7 @@ typedef struct LLGLRenderingLimits
     uint32_t maxComputeShaderWorkGroupSize[3]; /* = {0,0,0} */
     uint32_t maxViewports;                     /* = 0 */
     uint32_t maxViewportSize[2];               /* = {0,0} */
+    uint32_t maxViews;                         /* = 0 */
     uint64_t maxBufferSize;                    /* = 0 */
     uint64_t maxConstantBufferSize;            /* = 0 */
     uint32_t maxStreamOutputs;                 /* = 0 */
@@ -1720,6 +1723,7 @@ typedef struct LLGLRenderPassDescriptor
     LLGLAttachmentFormatDescriptor depthAttachment;
     LLGLAttachmentFormatDescriptor stencilAttachment;
     uint32_t                       samples;             /* = 1 */
+    uint32_t                       views;               /* = 1 */
 }
 LLGLRenderPassDescriptor;
 
@@ -1729,6 +1733,7 @@ typedef struct LLGLRenderTargetDescriptor
     LLGLRenderPass           renderPass;             /* = LLGL_NULL_OBJECT */
     LLGLExtent2D             resolution;
     uint32_t                 samples;                /* = 1 */
+    uint32_t                 views;                  /* = 1 */
     LLGLAttachmentDescriptor colorAttachments[8];
     LLGLAttachmentDescriptor resolveAttachments[8];
     LLGLAttachmentDescriptor depthStencilAttachment;

@@ -111,6 +111,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateFragmentShaderOutputWithRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, const DbgRenderPass& renderPass, bool hasDualSourceBlend);
         void ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, bool hasDualSourceBlend);
         void ValidatePipelineStateUniforms(const DbgPipelineLayout& pipelineLayout, const ArrayView<DbgShader*>& shaders, const char* psoDebugName);
+        void ValidateRenderTargetDesc(const RenderTargetDescriptor &renderTargetDesc);
 
         void Assert3DTextures();
         void AssertCubeTextures();

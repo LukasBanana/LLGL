@@ -279,6 +279,7 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
         case spv::BuiltInFragStencilRefEXT: return SystemValue::Stencil;
         case spv::BuiltInVertexId:          return SystemValue::VertexID;
         case spv::BuiltInVertexIndex:       return SystemValue::VertexID;
+        case spv::BuiltInViewIndex:         return SystemValue::ViewIndex;
         case spv::BuiltInViewportIndex:     return SystemValue::ViewportIndex;
         default:                            return SystemValue::Undefined;
     }

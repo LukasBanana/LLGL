@@ -426,7 +426,9 @@ bool VKOpenXRGraphicsBinding::EnumerateSwapchainImages(
     outImages.reserve(imageCount);
 
     VKExternalImageInfo params{};
-    params.type             = TextureType::Texture2D;
+    // A multiview swap-chain (arrayLayers > 1) wraps each runtime image as a 2D array texture so render targets
+    // can create layered (2D_ARRAY) image views over all views for single-pass stereo.
+    params.type             = (swapChainDesc.arrayLayers > 1 ? TextureType::Texture2DArray : TextureType::Texture2D);
     params.format           = static_cast<VkFormat>(nativeFormat);
     params.extent           = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
     params.numMipLevels     = 1;

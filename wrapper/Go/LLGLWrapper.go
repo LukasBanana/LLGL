@@ -755,6 +755,7 @@ const (
     SystemValueSampleID
     SystemValueStencil
     SystemValueVertexID
+    SystemValueViewIndex
     SystemValueViewportIndex
 )
 
@@ -1149,6 +1150,7 @@ type RenderingFeatures struct {
     HasOffsetInstancing          bool /* = false */
     HasIndirectDrawing           bool /* = false */
     HasViewportArrays            bool /* = false */
+    HasMultiView                 bool /* = false */
     HasConservativeRasterization bool /* = false */
     HasStreamOutputs             bool /* = false */
     HasLogicOp                   bool /* = false */
@@ -1171,6 +1173,7 @@ type RenderingLimits struct {
     MaxComputeShaderWorkGroupSize [3]uint32  /* = {0,0,0} */
     MaxViewports                  uint32     /* = 0 */
     MaxViewportSize               [2]uint32  /* = {0,0} */
+    MaxViews                      uint32     /* = 0 */
     MaxBufferSize                 uint64     /* = 0 */
     MaxConstantBufferSize         uint64     /* = 0 */
     MaxStreamOutputs              uint32     /* = 0 */
@@ -1528,6 +1531,7 @@ type RenderPassDescriptor struct {
     DepthAttachment   AttachmentFormatDescriptor
     StencilAttachment AttachmentFormatDescriptor
     Samples           uint32                        /* = 1 */
+    Views             uint32                        /* = 1 */
 }
 
 type RenderTargetDescriptor struct {
@@ -1535,6 +1539,7 @@ type RenderTargetDescriptor struct {
     RenderPass             *RenderPass             /* = nil */
     Resolution             Extent2D
     Samples                uint32                  /* = 1 */
+    Views                  uint32                  /* = 1 */
     ColorAttachments       [8]AttachmentDescriptor
     ResolveAttachments     [8]AttachmentDescriptor
     DepthStencilAttachment AttachmentDescriptor
