@@ -213,7 +213,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Create native PSO */
     ComPtr<ID3D12PipelineState> primaryPSO;
 
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /*
     Multiview (single-pass layered) rendering is implemented with D3D12 view instancing, which requires the
     stream-based pipeline state API. This path is taken only when the render pass has more than one view; all
@@ -235,7 +235,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
         SetNativeAndUpdateCache(std::move(primaryPSO), pipelineCache);
         return;
     }
-    #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
+    #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
     if (isStripTopology && desc.indexFormat == Format::Undefined)
     {
@@ -265,7 +265,7 @@ ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(ID3D12Devi
     return pipelineState;
 }
 
-#ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
 
 /*
@@ -369,7 +369,7 @@ ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOAsViewInstanced(
     return pipelineState;
 }
 
-#endif // /LLGL_D3D12_ENABLE_DXCOMPILER
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
 
 } // /namespace LLGL

@@ -173,9 +173,36 @@ DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, con
  * ======= Private: =======
  */
 
+/*
+Ignore D3D12 validation errors that originate from an OpenXR runtime's use of our shared device rather than from
+LLGL's own API usage. In the OpenXR D3D12 path LLGL hands its ID3D12Device + queue to the runtime (see the
+Direct3D12 OpenXR graphics binding); the runtime's compositor then shares the swap-chain images through its
+D3D11-on-12 interop, and this info-queue callback -- being per-device -- catches messages the runtime causes, not
+just ours. This mirrors the Vulkan backend, whose debug callback likewise only breaks on LLGL-owned work (see
+ShouldBreakOnValidationError in VKRenderSystem.cpp).
+
+The ReflectSharedProperties family is such a case: LLGL never calls ID3D12CompatibilityDevice::ReflectSharedProperties,
+so any such message comes from the runtime's D3D11On12 wrapping of the swap-chain images. Per Valve
+(ValveSoftware/openvr#1134) this is a bug in Microsoft's D3D11On12 library and "can safely be ignored"; the
+app-side workaround (allocating the submitted texture via CreateSharedResource) does not apply here because the XR
+runtime -- not LLGL -- owns the swap-chain images.
+*/
+static bool IsRuntimeOwnedD3D12ValidationError(D3D12_MESSAGE_ID id)
+{
+    switch (id)
+    {
+        case D3D12_MESSAGE_ID_REFLECTSHAREDPROPERTIES_INVALIDOBJECT:
+        case D3D12_MESSAGE_ID_REFLECTSHAREDPROPERTIES_INVALIDSIZE:
+        case D3D12_MESSAGE_ID_REFLECTSHAREDPROPERTIES_UNRECOGNIZEDPROPERTIES:
+            return true;
+        default:
+            return false;
+    }
+}
+
 static void LLGL_API_STDCALL D3D12DebugMessageCallback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* /*userData*/)
 {
-    if (severity == D3D12_MESSAGE_SEVERITY_ERROR)
+    if (severity == D3D12_MESSAGE_SEVERITY_ERROR && !IsRuntimeOwnedD3D12ValidationError(id))
     {
         DebugPrintf(
             "D3D12 debug validation [D3D12_MESSAGE_SEVERITY_ERROR]: %s (ID=%d)",

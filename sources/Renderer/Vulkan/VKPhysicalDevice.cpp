@@ -164,6 +164,16 @@ void VKPhysicalDevice::LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice
     for (const VkExtensionProperties& extension : supportedExtensions_)
         supportedExtensionNames_.insert(extension.extensionName);
 
+    /*
+    Populate enabledExtensionNames_ too, mirroring PickPhysicalDevice. The OpenXR runtime creates the VkDevice from
+    the same required+optional extension set (see the Vulkan OpenXR graphics binding), but LLGL only adopts the device
+    as a weak ref, so nothing else records which extensions are active. VKLoadDeviceExtensions() reads this list to
+    populate the extension registry that HasExtension() queries; without it, extension-gated features such as
+    KHR_multiview (single-pass stereo) would be treated as disabled even though the adopted device enabled them.
+    */
+    EnableExtensions(VKGetRequiredDeviceExtensions(), /*required:*/ false);
+    EnableExtensions(GetOptionalExtensions());
+
     QueryDeviceInfo();
 }
 

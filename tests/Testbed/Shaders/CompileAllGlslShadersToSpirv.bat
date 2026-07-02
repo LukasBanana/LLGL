@@ -37,8 +37,9 @@ glslangValidator -V -DVERTEX_FORMAT=1 -o VertexFormats\VertexFormats.Format1.450
 glslangValidator -V -o VertexFormats\VertexFormats.450core.frag.spv VertexFormats\VertexFormats.450core.frag
 glslangValidator -V --target-env vulkan1.2 -DENABLE_SPIRV=1 -o Meshlet\Meshlet.450core.mesh.spv Meshlet\Meshlet.450core.mesh
 glslangValidator -V -DENABLE_SPIRV=1 -o Meshlet\Meshlet.450core.frag.spv Meshlet\Meshlet.450core.frag
-
-echo DONE
 glslangValidator -V -DENABLE_SPIRV=1 -o Multiview\Multiview.450core.vert.spv Multiview\Multiview.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o Multiview\Multiview.450core.frag.spv Multiview\Multiview.450core.frag
+
+echo DONE
+
 pause

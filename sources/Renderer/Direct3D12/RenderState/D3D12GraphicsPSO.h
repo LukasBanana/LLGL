@@ -45,12 +45,14 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
 
         ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName);
 
-        #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
         /*
         Creates a view-instanced PSO (single-pass layered/multiview rendering) from an equivalent graphics PSO
         descriptor. View instance i is routed to render-target array index i, and the shader reads SV_ViewID
-        (SystemValue::ViewIndex) to index per-view data. Requires the stream-based pipeline state API and
-        Shader Model 6.1, which is why this path is gated on LLGL_D3D12_ENABLE_DXCOMPILER.
+        (SystemValue::ViewIndex) to index per-view data. Requires the stream-based pipeline state API (ID3D12Device2,
+        VIEW_INSTANCING subobject) from a newer Windows SDK, which is why this path is gated on
+        LLGL_D3D12_ENABLE_FEATURELEVEL. The SV_ViewID shaders themselves need Shader Model 6.1, but may be compiled
+        externally, so this is intentionally not gated on LLGL_D3D12_ENABLE_DXCOMPILER.
         */
         ComPtr<ID3D12PipelineState> CreateNativePSOAsViewInstanced(
             ID3D12Device*                               device,
@@ -58,7 +60,7 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
             UINT                                        numViews,
             const char*                                 debugName
         );
-        #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
+        #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
     private:
 

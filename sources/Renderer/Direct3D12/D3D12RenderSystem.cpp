@@ -876,13 +876,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
     caps.features.hasViewportArrays                 = true;
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /*
-    Multiview is implemented with D3D12 view instancing (SV_ViewID, Shader Model 6.1). The view-instanced PSO path
-    is compiled out unless LLGL_D3D12_ENABLE_DXCOMPILER, so the capability is reported under that macro. The cap
-    reflects the device's view-instancing support, NOT runtime shader compilation: an app that precompiles its
-    SV_ViewID shaders to DXIL can use multiview without dxcompiler.dll present, so it must not be gated on DXC
-    being loadable. (A consumer that compiles SM 6.1 shaders at runtime is responsible for shipping dxcompiler.dll.)
+    Multiview is implemented with D3D12 view instancing (SV_ViewID). The view-instanced PSO path uses the
+    stream-based pipeline state API (ID3D12Device2, VIEW_INSTANCING subobject), which requires a newer Windows SDK
+    and is compiled out below feature level 12.1, so the capability is reported under LLGL_D3D12_ENABLE_FEATURELEVEL.
     */
     D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
@@ -915,7 +913,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewports                        = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
     caps.limits.maxViewportSize[0]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     caps.limits.maxViewportSize[1]                  = D3D12_VIEWPORT_BOUNDS_MAX;
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     caps.limits.maxViews                            = (caps.features.hasMultiView ? D3D12_MAX_VIEW_INSTANCE_COUNT : 1u);
     #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;

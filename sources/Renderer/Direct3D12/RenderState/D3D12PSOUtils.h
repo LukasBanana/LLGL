@@ -8,11 +8,12 @@
 #ifndef LLGL_D3D12_PSO_UTILS_H
 #define LLGL_D3D12_PSO_UTILS_H
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
 #include <d3d12.h>
 
 namespace LLGL
 {
-
 
 template <D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TType, typename TObject>
 struct alignas(void *) D3DPipelineStreamSubobject
@@ -50,6 +51,8 @@ struct alignas(void *) D3DPipelineStreamSubobject
 
 } // /namespace LLGL
 
-#endif
+#endif // #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+#endif // LLGL_D3D12_PSO_UTILS_H
 
 // ================================================================================
