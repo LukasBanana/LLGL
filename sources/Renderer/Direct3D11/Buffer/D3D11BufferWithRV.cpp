@@ -54,7 +54,7 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     uavFlags_     { GetUAVFlags(desc)         }
 {
     /* Determine stride size either for structured buffers or regular buffers */
-    const UINT stride = (IsByteAddressBuffer(desc) ? 4 : GetStorageBufferStride(desc));
+    const UINT stride = GetStorageBufferStride(desc);
 
     /* Create resource views (SRV and UAV) */
     const DXGI_FORMAT   format      = GetD3DResourceViewFormat(desc);

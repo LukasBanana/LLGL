@@ -404,6 +404,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( PipelineCaching             );
     RUN_TEST( ShaderErrors                );
     RUN_TEST( SamplerBuffer               );
+    RUN_TEST( ByteBuffer                  );
     RUN_TEST( BarrierReadAfterWrite       );
 
     // Run all rendering tests
@@ -1078,6 +1079,7 @@ bool TestbedContext::LoadShaders()
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.hlsl",         ShaderType::Compute,         "CSMain",  "cs_5_0");
+        shaders[CSByteBuffer]       = LoadShaderFromFile("ByteBuffer.hlsl",            ShaderType::Compute,         "CSMain",  "cs_5_0");
         shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.hlsl",        ShaderType::Compute,         "CSMain",  "cs_5_0");
         shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout0);
         shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout1);

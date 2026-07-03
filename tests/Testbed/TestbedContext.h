@@ -194,6 +194,8 @@ class TestbedContext
 
             CSSamplerBuffer,
 
+            CSByteBuffer,
+
             CSReadAfterWrite,
 
             VSVertexFormat0,

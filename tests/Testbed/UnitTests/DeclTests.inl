@@ -65,6 +65,7 @@ DECL_TEST( MipMaps );
 DECL_TEST( PipelineCaching );
 DECL_TEST( ShaderErrors );
 DECL_TEST( SamplerBuffer );
+DECL_TEST( ByteBuffer );
 DECL_TEST( NativeHandle );
 DECL_TEST( BarrierReadAfterWrite );
 

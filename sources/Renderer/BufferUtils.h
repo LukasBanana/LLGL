@@ -22,7 +22,7 @@ class Buffer;
 
 /*
 Returns the final stride (in bytes) for a storage buffer, i.e. either by <stride> attribute of <format>.
-If <format> is undefined, then 1 is returned for byte address buffers.
+If <format> is undefined, then 4 is returned for byte address buffers.
 */
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc);
 

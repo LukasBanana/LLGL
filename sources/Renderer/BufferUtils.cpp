@@ -17,7 +17,9 @@ namespace LLGL
 
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc)
 {
-    if (desc.stride > 0)
+    if (IsByteAddressBuffer(desc))
+        return 4;
+    else if (desc.stride > 0)
         return desc.stride;
     else if (desc.format != Format::Undefined)
         return std::max(1u, (GetFormatAttribs(desc.format).bitSize / 8u));
