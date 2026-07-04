@@ -89,6 +89,7 @@ enum class ShadingLanguage
     HLSL_6_6        = (0x30000 | 660),  //!< HLSL 6.6 (since Direct3D 12). Shader model 6.6 adds dynamic resources to HLSL.
     HLSL_6_7        = (0x30000 | 670),  //!< HLSL 6.7 (since Direct3D 12). Shader model 6.7 adds advanced texture operations to HLSL.
     HLSL_6_8        = (0x30000 | 680),  //!< HLSL 6.8 (since Direct3D 12). Shader model 6.8 adds work graphs to HLSL.
+    HLSL_6_9        = (0x30000 | 690),  //!< HLSL 6.9 (since Direct3D 12). Shader model 6.9 adds long vectors with up to 1024 elements.
 
     Metal           = (0x40000),        //!< Metal Shading Language.
     Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0).
@@ -104,7 +105,19 @@ enum class ShadingLanguage
     SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
     SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.
 
-    VersionBitmask  = 0x0000ffff,       //!< Bitmask for the version number of each shading language enumeration entry.
+    DXIL            = (0x60000),
+    DXIL_1_0        = (0x60000 | 100),  //!< DXIL 1.0 (since Direct3D 12) maps to Shader model 6.0. See HLSL_6_0.
+    DXIL_1_1        = (0x60000 | 110),  //!< DXIL 1.1 (since Direct3D 12) maps to Shader model 6.1. See HLSL_6_1.
+    DXIL_1_2        = (0x60000 | 120),  //!< DXIL 1.2 (since Direct3D 12) maps to Shader model 6.2. See HLSL_6_2.
+    DXIL_1_3        = (0x60000 | 130),  //!< DXIL 1.3 (since Direct3D 12) maps to Shader model 6.3. See HLSL_6_3.
+    DXIL_1_4        = (0x60000 | 140),  //!< DXIL 1.4 (since Direct3D 12) maps to Shader model 6.4. See HLSL_6_4.
+    DXIL_1_5        = (0x60000 | 150),  //!< DXIL 1.5 (since Direct3D 12) maps to Shader model 6.5. See HLSL_6_5.
+    DXIL_1_6        = (0x60000 | 160),  //!< DXIL 1.6 (since Direct3D 12) maps to Shader model 6.6. See HLSL_6_6.
+    DXIL_1_7        = (0x60000 | 170),  //!< DXIL 1.7 (since Direct3D 12) maps to Shader model 6.7. See HLSL_6_7.
+    DXIL_1_8        = (0x60000 | 180),  //!< DXIL 1.8 (since Direct3D 12) maps to Shader model 6.8. See HLSL_6_8.
+    DXIL_1_9        = (0x60000 | 190),  //!< DXIL 1.9 (since Direct3D 12) maps to Shader model 6.9. See HLSL_6_9.
+
+    VersionBitmask  = 0x0000FFFF,       //!< Bitmask for the version number of each shading language enumeration entry.
 };
 
 /**

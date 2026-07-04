@@ -644,6 +644,7 @@ const (
     ShadingLanguageHLSL_6_6       = (0x30000|660)
     ShadingLanguageHLSL_6_7       = (0x30000|670)
     ShadingLanguageHLSL_6_8       = (0x30000|680)
+    ShadingLanguageHLSL_6_9       = (0x30000|690)
     ShadingLanguageMetal          = (0x40000)
     ShadingLanguageMetal_1_0      = (0x40000|100)
     ShadingLanguageMetal_1_1      = (0x40000|110)
@@ -656,7 +657,18 @@ const (
     ShadingLanguageMetal_3_0      = (0x40000|300)
     ShadingLanguageSPIRV          = (0x50000)
     ShadingLanguageSPIRV_100      = (0x50000|100)
-    ShadingLanguageVersionBitmask = 0x0000ffff
+    ShadingLanguageDXIL           = (0x60000)
+    ShadingLanguageDXIL_1_0       = (0x60000|100)
+    ShadingLanguageDXIL_1_1       = (0x60000|110)
+    ShadingLanguageDXIL_1_2       = (0x60000|120)
+    ShadingLanguageDXIL_1_3       = (0x60000|130)
+    ShadingLanguageDXIL_1_4       = (0x60000|140)
+    ShadingLanguageDXIL_1_5       = (0x60000|150)
+    ShadingLanguageDXIL_1_6       = (0x60000|160)
+    ShadingLanguageDXIL_1_7       = (0x60000|170)
+    ShadingLanguageDXIL_1_8       = (0x60000|180)
+    ShadingLanguageDXIL_1_9       = (0x60000|190)
+    ShadingLanguageVersionBitmask = 0x0000FFFF
 )
 
 type ScreenOrigin int

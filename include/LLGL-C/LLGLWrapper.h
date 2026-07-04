@@ -671,6 +671,7 @@ typedef enum LLGLShadingLanguage
     LLGLShadingLanguageHLSL_6_6       = (0x30000|660),
     LLGLShadingLanguageHLSL_6_7       = (0x30000|670),
     LLGLShadingLanguageHLSL_6_8       = (0x30000|680),
+    LLGLShadingLanguageHLSL_6_9       = (0x30000|690),
     LLGLShadingLanguageMetal          = (0x40000),
     LLGLShadingLanguageMetal_1_0      = (0x40000|100),
     LLGLShadingLanguageMetal_1_1      = (0x40000|110),
@@ -683,7 +684,18 @@ typedef enum LLGLShadingLanguage
     LLGLShadingLanguageMetal_3_0      = (0x40000|300),
     LLGLShadingLanguageSPIRV          = (0x50000),
     LLGLShadingLanguageSPIRV_100      = (0x50000|100),
-    LLGLShadingLanguageVersionBitmask = 0x0000ffff,
+    LLGLShadingLanguageDXIL           = (0x60000),
+    LLGLShadingLanguageDXIL_1_0       = (0x60000|100),
+    LLGLShadingLanguageDXIL_1_1       = (0x60000|110),
+    LLGLShadingLanguageDXIL_1_2       = (0x60000|120),
+    LLGLShadingLanguageDXIL_1_3       = (0x60000|130),
+    LLGLShadingLanguageDXIL_1_4       = (0x60000|140),
+    LLGLShadingLanguageDXIL_1_5       = (0x60000|150),
+    LLGLShadingLanguageDXIL_1_6       = (0x60000|160),
+    LLGLShadingLanguageDXIL_1_7       = (0x60000|170),
+    LLGLShadingLanguageDXIL_1_8       = (0x60000|180),
+    LLGLShadingLanguageDXIL_1_9       = (0x60000|190),
+    LLGLShadingLanguageVersionBitmask = 0x0000FFFF,
 }
 LLGLShadingLanguage;
 

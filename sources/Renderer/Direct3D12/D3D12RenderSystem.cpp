@@ -36,6 +36,7 @@
 #include "RenderState/D3D12MeshPSO.h"
 
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
+#include <LLGL/Utils/TypeNames.h>
 
 
 namespace LLGL
@@ -675,55 +676,6 @@ HRESULT D3D12RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D12::R
     return device_.ShareDXDevice(nativeHandle.device, flags);
 }
 
-static D3D_SHADER_MODEL FindHighestShaderModel(ID3D12Device* device)
-{
-    D3D12_FEATURE_DATA_SHADER_MODEL feature;
-
-    const D3D_SHADER_MODEL shaderModels[] =
-    {
-        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        D3D_SHADER_MODEL_6_7,
-        D3D_SHADER_MODEL_6_6,
-        D3D_SHADER_MODEL_6_5,
-        D3D_SHADER_MODEL_6_4,
-        D3D_SHADER_MODEL_6_3,
-        D3D_SHADER_MODEL_6_2,
-        D3D_SHADER_MODEL_6_1,
-        #endif
-        D3D_SHADER_MODEL_6_0,
-        D3D_SHADER_MODEL_5_1,
-    };
-
-    for (D3D_SHADER_MODEL model : shaderModels)
-    {
-        feature.HighestShaderModel = model;
-        HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
-        if (SUCCEEDED(hr))
-            return model;
-    }
-
-    return D3D_SHADER_MODEL_5_1;
-}
-
-static const char* DXShaderModelToString(D3D_SHADER_MODEL shaderModel)
-{
-    switch (shaderModel)
-    {
-        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        case D3D_SHADER_MODEL_6_7: return "6.7";
-        case D3D_SHADER_MODEL_6_6: return "6.6";
-        case D3D_SHADER_MODEL_6_5: return "6.5";
-        case D3D_SHADER_MODEL_6_4: return "6.4";
-        case D3D_SHADER_MODEL_6_3: return "6.3";
-        case D3D_SHADER_MODEL_6_2: return "6.2";
-        case D3D_SHADER_MODEL_6_1: return "6.1";
-        #endif
-        case D3D_SHADER_MODEL_6_0: return "6.0";
-        case D3D_SHADER_MODEL_5_1: return "5.1";
-    }
-    return "";
-}
-
 static const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
 {
     #if LLGL_D3D12_ENABLE_FEATURELEVEL > 0
@@ -741,9 +693,52 @@ static const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
     return "12.0";
 }
 
-int D3D12RenderSystem::GetMinorVersion() const
+// Returns the HLSL version for the specified Direct3D feature level.
+static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_SHADER_MODEL shaderModel)
 {
-    return 0;
+    std::vector<ShadingLanguage> languages;
+
+    /* HLSL is supported through FXC (HLSL 4.0-5.1) and optionally through DXC (HLSL 6.0+) */
+    languages.push_back(ShadingLanguage::HLSL);
+
+    /* HLSL 6.0+ can only be compiled from source when DXC was included in this build */
+    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #   if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    if (shaderModel >= D3D_SHADER_MODEL_6_9) { languages.push_back(ShadingLanguage::HLSL_6_9); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_8) { languages.push_back(ShadingLanguage::HLSL_6_8); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_7) { languages.push_back(ShadingLanguage::HLSL_6_7); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_6) { languages.push_back(ShadingLanguage::HLSL_6_6); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_5) { languages.push_back(ShadingLanguage::HLSL_6_5); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_4) { languages.push_back(ShadingLanguage::HLSL_6_4); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_3) { languages.push_back(ShadingLanguage::HLSL_6_3); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_2) { languages.push_back(ShadingLanguage::HLSL_6_2); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_1) { languages.push_back(ShadingLanguage::HLSL_6_1); }
+    #   endif
+    if (shaderModel >= D3D_SHADER_MODEL_6_0) { languages.push_back(ShadingLanguage::HLSL_6_0); }
+    #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
+
+    if (shaderModel >= D3D_SHADER_MODEL_5_1) { languages.push_back(ShadingLanguage::HLSL_5_1); }
+
+    languages.push_back(ShadingLanguage::HLSL_5_0);
+    languages.push_back(ShadingLanguage::HLSL_4_1);
+    languages.push_back(ShadingLanguage::HLSL_4_0);
+
+    /* DXIL is the primary shading language for D3D12 */
+    languages.push_back(ShadingLanguage::DXIL);
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    if (shaderModel >= D3D_SHADER_MODEL_6_9) { languages.push_back(ShadingLanguage::DXIL_1_9); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_8) { languages.push_back(ShadingLanguage::DXIL_1_8); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_7) { languages.push_back(ShadingLanguage::DXIL_1_7); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_6) { languages.push_back(ShadingLanguage::DXIL_1_6); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_5) { languages.push_back(ShadingLanguage::DXIL_1_5); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_4) { languages.push_back(ShadingLanguage::DXIL_1_4); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_3) { languages.push_back(ShadingLanguage::DXIL_1_3); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_2) { languages.push_back(ShadingLanguage::DXIL_1_2); }
+    if (shaderModel >= D3D_SHADER_MODEL_6_1) { languages.push_back(ShadingLanguage::DXIL_1_1); }
+    #endif
+    if (shaderModel >= D3D_SHADER_MODEL_6_0) { languages.push_back(ShadingLanguage::DXIL_1_0); }
+
+    return languages;
 }
 
 void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
@@ -751,34 +746,41 @@ void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
     /* Get D3D version */
     info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
 
-    /* Get shading language support */
-    info.shadingLanguageName = "HLSL ";
+    /*
+    Get shading language support and print it as "HLSL" or "DXIL" version depending on what language has the higher support.
+    For instance, if this backend was not compiled with DXC, HLSL 5.1 will be the highest supported source lagnuage, but DXIL 1.9 might be supported by the runtime.
+    In this case, the output name of the preferred language is DXIL 1.9. Otherwise, HLSL is preferred as name output.
+    */
+    const std::vector<ShadingLanguage> shadingLanguagers = DXGetHLSLVersions(device_.GetShaderModel());
 
-    const D3D_SHADER_MODEL shaderModel = FindHighestShaderModel(device_.GetNative());
-    info.shadingLanguageName += DXShaderModelToString(shaderModel);
+    ShadingLanguage highestHLSL = ShadingLanguage::HLSL;
+    ShadingLanguage highestDXIL = ShadingLanguage::DXIL;
+
+    for (ShadingLanguage language : shadingLanguagers)
+    {
+        int languageNo = static_cast<int>(language);
+        if ((languageNo & static_cast<int>(ShadingLanguage::HLSL)) == static_cast<int>(ShadingLanguage::HLSL))
+        {
+            if (static_cast<int>(highestHLSL) < languageNo)
+                highestHLSL = language;
+        }
+        else if ((languageNo & static_cast<int>(ShadingLanguage::DXIL)) == static_cast<int>(ShadingLanguage::DXIL))
+        {
+            if (static_cast<int>(highestDXIL) < languageNo)
+                highestDXIL = language;
+        }
+    }
+
+    const int hlslVersionNo = (static_cast<int>(highestHLSL) - static_cast<int>(ShadingLanguage::HLSL_6_0));
+    const int dxilVersionNo = (static_cast<int>(highestDXIL) - static_cast<int>(ShadingLanguage::DXIL_1_0));
+    if (hlslVersionNo >= dxilVersionNo)
+        info.shadingLanguageName = ToString(highestHLSL);
+    else
+        info.shadingLanguageName = ToString(highestDXIL);
 
     /* Get device and vendor name from adapter */
     info.deviceName = videoAdapterInfo_.name.c_str();
     info.vendorName = GetVendorName(videoAdapterInfo_.vendor);
-}
-
-// Returns the HLSL version for the specified Direct3D feature level.
-static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureLevel)
-{
-    std::vector<ShadingLanguage> languages;
-
-    languages.push_back(ShadingLanguage::HLSL);
-    languages.push_back(ShadingLanguage::HLSL_2_0);
-
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_1 ) { languages.push_back(ShadingLanguage::HLSL_2_0a); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) { languages.push_back(ShadingLanguage::HLSL_2_0b); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) { languages.push_back(ShadingLanguage::HLSL_3_0);  }
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) { languages.push_back(ShadingLanguage::HLSL_4_0);  }
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) { languages.push_back(ShadingLanguage::HLSL_4_1);  }
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) { languages.push_back(ShadingLanguage::HLSL_5_0);  }
-    if (featureLevel >= D3D_FEATURE_LEVEL_12_0) { languages.push_back(ShadingLanguage::HLSL_5_1);  }
-
-    return languages;
 }
 
 static std::vector<Format> GetDefaultSupportedDXTextureFormats()
@@ -835,7 +837,6 @@ static long GetStorageResourceStageFlags(D3D_FEATURE_LEVEL featureLevel)
 void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 {
     const D3D_FEATURE_LEVEL featureLevel = GetFeatureLevel();
-    //const int minorVersion = GetMinorVersion();
 
     const std::uint32_t maxThreadGroups = 65535u;
 
@@ -848,7 +849,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     /* Query common attributes */
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
     caps.clippingRange                              = ClippingRange::ZeroToOne;
-    caps.shadingLanguages                           = DXGetHLSLVersions(featureLevel);
+    caps.shadingLanguages                           = DXGetHLSLVersions(device_.GetShaderModel());
     caps.textureFormats                             = GetDefaultSupportedDXTextureFormats();
 
     caps.features.hasRenderTargets                  = true;

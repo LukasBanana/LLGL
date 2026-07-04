@@ -642,6 +642,7 @@ namespace LLGL
         HLSL_6_6       = (0x30000|660),
         HLSL_6_7       = (0x30000|670),
         HLSL_6_8       = (0x30000|680),
+        HLSL_6_9       = (0x30000|690),
         Metal          = (0x40000),
         Metal_1_0      = (0x40000|100),
         Metal_1_1      = (0x40000|110),
@@ -654,7 +655,18 @@ namespace LLGL
         Metal_3_0      = (0x40000|300),
         SPIRV          = (0x50000),
         SPIRV_100      = (0x50000|100),
-        VersionBitmask = 0x0000ffff,
+        DXIL           = (0x60000),
+        DXIL_1_0       = (0x60000|100),
+        DXIL_1_1       = (0x60000|110),
+        DXIL_1_2       = (0x60000|120),
+        DXIL_1_3       = (0x60000|130),
+        DXIL_1_4       = (0x60000|140),
+        DXIL_1_5       = (0x60000|150),
+        DXIL_1_6       = (0x60000|160),
+        DXIL_1_7       = (0x60000|170),
+        DXIL_1_8       = (0x60000|180),
+        DXIL_1_9       = (0x60000|190),
+        VersionBitmask = 0x0000FFFF,
     }
 
     public enum ScreenOrigin

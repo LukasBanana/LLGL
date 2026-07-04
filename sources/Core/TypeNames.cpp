@@ -66,7 +66,7 @@ LLGL_EXPORT const char* ToString(const WarningType val)
     return nullptr;
 }
 
-//TODO: rename ToString() functions that return a more human readable friendly name to ToName() or ToLabel.
+//TODO: rename ToString() functions that return a more human readable friendly name to ToName() or ToLabel().
 LLGL_EXPORT const char* ToString(const ShadingLanguage val)
 {
     using T = ShadingLanguage;
@@ -112,6 +112,7 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val)
         case T::HLSL_6_6:   return "HLSL 6.6";
         case T::HLSL_6_7:   return "HLSL 6.7";
         case T::HLSL_6_8:   return "HLSL 6.8";
+        case T::HLSL_6_9:   return "HLSL 6.9";
 
         case T::Metal:      return "Metal";
         case T::Metal_1_0:  return "Metal 1.0";
@@ -126,6 +127,18 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val)
 
         case T::SPIRV:      return "SPIR-V";
         case T::SPIRV_100:  return "SPIR-V 1.00";
+
+        case T::DXIL:       return "DXIL";
+        case T::DXIL_1_0:   return "DXIL 1.0";
+        case T::DXIL_1_1:   return "DXIL 1.1";
+        case T::DXIL_1_2:   return "DXIL 1.2";
+        case T::DXIL_1_3:   return "DXIL 1.3";
+        case T::DXIL_1_4:   return "DXIL 1.4";
+        case T::DXIL_1_5:   return "DXIL 1.5";
+        case T::DXIL_1_6:   return "DXIL 1.6";
+        case T::DXIL_1_7:   return "DXIL 1.7";
+        case T::DXIL_1_8:   return "DXIL 1.8";
+        case T::DXIL_1_9:   return "DXIL 1.9";
 
         default:            break;
     }

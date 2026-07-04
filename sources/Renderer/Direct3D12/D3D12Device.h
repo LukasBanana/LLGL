@@ -58,6 +58,12 @@ class D3D12Device
             return featureLevel_;
         }
 
+        // Returns the highest available shader model for this Direct3D device.
+        inline D3D_SHADER_MODEL GetShaderModel() const
+        {
+            return shaderModel_;
+        }
+
         // Returns the info queue of the debug layer.
         inline ID3D12InfoQueue* GetInfoQueue() const
         {
@@ -73,6 +79,7 @@ class D3D12Device
 
         ComPtr<ID3D12Device>    device_;
         D3D_FEATURE_LEVEL       featureLevel_   = D3D_FEATURE_LEVEL_9_1;
+        D3D_SHADER_MODEL        shaderModel_    = D3D_SHADER_MODEL_NONE;
 
         ComPtr<ID3D12InfoQueue> infoQueue_;
 

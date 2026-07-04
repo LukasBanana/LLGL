@@ -20,6 +20,38 @@ namespace LLGL
 
 /* ----- Device creation ----- */
 
+static D3D_SHADER_MODEL FindHighestShaderModel(ID3D12Device* device)
+{
+    D3D12_FEATURE_DATA_SHADER_MODEL feature;
+
+    const D3D_SHADER_MODEL shaderModels[] =
+    {
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        D3D_SHADER_MODEL_6_9,
+        D3D_SHADER_MODEL_6_8,
+        D3D_SHADER_MODEL_6_7,
+        D3D_SHADER_MODEL_6_6,
+        D3D_SHADER_MODEL_6_5,
+        D3D_SHADER_MODEL_6_4,
+        D3D_SHADER_MODEL_6_3,
+        D3D_SHADER_MODEL_6_2,
+        D3D_SHADER_MODEL_6_1,
+        #endif
+        D3D_SHADER_MODEL_6_0,
+        D3D_SHADER_MODEL_5_1,
+    };
+
+    for (D3D_SHADER_MODEL model : shaderModels)
+    {
+        feature.HighestShaderModel = model;
+        HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
+        if (SUCCEEDED(hr))
+            return model;
+    }
+
+    return D3D_SHADER_MODEL_5_1;
+}
+
 HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, long flags, IDXGIAdapter* adapter)
 {
     HRESULT hr = S_OK;
@@ -31,7 +63,8 @@ HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureL
         if (SUCCEEDED(hr))
         {
             /* Store selected feature level */
-            featureLevel_ = level;
+            featureLevel_   = level;
+            shaderModel_    = FindHighestShaderModel(device_.Get());
 
             if ((flags & RenderSystemFlags::DebugDevice) != 0)
                 QueryInfoQueueInterface((flags & RenderSystemFlags::DebugBreakOnError) != 0);
@@ -76,7 +109,8 @@ HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice, long flags)
     if (FAILED(hr))
         return hr;
 
-    featureLevel_ = featureLevelSupport.MaxSupportedFeatureLevel;
+    featureLevel_   = featureLevelSupport.MaxSupportedFeatureLevel;
+    shaderModel_    = FindHighestShaderModel(sharedD3DDevice);
 
     /* Store reference to shared D3D device */
     device_ = sharedD3DDevice;
