@@ -79,7 +79,7 @@ class D3D12Device
 
         ComPtr<ID3D12Device>    device_;
         D3D_FEATURE_LEVEL       featureLevel_   = D3D_FEATURE_LEVEL_9_1;
-        D3D_SHADER_MODEL        shaderModel_    = D3D_SHADER_MODEL_NONE;
+        D3D_SHADER_MODEL        shaderModel_    = D3D_SHADER_MODEL_5_1;
 
         ComPtr<ID3D12InfoQueue> infoQueue_;
 
