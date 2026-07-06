@@ -423,6 +423,8 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
 {
     LLGL_DBG_SOURCE();
 
+    ValidateRenderTargetDesc(renderTargetDesc);
+
     RenderTargetDescriptor instanceDesc = renderTargetDesc;
     {
         instanceDesc.renderPass = DbgGetInstance<DbgRenderPass>(renderTargetDesc.renderPass);
@@ -1748,6 +1750,7 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
         const std::uint32_t numResourceViews    = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
         const std::size_t   numBindings         = bindings.size();
 
+
         if (numBindings == 0)
         {
             LLGL_DBG_ERROR(
@@ -1782,9 +1785,11 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
         {
             if (initialResourceViews.size() == numResourceViews)
             {
-                /* Validate all resource view descriptors against their respective binding descriptor */
+                /* Validate all resource view descriptors against their respective binding descriptor, accounting for array bindings */
                 for_range(i, resourceHeapDesc.numResourceViews)
+                {
                     ValidateResourceViewForBinding(initialResourceViews[i], bindings[i % bindings.size()]);
+                }
             }
             else
             {
@@ -2536,6 +2541,43 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
                 psoLabel.c_str(),
                 (IsVulkan() ? "; perhaps LLGL was built without LLGL_VK_ENABLE_SPIRV_REFLECT" : "")
             );
+        }
+    }
+}
+
+void DbgRenderSystem::ValidateRenderTargetDesc(const RenderTargetDescriptor &renderTargetDesc)
+{
+    /* Get number of views from render-target descriptor or render-pass and warn on mismatch */
+    std::uint32_t numViews = renderTargetDesc.views;
+    if (renderTargetDesc.renderPass != nullptr)
+    {
+        const DbgRenderPass *renderPassDbg = LLGL_CAST(const DbgRenderPass *, renderTargetDesc.renderPass);
+        numViews = renderPassDbg->desc.views;
+        if (renderTargetDesc.views > 1 && renderPassDbg->desc.views > 1 && renderTargetDesc.views != renderPassDbg->desc.views)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "mismatching number of views between render-target (%u) and render-pass (%u)",
+                renderTargetDesc.views, renderPassDbg->desc.views);
+        }
+    }
+
+    /* Validatge multiview feature support */
+    if (numViews > 1)
+    {
+        if (!GetRenderingCaps().features.hasMultiView)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::UnsupportedFeature,
+                "multiview not supported, but render-target specified %u",
+                renderTargetDesc.views);
+        }
+        else if (numViews > GetRenderingCaps().limits.maxViews)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "maximum number of supported views is %u, but render-target specified %u",
+                GetRenderingCaps().limits.maxViews, numViews);
         }
     }
 }

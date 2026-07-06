@@ -40,12 +40,19 @@ VKRenderTarget::VKRenderTarget(
 {
     if (desc.renderPass)
     {
-        /* Get render pass from descriptor */
+        /* Get render pass from descriptor; multiview view count comes from that render pass's view mask */
         renderPass_ = LLGL_CAST(const VKRenderPass*, desc.renderPass);
+        numViews_ = renderPass_->GetNumViews();
     }
     else
     {
-        /* Create default render pass */
+        /*
+        Create a default render pass. Its view count comes from RenderTargetDescriptor::views, so a multiview
+        render target can be created without an explicit render pass; the default pass derives its per-attachment
+        final layouts from each attachment texture's bind flags (e.g. color attachments end in
+        COLOR_ATTACHMENT_OPTIMAL), which is what offscreen/XR images need -- unlike a swap-chain-style render pass.
+        */
+        numViews_ = (desc.views > 1 ? desc.views : 1);
         CreateDefaultRenderPass(device, desc);
         renderPass_ = (&defaultRenderPass_);
     }
@@ -195,8 +202,8 @@ void VKRenderTarget::CreateRenderPass(
         }
     }
 
-    /* Create native Vulkan render pass with attachment descriptors */
-    renderPass.CreateVkRenderPassWithDescriptors(device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_);
+    /* Create native Vulkan render pass with attachment descriptors (multiview view count must match the framebuffer image views) */
+    renderPass.CreateVkRenderPassWithDescriptors(device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_, numViews_);
 }
 
 void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
@@ -218,11 +225,27 @@ VkImageView VKRenderTarget::CreateAttachmentImageView(
     /* Validate texture resolution to render target (to validate correlation between attachments) */
     ValidateMipResolution(*textureVK, attachmentDesc.mipLevel);
 
-    /* Create new image view for MIP-level and array layer specified in attachment descriptor */
+    /*
+    For multiview rendering, the attachment view spans 'numViews_' consecutive array layers starting at the
+    attachment's base layer; the render pass view mask then routes each view to one layer. This requires the
+    attachment texture to be an array texture (so its image view type is 2D_ARRAY) with enough layers.
+    For non-multiview rendering (numViews_ == 1) this is a single-layer view, identical to before.
+    */
+    const std::uint32_t numLayers = numViews_;
+    if (numLayers > 1)
+    {
+        LLGL_ASSERT(
+            attachmentDesc.arrayLayer + numLayers <= textureVK->GetNumArrayLayers(),
+            "multiview render target requires an array texture with at least %u layers, but attachment provides %u",
+            attachmentDesc.arrayLayer + numLayers, textureVK->GetNumArrayLayers()
+        );
+    }
+
+    /* Create new image view for MIP-level and array layer range specified in attachment descriptor */
     const VkImageLayout renderPassImageLayout = (IsDepthOrStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
     {
-        textureVK->CreateImageView(device, TextureSubresource{ attachmentDesc.arrayLayer, attachmentDesc.mipLevel }, format, imageView);
+        textureVK->CreateImageView(device, TextureSubresource{ attachmentDesc.arrayLayer, numLayers, attachmentDesc.mipLevel, 1u }, format, imageView);
     }
     attachmentViews_.emplace_back(textureVK, renderPassImageLayout, std::move(imageView));
 
@@ -276,7 +299,8 @@ void VKRenderTarget::CreateFramebuffer(
         }
         else
         {
-            /* Create internal color buffer */
+            /* Internal (anonymous) color buffers are single-layer and cannot be used for multiview rendering */
+            LLGL_ASSERT(numViews_ == 1, "multiview render target requires a texture for each color attachment");
             attachmentImageViews[i] = CreateColorBuffer(deviceMemoryMngr, colorAttachment.format);
         }
     }
@@ -294,7 +318,8 @@ void VKRenderTarget::CreateFramebuffer(
         }
         else
         {
-            /* Create internal depth-stencil buffer */
+            /* Internal (anonymous) depth-stencil buffers are single-layer and cannot be used for multiview rendering */
+            LLGL_ASSERT(numViews_ == 1, "multiview render target requires a texture for the depth-stencil attachment");
             attachmentImageViews[numColorAttachments_] = CreateDepthStencilBuffer(deviceMemoryMngr, depthStencilFormat_);
         }
     }

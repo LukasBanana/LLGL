@@ -59,17 +59,30 @@ class LLGL_EXPORT XRSwapChain : public Interface
         virtual std::uint32_t GetArrayLayers() const = 0;
 
         /**
-        \brief Returns the render target for this swap-chain's current-frame image.
-        \return Render target to render the current frame's view into, or null if no image is ready (in which case the
+        \brief Acquires this frame's swap-chain image and returns the render target to render the current view into.
+        \return Render target for the current frame's view, or null if no image could be acquired (in which case the
         view should be skipped for this frame).
-        \remarks This is a pure accessor with no side effects: the runtime image (and its managed depth image, if any)
-        is acquired and waited on ahead of time by XRSession::EndFrame, and released by the next EndFrame, analogous to
-        how LLGL::SwapChain hides image acquisition behind Present. The render target combines the current color image
-        with the swap-chain's managed depth buffer (present when the swap-chain was created with a depth-stencil format).
+        \remarks This has side effects: it acquires and waits on the runtime image (and its managed depth image, if
+        any), so it must be called exactly once per frame per view, after XRSession::BeginFrame and before rendering.
+        The image is released by the next XRSession::EndFrame. Acquire/wait/release are hidden inside LLGL, analogous
+        to how LLGL::SwapChain hides image acquisition behind Present; the acquire happens here (inside the frame)
+        rather than ahead of time because some OpenXR runtimes require it to stay within the begin/end-frame bracket.
+        The render target combines the current color image with the swap-chain's managed depth buffer (present when
+        the swap-chain was created with a depth-stencil format).
+        \see GetRenderTarget
         \see GetRenderPass
         \see XRSession::EndFrame
         */
-        virtual RenderTarget* GetRenderTarget() = 0;
+        virtual RenderTarget* AcquireRenderTarget() = 0;
+
+        /**
+        \brief Returns the render target for the image currently acquired by AcquireRenderTarget, or null if none.
+        \remarks Pure accessor with no side effects. Unlike AcquireRenderTarget, this never acquires an image; it only
+        reports the render target for the image acquired earlier this frame (or null if AcquireRenderTarget has not
+        been called, or the image was already released by XRSession::EndFrame).
+        \see AcquireRenderTarget
+        */
+        virtual RenderTarget* GetRenderTarget() const = 0;
 
         /**
         \brief Returns a render pass compatible with this swap-chain's render targets.

@@ -45,17 +45,25 @@ if(NOT OPENXR_FOUND AND LLGL_OPENXR_ALLOW_FETCH)
         set(BUILD_CONFORMANCE_TESTS  OFF CACHE BOOL "" FORCE)
         set(BUILD_LOADER             ON  CACHE BOOL "" FORCE)
 
-        # Build the loader statically on desktop, dynamically on Android.
+        # Choose a shared vs static loader based on how LLGL itself is built.
         #
-        # The SDK's loader CMakeLists adds an unconditional Visual Studio POST_BUILD step that
-        # xcopies the built loader DLL from the loader target's *own* output dir into the SDK's
-        # sample/test dirs (hello_xr/loader_test/conformance). We never build those, and any
-        # consuming project that sets a global CMAKE_RUNTIME_OUTPUT_DIRECTORY redirects the DLL
-        # elsewhere, so that xcopy fails the whole build with "File not found - openxr_loader*.dll".
-        # A static loader skips that block entirely and removes the DLL-deployment burden on
-        # desktop consumers (the loader still discovers the active XR runtime via the registry).
-        # Android keeps the dynamic loader because the APK ships libopenxr_loader.so (see BuildAndroid.sh).
-        if(ANDROID)
+        # When LLGL is built as SHARED libraries (the default), each renderer backend is a separate module DLL
+        # (LLGL_Vulkan, LLGL_Direct3D12, ...) and the XR graphics bindings live inside those DLLs, while the XR
+        # frontend that calls xrCreateInstance lives elsewhere. A *static* loader would be linked into each of
+        # those binaries separately, giving every module its own private copy of the loader's global instance
+        # table -- so an XrInstance created by one module is rejected as "No active XrInstance handle"
+        # (XR_ERROR_HANDLE_INVALID) when another module calls xrGetInstanceProcAddr on it. A single shared loader
+        # DLL is imported by all modules, so they share one loader instance. The DLL is deployed next to the LLGL
+        # binaries below, and its own output directory is pinned so the SDK's xcopy POST_BUILD step keeps working
+        # even when a consuming project redirects binaries via a global CMAKE_RUNTIME_OUTPUT_DIRECTORY.
+        #
+        # When LLGL is built STATIC (LLGL_BUILD_STATIC_LIB), every module is linked into the single consuming
+        # binary, so the static loader has exactly one copy and the duplication problem cannot occur. Keep it
+        # static there: it stays embeddable with no loader-DLL deployment burden and skips the xcopy step entirely
+        # (which is what motivated building the loader statically on desktop in the first place).
+        #
+        # Android always ships the dynamic loader (libopenxr_loader.so) in the APK (see BuildAndroid.sh).
+        if(ANDROID OR NOT LLGL_BUILD_STATIC_LIB)
             set(DYNAMIC_LOADER       ON  CACHE BOOL "" FORCE)
         else()
             set(DYNAMIC_LOADER       OFF CACHE BOOL "" FORCE)
@@ -87,4 +95,29 @@ if(OPENXR_FOUND)
             set_target_properties(${_oxr_target} PROPERTIES FOLDER "External/OpenXR")
         endif()
     endforeach()
+
+    # For the fetched SHARED loader on desktop (LLGL built as shared libraries), pin its output directory and
+    # deploy the DLL next to the LLGL binaries. Skipped for Android (the APK bundles libopenxr_loader.so), for a
+    # system-installed loader (already on the loader search path), and for static LLGL builds (which keep the
+    # static loader and have no loader DLL).
+    if(OPENXR_SOURCE STREQUAL "fetch" AND NOT ANDROID AND NOT LLGL_BUILD_STATIC_LIB AND TARGET openxr_loader AND TARGET LLGL)
+        # Pin the loader DLL to its own build directory (overriding any global CMAKE_RUNTIME_OUTPUT_DIRECTORY a
+        # consuming project may set), so the SDK's POST_BUILD xcopy -- which copies from the loader's own dir into
+        # the SDK sample dirs -- always finds its source and does not fail the build.
+        set_target_properties(openxr_loader PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${openxr_sdk_BINARY_DIR}/src/loader"
+        )
+
+        # Deploy the loader DLL next to the LLGL binaries so applications can load it at runtime. The copy is
+        # attached to the core LLGL target because add_custom_command(TARGET ...) must be issued in the directory
+        # that created the target, and openxr_loader is created in the FetchContent sub-build; force the loader to
+        # build before LLGL so its DLL exists when the copy runs.
+        add_dependencies(LLGL openxr_loader)
+        add_custom_command(
+            TARGET LLGL POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:openxr_loader>" "$<TARGET_FILE_DIR:LLGL>"
+            COMMENT "Deploying OpenXR loader DLL next to LLGL binaries"
+            VERBATIM
+        )
+    endif()
 endif()

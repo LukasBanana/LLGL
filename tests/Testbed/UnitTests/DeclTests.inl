@@ -89,6 +89,7 @@ DECL_TEST( StreamOutput );
 DECL_TEST( ResourceCopy );
 DECL_TEST( CombinedTexSamplers );
 DECL_TEST( MeshShaders );
+DECL_TEST( Multiview );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );

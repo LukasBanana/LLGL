@@ -429,6 +429,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ResourceCopy                );
     RUN_TEST( CombinedTexSamplers         );
     RUN_TEST( MeshShaders                 );
+    RUN_TEST( Multiview                   );
 
     // Reset main renderer and run C99 tests
     // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)

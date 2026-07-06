@@ -140,6 +140,23 @@ struct RenderTargetDescriptor
     std::uint32_t           samples     = 1;
 
     /**
+    \brief Specifies the number of views for multiview (single-pass layered) rendering. By default 1.
+    \remarks If this is greater than 1, the render target renders to \c views consecutive array layers of its
+    attachments at once (single-pass stereo / cascaded shadow maps); see RenderPassDescriptor::views for details.
+    All attachments that reference a texture must be array textures with at least <code>arrayLayer + views</code> layers.
+    \remarks If \c renderPass is specified, the number of views is taken from that RenderPass and this field is ignored
+    (they must be consistent). If \c renderPass is null, the default render pass created for this render target uses
+    this view count.
+    \remarks This must not be greater than RenderingLimits::maxViews, and requires RenderingFeatures::hasMultiView.
+    A value of 0 is treated the same as 1 (multiview disabled).
+    \note Only supported with: Vulkan, Direct3D 12.
+    \see RenderPassDescriptor::views
+    \see RenderingFeatures::hasMultiView
+    \see RenderingLimits::maxViews
+    */
+    std::uint32_t           views       = 1;
+
+    /**
     \brief Specifies the list of color attachment descriptors.
     \remarks Each attachment descriptor describes into which target will be rendered.
     \remarks For each attachment, for which a texture is specified, this texture must have the same number of samples as specified by RenderTargetDescriptor::samples,

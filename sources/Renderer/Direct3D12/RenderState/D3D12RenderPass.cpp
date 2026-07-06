@@ -77,13 +77,17 @@ void D3D12RenderPass::BuildAttachments(
 
     /* Store sample descriptor */
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
+
+    /* Store number of views for multiview (view-instanced) rendering */
+    numViews_ = (desc.views > 1 ? desc.views : 1);
 }
 
 void D3D12RenderPass::BuildAttachments(
     UINT                    numColorFormats,
     const DXGI_FORMAT*      colorFormats,
     const DXGI_FORMAT       depthStencilFormat,
-    const DXGI_SAMPLE_DESC& sampleDesc)
+    const DXGI_SAMPLE_DESC& sampleDesc,
+    UINT                    numViews)
 {
     /* Reset clear flags */
     clearFlagsDSV_ = 0;
@@ -99,6 +103,9 @@ void D3D12RenderPass::BuildAttachments(
 
     /* Store sample descriptor */
     sampleDesc_ = sampleDesc;
+
+    /* Store number of views for multiview (view-instanced) rendering */
+    numViews_ = (numViews > 1 ? numViews : 1);
 }
 
 

@@ -158,6 +158,24 @@ struct RenderPassDescriptor
     \see RenderingLimits::maxNoAttachmentSamples
     */
     std::uint32_t               samples             = 1;
+
+    /**
+    \brief Specifies the number of views for multiview (single-pass layered) rendering. By default 1.
+    \remarks If this is greater than 1, the render pass is a multiview render pass:
+    a single draw command is broadcast to \c views consecutive array layers of the render target,
+    starting at AttachmentDescriptor::arrayLayer. Each invocation can read its layer index via
+    SystemValue::ViewIndex to index per-view data (e.g. view-projection matrices for single-pass stereo or
+    cascaded shadow maps). All render target attachments used with this render pass must be array textures
+    with at least <code>arrayLayer + views</code> layers.
+    \remarks This must not be greater than RenderingLimits::maxViews, and requires RenderingFeatures::hasMultiView.
+    A value of 0 is treated the same as 1 (multiview disabled).
+    \note Only supported with: Vulkan, Direct3D 12.
+    \see RenderingFeatures::hasMultiView
+    \see RenderingLimits::maxViews
+    \see SystemValue::ViewIndex
+    \see AttachmentDescriptor::arrayLayer
+    */
+    std::uint32_t               views               = 1;
 };
 
 

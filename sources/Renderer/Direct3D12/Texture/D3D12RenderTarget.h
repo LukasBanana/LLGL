@@ -61,10 +61,14 @@ class D3D12RenderTarget final : public RenderTarget
 
         void CreateDescriptorHeaps(ID3D12Device* device, const UINT numColorTargets);
 
+        // Resolves the multiview view count from an explicit render pass (if any) or RenderTargetDescriptor::views.
+        static UINT ResolveNumViews(const RenderTargetDescriptor& desc);
+
         void CreateAttachments(
             ID3D12Device*                   device,
             const RenderTargetDescriptor&   desc,
-            const ColorFormatVector&        colorFormats
+            const ColorFormatVector&        colorFormats,
+            UINT                            numViews
         );
 
         void CreateColorAttachment(
@@ -72,14 +76,16 @@ class D3D12RenderTarget final : public RenderTarget
             const AttachmentDescriptor&     colorAttachment,
             const AttachmentDescriptor&     resolveAttachment,
             DXGI_FORMAT                     format,
-            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle
+            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
+            UINT                            numArrayLayers          = 1
         );
 
         void CreateDepthStencilAttachment(
             ID3D12Device*                   device,
             const AttachmentDescriptor&     depthStenciAttachment,
             D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
-            D3D12_DSV_FLAGS                 dsvFlags                = D3D12_DSV_FLAG_NONE
+            D3D12_DSV_FLAGS                 dsvFlags                = D3D12_DSV_FLAG_NONE,
+            UINT                            numArrayLayers          = 1
         );
 
         D3D12Resource* CreateInternalTexture(
@@ -97,7 +103,8 @@ class D3D12RenderTarget final : public RenderTarget
             const TextureType           type,
             UINT                        mipLevel,
             UINT                        arrayLayer,
-            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            UINT                        numArrayLayers  = 1
         );
 
         void CreateDepthStencilView(
@@ -107,7 +114,8 @@ class D3D12RenderTarget final : public RenderTarget
             const TextureType   type,
             UINT                mipLevel,
             UINT                arrayLayer,
-            D3D12_DSV_FLAGS     dsvFlags    = D3D12_DSV_FLAG_NONE
+            D3D12_DSV_FLAGS     dsvFlags        = D3D12_DSV_FLAG_NONE,
+            UINT                numArrayLayers  = 1
         );
 
         void CreateResolveTarget(

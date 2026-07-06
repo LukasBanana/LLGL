@@ -21,7 +21,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
-
+#include "D3D12PSOUtils.h"
 
 namespace LLGL
 {
@@ -91,40 +91,6 @@ void D3D12MeshPSO::Bind(D3D12CommandContext& commandContext)
     BindOutputMergerAndStaticStates(commandContext.GetCommandList());
 }
 
-template <D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TType, typename TObject>
-struct alignas(void*) D3DPipelineStreamSubobject
-{
-    D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type    = { TType };
-    TObject                             object  = {};
-
-    D3DPipelineStreamSubobject() = default;
-
-    inline D3DPipelineStreamSubobject(TObject object) :
-        object { std::move(object) }
-    {
-    }
-
-    inline D3DPipelineStreamSubobject& operator = (TObject object)
-    {
-        this->object = std::move(object);
-        return *this;
-    }
-
-    inline operator TObject& ()
-    {
-        return object;
-    }
-
-    inline TObject& operator * ()
-    {
-        return object;
-    }
-
-    inline TObject* operator -> ()
-    {
-        return &object;
-    }
-};
 
 struct D3DMeshPipelineStream
 {

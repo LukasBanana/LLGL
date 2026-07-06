@@ -7,6 +7,7 @@
 
 #include "VKDevice.h"
 #include "VKTypes.h"
+#include "Command/VKCommandBufferRegistry.h"
 #include "RenderState/VKFence.h"
 #include "Buffer/VKBuffer.h"
 #include "Texture/VKTexture.h"
@@ -168,6 +169,9 @@ VkCommandBuffer VKDevice::AllocCommandBuffer(bool begin)
     VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer);
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffer");
 
+    /* Track this command buffer so the debug messenger can attribute validation errors to LLGL (see registry) */
+    VKRegisterCommandBuffers(1, &cmdBuffer);
+
     /* Begin command buffer recording (if enabled) */
     if (begin)
     {
@@ -210,7 +214,10 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
 
     /* Release command buffer (if enabled) */
     if (release)
+    {
+        VKUnregisterCommandBuffers(1, &cmdBuffer);
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmdBuffer);
+    }
 }
 
 void VKDevice::CopyBuffer(

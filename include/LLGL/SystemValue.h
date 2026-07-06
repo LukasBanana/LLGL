@@ -37,6 +37,7 @@ namespace LLGL
 <tr><td>SystemValue::SampleID</td><td>\c SV_SampleIndex</td><td>\c gl_SampleID</td><td>\c gl_SampleID</td><td><code>[[sample_id]]</code></td></tr>
 <tr><td>SystemValue::Stencil</td><td>\c SV_StencilRef</td><td>N/A</td><td>N/A</td><td><code>[[stencil]]</code></td></tr>
 <tr><td>SystemValue::VertexID</td><td>\c SV_VertexID</td><td>\c gl_VertexID</td><td>\c gl_VertexIndex</td><td><code>[[vertex_id]]</code></td></tr>
+<tr><td>SystemValue::ViewIndex</td><td>\c SV_ViewID</td><td>\c gl_ViewIndex</td><td>\c gl_ViewIndex</td><td><code>[[amplification_id]]</code></td></tr>
 <tr><td>SystemValue::ViewportIndex</td><td>\c SV_ViewportArrayIndex</td><td>\c gl_ViewportIndex</td><td>\c gl_ViewportIndex</td><td><code>[[viewport_array_index]]</code></td></tr>
 </table>
 \see VertexAttribute::systemValue
@@ -102,6 +103,19 @@ enum class SystemValue
     \see CommandBuffer::Draw
     */
     VertexID,
+
+    /**
+    \brief Index of the view in a multiview render pass.
+    \remarks This is used for single-pass layered rendering, where a single draw is broadcast to multiple
+    array layers of the render target (e.g. single-pass stereo for VR or cascaded shadow maps).
+    The shader uses this value to index per-view data such as view-projection matrices.
+    \remarks This requires RenderingFeatures::hasMultiView and is enabled per render pass via RenderPassDescriptor::views.
+    \note Only supported with: Vulkan, Direct3D 12.
+    \see RenderPassDescriptor::views
+    \see RenderingFeatures::hasMultiView
+    \see RenderingLimits::maxViews
+    */
+    ViewIndex,
 
     //! Index of the viewport array.
     ViewportIndex,

@@ -871,6 +871,7 @@ const char* SystemValueToString(SystemValue systemValue)
         case SystemValue::SampleID:             return "SV_SampleIndex";
         case SystemValue::Stencil:              return "SV_StencilRef";
         case SystemValue::VertexID:             return "SV_VertexID";
+        case SystemValue::ViewIndex:            return "SV_ViewID";
         case SystemValue::ViewportIndex:        return "SV_ViewportArrayIndex";
     }
     return nullptr;

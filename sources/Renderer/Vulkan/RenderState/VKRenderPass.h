@@ -40,7 +40,8 @@ class VKRenderPass final : public RenderPass
             std::uint32_t                   numAttachments,
             std::uint32_t                   numColorAttachments,
             const VkAttachmentDescription*  attachmentDescs,
-            VkSampleCountFlagBits           sampleCountBits
+            VkSampleCountFlagBits           sampleCountBits,
+            std::uint32_t                   numViews = 1
         );
 
         // Returns the Vulkan render pass object.
@@ -82,6 +83,12 @@ class VKRenderPass final : public RenderPass
             return sampleCountBits_;
         }
 
+        // Returns the number of views for multiview rendering, or 1 if multiview is disabled for this render pass.
+        inline std::uint32_t GetNumViews() const
+        {
+            return numViews_;
+        }
+
     private:
 
         VKPtr<VkRenderPass>     renderPass_;
@@ -91,6 +98,7 @@ class VKRenderPass final : public RenderPass
         std::uint8_t            numClearValues_         = 0;
         std::uint8_t            numColorAttachments_    = 0;
         VkSampleCountFlagBits   sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;
+        std::uint32_t           numViews_               = 1;
 
 };
 

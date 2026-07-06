@@ -765,6 +765,7 @@ namespace LLGL
         SampleID,
         Stencil,
         VertexID,
+        ViewIndex,
         ViewportIndex,
     }
 
@@ -1470,6 +1471,7 @@ namespace LLGL
         public bool HasOffsetInstancing { get; set; }          = false;
         public bool HasIndirectDrawing { get; set; }           = false;
         public bool HasViewportArrays { get; set; }            = false;
+        public bool HasMultiView { get; set; }                 = false;
         public bool HasConservativeRasterization { get; set; } = false;
         public bool HasStreamOutputs { get; set; }             = false;
         public bool HasLogicOp { get; set; }                   = false;
@@ -1510,6 +1512,7 @@ namespace LLGL
                 HasOffsetInstancing          = value.hasOffsetInstancing;
                 HasIndirectDrawing           = value.hasIndirectDrawing;
                 HasViewportArrays            = value.hasViewportArrays;
+                HasMultiView                 = value.hasMultiView;
                 HasConservativeRasterization = value.hasConservativeRasterization;
                 HasStreamOutputs             = value.hasStreamOutputs;
                 HasLogicOp                   = value.hasLogicOp;
@@ -1535,6 +1538,7 @@ namespace LLGL
         public int[]   MaxComputeShaderWorkGroupSize { get; set; } = new int[]{ 0, 0, 0 };
         public int     MaxViewports { get; set; }                  = 0;
         public int[]   MaxViewportSize { get; set; }               = new int[]{ 0, 0 };
+        public int     MaxViews { get; set; }                      = 0;
         public long    MaxBufferSize { get; set; }                 = 0;
         public long    MaxConstantBufferSize { get; set; }         = 0;
         public int     MaxStreamOutputs { get; set; }              = 0;
@@ -1580,6 +1584,7 @@ namespace LLGL
                     MaxViewports                     = value.maxViewports;
                     MaxViewportSize[0]               = value.maxViewportSize[0];
                     MaxViewportSize[1]               = value.maxViewportSize[1];
+                    MaxViews                         = value.maxViews;
                     MaxBufferSize                    = value.maxBufferSize;
                     MaxConstantBufferSize            = value.maxConstantBufferSize;
                     MaxStreamOutputs                 = value.maxStreamOutputs;
@@ -3889,6 +3894,8 @@ namespace LLGL
             [MarshalAs(UnmanagedType.I1)]
             public bool hasViewportArrays;            /* = false */
             [MarshalAs(UnmanagedType.I1)]
+            public bool hasMultiView;                 /* = false */
+            [MarshalAs(UnmanagedType.I1)]
             public bool hasConservativeRasterization; /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasStreamOutputs;             /* = false */
@@ -3917,6 +3924,7 @@ namespace LLGL
             public fixed int   maxComputeShaderWorkGroupSize[3]; /* = { 0, 0, 0 } */
             public int         maxViewports;                     /* = 0 */
             public fixed int   maxViewportSize[2];               /* = { 0, 0 } */
+            public int         maxViews;                         /* = 0 */
             public long        maxBufferSize;                    /* = 0 */
             public long        maxConstantBufferSize;            /* = 0 */
             public int         maxStreamOutputs;                 /* = 0 */
@@ -4308,6 +4316,7 @@ namespace LLGL
             public AttachmentFormatDescriptor depthAttachment;
             public AttachmentFormatDescriptor stencilAttachment;
             public int                        samples;           /* = 1 */
+            public int                        views;             /* = 1 */
         }
 
         public unsafe struct RenderTargetDescriptor
@@ -4316,6 +4325,7 @@ namespace LLGL
             public RenderPass           renderPass;             /* = null */
             public Extent2D             resolution;
             public int                  samples;                /* = 1 */
+            public int                  views;                  /* = 1 */
             public AttachmentDescriptor colorAttachments0;
             public AttachmentDescriptor colorAttachments1;
             public AttachmentDescriptor colorAttachments2;

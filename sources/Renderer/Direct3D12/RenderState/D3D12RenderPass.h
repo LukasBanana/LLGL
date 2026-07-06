@@ -47,7 +47,8 @@ class D3D12RenderPass final : public RenderPass
             UINT                    numColorFormats,
             const DXGI_FORMAT*      colorFormats,
             const DXGI_FORMAT       depthStencilFormat,
-            const DXGI_SAMPLE_DESC& sampleDesc
+            const DXGI_SAMPLE_DESC& sampleDesc,
+            UINT                    numViews            = 1
         );
 
         // Returns the number of color attachments used for this render pass.
@@ -92,6 +93,12 @@ class D3D12RenderPass final : public RenderPass
             return sampleDesc_;
         }
 
+        // Returns the number of views for multiview (view-instanced) rendering, or 1 if multiview is disabled.
+        inline UINT GetNumViews() const
+        {
+            return numViews_;
+        }
+
     private:
 
         void SetDSVFormat(DXGI_FORMAT format);
@@ -109,6 +116,8 @@ class D3D12RenderPass final : public RenderPass
         DXGI_FORMAT         dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
 
         DXGI_SAMPLE_DESC    sampleDesc_                                             = { 1, 0 };
+
+        UINT                numViews_                                               = 1;
 
 };
 

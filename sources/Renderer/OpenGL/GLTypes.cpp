@@ -1411,6 +1411,7 @@ const char* SystemValueToString(SystemValue systemValue, ShaderType shaderType)
         case SystemValue::SampleID:             return "gl_SampleID";
         case SystemValue::Stencil:              return "gl_Stencil";
         case SystemValue::VertexID:             return "gl_VertexID";
+        case SystemValue::ViewIndex:            return "gl_ViewIndex";
         case SystemValue::ViewportIndex:        return "gl_ViewportIndex";
     }
     return nullptr;
