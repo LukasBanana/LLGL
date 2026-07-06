@@ -8,7 +8,7 @@
 #include "VKCommandBufferRegistry.h"
 #include <mutex>
 #include <unordered_set>
-#include <atomic.h>
+#include <atomic>
 
 namespace LLGL
 {
