@@ -657,7 +657,7 @@ struct RenderingFeatures
     \see RenderingLimits::maxViews
     \see SystemValue::ViewIndex
     */
-    bool hasMultiView                   = false;
+    bool hasMultiview                   = false;
 
     /**
     \brief Specifies whether conservative rasterization is supported.
@@ -798,13 +798,12 @@ struct RenderingLimits
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
 
     /**
-    \brief Specifies the maximum number of views for multiview (single-pass layered) rendering. By default 1.
-    \remarks This is the upper limit for RenderPassDescriptor::views.  This values should only be more than 1
-        if hasMultiView is true.
+    \brief Specifies the maximum number of views for multiview (single-pass layered) rendering.
+    \remarks This is the upper limit for RenderPassDescriptor::views. This values should only be more than 1 if \c hasMultiview is true.
     \see RenderPassDescriptor::views
-    \see RenderingFeatures::hasMultiView
+    \see RenderingFeatures::hasMultiview
     */
-    std::uint32_t   maxViews                            = 1;
+    std::uint32_t   maxViews                            = 0;
 
     /**
     \brief Specifies the maximum size (in bytes) that is supported for hardware buffers (vertex, index, storage buffers).

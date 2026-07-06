@@ -113,6 +113,9 @@ class TestbedContext
         // Loads a new texture from file.
         LLGL::Texture* LoadTextureFromFile(const char* name, const std::string& filename, LLGL::Format format = LLGL::Format::RGBA8UNorm);
 
+        // Returns true if the specified shading language is supported by the current renderer.
+        bool IsShadingLanguageSupported(LLGL::ShadingLanguage language) const;
+
     protected:
 
         enum Models

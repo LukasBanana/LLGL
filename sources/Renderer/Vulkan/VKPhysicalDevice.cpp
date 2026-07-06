@@ -333,7 +333,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
     #if VK_KHR_multiview
-    caps.features.hasMultiView                      = (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME) && features_.multiview.multiview != VK_FALSE);
+    caps.features.hasMultiview                      = (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME) && features_.multiview.multiview != VK_FALSE);
     #endif
     #if VK_EXT_conservative_rasterization
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
@@ -369,7 +369,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     #if VK_KHR_multiview
-    caps.limits.maxViews                            = (caps.features.hasMultiView ? properties_.multiview.maxMultiviewViewCount : 1u);
+    caps.limits.maxViews                            = (caps.features.hasMultiview ? properties_.multiview.maxMultiviewViewCount : 1u);
     #endif
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;

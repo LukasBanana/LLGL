@@ -167,10 +167,10 @@ struct RenderPassDescriptor
     SystemValue::ViewIndex to index per-view data (e.g. view-projection matrices for single-pass stereo or
     cascaded shadow maps). All render target attachments used with this render pass must be array textures
     with at least <code>arrayLayer + views</code> layers.
-    \remarks This must not be greater than RenderingLimits::maxViews, and requires RenderingFeatures::hasMultiView.
+    \remarks This must not be greater than RenderingLimits::maxViews and requires RenderingFeatures::hasMultiview.
     A value of 0 is treated the same as 1 (multiview disabled).
     \note Only supported with: Vulkan, Direct3D 12.
-    \see RenderingFeatures::hasMultiView
+    \see RenderingFeatures::hasMultiview
     \see RenderingLimits::maxViews
     \see SystemValue::ViewIndex
     \see AttachmentDescriptor::arrayLayer

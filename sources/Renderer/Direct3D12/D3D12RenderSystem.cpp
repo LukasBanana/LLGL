@@ -841,9 +841,21 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     const std::uint32_t maxThreadGroups = 65535u;
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+    /*
+    Multiview is implemented with D3D12 view instancing (SV_ViewID). The view-instanced PSO path uses the
+    stream-based pipeline state API (ID3D12Device2, VIEW_INSTANCING subobject), which requires a newer Windows SDK
+    and is compiled out below feature level 12.1, so the capability is reported under LLGL_D3D12_ENABLE_FEATURELEVEL.
+    */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
+    deviceCaps_.viewInstancingTier = options3.ViewInstancingTier;
+
+    /* Check mesh shader support */
     D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
     deviceCaps_.meshShaderTier = options7.MeshShaderTier;
+
     #endif
 
     /* Query common attributes */
@@ -878,14 +890,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
     caps.features.hasViewportArrays                 = true;
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-    /*
-    Multiview is implemented with D3D12 view instancing (SV_ViewID). The view-instanced PSO path uses the
-    stream-based pipeline state API (ID3D12Device2, VIEW_INSTANCING subobject), which requires a newer Windows SDK
-    and is compiled out below feature level 12.1, so the capability is reported under LLGL_D3D12_ENABLE_FEATURELEVEL.
-    */
-    D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
-    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
-    caps.features.hasMultiView                      = (options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED);
+    caps.features.hasMultiview                      = (deviceCaps_.viewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED);
     #endif
     caps.features.hasConservativeRasterization      = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
     caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
@@ -915,7 +920,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[0]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     caps.limits.maxViewportSize[1]                  = D3D12_VIEWPORT_BOUNDS_MAX;
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-    caps.limits.maxViews                            = (caps.features.hasMultiView ? D3D12_MAX_VIEW_INSTANCE_COUNT : 1u);
+    caps.limits.maxViews                            = (caps.features.hasMultiview ? D3D12_MAX_VIEW_INSTANCE_COUNT : 1u);
     #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;
     caps.limits.maxConstantBufferSize               = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;

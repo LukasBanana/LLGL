@@ -1162,7 +1162,7 @@ type RenderingFeatures struct {
     HasOffsetInstancing          bool /* = false */
     HasIndirectDrawing           bool /* = false */
     HasViewportArrays            bool /* = false */
-    HasMultiView                 bool /* = false */
+    HasMultiview                 bool /* = false */
     HasConservativeRasterization bool /* = false */
     HasStreamOutputs             bool /* = false */
     HasLogicOp                   bool /* = false */

@@ -950,7 +950,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasInstancing);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasOffsetInstancing);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasIndirectDrawing);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasViewportArrays);
-LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasMultiView);
+LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasMultiview);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasConservativeRasterization);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasStreamOutputs);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasLogicOp);

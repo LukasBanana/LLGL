@@ -15,12 +15,12 @@ render pass, and each view i writes into array layer i of the render target. The
 differently by its view index (view 0 -> red, view 1 -> green), so reading back each layer confirms both that
 multiview routed each view to the correct layer and that the per-view index reached the shader.
 
-Skipped on backends/devices without multiview support (RenderingFeatures::hasMultiView). Only Vulkan
+Skipped on backends/devices without multiview support (RenderingFeatures::hasMultiview). Only Vulkan
 (VK_KHR_multiview) and Direct3D 12 (view instancing, requires DXC) report it.
 */
 DEF_TEST( Multiview )
 {
-    if (!caps.features.hasMultiView || caps.limits.maxViews < 2)
+    if (!caps.features.hasMultiview || caps.limits.maxViews < 2)
         return TestResult::Skipped;
 
     constexpr std::uint32_t numViews = 2;
@@ -50,19 +50,15 @@ DEF_TEST( Multiview )
 
     // Multiview shaders. The vertex shader is a full-screen triangle (no vertex buffer) whose color depends on
     // the view index. Only HLSL (SM 6.1) and SPIR-V variants exist, matching the multiview-capable backends.
-    auto HasLanguage = [this](ShadingLanguage lang) -> bool
-    {
-        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), lang) != caps.shadingLanguages.end());
-    };
-
     Shader* vertShader = nullptr;
     Shader* fragShader = nullptr;
-    if (HasLanguage(ShadingLanguage::HLSL))
+
+    if (IsShadingLanguageSupported(ShadingLanguage::HLSL_6_1))
     {
         vertShader = LoadShaderFromFile("Multiview.hlsl", ShaderType::Vertex,   "VSMain", "vs_6_1", nullptr, VertFmtEmpty);
         fragShader = LoadShaderFromFile("Multiview.hlsl", ShaderType::Fragment, "PSMain", "ps_6_1");
     }
-    else if (HasLanguage(ShadingLanguage::SPIRV))
+    else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
         vertShader = LoadShaderFromFile("Multiview.450core.vert.spv", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         fragShader = LoadShaderFromFile("Multiview.450core.frag.spv", ShaderType::Fragment, nullptr, nullptr);
@@ -70,7 +66,7 @@ DEF_TEST( Multiview )
 
     if (vertShader == nullptr || fragShader == nullptr)
     {
-        // The shaders need Shader Model 6.1 (SV_ViewID). hasMultiView reports the device's view-instancing
+        // The shaders need Shader Model 6.1 (SV_ViewID). hasMultiview reports the device's view-instancing
         // support, but this test compiles its shaders at runtime, which for HLSL needs DXC (dxcompiler.dll). When
         // that runtime compiler is unavailable (e.g. CI on the Basic Render Driver), the feature is supported but
         // the test can't build its shaders here -- skip rather than fail. (Coverage still comes from the SPIR-V
@@ -88,7 +84,7 @@ DEF_TEST( Multiview )
     CREATE_GRAPHICS_PSO(pso, psoDesc, "multiviewPSO");
 
     // Single draw, broadcast to both views/layers.
-    cmdBuffer->Begin();
+    BEGIN();
     {
         cmdBuffer->BeginRenderPass(*target);
         {
@@ -99,9 +95,7 @@ DEF_TEST( Multiview )
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdBuffer->End();
-    cmdQueue->Submit(*cmdBuffer);
-    cmdQueue->WaitIdle();
+    END();
 
     // Read back the center pixel of each layer and verify view i -> layer i with the expected per-view color.
     TestResult result = TestResult::Passed;
@@ -111,7 +105,7 @@ DEF_TEST( Multiview )
         {   0, 255,   0, 255 }, // view 1 -> green
     };
 
-    for (std::uint32_t view = 0; view < numViews; ++view)
+    for_range(view, numViews)
     {
         TextureRegion region;
         {

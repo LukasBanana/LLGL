@@ -147,11 +147,11 @@ struct RenderTargetDescriptor
     \remarks If \c renderPass is specified, the number of views is taken from that RenderPass and this field is ignored
     (they must be consistent). If \c renderPass is null, the default render pass created for this render target uses
     this view count.
-    \remarks This must not be greater than RenderingLimits::maxViews, and requires RenderingFeatures::hasMultiView.
+    \remarks This must not be greater than RenderingLimits::maxViews, and requires RenderingFeatures::hasMultiview.
     A value of 0 is treated the same as 1 (multiview disabled).
     \note Only supported with: Vulkan, Direct3D 12.
     \see RenderPassDescriptor::views
-    \see RenderingFeatures::hasMultiView
+    \see RenderingFeatures::hasMultiview
     \see RenderingLimits::maxViews
     */
     std::uint32_t           views       = 1;

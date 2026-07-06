@@ -2565,18 +2565,18 @@ void DbgRenderSystem::ValidateRenderTargetDesc(const RenderTargetDescriptor &ren
     /* Validatge multiview feature support */
     if (numViews > 1)
     {
-        if (!GetRenderingCaps().features.hasMultiView)
+        if (!GetRenderingCaps().features.hasMultiview)
         {
             LLGL_DBG_ERROR(
                 ErrorType::UnsupportedFeature,
-                "multiview not supported, but render-target specified %u",
+                "multiview not supported, but render-target specified %u views",
                 renderTargetDesc.views);
         }
         else if (numViews > GetRenderingCaps().limits.maxViews)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "maximum number of supported views is %u, but render-target specified %u",
+                "maximum number of supported views is %u, but render-target specified %u views",
                 GetRenderingCaps().limits.maxViews, numViews);
         }
     }

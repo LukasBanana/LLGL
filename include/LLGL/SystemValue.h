@@ -109,10 +109,10 @@ enum class SystemValue
     \remarks This is used for single-pass layered rendering, where a single draw is broadcast to multiple
     array layers of the render target (e.g. single-pass stereo for VR or cascaded shadow maps).
     The shader uses this value to index per-view data such as view-projection matrices.
-    \remarks This requires RenderingFeatures::hasMultiView and is enabled per render pass via RenderPassDescriptor::views.
+    \remarks This requires RenderingFeatures::hasMultiview and is enabled per render pass via RenderPassDescriptor::views.
     \note Only supported with: Vulkan, Direct3D 12.
     \see RenderPassDescriptor::views
-    \see RenderingFeatures::hasMultiView
+    \see RenderingFeatures::hasMultiview
     \see RenderingLimits::maxViews
     */
     ViewIndex,

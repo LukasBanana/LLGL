@@ -59,9 +59,10 @@ class D3D12SubresourceContext;
 struct D3D12DeviceCaps
 {
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-    D3D12_MESH_SHADER_TIER  meshShaderTier      = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
+    D3D12_VIEW_INSTANCING_TIER  viewInstancingTier  = D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED;
+    D3D12_MESH_SHADER_TIER      meshShaderTier      = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
     #endif
-    bool                    isTearingSupported  = false;
+    bool                        isTearingSupported  = false;
 };
 
 class D3D12RenderSystem final : public RenderSystem

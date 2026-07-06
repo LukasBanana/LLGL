@@ -321,7 +321,7 @@ RenderSystemPtr OpenXRSystem::CreateRenderSystem(const RenderSystemDescriptor& r
 {
     Report* outReport = report != nullptr ? report : &report_;
 
-    GraphicsBinding *binding = FindBindingByName(renderSystemDesc.moduleName.c_str());
+    GraphicsBinding* binding = FindBindingByName(renderSystemDesc.moduleName.c_str());
     if (binding == nullptr)
     {
         outReport->Errorf(

@@ -1259,7 +1259,7 @@ typedef struct LLGLRenderingFeatures
     bool hasOffsetInstancing;          /* = false */
     bool hasIndirectDrawing;           /* = false */
     bool hasViewportArrays;            /* = false */
-    bool hasMultiView;                 /* = false */
+    bool hasMultiview;                 /* = false */
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */

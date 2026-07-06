@@ -385,7 +385,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferSubmit         );
     RUN_TEST( CommandBufferEncode         );
 
-    // Run all resource tests
+    // Run all resource tests (these don't render to the screen)
     RUN_TEST( NativeHandle                );
     RUN_TEST( BufferWriteAndRead          );
     RUN_TEST( BufferMap                   );
@@ -406,8 +406,9 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( SamplerBuffer               );
     RUN_TEST( ByteBuffer                  );
     RUN_TEST( BarrierReadAfterWrite       );
+    RUN_TEST( Multiview                   );
 
-    // Run all rendering tests
+    // Run all rendering tests (these are meant to render to the Testbed output window)
     RUN_TEST( DepthBuffer                 );
     RUN_TEST( StencilBuffer               );
     RUN_TEST( SceneUpdate                 );
@@ -429,7 +430,6 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ResourceCopy                );
     RUN_TEST( CombinedTexSamplers         );
     RUN_TEST( MeshShaders                 );
-    RUN_TEST( Multiview                   );
 
     // Reset main renderer and run C99 tests
     // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)
@@ -1026,11 +1026,6 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
 
 bool TestbedContext::LoadShaders()
 {
-    auto IsShadingLanguageSupported = [this](ShadingLanguage language) -> bool
-    {
-        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
-    };
-
     const ShaderMacro definesEnableTexturing[] =
     {
         ShaderMacro{ "ENABLE_TEXTURING", "1" },
@@ -1296,7 +1291,12 @@ Texture* TestbedContext::LoadTextureFromFile(const char* name, const std::string
     stbi_image_free(imgBuf);
 
     return tex;
-};
+}
+
+bool TestbedContext::IsShadingLanguageSupported(ShadingLanguage language) const
+{
+    return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
+}
 
 bool TestbedContext::LoadDefaultTextures()
 {
