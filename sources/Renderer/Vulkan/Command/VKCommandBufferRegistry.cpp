@@ -8,7 +8,7 @@
 #include "VKCommandBufferRegistry.h"
 #include <mutex>
 #include <unordered_set>
-
+#include <atomic.h>
 
 namespace LLGL
 {
@@ -52,7 +52,14 @@ void VKUnregisterCommandBuffers(std::uint32_t count, const VkCommandBuffer* comm
 {
     if (commandBuffers == nullptr)
         return;
+
+    if (!g_commandBufferTrackingEnabled)
+        return;
+
     std::lock_guard<std::mutex> guard{ g_commandBufferRegistryMutex };
+    if (!g_commandBufferTrackingEnabled)
+        return;
+
     for (std::uint32_t i = 0; i < count; ++i)
         g_commandBufferRegistry.erase(commandBuffers[i]);
 }
@@ -61,6 +68,10 @@ bool VKIsLLGLCommandBuffer(VkCommandBuffer commandBuffer)
 {
     if (commandBuffer == VK_NULL_HANDLE)
         return false;
+
+    if (!g_commandBufferTrackingEnabled)
+        return false;
+
     std::lock_guard<std::mutex> guard{ g_commandBufferRegistryMutex };
     return (g_commandBufferRegistry.find(commandBuffer) != g_commandBufferRegistry.end());
 }
