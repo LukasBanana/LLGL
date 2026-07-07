@@ -8,51 +8,59 @@
 #ifndef LLGL_D3D12_PSO_UTILS_H
 #define LLGL_D3D12_PSO_UTILS_H
 
+
 #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
 #include <d3d12.h>
 
+
 namespace LLGL
 {
 
+
 template <D3D12_PIPELINE_STATE_SUBOBJECT_TYPE TType, typename TObject>
-struct alignas(void *) D3DPipelineStreamSubobject
+struct alignas(void*) D3DPipelineStreamSubobject
 {
-    D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type = {TType};
-    TObject object = {};
+    D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type    = { TType };
+    TObject                             object  = {};
 
     D3DPipelineStreamSubobject() = default;
 
-    inline D3DPipelineStreamSubobject(TObject object) : object{std::move(object)}
+    inline D3DPipelineStreamSubobject(TObject object) :
+        object { std::move(object) }
     {
     }
 
-    inline D3DPipelineStreamSubobject& operator=(TObject object)
+    inline D3DPipelineStreamSubobject& operator = (TObject object)
     {
         this->object = std::move(object);
         return *this;
     }
 
-    inline operator TObject &()
+    inline operator TObject& ()
     {
         return object;
     }
 
-    inline TObject &operator*()
+    inline TObject& operator * ()
     {
         return object;
     }
 
-    inline TObject *operator->()
+    inline TObject* operator -> ()
     {
         return &object;
     }
 };
 
+
 } // /namespace LLGL
 
 #endif // #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
+
 #endif // LLGL_D3D12_PSO_UTILS_H
+
+
 
 // ================================================================================

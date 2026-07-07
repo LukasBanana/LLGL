@@ -59,10 +59,7 @@ class D3D12RenderTarget final : public RenderTarget
 
         UINT GatherAttachmentFormats(D3D12Device& device, const RenderTargetDescriptor& desc, ColorFormatVector& outColorFormats);
 
-        void CreateDescriptorHeaps(ID3D12Device* device, const UINT numColorTargets);
-
-        // Resolves the multiview view count from an explicit render pass (if any) or RenderTargetDescriptor::views.
-        static UINT ResolveNumViews(const RenderTargetDescriptor& desc);
+        void CreateDescriptorHeaps(ID3D12Device* device, UINT numColorTargets);
 
         void CreateAttachments(
             ID3D12Device*                   device,

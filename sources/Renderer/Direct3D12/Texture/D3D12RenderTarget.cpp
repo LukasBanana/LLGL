@@ -27,6 +27,21 @@ namespace LLGL
 {
 
 
+static const D3D12RenderPass* GetD3DRenderPass(const RenderPass* renderPass)
+{
+    return (renderPass != nullptr ? LLGL_CAST(const D3D12RenderPass*, renderPass) : nullptr);
+}
+
+// Resolves the multiview view count from an explicit render pass (if any) or RenderTargetDescriptor::views.
+static UINT ResolveNumViews(const RenderTargetDescriptor& desc)
+{
+    /* An explicit render pass carries the view count; otherwise it comes from RenderTargetDescriptor::views */
+    if (auto* renderPassD3D = GetD3DRenderPass(desc.renderPass))
+        return renderPassD3D->GetNumViews();
+    else
+        return (desc.views > 1 ? desc.views : 1);
+}
+
 D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc) :
     resolution_ { desc.resolution }
 {
@@ -201,7 +216,7 @@ UINT D3D12RenderTarget::GatherAttachmentFormats(D3D12Device& device, const Rende
     return static_cast<UINT>(outColorFormats.size());
 }
 
-void D3D12RenderTarget::CreateDescriptorHeaps(ID3D12Device* device, const UINT numColorTargets)
+void D3D12RenderTarget::CreateDescriptorHeaps(ID3D12Device* device, UINT numColorTargets)
 {
     /* Create RTV descriptor heap */
     if (numColorTargets > 0)
@@ -228,19 +243,6 @@ void D3D12RenderTarget::CreateDescriptorHeaps(ID3D12Device* device, const UINT n
         }
         dsvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device, heapDesc);
     }
-}
-
-static const D3D12RenderPass* GetD3DRenderPass(const RenderPass* renderPass)
-{
-    return (renderPass != nullptr ? LLGL_CAST(const D3D12RenderPass*, renderPass) : nullptr);
-}
-
-UINT D3D12RenderTarget::ResolveNumViews(const RenderTargetDescriptor& desc)
-{
-    /* An explicit render pass carries the view count; otherwise it comes from RenderTargetDescriptor::views */
-    if (auto* renderPassD3D = GetD3DRenderPass(desc.renderPass))
-        return renderPassD3D->GetNumViews();
-    return (desc.views > 1 ? desc.views : 1);
 }
 
 void D3D12RenderTarget::CreateAttachments(

@@ -54,8 +54,8 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         LLGL_D3D12_ENABLE_FEATURELEVEL. The SV_ViewID shaders themselves need Shader Model 6.1, but may be compiled
         externally, so this is intentionally not gated on LLGL_D3D12_ENABLE_DXCOMPILER.
         */
-        ComPtr<ID3D12PipelineState> CreateNativePSOAsViewInstanced(
-            ID3D12Device*                               device,
+        ComPtr<ID3D12PipelineState> CreateNativePSOWithStreamDesc(
+            ID3D12Device2*                              device,
             const D3D12_GRAPHICS_PIPELINE_STATE_DESC&   desc,
             UINT                                        numViews,
             const char*                                 debugName

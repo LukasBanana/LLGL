@@ -79,7 +79,7 @@ void D3D12RenderPass::BuildAttachments(
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
 
     /* Store number of views for multiview (view-instanced) rendering */
-    numViews_ = (desc.views > 1 ? desc.views : 1);
+    numViews_ = std::max(1u, desc.views);
 }
 
 void D3D12RenderPass::BuildAttachments(
@@ -105,7 +105,7 @@ void D3D12RenderPass::BuildAttachments(
     sampleDesc_ = sampleDesc;
 
     /* Store number of views for multiview (view-instanced) rendering */
-    numViews_ = (numViews > 1 ? numViews : 1);
+    numViews_ = std::max(1u, numViews);
 }
 
 
