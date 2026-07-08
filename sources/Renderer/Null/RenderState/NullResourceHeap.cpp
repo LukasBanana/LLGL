@@ -20,7 +20,13 @@ namespace LLGL
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutNull = LLGL_CAST(const NullPipelineLayout*, pipelineLayout);
-    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutNull->desc.heapBindings.size()));
+    /*
+    Count the expanded descriptors, i.e. a binding with an array size greater than 1 contributes
+    'arraySize' descriptors per set, not one. This keeps the descriptor-per-set count consistent
+    with 'numResourceViews' (which counts each array element individually), so array bindings are
+    not wrongly rejected by GetNumResourceViewsOrThrow().
+    */
+    return std::max(1u, GetNumExpandedHeapDescriptors(pipelineLayoutNull->desc.heapBindings));
 }
 
 NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :

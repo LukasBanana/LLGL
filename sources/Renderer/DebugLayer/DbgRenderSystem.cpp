@@ -12,6 +12,7 @@
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../RenderTargetUtils.h"
+#include "../ResourceUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
@@ -1750,6 +1751,14 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
         const std::uint32_t numResourceViews    = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
         const std::size_t   numBindings         = bindings.size();
 
+        /*
+        A heap-binding with an array size greater than 1 contributes 'arraySize' descriptors to
+        each descriptor set, not one. The number of resource views must be a multiple of the
+        per-set descriptor count (the sum of the binding array sizes), not of the raw binding
+        count - otherwise valid heaps containing an array binding (e.g. a bindless texture
+        table) are wrongly rejected.
+        */
+        const std::size_t numDescriptorsPerSet = GetNumExpandedHeapDescriptors(bindings);
 
         if (numBindings == 0)
         {
@@ -1765,20 +1774,20 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
                 "cannot create resource heap with both 'numResourceViews' being zero and 'initialResourceViews' being empty"
             );
         }
-        else if (numResourceViews < numBindings)
+        else if (numResourceViews < numDescriptorsPerSet)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create resource heap with less resources (%u) than bindings in pipeline layout (%zu)",
-                numResourceViews, numBindings
+                "cannot create resource heap with less resources (%u) than descriptors per set in pipeline layout (%zu)",
+                numResourceViews, numDescriptorsPerSet
             );
         }
-        else if (numResourceViews % numBindings != 0)
+        else if (numResourceViews % numDescriptorsPerSet != 0)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create resource heap with number of resource views (%u) not being a multiple of bindings in pipeline layout (%zu)",
-                numResourceViews, numBindings
+                "cannot create resource heap with number of resource views (%u) not being a multiple of descriptors per set in pipeline layout (%zu)",
+                numResourceViews, numDescriptorsPerSet
             );
         }
         else if (!initialResourceViews.empty())
@@ -1786,10 +1795,9 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
             if (initialResourceViews.size() == numResourceViews)
             {
                 /* Validate all resource view descriptors against their respective binding descriptor, accounting for array bindings */
+                const DynamicVector<BindingDescriptor> expandedBindings = GetExpandedHeapDescriptors(bindings);
                 for_range(i, resourceHeapDesc.numResourceViews)
-                {
-                    ValidateResourceViewForBinding(initialResourceViews[i], bindings[i % bindings.size()]);
-                }
+                    ValidateResourceViewForBinding(initialResourceViews[i], expandedBindings[i % expandedBindings.size()]);
             }
             else
             {
