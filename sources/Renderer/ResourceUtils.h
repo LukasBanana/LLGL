@@ -72,6 +72,9 @@ LLGL_EXPORT std::uint32_t GetNumResourceViewsOrThrow(
 // Returns the enumeration value for a predefined static sampler border color.
 LLGL_EXPORT StaticSamplerBorderColor GetStaticSamplerBorderColor(const float (&color)[4]);
 
+// Returns the number of expanded heap-binding descriptors, i.e. the sum of all binding array sizes (arraySize of 0 counts as 1).
+LLGL_EXPORT std::uint32_t GetNumExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs);
+
 // Returns a list of expanded heap-binding descriptors, i.e. all array resources have been flattened.
 LLGL_EXPORT DynamicVector<BindingDescriptor> GetExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs);
 

@@ -53,7 +53,7 @@ LLGL_EXPORT StaticSamplerBorderColor GetStaticSamplerBorderColor(const float (&c
     return StaticSamplerBorderColor::TransparentBlack;
 }
 
-static std::uint32_t GetNumExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs)
+LLGL_EXPORT std::uint32_t GetNumExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs)
 {
     std::uint32_t n = 0;
     for (const BindingDescriptor& binding : bindingDescs)
