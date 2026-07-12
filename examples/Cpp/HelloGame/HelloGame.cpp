@@ -57,6 +57,8 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  jitterDelay             = 1.0f;
     static constexpr float  jitterDuration          = 1.0f;
     static constexpr float  jitterMaxAngle          = 15.0f;
+    static constexpr float  tileActivateSpeed       = 0.5f; // in seconds
+    static constexpr float  tileActivateWallHeight  = 0.3f;
 
     static constexpr float  playerMoveSpeed         = 0.25f; // in seconds
     static constexpr float  playerFallAcceleration  = 2.0f; // in units per seconds
@@ -180,6 +182,11 @@ class Example_HelloGame : public ExampleBase
     {
         float           wMatrix[4][3];
         float           color[4];
+
+        void SetPosY(float y)
+        {
+            wMatrix[3][1] = y;
+        }
     };
 
     // Decor for trees in the background
@@ -191,14 +198,24 @@ class Example_HelloGame : public ExampleBase
 
     struct Tile
     {
+        enum State
+        {
+            Inactive = 0,
+            Active,
+            ActiveBeginLock,
+            ActiveEndLock,
+        };
+
         Tile() :
-            instanceIndex { ~0u },
-            isActive      { 0   }
+            instanceIndex { ~0u      },
+            state         { Inactive },
+            animation     { 0.0f     }
         {
         }
 
         std::uint32_t   instanceIndex; // Index into 'meshInstances'
-        std::uint32_t   isActive : 1;
+        State           state;
+        float           animation;
 
         bool IsValid() const
         {
@@ -207,7 +224,47 @@ class Example_HelloGame : public ExampleBase
 
         bool IsActivated() const
         {
-            return (isActive != 0);
+            return (state != Inactive);
+        }
+
+        bool Activate()
+        {
+            if (IsValid() && state == Inactive)
+            {
+                state = Active;
+                return true;
+            }
+            return false;
+        }
+
+        bool Deactivate()
+        {
+            if (IsValid() && state != Inactive)
+            {
+                state = Inactive;
+                animation = 0.0f;
+                return true;
+            }
+            return false;
+        }
+
+        void StartLockAnimation()
+        {
+            if (IsValid() && state == Active)
+                state = ActiveBeginLock;
+        }
+
+        bool Animate(float dt)
+        {
+            if (IsValid() && state == ActiveBeginLock)
+            {
+                animation += dt / tileActivateSpeed;
+                if (animation < 1.0f)
+                    return true;
+                animation = 1.0f;
+                state = ActiveEndLock;
+            }
+            return false;
         }
     };
 
@@ -308,6 +365,7 @@ class Example_HelloGame : public ExampleBase
         TileGrid                walls;
         std::vector<Decor>      trees;
         std::vector<Instance>   meshInstances;
+        std::vector<Tile*>      animatedTiles; // All tiles that are currently being animated
         InstanceRange           meshInstanceDirtyRange;
         InstanceRange           tileInstanceRange;
         InstanceRange           treeInstanceRange;
@@ -317,6 +375,7 @@ class Example_HelloGame : public ExampleBase
         int                     activatedTiles              = 0;
         int                     maxTilesToActivate          = 0;
         float                   lightPhase                  = 0.0f;
+        Tile*                   lastActivatedTile           = nullptr;
 
         bool IsWall(int x, int y) const
         {
@@ -368,9 +427,8 @@ class Example_HelloGame : public ExampleBase
             Tile* tile = floor.Get(x, y);
             if (tile != nullptr && tile->IsValid())
             {
-                if (tile->isActive == 0)
+                if (tile->Activate())
                 {
-                    tile->isActive = 1;
                     Instance& instance = meshInstances[tile->instanceIndex];
                     {
                         instance.color[0] = color[0];
@@ -379,22 +437,37 @@ class Example_HelloGame : public ExampleBase
                     }
                     meshInstanceDirtyRange.Insert(tile->instanceIndex);
                     ++activatedTiles;
+                    lastActivatedTile = tile;
                     return true;
                 }
             }
             return false;
         }
 
+        void LockLastActivatedTile()
+        {
+            // Start lock animation of previoulsy activated tile
+            if (lastActivatedTile != nullptr)
+            {
+                lastActivatedTile->StartLockAnimation();
+                animatedTiles.push_back(lastActivatedTile);
+                lastActivatedTile = nullptr;
+            }
+        }
+
         void PutPlayer(Player& player)
         {
             player.Put(playerStart);
+            LockLastActivatedTile();
             ActivateTile(playerStart[0], playerStart[1], playerColor);
         }
 
         void ResetTiles()
         {
+            lastActivatedTile   = nullptr;
             activatedTiles      = 0;
             maxTilesToActivate  = 0;
+            animatedTiles.clear();
 
             for_range(row, gridSize[1])
             {
@@ -424,7 +497,65 @@ class Example_HelloGame : public ExampleBase
                         }
 
                         // Reset tile
-                        floorTile->isActive = 0;
+                        if (floorTile->Deactivate())
+                            floorInstance.SetPosY(0.0f);
+                    }
+                }
+            }
+        }
+
+        void Animate(float dt)
+        {
+            if (!animatedTiles.empty())
+            {
+                std::size_t i = 0;
+                std::size_t iEnd = animatedTiles.size() - 1;
+                while (i < animatedTiles.size())
+                {
+                    Tile* tile = animatedTiles[i];
+
+                    // Once an empty entry is reached, erase all elements until the end of the elist
+                    if (tile == nullptr)
+                    {
+                        animatedTiles.erase(animatedTiles.begin() + i, animatedTiles.end());
+                        break;
+                    }
+
+                    // Animate current tile
+                    auto AnimationWindowFunction = [](float t, float midPhase, float bounceAmplitude, unsigned numBounces) -> float
+                    {
+                        if (t < midPhase)
+                        {
+                            float phase = (t/midPhase);
+                            return phase*phase;
+                        }
+                        else
+                        {
+                            float phase = (t - midPhase)/(1.0f - midPhase);
+                            float sinePhase = phase*static_cast<float>(Gs::pi)*2.0f*static_cast<float>(numBounces);
+                            return 1.0f + std::sin(sinePhase)*bounceAmplitude*(1.0f - phase);
+                        }
+                    };
+
+                    if (tile->Animate(dt))
+                    {
+                        // Animate mesh instance position
+                        Instance& meshInstance = meshInstances[tile->instanceIndex];
+                        const float tileAnimPhase = AnimationWindowFunction(tile->animation, 0.3f, 0.3f, 2u);
+                        const float tilePosY = wallPosY * tileActivateWallHeight * tileAnimPhase;
+                        meshInstance.SetPosY(tilePosY);
+                        meshInstanceDirtyRange.Insert(tile->instanceIndex);
+
+                        // Move to next tile
+                        ++i;
+                    }
+                    else
+                    {
+                        // Swap out tile with entry at the end of the list that is non-null
+                        animatedTiles[i] = animatedTiles[iEnd];
+                        animatedTiles[iEnd] = nullptr;
+                        if (iEnd > 0)
+                            --iEnd;
                     }
                 }
             }
@@ -1373,7 +1504,7 @@ private:
             nextLevel = &levels[index];
             nextLevel->ResetTiles();
             levelDistance           = static_cast<float>(currentLevel->gridSize[0] + nextLevel->gridSize[0]) * 1.5f * moveDirection;
-            nextLevelInstanceOffset = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
+            nextLevelInstanceOffset = (currentLevel == nextLevel ? 0 : static_cast<std::uint32_t>(currentLevel->meshInstances.size()));
 
             // Update instance buffer from current and next level instance data plus one instance for the player model
             instanceBuffer.Resize(*renderer, 1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size() + nextLevel->meshInstances.size()));
@@ -1718,6 +1849,9 @@ private:
                     if (player.gridPos[0] != nextPosX ||
                         player.gridPos[1] != nextPosY)
                     {
+                        // Lock previously activated tile
+                        currentLevel->LockLastActivatedTile();
+
                         // Activate tile and start warp effect when level has been completed
                         if (currentLevel->IsTileHole(nextPosX, nextPosY))
                         {
@@ -1967,6 +2101,9 @@ private:
             }
             SetLightPhase(effects.lightPhase);
         }
+
+        // Animate current level
+        currentLevel->Animate(dt);
     }
 
     void RenderLevel(const Level& level, float worldOffsetX, std::uint32_t instanceOffset)
@@ -2087,7 +2224,7 @@ private:
                 if (numInstancesToUpdate > 0)
                 {
                     // Update mesh instance buffer
-                    const std::uint32_t firstInstanceToUpdate = (1 + nextLevelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
+                    const std::uint32_t firstInstanceToUpdate = (1 + currentLevelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
 
                     instanceBuffer.Update(
                         *commands,
@@ -2155,6 +2292,8 @@ constexpr float  Example_HelloGame::timeOfDayChangeSpeed   ;
 constexpr float  Example_HelloGame::jitterDelay            ;
 constexpr float  Example_HelloGame::jitterDuration         ;
 constexpr float  Example_HelloGame::jitterMaxAngle         ;
+constexpr float  Example_HelloGame::tileActivateSpeed      ;
+constexpr float  Example_HelloGame::tileActivateWallHeight ;
 
 constexpr float  Example_HelloGame::playerMoveSpeed        ;
 constexpr float  Example_HelloGame::playerFallAcceleration ;
