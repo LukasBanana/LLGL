@@ -167,6 +167,34 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
 
 LLGL_EXPORT std::size_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
 {
+    const FormatAttributes& formatAttribs = GetFormatAttribs(format);
+
+    if ((formatAttribs.flags & FormatFlags::IsCompressed) != 0)
+    {
+        /*
+        Block-compressed data is padded to whole blocks per row and column of every MIP level,
+        so the size must be accumulated per level with ceil-division block counts. A plain texel
+        count cannot express this: GetMemoryFootprint(format, numTexels) returns 0 whenever the
+        count is not a multiple of the block area (e.g. any power-of-two extent with 6x6 blocks,
+        or any MIP level smaller than one block).
+        */
+        if (formatAttribs.blockWidth == 0 || formatAttribs.blockHeight == 0)
+            return 0;
+
+        const Extent3D subresourceExtent = CalcTextureExtent(type, extent, subresource.numArrayLayers);
+
+        std::size_t numBlocks = 0;
+        for_range(mipLevel, subresource.numMipLevels)
+        {
+            const Extent3D mipExtent = GetMipExtent(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
+            const std::size_t numBlocksX = (mipExtent.width  + formatAttribs.blockWidth  - 1) / formatAttribs.blockWidth;
+            const std::size_t numBlocksY = (mipExtent.height + formatAttribs.blockHeight - 1) / formatAttribs.blockHeight;
+            numBlocks += numBlocksX * numBlocksY * mipExtent.depth;
+        }
+
+        return (numBlocks * formatAttribs.bitSize) / 8;
+    }
+
     const std::uint32_t numTexels = NumMipTexels(type, extent, subresource);
     return GetMemoryFootprint(format, numTexels);
 }

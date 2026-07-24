@@ -332,9 +332,10 @@ static VkImageLayout FindOptimalInitialVkImageLayout(Format format, long bindFla
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
-    /* Determine size of image for staging buffer */
+    /* Determine size of image for staging buffer (block-aware overload: the texel-count one
+       returns 0 for extents that don't tile the block size, e.g. pow2 extents with 6x6 blocks) */
     const std::uint32_t imageSize       = NumMipTexels(textureDesc, 0);
-    const std::size_t   initialDataSize = GetMemoryFootprint(textureDesc.format, imageSize);
+    const std::size_t   initialDataSize = GetMemoryFootprint(textureDesc.type, textureDesc.format, textureDesc.extent, TextureSubresource{ 0, textureDesc.arrayLayers, 0, 1 });
     const std::uint32_t bytesPerPixel   = static_cast<std::uint32_t>(GetMemoryFootprint(textureDesc.format, 1));
     const auto&         formatAttribs   = GetFormatAttribs(textureDesc.format);
     const Extent3D      extent          = CalcTextureExtent(textureDesc.type, textureDesc.extent, textureDesc.arrayLayers);
@@ -525,7 +526,9 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     VkImage                     image           = textureVK.GetVkImage();
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth;
     const void*                 imageData       = nullptr;
-    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
+    /* Block-aware size: the texel-count overload returns 0 for regions that don't tile the
+       block size (pow2 extents with 6x6 blocks, or MIP levels smaller than one block) */
+    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, subresource));
     const std::uint32_t         bytesPerPixel   = static_cast<std::uint32_t>(GetMemoryFootprint(format, 1));
 
     /* Check if image data must be converted */
@@ -623,7 +626,8 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     }
     else
     {
-        stagingBufferSize = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageNumTexels));
+        /* Block-aware size (see WriteTexture) */
+        stagingBufferSize = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, subresource));
     }
 
     /* Create staging buffer */
