@@ -527,8 +527,12 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth;
     const void*                 imageData       = nullptr;
     /* Block-aware size: the texel-count overload returns 0 for regions that don't tile the
-       block size (pow2 extents with 6x6 blocks, or MIP levels smaller than one block) */
-    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, subresource));
+       block size (pow2 extents with 6x6 blocks, or MIP levels smaller than one block).
+       NOTE: the extent-based overload treats its extent as the base (MIP 0) extent, but
+       textureRegion.extent is already resolved to the region's MIP level - so the MIP range
+       must be rebased to 0 or the size is scaled down a second time. */
+    const TextureSubresource    sizeSubresource { subresource.baseArrayLayer, subresource.numArrayLayers, 0, subresource.numMipLevels };
+    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, sizeSubresource));
     const std::uint32_t         bytesPerPixel   = static_cast<std::uint32_t>(GetMemoryFootprint(format, 1));
 
     /* Check if image data must be converted */
@@ -626,8 +630,10 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     }
     else
     {
-        /* Block-aware size (see WriteTexture) */
-        stagingBufferSize = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, subresource));
+        /* Block-aware size; MIP range rebased to 0 - textureRegion.extent is already the
+           region's MIP-level extent (see WriteTexture) */
+        const TextureSubresource sizeSubresource{ subresource.baseArrayLayer, subresource.numArrayLayers, 0, subresource.numMipLevels };
+        stagingBufferSize = static_cast<VkDeviceSize>(GetMemoryFootprint(textureVK.GetType(), format, textureRegion.extent, sizeSubresource));
     }
 
     /* Create staging buffer */
