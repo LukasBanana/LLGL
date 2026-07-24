@@ -479,6 +479,7 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     RUN_TEST( ParseUtil );
     RUN_TEST( ImageConversions );
     RUN_TEST( ImageStrides );
+    RUN_TEST( FormatAttribs );
 
     #undef RUN_TEST
 

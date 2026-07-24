@@ -26,6 +26,7 @@ DECL_RITEST( ContainerStringOperators );
 DECL_RITEST( ParseUtil );
 DECL_RITEST( ImageConversions );
 DECL_RITEST( ImageStrides );
+DECL_RITEST( FormatAttribs );
 
 #undef DECL_RITEST
 
