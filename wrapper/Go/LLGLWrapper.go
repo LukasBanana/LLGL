@@ -1163,6 +1163,7 @@ type RenderingFeatures struct {
     HasIndirectDrawing           bool /* = false */
     HasViewportArrays            bool /* = false */
     HasMultiview                 bool /* = false */
+    HasDepthStencilResolve       bool /* = false */
     HasConservativeRasterization bool /* = false */
     HasStreamOutputs             bool /* = false */
     HasLogicOp                   bool /* = false */

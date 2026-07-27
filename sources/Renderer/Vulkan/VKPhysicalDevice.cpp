@@ -408,6 +408,12 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     #if VK_KHR_multiview
     caps.features.hasMultiview                      = (SupportsExtension(VK_KHR_MULTIVIEW_EXTENSION_NAME) && features_.multiview.multiview != VK_FALSE);
     #endif
+    #if VK_KHR_depth_stencil_resolve && VK_KHR_create_renderpass2
+    // Core in Vulkan 1.2, but the OpenXR path creates a 1.1 device, so the extension is what decides here. It also
+    // needs create_renderpass2: the resolve is described by a struct chained into VkSubpassDescription2, which only
+    // the version-2 render pass entry points accept.
+    caps.features.hasDepthStencilResolve            = (SupportsExtension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME) && SupportsExtension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME));
+    #endif
     #if VK_EXT_conservative_rasterization
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
     #endif

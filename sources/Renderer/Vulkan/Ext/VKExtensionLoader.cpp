@@ -326,6 +326,8 @@ bool VKLoadDeviceExtensions(VkDevice device, const ArrayView<const char*>& suppo
     ENABLE_VKEXT( EXT_conservative_rasterization );
     ENABLE_VKEXT( EXT_nested_command_buffer      );
     ENABLE_VKEXT( KHR_imageless_framebuffer      );
+    ENABLE_VKEXT( KHR_create_renderpass2         );
+    ENABLE_VKEXT( KHR_depth_stencil_resolve      );
 
     #undef LOAD_VKEXT
 

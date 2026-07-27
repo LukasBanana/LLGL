@@ -266,6 +266,22 @@ bool OpenXRSwapChain::BuildRenderTargets()
     // VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and lazily-allocated memory on that basis, which is what makes
     // multi-sampling affordable on a tile-based GPU. Nothing needs to be requested explicitly.
     const bool hasMultiSampling = (desc_.sampleCount > 1);
+
+    // Probe for depth-stencil resolve. Without it a multi-sampled depth attachment cannot be resolved into the
+    // runtime's single-sampled depth image, so depth could not be submitted for reprojection while multi-sampling
+    // is on. Core in Vulkan 1.2, but the OpenXR path builds a 1.1 device (VKOpenXRGraphicsBinding), so it is taken
+    // as an extension - which additionally needs create_renderpass2, since the resolve struct chains into
+    // VkSubpassDescription2.
+    if (hasMultiSampling)
+    {
+        const RenderingCapabilities& caps = renderSystem_.GetRenderingCaps();
+        Log::Printf(
+            "XR multi-sampling: %ux, depth-stencil resolve %s\n",
+            desc_.sampleCount,
+            caps.features.hasDepthStencilResolve ? "supported" : "UNSUPPORTED (depth submission unavailable)"
+        );
+    }
+
     if (hasMultiSampling)
     {
         TextureDescriptor msaaColorDesc;

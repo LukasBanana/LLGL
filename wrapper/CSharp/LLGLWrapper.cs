@@ -1472,6 +1472,7 @@ namespace LLGL
         public bool HasIndirectDrawing { get; set; }           = false;
         public bool HasViewportArrays { get; set; }            = false;
         public bool HasMultiview { get; set; }                 = false;
+        public bool HasDepthStencilResolve { get; set; }       = false;
         public bool HasConservativeRasterization { get; set; } = false;
         public bool HasStreamOutputs { get; set; }             = false;
         public bool HasLogicOp { get; set; }                   = false;
@@ -1513,6 +1514,7 @@ namespace LLGL
                 HasIndirectDrawing           = value.hasIndirectDrawing;
                 HasViewportArrays            = value.hasViewportArrays;
                 HasMultiview                 = value.hasMultiview;
+                HasDepthStencilResolve       = value.hasDepthStencilResolve;
                 HasConservativeRasterization = value.hasConservativeRasterization;
                 HasStreamOutputs             = value.hasStreamOutputs;
                 HasLogicOp                   = value.hasLogicOp;
@@ -3919,6 +3921,8 @@ namespace LLGL
             public bool hasViewportArrays;            /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasMultiview;                 /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool hasDepthStencilResolve;       /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasConservativeRasterization; /* = false */
             [MarshalAs(UnmanagedType.I1)]

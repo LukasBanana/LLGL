@@ -1260,6 +1260,7 @@ typedef struct LLGLRenderingFeatures
     bool hasIndirectDrawing;           /* = false */
     bool hasViewportArrays;            /* = false */
     bool hasMultiview;                 /* = false */
+    bool hasDepthStencilResolve;       /* = false */
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */
