@@ -250,10 +250,6 @@ void MyXRRenderer::CreateSwapChains()
     // swap-chain transparently falls back to a private depth texture that is not submitted.
     const LLGL::ArrayView<LLGL::Format> depthFormats = session->GetSupportedDepthFormats();
     const LLGL::Format depthFormat = (depthFormats.empty() ? LLGL::Format::D32Float : depthFormats[0]);
-    LLGL::Log::Printf(
-        "Depth submission: %s\n",
-        depthFormats.empty() ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" : "enabled"
-    );
 
     // Clamp the requested sample count to what this renderer can provide. The swap-chain renders into its own
     // multi-sampled attachments and resolves into the runtime's images (which are always single-sampled, since
@@ -269,6 +265,16 @@ void MyXRRenderer::CreateSwapChains()
             sampleCount = 1;
     }
     LLGL::Log::Printf("Multi-sampling: %ux\n", sampleCount);
+
+    // Reported after the sample count is known, because it is not decided by the runtime alone: submitting depth
+    // needs XR_KHR_composition_layer_depth AND no multi-sampling (a multi-sampled depth attachment cannot be
+    // resolved into the runtime's single-sampled depth image), so with MSAA the swap-chain keeps depth private.
+    LLGL::Log::Printf(
+        "Depth submission: %s\n",
+        depthFormats.empty()  ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
+        sampleCount > 1       ? "disabled (not available with multi-sampling)" :
+                                "enabled"
+    );
 
     // Requesting a depth-stencil format makes the swap-chain provision and manage the depth buffer and per-image
     // render targets internally (see XRSwapChain::GetRenderTarget).

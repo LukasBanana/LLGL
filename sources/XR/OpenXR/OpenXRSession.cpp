@@ -233,8 +233,17 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
     {
         bool depthReady = false;
 
+        /*
+        Depth cannot be submitted while multi-sampling: the swap-chain renders into its own multi-sampled depth
+        attachment, and resolving that into the runtime's single-sampled depth image needs depth-stencil resolve,
+        which is not implemented here. Creating the companion anyway would hand the compositor an image nothing
+        ever writes to, and it would be used for reprojection - so fall through to the private depth texture,
+        which is honest about not being submitted.
+        */
+        const bool depthSubmissionPossible = (depthSubmissionEnabled_ && swapChainDesc.sampleCount <= 1);
+
         // Prefer a depth swap-chain submitted to the runtime for reprojection, if the runtime supports it.
-        if (depthSubmissionEnabled_)
+        if (depthSubmissionPossible)
         {
             XRSwapChainDescriptor depthDesc;
             depthDesc.format        = swapChainDesc.depthStencilFormat;
