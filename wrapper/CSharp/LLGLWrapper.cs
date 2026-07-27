@@ -2355,10 +2355,11 @@ namespace LLGL
     {
         public SwapChainDescriptor() { }
 
-        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false, bool resizable = false)
+        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), Format format = Format.Undefined, int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false, bool resizable = false)
         {
             DebugName   = debugName;
             Resolution  = resolution;
+            Format      = format;
             ColorBits   = colorBits;
             DepthBits   = depthBits;
             StencilBits = stencilBits;
@@ -2370,6 +2371,7 @@ namespace LLGL
 
         public AnsiString DebugName { get; set; }   = null;
         public Extent2D   Resolution { get; set; }  = new Extent2D();
+        public Format     Format { get; set; }      = Format.Undefined;
         public int        ColorBits { get; set; }   = 32;
         public int        DepthBits { get; set; }   = 24;
         public int        StencilBits { get; set; } = 8;
@@ -2390,6 +2392,7 @@ namespace LLGL
                         native.debugName = debugNamePtr;
                     }
                     native.resolution  = Resolution;
+                    native.format      = Format;
                     native.colorBits   = ColorBits;
                     native.depthBits   = DepthBits;
                     native.stencilBits = StencilBits;
@@ -4201,6 +4204,7 @@ namespace LLGL
         {
             public byte*    debugName;   /* = null */
             public Extent2D resolution;
+            public Format   format;      /* = Format.Undefined */
             public int      colorBits;   /* = 32 */
             public int      depthBits;   /* = 24 */
             public int      stencilBits; /* = 8 */

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Types.h>
+#include <LLGL/Format.h>
 #include <cstdint>
 
 
@@ -73,6 +74,17 @@ struct SwapChainDescriptor
     \see RenderTarget::GetResolution
     */
     Extent2D        resolution;
+
+    /**
+    \brief Preferred color format for the swap-chain buffers. By default Format::Undefined.
+    \remarks If this is Format::Undefined, the renderer picks a format automatically (the default behavior).
+    Otherwise the renderer uses this format if the presentation surface supports it, and falls back to its
+    automatic selection if it does not. This is primarily intended to request an sRGB format (e.g.
+    Format::BGRA8UNorm_sRGB), so the hardware performs the linear-to-sRGB conversion on write.
+    To determine the actual color format of a swap-chain, use the SwapChain::GetColorFormat function.
+    \see SwapChain::GetColorFormat
+    */
+    Format          format          = Format::Undefined;
 
     /**
     \brief Number of bits for each pixel in the color buffer. Should be 24 or 32. By default 32.

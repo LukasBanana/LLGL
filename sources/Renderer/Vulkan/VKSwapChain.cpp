@@ -69,6 +69,7 @@ VKSwapChain::VKSwapChain(
     surface_                 { instance, vkDestroySurfaceKHR             },
     swapChain_               { device, vkDestroySwapchainKHR             },
     swapChainRenderPass_     { device                                    },
+    requestedColorFormat_    { desc.format                               },
     swapChainSamples_        { GetClampedSamples(desc.samples)           },
     secondaryRenderPass_     { device                                    },
     depthStencilBuffer_      { device                                    },
@@ -710,6 +711,25 @@ VkSurfaceFormatKHR VKSwapChain::PickSwapSurfaceFormat(const std::vector<VkSurfac
 {
     if (surfaceFormats.empty())
         LLGL_TRAP("no Vulkan surface formats available");
+
+    /* Honor an explicitly requested format when the surface supports it.
+       This is how an application asks for an sRGB swap-chain, so the hardware performs the
+       linear-to-sRGB conversion on write instead of the shader. */
+    if (requestedColorFormat_ != Format::Undefined)
+    {
+        const VkFormat requestedVkFormat = VKTypes::Map(requestedColorFormat_);
+
+        if (surfaceFormats.size() == 1 && surfaceFormats.front().format == VK_FORMAT_UNDEFINED)
+            return { requestedVkFormat, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+
+        for (const VkSurfaceFormatKHR& format : surfaceFormats)
+        {
+            if (format.format == requestedVkFormat && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                return format;
+        }
+
+        /* Not supported by this surface - fall through to the automatic selection below. */
+    }
 
     if (surfaceFormats.size() == 1 && surfaceFormats.front().format == VK_FORMAT_UNDEFINED)
         return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };

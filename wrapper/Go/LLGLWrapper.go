@@ -1439,6 +1439,7 @@ type ComputeShaderAttributes struct {
 type SwapChainDescriptor struct {
     DebugName   string   /* = "" */
     Resolution  Extent2D
+    Format      Format   /* = FormatUndefined */
     ColorBits   int      /* = 32 */
     DepthBits   int      /* = 24 */
     StencilBits int      /* = 8 */

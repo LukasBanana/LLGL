@@ -1608,6 +1608,7 @@ typedef struct LLGLSwapChainDescriptor
 {
     const char*  debugName;   /* = NULL */
     LLGLExtent2D resolution;
+    LLGLFormat   format;      /* = LLGLFormatUndefined */
     int          colorBits;   /* = 32 */
     int          depthBits;   /* = 24 */
     int          stencilBits; /* = 8 */
