@@ -334,6 +334,16 @@ VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* can
     LLGL_TRAP("failed to find suitable image format");
 }
 
+bool VKHasMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+{
+    for_range(i, memoryProperties.memoryTypeCount)
+    {
+        if ((memoryTypeBits & (1 << i)) != 0 && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            return true;
+    }
+    return false;
+}
+
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
 {
     for_range(i, memoryProperties.memoryTypeCount)

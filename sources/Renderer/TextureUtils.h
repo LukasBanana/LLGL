@@ -87,6 +87,23 @@ LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
     std::uint32_t       alignment = 1
 );
 
+/*
+Returns true if the specified texture is only ever used as a render-target attachment,
+i.e. it is never sampled, written as storage, or used as a copy source/destination, has a
+single MIP-map level, and is not initialized with image data.
+
+Backends use this to select a cheaper representation for such a texture, but each adds its
+own condition on top:
+- OpenGL additionally requires a non-arrayed 2D type, because a renderbuffer cannot
+  represent array layers (see IsRenderbufferSufficient).
+- Vulkan additionally requires a multi-sampled type before treating the texture as a
+  transient attachment, because lazily-allocated memory does not preserve contents beyond
+  the render pass that wrote them. A single-sampled attachment may legitimately be
+  re-attached with AttachmentLoadOp::Load in a later pass, whereas raw multi-sample
+  contents are only ever consumed by a resolve within their own pass.
+*/
+LLGL_EXPORT bool IsAttachmentOnlyTexture(const TextureDescriptor& textureDesc);
+
 // Returns true if the specified flags for texture creation require MIP-map generation at creation time.
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc);
 

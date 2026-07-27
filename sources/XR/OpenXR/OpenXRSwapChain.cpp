@@ -56,6 +56,14 @@ OpenXRSwapChain::~OpenXRSwapChain()
     }
     renderTargets_.clear();
 
+    // The render pass belongs to the first render target, so it is gone with them.
+    renderPass_ = nullptr;
+
+    if (msaaColorTexture_ != nullptr)
+        renderSystem_.Release(*msaaColorTexture_);
+    if (msaaDepthTexture_ != nullptr)
+        renderSystem_.Release(*msaaDepthTexture_);
+
     if (depthTexture_ != nullptr)
         renderSystem_.Release(*depthTexture_);
 
@@ -248,6 +256,70 @@ bool OpenXRSwapChain::BuildRenderTargets()
     // COLOR_ATTACHMENT_OPTIMAL, depth in DEPTH_STENCIL_ATTACHMENT_OPTIMAL), exactly like the single-view path.
     const std::uint32_t numViews = (desc_.arrayLayers > 1 ? desc_.arrayLayers : 1);
 
+    // MSAA: the runtime's images are single-sampled (they are the compositor's), so rendering targets our own
+    // multi-sampled attachments and resolves into the acquired image. LLGL requires real textures rather than
+    // anonymous internal buffers here, because those are single-layer and this may be a multiview target.
+    // One attachment set is shared by every swap-chain image; only the resolve target rotates.
+    //
+    // These are attachment-only, single-MIP, multi-sampled textures with no initial data, so a backend can
+    // infer that their contents never outlive the render pass - the Vulkan backend gives them
+    // VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and lazily-allocated memory on that basis, which is what makes
+    // multi-sampling affordable on a tile-based GPU. Nothing needs to be requested explicitly.
+    const bool hasMultiSampling = (desc_.sampleCount > 1);
+    if (hasMultiSampling)
+    {
+        TextureDescriptor msaaColorDesc;
+        {
+            msaaColorDesc.debugName     = "XRSwapChain.MSAAColor";
+            msaaColorDesc.type          = (numViews > 1 ? TextureType::Texture2DMSArray : TextureType::Texture2DMS);
+            msaaColorDesc.bindFlags     = BindFlags::ColorAttachment;
+            msaaColorDesc.miscFlags     = MiscFlags::FixedSamples | MiscFlags::NoInitialData;
+            msaaColorDesc.format        = desc_.format;
+            msaaColorDesc.extent        = { desc_.resolution.width, desc_.resolution.height, 1 };
+            msaaColorDesc.arrayLayers   = numViews;
+            msaaColorDesc.mipLevels     = 1;
+            msaaColorDesc.samples       = desc_.sampleCount;
+        }
+        msaaColorTexture_ = renderSystem_.CreateTexture(msaaColorDesc);
+        if (msaaColorTexture_ == nullptr)
+            return false;
+
+        // Depth must match the color attachment's sample count. Note this displaces depth submission: a
+        // multi-sampled depth buffer cannot be resolved into the runtime's single-sampled depth image without
+        // depth-resolve support, so with MSAA the depth companion (if any) is not rendered into and depth
+        // reprojection is unavailable.
+        if (hasDepth)
+        {
+            Texture* depthReference = depthTextures.front();
+
+            TextureDescriptor msaaDepthDesc;
+            {
+                msaaDepthDesc.debugName     = "XRSwapChain.MSAADepth";
+                msaaDepthDesc.type          = (numViews > 1 ? TextureType::Texture2DMSArray : TextureType::Texture2DMS);
+                msaaDepthDesc.bindFlags     = BindFlags::DepthStencilAttachment;
+                msaaDepthDesc.miscFlags     = MiscFlags::FixedSamples | MiscFlags::NoInitialData;
+                msaaDepthDesc.format        = depthReference->GetFormat();
+                msaaDepthDesc.extent        = { desc_.resolution.width, desc_.resolution.height, 1 };
+                msaaDepthDesc.arrayLayers   = numViews;
+                msaaDepthDesc.mipLevels     = 1;
+                msaaDepthDesc.samples       = desc_.sampleCount;
+            }
+            msaaDepthTexture_ = renderSystem_.CreateTexture(msaaDepthDesc);
+            if (msaaDepthTexture_ == nullptr)
+                return false;
+        }
+
+        /* The render pass is left to the render target below. Do NOT build one from a RenderPassDescriptor here:
+           that path is shaped for swap-chains and gives every color attachment a final layout of
+           VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, which is only valid for images owned by a VkSwapchainKHR. The runtime's
+           images are ordinary VkImages handed to us by OpenXR, so that layout is invalid for them - desktop drivers
+           tolerate it, Adreno faults inside vkCmdBeginRenderPass. It would also propagate the color attachment's
+           store op onto the resolve attachment, discarding the very image being resolved into.
+
+           Discarding the multi-sampled contents at end of pass - the tile-memory win - is handled by
+           VKRenderTarget::CreateRenderPass, which knows which color attachments have a resolve target. */
+    }
+
     renderTargets_.resize(texturePtrs_.size());
     for (std::size_t colorIndex = 0; colorIndex < texturePtrs_.size(); ++colorIndex)
     {
@@ -257,9 +329,22 @@ bool OpenXRSwapChain::BuildRenderTargets()
             RenderTargetDescriptor renderTargetDesc;
             renderTargetDesc.resolution          = desc_.resolution;
             renderTargetDesc.views               = numViews;
-            renderTargetDesc.colorAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
-            if (hasDepth)
-                renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ depthTextures[depthIndex] };
+
+            if (hasMultiSampling)
+            {
+                /* Render into the multi-sampled attachments and resolve into the runtime's image. */
+                renderTargetDesc.samples               = desc_.sampleCount;
+                renderTargetDesc.colorAttachments[0]   = AttachmentDescriptor{ msaaColorTexture_ };
+                renderTargetDesc.resolveAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
+                if (msaaDepthTexture_ != nullptr)
+                    renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ msaaDepthTexture_ };
+            }
+            else
+            {
+                renderTargetDesc.colorAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
+                if (hasDepth)
+                    renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ depthTextures[depthIndex] };
+            }
 
             // Every render target shares one render pass object (created by the first target): all targets have
             // identical attachment formats, so reusing it avoids redundant render passes and guarantees GetRenderPass

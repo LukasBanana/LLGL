@@ -98,6 +98,10 @@ VKSurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurface
 VKQueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
 VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* candidates, std::size_t numCandidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
+// Returns true if the implementation exposes a memory type supporting the specified type bits and properties.
+// Use this to probe for optional memory properties: VKFindMemoryType traps rather than reporting failure.
+bool VKHasMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
+
 // Returns the memory type index that supports the specified type bits and properties, or traps program execution on failure.
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
 

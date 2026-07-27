@@ -36,29 +36,14 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
     /*
     Renderbuffers can only be used under the following conditions:
-    - Texture must be 2D or 2D-multisampled
-    - Only a single MIP-map level
-    - Only used as attachment
-    - No initial image data is specified
+    - Only used as attachment, with a single MIP-map level and no initial image data
+      (shared with the other backends, see IsAttachmentOnlyTexture)
+    - Texture must be 2D or 2D-multisampled, since a renderbuffer has no array layers
     */
-    const long attachmentBindFlags =
-    (
-        desc.bindFlags &
-        (
-            BindFlags::Sampled                  |
-            BindFlags::Storage                  |
-            BindFlags::ColorAttachment          |
-            BindFlags::DepthStencilAttachment   |
-            BindFlags::CopySrc                  |
-            BindFlags::CopyDst
-        )
-    );
     return
     (
-        desc.mipLevels == 1 &&
-        (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS) &&
-        (attachmentBindFlags == BindFlags::ColorAttachment || attachmentBindFlags == BindFlags::DepthStencilAttachment) &&
-        ((desc.miscFlags & MiscFlags::NoInitialData) != 0)
+        IsAttachmentOnlyTexture(desc) &&
+        (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS)
     );
 }
 

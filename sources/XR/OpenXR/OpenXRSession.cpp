@@ -179,7 +179,11 @@ bool OpenXRSession::CreateNativeSwapChain(
     XrSwapchainCreateInfo createInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
     createInfo.usageFlags       = usageFlags;
     createInfo.format           = nativeFormat;
-    createInfo.sampleCount      = swapChainDesc.sampleCount;
+    /* Runtime images are always single-sampled: they are what the compositor consumes, and
+       multisampled swap-chains are inconsistently supported across runtimes. When the
+       application asks for MSAA, the swap-chain renders into its own multisampled attachment
+       and resolves into these images instead (see OpenXRSwapChain::CreateRenderTargets). */
+    createInfo.sampleCount      = 1;
     createInfo.width            = swapChainDesc.resolution.width;
     createInfo.height           = swapChainDesc.resolution.height;
     createInfo.faceCount        = 1;
