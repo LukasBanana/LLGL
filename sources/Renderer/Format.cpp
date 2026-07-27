@@ -170,6 +170,10 @@ static const FormatAttributes g_formatAttribs[] =
     {  64, 4, 4, 1, ImageFormat::Compressed,   DataType::Int8,      Mips | Dim2D_3D | DimCube | Compr | SNorm                  }, // BC4SNorm
     { 128, 4, 4, 2, ImageFormat::Compressed,   DataType::UInt8,     Mips | Dim2D_3D | DimCube | Compr | UNorm                  }, // BC5UNorm
     { 128, 4, 4, 2, ImageFormat::Compressed,   DataType::Int8,      Mips | Dim2D_3D | DimCube | Compr | SNorm                  }, // BC5SNorm
+    { 128, 4, 4, 3, ImageFormat::Compressed,   DataType::Float16,   Mips | Dim2D_3D | DimCube | Compr | UFloat                 }, // BC6HUFloat
+    { 128, 4, 4, 3, ImageFormat::Compressed,   DataType::Float16,   Mips | Dim2D_3D | DimCube | Compr | SFloat                 }, // BC6HSFloat
+    { 128, 4, 4, 4, ImageFormat::Compressed,   DataType::UInt8,     Mips | Dim2D_3D | DimCube | Compr | UNorm                  }, // BC7UNorm
+    { 128, 4, 4, 4, ImageFormat::Compressed,   DataType::UInt8,     Mips | Dim2D_3D | DimCube | Compr | UNorm | sRGB           }, // BC7UNorm_sRGB
 
     /* --- Advanced scalable texture compression (ASTC) formats --- */
 //   bits  w  h  c  format                     dataType
