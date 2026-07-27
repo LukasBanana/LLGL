@@ -63,7 +63,7 @@ class MyXRRenderer
 
     // When true, render both eyes in a single pass using multiview (VK_KHR_multiview / D3D12 view instancing)
     // instead of looping over per-eye swap-chains. Requested on the command line and only enabled if the active
-    // renderer reports RenderingFeatures::hasMultiView.
+    // renderer reports RenderingFeatures::hasMultiview.
     bool                            useMultiview    = false;
 
     LLGL::Buffer*                   vertexBuffer    = nullptr;
@@ -182,7 +182,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview)
     if (requestMultiview)
     {
         const LLGL::RenderingCapabilities& caps = renderer->GetRenderingCaps();
-        if (caps.features.hasMultiView && caps.limits.maxViews >= viewCount)
+        if (caps.features.hasMultiview && caps.limits.maxViews >= viewCount)
         {
             useMultiview = true;
             LLGL::Log::Printf("Multiview: enabled (single-pass stereo, %u views)\n", viewCount);
