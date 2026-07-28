@@ -213,6 +213,16 @@ static bool DECL_LOADVKEXT_PROC(EXT_mesh_shader)
     #endif // /VK_EXT_mesh_shader
 }
 
+static bool DECL_LOADVKEXT_PROC(KHR_create_renderpass2)
+{
+    #if VK_KHR_create_renderpass2
+    LOAD_VKPROC( vkCreateRenderPass2KHR );
+    return true;
+    #else
+    return false;
+    #endif // /VK_KHR_create_renderpass2
+}
+
 #undef DECL_LOADVKEXT_PROC_BASE
 #undef DECL_LOADVKEXT_PROC_INSTANCE
 #undef DECL_LOADVKEXT_PROC
@@ -321,12 +331,12 @@ bool VKLoadDeviceExtensions(VkDevice device, const ArrayView<const char*>& suppo
     LOAD_VKEXT( EXT_conditional_rendering           );
     LOAD_VKEXT( EXT_transform_feedback              );
     LOAD_VKEXT( EXT_mesh_shader                     );
+    LOAD_VKEXT( KHR_create_renderpass2              );
 
     ENABLE_VKEXT( KHR_multiview                  );
     ENABLE_VKEXT( EXT_conservative_rasterization );
     ENABLE_VKEXT( EXT_nested_command_buffer      );
     ENABLE_VKEXT( KHR_imageless_framebuffer      );
-    ENABLE_VKEXT( KHR_create_renderpass2         );
     ENABLE_VKEXT( KHR_depth_stencil_resolve      );
 
     #undef LOAD_VKEXT

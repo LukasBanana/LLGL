@@ -407,6 +407,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ByteBuffer                  );
     RUN_TEST( BarrierReadAfterWrite       );
     RUN_TEST( Multiview                   );
+    RUN_TEST( DepthStencilResolve         );
 
     // Run all rendering tests (these are meant to render to the Testbed output window)
     RUN_TEST( DepthBuffer                 );

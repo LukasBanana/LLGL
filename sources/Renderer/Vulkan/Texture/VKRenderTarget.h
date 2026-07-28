@@ -75,6 +75,13 @@ class VKRenderTarget final : public RenderTarget
 
     private:
 
+        /*
+        Returns true if this render target resolves its multi-sampled depth-stencil attachment into a
+        single-sampled texture. Unlike a color resolve, this is opt-in: leaving it off is what lets the
+        multi-sampled depth buffer stay in tile memory.
+        */
+        bool HasDepthStencilResolve(const RenderTargetDescriptor& desc) const;
+
         void CreateRenderPass(
             VkDevice                        device,
             const RenderTargetDescriptor&   desc,

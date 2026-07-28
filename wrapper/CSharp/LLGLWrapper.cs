@@ -4357,11 +4357,11 @@ namespace LLGL
 
         public unsafe struct RenderTargetDescriptor
         {
-            public byte*                debugName;              /* = null */
-            public RenderPass           renderPass;             /* = null */
+            public byte*                debugName;                     /* = null */
+            public RenderPass           renderPass;                    /* = null */
             public Extent2D             resolution;
-            public int                  samples;                /* = 1 */
-            public int                  views;                  /* = 1 */
+            public int                  samples;                       /* = 1 */
+            public int                  views;                         /* = 1 */
             public AttachmentDescriptor colorAttachments0;
             public AttachmentDescriptor colorAttachments1;
             public AttachmentDescriptor colorAttachments2;
@@ -4379,6 +4379,7 @@ namespace LLGL
             public AttachmentDescriptor resolveAttachments6;
             public AttachmentDescriptor resolveAttachments7;
             public AttachmentDescriptor depthStencilAttachment;
+            public AttachmentDescriptor depthStencilResolveAttachment;
         }
 
         public unsafe struct VertexShaderAttributes

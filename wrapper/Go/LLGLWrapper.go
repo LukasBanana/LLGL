@@ -1553,14 +1553,15 @@ type RenderPassDescriptor struct {
 }
 
 type RenderTargetDescriptor struct {
-    DebugName              string                  /* = "" */
-    RenderPass             *RenderPass             /* = nil */
-    Resolution             Extent2D
-    Samples                uint32                  /* = 1 */
-    Views                  uint32                  /* = 1 */
-    ColorAttachments       [8]AttachmentDescriptor
-    ResolveAttachments     [8]AttachmentDescriptor
-    DepthStencilAttachment AttachmentDescriptor
+    DebugName                     string                  /* = "" */
+    RenderPass                    *RenderPass             /* = nil */
+    Resolution                    Extent2D
+    Samples                       uint32                  /* = 1 */
+    Views                         uint32                  /* = 1 */
+    ColorAttachments              [8]AttachmentDescriptor
+    ResolveAttachments            [8]AttachmentDescriptor
+    DepthStencilAttachment        AttachmentDescriptor
+    DepthStencilResolveAttachment AttachmentDescriptor
 }
 
 type VertexShaderAttributes struct {

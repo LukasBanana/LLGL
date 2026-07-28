@@ -267,21 +267,12 @@ bool OpenXRSwapChain::BuildRenderTargets()
     // multi-sampling affordable on a tile-based GPU. Nothing needs to be requested explicitly.
     const bool hasMultiSampling = (desc_.sampleCount > 1);
 
-    // Probe for depth-stencil resolve. Without it a multi-sampled depth attachment cannot be resolved into the
-    // runtime's single-sampled depth image, so depth could not be submitted for reprojection while multi-sampling
-    // is on. Core in Vulkan 1.2, but the OpenXR path builds a 1.1 device (VKOpenXRGraphicsBinding), so it is taken
-    // as an extension - which additionally needs create_renderpass2, since the resolve struct chains into
-    // VkSubpassDescription2.
-    if (hasMultiSampling)
-    {
-        const RenderingCapabilities& caps = renderSystem_.GetRenderingCaps();
-        Log::Printf(
-            "XR multi-sampling: %ux, depth-stencil resolve %s\n",
-            desc_.sampleCount,
-            caps.features.hasDepthStencilResolve ? "supported" : "UNSUPPORTED (depth submission unavailable)"
-        );
-    }
-
+    // Depth submission and multi-sampling coexist through depth-stencil resolve: the multi-sampled depth
+    // attachment is resolved into the runtime's single-sampled depth image at end of pass. That is core in
+    // Vulkan 1.2, but the OpenXR path builds a 1.1 device (VKOpenXRGraphicsBinding), so it is taken as an
+    // extension - which additionally needs create_renderpass2, since the resolve description chains into
+    // VkSubpassDescription2. OpenXRSession has already fallen back to a private (unsubmitted) depth texture if
+    // it is missing, so by here a depth companion implies the resolve is available.
     if (hasMultiSampling)
     {
         TextureDescriptor msaaColorDesc;
@@ -300,10 +291,10 @@ bool OpenXRSwapChain::BuildRenderTargets()
         if (msaaColorTexture_ == nullptr)
             return false;
 
-        // Depth must match the color attachment's sample count. Note this displaces depth submission: a
-        // multi-sampled depth buffer cannot be resolved into the runtime's single-sampled depth image without
-        // depth-resolve support, so with MSAA the depth companion (if any) is not rendered into and depth
-        // reprojection is unavailable.
+        // Depth must match the color attachment's sample count, so depth also goes through a private
+        // multi-sampled attachment. When the runtime's depth image is submitted for reprojection, this is
+        // resolved into it at end of pass (see the depth-stencil resolve attachment below); otherwise it is
+        // purely transient, like the multi-sampled color.
         if (hasDepth)
         {
             Texture* depthReference = depthTextures.front();
@@ -353,7 +344,15 @@ bool OpenXRSwapChain::BuildRenderTargets()
                 renderTargetDesc.colorAttachments[0]   = AttachmentDescriptor{ msaaColorTexture_ };
                 renderTargetDesc.resolveAttachments[0] = AttachmentDescriptor{ texturePtrs_[colorIndex] };
                 if (msaaDepthTexture_ != nullptr)
+                {
                     renderTargetDesc.depthStencilAttachment = AttachmentDescriptor{ msaaDepthTexture_ };
+
+                    /* Resolve the multi-sampled depth into the runtime's image only when that image is actually
+                       submitted for reprojection. A private depth texture is never read outside the pass, so
+                       leaving the resolve off is what keeps the multi-sampled depth in tile memory. */
+                    if (depthCompanion_ != nullptr)
+                        renderTargetDesc.depthStencilResolveAttachment = AttachmentDescriptor{ depthTextures[depthIndex] };
+                }
             }
             else
             {

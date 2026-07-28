@@ -110,6 +110,12 @@ DECL_VKPROC( vkCmdDrawMeshTasksIndirectCountEXT ); // Requires VK_KHR_draw_indir
 
 #endif // /VK_EXT_mesh_shader
 
+#if VK_KHR_create_renderpass2
+
+DECL_VKPROC( vkCreateRenderPass2KHR );
+
+#endif // /VK_KHR_create_renderpass2
+
 
 
 // ================================================================================
