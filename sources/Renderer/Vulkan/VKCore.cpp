@@ -17,32 +17,34 @@
 namespace LLGL
 {
 
+    // Returned by VKGetMemoryTypeIndex() to indicate that the memory type was not found
+    static constexpr std::uint32_t kInvalidMemoryIndex = ~0u;
 
-/* ----- Basic Functions ----- */
+    /* ----- Basic Functions ----- */
 
-static const char* VKResultToStr(const VkResult result)
-{
-    // see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html
-    switch (result)
+    static const char *VKResultToStr(const VkResult result)
     {
-        LLGL_CASE_TO_STR( VK_SUCCESS );
-        LLGL_CASE_TO_STR( VK_NOT_READY );
-        LLGL_CASE_TO_STR( VK_TIMEOUT );
-        LLGL_CASE_TO_STR( VK_EVENT_SET );
-        LLGL_CASE_TO_STR( VK_EVENT_RESET );
-        LLGL_CASE_TO_STR( VK_INCOMPLETE );
-        LLGL_CASE_TO_STR( VK_ERROR_OUT_OF_HOST_MEMORY );
-        LLGL_CASE_TO_STR( VK_ERROR_OUT_OF_DEVICE_MEMORY );
-        LLGL_CASE_TO_STR( VK_ERROR_INITIALIZATION_FAILED );
-        LLGL_CASE_TO_STR( VK_ERROR_DEVICE_LOST );
-        LLGL_CASE_TO_STR( VK_ERROR_MEMORY_MAP_FAILED );
-        LLGL_CASE_TO_STR( VK_ERROR_LAYER_NOT_PRESENT );
-        LLGL_CASE_TO_STR( VK_ERROR_EXTENSION_NOT_PRESENT );
-        LLGL_CASE_TO_STR( VK_ERROR_FEATURE_NOT_PRESENT );
-        LLGL_CASE_TO_STR( VK_ERROR_INCOMPATIBLE_DRIVER );
-        LLGL_CASE_TO_STR( VK_ERROR_TOO_MANY_OBJECTS );
-        LLGL_CASE_TO_STR( VK_ERROR_FORMAT_NOT_SUPPORTED );
-        LLGL_CASE_TO_STR( VK_ERROR_FRAGMENTED_POOL );
+        // see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html
+        switch (result)
+        {
+            LLGL_CASE_TO_STR(VK_SUCCESS);
+            LLGL_CASE_TO_STR(VK_NOT_READY);
+            LLGL_CASE_TO_STR(VK_TIMEOUT);
+            LLGL_CASE_TO_STR(VK_EVENT_SET);
+            LLGL_CASE_TO_STR(VK_EVENT_RESET);
+            LLGL_CASE_TO_STR(VK_INCOMPLETE);
+            LLGL_CASE_TO_STR(VK_ERROR_OUT_OF_HOST_MEMORY);
+            LLGL_CASE_TO_STR(VK_ERROR_OUT_OF_DEVICE_MEMORY);
+            LLGL_CASE_TO_STR(VK_ERROR_INITIALIZATION_FAILED);
+            LLGL_CASE_TO_STR(VK_ERROR_DEVICE_LOST);
+            LLGL_CASE_TO_STR(VK_ERROR_MEMORY_MAP_FAILED);
+            LLGL_CASE_TO_STR(VK_ERROR_LAYER_NOT_PRESENT);
+            LLGL_CASE_TO_STR(VK_ERROR_EXTENSION_NOT_PRESENT);
+            LLGL_CASE_TO_STR(VK_ERROR_FEATURE_NOT_PRESENT);
+            LLGL_CASE_TO_STR(VK_ERROR_INCOMPATIBLE_DRIVER);
+            LLGL_CASE_TO_STR(VK_ERROR_TOO_MANY_OBJECTS);
+            LLGL_CASE_TO_STR(VK_ERROR_FORMAT_NOT_SUPPORTED);
+            LLGL_CASE_TO_STR(VK_ERROR_FRAGMENTED_POOL);
         #if VK_HEADER_VERSION >= 131
         LLGL_CASE_TO_STR( VK_ERROR_UNKNOWN );
         #endif
@@ -334,23 +336,27 @@ VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* can
     LLGL_TRAP("failed to find suitable image format");
 }
 
-bool VKHasMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
-{
-    for_range(i, memoryProperties.memoryTypeCount)
-    {
-        if ((memoryTypeBits & (1 << i)) != 0 && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            return true;
-    }
-    return false;
-}
-
-std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+static std::uint32_t VKGetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties &memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
 {
     for_range(i, memoryProperties.memoryTypeCount)
     {
         if ((memoryTypeBits & (1 << i)) != 0 && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
             return i;
     }
+    return kInvalidMemoryIndex;
+}
+
+bool VKHasMemoryType(const VkPhysicalDeviceMemoryProperties &memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+{
+    return VKGetMemoryTypeIndex(memoryProperties, memoryTypeBits, properties) != kInvalidMemoryIndex;
+}
+
+std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties &memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+{
+    std::uint32_t index = VKGetMemoryTypeIndex(memoryProperties, memoryTypeBits, properties);
+    if (index != kInvalidMemoryIndex)
+        return index;
+
     LLGL_TRAP("failed to find suitable Vulkan memory type");
 }
 
