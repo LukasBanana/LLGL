@@ -17,6 +17,14 @@
   <uses-permission android:name="org.khronos.openxr.permission.OPENXR" />
   <uses-permission android:name="org.khronos.openxr.permission.OPENXR_SYSTEM" />
 
+  <!-- Declare hand tracking as supported but optional. Meta's headset shell otherwise treats an app
+       that says nothing about input as controllers-only and blocks every launch behind a "controllers
+       required" dialog, which has to be dismissed in the headset after each install. Marked
+       required="false" so this stays a hint: the examples work with either input, and runtimes that
+       do not know these vendor-specific names simply ignore them. -->
+  <uses-feature android:name="oculus.software.handtracking" android:required="false" />
+  <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
+
   <!-- Android 11+ package visibility: declare the OpenXR runtime broker content providers
        so the loader can discover the system runtime via getContentResolver().query(). -->
   <queries>
