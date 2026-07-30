@@ -341,6 +341,8 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
 {
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
+    caps.swapChainColorFormats          = GLGetSupportedSwapChainColorFormats();
+    caps.swapChainDepthStencilFormats   = GLGetSupportedSwapChainDepthStencilFormats();
     GLGetSupportedFeatures(caps.features);
     GLGetFeatureLimits(caps.features, caps.limits);
     GLGetTextureLimits(caps.features, caps.limits);

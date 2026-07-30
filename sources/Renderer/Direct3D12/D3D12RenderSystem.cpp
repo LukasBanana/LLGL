@@ -804,6 +804,21 @@ static std::vector<Format> GetDefaultSupportedDXTextureFormats()
     return formats;
 }
 
+/*
+D3D12SwapChain always creates its back buffer as DXGI_FORMAT_R8G8B8A8_UNORM and ignores
+SwapChainDescriptor::colorFormat, so this is the only format the color buffer can have.
+*/
+static std::vector<Format> GetSupportedDXSwapChainColorFormats()
+{
+    return { Format::RGBA8UNorm };
+}
+
+// Returns the depth-stencil formats DXPickDepthStencilFormat can produce; Direct3D 12 requires feature level 11.0 or later.
+static std::vector<Format> GetSupportedDXSwapChainDepthStencilFormats()
+{
+    return { Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, Format::D32FloatS8X24UInt };
+}
+
 static std::uint32_t GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
 {
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384; // D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION
@@ -863,6 +878,8 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = DXGetHLSLVersions(device_.GetShaderModel());
     caps.textureFormats                             = GetDefaultSupportedDXTextureFormats();
+    caps.swapChainColorFormats                      = GetSupportedDXSwapChainColorFormats();
+    caps.swapChainDepthStencilFormats               = GetSupportedDXSwapChainDepthStencilFormats();
 
     caps.features.hasRenderTargets                  = true;
     caps.features.has3DTextures                     = true;

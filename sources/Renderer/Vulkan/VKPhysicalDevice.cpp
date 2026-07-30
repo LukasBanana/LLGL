@@ -256,6 +256,54 @@ struct VKPipelineCacheID
     std::uint8_t  pipelineCacheUUID[VK_UUID_SIZE];  // VkPhysicalDeviceProperties::pipelineCacheUUID
 };
 
+/*
+Returns the subset of 'candidates' the physical device supports with the specified format features
+for optimally tiled images. Used to report which swap-chain formats VKSwapChain can actually pick.
+*/
+static std::vector<Format> FilterVKSupportedFormats(
+    VkPhysicalDevice            physicalDevice,
+    const ArrayView<Format>&    candidates,
+    VkFormatFeatureFlags        formatFeatures)
+{
+    std::vector<Format> formats;
+    formats.reserve(candidates.size());
+
+    for (const Format format : candidates)
+    {
+        VkFormatProperties formatProps = {};
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, VKTypes::Map(format), &formatProps);
+        if ((formatProps.optimalTilingFeatures & formatFeatures) == formatFeatures)
+            formats.push_back(format);
+    }
+
+    return formats;
+}
+
+static std::vector<Format> GetSupportedVKSwapChainColorFormats(VkPhysicalDevice physicalDevice)
+{
+    /*
+    Color formats VKSwapChain::PickSwapSurfaceFormat can select, filtered by device support.
+    Presentation support additionally depends on the surface, which is not known at this point.
+    */
+    static const Format candidates[] =
+    {
+        Format::RGBA8UNorm, Format::RGBA8UNorm_sRGB,
+        Format::BGRA8UNorm, Format::BGRA8UNorm_sRGB,
+        Format::RGB10A2UNorm, Format::RGBA16Float,
+    };
+    return FilterVKSupportedFormats(physicalDevice, candidates, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT);
+}
+
+static std::vector<Format> GetSupportedVKSwapChainDepthStencilFormats(VkPhysicalDevice physicalDevice)
+{
+    /* Depth-stencil formats VKSwapChain::PickDepthStencilFormat can select, filtered by device support */
+    static const Format candidates[] =
+    {
+        Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, Format::D32FloatS8X24UInt,
+    };
+    return FilterVKSupportedFormats(physicalDevice, candidates, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
+
 static void GetVKPipelineCacheID(const VkPhysicalDeviceProperties& properties, std::vector<char>& outCacheID)
 {
     outCacheID.resize(sizeof(VKPipelineCacheID));
@@ -288,6 +336,8 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
     caps.textureFormats                             = GetDefaultSupportedVKTextureFormats();
+    caps.swapChainColorFormats                      = GetSupportedVKSwapChainColorFormats(physicalDevice_);
+    caps.swapChainDepthStencilFormats               = GetSupportedVKSwapChainDepthStencilFormats(physicalDevice_);
 
     if (features_.textureCompressionBC != VK_FALSE)
     {

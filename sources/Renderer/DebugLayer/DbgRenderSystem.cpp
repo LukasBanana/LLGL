@@ -58,6 +58,9 @@ bool DbgRenderSystem::IsVulkan() const
 
 SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
+    if (LLGL_DBG_SOURCE())
+        ValidateSwapChainDesc(swapChainDesc);
+
     /* Create swap-chain and flush frame profile on SwapChain::Present() calls  */
     return swapChains_.emplace<DbgSwapChain>(
         *instance_->CreateSwapChain(swapChainDesc, surface),
@@ -762,6 +765,46 @@ void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAc
                 ErrorType::InvalidState,
                 "cannot map %s with CPU write access, because the resource was not created with 'LLGL::CPUAccessFlags::Write' flag",
                 resourceTypeName
+            );
+        }
+    }
+}
+
+void DbgRenderSystem::ValidateSwapChainDesc(const SwapChainDescriptor& swapChainDesc)
+{
+    /*
+    Both format fields are optional and Format::Undefined means the backend picks a format automatically,
+    but any other format must be of the matching kind. Backends silently fall back to their automatic
+    selection for a mismatching format, so the requested format would otherwise be ignored without notice.
+    */
+    if (swapChainDesc.colorFormat != Format::Undefined)
+    {
+        if (!IsColorFormat(swapChainDesc.colorFormat))
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot use depth-stencil format for swap-chain color buffer: %s",
+                ToString(swapChainDesc.colorFormat)
+            );
+        }
+        else if (IsCompressedFormat(swapChainDesc.colorFormat))
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot use compressed format for swap-chain color buffer: %s",
+                ToString(swapChainDesc.colorFormat)
+            );
+        }
+    }
+
+    if (swapChainDesc.depthStencilFormat != Format::Undefined)
+    {
+        if (!IsDepthOrStencilFormat(swapChainDesc.depthStencilFormat))
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot use color format for swap-chain depth-stencil buffer: %s",
+                ToString(swapChainDesc.depthStencilFormat)
             );
         }
     }

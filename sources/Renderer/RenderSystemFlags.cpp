@@ -66,6 +66,36 @@ LLGL_EXPORT bool ValidateRenderingCaps(
         }
     }
 
+    /* Validate swap-chain color formats */
+    for_range(i, requiredCaps.swapChainColorFormats.size())
+    {
+        const Format colorFormat = requiredCaps.swapChainColorFormats[i];
+        if (!Contains(presentCaps.swapChainColorFormats, colorFormat))
+        {
+            bool continueValidation = ReportValidationFailure(
+                callback,
+                "swap-chain color format not supported: " + std::string(ToString(colorFormat)),
+                "swapChainColorFormats[" + std::to_string(i) + ']'
+            );
+            LLGL_CONTINUE_VALIDATION_IF(continueValidation);
+        }
+    }
+
+    /* Validate swap-chain depth-stencil formats */
+    for_range(i, requiredCaps.swapChainDepthStencilFormats.size())
+    {
+        const Format depthStencilFormat = requiredCaps.swapChainDepthStencilFormats[i];
+        if (!Contains(presentCaps.swapChainDepthStencilFormats, depthStencilFormat))
+        {
+            bool continueValidation = ReportValidationFailure(
+                callback,
+                "swap-chain depth-stencil format not supported: " + std::string(ToString(depthStencilFormat)),
+                "swapChainDepthStencilFormats[" + std::to_string(i) + ']'
+            );
+            LLGL_CONTINUE_VALIDATION_IF(continueValidation);
+        }
+    }
+
     /* Validate features */
     #define LLGL_VALIDATE_FEATURE(ATTRIB, INFO)                             \
         if (requiredCaps.features.ATTRIB && !presentCaps.features.ATTRIB)   \

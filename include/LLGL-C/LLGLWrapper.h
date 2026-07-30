@@ -1558,12 +1558,16 @@ LLGLRenderSystemDescriptor;
 
 typedef struct LLGLRenderingCapabilities
 {
-    LLGLScreenOrigin           screenOrigin;        /* = LLGLScreenOriginUpperLeft */
-    LLGLClippingRange          clippingRange;       /* = LLGLClippingRangeZeroToOne */
-    size_t                     numShadingLanguages; /* = 0 */
-    const LLGLShadingLanguage* shadingLanguages;    /* = NULL */
-    size_t                     numTextureFormats;   /* = 0 */
-    const LLGLFormat*          textureFormats;      /* = NULL */
+    LLGLScreenOrigin           screenOrigin;                    /* = LLGLScreenOriginUpperLeft */
+    LLGLClippingRange          clippingRange;                   /* = LLGLClippingRangeZeroToOne */
+    size_t                     numShadingLanguages;             /* = 0 */
+    const LLGLShadingLanguage* shadingLanguages;                /* = NULL */
+    size_t                     numTextureFormats;               /* = 0 */
+    const LLGLFormat*          textureFormats;                  /* = NULL */
+    size_t                     numSwapChainColorFormats;        /* = 0 */
+    const LLGLFormat*          swapChainColorFormats;           /* = NULL */
+    size_t                     numSwapChainDepthStencilFormats; /* = 0 */
+    const LLGLFormat*          swapChainDepthStencilFormats;    /* = NULL */
     LLGLRenderingFeatures      features;
     LLGLRenderingLimits        limits;
 }
@@ -1606,16 +1610,17 @@ LLGLComputeShaderAttributes;
 
 typedef struct LLGLSwapChainDescriptor
 {
-    const char*  debugName;   /* = NULL */
+    const char*  debugName;          /* = NULL */
     LLGLExtent2D resolution;
-    LLGLFormat   format;      /* = LLGLFormatUndefined */
-    int          colorBits;   /* = 32 */
-    int          depthBits;   /* = 24 */
-    int          stencilBits; /* = 8 */
-    uint32_t     samples;     /* = 1 */
-    uint32_t     swapBuffers; /* = 2 */
-    bool         fullscreen;  /* = false */
-    bool         resizable;   /* = false */
+    LLGLFormat   colorFormat;        /* = LLGLFormatUndefined */
+    LLGLFormat   depthStencilFormat; /* = LLGLFormatUndefined */
+    int          colorBits;          /* = 32 */
+    int          depthBits;          /* = 24 */
+    int          stencilBits;        /* = 8 */
+    uint32_t     samples;            /* = 1 */
+    uint32_t     swapBuffers;        /* = 2 */
+    bool         fullscreen;         /* = false */
+    bool         resizable;          /* = false */
 }
 LLGLSwapChainDescriptor;
 

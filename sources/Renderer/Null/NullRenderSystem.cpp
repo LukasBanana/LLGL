@@ -37,6 +37,21 @@ static void InitNullRendererTextureFormats(std::vector<Format>& textureFormats)
         textureFormats.push_back(static_cast<Format>(firstFormatIndex + i));
 }
 
+static void InitNullRendererSwapChainFormats(std::vector<Format>& colorFormats, std::vector<Format>& depthStencilFormats)
+{
+    /* NullSwapChain accepts any color and depth-stencil format the descriptor requests */
+    colorFormats =
+    {
+        Format::RGBA8UNorm, Format::RGBA8UNorm_sRGB,
+        Format::BGRA8UNorm, Format::BGRA8UNorm_sRGB,
+        Format::RGB10A2UNorm, Format::RGBA16Float,
+    };
+    depthStencilFormats =
+    {
+        Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, Format::D32FloatS8X24UInt,
+    };
+}
+
 static void InitNullRendererFeatures(RenderingFeatures& features)
 {
     features.hasRenderTargets               = true;
@@ -102,6 +117,7 @@ static void GetNullRenderingCaps(RenderingCapabilities& caps)
 {
     InitNullRendererShadingLanguages(caps.shadingLanguages);
     InitNullRendererTextureFormats(caps.textureFormats);
+    InitNullRendererSwapChainFormats(caps.swapChainColorFormats, caps.swapChainDepthStencilFormats);
     InitNullRendererFeatures(caps.features);
     InitNullRendererLimits(caps.limits);
 }

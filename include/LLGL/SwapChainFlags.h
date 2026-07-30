@@ -66,7 +66,7 @@ struct SwapChainDescriptor
     \remarks The final name of the native hardware resource is implementation defined.
     \see RenderSystemChild::SetDebugName
     */
-    const char*     debugName       = nullptr;
+    const char*     debugName           = nullptr;
 
     /**
     \brief Screen resolution (in pixels).
@@ -77,38 +77,54 @@ struct SwapChainDescriptor
 
     /**
     \brief Preferred color format for the swap-chain buffers. By default Format::Undefined.
-    \remarks If this is Format::Undefined, the renderer picks a format automatically (the default behavior).
+    \remarks If this is Format::Undefined, the renderer picks a format automatically from the deprecated \c colorBits field (the default behavior).
     Otherwise the renderer uses this format if the presentation surface supports it, and falls back to its
     automatic selection if it does not. This is primarily intended to request an sRGB format (e.g.
     Format::BGRA8UNorm_sRGB), so the hardware performs the linear-to-sRGB conversion on write.
     To determine the actual color format of a swap-chain, use the SwapChain::GetColorFormat function.
     \see SwapChain::GetColorFormat
     */
-    Format          format          = Format::Undefined;
+    Format          colorFormat         = Format::Undefined;
+
+    /**
+    \brief Preferred depth-stencil format for the swap-chain. By default Format::Undefined.
+    \remarks If this is Format::Undefined, the renderer picks a format automatically from the deprecated \c depthBits and \c stencilBits fields (the default behavior).
+    Otherwise this must be one of the depth-stencil formats, i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
+    The renderer uses this format if the hardware supports it and falls back to its automatic selection if it does not.
+    To determine the actual depth-stencil format of a swap-chain, use the SwapChain::GetDepthStencilFormat function.
+    \see SwapChain::GetDepthStencilFormat
+    */
+    Format          depthStencilFormat  = Format::Undefined;
 
     /**
     \brief Number of bits for each pixel in the color buffer. Should be 24 or 32. By default 32.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the color buffer.
     To determine the actual color format of a swap-chain, use the SwapChain::GetColorFormat function.
+    \note This field is deprecated and ignored if \c colorFormat is not Format::Undefined; Use \c colorFormat instead!
+    \see colorFormat
     \see SwapChain::GetColorFormat
     */
-    int             colorBits       = 32;
+    int             colorBits           = 32;
 
     /**
     \brief Number of bits for each pixel in the depth buffer. Should be 24, 32, or zero to disable depth buffer. By default 24.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the depth buffer.
     To determine the actual depth-stencil format of a swap-chain, use the SwapChain::GetDepthStencilFormat function.
+    \note This field is deprecated and ignored if \c depthStencilFormat is not Format::Undefined; Use \c depthStencilFormat instead!
+    \see depthStencilFormat
     \see SwapChain::GetDepthStencilFormat
     */
-    int             depthBits       = 24;
+    int             depthBits           = 24;
 
     /**
     \brief Number of bits for each pixel in the stencil buffer. Should be 8, or zero to disable stencil buffer. By default 8.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the stencil buffer.
     To determine the actual depth-stencil format of a swap-chain, use the SwapChain::GetDepthStencilFormat function.
+    \note This field is deprecated and ignored if \c depthStencilFormat is not Format::Undefined; Use \c depthStencilFormat instead!
+    \see depthStencilFormat
     \see SwapChain::GetDepthStencilFormat
     */
-    int             stencilBits     = 8;
+    int             stencilBits         = 8;
 
     /**
     \brief Number of samples for the swap-chain buffers. By default 1.
@@ -116,7 +132,7 @@ struct SwapChainDescriptor
     The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
     \see RenderTarget::GetSamples
     */
-    std::uint32_t   samples         = 1;
+    std::uint32_t   samples             = 1;
 
     /**
     \brief Number of swap buffers. By default 2 (for double-buffering).
@@ -125,21 +141,21 @@ struct SwapChainDescriptor
     \see SwapChain::GetCurrentSwapIndex
     \see SwapChain::GetNumSwapBuffers
     */
-    std::uint32_t   swapBuffers     = 2;
+    std::uint32_t   swapBuffers         = 2;
 
     /**
     \brief Specifies whether to create the swap-chain initially in fullscreen mode or windowed mode otherwise.
     \see SwapChain::ResizeBuffers
     \see ResizeBuffersFlags::FullscreenMode
     */
-    bool            fullscreen      = false;
+    bool            fullscreen          = false;
 
     /**
     \brief Specifies whether to create the default surface for the swap-chain with the resizable attribute.
     \remarks If a custom surface is specified, this field is ignored.
     \see WindowFlags::Resizable
     */
-    bool            resizable       = false;
+    bool            resizable           = false;
 };
 
 

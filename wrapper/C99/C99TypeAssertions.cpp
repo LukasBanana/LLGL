@@ -921,6 +921,8 @@ LLGL_STATIC_ASSERT_OFFSET(SubresourceFootprint, layerStride);
 LLGL_STATIC_ASSERT_SIZE(SwapChainDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, resolution);
+LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, colorFormat);
+LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, depthStencilFormat);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, colorBits);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, depthBits);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, stencilBits);

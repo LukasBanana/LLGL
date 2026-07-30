@@ -93,14 +93,26 @@ void GLContext::DeduceColorFormat(int /*rBits*/, int rShift, int /*gBits*/, int 
 
 void GLContext::DeduceDepthStencilFormat(int depthBits, int stencilBits)
 {
-    if (depthBits == 24 && stencilBits == 8)
-        depthStencilFormat_ = Format::D24UNormS8UInt;
-    else if (depthBits == 32 && stencilBits == 8)
-        depthStencilFormat_ = Format::D32FloatS8X24UInt;
-    else if (depthBits == 16 && stencilBits == 0)
-        depthStencilFormat_ = Format::D16UNorm;
-    else if (depthBits == 32 && stencilBits == 0)
-        depthStencilFormat_ = Format::D32Float;
+    /*
+    The bit sizes come from the pixel format the windowing system selected, which is not restricted to the
+    combinations LLGL can request. Map every combination that has a depth or stencil component onto the
+    closest LLGL format, so GetDepthStencilFormat() never reports Format::Undefined for a buffer that exists.
+    */
+    if (depthBits == 0 && stencilBits == 0)
+    {
+        /* Pixel format has neither a depth nor a stencil buffer */
+        depthStencilFormat_ = Format::Undefined;
+    }
+    else if (stencilBits > 0)
+    {
+        /* LLGL has no stencil-only format, so a stencil buffer always implies a combined depth-stencil format */
+        depthStencilFormat_ = (depthBits > 24 ? Format::D32FloatS8X24UInt : Format::D24UNormS8UInt);
+    }
+    else
+    {
+        /* LLGL has no 24-bit depth-only format, so report anything above 16 bits as 32-bit depth */
+        depthStencilFormat_ = (depthBits > 16 ? Format::D32Float : Format::D16UNorm);
+    }
 }
 
 void GLContext::SetDefaultColorFormat()

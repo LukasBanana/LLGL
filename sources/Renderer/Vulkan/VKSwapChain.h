@@ -118,7 +118,7 @@ class VKSwapChain final : public SwapChain
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const;
-        VkFormat PickDepthStencilFormat(int depthBits, int stencilBits) const;
+        VkFormat PickDepthStencilFormat(const SwapChainDescriptor& desc) const;
         std::uint32_t PickSwapChainSize(std::uint32_t swapBuffers) const;
 
         void AcquireNextColorBuffer();
@@ -141,7 +141,7 @@ class VKSwapChain final : public SwapChain
         VKPtr<VkSwapchainKHR>               swapChain_;
         VKRenderPass                        swapChainRenderPass_;
         VkSurfaceFormatKHR                  swapChainFormat_                            = {};
-        Format                              requestedColorFormat_                       = Format::Undefined; // SwapChainDescriptor::format; Undefined = pick automatically
+        Format                              requestedColorFormat_                       = Format::Undefined; // SwapChainDescriptor::colorFormat; Undefined = pick automatically
         std::uint32_t                       swapChainSamples_                           = 1;
         VkExtent2D                          swapChainExtent_                            = { 0, 0 };
         std::vector<VkImage>                swapChainImages_;

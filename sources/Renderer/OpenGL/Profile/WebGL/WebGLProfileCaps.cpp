@@ -234,6 +234,8 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
     const GLint version = GetGLESVersion();
     GLGetRenderingAttribs(caps, version);
     GLGetSupportedTextureFormats(caps.textureFormats);
+    caps.swapChainColorFormats          = GLGetSupportedSwapChainColorFormats();
+    caps.swapChainDepthStencilFormats   = GLGetSupportedSwapChainDepthStencilFormats();
     GLGetSupportedFeatures(caps.features, version);
     GLGetFeatureLimits(caps.limits, version);
     GLGetTextureLimits(caps.features, caps.limits, version);

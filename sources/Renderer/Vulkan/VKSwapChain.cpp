@@ -69,7 +69,7 @@ VKSwapChain::VKSwapChain(
     surface_                 { instance, vkDestroySurfaceKHR             },
     swapChain_               { device, vkDestroySwapchainKHR             },
     swapChainRenderPass_     { device                                    },
-    requestedColorFormat_    { desc.format                               },
+    requestedColorFormat_    { desc.colorFormat                          },
     swapChainSamples_        { GetClampedSamples(desc.samples)           },
     secondaryRenderPass_     { device                                    },
     depthStencilBuffer_      { device                                    },
@@ -81,7 +81,7 @@ VKSwapChain::VKSwapChain(
 
     /* Pick image count for swap-chain and depth-stencil format */
     numPreferredColorBuffers_   = PickSwapChainSize(desc.swapBuffers);
-    depthStencilFormat_         = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
+    depthStencilFormat_         = PickDepthStencilFormat(desc);
 
     /* Create Vulkan render passes, swap-chain, depth-stencil buffer, and multisampling color buffers */
     CreateDefaultAndSecondaryRenderPass();
@@ -752,24 +752,43 @@ VkExtent2D VKSwapChain::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCa
     };
 }
 
-static std::vector<VkFormat> GetDepthStencilFormatPreference(int depthBits, int stencilBits)
+static std::vector<VkFormat> GetDepthStencilFormatPreference(const SwapChainDescriptor& desc)
 {
-    if (stencilBits == 0)
+    /*
+    Honor an explicitly requested depth-stencil format and list the closest matches as fallback
+    in case the physical device does not support the requested one.
+    */
+    switch (desc.depthStencilFormat)
     {
-        if (depthBits == 32)
+        case Format::D16UNorm:
+            return { VK_FORMAT_D16_UNORM, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT };
+        case Format::D24UNormS8UInt:
+            return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT };
+        case Format::D32Float:
+            return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
+        case Format::D32FloatS8X24UInt:
+            return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+        default:
+            break;
+    }
+
+    /* Deduce the format from the deprecated depth/stencil bit sizes */
+    if (desc.stencilBits == 0)
+    {
+        if (desc.depthBits == 32)
             return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
     }
     else
     {
-        if (depthBits == 32)
+        if (desc.depthBits == 32)
             return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
     }
     return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM };
 }
 
-VkFormat VKSwapChain::PickDepthStencilFormat(int depthBits, int stencilBits) const
+VkFormat VKSwapChain::PickDepthStencilFormat(const SwapChainDescriptor& desc) const
 {
-    const std::vector<VkFormat> formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
+    const std::vector<VkFormat> formats = GetDepthStencilFormatPreference(desc);
     return VKFindSupportedImageFormat(
         physicalDevice_,
         formats.data(),
