@@ -141,7 +141,7 @@ class VKSwapChain final : public SwapChain
         VKPtr<VkSwapchainKHR>               swapChain_;
         VKRenderPass                        swapChainRenderPass_;
         VkSurfaceFormatKHR                  swapChainFormat_                            = {};
-        Format                              requestedColorFormat_                       = Format::Undefined; // SwapChainDescriptor::colorFormat; Undefined = pick automatically
+        VkFormat                            requestedColorFormat_ = VK_FORMAT_UNDEFINED; // SwapChainDescriptor::colorFormat; Undefined = pick automatically
         std::uint32_t                       swapChainSamples_                           = 1;
         VkExtent2D                          swapChainExtent_                            = { 0, 0 };
         std::vector<VkImage>                swapChainImages_;
