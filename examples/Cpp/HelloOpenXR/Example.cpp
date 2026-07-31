@@ -20,6 +20,7 @@
 #include <FileUtils.h>
 #include <LLGL/XR/XRSystem.h>
 #include <cstring>
+#include <cstdlib>
 
 /*
  * Helpers
@@ -63,8 +64,15 @@ class MyXRRenderer
 
     // When true, render both eyes in a single pass using multiview (VK_KHR_multiview / D3D12 view instancing)
     // instead of looping over per-eye swap-chains. Requested on the command line and only enabled if the active
-    // renderer reports RenderingFeatures::hasMultiView.
+    // renderer reports RenderingFeatures::hasMultiview.
     bool                            useMultiview    = false;
+
+    // Multi-sample count for the XR swap-chains; 1 disables MSAA. MSAA is the anti-aliasing method of
+    // choice in VR - edge shimmer is far more objectionable in a headset than on a monitor, and on the
+    // tile-based GPUs standalone headsets use the resolve happens in tile memory, so it costs much less
+    // than it would on a desktop GPU. Set from the command line / system property, then clamped in
+    // CreateSwapChains to what the renderer reports.
+    std::uint32_t                   sampleCount     = 4;
 
     LLGL::Buffer*                   vertexBuffer    = nullptr;
     LLGL::Buffer*                   indexBuffer     = nullptr;
@@ -91,7 +99,8 @@ public:
 
     // Brings up the XR runtime, the render system, the session, and the swap-chains.
     // If requestMultiview is true and the renderer supports it, both eyes are rendered in a single pass.
-    MyXRRenderer(const char* rendererModule, bool requestMultiview);
+    // requestSampleCount selects multi-sampling (1 disables it); it is clamped to the renderer's limits.
+    MyXRRenderer(const char* rendererModule, bool requestMultiview, std::uint32_t requestSampleCount);
 
     ~MyXRRenderer();
 
@@ -124,8 +133,10 @@ private:
 
 };
 
-MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview)
+MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, std::uint32_t requestSampleCount)
 {
+    sampleCount = (requestSampleCount > 0 ? requestSampleCount : 1);
+
     std::int32_t xrSystemDescFlags = 0;
 #if defined(_DEBUG)
     xrSystemDescFlags = LLGL::XRSystemFlags::DebugDevice;
@@ -182,7 +193,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview)
     if (requestMultiview)
     {
         const LLGL::RenderingCapabilities& caps = renderer->GetRenderingCaps();
-        if (caps.features.hasMultiView && caps.limits.maxViews >= viewCount)
+        if (caps.features.hasMultiview && caps.limits.maxViews >= viewCount)
         {
             useMultiview = true;
             LLGL::Log::Printf("Multiview: enabled (single-pass stereo, %u views)\n", viewCount);
@@ -239,9 +250,30 @@ void MyXRRenderer::CreateSwapChains()
     // swap-chain transparently falls back to a private depth texture that is not submitted.
     const LLGL::ArrayView<LLGL::Format> depthFormats = session->GetSupportedDepthFormats();
     const LLGL::Format depthFormat = (depthFormats.empty() ? LLGL::Format::D32Float : depthFormats[0]);
+
+    // Clamp the requested sample count to what this renderer can provide. The swap-chain renders into its own
+    // multi-sampled attachments and resolves into the runtime's images (which are always single-sampled, since
+    // they belong to the compositor), so both the color and depth limits apply.
+    const LLGL::RenderingLimits& limits = renderer->GetRenderingCaps().limits;
+    {
+        std::uint32_t maxSamples = limits.maxColorBufferSamples;
+        if (limits.maxDepthBufferSamples < maxSamples)
+            maxSamples = limits.maxDepthBufferSamples;
+        if (maxSamples > 0 && sampleCount > maxSamples)
+            sampleCount = maxSamples;
+        if (sampleCount == 0)
+            sampleCount = 1;
+    }
+    LLGL::Log::Printf("Multi-sampling: %ux\n", sampleCount);
+
+    // Reported after the sample count is known, because it is not decided by the runtime alone: submitting depth
+    // needs XR_KHR_composition_layer_depth AND no multi-sampling (a multi-sampled depth attachment cannot be
+    // resolved into the runtime's single-sampled depth image), so with MSAA the swap-chain keeps depth private.
     LLGL::Log::Printf(
         "Depth submission: %s\n",
-        depthFormats.empty() ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" : "enabled"
+        depthFormats.empty()  ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
+        sampleCount > 1       ? "disabled (not available with multi-sampling)" :
+                                "enabled"
     );
 
     // Requesting a depth-stencil format makes the swap-chain provision and manage the depth buffer and per-image
@@ -255,6 +287,7 @@ void MyXRRenderer::CreateSwapChains()
         swapChainDesc.depthStencilFormat = depthFormat;
         swapChainDesc.resolution         = { viewConfigs[0].recommendedImageExtent.width, viewConfigs[0].recommendedImageExtent.height };
         swapChainDesc.arrayLayers        = viewCount;
+        swapChainDesc.sampleCount        = sampleCount;
 
         swapChains.resize(1);
         swapChains[0] = session->CreateSwapChain(swapChainDesc);
@@ -271,6 +304,7 @@ void MyXRRenderer::CreateSwapChains()
             swapChainDesc.format             = colorFormat;
             swapChainDesc.depthStencilFormat = depthFormat;
             swapChainDesc.resolution         = { viewConfigs[eye].recommendedImageExtent.width, viewConfigs[eye].recommendedImageExtent.height };
+            swapChainDesc.sampleCount        = sampleCount;
 
             swapChains[eye] = session->CreateSwapChain(swapChainDesc);
             if (swapChains[eye] == nullptr)
@@ -328,6 +362,10 @@ void MyXRRenderer::CreateResources()
     pipelineDesc.depth.compareOp        = LLGL::CompareOp::Less;
     pipelineDesc.rasterizer.cullMode    = LLGL::CullMode::Back;
     pipelineDesc.rasterizer.frontCCW    = true;
+    // Required whenever the swap-chains are multi-sampled: a PSO's sample count must match the render pass
+    // it is used with, and LLGL only takes it from the render pass when multi-sampling is enabled here -
+    // otherwise the PSO is built for a single sample and mismatches a multi-sampled pass.
+    pipelineDesc.rasterizer.multiSampleEnabled = (sampleCount > 1);
     // Vulkan needs the PSO to know the render pass it'll be used with. All XR render targets share
     // the same color/depth attachment formats, so any swap-chain's render pass is compatible.
     pipelineDesc.renderPass = swapChains.front()->GetRenderPass();
@@ -589,11 +627,11 @@ bool MyXRRenderer::RenderFrame()
  * Main function
  */
 
-static void RunHelloOpenXR(const char* rendererModule, bool requestMultiview)
+static void RunHelloOpenXR(const char* rendererModule, bool requestMultiview, std::uint32_t requestSampleCount)
 {
     LLGL::Log::Printf("Requesting renderer module: %s\n", rendererModule);
 
-    MyXRRenderer xrRenderer{ rendererModule, requestMultiview };
+    MyXRRenderer xrRenderer{ rendererModule, requestMultiview, requestSampleCount };
     xrRenderer.CreateResources();
 
     // Main loop: Surface::ProcessEvents drives the OS/Android application lifecycle, while
@@ -624,6 +662,23 @@ static bool AndroidRequestMultiview()
     return true; // default: request multiview (falls back to per-eye if unsupported)
 }
 
+// Reads the requested multi-sample count from the "debug.llgl.samples" system property, so MSAA can be
+// toggled on the headset without rebuilding (e.g. to A/B its cost, or to isolate a rendering problem):
+//   adb shell setprop debug.llgl.samples 1   # no multi-sampling
+//   adb shell setprop debug.llgl.samples 4   # 4x MSAA (also the default when the property is unset)
+// The property must be set before the app launches (it is read once at startup).
+static std::uint32_t AndroidRequestSampleCount()
+{
+    char value[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.llgl.samples", value) > 0)
+    {
+        const int samples = std::atoi(value);
+        if (samples > 0)
+            return static_cast<std::uint32_t>(samples);
+    }
+    return 4; // default: 4x MSAA (clamped to the renderer's limits at swap-chain creation)
+}
+
 void android_main(android_app* state)
 {
     LLGL::Log::RegisterCallbackStd();
@@ -638,7 +693,11 @@ void android_main(android_app* state)
         // forced off via the debug.llgl.multiview system property (see AndroidRequestMultiview).
         const bool requestMultiview = AndroidRequestMultiview();
         LLGL::Log::Printf("Android multiview request: %s (debug.llgl.multiview)\n", requestMultiview ? "on" : "off (per-eye)");
-        RunHelloOpenXR("Vulkan", requestMultiview);
+
+        const std::uint32_t requestSampleCount = AndroidRequestSampleCount();
+        LLGL::Log::Printf("Android sample count request: %u (debug.llgl.samples)\n", requestSampleCount);
+
+        RunHelloOpenXR("Vulkan", requestMultiview, requestSampleCount);
     }
     catch (const std::exception& e)
     {
@@ -652,22 +711,30 @@ int main(int argc, char* argv[])
 {
     LLGL::Log::RegisterCallbackStd();
 
-    // Command line: an optional renderer module name and an optional "--multiview" (or "-mv") flag, in any order.
+    // Command line: an optional renderer module name, an optional "--multiview" (or "-mv") flag, and an
+    // optional "--samples=N", in any order.
     // The renderer module defaults to Vulkan. Supported XR backends: "Vulkan", "Direct3D11", "Direct3D12".
     // Multiview (single-pass stereo) is supported by Vulkan and Direct3D12; it falls back to per-eye otherwise.
+    // Multi-sampling defaults to 4x; "--samples=1" disables it. The count is clamped to the renderer's limits.
     const char* rendererModule = "Vulkan";
     bool requestMultiview = false;
+    std::uint32_t requestSampleCount = 4;
     for (int i = 1; i < argc; ++i)
     {
         if (std::strcmp(argv[i], "--multiview") == 0 || std::strcmp(argv[i], "-mv") == 0)
             requestMultiview = true;
+        else if (std::strncmp(argv[i], "--samples=", 10) == 0)
+        {
+            const int samples = std::atoi(argv[i] + 10);
+            requestSampleCount = (samples > 0 ? static_cast<std::uint32_t>(samples) : 1);
+        }
         else
             rendererModule = argv[i];
     }
 
     try
     {
-        RunHelloOpenXR(rendererModule, requestMultiview);
+        RunHelloOpenXR(rendererModule, requestMultiview, requestSampleCount);
     }
     catch (const std::exception& e)
     {

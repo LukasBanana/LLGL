@@ -19,6 +19,8 @@ func convertSwapChainDescriptor(dst *C.LLGLSwapChainDescriptor, src *SwapChainDe
 	dst.debugName			= C.CString(src.DebugName)
 	dst.resolution.width	= C.uint32_t(src.Resolution.Width)
 	dst.resolution.height	= C.uint32_t(src.Resolution.Height)
+	dst.colorFormat			= C.LLGLFormat(src.ColorFormat)
+	dst.depthStencilFormat	= C.LLGLFormat(src.DepthStencilFormat)
 	dst.colorBits			= C.int(src.ColorBits)
 	dst.depthBits			= C.int(src.DepthBits)
 	dst.stencilBits			= C.int(src.StencilBits)

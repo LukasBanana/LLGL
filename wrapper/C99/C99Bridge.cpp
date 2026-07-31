@@ -53,12 +53,22 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     wrapper.textureFormats.resize(src.textureFormats.size());
     ::memcpy(wrapper.textureFormats.data(), src.textureFormats.data(), sizeof(LLGLFormat) * src.textureFormats.size());
 
-    dst.screenOrigin        = static_cast<LLGLScreenOrigin>(src.screenOrigin);
-    dst.clippingRange       = static_cast<LLGLClippingRange>(src.clippingRange);
-    dst.numShadingLanguages = wrapper.shadingLanguages.size();
-    dst.shadingLanguages    = wrapper.shadingLanguages.data();
-    dst.numTextureFormats   = wrapper.textureFormats.size();
-    dst.textureFormats      = wrapper.textureFormats.data();
+    wrapper.swapChainColorFormats.resize(src.swapChainColorFormats.size());
+    ::memcpy(wrapper.swapChainColorFormats.data(), src.swapChainColorFormats.data(), sizeof(LLGLFormat) * src.swapChainColorFormats.size());
+
+    wrapper.swapChainDepthStencilFormats.resize(src.swapChainDepthStencilFormats.size());
+    ::memcpy(wrapper.swapChainDepthStencilFormats.data(), src.swapChainDepthStencilFormats.data(), sizeof(LLGLFormat) * src.swapChainDepthStencilFormats.size());
+
+    dst.screenOrigin                        = static_cast<LLGLScreenOrigin>(src.screenOrigin);
+    dst.clippingRange                       = static_cast<LLGLClippingRange>(src.clippingRange);
+    dst.numShadingLanguages                 = wrapper.shadingLanguages.size();
+    dst.shadingLanguages                    = wrapper.shadingLanguages.data();
+    dst.numTextureFormats                   = wrapper.textureFormats.size();
+    dst.textureFormats                      = wrapper.textureFormats.data();
+    dst.numSwapChainColorFormats            = wrapper.swapChainColorFormats.size();
+    dst.swapChainColorFormats               = wrapper.swapChainColorFormats.data();
+    dst.numSwapChainDepthStencilFormats     = wrapper.swapChainDepthStencilFormats.size();
+    dst.swapChainDepthStencilFormats        = wrapper.swapChainDepthStencilFormats.data();
     ::memcpy(&(dst.features), &(src.features), sizeof(LLGLRenderingFeatures));
     ::memcpy(&(dst.limits), &(src.limits), sizeof(LLGLRenderingLimits));
 }

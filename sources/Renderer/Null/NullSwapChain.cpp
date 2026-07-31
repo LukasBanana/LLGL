@@ -12,23 +12,31 @@ namespace LLGL
 {
 
 
-static Format ChooseColorFormat(int /*colorBits*/)
+static Format ChooseColorFormat(const SwapChainDescriptor& desc)
 {
+    /* Honor an explicitly requested color format and ignore the deprecated 'colorBits' field otherwise */
+    if (IsColorFormat(desc.colorFormat))
+        return desc.colorFormat;
     return Format::RGBA8UNorm;
 }
 
-static Format ChooseDepthStencilFormat(int depthBits, int stencilBits)
+static Format ChooseDepthStencilFormat(const SwapChainDescriptor& desc)
 {
-    if (depthBits == 32)
+    /* Honor an explicitly requested depth-stencil format */
+    if (IsDepthOrStencilFormat(desc.depthStencilFormat))
+        return desc.depthStencilFormat;
+
+    /* Deduce the format from the deprecated depth/stencil bit sizes */
+    if (desc.depthBits == 32)
     {
-        if (stencilBits != 0)
+        if (desc.stencilBits != 0)
             return Format::D32FloatS8X24UInt;
         else
             return Format::D32Float;
     }
     else
     {
-        if (stencilBits != 0)
+        if (desc.stencilBits != 0)
             return Format::D24UNormS8UInt;
         else
             return Format::D32Float;
@@ -42,8 +50,8 @@ NullSwapChain::NullSwapChain(
 :
     SwapChain           { desc                                                       },
     samples_            { desc.samples                                               },
-    colorFormat_        { ChooseColorFormat(desc.colorBits)                          },
-    depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
+    colorFormat_        { ChooseColorFormat(desc)                                    },
+    depthStencilFormat_ { ChooseDepthStencilFormat(desc)                             }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 

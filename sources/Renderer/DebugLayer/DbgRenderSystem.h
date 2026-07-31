@@ -61,6 +61,8 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName);
 
+        void ValidateSwapChainDesc(const SwapChainDescriptor& swapChainDesc);
+
         void ValidateCommandBufferDesc(const CommandBufferDescriptor& commandBufferDesc);
 
         void ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut = nullptr);

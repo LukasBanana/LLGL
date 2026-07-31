@@ -110,6 +110,12 @@ void VKDeviceMemoryManager::PrintBlocks(std::ostream& s, const std::string& titl
 #endif
 
 
+bool VKDeviceMemoryManager::SupportsMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
+{
+    return VKHasMemoryType(memoryProperties_, memoryTypeBits, properties);
+}
+
+
 /*
  * ======= Private: =======
  */

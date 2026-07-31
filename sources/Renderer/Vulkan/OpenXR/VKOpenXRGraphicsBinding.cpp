@@ -433,7 +433,9 @@ bool VKOpenXRGraphicsBinding::EnumerateSwapchainImages(
     params.extent           = { swapChainDesc.resolution.width, swapChainDesc.resolution.height, 1u };
     params.numMipLevels     = 1;
     params.numArrayLayers   = swapChainDesc.arrayLayers;
-    params.sampleCountBits  = VKTypes::ToVkSampleCountBits(swapChainDesc.sampleCount);
+    /* Runtime images are single-sampled regardless of the requested sample count; with MSAA
+       they are the resolve target, not the render target (see OpenXRSession::CreateSwapchain). */
+    params.sampleCountBits  = VK_SAMPLE_COUNT_1_BIT;
     params.initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED;
 
     if (kind == SwapchainKind::DepthStencil)

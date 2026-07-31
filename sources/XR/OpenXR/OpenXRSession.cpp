@@ -179,7 +179,11 @@ bool OpenXRSession::CreateNativeSwapChain(
     XrSwapchainCreateInfo createInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
     createInfo.usageFlags       = usageFlags;
     createInfo.format           = nativeFormat;
-    createInfo.sampleCount      = swapChainDesc.sampleCount;
+    /* Runtime images are always single-sampled: they are what the compositor consumes, and
+       multisampled swap-chains are inconsistently supported across runtimes. When the
+       application asks for MSAA, the swap-chain renders into its own multisampled attachment
+       and resolves into these images instead (see OpenXRSwapChain::CreateRenderTargets). */
+    createInfo.sampleCount      = 1;
     createInfo.width            = swapChainDesc.resolution.width;
     createInfo.height           = swapChainDesc.resolution.height;
     createInfo.faceCount        = 1;
@@ -229,8 +233,17 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
     {
         bool depthReady = false;
 
+        /*
+        Depth cannot be submitted while multi-sampling: the swap-chain renders into its own multi-sampled depth
+        attachment, and resolving that into the runtime's single-sampled depth image needs depth-stencil resolve,
+        which is not implemented here. Creating the companion anyway would hand the compositor an image nothing
+        ever writes to, and it would be used for reprojection - so fall through to the private depth texture,
+        which is honest about not being submitted.
+        */
+        const bool depthSubmissionPossible = (depthSubmissionEnabled_ && swapChainDesc.sampleCount <= 1);
+
         // Prefer a depth swap-chain submitted to the runtime for reprojection, if the runtime supports it.
-        if (depthSubmissionEnabled_)
+        if (depthSubmissionPossible)
         {
             XRSwapChainDescriptor depthDesc;
             depthDesc.format        = swapChainDesc.depthStencilFormat;

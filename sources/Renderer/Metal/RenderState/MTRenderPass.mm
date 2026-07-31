@@ -118,28 +118,53 @@ static MTAttachmentFormat MakeDefaultMTAttachmentFormat(MTLPixelFormat format)
     return fmt;
 }
 
-static MTLPixelFormat GetColorMTLPixelFormat(int /*colorBits*/)
+static MTLPixelFormat GetColorMTLPixelFormat(const SwapChainDescriptor& desc)
 {
+    /* Honor an explicitly requested color format and ignore the deprecated 'colorBits' field otherwise */
+    if (IsColorFormat(desc.colorFormat))
+        return MTTypes::ToMTLPixelFormat(desc.colorFormat);
     return MTLPixelFormatBGRA8Unorm;
 }
 
-static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBits, id<MTLDevice> device)
+static MTLPixelFormat GetDepth24Stencil8MTLPixelFormat(id<MTLDevice> device)
 {
-    if (stencilBits == 8)
+    #ifdef LLGL_OS_MACOS
+    if (device != nil && device.depth24Stencil8PixelFormatSupported)
+        return MTLPixelFormatDepth24Unorm_Stencil8;
+    #endif
+    return MTLPixelFormatDepth32Float_Stencil8;
+}
+
+static MTLPixelFormat GetDepth16MTLPixelFormat()
+{
+    if (@available(iOS 13.0, *))
+        return MTLPixelFormatDepth16Unorm;
+    return MTLPixelFormatDepth32Float;
+}
+
+static MTLPixelFormat GetDepthStencilMTLPixelFormat(const SwapChainDescriptor& desc, id<MTLDevice> device)
+{
+    /* Honor an explicitly requested depth-stencil format */
+    switch (desc.depthStencilFormat)
     {
-        #ifdef LLGL_OS_MACOS
-        if (depthBits == 24 && device != nil && device.depth24Stencil8PixelFormatSupported)
-            return MTLPixelFormatDepth24Unorm_Stencil8;
-        #endif
+        case Format::D16UNorm:          return GetDepth16MTLPixelFormat();
+        case Format::D24UNormS8UInt:    return GetDepth24Stencil8MTLPixelFormat(device);
+        case Format::D32Float:          return MTLPixelFormatDepth32Float;
+        case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
+        default:                        break;
+    }
+
+    /* Deduce the format from the deprecated depth/stencil bit sizes */
+    if (desc.stencilBits == 8)
+    {
+        if (desc.depthBits == 24)
+            return GetDepth24Stencil8MTLPixelFormat(device);
         return MTLPixelFormatDepth32Float_Stencil8;
     }
     else
     {
-        if (@available(iOS 13.0, *))
-        {
-            if (depthBits == 16)
-                return MTLPixelFormatDepth16Unorm;
-        }
+        if (desc.depthBits == 16)
+            return GetDepth16MTLPixelFormat();
         return MTLPixelFormatDepth32Float;
     }
 }
@@ -148,14 +173,28 @@ static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBi
 MTRenderPass::MTRenderPass(id<MTLDevice> device, const SwapChainDescriptor& desc) :
     sampleCount_ { GetMTRenderPassSampleCount(device, desc.samples) }
 {
-    const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc.colorBits);
-    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.depthBits, desc.stencilBits, device);
+    const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc);
+    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc, device);
 
     colorAttachments_ = { MakeDefaultMTAttachmentFormat(colorFormat) };
 
-    if (desc.depthBits > 0)
+    /* Determine which attachments are used from the requested format or the deprecated bit sizes otherwise */
+    const bool hasDepthAttachment =
+    (
+        desc.depthStencilFormat != Format::Undefined ?
+            IsDepthFormat(desc.depthStencilFormat) :
+            desc.depthBits > 0
+    );
+    const bool hasStencilAttachment =
+    (
+        desc.depthStencilFormat != Format::Undefined ?
+            IsStencilFormat(desc.depthStencilFormat) :
+            desc.stencilBits > 0
+    );
+
+    if (hasDepthAttachment)
         depthAttachment_ = MakeDefaultMTAttachmentFormat(depthStencilFormat);
-    if (desc.stencilBits > 0)
+    if (hasStencilAttachment)
         stencilAttachment_ = MakeDefaultMTAttachmentFormat(depthStencilFormat);
 }
 

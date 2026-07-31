@@ -44,6 +44,11 @@ class VKDeviceMemoryManager
         VKDeviceMemoryManager(const VKDeviceMemoryManager&) = delete;
         VKDeviceMemoryManager& operator = (const VKDeviceMemoryManager&) = delete;
 
+        // Returns true if this device exposes a memory type with the specified bits and properties.
+        // Allocate() traps when no such type exists, so probe with this before requesting memory
+        // properties that are optional (e.g. VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT).
+        bool SupportsMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
+
         // Allocates a new device memory block of the specified size and with the specified attributes.
         VKDeviceMemoryRegion* Allocate(
             VkDeviceSize            size,

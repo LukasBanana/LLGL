@@ -929,6 +929,36 @@ struct RenderingCapabilities
     std::vector<Format>             textureFormats;
 
     /**
+    \brief Specifies the list of color formats a swap-chain color buffer can have.
+    \remarks This is the set of formats SwapChain::GetColorFormat can return, i.e. a subset of \c textureFormats,
+    since a swap-chain color buffer must also be presentable and not every renderable format can be scanned out
+    by the display hardware. Requesting a format from this list via SwapChainDescriptor::colorFormat is a preference,
+    not a guarantee: if the renderer cannot honor it, it falls back to its automatic selection.
+    Use SwapChain::GetColorFormat to determine the format that was actually used.
+    \note With Vulkan, final support also depends on the presentation surface, which is not known until a swap-chain
+    is created, so a format listed here may still be rejected by a particular surface.
+    \note With Direct3D 11, Direct3D 12, and OpenGL, SwapChainDescriptor::colorFormat is currently not honored at all
+    and the color buffer always uses the format the backend picks itself.
+    \see SwapChainDescriptor::colorFormat
+    \see SwapChain::GetColorFormat
+    */
+    std::vector<Format>             swapChainColorFormats;
+
+    /**
+    \brief Specifies the list of depth-stencil formats a swap-chain depth-stencil buffer can have.
+    \remarks This is the set of formats SwapChain::GetDepthStencilFormat can return and the set of formats that can be
+    requested via SwapChainDescriptor::depthStencilFormat, i.e. a subset of Format::D16UNorm, Format::D24UNormS8UInt,
+    Format::D32Float, and Format::D32FloatS8X24UInt. If a requested format is not in this list, the renderer falls back
+    to its automatic selection. Use SwapChain::GetDepthStencilFormat to determine the format that was actually used.
+    \note With OpenGL, the depth-stencil buffer belongs to the pixel format the windowing system selects, so a request
+    is only a hint for that selection and the driver commonly substitutes a different format. Only the format that can
+    be relied upon is reported here; SwapChain::GetDepthStencilFormat may still return another one.
+    \see SwapChainDescriptor::depthStencilFormat
+    \see SwapChain::GetDepthStencilFormat
+    */
+    std::vector<Format>             swapChainDepthStencilFormats;
+
+    /**
     \brief Specifies all supported hardware features.
     \remarks Especially with OpenGL these features can vary between different hardware and GL versions.
     */

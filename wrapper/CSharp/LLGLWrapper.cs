@@ -2174,12 +2174,14 @@ namespace LLGL
 
     public class RenderingCapabilities
     {
-        public ScreenOrigin      ScreenOrigin { get; set; }     = ScreenOrigin.UpperLeft;
-        public ClippingRange     ClippingRange { get; set; }    = ClippingRange.ZeroToOne;
+        public ScreenOrigin      ScreenOrigin { get; set; }                 = ScreenOrigin.UpperLeft;
+        public ClippingRange     ClippingRange { get; set; }                = ClippingRange.ZeroToOne;
         public ShadingLanguage[] ShadingLanguages { get; set; }
         public Format[]          TextureFormats { get; set; }
-        public RenderingFeatures Features { get; set; }         = new RenderingFeatures();
-        public RenderingLimits   Limits { get; set; }           = new RenderingLimits();
+        public Format[]          SwapChainColorFormats { get; set; }
+        public Format[]          SwapChainDepthStencilFormats { get; set; }
+        public RenderingFeatures Features { get; set; }                     = new RenderingFeatures();
+        public RenderingLimits   Limits { get; set; }                       = new RenderingLimits();
 
         public RenderingCapabilities() { }
 
@@ -2194,20 +2196,30 @@ namespace LLGL
             {
                 unsafe
                 {
-                    ScreenOrigin     = value.screenOrigin;
-                    ClippingRange    = value.clippingRange;
-                    ShadingLanguages = new ShadingLanguage[(int)value.numShadingLanguages];
+                    ScreenOrigin                 = value.screenOrigin;
+                    ClippingRange                = value.clippingRange;
+                    ShadingLanguages             = new ShadingLanguage[(int)value.numShadingLanguages];
                     for (int i = 0; i < ShadingLanguages.Length; ++i)
                     {
                         ShadingLanguages[i] = value.shadingLanguages[i];
                     }
-                    TextureFormats   = new Format[(int)value.numTextureFormats];
+                    TextureFormats               = new Format[(int)value.numTextureFormats];
                     for (int i = 0; i < TextureFormats.Length; ++i)
                     {
                         TextureFormats[i] = value.textureFormats[i];
                     }
-                    Features.Native  = value.features;
-                    Limits.Native    = value.limits;
+                    SwapChainColorFormats        = new Format[(int)value.numSwapChainColorFormats];
+                    for (int i = 0; i < SwapChainColorFormats.Length; ++i)
+                    {
+                        SwapChainColorFormats[i] = value.swapChainColorFormats[i];
+                    }
+                    SwapChainDepthStencilFormats = new Format[(int)value.numSwapChainDepthStencilFormats];
+                    for (int i = 0; i < SwapChainDepthStencilFormats.Length; ++i)
+                    {
+                        SwapChainDepthStencilFormats[i] = value.swapChainDepthStencilFormats[i];
+                    }
+                    Features.Native              = value.features;
+                    Limits.Native                = value.limits;
                 }
             }
         }
@@ -2355,28 +2367,32 @@ namespace LLGL
     {
         public SwapChainDescriptor() { }
 
-        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false, bool resizable = false)
+        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), Format colorFormat = Format.Undefined, Format depthStencilFormat = Format.Undefined, int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false, bool resizable = false)
         {
-            DebugName   = debugName;
-            Resolution  = resolution;
-            ColorBits   = colorBits;
-            DepthBits   = depthBits;
-            StencilBits = stencilBits;
-            Samples     = samples;
-            SwapBuffers = swapBuffers;
-            Fullscreen  = fullscreen;
-            Resizable   = resizable;
+            DebugName          = debugName;
+            Resolution         = resolution;
+            ColorFormat        = colorFormat;
+            DepthStencilFormat = depthStencilFormat;
+            ColorBits          = colorBits;
+            DepthBits          = depthBits;
+            StencilBits        = stencilBits;
+            Samples            = samples;
+            SwapBuffers        = swapBuffers;
+            Fullscreen         = fullscreen;
+            Resizable          = resizable;
         }
 
-        public AnsiString DebugName { get; set; }   = null;
-        public Extent2D   Resolution { get; set; }  = new Extent2D();
-        public int        ColorBits { get; set; }   = 32;
-        public int        DepthBits { get; set; }   = 24;
-        public int        StencilBits { get; set; } = 8;
-        public int        Samples { get; set; }     = 1;
-        public int        SwapBuffers { get; set; } = 2;
-        public bool       Fullscreen { get; set; }  = false;
-        public bool       Resizable { get; set; }   = false;
+        public AnsiString DebugName { get; set; }          = null;
+        public Extent2D   Resolution { get; set; }         = new Extent2D();
+        public Format     ColorFormat { get; set; }        = Format.Undefined;
+        public Format     DepthStencilFormat { get; set; } = Format.Undefined;
+        public int        ColorBits { get; set; }          = 32;
+        public int        DepthBits { get; set; }          = 24;
+        public int        StencilBits { get; set; }        = 8;
+        public int        Samples { get; set; }            = 1;
+        public int        SwapBuffers { get; set; }        = 2;
+        public bool       Fullscreen { get; set; }         = false;
+        public bool       Resizable { get; set; }          = false;
 
         internal NativeLLGL.SwapChainDescriptor Native
         {
@@ -2389,14 +2405,16 @@ namespace LLGL
                     {
                         native.debugName = debugNamePtr;
                     }
-                    native.resolution  = Resolution;
-                    native.colorBits   = ColorBits;
-                    native.depthBits   = DepthBits;
-                    native.stencilBits = StencilBits;
-                    native.samples     = Samples;
-                    native.swapBuffers = SwapBuffers;
-                    native.fullscreen  = Fullscreen;
-                    native.resizable   = Resizable;
+                    native.resolution         = Resolution;
+                    native.colorFormat        = ColorFormat;
+                    native.depthStencilFormat = DepthStencilFormat;
+                    native.colorBits          = ColorBits;
+                    native.depthBits          = DepthBits;
+                    native.stencilBits        = StencilBits;
+                    native.samples            = Samples;
+                    native.swapBuffers        = SwapBuffers;
+                    native.fullscreen         = Fullscreen;
+                    native.resizable          = Resizable;
                 }
                 return native;
             }
@@ -4153,12 +4171,16 @@ namespace LLGL
 
         public unsafe struct RenderingCapabilities
         {
-            public ScreenOrigin      screenOrigin;        /* = ScreenOrigin.UpperLeft */
-            public ClippingRange     clippingRange;       /* = ClippingRange.ZeroToOne */
+            public ScreenOrigin      screenOrigin;                    /* = ScreenOrigin.UpperLeft */
+            public ClippingRange     clippingRange;                   /* = ClippingRange.ZeroToOne */
             public IntPtr            numShadingLanguages;
             public ShadingLanguage*  shadingLanguages;
             public IntPtr            numTextureFormats;
             public Format*           textureFormats;
+            public IntPtr            numSwapChainColorFormats;
+            public Format*           swapChainColorFormats;
+            public IntPtr            numSwapChainDepthStencilFormats;
+            public Format*           swapChainDepthStencilFormats;
             public RenderingFeatures features;
             public RenderingLimits   limits;
         }
@@ -4199,17 +4221,19 @@ namespace LLGL
 
         public unsafe struct SwapChainDescriptor
         {
-            public byte*    debugName;   /* = null */
+            public byte*    debugName;          /* = null */
             public Extent2D resolution;
-            public int      colorBits;   /* = 32 */
-            public int      depthBits;   /* = 24 */
-            public int      stencilBits; /* = 8 */
-            public int      samples;     /* = 1 */
-            public int      swapBuffers; /* = 2 */
+            public Format   colorFormat;        /* = Format.Undefined */
+            public Format   depthStencilFormat; /* = Format.Undefined */
+            public int      colorBits;          /* = 32 */
+            public int      depthBits;          /* = 24 */
+            public int      stencilBits;        /* = 8 */
+            public int      samples;            /* = 1 */
+            public int      swapBuffers;        /* = 2 */
             [MarshalAs(UnmanagedType.I1)]
-            public bool     fullscreen;  /* = false */
+            public bool     fullscreen;         /* = false */
             [MarshalAs(UnmanagedType.I1)]
-            public bool     resizable;   /* = false */
+            public bool     resizable;          /* = false */
         }
 
         public unsafe struct TextureDescriptor

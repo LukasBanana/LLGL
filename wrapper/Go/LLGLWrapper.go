@@ -1399,12 +1399,14 @@ type RenderSystemDescriptor struct {
 }
 
 type RenderingCapabilities struct {
-    ScreenOrigin     ScreenOrigin      /* = ScreenOriginUpperLeft */
-    ClippingRange    ClippingRange     /* = ClippingRangeZeroToOne */
-    ShadingLanguages []ShadingLanguage /* = nil */
-    TextureFormats   []Format          /* = nil */
-    Features         RenderingFeatures
-    Limits           RenderingLimits
+    ScreenOrigin                 ScreenOrigin      /* = ScreenOriginUpperLeft */
+    ClippingRange                ClippingRange     /* = ClippingRangeZeroToOne */
+    ShadingLanguages             []ShadingLanguage /* = nil */
+    TextureFormats               []Format          /* = nil */
+    SwapChainColorFormats        []Format          /* = nil */
+    SwapChainDepthStencilFormats []Format          /* = nil */
+    Features                     RenderingFeatures
+    Limits                       RenderingLimits
 }
 
 type AttachmentDescriptor struct {
@@ -1437,15 +1439,17 @@ type ComputeShaderAttributes struct {
 }
 
 type SwapChainDescriptor struct {
-    DebugName   string   /* = "" */
-    Resolution  Extent2D
-    ColorBits   int      /* = 32 */
-    DepthBits   int      /* = 24 */
-    StencilBits int      /* = 8 */
-    Samples     uint32   /* = 1 */
-    SwapBuffers uint32   /* = 2 */
-    Fullscreen  bool     /* = false */
-    Resizable   bool     /* = false */
+    DebugName          string   /* = "" */
+    Resolution         Extent2D
+    ColorFormat        Format   /* = FormatUndefined */
+    DepthStencilFormat Format   /* = FormatUndefined */
+    ColorBits          int      /* = 32 */
+    DepthBits          int      /* = 24 */
+    StencilBits        int      /* = 8 */
+    Samples            uint32   /* = 1 */
+    SwapBuffers        uint32   /* = 2 */
+    Fullscreen         bool     /* = false */
+    Resizable          bool     /* = false */
 }
 
 type TextureSwizzleRGBA struct {

@@ -52,27 +52,27 @@ static VKPtr<VkFence> NullVkFence(VkDevice device)
 }
 
 VKSwapChain::VKSwapChain(
-    VkInstance                      instance,
-    VkPhysicalDevice                physicalDevice,
-    VkDevice                        device,
-    VKDeviceMemoryManager&          deviceMemoryMngr,
-    const VKSharedCommandQueueSPtr& graphicsQueue,
-    const SwapChainDescriptor&      desc,
-    const std::shared_ptr<Surface>& surface,
-    const RendererInfo&             rendererInfo)
-:
-    SwapChain                { desc                                      },
-    instance_                { instance                                  },
-    physicalDevice_          { physicalDevice                            },
-    device_                  { device                                    },
-    deviceMemoryMngr_        { deviceMemoryMngr                          },
-    surface_                 { instance, vkDestroySurfaceKHR             },
-    swapChain_               { device, vkDestroySwapchainKHR             },
-    swapChainRenderPass_     { device                                    },
-    swapChainSamples_        { GetClampedSamples(desc.samples)           },
-    secondaryRenderPass_     { device                                    },
-    depthStencilBuffer_      { device                                    },
-    graphicsQueue_           { graphicsQueue                             }
+    VkInstance instance,
+    VkPhysicalDevice physicalDevice,
+    VkDevice device,
+    VKDeviceMemoryManager &deviceMemoryMngr,
+    const VKSharedCommandQueueSPtr &graphicsQueue,
+    const SwapChainDescriptor &desc,
+    const std::shared_ptr<Surface> &surface,
+    const RendererInfo &rendererInfo)
+    : SwapChain{desc},
+      instance_{instance},
+      physicalDevice_{physicalDevice},
+      device_{device},
+      deviceMemoryMngr_{deviceMemoryMngr},
+      surface_{instance, vkDestroySurfaceKHR},
+      swapChain_{device, vkDestroySwapchainKHR},
+      swapChainRenderPass_{device},
+      requestedColorFormat_{VKTypes::Map(desc.colorFormat)},
+      swapChainSamples_{GetClampedSamples(desc.samples)},
+      secondaryRenderPass_{device},
+      depthStencilBuffer_{device},
+      graphicsQueue_{graphicsQueue}
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
@@ -80,7 +80,7 @@ VKSwapChain::VKSwapChain(
 
     /* Pick image count for swap-chain and depth-stencil format */
     numPreferredColorBuffers_   = PickSwapChainSize(desc.swapBuffers);
-    depthStencilFormat_         = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
+    depthStencilFormat_         = PickDepthStencilFormat(desc);
 
     /* Create Vulkan render passes, swap-chain, depth-stencil buffer, and multisampling color buffers */
     CreateDefaultAndSecondaryRenderPass();
@@ -711,6 +711,23 @@ VkSurfaceFormatKHR VKSwapChain::PickSwapSurfaceFormat(const std::vector<VkSurfac
     if (surfaceFormats.empty())
         LLGL_TRAP("no Vulkan surface formats available");
 
+    /* Honor an explicitly requested format when the surface supports it.
+       This is how an application asks for an sRGB swap-chain, so the hardware performs the
+       linear-to-sRGB conversion on write instead of the shader. */
+    if (requestedColorFormat_ != VK_FORMAT_UNDEFINED)
+    {
+        if (surfaceFormats.size() == 1 && surfaceFormats.front().format == VK_FORMAT_UNDEFINED)
+            return {requestedColorFormat_, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+
+        for (const VkSurfaceFormatKHR& format : surfaceFormats)
+        {
+            if (format.format == requestedColorFormat_ && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                return format;
+        }
+
+        /* Not supported by this surface - fall through to the automatic selection below. */
+    }
+
     if (surfaceFormats.size() == 1 && surfaceFormats.front().format == VK_FORMAT_UNDEFINED)
         return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
@@ -732,24 +749,43 @@ VkExtent2D VKSwapChain::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCa
     };
 }
 
-static std::vector<VkFormat> GetDepthStencilFormatPreference(int depthBits, int stencilBits)
+static std::vector<VkFormat> GetDepthStencilFormatPreference(const SwapChainDescriptor& desc)
 {
-    if (stencilBits == 0)
+    /*
+    Honor an explicitly requested depth-stencil format and list the closest matches as fallback
+    in case the physical device does not support the requested one.
+    */
+    switch (desc.depthStencilFormat)
     {
-        if (depthBits == 32)
+        case Format::D16UNorm:
+            return { VK_FORMAT_D16_UNORM, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT };
+        case Format::D24UNormS8UInt:
+            return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT };
+        case Format::D32Float:
+            return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
+        case Format::D32FloatS8X24UInt:
+            return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+        default:
+            break;
+    }
+
+    /* Deduce the format from the deprecated depth/stencil bit sizes */
+    if (desc.stencilBits == 0)
+    {
+        if (desc.depthBits == 32)
             return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
     }
     else
     {
-        if (depthBits == 32)
+        if (desc.depthBits == 32)
             return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
     }
     return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM };
 }
 
-VkFormat VKSwapChain::PickDepthStencilFormat(int depthBits, int stencilBits) const
+VkFormat VKSwapChain::PickDepthStencilFormat(const SwapChainDescriptor& desc) const
 {
-    const std::vector<VkFormat> formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
+    const std::vector<VkFormat> formats = GetDepthStencilFormatPreference(desc);
     return VKFindSupportedImageFormat(
         physicalDevice_,
         formats.data(),

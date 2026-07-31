@@ -41,6 +41,37 @@ static GLint GetFramebufferHeight(const Extent2D& resolution)
     return static_cast<GLint>(resolution.height);
 }
 
+// Returns the number of color bits, either from the requested color format or the deprecated 'colorBits' field.
+static int GetGLColorBits(const SwapChainDescriptor& desc)
+{
+    if (IsColorFormat(desc.colorFormat))
+        return static_cast<int>(GetFormatAttribs(desc.colorFormat).bitSize);
+    return desc.colorBits;
+}
+
+// Returns the number of depth and stencil bits, either from the requested depth-stencil format or the deprecated bit-size fields.
+static void GetGLDepthStencilBits(const SwapChainDescriptor& desc, int& outDepthBits, int& outStencilBits)
+{
+    switch (desc.depthStencilFormat)
+    {
+        case Format::D16UNorm:
+            outDepthBits = 16; outStencilBits = 0;
+            break;
+        case Format::D24UNormS8UInt:
+            outDepthBits = 24; outStencilBits = 8;
+            break;
+        case Format::D32Float:
+            outDepthBits = 32; outStencilBits = 0;
+            break;
+        case Format::D32FloatS8X24UInt:
+            outDepthBits = 32; outStencilBits = 8;
+            break;
+        default:
+            outDepthBits = desc.depthBits; outStencilBits = desc.stencilBits;
+            break;
+    }
+}
+
 GLSwapChain::GLSwapChain(
     GLRenderSystem&                 renderSystem,
     const SwapChainDescriptor&      desc,
@@ -51,9 +82,8 @@ GLSwapChain::GLSwapChain(
 {
     /* Set up pixel format for GL context */
     GLPixelFormat pixelFormat;
-    pixelFormat.colorBits   = desc.colorBits;
-    pixelFormat.depthBits   = desc.depthBits;
-    pixelFormat.stencilBits = desc.stencilBits;
+    pixelFormat.colorBits   = GetGLColorBits(desc);
+    GetGLDepthStencilBits(desc, pixelFormat.depthBits, pixelFormat.stencilBits);
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
     #ifdef LLGL_OS_LINUX

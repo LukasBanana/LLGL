@@ -193,6 +193,17 @@ void VKRenderTarget::CreateRenderPass(
             {
                 VkFormat format = VKTypes::Map(GetAttachmentFormat(resolveAttachment));
                 InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], format, bindFlags, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+
+                /*
+                The multi-sampled color attachment is resolved into the attachment above, so its own contents are
+                never read after the pass and storing them is pure bandwidth - on a tile-based GPU this is what
+                lets the multi-sample surface stay on chip and never reach main memory.
+
+                Only for the DONT_CARE variant: the secondary render pass loads its attachments to resume a
+                paused pass, and discarding the contents it is about to reload would lose them.
+                */
+                if (attachmentsLoadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
+                    attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             }
             else
             {

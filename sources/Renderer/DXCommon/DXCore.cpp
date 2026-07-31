@@ -512,8 +512,18 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
     LLGL_TRAP("failed to map Direct3D signature parameter to LLGL::Format");
 }
 
-DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)
+DXGI_FORMAT DXPickDepthStencilFormat(Format depthStencilFormat, int depthBits, int stencilBits)
 {
+    /* Honor an explicitly requested depth-stencil format */
+    switch (depthStencilFormat)
+    {
+        case Format::D16UNorm:          return DXGI_FORMAT_D16_UNORM;
+        case Format::D24UNormS8UInt:    return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        case Format::D32Float:          return DXGI_FORMAT_D32_FLOAT;
+        case Format::D32FloatS8X24UInt: return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        default:                        break;
+    }
+
     /* Only return unknown format if depth-stencil is explicitly disabled */
     if (depthBits == 0 && stencilBits == 0)
         return DXGI_FORMAT_UNKNOWN;

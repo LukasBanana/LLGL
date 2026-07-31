@@ -28,11 +28,11 @@ D3D11SwapChain::D3D11SwapChain(
     SwapChain            { desc                                                       },
     device_              { device                                                     },
     renderSystem_        { renderSystem                                               },
-    depthStencilFormat_  { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) },
-    renderTargetHandles_ { 1u, (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)           },
-    tearingSupported_    { renderSystem.IsTearingSupported()                          },
-    colorBufferLocator_  { ResourceType::Texture, BindFlags::ColorAttachment          },
-    depthBufferLocator_  { ResourceType::Texture, BindFlags::DepthStencilAttachment   }
+    depthStencilFormat_  { DXPickDepthStencilFormat(desc.depthStencilFormat, desc.depthBits, desc.stencilBits) },
+    renderTargetHandles_ { 1u, (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)                                    },
+    tearingSupported_    { renderSystem.IsTearingSupported()                                                   },
+    colorBufferLocator_  { ResourceType::Texture, BindFlags::ColorAttachment                                   },
+    depthBufferLocator_  { ResourceType::Texture, BindFlags::DepthStencilAttachment                            }
 {
     /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc);

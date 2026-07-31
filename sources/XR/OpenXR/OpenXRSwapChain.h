@@ -138,6 +138,12 @@ class OpenXRSwapChain final : public XRSwapChain
         std::unique_ptr<OpenXRSwapChain>            depthCompanion_;
         Texture*                                    depthTexture_   = nullptr;
 
+        // Multi-sampled attachments used when desc_.sampleCount > 1. The runtime's images are single-sampled
+        // (the compositor's), so rendering targets these instead and resolves into the acquired runtime image.
+        // One set is shared by every swap-chain image: only the resolve target rotates. Owned by this swap-chain.
+        Texture*                                    msaaColorTexture_ = nullptr;
+        Texture*                                    msaaDepthTexture_ = nullptr;
+
         // Render targets indexed [colorImageIndex][depthImageIndex]; the depth axis has a single slot when depth is a
         // private texture or absent. Owned by this swap-chain.
         SmallVector<SmallVector<RenderTarget*>>     renderTargets_;

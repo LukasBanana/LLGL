@@ -40,20 +40,42 @@ VKDeviceImage& VKDeviceImage::operator = (VKDeviceImage&& rhs)
     return *this;
 }
 
-void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
+void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr, bool preferLazilyAllocated)
 {
     VkDevice device = deviceMemoryMngr.GetVkDevice();
 
     /* Get memory requirements for the image */
     vkGetImageMemoryRequirements(device, image_, &memoryRequirements_);
 
+    /* For a transient attachment, prefer memory the implementation only backs on demand: tile-based GPUs can then
+       keep the attachment entirely on chip. Desktop GPUs typically expose no such memory type, so the support is
+       probed first and this falls through to regular device-local memory below.
+
+       The probe is not optional: Allocate() resolves the memory type through VKFindMemoryType, which TRAPS when
+       nothing matches rather than returning null, so requesting lazily-allocated memory unconditionally would
+       abort on every implementation that lacks it instead of falling back. */
+    constexpr VkMemoryPropertyFlags lazilyAllocatedProperties = (VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (preferLazilyAllocated && deviceMemoryMngr.SupportsMemoryType(memoryRequirements_.memoryTypeBits, lazilyAllocatedProperties))
+    {
+        memoryRegion_ = deviceMemoryMngr.Allocate(
+            memoryRequirements_.size,
+            memoryRequirements_.alignment,
+            memoryRequirements_.memoryTypeBits,
+            lazilyAllocatedProperties
+        );
+    }
+
     /* Allocate device memory */
-    memoryRegion_ = deviceMemoryMngr.Allocate(
-        memoryRequirements_.size,
-        memoryRequirements_.alignment,
-        memoryRequirements_.memoryTypeBits,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-    );
+    if (memoryRegion_ == nullptr)
+    {
+        memoryRegion_ = deviceMemoryMngr.Allocate(
+            memoryRequirements_.size,
+            memoryRequirements_.alignment,
+            memoryRequirements_.memoryTypeBits,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
+    }
 
     /* Bind image to device memory region */
     if (memoryRegion_ == nullptr)

@@ -133,6 +133,22 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     }
     #endif
 
+    /*
+    Query supported swap-chain formats.
+    The color formats are the ones a CAMetalLayer can be configured with; MTSwapChain takes its
+    color format from MTRenderPass, which maps SwapChainDescriptor::colorFormat directly.
+    */
+    caps.swapChainColorFormats = { Format::BGRA8UNorm, Format::BGRA8UNorm_sRGB, Format::RGBA16Float };
+
+    /* These are the formats MTRenderPass can produce for a swap-chain; see GetDepthStencilMTLPixelFormat */
+    caps.swapChainDepthStencilFormats = { Format::D32Float, Format::D32FloatS8X24UInt };
+
+    if (g_formatCaps.hasD24S8UIntFormat)
+        caps.swapChainDepthStencilFormats.push_back(Format::D24UNormS8UInt);
+
+    if (@available(macOS 10.12, iOS 13.0, *))
+        caps.swapChainDepthStencilFormats.push_back(Format::D16UNorm);
+
     /* Specify supported shading languages */
     const int version = FeatureSetToVersion(fset);
 

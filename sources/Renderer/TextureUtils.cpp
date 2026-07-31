@@ -129,6 +129,29 @@ LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
     return footprint;
 }
 
+LLGL_EXPORT bool IsAttachmentOnlyTexture(const TextureDescriptor& textureDesc)
+{
+    /* The texture must be bound as exactly one kind of attachment and nothing else */
+    const long relevantBindFlags =
+    (
+        textureDesc.bindFlags &
+        (
+            BindFlags::Sampled                  |
+            BindFlags::Storage                  |
+            BindFlags::ColorAttachment          |
+            BindFlags::DepthStencilAttachment   |
+            BindFlags::CopySrc                  |
+            BindFlags::CopyDst
+        )
+    );
+    return
+    (
+        textureDesc.mipLevels == 1 &&
+        (relevantBindFlags == BindFlags::ColorAttachment || relevantBindFlags == BindFlags::DepthStencilAttachment) &&
+        ((textureDesc.miscFlags & MiscFlags::NoInitialData) != 0)
+    );
+}
+
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
 {
     return
