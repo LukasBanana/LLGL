@@ -85,11 +85,8 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         auto size = resolution;
         if (GetSurface().AdaptForVideoMode(&size, (toggleFullscreen ? &fullscreen : nullptr)))
         {
-            if (ResizeBuffersPrimary(size))
-            {
-                pimpl_->resolution = size;
+            if (ResizeBuffersPrimaryAndStoreResolution(size))
                 return true;
-            }
         }
 
         /* Switch to fullscreen or restore surface position for windowed mode */
@@ -104,14 +101,32 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
     else
     {
         /* Only resize swap buffers */
-        if (ResizeBuffersPrimary(resolution))
-        {
-            pimpl_->resolution = resolution;
+        if (ResizeBuffersPrimaryAndStoreResolution(resolution))
             return true;
-        }
     }
 
     return false;
+}
+
+/*
+Records the requested resolution *before* resizing so that a backend which clamps the extent can
+report what it actually allocated via SetResolution(); on failure the previous value is restored.
+*/
+bool SwapChain::ResizeBuffersPrimaryAndStoreResolution(const Extent2D& resolution)
+{
+    const Extent2D prevResolution = pimpl_->resolution;
+
+    pimpl_->resolution = resolution;
+    if (ResizeBuffersPrimary(resolution))
+        return true;
+
+    pimpl_->resolution = prevResolution;
+    return false;
+}
+
+void SwapChain::SetResolution(const Extent2D& resolution)
+{
+    pimpl_->resolution = resolution;
 }
 
 /* ----- Configuration ----- */

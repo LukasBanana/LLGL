@@ -502,6 +502,13 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     /* Pick swap-chain extent by resolution */
     swapChainExtent_ = PickSwapExtent(surfaceSupportDetails_.caps, resolution);
 
+    /*
+    Report the extent that was actually picked, not the one that was requested:
+    PickSwapExtent() clamps to the surface's min/max image extent, which on most
+    windowing systems both equal the window's current client area.
+    */
+    SetResolution(Extent2D{ swapChainExtent_.width, swapChainExtent_.height });
+
     /* Get device queues for graphics and presentation */
     VkSurfaceKHR surface = surface_.Get();
     const VKQueueFamilyIndices queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT, &surface);
