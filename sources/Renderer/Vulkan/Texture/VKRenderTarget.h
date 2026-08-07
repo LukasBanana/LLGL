@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../VKPtr.h"
 #include "../RenderState/VKRenderPass.h"
 #include "VKDepthStencilBuffer.h"

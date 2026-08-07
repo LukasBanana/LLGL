@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Sampler.h>
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../VKPtr.h"
 
 
