@@ -32,7 +32,7 @@ namespace LLGL
 
 
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
-static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
+static bool IsRenderbufferSufficient(const TextureDescriptor& textureDesc)
 {
     /*
     Renderbuffers can only be used under the following conditions:
@@ -40,11 +40,8 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
       (shared with the other backends, see IsAttachmentOnlyTexture)
     - Texture must be 2D or 2D-multisampled, since a renderbuffer has no array layers
     */
-    return
-    (
-        IsAttachmentOnlyTexture(desc) &&
-        (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS)
-    );
+    const bool isTexture2Dor2DMS = (textureDesc.type == TextureType::Texture2D || textureDesc.type == TextureType::Texture2DMS);
+    return isTexture2Dor2DMS && IsAttachmentOnlyTexture(textureDesc);
 }
 
 // Maps the specified format to a swizzle format, or identity swizzle if texture swizzling is not necessary

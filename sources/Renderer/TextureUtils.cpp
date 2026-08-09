@@ -144,12 +144,12 @@ LLGL_EXPORT bool IsAttachmentOnlyTexture(const TextureDescriptor& textureDesc)
             BindFlags::CopyDst
         )
     );
-    return
-    (
-        textureDesc.mipLevels == 1 &&
-        (relevantBindFlags == BindFlags::ColorAttachment || relevantBindFlags == BindFlags::DepthStencilAttachment) &&
-        ((textureDesc.miscFlags & MiscFlags::NoInitialData) != 0)
-    );
+
+    const bool hasSingleMipLevel        = (textureDesc.mipLevels == 1);
+    const bool hasAttachmentOnlyBinding = (relevantBindFlags == BindFlags::ColorAttachment || relevantBindFlags == BindFlags::DepthStencilAttachment);
+    const bool isNoInitialDataSpecified = ((textureDesc.miscFlags & MiscFlags::NoInitialData) != 0);
+
+    return (hasSingleMipLevel && hasAttachmentOnlyBinding && isNoInitialDataSpecified);
 }
 
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)

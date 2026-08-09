@@ -52,27 +52,28 @@ static VKPtr<VkFence> NullVkFence(VkDevice device)
 }
 
 VKSwapChain::VKSwapChain(
-    VkInstance instance,
-    VkPhysicalDevice physicalDevice,
-    VkDevice device,
-    VKDeviceMemoryManager &deviceMemoryMngr,
-    const VKSharedCommandQueueSPtr &graphicsQueue,
-    const SwapChainDescriptor &desc,
-    const std::shared_ptr<Surface> &surface,
-    const RendererInfo &rendererInfo)
-    : SwapChain{desc},
-      instance_{instance},
-      physicalDevice_{physicalDevice},
-      device_{device},
-      deviceMemoryMngr_{deviceMemoryMngr},
-      surface_{instance, vkDestroySurfaceKHR},
-      swapChain_{device, vkDestroySwapchainKHR},
-      swapChainRenderPass_{device},
-      requestedColorFormat_{VKTypes::Map(desc.colorFormat)},
-      swapChainSamples_{GetClampedSamples(desc.samples)},
-      secondaryRenderPass_{device},
-      depthStencilBuffer_{device},
-      graphicsQueue_{graphicsQueue}
+    VkInstance                      instance,
+    VkPhysicalDevice                physicalDevice,
+    VkDevice                        device,
+    VKDeviceMemoryManager&          deviceMemoryMngr,
+    const VKSharedCommandQueueSPtr& graphicsQueue,
+    const SwapChainDescriptor&      desc,
+    const std::shared_ptr<Surface>& surface,
+    const RendererInfo&             rendererInfo)
+:
+    SwapChain             { desc                            },
+    instance_             { instance                        },
+    physicalDevice_       { physicalDevice                  },
+    device_               { device                          },
+    deviceMemoryMngr_     { deviceMemoryMngr                },
+    surface_              { instance, vkDestroySurfaceKHR   },
+    swapChain_            { device, vkDestroySwapchainKHR   },
+    swapChainRenderPass_  { device                          },
+    requestedColorFormat_ { VKTypes::Map(desc.colorFormat)  },
+    swapChainSamples_     { GetClampedSamples(desc.samples) },
+    secondaryRenderPass_  { device                          },
+    depthStencilBuffer_   { device                          },
+    graphicsQueue_        { graphicsQueue                   }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 

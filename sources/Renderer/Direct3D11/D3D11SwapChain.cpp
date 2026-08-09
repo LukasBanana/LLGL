@@ -25,9 +25,9 @@ D3D11SwapChain::D3D11SwapChain(
     const SwapChainDescriptor&          desc,
     const std::shared_ptr<Surface>&     surface)
 :
-    SwapChain            { desc                                                       },
-    device_              { device                                                     },
-    renderSystem_        { renderSystem                                               },
+    SwapChain            { desc                                                                                },
+    device_              { device                                                                              },
+    renderSystem_        { renderSystem                                                                        },
     depthStencilFormat_  { DXPickDepthStencilFormat(desc.depthStencilFormat, desc.depthBits, desc.stencilBits) },
     renderTargetHandles_ { 1u, (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)                                    },
     tearingSupported_    { renderSystem.IsTearingSupported()                                                   },

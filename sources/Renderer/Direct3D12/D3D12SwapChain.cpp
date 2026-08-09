@@ -33,8 +33,8 @@ D3D12SwapChain::D3D12SwapChain(
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    SwapChain           { desc                                                           },
-    renderSystem_       { renderSystem                                                   },
+    SwapChain           { desc                                                                                },
+    renderSystem_       { renderSystem                                                                        },
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthStencilFormat, desc.depthBits, desc.stencilBits) },
     frameFence_         { renderSystem.GetDXDevice()                                                          },
     numColorBuffers_    { Clamp<UINT>(desc.swapBuffers, 2u, DXGI_MAX_SWAP_CHAIN_BUFFERS)                      },
