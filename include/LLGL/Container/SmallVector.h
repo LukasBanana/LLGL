@@ -170,7 +170,7 @@ class LLGL_EXPORT SmallVector
         }
 
         //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
-        SmallVector(SmallVector&& other) :
+        SmallVector(SmallVector&& other) noexcept :
             SmallVector {}
         {
             operator = (std::forward<SmallVector&&>(other));
@@ -471,8 +471,7 @@ class LLGL_EXPORT SmallVector
             return end();
         }
 
-        void swap(SmallVector& other)
-        {
+        void swap(SmallVector& other) noexcept {
             if (is_dynamic() && other.is_dynamic())
             {
                 /* Just swap members between both containers */
@@ -574,8 +573,10 @@ class LLGL_EXPORT SmallVector
 
         SmallVector& operator = (const SmallVector& rhs)
         {
-            clear();
-            insert(end(), rhs.begin(), rhs.end());
+            if (&rhs != this) {
+                clear();
+                insert(end(), rhs.begin(), rhs.end());
+            }
             return *this;
         }
 
@@ -593,12 +594,12 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
-        SmallVector& operator = (SmallVector&& rhs)
+        SmallVector& operator = (SmallVector&& rhs) noexcept
         {
             if (&rhs != this)
             {
                 /* Clear this container and adopt new configuration */
-                release_heap();
+                release();
 
                 if (rhs.is_dynamic())
                 {
