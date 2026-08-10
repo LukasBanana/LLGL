@@ -473,7 +473,9 @@ class LLGL_EXPORT SmallVector
             return end();
         }
 
-        void swap(SmallVector& other) noexcept
+        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
+        // because otherwise we have to copy the data from the static container.
+        void swap(SmallVector& other) noexcept(LocalCapacity == 0)
         {
             if (is_dynamic() && other.is_dynamic())
             {
