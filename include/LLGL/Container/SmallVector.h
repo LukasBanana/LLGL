@@ -169,8 +169,10 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
-        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
-        //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
+        /**
+        \brief Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
+        \remarks This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
+        */
         SmallVector(SmallVector&& other) :
             SmallVector {}
         {
@@ -598,7 +600,10 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
-        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
+        /**
+        \brief Takes the ownership of dynamically allocated elements from the \c rhs vector or copies all elements if the dynamic allocation is not used yet.
+        \remarks This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
+        */
         SmallVector& operator = (SmallVector&& rhs)
         {
             if (&rhs != this)

@@ -74,12 +74,37 @@ DEF_RITEST( FormatAttribs )
             }                                                                                           \
         }
 
-    TEST_FORMAT_ATTR(Format::A8UNorm, DataType::UInt8, 1, 1);
-    TEST_FORMAT_ATTR(Format::BGRA8UNorm_sRGB, DataType::UInt8, 1, 4);
-    TEST_FORMAT_ATTR(Format::BC1UNorm, DataType::UInt8, 16, 8);
-    TEST_FORMAT_ATTR(Format::ASTC4x4, DataType::UInt8, 16, 16);
-    TEST_FORMAT_ATTR(Format::ASTC12x12_sRGB, DataType::UInt8, 144, 16);
-    TEST_FORMAT_ATTR(Format::ETC2UNorm_sRGB, DataType::UInt8, 16, 8);
+    TEST_FORMAT_ATTR( Format::A8UNorm,              DataType::UInt8,          1,  1 );
+    TEST_FORMAT_ATTR( Format::BGRA8UNorm_sRGB,      DataType::UInt8,          1,  4 );
+    TEST_FORMAT_ATTR( Format::BC1UNorm,             DataType::UInt8,         16,  8 );
+    TEST_FORMAT_ATTR( Format::ASTC4x4,              DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::ASTC12x12_sRGB,       DataType::UInt8,        144, 16 );
+    TEST_FORMAT_ATTR( Format::ETC2UNorm_sRGB,       DataType::UInt8,         16,  8 );
+    TEST_FORMAT_ATTR( Format::RGB8UNorm,            DataType::UInt8,          1,  3 );
+    TEST_FORMAT_ATTR( Format::R64Float,             DataType::Float64,        1,  8 );
+    TEST_FORMAT_ATTR( Format::RGBA64Float,          DataType::Float64,        1, 32 );
+    TEST_FORMAT_ATTR( Format::RGB10A2UNorm,         DataType::Undefined,      1,  4 );
+    TEST_FORMAT_ATTR( Format::RG11B10Float,         DataType::Undefined,      1,  4 );
+    TEST_FORMAT_ATTR( Format::D24UNormS8UInt,       DataType::UInt32,         1,  4 );
+    TEST_FORMAT_ATTR( Format::D32FloatS8X24UInt,    DataType::Float32,        1,  8 );
+    TEST_FORMAT_ATTR( Format::BC5SNorm,             DataType::Int8,          16, 16 );
+    TEST_FORMAT_ATTR( Format::BC6HUFloat,           DataType::Float16,       16, 16 );
+    TEST_FORMAT_ATTR( Format::ASTC10x5_sRGB,        DataType::UInt8,         50, 16 );
+    TEST_FORMAT_ATTR( Format::BC1UNorm_sRGB,        DataType::UInt8,         16,  8 );
+    TEST_FORMAT_ATTR( Format::BC2UNorm,             DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::BC2UNorm_sRGB,        DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::BC3UNorm_sRGB,        DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::BC4UNorm,             DataType::UInt8,         16,  8 );
+    TEST_FORMAT_ATTR( Format::BC4SNorm,             DataType::Int8,          16,  8 );
+    TEST_FORMAT_ATTR( Format::BC7UNorm,             DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::BC7UNorm_sRGB,        DataType::UInt8,         16, 16 );
+    TEST_FORMAT_ATTR( Format::ASTC8x8,              DataType::UInt8,         64, 16 );
+    TEST_FORMAT_ATTR( Format::ASTC8x8_sRGB,         DataType::UInt8,         64, 16 );
+    TEST_FORMAT_ATTR( Format::ETC2UNorm,            DataType::UInt8,         16,  8 );
+    TEST_FORMAT_ATTR( Format::RG8UInt,              DataType::UInt8,          1,  2 );
+    TEST_FORMAT_ATTR( Format::RG8SInt,              DataType::Int8,           1,  2 );
+    TEST_FORMAT_ATTR( Format::RGBA8UInt,            DataType::UInt8,          1,  4 );
+    TEST_FORMAT_ATTR( Format::RGBA8SInt,            DataType::Int8,           1,  4 );
 
     return result;
 }
