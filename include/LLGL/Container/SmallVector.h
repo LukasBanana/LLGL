@@ -169,6 +169,7 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
         //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
         SmallVector(SmallVector&& other) :
             SmallVector {}
@@ -471,6 +472,7 @@ class LLGL_EXPORT SmallVector
             return end();
         }
 
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
         void swap(SmallVector& other)
         {
             if (is_dynamic() && other.is_dynamic())
@@ -574,8 +576,11 @@ class LLGL_EXPORT SmallVector
 
         SmallVector& operator = (const SmallVector& rhs)
         {
-            clear();
-            insert(end(), rhs.begin(), rhs.end());
+            if (&rhs != this)
+            {
+                clear();
+                insert(end(), rhs.begin(), rhs.end());
+            }
             return *this;
         }
 
@@ -593,12 +598,13 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
         SmallVector& operator = (SmallVector&& rhs)
         {
             if (&rhs != this)
             {
                 /* Clear this container and adopt new configuration */
-                release_heap();
+                release();
 
                 if (rhs.is_dynamic())
                 {
@@ -746,10 +752,9 @@ class LLGL_EXPORT SmallVector
 
         void move_all(pointer dst)
         {
-            /* Copy elements into new container, destroy old elements, and deallocate old container */
+            /* Copy elements into new container and release old data */
             construct_range(dst, begin(), end());
-            destroy_range(begin(), end());
-            release_heap();
+            release();
         }
 
         void move_tail_left(iterator dst, iterator from, iterator to)
@@ -799,12 +804,11 @@ class LLGL_EXPORT SmallVector
             const size_type cap = GrowStrategy::Grow(size() + count);
             pointer data = Allocator{}.allocate(cap);
 
-            /* Copy elements into new container, destroy old elements, and deallocate old container */
+            /* Copy elements into new container and release old data */
             construct_range(data, begin(), begin() + offset);
             construct_range(data + offset, src, src + count);
             construct_range(data + offset + count, begin() + offset, end());
-            destroy_range(begin(), end());
-            release_heap();
+            release();
 
             /* Take new container */
             data_   = data;
