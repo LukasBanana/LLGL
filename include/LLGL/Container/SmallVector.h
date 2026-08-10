@@ -809,7 +809,7 @@ class LLGL_EXPORT SmallVector
             construct_range(data, begin(), begin() + offset);
             construct_range(data + offset, src, src + count);
             construct_range(data + offset + count, begin() + offset, end());
-            release()
+            release();
 
             /* Take new container */
             data_   = data;
