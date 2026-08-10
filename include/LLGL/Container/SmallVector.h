@@ -753,7 +753,7 @@ class LLGL_EXPORT SmallVector
 
         void move_all(pointer dst)
         {
-            /* Copy elements into new container, destroy old elements, and deallocate old container */
+            /* Copy elements into new container and release old data */
             construct_range(dst, begin(), end());
             release();
         }
