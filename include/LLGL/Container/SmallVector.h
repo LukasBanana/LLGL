@@ -471,7 +471,8 @@ class LLGL_EXPORT SmallVector
             return end();
         }
 
-        void swap(SmallVector& other) noexcept {
+        void swap(SmallVector& other) noexcept
+        {
             if (is_dynamic() && other.is_dynamic())
             {
                 /* Just swap members between both containers */
