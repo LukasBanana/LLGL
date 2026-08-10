@@ -169,8 +169,10 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
+        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
+        // because otherwise we have to copy the data from the static container.
         //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
-        SmallVector(SmallVector&& other) noexcept :
+        SmallVector(SmallVector&& other) noexcept(LocalCapacity == 0) :
             SmallVector {}
         {
             operator = (std::forward<SmallVector&&>(other));
@@ -574,7 +576,8 @@ class LLGL_EXPORT SmallVector
 
         SmallVector& operator = (const SmallVector& rhs)
         {
-            if (&rhs != this) {
+            if (&rhs != this)
+            {
                 clear();
                 insert(end(), rhs.begin(), rhs.end());
             }
@@ -595,7 +598,9 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
-        SmallVector& operator = (SmallVector&& rhs) noexcept
+        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
+        // because otherwise we have to copy the data from the static container.
+        SmallVector& operator = (SmallVector&& rhs) noexcept(LocalCapacity == 0)
         {
             if (&rhs != this)
             {
@@ -750,8 +755,7 @@ class LLGL_EXPORT SmallVector
         {
             /* Copy elements into new container, destroy old elements, and deallocate old container */
             construct_range(dst, begin(), end());
-            destroy_range(begin(), end());
-            release_heap();
+            release();
         }
 
         void move_tail_left(iterator dst, iterator from, iterator to)
@@ -801,12 +805,11 @@ class LLGL_EXPORT SmallVector
             const size_type cap = GrowStrategy::Grow(size() + count);
             pointer data = Allocator{}.allocate(cap);
 
-            /* Copy elements into new container, destroy old elements, and deallocate old container */
+            /* Copy elements into new container and release old data */
             construct_range(data, begin(), begin() + offset);
             construct_range(data + offset, src, src + count);
             construct_range(data + offset + count, begin() + offset, end());
-            destroy_range(begin(), end());
-            release_heap();
+            release()
 
             /* Take new container */
             data_   = data;
