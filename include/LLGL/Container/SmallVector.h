@@ -169,10 +169,9 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
-        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
-        // because otherwise we have to copy the data from the static container.
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
         //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
-        SmallVector(SmallVector&& other) noexcept(LocalCapacity == 0) :
+        SmallVector(SmallVector&& other) :
             SmallVector {}
         {
             operator = (std::forward<SmallVector&&>(other));
@@ -473,9 +472,8 @@ class LLGL_EXPORT SmallVector
             return end();
         }
 
-        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
-        // because otherwise we have to copy the data from the static container.
-        void swap(SmallVector& other) noexcept(LocalCapacity == 0)
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
+        void swap(SmallVector& other)
         {
             if (is_dynamic() && other.is_dynamic())
             {
@@ -600,9 +598,8 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
-        // Guarantee noexcept only if the vector is always dynamic (LocalCapacity == 0),
-        // because otherwise we have to copy the data from the static container.
-        SmallVector& operator = (SmallVector&& rhs) noexcept(LocalCapacity == 0)
+        // This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
+        SmallVector& operator = (SmallVector&& rhs)
         {
             if (&rhs != this)
             {
