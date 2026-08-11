@@ -102,7 +102,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::CopyDescriptors(
 
 ID3D12DescriptorHeap* D3D12StagingDescriptorHeapPool::GetDescriptorHeap() const
 {
-    return (chunkIdx_ < chunks_.size() ? chunks_.back().GetNative() : nullptr);
+    return (chunkIdx_ < chunks_.size() ? chunks_[chunkIdx_].GetNative() : nullptr);
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::GetGpuHandleWithOffset() const

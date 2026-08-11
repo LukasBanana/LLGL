@@ -616,26 +616,39 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
 
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
-    /* Copy descriptors for specified set into shader-visible descriptor heap */
+    /* Copy descriptors before binding the active heaps */
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandles[2] = {};
     for_range(i, 2)
     {
         const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
         if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
         {
             /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
+            gpuDescHandles[i] = commandContext_.CopyDescriptorsForStaging(
                 heapType,
                 resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
                 0,
                 resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
             );
+        }
+    }
 
+    /* Rebind in case copying descriptors advanced either pool to a new chunk */
+    commandContext_.SetStagingDescriptorHeaps(
+        boundPipelineLayout_->GetDescriptorHeapSetLayout(),
+        boundPipelineLayout_->GetRootParameterIndices()
+    );
+
+    for_range(i, 2)
+    {
+        if (gpuDescHandles[i].ptr != 0)
+        {
             /* Bind descriptor table to root parameter */
             const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
             if (boundPipelineState_->GetType() == D3D12PipelineType::Compute)
-                GetNative()->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
+                GetNative()->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandles[i]);
             else
-                GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
+                GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandles[i]);
         }
     }
 
