@@ -77,8 +77,11 @@ static void CalcSubresourceLayoutPrimary(
     const FormatAttributes& formatAttribs = GetFormatAttribs(format);
     if (formatAttribs.blockWidth > 0 && formatAttribs.blockHeight > 0)
     {
-        outLayout.rowStride         = (extent.width * formatAttribs.bitSize) / formatAttribs.blockWidth / 8;
-        outLayout.layerStride       = (extent.height * outLayout.rowStride) / formatAttribs.blockHeight;
+        const std::uint32_t bytesPerBlock = formatAttribs.bitSize / 8;
+        const std::uint32_t blocksWide    = DivideRoundUp<std::uint32_t>(extent.width, formatAttribs.blockWidth);
+        const std::uint32_t blocksHigh    = DivideRoundUp<std::uint32_t>(extent.height, formatAttribs.blockHeight);
+        outLayout.rowStride         = blocksWide * bytesPerBlock;
+        outLayout.layerStride       = outLayout.rowStride * blocksHigh;
         outLayout.subresourceSize   = extent.depth * outLayout.layerStride * std::max(1u, numArrayLayers);
     }
 }

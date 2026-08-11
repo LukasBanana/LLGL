@@ -332,8 +332,13 @@ HRESULT D3D11Texture::UpdateSubresource(
     const char* srcData = static_cast<const char*>(imageView.data);
     LLGL_ASSERT_PTR(srcData);
 
-    std::uint32_t srcRowStride      = imageView.rowStride > 0 ? imageView.rowStride                 : dataLayout.rowStride;
-    std::uint32_t srcLayerStride    = imageView.rowStride > 0 ? imageView.rowStride * extent.height : dataLayout.layerStride;
+    std::uint32_t srcRowStride   = imageView.rowStride > 0 ? imageView.rowStride : dataLayout.rowStride;
+    std::uint32_t srcLayerStride = dataLayout.layerStride;
+    if (imageView.rowStride > 0)
+    {
+        /* Compressed formats use block rows rather than texel rows. */
+        srcLayerStride = srcRowStride * DivideRoundUp<std::uint32_t>(extent.height, formatAttribs.blockHeight);
+    }
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
