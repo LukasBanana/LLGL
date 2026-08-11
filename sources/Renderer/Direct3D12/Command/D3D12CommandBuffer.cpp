@@ -618,13 +618,11 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
 
     /* Copy descriptors before binding the active heaps */
     D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandles[2] = {};
-    bool hasDescriptorHeap[2] = {};
     for_range(i, 2)
     {
         const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
         if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
         {
-            hasDescriptorHeap[i] = true;
             /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
             gpuDescHandles[i] = commandContext_.CopyDescriptorsForStaging(
                 heapType,
@@ -635,6 +633,7 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
         }
     }
 
+    /* Rebind in case copying descriptors advanced either pool to a new chunk */
     commandContext_.SetStagingDescriptorHeaps(
         boundPipelineLayout_->GetDescriptorHeapSetLayout(),
         boundPipelineLayout_->GetRootParameterIndices()
@@ -642,7 +641,7 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
 
     for_range(i, 2)
     {
-        if (hasDescriptorHeap[i])
+        if (gpuDescHandles[i].ptr != 0)
         {
             /* Bind descriptor table to root parameter */
             const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
