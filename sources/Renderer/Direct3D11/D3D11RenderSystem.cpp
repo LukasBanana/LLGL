@@ -834,7 +834,7 @@ void D3D11RenderSystem::QueryDXDeviceVersion()
 {
     LLGL_ASSERT_PTR(device_);
 
-    HRESULT hr;
+    HRESULT hr = S_OK;
 
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
