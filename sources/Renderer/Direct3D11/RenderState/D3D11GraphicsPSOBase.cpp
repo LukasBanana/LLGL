@@ -68,6 +68,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
         {
             const auto& inputAttributes = pipelineLayout->GetInputAttributes();
 
+            // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
             if (!inputAttributes.empty())
             {
                 HRESULT hr = device->CreateInputLayout(
