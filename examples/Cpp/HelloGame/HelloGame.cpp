@@ -1066,37 +1066,22 @@ private:
         const bool needsUniqueBindingSlots  = (IsVulkan());
 
         {
-            LLGL::PipelineLayoutDescriptor layoutDesc;
+            LLGL::PipelineLayoutDescriptor layoutDesc = LLGL::Parse(
+                "cbuffer(Scene@1):vert:frag,"
+                "%s(instances@2):vert,"
+                "texture(shadowMap@4):frag,"
+                "sampler(shadowMapSampler@%d):frag,"
+                "float3(worldOffset),"  // Uniform_worldOffset   (0)
+                "float(bendIntensity)," // Uniform_bendIntensity (1)
+                "uint(firstInstance),", // Uniform_firstInstance (2)
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
+                (needsUniqueBindingSlots ? 5 : 4)
+            );
             layoutDesc.inputVertexAttribs = vertexFormat.attributes;
-            layoutDesc.bindings = {
-                LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage, 1),
-                LLGL::BindingDescriptor("instances", LLGL::ResourceType::Buffer, (instanceBuffer.IsCbuffer() ? LLGL::BindFlags::ConstantBuffer : LLGL::BindFlags::Sampled), LLGL::StageFlags::VertexStage, 2),
-                LLGL::BindingDescriptor("shadowMap", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 4),
-                LLGL::BindingDescriptor("shadowMapSampler", LLGL::ResourceType::Sampler, 0, LLGL::StageFlags::FragmentStage, (needsUniqueBindingSlots ? 5 : 4)),
-            };
-            layoutDesc.uniforms = {
-                LLGL::UniformDescriptor("worldOffset", LLGL::UniformType::Float3),
-                LLGL::UniformDescriptor("bendIntensity", LLGL::UniformType::Float1),
-                LLGL::UniformDescriptor("firstInstance", LLGL::UniformType::UInt1),
-            };
 
             // Create PSO for instanced meshes
             scenePSOLayout[0] = renderer->CreatePipelineLayout(layoutDesc);
         }
-
-        // scenePSOLayout[0] = renderer->CreatePipelineLayout(
-        //     LLGL::Parse(
-        //         "cbuffer(Scene@1):vert:frag,"
-        //         "%s(instances@2):vert,"
-        //         "texture(shadowMap@4):frag,"
-        //         "sampler(shadowMapSampler@%d):frag,"
-        //         "float3(worldOffset),"  // Uniform_worldOffset   (0)
-        //         "float(bendIntensity)," // Uniform_bendIntensity (1)
-        //         "uint(firstInstance),", // Uniform_firstInstance (2)
-        //         (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
-        //         (needsUniqueBindingSlots ? 5 : 4)
-        //     )
-        // );
 
         LLGL::GraphicsPipelineDescriptor scenePSODesc;
         {
@@ -1115,33 +1100,19 @@ private:
         ReportPSOErrors(scenePSO[0]);
 
         {
-            LLGL::PipelineLayoutDescriptor layoutDesc;
+            LLGL::PipelineLayoutDescriptor layoutDesc = LLGL::Parse(
+                "cbuffer(Scene@1):vert,"
+                "%s(instances@2):vert,"
+                "float3(worldOffset),"
+                "float(bendIntensity),"
+                "uint(firstInstance),",
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
+            );
             layoutDesc.inputVertexAttribs = vertexFormat.attributes;
-            layoutDesc.bindings = {
-                LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 1),
-                LLGL::BindingDescriptor("instances", LLGL::ResourceType::Buffer, (instanceBuffer.IsCbuffer() ? LLGL::BindFlags::ConstantBuffer : LLGL::BindFlags::Sampled), LLGL::StageFlags::VertexStage, 2),
-            };
-            layoutDesc.uniforms = {
-                LLGL::UniformDescriptor("worldOffset", LLGL::UniformType::Float3),
-                LLGL::UniformDescriptor("bendIntensity", LLGL::UniformType::Float1),
-                LLGL::UniformDescriptor("firstInstance", LLGL::UniformType::UInt1),
-            };
 
             // Create PSO for shadow-mapping but without a fragment shader
             scenePSOLayout[1] = renderer->CreatePipelineLayout(layoutDesc);
         }
-
-        // // Create PSO for shadow-mapping but without a fragment shader
-        // scenePSOLayout[1] = renderer->CreatePipelineLayout(
-        //     LLGL::Parse(
-        //         "cbuffer(Scene@1):vert,"
-        //         "%s(instances@2):vert,"
-        //         "float3(worldOffset),"
-        //         "float(bendIntensity),"
-        //         "uint(firstInstance),",
-        //         (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
-        //     )
-        // );
 
         {
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
@@ -1159,32 +1130,20 @@ private:
         ReportPSOErrors(scenePSO[1]);
 
         {
-            LLGL::PipelineLayoutDescriptor layoutDesc;
+            LLGL::PipelineLayoutDescriptor layoutDesc = LLGL::Parse(
+                "cbuffer(Scene@1):vert:frag,"
+                "texture(colorMap@2):frag,"
+                "sampler(colorMapSampler@%d):frag,"
+                "texture(shadowMap@4):frag,"
+                "sampler(shadowMapSampler@%d):frag,",
+                (needsUniqueBindingSlots ? 3 : 2),
+                (needsUniqueBindingSlots ? 5 : 4)
+            );
             layoutDesc.inputVertexAttribs = vertexFormat.attributes;
-            layoutDesc.bindings = {
-                LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage, 1),
-                LLGL::BindingDescriptor("colorMap", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 2),
-                LLGL::BindingDescriptor("colorMapSampler", LLGL::ResourceType::Sampler, 0, LLGL::StageFlags::FragmentStage, (needsUniqueBindingSlots ? 3 : 2)),
-                LLGL::BindingDescriptor("shadowMap", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 4),
-                LLGL::BindingDescriptor("shadowMapSampler", LLGL::ResourceType::Sampler, 0, LLGL::StageFlags::FragmentStage, (needsUniqueBindingSlots ? 5 : 4)),
-            };
 
             // Create PSO for background
             groundPSOLayout = renderer->CreatePipelineLayout(layoutDesc);
         }
-
-        // Create PSO for background
-        // groundPSOLayout = renderer->CreatePipelineLayout(
-        //     LLGL::Parse(
-        //         "cbuffer(Scene@1):vert:frag,"
-        //         "texture(colorMap@2):frag,"
-        //         "sampler(colorMapSampler@%d):frag,"
-        //         "texture(shadowMap@4):frag,"
-        //         "sampler(shadowMapSampler@%d):frag,",
-        //         (needsUniqueBindingSlots ? 3 : 2),
-        //         (needsUniqueBindingSlots ? 5 : 4)
-        //     )
-        // );
 
         LLGL::GraphicsPipelineDescriptor groundPSODesc;
         {
