@@ -137,6 +137,8 @@ typedef enum LLGLFormat
     LLGLFormatRG11B10Float,
     LLGLFormatRGB9E5Float,
     LLGLFormatBGR5A1UNorm,
+    LLGLFormatB5G6R5UNorm,
+    LLGLFormatBGRA4UNorm,
     LLGLFormatD16UNorm,
     LLGLFormatD24UNormS8UInt,
     LLGLFormatD32Float,

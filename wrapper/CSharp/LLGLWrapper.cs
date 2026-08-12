@@ -128,6 +128,8 @@ namespace LLGL
         RG11B10Float,
         RGB9E5Float,
         BGR5A1UNorm,
+        B5G6R5UNorm,
+        BGRA4UNorm,
         D16UNorm,
         D24UNormS8UInt,
         D32Float,

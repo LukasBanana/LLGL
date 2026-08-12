@@ -42,6 +42,7 @@ void GLImageViewConverter::Assign(const ImageView* initialImage, GLSwizzleFormat
             }
             break;
 
+            case GLSwizzleFormat::BGR:
             case GLSwizzleFormat::BGRA:
             {
                 /* Just convert image format, but keep image buffer unchanged */

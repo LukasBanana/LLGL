@@ -86,7 +86,7 @@ DEF_RITEST( FormatAttribs )
     TEST_FORMAT_ATTR( Format::RGB10A2UNorm,         DataType::Undefined,      1,  4 );
     TEST_FORMAT_ATTR( Format::RG11B10Float,         DataType::Undefined,      1,  4 );
     TEST_FORMAT_ATTR( Format::B5G6R5UNorm,          DataType::Undefined,      1,  2 );
-    TEST_FORMAT_ATTR( Format::B4G4R4A4UNorm,        DataType::Undefined,      1,  2 );
+    TEST_FORMAT_ATTR( Format::BGRA4UNorm,           DataType::Undefined,      1,  2 );
     TEST_FORMAT_ATTR( Format::D24UNormS8UInt,       DataType::UInt32,         1,  4 );
     TEST_FORMAT_ATTR( Format::D32FloatS8X24UInt,    DataType::Float32,        1,  8 );
     TEST_FORMAT_ATTR( Format::BC5SNorm,             DataType::Int8,          16, 16 );

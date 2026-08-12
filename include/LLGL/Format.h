@@ -103,6 +103,8 @@ i.e. for the Format::RGB10A2UNorm the bit pattern is <code>A[31:30], B[29:20], G
 | Format::RG11B10Float    | <b>\c  32</b> | \c f11 | \c f11 | \c f10 |        |        |
 | Format::RGB9E5Float     | <b>\c  32</b> | \c   9 | \c   9 | \c   9 |        | \c   5 |
 | Format::BGR5A1UNorm     | <b>\c  16</b> | \c  n5 | \c  n5 | \c  n5 | \c  n1 |        |
+| Format::B5G6R5UNorm     | <b>\c  16</b> | \c  n5 | \c  n6 | \c  n5 |        |        |
+| Format::BGRA4UNorm      | <b>\c  16</b> | \c  n4 | \c  n4 | \c  n4 | \c  n4 |        |
 
 \see TextureDescriptor::format
 \see VertexAttribute::format
@@ -207,8 +209,8 @@ enum class Format
     RG11B10Float,       //!< Packed color format: red, green 11-bit and blue 10-bit unsigned floating point, i.e. 6-bit mantissa for red and green, 5-bit mantissa for blue, and 5-bit exponent for all components.
     RGB9E5Float,        //!< Packed color format: red, green, blue 9-bit unsigned floating-point with shared 5-bit exponent, i.e. 9-bit mantissa for each component and one 5-bit exponent for all components.
     BGR5A1UNorm,        //!< Packed color format: blue, green, red 5-bit and alpha 1-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan, Direct3D 11.1, Direct3D 12, Metal.
-    B5G6R5UNorm,        //!< Packed color format: blue, green, red 5-6-5 normalized unsigned integer components.
-    B4G4R4A4UNorm,      //!< Packed color format: blue, green, red, alpha 4-bit normalized unsigned integer components.
+    B5G6R5UNorm,        //!< Packed color format: blue, green, red 5-6-5 normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal.
+    BGRA4UNorm,         //!< Packed color format: blue, green, red, alpha 4-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
 
     /* --- Depth-stencil formats --- */
     D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.

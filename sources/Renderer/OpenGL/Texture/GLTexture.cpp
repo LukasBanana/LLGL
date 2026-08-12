@@ -53,6 +53,8 @@ static GLSwizzleFormat MapToGLSwizzleFormat(const Format format)
     const auto& formatDesc = GetFormatAttribs(format);
     if (formatDesc.format == ImageFormat::Alpha)
         return GLSwizzleFormat::Alpha;
+    else if (formatDesc.format == ImageFormat::BGR)
+        return GLSwizzleFormat::BGR;
     else if (formatDesc.format == ImageFormat::BGRA)
         return GLSwizzleFormat::BGRA;
     else
@@ -291,6 +293,7 @@ static Format MapGLSwizzleFormat(const Format format, const GLSwizzleFormat swiz
     switch (swizzle)
     {
         case GLSwizzleFormat::Alpha:    return MapGLSwizzleFormatAlpha(format);
+        case GLSwizzleFormat::BGR:      return format;
         case GLSwizzleFormat::BGRA:     return MapGLSwizzleFormatBGRA(format);
         default:                        return format;
     }
@@ -396,6 +399,7 @@ static void InitializeGLTextureSwizzleWithFormat(
             InitializeGLTextureSwizzle(target, swizzle);
             break;
 
+        case GLSwizzleFormat::BGR:
         case GLSwizzleFormat::BGRA:
             InitializeGLTextureSwizzle(target, GetTextureSwizzlePermutationBGRA(swizzle));
             break;
