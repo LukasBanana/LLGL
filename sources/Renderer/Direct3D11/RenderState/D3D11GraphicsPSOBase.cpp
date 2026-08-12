@@ -61,18 +61,24 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
     if (auto* vertexShaderD3D = LLGL_CAST(const D3D11VertexShader*, desc.vertexShader))
     {
         /* Take input layout and store optional proxy geometry-shader for stream-output */
-        const auto& inputAttributes = GetPipelineLayout()->GetInputAttributes();
 
-        if (!inputAttributes.empty())
+        const auto* pipelineLayout = GetPipelineLayout();
+
+        if (pipelineLayout != nullptr)
         {
-            HRESULT hr = device->CreateInputLayout(
-                inputAttributes.data(),
-                inputAttributes.size(),
-                vertexShaderD3D->GetByteCode()->GetBufferPointer(),
-                vertexShaderD3D->GetByteCode()->GetBufferSize(),
-                inputLayout_.ReleaseAndGetAddressOf()
-            );
-            DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+            const auto& inputAttributes = pipelineLayout->GetInputAttributes();
+
+            if (!inputAttributes.empty())
+            {
+                HRESULT hr = device->CreateInputLayout(
+                    inputAttributes.data(),
+                    inputAttributes.size(),
+                    vertexShaderD3D->GetByteCode()->GetBufferPointer(),
+                    vertexShaderD3D->GetByteCode()->GetBufferSize(),
+                    inputLayout_.ReleaseAndGetAddressOf()
+                );
+                DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+            }
         }
 
         // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
