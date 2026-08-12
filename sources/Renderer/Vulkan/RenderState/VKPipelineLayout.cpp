@@ -23,8 +23,7 @@
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 
-
-namespace LLGL
+namespace
 {
 
 // Helper structure to build set of <VkVertexInputBindingDescription> elements
@@ -35,6 +34,11 @@ struct VKCompareVertexBindingDesc
         return (lhs.binding < rhs.binding);
     }
 };
+
+}
+
+namespace LLGL
+{
 
 VKPtr<VkPipelineLayout> VKPipelineLayout::defaultPipelineLayout_;
 

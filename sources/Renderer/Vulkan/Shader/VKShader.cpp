@@ -25,6 +25,19 @@
 #   include "../../SPIRV/SpirvReflect.h"
 #endif
 
+namespace
+{
+
+// Helper structure to build set of <VkVertexInputBindingDescription> elements
+struct VKCompareVertexBindingDesc
+{
+    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
+    {
+        return (lhs.binding < rhs.binding);
+    }
+};
+
+}
 
 namespace LLGL
 {
@@ -564,15 +577,6 @@ bool VKShader::BuildShader(const ShaderDescriptor& shaderDesc)
     else
         return LoadBinary(shaderDesc);
 }
-
-// Helper structure to build set of <VkVertexInputBindingDescription> elements
-struct VKCompareVertexBindingDesc
-{
-    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
-    {
-        return (lhs.binding < rhs.binding);
-    }
-};
 
 void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
