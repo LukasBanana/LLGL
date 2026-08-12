@@ -385,7 +385,7 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
     }
 
     // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
-    if (vertexInputCreateInfo.sType != VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO)
+    if (vertexInputCreateInfo.pVertexAttributeDescriptions == nullptr)
     {
         vertexShaderVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
     }
