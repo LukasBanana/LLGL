@@ -76,6 +76,14 @@ class D3D12Buffer : public Buffer
             CPUAccess               access
         );
 
+        // Persistently maps the resource for direct CPU writes (used for
+        // DynamicUsage buffers allocated in an UPLOAD heap). Returns the
+        // mapped pointer or nullptr when the buffer is not host-visible.
+        void* PersistentlyMap(ID3D12Device* device);
+        void UnmapPersistently();
+        inline void* GetMappedPtr() const { return mappedPtr_; }
+        inline bool IsHostVisible() const { return hostVisible_; }
+
         // Unmaps the buffer content from CPU memory space.
         void Unmap(
             D3D12CommandContext&    commandContext,
@@ -229,6 +237,9 @@ class D3D12Buffer : public Buffer
         D3D12_RANGE                             mappedRange_                = {};
         CPUAccess                               mappedCPUaccess_            = CPUAccess::ReadOnly;
         D3D12StagingBufferPool::MapBufferTicket mappedBufferTicket_;
+
+        void*                                   mappedPtr_                  = nullptr;
+        bool                                    hostVisible_                = false;
 
 };
 

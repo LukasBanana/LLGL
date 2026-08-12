@@ -111,6 +111,16 @@ void D3D12CommandBuffer::UpdateBuffer(
     std::uint64_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    // Fast path: DynamicUsage buffers live in an UPLOAD heap and are
+    // persistently mapped, so write directly to CPU memory -- no staging
+    // copy, no CopyBufferRegion, no barrier. The client frame-rings these
+    // buffers to match the command-allocator ring (maxNumAllocators=3), so
+    // the write cannot race the GPU's read of a previous frame's slot.
+    if (void* mappedPtr = dstBufferD3D.GetMappedPtr())
+    {
+        std::memcpy(static_cast<char*>(mappedPtr) + dstOffset, data, static_cast<std::size_t>(dataSize));
+        return;
+    }
     commandContext_.UpdateSubresource(dstBufferD3D.GetResource(), dstOffset, data, dataSize);
 }
 
