@@ -1067,7 +1067,7 @@ private:
 
         {
             LLGL::PipelineLayoutDescriptor layoutDesc;
-            layoutDesc.inputVertexFormat = vertexFormat;
+            layoutDesc.inputVertexAttribs = vertexFormat.attributes;
             layoutDesc.bindings = {
                 LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage, 1),
                 LLGL::BindingDescriptor("instances", LLGL::ResourceType::Buffer, (instanceBuffer.IsCbuffer() ? LLGL::BindFlags::ConstantBuffer : LLGL::BindFlags::Sampled), LLGL::StageFlags::VertexStage, 2),
@@ -1116,7 +1116,7 @@ private:
 
         {
             LLGL::PipelineLayoutDescriptor layoutDesc;
-            layoutDesc.inputVertexFormat = vertexFormat;
+            layoutDesc.inputVertexAttribs = vertexFormat.attributes;
             layoutDesc.bindings = {
                 LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 1),
                 LLGL::BindingDescriptor("instances", LLGL::ResourceType::Buffer, (instanceBuffer.IsCbuffer() ? LLGL::BindFlags::ConstantBuffer : LLGL::BindFlags::Sampled), LLGL::StageFlags::VertexStage, 2),
@@ -1160,7 +1160,7 @@ private:
 
         {
             LLGL::PipelineLayoutDescriptor layoutDesc;
-            layoutDesc.inputVertexFormat = vertexFormat;
+            layoutDesc.inputVertexAttribs = vertexFormat.attributes;
             layoutDesc.bindings = {
                 LLGL::BindingDescriptor("Scene", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage, 1),
                 LLGL::BindingDescriptor("colorMap", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 2),

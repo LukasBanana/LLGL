@@ -150,8 +150,8 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
 
     ReserveVertexAttribs(desc);
 
-    const std::size_t numVertexAttribs = desc.inputVertexFormat.attributes.size();
-    const auto& vertexAttribs = desc.inputVertexFormat.attributes;
+    const auto& vertexAttribs    = desc.inputVertexAttribs;
+    const auto  numVertexAttribs = vertexAttribs.size();
 
     /* Build input element descriptors */
     inputElements_.resize(numVertexAttribs);
@@ -292,9 +292,9 @@ void D3D12PipelineLayout::ReserveVertexAttribs(const PipelineLayoutDescriptor& d
 {
     /* Reserve memory for the input element names */
     vertexAttribNames_.Clear();
-    for (const VertexAttribute& attr : desc.inputVertexFormat.attributes)
+    for (const VertexAttribute& attr : desc.inputVertexAttribs)
         vertexAttribNames_.Reserve(attr.name.size());
-    for (const VertexAttribute& attr : desc.outputVertexFormat.attributes)
+    for (const VertexAttribute& attr : desc.outputVertexAttribs)
         vertexAttribNames_.Reserve(attr.name.size());
 }
 

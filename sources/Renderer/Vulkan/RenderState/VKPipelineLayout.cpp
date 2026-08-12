@@ -81,8 +81,8 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
 
 void VKPipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
 {
-    const std::size_t numVertexAttribs = desc.inputVertexFormat.attributes.size();
-    const auto* vertexAttribs = desc.inputVertexFormat.attributes.data();
+    const std::size_t numVertexAttribs = desc.inputVertexAttribs.size();
+    const auto* vertexAttribs = desc.inputVertexAttribs.data();
 
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
         return;

@@ -37,8 +37,8 @@ D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLay
     BuildDynamicResourceBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
 
-    const std::size_t numVertexAttribs = static_cast<UINT>(desc.inputVertexFormat.attributes.size());
-    const auto* vertexAttribs = desc.inputVertexFormat.attributes.data();
+    const auto& vertexAttribs = desc.inputVertexAttribs;
+    const auto  numVertexAttribs = static_cast<UINT>(vertexAttribs.size());
 
     inputAttributes_.resize(numVertexAttribs);
 
