@@ -415,7 +415,7 @@ struct ShaderDescriptor
     long                        flags           = 0;
 
     //! Vertex (or geometry) shader specific attributes.
-    LLGL_DEPRECATED("Use the `inputVertexFormat` and `outputVertexFormat` fields in LLGL::PipelineLayoutDescriptor instead")
+    LLGL_DEPRECATED("ShaderDescriptor::vertex is deprecated since 0.05b; Use the `inputVertexFormat` and `outputVertexFormat` fields in LLGL::PipelineLayoutDescriptor instead")
     VertexShaderAttributes      vertex;
 
     //! Fragment shader specific attributes.
