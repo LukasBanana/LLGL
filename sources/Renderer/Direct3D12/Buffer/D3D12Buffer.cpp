@@ -388,27 +388,6 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
     return flagsD3D;
 }
 
-static bool IsUploadHeapCompatible(const BufferDescriptor& desc)
-{
-    if ((desc.miscFlags & MiscFlags::DynamicUsage) == 0)
-        return false;
-
-    /* Upload heap resources are permanently restricted to GENERIC_READ.
-       Keep buffers with output-only usages in the default heap because they
-       may need UAV, COPY_DEST, or stream-output states. */
-    constexpr long allowedBindFlags =
-    (
-        BindFlags::VertexBuffer |
-        BindFlags::IndexBuffer |
-        BindFlags::ConstantBuffer |
-        BindFlags::Sampled |
-        BindFlags::IndirectBuffer |
-        BindFlags::CopySrc
-    );
-
-    return ((desc.bindFlags & ~allowedBindFlags) == 0 && desc.bindFlags != 0);
-}
-
 // see https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/nf-d3d12-id3d12device-createcommittedresource
 void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc)
 {
@@ -425,56 +404,27 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     else
         internalSize_ = bufferSize_;
 
-    /* DynamicUsage buffers with read-only bindings can use an upload heap and
-       be persistently mapped. Output-capable buffers remain in the default
-       heap because upload heaps are restricted to GENERIC_READ. */
-    const bool hostVisible = IsUploadHeapCompatible(desc);
+    /* Store buffer primary usage stage */
+    resource_.usageState = GetD3DUsageState(desc.bindFlags);
 
-    /* Upload resources must remain in GENERIC_READ for their entire lifetime.
-       Keep this as the tracked usage state to prevent later command-buffer
-       binding from emitting an invalid transition barrier. */
-    resource_.usageState = (hostVisible ? D3D12_RESOURCE_STATE_GENERIC_READ : GetD3DUsageState(desc.bindFlags));
-    const CD3DX12_HEAP_PROPERTIES heapProperties{ hostVisible ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_DEFAULT };
-    const D3D12_RESOURCE_STATES initialState = hostVisible ? D3D12_RESOURCE_STATE_GENERIC_READ : D3D12_RESOURCE_STATE_COMMON;
+    /* Create generic buffer resource */
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
     const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc));
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        initialState,
+        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware buffer");
-    if (hostVisible)
-        PersistentlyMap(device);
 }
 
 /*
 TODO: Needs refactoring:
     When the format changes, a new UAV entry must be put into the descriptor heap, so the heap must also ne able to grow.
 */
-void* D3D12Buffer::PersistentlyMap(ID3D12Device* device)
-{
-    if (mappedPtr_ != nullptr)
-        return mappedPtr_;
-    if (resource_.native == nullptr)
-        return nullptr;
-    HRESULT hr = resource_.native->Map(0, nullptr, &mappedPtr_);
-    hostVisible_ = SUCCEEDED(hr) && mappedPtr_ != nullptr;
-    return mappedPtr_;
-}
-
-void D3D12Buffer::UnmapPersistently()
-{
-    if (mappedPtr_ != nullptr && resource_.native != nullptr)
-    {
-        resource_.native->Unmap(0, nullptr);
-        mappedPtr_ = nullptr;
-    }
-    hostVisible_ = false;
-}
-
 void D3D12Buffer::CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, DXGI_FORMAT format, UINT formatStride)
 {
     /* Use device the resource was created with */
