@@ -178,15 +178,6 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
 {
     const std::uint32_t numColorAttachments = GetNumColorAttachments();
 
-    /* Save the previously bound draw framebuffer: RT creation must not leak
-       the FBO binding. The swapchain pass can be open when an offscreen RT is
-       created mid-frame; leaving the RT's FBO bound redirects every
-       subsequent draw of that pass into the offscreen RT (observed: the whole
-       scene rendered into the first offscreen RT, the swapchain stayed black
-       with only the ImGui overlay visible). */
-    GLint prevDrawFBO = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevDrawFBO);
-
     /* Bind primary FBO */
     GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebuffer_.GetID());
     {
@@ -240,9 +231,6 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
             }
         }
     }
-
-    /* Restore the previous draw framebuffer binding */
-    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, static_cast<GLuint>(prevDrawFBO));
 }
 
 void GLRenderTarget::CreateFramebufferWithNoAttachments()
@@ -252,24 +240,17 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments()
     {
         /* Set default framebuffer parameters */
         framebuffer_.FramebufferParameters(resolution_[0], resolution_[1], /*layers:*/ 1, samples_, /*fixedSampleLocations:*/ 0);
-        GLThrowIfFramebufferStatusFailed("initializing default parameters for framebuffer object (FBO) failed");
     }
     else
     #endif // /LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS
     {
-        /* Save the previously bound draw framebuffer (see
-           CreateFramebufferWithAttachments for why the binding must not leak). */
-        GLint prevDrawFBO = 0;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevDrawFBO);
-
         /* Bind primary FBO and create dummy renderbuffer attachment */
         GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebuffer_.GetID());
         CreateAndAttachRenderbuffer(GL_COLOR_ATTACHMENT0, GL_RED);
-        GLThrowIfFramebufferStatusFailed("initializing default parameters for framebuffer object (FBO) failed");
-
-        /* Restore the previous draw framebuffer binding */
-        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, static_cast<GLuint>(prevDrawFBO));
     }
+
+    /* Validate framebuffer status */
+    GLThrowIfFramebufferStatusFailed("initializing default parameters for framebuffer object (FBO) failed");
 }
 
 void GLRenderTarget::BuildColorAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget)

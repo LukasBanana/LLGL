@@ -35,8 +35,6 @@ namespace LLGL
 {
 
 
-
-
 /*
  * Internal constants
  */
@@ -1174,32 +1172,43 @@ void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
 void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 {
     boundRenderTarget_ = renderTarget;
-    const GLuint fbo = (renderTarget ? renderTarget->GetFramebuffer().GetID() : 0);
-    // Force the bind instead of relying on the per-manager dirty tracking:
-    // multiple GLStateManager instances share ONE context (the swapchain
-    // owns its own manager; offscreen render-target passes run through the
-    // default manager), so this manager's tracked framebuffer can be stale
-    // while another manager has bound a different FBO on the same context.
-    // A skipped re-bind leaves the previous FBO active and every subsequent
-    // draw renders into the wrong framebuffer (observed: the whole scene
-    // rendered into the first offscreen RT, the swapchain stayed black).
-    const auto targetIdx = static_cast<std::size_t>(GLFramebufferTarget::DrawFramebuffer);
-    contextState_.boundFramebuffers[targetIdx] = fbo;
-    glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], fbo);
     if (renderTarget)
+    {
+        BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, renderTarget->GetFramebuffer().GetID());
         SetClipControl(GL_UPPER_LEFT, contextState_.clipDepthMode);
+    }
     else
+    {
+        BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);
         SetClipControl(GL_LOWER_LEFT, contextState_.clipDepthMode);
+    }
 }
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
     #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
-    /* Only bind framebuffer if the framebuffer has changed */
-    auto targetIdx = static_cast<std::size_t>(target);
-    if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
+    const auto targetIdx = static_cast<std::size_t>(target);
+    if (target == GLFramebufferTarget::Framebuffer)
+    {
+        /* GL_FRAMEBUFFER updates both read and draw framebuffer bindings */
+        contextState_.boundFramebuffers[targetIdx] = framebuffer;
+
+        const auto drawTargetIdx = static_cast<std::size_t>(GLFramebufferTarget::DrawFramebuffer);
+        const auto readTargetIdx = static_cast<std::size_t>(GLFramebufferTarget::ReadFramebuffer);
+        if (
+            contextState_.boundFramebuffers[drawTargetIdx] != framebuffer ||
+            contextState_.boundFramebuffers[readTargetIdx] != framebuffer)
+        {
+            contextState_.boundFramebuffers[drawTargetIdx] = framebuffer;
+            contextState_.boundFramebuffers[readTargetIdx] = framebuffer;
+            glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
+        }
+    }
+    else if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
     {
         contextState_.boundFramebuffers[targetIdx] = framebuffer;
+        if (target == GLFramebufferTarget::DrawFramebuffer)
+            contextState_.boundFramebuffers[static_cast<std::size_t>(GLFramebufferTarget::Framebuffer)] = framebuffer;
         glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
     }
     #endif
@@ -1660,15 +1669,11 @@ void GLStateManager::BindCombinedEmulatedSampler(GLuint layer, const GLEmulatedS
 
 void GLStateManager::BindShaderProgram(GLuint program)
 {
-    // Always re-assert the program: the tracked state can diverge from the
-    // actual GL state when multiple GLStateManager instances share one
-    // context (the swapchain owns its own manager; offscreen render-target
-    // passes run through the default manager). A skipped glUseProgram would
-    // leave the previous manager's program bound -- observed as every game
-    // draw rendering with program 1 (the FF/overlay program) while the
-    // tracked state claimed the pipeline's program.
-    contextState_.boundProgram = program;
-    glUseProgram(program);
+    if (contextState_.boundProgram != program)
+    {
+        contextState_.boundProgram = program;
+        glUseProgram(program);
+    }
 }
 
 void GLStateManager::PushBoundShaderProgram()
@@ -1752,16 +1757,10 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         auto& swapChainGL = LLGL_CAST(GLSwapChain&, renderTarget);
+
         /* Make context current and unbind FBO */
         GLSwapChain::MakeCurrent(&swapChainGL);
         GLStateManager::Get().BindGLRenderTarget(nullptr);
-        // Also reset the swapchain's OWN state manager: its boundRenderTarget_
-        // drives the shader-permutation selection in GLPipelineState::Bind
-        // (FlippedYPosition when a render target is bound). Offscreen RT
-        // passes run through the default manager, so this manager's
-        // boundRenderTarget_ can stay stale -- every subsequent game draw
-        // would select the flipped-Y shader permutation and render black.
-        swapChainGL.GetStateManager().BindGLRenderTarget(nullptr);
 
         if (nextStateManager != nullptr)
             *nextStateManager = &(swapChainGL.GetStateManager());
@@ -2040,30 +2039,17 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 
 void GLStateManager::PrepareRasterizerStateForClear(GLFramebufferClearState& clearState)
 {
-    /* Temporarily disable GL_RASTERIZER_DISCARD, or glClear* commands will be ignored.
-       Query the REAL GL state, not the tracked state: with multiple GLStateManager
-       instances sharing one context (the swapchain owns its own manager, the default
-       manager is used for offscreen render targets) the tracked state can claim
-       "disabled" while the actual GL state has the test enabled -- leaving glClear
-       clipped by a stale scissor rect or discarded entirely. glIsEnabled is the
-       ground truth; the swapchain clear was observed black (only the ImGui overlay
-       visible) with the tracked-state check. */
-    const auto rasterizerDiscardIdx = static_cast<std::size_t>(GLState::RasterizerDiscard);
-    const bool rasterizerDiscardEnabled = (glIsEnabled(GL_RASTERIZER_DISCARD) != GL_FALSE);
-    contextState_.capabilities[rasterizerDiscardIdx] = false;
-    if (rasterizerDiscardEnabled)
+    /* Temporarily disable GL_RASTERIZER_DISCARD, or glClear* commands will be ignored */
+    if (IsEnabled(GLState::RasterizerDiscard))
     {
-        glDisable(GL_RASTERIZER_DISCARD);
+        Disable(GLState::RasterizerDiscard);
         clearState.oldRasterizerDiscardState = true;
     }
 
     /* Temporarily disable scissor test */
-    const auto scissorTestIdx = static_cast<std::size_t>(GLState::ScissorTest);
-    const bool scissorTestEnabled = (glIsEnabled(GL_SCISSOR_TEST) != GL_FALSE);
-    contextState_.capabilities[scissorTestIdx] = false;
-    if (scissorTestEnabled)
+    if (IsEnabled(GLState::ScissorTest))
     {
-        glDisable(GL_SCISSOR_TEST);
+        Disable(GLState::ScissorTest);
         clearState.oldScissorTestState = true;
     }
 }
