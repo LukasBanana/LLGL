@@ -207,6 +207,8 @@ enum class Format
     RG11B10Float,       //!< Packed color format: red, green 11-bit and blue 10-bit unsigned floating point, i.e. 6-bit mantissa for red and green, 5-bit mantissa for blue, and 5-bit exponent for all components.
     RGB9E5Float,        //!< Packed color format: red, green, blue 9-bit unsigned floating-point with shared 5-bit exponent, i.e. 9-bit mantissa for each component and one 5-bit exponent for all components.
     BGR5A1UNorm,        //!< Packed color format: blue, green, red 5-bit and alpha 1-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan, Direct3D 11.1, Direct3D 12, Metal.
+    B5G6R5UNorm,        //!< Packed color format: blue, green, red 5-6-5 normalized unsigned integer components.
+    B4G4R4A4UNorm,      //!< Packed color format: blue, green, red, alpha 4-bit normalized unsigned integer components.
 
     /* --- Depth-stencil formats --- */
     D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.

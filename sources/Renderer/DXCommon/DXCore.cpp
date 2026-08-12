@@ -289,6 +289,7 @@ static const Format g_D3DDefaultTextureFormats[] =
     Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
     Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
     Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+    Format::B5G6R5UNorm,        Format::B4G4R4A4UNorm,
     Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
     Format::BC1UNorm,           Format::BC1UNorm_sRGB,
     Format::BC2UNorm,           Format::BC2UNorm_sRGB,
