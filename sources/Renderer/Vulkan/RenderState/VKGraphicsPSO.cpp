@@ -378,7 +378,7 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
         return false;
 
     /* Initialize vertex input descriptor */
-    VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
+    VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
     if (pipelineLayoutVK != nullptr)
     {
         pipelineLayoutVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
