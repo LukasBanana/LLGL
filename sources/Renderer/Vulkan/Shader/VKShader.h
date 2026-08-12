@@ -13,6 +13,7 @@
 #include <LLGL/Report.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include "../RenderState/VertexInputLayout.h"
 #include "VKShaderBindingLayout.h"
 #include <vector>
 #include <functional>
@@ -111,20 +112,11 @@ class VKShader final : public Shader
     private:
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
-        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
         void BuildBindingLayout();
         void BuildReport();
 
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
-
-    private:
-
-        struct VertexInputLayout
-        {
-            std::vector<VkVertexInputBindingDescription>    bindingDescs;
-            std::vector<VkVertexInputAttributeDescription>  attribDescs;
-        };
 
     private:
 

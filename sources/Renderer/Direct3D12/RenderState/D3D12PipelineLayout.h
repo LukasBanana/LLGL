@@ -216,11 +216,24 @@ class D3D12PipelineLayout final : public PipelineLayout
             return numUAVBarriers_;
         }
 
+    public:
+
+        static void BuildInputLayout(
+            LLGL::ArrayView<VertexAttribute> attributes,
+            std::vector<D3D12_INPUT_ELEMENT_DESC>& output,
+            LinearStringContainer& vertexAttribNames
+        );
+
+        static void BuildStreamOutput(
+            LLGL::ArrayView<VertexAttribute> attributes,
+            std::vector<D3D12_SO_DECLARATION_ENTRY>& output,
+            std::vector<UINT>& bufferStrides,
+            LinearStringContainer& vertexAttribNames
+        );
+
     private:
 
         void ReserveVertexAttribs(const PipelineLayoutDescriptor& desc);
-        void BuildStreamOutput(const PipelineLayoutDescriptor& desc);
-        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
 
         void BuildRootSignature(
             D3D12RootSignature&             rootSignature,

@@ -15,6 +15,7 @@
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../PipelineStateUtils.h"
+#include "../RenderState/VKPipelineLayout.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
@@ -64,7 +65,7 @@ VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     device_ { device    }
 {
     BuildShader(desc);
-    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+    VKPipelineLayout::BuildInputLayout(desc.vertex.inputAttribs, inputLayout_);
     BuildBindingLayout();
     BuildReport();
 }
@@ -576,49 +577,6 @@ bool VKShader::BuildShader(const ShaderDescriptor& shaderDesc)
         return CompileSource(shaderDesc);
     else
         return LoadBinary(shaderDesc);
-}
-
-void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    inputLayout_.bindingDescs.reserve(numVertexAttribs);
-
-    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
-
-    for_range(i, numVertexAttribs)
-    {
-        const VertexAttribute& attr = vertexAttribs[i];
-
-        LLGL_ASSERT(
-            !(attr.instanceDivisor > 1),
-            "vertex instance divisor must be 0 or 1 for Vulkan, but %u was specified: %s",
-            attr.instanceDivisor, attr.name.c_str()
-        );
-
-        /* Append vertex input attribute descriptor */
-        VkVertexInputAttributeDescription vertexAttrib;
-        {
-            vertexAttrib.location   = attr.location;
-            vertexAttrib.binding    = attr.slot;
-            vertexAttrib.format     = VKTypes::Map(attr.format);
-            vertexAttrib.offset     = attr.offset;
-        }
-        inputLayout_.attribDescs.push_back(vertexAttrib);
-
-        /* Insert vertex binding descriptor */
-        VkVertexInputBindingDescription inputBinding;
-        {
-            inputBinding.binding    = attr.slot;
-            inputBinding.stride     = attr.stride;
-            inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
-        }
-        bindingDescSet.insert(inputBinding);
-    }
-
-    /* Store binding descriptor in vector */
-    inputLayout_.bindingDescs.insert(inputLayout_.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
 }
 
 void VKShader::BuildBindingLayout()

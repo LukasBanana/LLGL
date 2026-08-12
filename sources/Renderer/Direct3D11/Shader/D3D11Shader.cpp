@@ -8,11 +8,13 @@
 #include "D3D11Shader.h"
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
+#include "../RenderState/D3D11PipelineLayout.h"
 #include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -111,17 +113,6 @@ bool D3D11Shader::BuildProxyGeometryShader(
  * ======= Private: =======
  */
 
-// Converts a vertex attribute to a D3D stream-output entry
-static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
-{
-    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for
-    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
-    dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;
-    dst.ComponentCount  = GetFormatAttribs(src.format).components;
-    dst.OutputSlot      = src.slot;
-}
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
 bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
@@ -259,13 +250,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
                 UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
                 UINT numBufferStrides = 0;
 
-                for_range(i, numStreamOutputAttribs)
-                {
-                    ConvertSODeclEntry(outputElements[i], streamOutputAttribs[i]);
-                    LLGL_ASSERT(outputElements[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
-                    bufferStrides[outputElements[i].OutputSlot] = streamOutputAttribs[i].stride;
-                    numBufferStrides = std::max<UINT>(numBufferStrides, outputElements[i].OutputSlot + 1);
-                }
+                LLGL::D3D11PipelineLayout::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
 
                 /* Create geometry shader with stream-output declaration */
                 HRESULT hr = device->CreateGeometryShaderWithStreamOutput(

@@ -14,6 +14,7 @@
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -26,8 +27,8 @@ D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLay
 {
     BuildDynamicResourceBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
-    BuildInputLayout(desc);
-    BuildStreamOutput(desc);
+    BuildInputLayout(desc.inputVertexAttribs, inputElements_);
+    BuildStreamOutput(desc.outputVertexAttribs, outputElements_, bufferStrides_, numBufferStrides_);
 }
 
 static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
@@ -41,15 +42,15 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
     dst.InstanceDataStepRate    = src.instanceDivisor;
 }
 
-void D3D11PipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
+void D3D11PipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_INPUT_ELEMENT_DESC>& output)
 {
-    const auto& vertexAttribs = desc.inputVertexAttribs;
-    const auto  numVertexAttribs = static_cast<UINT>(vertexAttribs.size());
+    const auto numVertexAttribs = static_cast<UINT>(attributes.size());
 
-    inputElements_.resize(numVertexAttribs);
+    std::vector<D3D11_INPUT_ELEMENT_DESC> outputAttributes;
+    outputAttributes.resize(numVertexAttribs);
 
     for_range(i, numVertexAttribs)
-        ConvertInputElementDesc(inputElements_[i], vertexAttribs[i]);
+        ConvertInputElementDesc(outputAttributes[i], attributes[i]);
 }
 
 // Converts a vertex attribute to a D3D stream-output entry
@@ -64,20 +65,19 @@ static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttr
     dst.OutputSlot      = src.slot;
 }
 
-void D3D11PipelineLayout::BuildStreamOutput(const PipelineLayoutDescriptor& desc)
+void D3D11PipelineLayout::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_SO_DECLARATION_ENTRY>& output, UINT (&bufferStrides)[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
 {
-    const auto& streamOutputAttribs = desc.outputVertexAttribs;
-    const auto  numStreamOutputAttribs = static_cast<UINT>(streamOutputAttribs.size());
+    const auto numStreamOutputAttribs = static_cast<UINT>(attributes.size());
 
     /* Initialize output elements for geometry shader with stream-output */
-    outputElements_.resize(numStreamOutputAttribs);
+    output.resize(numStreamOutputAttribs);
 
     for_range(i, numStreamOutputAttribs)
     {
-        ConvertSODeclEntry(outputElements_[i], streamOutputAttribs[i]);
-        LLGL_ASSERT(outputElements_[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
-        bufferStrides_[outputElements_[i].OutputSlot] = streamOutputAttribs[i].stride;
-        numBufferStrides_ = std::max<UINT>(numBufferStrides_, outputElements_[i].OutputSlot + 1);
+        ConvertSODeclEntry(output[i], attributes[i]);
+        LLGL_ASSERT(output[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
+        bufferStrides[output[i].OutputSlot] = attributes[i].stride;
+        numBufferStrides = std::max<UINT>(numBufferStrides, output[i].OutputSlot + 1);
     }
 }
 

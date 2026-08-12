@@ -65,8 +65,6 @@ class D3D12Shader final : public Shader
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
         void ReserveVertexAttribs(const ShaderDescriptor& shaderDesc);
-        void BuildInputLayout(UINT numVertexAttribs, const VertexAttribute* vertexAttribs);
-        void BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute* vertexAttribs);
 
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);

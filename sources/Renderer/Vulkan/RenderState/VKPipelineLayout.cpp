@@ -7,6 +7,7 @@
 
 #include "VKPipelineLayout.h"
 #include "LLGL/PipelineLayoutFlags.h"
+#include "LLGL/VertexAttribute.h"
 #include "VKPipelineLayoutPermutationPool.h"
 #include "VKPoolSizeAccumulator.h"
 #include "VKSanitizeBindingSlotContext.h"
@@ -56,7 +57,7 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     if ((barrierFlags_ & (BarrierFlags::StorageBuffer | BarrierFlags::StorageTexture)) != 0)
         barrier_ = MakeUnique<VKPipelineBarrier>();
 
-    BuildInputLayout(desc);
+    BuildInputLayout(desc.inputVertexAttribs, inputLayout_);
 
     /* Create Vulkan descriptor set layouts */
     VKSanitizeBindingSlotContext sanitizeContext;
@@ -83,15 +84,15 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     }
 }
 
-void VKPipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
+void VKPipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout)
 {
-    const std::size_t numVertexAttribs = desc.inputVertexAttribs.size();
-    const auto* vertexAttribs = desc.inputVertexAttribs.data();
+    const auto numVertexAttribs = attributes.size();
+    const auto* vertexAttribs = attributes.data();
 
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
         return;
 
-    inputLayout_.bindingDescs.reserve(numVertexAttribs);
+    inputLayout.bindingDescs.reserve(numVertexAttribs);
 
     std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
 
@@ -113,7 +114,7 @@ void VKPipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
             vertexAttrib.format     = VKTypes::Map(attr.format);
             vertexAttrib.offset     = attr.offset;
         }
-        inputLayout_.attribDescs.push_back(vertexAttrib);
+        inputLayout.attribDescs.push_back(vertexAttrib);
 
         /* Insert vertex binding descriptor */
         VkVertexInputBindingDescription inputBinding;
@@ -126,7 +127,7 @@ void VKPipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
     }
 
     /* Store binding descriptor in vector */
-    inputLayout_.bindingDescs.insert(inputLayout_.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
+    inputLayout.bindingDescs.insert(inputLayout.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
 }
 
 void VKPipelineLayout::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const

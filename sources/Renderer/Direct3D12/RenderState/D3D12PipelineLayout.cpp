@@ -150,19 +150,18 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     }
 
     ReserveVertexAttribs(desc);
-    BuildInputLayout(desc);
-    BuildStreamOutput(desc);
+    BuildInputLayout(desc.inputVertexAttribs, inputElements_, vertexAttribNames_);
+    BuildStreamOutput(desc.outputVertexAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
 }
 
-void D3D12PipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
+void D3D12PipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D12_INPUT_ELEMENT_DESC>& output, LinearStringContainer& vertexAttribNames)
 {
-    const auto& vertexAttribs    = desc.inputVertexAttribs;
-    const auto  numVertexAttribs = vertexAttribs.size();
+    const auto numVertexAttribs = attributes.size();
 
     /* Build input element descriptors */
-    inputElements_.resize(numVertexAttribs);
+    output.resize(numVertexAttribs);
     for_range(i, numVertexAttribs)
-        Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
+        Convert(output[i], attributes[i], vertexAttribNames);
 }
 
 /*
@@ -180,33 +179,32 @@ static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttr
     dst.OutputSlot      = src.slot;
 }
 
-void D3D12PipelineLayout::BuildStreamOutput(const PipelineLayoutDescriptor& desc)
+void D3D12PipelineLayout::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D12_SO_DECLARATION_ENTRY>& soDeclEntries, std::vector<UINT>& soBufferStrides, LinearStringContainer& vertexAttribNames)
 {
-    const auto& streamOutputAttribs    = desc.outputVertexAttribs;
-    const auto  numStreamOutputAttribs = streamOutputAttribs.size();
+    if (attributes.empty())
+       return;
 
-    if (streamOutputAttribs.empty())
-        return;
+    const auto numStreamOutputAttribs = attributes.size();
 
     /* Reserve memory for the buffer strides */
     UINT maxSlot = 0;
     for_range(i, numStreamOutputAttribs)
-        maxSlot = std::max(maxSlot, streamOutputAttribs[i].slot);
+        maxSlot = std::max(maxSlot, attributes[i].slot);
 
-    soBufferStrides_.clear();
-    soBufferStrides_.resize(maxSlot + 1, 0);
+    soBufferStrides.clear();
+    soBufferStrides.resize(maxSlot + 1, 0);
 
     /* Build stream-output entries and buffer strides */
-    soDeclEntries_.resize(numStreamOutputAttribs);
+    soDeclEntries.resize(numStreamOutputAttribs);
     for_range(i, numStreamOutputAttribs)
     {
-        const VertexAttribute& attr = streamOutputAttribs[i];
+        const VertexAttribute& attr = attributes[i];
 
         /* Convert vertex attribute to stream-output entry */
-        ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
+        ConvertSODeclEntry(soDeclEntries[i], attr, vertexAttribNames);
 
         /* Store buffer stide */
-        UINT& bufferStride = soBufferStrides_[attr.slot];
+        UINT& bufferStride = soBufferStrides[attr.slot];
         if (attr.stride == 0)
         {
             /* Error: vertex attribute must not have stride of zero */
@@ -230,9 +228,9 @@ void D3D12PipelineLayout::BuildStreamOutput(const PipelineLayoutDescriptor& desc
     }
 
     /* Build buffer stride */
-    for_range(i, soBufferStrides_.size())
+    for_range(i, soBufferStrides.size())
     {
-        if (soBufferStrides_[i] == 0)
+        if (soBufferStrides[i] == 0)
             LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
     }
 }

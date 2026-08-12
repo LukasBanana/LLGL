@@ -15,6 +15,7 @@
 #include "VKDescriptorSetLayout.h"
 #include "VKPipelineLayoutPermutation.h"
 #include "VKDescriptorCache.h"
+#include "VertexInputLayout.h"
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
@@ -144,6 +145,8 @@ class VKPipelineLayout final : public PipelineLayout
         // Returns the default VkPipelineLayout object.
         static VkPipelineLayout GetDefault();
 
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout);
+
     private:
 
         // Enumeration of descriptor set layout types.
@@ -205,20 +208,12 @@ class VKPipelineLayout final : public PipelineLayout
             std::uint32_t&                          dstSet
         ) const;
 
-        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
-
     private:
 
         template <typename TContainer>
         void BuildDescriptorSetBindingSlots(DescriptorSetBindingTable& dst, const TContainer& src);
 
     private:
-
-        struct VertexInputLayout
-        {
-            std::vector<VkVertexInputBindingDescription>    bindingDescs;
-            std::vector<VkVertexInputAttributeDescription>  attribDescs;
-        };
 
         static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
 

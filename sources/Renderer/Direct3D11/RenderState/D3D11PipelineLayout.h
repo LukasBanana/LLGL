@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/DynamicVector.h>
 #include "../Texture/D3D11Sampler.h"
 #include <d3d11.h>
@@ -80,12 +81,15 @@ class D3D11PipelineLayout final : public PipelineLayout
             return ArrayView<UINT>(bufferStrides_, numBufferStrides_);
         }
 
+    public:
+
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_INPUT_ELEMENT_DESC>& output);
+        static void BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_SO_DECLARATION_ENTRY>& output, UINT (&bufferStrides)[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides);
+
     private:
 
         void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
         void BuildStaticSamplers(ID3D11Device* device, const std::vector<StaticSamplerDescriptor>& staticSamplerDescs);
-        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
-        void BuildStreamOutput(const PipelineLayoutDescriptor& desc);
 
     private:
 
