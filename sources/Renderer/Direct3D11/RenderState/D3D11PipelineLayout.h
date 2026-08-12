@@ -65,7 +65,8 @@ class D3D11PipelineLayout final : public PipelineLayout
             return uniforms_;
         }
 
-        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputAttributes() const {
+        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputAttributes() const
+        {
             return inputAttributes_;
         }
 
