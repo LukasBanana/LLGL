@@ -42,11 +42,10 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
     dst.InstanceDataStepRate    = src.instanceDivisor;
 }
 
-void D3D11PipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_INPUT_ELEMENT_DESC>& output)
+void D3D11PipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_INPUT_ELEMENT_DESC>& outputAttributes)
 {
     const auto numVertexAttribs = static_cast<UINT>(attributes.size());
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> outputAttributes;
     outputAttributes.resize(numVertexAttribs);
 
     for_range(i, numVertexAttribs)
@@ -65,7 +64,7 @@ static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttr
     dst.OutputSlot      = src.slot;
 }
 
-void D3D11PipelineLayout::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_SO_DECLARATION_ENTRY>& output, UINT (&bufferStrides)[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
+void D3D11PipelineLayout::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
 {
     const auto numStreamOutputAttribs = static_cast<UINT>(attributes.size());
 
