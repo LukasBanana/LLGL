@@ -11,6 +11,8 @@
 
 #include "D3D12DescriptorHeap.h"
 
+#include <vector>
+
 
 namespace LLGL
 {
@@ -63,6 +65,10 @@ class D3D12DescriptorCache
             );
         }
 
+        // Returns true when the same resource and descriptor type are already
+        // emplaced at the specified location.
+        bool IsEmplaced(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType) const;
+
     private:
 
         bool EmplaceBufferDescriptor(D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
@@ -74,6 +80,15 @@ class D3D12DescriptorCache
         ID3D12Device*       device_             = nullptr;
         D3D12DescriptorHeap descriptorHeaps_[2];
         UINT                currentStrides_[2]  = {};
+        struct BoundDescriptor
+        {
+            const Resource*               resource = nullptr;
+            D3D12_DESCRIPTOR_RANGE_TYPE   type     = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        };
+
+        // Last descriptor emplaced at each location, so a re-bind of an
+        // unchanged resource view skips the device call.
+        std::vector<BoundDescriptor> boundDescriptors_[2];
 
         struct
         {

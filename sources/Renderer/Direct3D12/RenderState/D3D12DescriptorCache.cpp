@@ -42,6 +42,11 @@ void D3D12DescriptorCache::Create(
 
 void D3D12DescriptorCache::Reset(UINT numResources, UINT numSamplers)
 {
+    /* Descriptor locations belong to the active pipeline layout. Invalidate
+       the resource tracking whenever its strides are changed. */
+    boundDescriptors_[g_dhIndexCbvSrvUav].clear();
+    boundDescriptors_[g_dhIndexSampler].clear();
+
     /* Store new sizes and resize descriptor heaps if necessary */
     currentStrides_[g_dhIndexCbvSrvUav] = numResources;
     if (descriptorHeaps_[g_dhIndexCbvSrvUav].GetSize() < numResources)
@@ -62,6 +67,15 @@ void D3D12DescriptorCache::Clear()
 {
     dirtyBits_.descHeapCbvSrvUav    = 1;
     dirtyBits_.descHeapSampler      = 1;
+    boundDescriptors_[g_dhIndexCbvSrvUav].clear();
+    boundDescriptors_[g_dhIndexSampler].clear();
+}
+
+bool D3D12DescriptorCache::IsEmplaced(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType) const
+{
+    const UINT heapIndex = (resource.GetResourceType() == ResourceType::Sampler ? g_dhIndexSampler : g_dhIndexCbvSrvUav);
+    const auto& bound = boundDescriptors_[heapIndex];
+    return (location < bound.size() && bound[location].resource == &resource && bound[location].type == descRangeType);
 }
 
 void D3D12DescriptorCache::EmplaceDescriptor(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType)
@@ -69,22 +83,46 @@ void D3D12DescriptorCache::EmplaceDescriptor(Resource& resource, UINT location, 
     switch (resource.GetResourceType())
     {
         case ResourceType::Buffer:
+        {
             LLGL_ASSERT(location < currentStrides_[g_dhIndexCbvSrvUav]);
+            auto& bound = boundDescriptors_[g_dhIndexCbvSrvUav];
+            if (IsEmplaced(resource, location, descRangeType))
+                return; // same resource already emplaced: skip the device call
+            if (location >= bound.size())
+                bound.resize(location + 1);
+            bound[location] = { &resource, descRangeType };
             if (EmplaceBufferDescriptor(LLGL_CAST(D3D12Buffer&, resource), descriptorHeaps_[g_dhIndexCbvSrvUav].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapCbvSrvUav = 1;
             break;
+        }
 
         case ResourceType::Texture:
+        {
             LLGL_ASSERT(location < currentStrides_[g_dhIndexCbvSrvUav]);
+            auto& bound = boundDescriptors_[g_dhIndexCbvSrvUav];
+            if (IsEmplaced(resource, location, descRangeType))
+                return;
+            if (location >= bound.size())
+                bound.resize(location + 1);
+            bound[location] = { &resource, descRangeType };
             if (EmplaceTextureDescriptor(LLGL_CAST(D3D12Texture&, resource), descriptorHeaps_[g_dhIndexCbvSrvUav].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapCbvSrvUav = 1;
             break;
+        }
 
         case ResourceType::Sampler:
+        {
             LLGL_ASSERT(location < currentStrides_[g_dhIndexSampler]);
+            auto& bound = boundDescriptors_[g_dhIndexSampler];
+            if (IsEmplaced(resource, location, descRangeType))
+                return;
+            if (location >= bound.size())
+                bound.resize(location + 1);
+            bound[location] = { &resource, descRangeType };
             if (EmplaceSamplerDescriptor(LLGL_CAST(D3D12Sampler&, resource), descriptorHeaps_[g_dhIndexSampler].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapSampler = 1;
             break;
+        }
 
         default:
             break;
