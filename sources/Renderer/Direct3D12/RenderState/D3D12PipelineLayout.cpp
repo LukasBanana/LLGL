@@ -15,6 +15,7 @@
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <string>
 #include <algorithm>
@@ -149,7 +150,12 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     }
 
     ReserveVertexAttribs(desc);
+    BuildInputLayout(desc);
+    BuildStreamOutput(desc);
+}
 
+void D3D12PipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
+{
     const auto& vertexAttribs    = desc.inputVertexAttribs;
     const auto  numVertexAttribs = vertexAttribs.size();
 
@@ -159,12 +165,98 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
         Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
 }
 
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
+    dst.Stream          = 0;
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = 0;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D12PipelineLayout::BuildStreamOutput(const PipelineLayoutDescriptor& desc)
+{
+    const auto& streamOutputAttribs    = desc.outputVertexAttribs;
+    const auto  numStreamOutputAttribs = streamOutputAttribs.size();
+
+    if (streamOutputAttribs.empty())
+        return;
+
+    /* Reserve memory for the buffer strides */
+    UINT maxSlot = 0;
+    for_range(i, numStreamOutputAttribs)
+        maxSlot = std::max(maxSlot, streamOutputAttribs[i].slot);
+
+    soBufferStrides_.clear();
+    soBufferStrides_.resize(maxSlot + 1, 0);
+
+    /* Build stream-output entries and buffer strides */
+    soDeclEntries_.resize(numStreamOutputAttribs);
+    for_range(i, numStreamOutputAttribs)
+    {
+        const VertexAttribute& attr = streamOutputAttribs[i];
+
+        /* Convert vertex attribute to stream-output entry */
+        ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
+
+        /* Store buffer stide */
+        UINT& bufferStride = soBufferStrides_[attr.slot];
+        if (attr.stride == 0)
+        {
+            /* Error: vertex attribute must not have stride of zero */
+            LLGL_TRAP(
+                "buffer stride in stream-output attribute must not be zero: %s",
+                attr.name.c_str()
+            );
+        }
+        else if (bufferStride == 0)
+        {
+            /* Store new buffer stride */
+            bufferStride = attr.stride;
+        }
+        else if (bufferStride != attr.stride)
+        {
+            LLGL_TRAP(
+                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
+                bufferStride, attr.stride, attr.name.c_str()
+            );
+        }
+    }
+
+    /* Build buffer stride */
+    for_range(i, soBufferStrides_.size())
+    {
+        if (soBufferStrides_[i] == 0)
+            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
+    }
+}
+
 bool D3D12PipelineLayout::GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const
 {
     if (!inputElements_.empty())
     {
         layoutDesc.pInputElementDescs   = inputElements_.data();
         layoutDesc.NumElements          = static_cast<UINT>(inputElements_.size());
+        return true;
+    }
+    return false;
+}
+
+bool D3D12PipelineLayout::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const
+{
+    if (!soDeclEntries_.empty())
+    {
+        layoutDesc.pSODeclaration   = soDeclEntries_.data();
+        layoutDesc.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
+        layoutDesc.pBufferStrides   = soBufferStrides_.data();
+        layoutDesc.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
+        layoutDesc.RasterizedStream = 0;
         return true;
     }
     return false;

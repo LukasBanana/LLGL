@@ -65,15 +65,27 @@ class D3D11PipelineLayout final : public PipelineLayout
             return uniforms_;
         }
 
-        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputAttributes() const
+        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputElements() const
         {
-            return inputAttributes_;
+            return inputElements_;
+        }
+
+        inline const std::vector<D3D11_SO_DECLARATION_ENTRY>& GetOutputElements() const
+        {
+            return outputElements_;
+        }
+
+        inline const ArrayView<UINT> GetBufferStrides() const
+        {
+            return ArrayView<UINT>(bufferStrides_, numBufferStrides_);
         }
 
     private:
 
         void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
         void BuildStaticSamplers(ID3D11Device* device, const std::vector<StaticSamplerDescriptor>& staticSamplerDescs);
+        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
+        void BuildStreamOutput(const PipelineLayoutDescriptor& desc);
 
     private:
 
@@ -81,7 +93,10 @@ class D3D11PipelineLayout final : public PipelineLayout
         std::vector<D3D11PipelineResourceBinding>   bindings_;
         std::vector<D3D11StaticSampler>             staticSamplers_;
         std::vector<UniformDescriptor>              uniforms_;
-        std::vector<D3D11_INPUT_ELEMENT_DESC>       inputAttributes_;
+        std::vector<D3D11_INPUT_ELEMENT_DESC>       inputElements_;
+        std::vector<D3D11_SO_DECLARATION_ENTRY>     outputElements_;
+        UINT                                        bufferStrides_[D3D11_SO_BUFFER_SLOT_COUNT];
+        UINT                                        numBufferStrides_;
 
 };
 

@@ -195,9 +195,17 @@ void D3D12GraphicsPSO::CreateNativePSO(
         LLGL_CAST(const D3D12Shader*, desc.vertexShader)->GetInputLayoutDesc(stateDesc.InputLayout);
     }
 
+    /* Set stream output */
+    pipelineLayout.GetStreamOutputDesc(stateDesc.StreamOutput);
+
+    // Deprecated feature support: Get stream output from the shaders if we failed to get it from the pipeline layout.
+    if (stateDesc.StreamOutput.pSODeclaration == nullptr)
+    {
+        GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
+    }
+
     /* Convert other states */
     const bool isStripTopology = IsPrimitiveTopologyStrip(desc.primitiveTopology);
-    stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;

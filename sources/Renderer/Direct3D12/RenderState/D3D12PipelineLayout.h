@@ -142,6 +142,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         D3D12DescriptorHeapSetLayout GetDescriptorHeapSetLayout() const;
 
         bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
+        bool GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const;
 
         // Returns the finalized native ID3D12RootSignature object as ComPtr.
         inline const ComPtr<ID3D12RootSignature>& GetFinalizedRootSignature() const
@@ -218,6 +219,8 @@ class D3D12PipelineLayout final : public PipelineLayout
     private:
 
         void ReserveVertexAttribs(const PipelineLayoutDescriptor& desc);
+        void BuildStreamOutput(const PipelineLayoutDescriptor& desc);
+        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
 
         void BuildRootSignature(
             D3D12RootSignature&             rootSignature,
@@ -279,6 +282,7 @@ class D3D12PipelineLayout final : public PipelineLayout
             UINT&                                       outCounter
         );
 
+
     private:
 
         ID3D12Device*                               device_                 = nullptr;
@@ -294,6 +298,8 @@ class D3D12PipelineLayout final : public PipelineLayout
         SmallVector<D3D12DescriptorLocation, 8>     rootParameterMap_;
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
+        std::vector<D3D12_SO_DECLARATION_ENTRY>     soDeclEntries_;
+        std::vector<UINT>                           soBufferStrides_;
         LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         UINT                                        numStaticSamplers_      = 0;

@@ -12,12 +12,23 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../ResourceUtils.h"
+#include "../../../Core/Assertion.h"
 
 #include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
+
+D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
+    heapBindings_ { GetExpandedHeapDescriptors(desc.heapBindings) },
+    uniforms_     { desc.uniforms                                 }
+{
+    BuildDynamicResourceBindings(desc.bindings);
+    BuildStaticSamplers(device, desc.staticSamplers);
+    BuildInputLayout(desc);
+    BuildStreamOutput(desc);
+}
 
 static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
 {
@@ -30,21 +41,44 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
     dst.InstanceDataStepRate    = src.instanceDivisor;
 }
 
-D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
-    heapBindings_ { GetExpandedHeapDescriptors(desc.heapBindings) },
-    uniforms_     { desc.uniforms                                 }
+void D3D11PipelineLayout::BuildInputLayout(const PipelineLayoutDescriptor& desc)
 {
-    BuildDynamicResourceBindings(desc.bindings);
-    BuildStaticSamplers(device, desc.staticSamplers);
-
     const auto& vertexAttribs = desc.inputVertexAttribs;
     const auto  numVertexAttribs = static_cast<UINT>(vertexAttribs.size());
 
-    inputAttributes_.resize(numVertexAttribs);
+    inputElements_.resize(numVertexAttribs);
 
     for_range(i, numVertexAttribs)
-        ConvertInputElementDesc(inputAttributes_[i], vertexAttribs[i]);
+        ConvertInputElementDesc(inputElements_[i], vertexAttribs[i]);
+}
 
+// Converts a vertex attribute to a D3D stream-output entry
+static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
+{
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
+    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = 0;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D11PipelineLayout::BuildStreamOutput(const PipelineLayoutDescriptor& desc)
+{
+    const auto& streamOutputAttribs = desc.outputVertexAttribs;
+    const auto  numStreamOutputAttribs = static_cast<UINT>(streamOutputAttribs.size());
+
+    /* Initialize output elements for geometry shader with stream-output */
+    outputElements_.resize(numStreamOutputAttribs);
+
+    for_range(i, numStreamOutputAttribs)
+    {
+        ConvertSODeclEntry(outputElements_[i], streamOutputAttribs[i]);
+        LLGL_ASSERT(outputElements_[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
+        bufferStrides_[outputElements_[i].OutputSlot] = streamOutputAttribs[i].stride;
+        numBufferStrides_ = std::max<UINT>(numBufferStrides_, outputElements_[i].OutputSlot + 1);
+    }
 }
 
 std::uint32_t D3D11PipelineLayout::GetNumHeapBindings() const

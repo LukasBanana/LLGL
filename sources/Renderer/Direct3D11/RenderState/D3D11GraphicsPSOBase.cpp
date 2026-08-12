@@ -64,21 +64,43 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
 
         const auto* pipelineLayout = GetPipelineLayout();
 
+        // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
         if (pipelineLayout != nullptr)
         {
-            const auto& inputAttributes = pipelineLayout->GetInputAttributes();
+            const auto& inputElements  = pipelineLayout->GetInputElements();
+            const auto& outputElements = pipelineLayout->GetOutputElements();
 
-            // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
-            if (!inputAttributes.empty())
+            auto* vertexByteCode = vertexShaderD3D->GetByteCode();
+
+            if (!inputElements.empty())
             {
                 HRESULT hr = device->CreateInputLayout(
-                    inputAttributes.data(),
-                    inputAttributes.size(),
-                    vertexShaderD3D->GetByteCode()->GetBufferPointer(),
-                    vertexShaderD3D->GetByteCode()->GetBufferSize(),
+                    inputElements.data(),
+                    inputElements.size(),
+                    vertexByteCode->GetBufferPointer(),
+                    vertexByteCode->GetBufferSize(),
                     inputLayout_.ReleaseAndGetAddressOf()
                 );
                 DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+            }
+
+            if (!outputElements.empty())
+            {
+                const auto& bufferStrides = pipelineLayout->GetBufferStrides();
+
+                /* Create geometry shader with stream-output declaration */
+                HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
+                    vertexByteCode->GetBufferPointer(),
+                    vertexByteCode->GetBufferSize(),
+                    outputElements.data(),
+                    static_cast<UINT>(outputElements.size()),
+                    bufferStrides.data(),
+                    bufferStrides.size(),
+                    0,
+                    nullptr,
+                    gs_.ReleaseAndGetAddressOf()
+                );
+                DXThrowIfCreateFailed(hr, "failed to create proxy geometry shader");
             }
         }
 
@@ -88,7 +110,11 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
             inputLayout_ = vertexShaderD3D->GetInputLayout();
         }
 
-        gs_ = vertexShaderD3D->GetProxyGeometryShader();
+        // Deprecated feature support: Get proxy geometry shader from the vertex shader if we failed to get it from the pipeline layout.
+        if (gs_ == nullptr)
+        {
+            gs_ = vertexShaderD3D->GetProxyGeometryShader();
+        }
     }
     else
         ResetReport("cannot create D3D graphics PSO without vertex shader", true);
