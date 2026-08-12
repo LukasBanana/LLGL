@@ -901,7 +901,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateResources();
-        CreateShaders(vertexFormat);
+        CreateShaders();
         CreatePipelines(vertexFormat);
         LoadLevels();
         SelectLevel(0);
@@ -1012,7 +1012,7 @@ private:
         return std::string(buf);
     }
 
-    void CreateShaders(const LLGL::VertexFormat& vertexFormat)
+    void CreateShaders()
     {
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
