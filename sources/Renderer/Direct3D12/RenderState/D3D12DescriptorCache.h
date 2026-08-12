@@ -65,15 +65,12 @@ class D3D12DescriptorCache
             );
         }
 
-        // Returns true when the same resource and descriptor type are already
-        // emplaced at the specified location.
-        bool IsEmplaced(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType) const;
-
     private:
 
-        bool EmplaceBufferDescriptor(D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
-        bool EmplaceTextureDescriptor(D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
-        bool EmplaceSamplerDescriptor(D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceCached(UINT heapIndex, Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceBufferDescriptor(D3D12Buffer& bufferD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceTextureDescriptor(D3D12Texture& textureD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceSamplerDescriptor(D3D12Sampler& samplerD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
 
     private:
 
