@@ -36,7 +36,7 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
     protected:
 
-        D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc);
+        D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsPipelineDescriptor& desc);
 
         void SetStaticViewportsAndScissors(D3D11StateManager& stateMngr);
 

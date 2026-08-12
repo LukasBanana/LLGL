@@ -9,6 +9,7 @@
 #include "D3D11StateManager.h"
 #include "D3D11PipelineLayout.h"
 #include "../D3D11Types.h"
+#include "../../DXCommon/DXCore.h"
 #include "../D3D11ObjectUtils.h"
 #include "../Shader/D3D11DomainShader.h"
 #include "../Shader/D3D11VertexShader.h"
@@ -53,14 +54,33 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
  * ======= Protected: =======
  */
 
-D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc) :
+D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsPipelineDescriptor& desc) :
     D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Validate pointers and get D3D shader objects */
     if (auto* vertexShaderD3D = LLGL_CAST(const D3D11VertexShader*, desc.vertexShader))
     {
         /* Take input layout and store optional proxy geometry-shader for stream-output */
-        inputLayout_ = vertexShaderD3D->GetInputLayout();
+        const auto& inputAttributes = GetPipelineLayout()->GetInputAttributes();
+
+        if (!inputAttributes.empty())
+        {
+            HRESULT hr = device->CreateInputLayout(
+                inputAttributes.data(),
+                inputAttributes.size(),
+                vertexShaderD3D->GetByteCode()->GetBufferPointer(),
+                vertexShaderD3D->GetByteCode()->GetBufferSize(),
+                inputLayout_.ReleaseAndGetAddressOf()
+            );
+            DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+        }
+
+        // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
+        if (inputLayout_ == nullptr)
+        {
+            inputLayout_ = vertexShaderD3D->GetInputLayout();
+        }
+
         gs_ = vertexShaderD3D->GetProxyGeometryShader();
     }
     else

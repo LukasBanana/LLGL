@@ -15,6 +15,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include "../Shader/D3D12RootSignature.h"
 #include "../../DXCommon/ComPtr.h"
+#include "../../../Core/LinearStringContainer.h"
 #include <d3d12.h>
 #include <memory>
 #include <map>
@@ -140,6 +141,8 @@ class D3D12PipelineLayout final : public PipelineLayout
         // Returns the layout of the set of descriptor heaps.
         D3D12DescriptorHeapSetLayout GetDescriptorHeapSetLayout() const;
 
+        bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
+
         // Returns the finalized native ID3D12RootSignature object as ComPtr.
         inline const ComPtr<ID3D12RootSignature>& GetFinalizedRootSignature() const
         {
@@ -214,6 +217,8 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     private:
 
+        void ReserveVertexAttribs(const PipelineLayoutDescriptor& desc);
+
         void BuildRootSignature(
             D3D12RootSignature&             rootSignature,
             const PipelineLayoutDescriptor& desc
@@ -287,6 +292,9 @@ class D3D12PipelineLayout final : public PipelineLayout
         D3D12RootSignatureLayout                    descriptorLayout_;
         SmallVector<D3D12DescriptorHeapLocation, 8> descriptorMap_;
         SmallVector<D3D12DescriptorLocation, 8>     rootParameterMap_;
+
+        std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
+        LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         UINT                                        numStaticSamplers_      = 0;
         D3D12RootParameterIndices                   rootParameterIndices_;

@@ -11,6 +11,7 @@
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
@@ -111,6 +112,21 @@ static long ConvoluteLayoutStageFlags(const PipelineLayoutDescriptor& desc)
     return convolutedStageFlags;
 }
 
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    dst.SemanticName            = stringContainer.CopyString(src.name);
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
+
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
     /* Keep pointer to D3D12 device */
@@ -131,6 +147,27 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
         finalizedRootSignature_ = rootSignature_->Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
         rootSignature_.reset();
     }
+
+    ReserveVertexAttribs(desc);
+
+    const std::size_t numVertexAttribs = desc.inputVertexFormat.attributes.size();
+    const auto& vertexAttribs = desc.inputVertexFormat.attributes;
+
+    /* Build input element descriptors */
+    inputElements_.resize(numVertexAttribs);
+    for_range(i, numVertexAttribs)
+        Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
+}
+
+bool D3D12PipelineLayout::GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const
+{
+    if (!inputElements_.empty())
+    {
+        layoutDesc.pInputElementDescs   = inputElements_.data();
+        layoutDesc.NumElements          = static_cast<UINT>(inputElements_.size());
+        return true;
+    }
+    return false;
 }
 
 void D3D12PipelineLayout::ReleaseRootSignature()
@@ -250,6 +287,16 @@ D3D12DescriptorHeapSetLayout D3D12PipelineLayout::GetDescriptorHeapSetLayout() c
 /*
  * ======= Private: =======
  */
+
+void D3D12PipelineLayout::ReserveVertexAttribs(const PipelineLayoutDescriptor& desc)
+{
+    /* Reserve memory for the input element names */
+    vertexAttribNames_.Clear();
+    for (const VertexAttribute& attr : desc.inputVertexFormat.attributes)
+        vertexAttribNames_.Reserve(attr.name.size());
+    for (const VertexAttribute& attr : desc.outputVertexFormat.attributes)
+        vertexAttribNames_.Reserve(attr.name.size());
+}
 
 void D3D12PipelineLayout::BuildRootSignature(
     D3D12RootSignature&             rootSignature,

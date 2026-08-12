@@ -59,6 +59,8 @@ class VKPipelineLayout final : public PipelineLayout
         // Creates a permutation of the specified shader. Should only be used by VKShaderModulePool.
         VKPtr<VkShaderModule> CreateVkShaderModulePermutation(VKShader& shaderVK) const;
 
+        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
+
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
@@ -203,12 +205,20 @@ class VKPipelineLayout final : public PipelineLayout
             std::uint32_t&                          dstSet
         ) const;
 
+        void BuildInputLayout(const PipelineLayoutDescriptor& desc);
+
     private:
 
         template <typename TContainer>
         void BuildDescriptorSetBindingSlots(DescriptorSetBindingTable& dst, const TContainer& src);
 
     private:
+
+        struct VertexInputLayout
+        {
+            std::vector<VkVertexInputBindingDescription>    bindingDescs;
+            std::vector<VkVertexInputAttributeDescription>  attribDescs;
+        };
 
         static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
 
@@ -228,6 +238,8 @@ class VKPipelineLayout final : public PipelineLayout
         VKLayoutBindingTable                bindingTable_;
         std::vector<VKPtr<VkSampler>>       immutableSamplers_;
         std::vector<UniformDescriptor>      uniformDescs_;
+
+        VertexInputLayout                   inputLayout_;
 
         VKPipelineBarrierPtr                barrier_;
 

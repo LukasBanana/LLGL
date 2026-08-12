@@ -10,12 +10,25 @@
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../ResourceUtils.h"
+
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
+static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
+{
+    dst.SemanticName            = src.name.c_str();
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
 
 D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
     heapBindings_ { GetExpandedHeapDescriptors(desc.heapBindings) },
@@ -23,6 +36,15 @@ D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLay
 {
     BuildDynamicResourceBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
+
+    const std::size_t numVertexAttribs = static_cast<UINT>(desc.inputVertexFormat.attributes.size());
+    const auto* vertexAttribs = desc.inputVertexFormat.attributes.data();
+
+    inputAttributes_.resize(numVertexAttribs);
+
+    for_range(i, numVertexAttribs)
+        ConvertInputElementDesc(inputAttributes_[i], vertexAttribs[i]);
+
 }
 
 std::uint32_t D3D11PipelineLayout::GetNumHeapBindings() const

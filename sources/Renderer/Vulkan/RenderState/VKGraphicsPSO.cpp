@@ -364,6 +364,8 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
         return false;
     }
 
+    const VKPipelineLayout* pipelineLayoutVK = LLGL_CAST(const VKPipelineLayout*, desc.pipelineLayout);
+
     /* Get shader stages */
     SmallVector_VkPipelineShaderStageCreateInfo shaderStageCreateInfos;
     bool shaderCreationFailed = false;
@@ -377,7 +379,16 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    vertexShaderVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+    if (pipelineLayoutVK != nullptr)
+    {
+        pipelineLayoutVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+    }
+
+    // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
+    if (vertexInputCreateInfo.sType != VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO)
+    {
+        vertexShaderVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+    }
 
     /* Initialize input assembly state */
     VkPipelineInputAssemblyStateCreateInfo inputAssembly;

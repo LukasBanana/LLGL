@@ -16,6 +16,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/StringLiteral.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <vector>
 #include <utility>
 
@@ -471,6 +472,10 @@ struct PipelineLayoutDescriptor
     \see RenderSystemChild::SetDebugName
     */
     const char*                                     debugName               = nullptr;
+
+    LLGL::VertexFormat inputVertexFormat;
+
+    LLGL::VertexFormat outputVertexFormat;
 
     /**
     \brief List of layout resource heap bindings.

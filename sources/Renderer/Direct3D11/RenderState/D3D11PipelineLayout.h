@@ -65,6 +65,10 @@ class D3D11PipelineLayout final : public PipelineLayout
             return uniforms_;
         }
 
+        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputAttributes() const {
+            return inputAttributes_;
+        }
+
     private:
 
         void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
@@ -76,6 +80,7 @@ class D3D11PipelineLayout final : public PipelineLayout
         std::vector<D3D11PipelineResourceBinding>   bindings_;
         std::vector<D3D11StaticSampler>             staticSamplers_;
         std::vector<UniformDescriptor>              uniforms_;
+        std::vector<D3D11_INPUT_ELEMENT_DESC>       inputAttributes_;
 
 };
 

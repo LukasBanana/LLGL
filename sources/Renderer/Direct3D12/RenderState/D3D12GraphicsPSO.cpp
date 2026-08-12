@@ -130,13 +130,6 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(const PrimitiveTop
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
-static D3D12_INPUT_LAYOUT_DESC GetD3DInputLayoutDesc(const Shader* vs)
-{
-    D3D12_INPUT_LAYOUT_DESC desc = {};
-    LLGL_CAST(const D3D12Shader*, vs)->GetInputLayoutDesc(desc);
-    return desc;
-}
-
 static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const Shader* ds, const Shader* gs)
 {
     D3D12_STREAM_OUTPUT_DESC desc = {};
@@ -193,9 +186,17 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Convert depth-stencil state */
     D3DConvertDepthStencilDesc(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
+    /* Set input layout */
+    pipelineLayout.GetInputLayoutDesc(stateDesc.InputLayout);
+
+    // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
+    if (stateDesc.InputLayout.pInputElementDescs == nullptr)
+    {
+        LLGL_CAST(const D3D12Shader*, desc.vertexShader)->GetInputLayoutDesc(stateDesc.InputLayout);
+    }
+
     /* Convert other states */
     const bool isStripTopology = IsPrimitiveTopologyStrip(desc.primitiveTopology);
-    stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
     stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.primitiveTopology);
