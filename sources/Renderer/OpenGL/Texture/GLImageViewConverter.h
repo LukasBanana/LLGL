@@ -21,6 +21,7 @@ namespace LLGL
 enum class GLSwizzleFormat
 {
     RGBA,   // GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA (Identity mapping)
+    BGR,    // GL_BLUE, GL_GREEN, GL_RED
     BGRA,   // GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA
     Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
 };

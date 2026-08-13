@@ -130,6 +130,8 @@ const (
     FormatRG11B10Float
     FormatRGB9E5Float
     FormatBGR5A1UNorm
+    FormatB5G6R5UNorm
+    FormatBGRA4UNorm
     FormatD16UNorm
     FormatD24UNormS8UInt
     FormatD32Float

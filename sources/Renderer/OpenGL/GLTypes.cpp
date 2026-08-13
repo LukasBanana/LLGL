@@ -185,6 +185,8 @@ GLenum MapOrZero(const Format format)
         case Format::RG11B10Float:      return GL_R11F_G11F_B10F;
         case Format::RGB9E5Float:       return GL_RGB9_E5;
         case Format::BGR5A1UNorm:       return GL_RGB5_A1;      // Texture component swizzle
+        case Format::B5G6R5UNorm:       return GL_RGB565;       // Texture component swizzle
+        case Format::BGRA4UNorm:        return GL_RGBA4;        // Texture component swizzle
         #endif
 
         /* --- Depth-stencil formats --- */
@@ -1123,6 +1125,8 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_R11F_G11F_B10F:                         return Format::RG11B10Float;
         case GL_RGB9_E5:                                return Format::RGB9E5Float;
         case GL_RGB5_A1:                                return Format::BGR5A1UNorm;
+        case GL_RGB565:                                 return Format::B5G6R5UNorm;
+        case GL_RGBA4:                                  return Format::BGRA4UNorm;
         #endif
 
         /* --- Depth-stencil formats --- */
