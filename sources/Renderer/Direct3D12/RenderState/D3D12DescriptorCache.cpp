@@ -73,15 +73,22 @@ void D3D12DescriptorCache::Clear()
 
 bool D3D12DescriptorCache::EmplaceCached(UINT heapIndex, Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType)
 {
-    auto& bound = boundDescriptors_[heapIndex];
+    std::vector<BoundDescriptor>& descriptors = boundDescriptors_[heapIndex];
 
-    if (location < bound.size() && bound[location].resource == &resource && bound[location].type == descRangeType)
+    /* Check if the specified resource is already bound as a descriptor at the same location */
+    if (location < descriptors.size() && descriptors[location].resource == &resource && descriptors[location].type == descRangeType)
         return true;
 
-    if (location >= bound.size())
-        bound.resize(location + 1);
+    if (location >= descriptors.size())
+        descriptors.resize(location + 1);
 
-    bound[location] = { &resource, descRangeType };
+    /* Make new cache entry */
+    BoundDescriptor newDescriptor;
+    {
+        newDescriptor.resource  = &resource;
+        newDescriptor.type      = descRangeType;
+    }
+    descriptors[location] = newDescriptor;
 
     return false;
 }

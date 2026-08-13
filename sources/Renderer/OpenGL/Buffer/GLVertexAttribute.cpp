@@ -44,18 +44,18 @@ void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, G
         // GL_ARB_vertex_array_bgra encodes BGRA in the size parameter.
         // The component type remains GL_UNSIGNED_BYTE. Passing GL_BGRA as
         // the type produces GL_INVALID_ENUM and disables the attribute.
-        dst.size            = static_cast<GLint>(GL_BGRA);
-        dst.type            = GL_UNSIGNED_BYTE;
-        dst.normalized      = GL_TRUE;
-        dst.isInteger       = false;
+        dst.size        = static_cast<GLint>(GL_BGRA);
+        dst.type        = GL_UNSIGNED_BYTE;
+        dst.normalized  = GL_TRUE;
+        dst.isInteger   = false;
     }
     else
     #endif
     {
-        dst.size            = static_cast<GLint>(formatAttribs.components);
-        dst.type            = GLTypes::Map(formatAttribs.dataType);
-        dst.normalized      = GLBoolean((formatAttribs.flags & FormatFlags::IsNormalized) != 0);
-        dst.isInteger       = IsIntegerFormat(src.format);
+        dst.size        = static_cast<GLint>(formatAttribs.components);
+        dst.type        = GLTypes::Map(formatAttribs.dataType);
+        dst.normalized  = GLBoolean((formatAttribs.flags & FormatFlags::IsNormalized) != 0);
+        dst.isInteger   = IsIntegerFormat(src.format);
     }
 }
 
