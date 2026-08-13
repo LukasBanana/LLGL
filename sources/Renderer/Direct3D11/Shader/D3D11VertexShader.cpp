@@ -49,7 +49,7 @@ void D3D11VertexShader::BuildInputLayout(ID3D11Device* device, UINT numVertexAtt
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    LLGL::D3D11PipelineLayout::BuildInputLayout({vertexAttribs, numVertexAttribs}, inputElements);
+    D3D11PipelineLayout::BuildInputLayout({vertexAttribs, numVertexAttribs}, inputElements);
 
     /* Create input layout */
     HRESULT hr = device->CreateInputLayout(

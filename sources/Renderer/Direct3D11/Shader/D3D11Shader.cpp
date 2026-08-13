@@ -250,7 +250,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
                 UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
                 UINT numBufferStrides = 0;
 
-                LLGL::D3D11PipelineLayout::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
+                D3D11PipelineLayout::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
 
                 /* Create geometry shader with stream-output declaration */
                 HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
