@@ -201,7 +201,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
     // Deprecated feature support: Get stream output from the shaders if we failed to get it from the pipeline layout.
     if (stateDesc.StreamOutput.pSODeclaration == nullptr)
     {
-        GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
+        stateDesc.StreamOutput = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     }
 
     /* Convert other states */
