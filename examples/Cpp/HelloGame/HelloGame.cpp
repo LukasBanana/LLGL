@@ -1066,17 +1066,19 @@ private:
         const bool needsUniqueBindingSlots  = (IsVulkan());
 
         // Create PSO for instanced meshes
-        scenePSOLayout[0] = renderer->CreatePipelineLayout(LLGL::Parse(
-            "cbuffer(Scene@1):vert:frag,"
-            "%s(instances@2):vert,"
-            "texture(shadowMap@4):frag,"
-            "sampler(shadowMapSampler@%d):frag,"
-            "float3(worldOffset),"  // Uniform_worldOffset   (0)
-            "float(bendIntensity)," // Uniform_bendIntensity (1)
-            "uint(firstInstance),", // Uniform_firstInstance (2)
-            (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
-            (needsUniqueBindingSlots ? 5 : 4)
-        ));
+        scenePSOLayout[0] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(Scene@1):vert:frag,"
+                "%s(instances@2):vert,"
+                "texture(shadowMap@4):frag,"
+                "sampler(shadowMapSampler@%d):frag,"
+                "float3(worldOffset),"  // Uniform_worldOffset   (0)
+                "float(bendIntensity)," // Uniform_bendIntensity (1)
+                "uint(firstInstance),", // Uniform_firstInstance (2)
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
+                (needsUniqueBindingSlots ? 5 : 4)
+            )
+        );
 
         LLGL::GraphicsPipelineDescriptor scenePSODesc;
         {
@@ -1096,14 +1098,16 @@ private:
         ReportPSOErrors(scenePSO[0]);
 
         // Create PSO for shadow-mapping but without a fragment shader
-        scenePSOLayout[1] = renderer->CreatePipelineLayout(LLGL::Parse(
-            "cbuffer(Scene@1):vert,"
-            "%s(instances@2):vert,"
-            "float3(worldOffset),"
-            "float(bendIntensity),"
-            "uint(firstInstance),",
-            (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
-        ));
+        scenePSOLayout[1] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(Scene@1):vert,"
+                "%s(instances@2):vert,"
+                "float3(worldOffset),"
+                "float(bendIntensity),"
+                "uint(firstInstance),",
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
+            )
+        );
 
         {
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
@@ -1122,15 +1126,17 @@ private:
         ReportPSOErrors(scenePSO[1]);
 
         // Create PSO for background
-        groundPSOLayout = renderer->CreatePipelineLayout(LLGL::Parse(
-            "cbuffer(Scene@1):vert:frag,"
-            "texture(colorMap@2):frag,"
-            "sampler(colorMapSampler@%d):frag,"
-            "texture(shadowMap@4):frag,"
-            "sampler(shadowMapSampler@%d):frag,",
-            (needsUniqueBindingSlots ? 3 : 2),
-            (needsUniqueBindingSlots ? 5 : 4)
-        ));
+        groundPSOLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(Scene@1):vert:frag,"
+                "texture(colorMap@2):frag,"
+                "sampler(colorMapSampler@%d):frag,"
+                "texture(shadowMap@4):frag,"
+                "sampler(shadowMapSampler@%d):frag,",
+                (needsUniqueBindingSlots ? 3 : 2),
+                (needsUniqueBindingSlots ? 5 : 4)
+            )
+        );
 
         LLGL::GraphicsPipelineDescriptor groundPSODesc;
         {
