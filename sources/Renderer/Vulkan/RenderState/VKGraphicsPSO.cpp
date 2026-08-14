@@ -388,11 +388,8 @@ void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
         return;
 
-    std::vector<VkVertexInputBindingDescription>   bindingDescs;
-    std::vector<VkVertexInputAttributeDescription> attribDescs;
-
-    bindingDescs.reserve(numVertexAttribs);
-    attribDescs.reserve(numVertexAttribs);
+    inputLayout.bindingDescs.reserve(numVertexAttribs);
+    inputLayout.attribDescs.reserve(numVertexAttribs);
 
     for_range(i, numVertexAttribs)
     {
@@ -412,7 +409,7 @@ void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes
             vertexAttrib.format     = VKTypes::Map(attr.format);
             vertexAttrib.offset     = attr.offset;
         }
-        attribDescs.push_back(vertexAttrib);
+        inputLayout.attribDescs.push_back(vertexAttrib);
 
         /* Insert vertex binding descriptor */
         VkVertexInputBindingDescription inputBinding;
@@ -421,7 +418,7 @@ void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes
             inputBinding.stride     = attr.stride;
             inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
         }
-        bindingDescs.push_back(inputBinding);
+        inputLayout.bindingDescs.push_back(inputBinding);
     }
 }
 
