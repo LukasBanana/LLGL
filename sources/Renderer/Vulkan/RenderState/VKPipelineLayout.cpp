@@ -6,8 +6,6 @@
  */
 
 #include "VKPipelineLayout.h"
-#include "LLGL/PipelineLayoutFlags.h"
-#include "LLGL/VertexAttribute.h"
 #include "VKPipelineLayoutPermutationPool.h"
 #include "VKPoolSizeAccumulator.h"
 #include "VKSanitizeBindingSlotContext.h"
@@ -24,8 +22,10 @@
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 
+
 namespace LLGL
 {
+
 
 VKPtr<VkPipelineLayout> VKPipelineLayout::defaultPipelineLayout_;
 

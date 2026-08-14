@@ -15,7 +15,6 @@
 #include "VKDescriptorSetLayout.h"
 #include "VKPipelineLayoutPermutation.h"
 #include "VKDescriptorCache.h"
-#include "VertexInputLayout.h"
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
@@ -229,8 +228,6 @@ class VKPipelineLayout final : public PipelineLayout
         VKLayoutBindingTable                bindingTable_;
         std::vector<VKPtr<VkSampler>>       immutableSamplers_;
         std::vector<UniformDescriptor>      uniformDescs_;
-
-        VertexInputLayout                   inputLayout_;
 
         VKPipelineBarrierPtr                barrier_;
 

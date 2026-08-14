@@ -11,7 +11,6 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/DynamicVector.h>
 #include "../Texture/D3D11Sampler.h"
 #include <d3d11.h>

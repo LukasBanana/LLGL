@@ -24,19 +24,6 @@
 #include "../../../Core/StringUtils.h"
 #include "VertexInputLayout.h"
 
-namespace
-{
-
-// Helper structure to build set of <VkVertexInputBindingDescription> elements
-struct VKCompareVertexBindingDesc
-{
-    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
-    {
-        return (lhs.binding < rhs.binding);
-    }
-};
-
-}
 
 namespace LLGL
 {

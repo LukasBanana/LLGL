@@ -10,16 +10,13 @@
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../DXCommon/DXTypes.h"
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
-
-#include <LLGL/VertexAttribute.h>
-#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
+
 
 D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
     heapBindings_ { GetExpandedHeapDescriptors(desc.heapBindings) },
