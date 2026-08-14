@@ -138,6 +138,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
 
         if (!outputElements.empty())
         {
+            // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3784385726
             /* Create geometry shader with stream-output declaration */
             HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
                 vertexByteCode->GetBufferPointer(),
