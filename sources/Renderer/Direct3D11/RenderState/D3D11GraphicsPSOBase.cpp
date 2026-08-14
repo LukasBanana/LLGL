@@ -153,13 +153,13 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
             DXThrowIfCreateFailed(hr, "failed to create proxy geometry shader");
         }
 
-        // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
+        // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline descriptor.
         if (inputLayout_ == nullptr)
         {
             inputLayout_ = vertexShaderD3D->GetInputLayout();
         }
 
-        // Deprecated feature support: Get proxy geometry shader from the vertex shader if we failed to get it from the pipeline layout.
+        // Deprecated feature support: Get proxy geometry shader from the vertex shader if we failed to get it from the pipeline descriptor.
         if (gs_ == nullptr)
         {
             gs_ = vertexShaderD3D->GetProxyGeometryShader();
