@@ -13,7 +13,7 @@
 #include <LLGL/Report.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
-#include "../RenderState/VertexInputLayout.h"
+#include "../RenderState/VKVertexInputLayout.h"
 #include "VKShaderBindingLayout.h"
 #include <vector>
 #include <functional>
@@ -97,7 +97,7 @@ class VKShader final : public Shader
             return bindingLayout_.GetDescriptorTypeForBinding(slot);
         }
 
-        inline const VertexInputLayout& GetVertexInputLayout() const
+        inline const VKVertexInputLayout& GetVertexInputLayout() const
         {
             return inputLayout_;
         }
@@ -131,7 +131,7 @@ class VKShader final : public Shader
         VKShaderBindingLayout   bindingLayout_;
 
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
-        VertexInputLayout       inputLayout_;
+        VKVertexInputLayout     inputLayout_;
 
         std::string             entryPoint_;
         Report                  report_;

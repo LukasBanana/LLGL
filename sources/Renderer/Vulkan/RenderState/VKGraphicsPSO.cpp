@@ -22,7 +22,7 @@
 #include <LLGL/Container/SmallVector.h>
 #include "../../../Core/Assertion.h"
 #include "../../../Core/StringUtils.h"
-#include "VertexInputLayout.h"
+#include "VKVertexInputLayout.h"
 
 
 namespace LLGL
@@ -350,7 +350,7 @@ void VKGraphicsPSO::FillAndAppendShaderStageCreateInfo(
     }
 };
 
-void VKGraphicsPSO::FillVertexInputStateCreateInfo(const VertexInputLayout& inputLayout, VkPipelineVertexInputStateCreateInfo& createInfo)
+void VKGraphicsPSO::FillVertexInputStateCreateInfo(const VKVertexInputLayout& inputLayout, VkPipelineVertexInputStateCreateInfo& createInfo)
 {
     /* Fill vertex input state create info */
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -380,7 +380,7 @@ void VKGraphicsPSO::FillVertexInputStateCreateInfo(const VertexInputLayout& inpu
     }
 }
 
-void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout)
+void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VKVertexInputLayout& inputLayout)
 {
     const auto numVertexAttribs = attributes.size();
     const auto* vertexAttribs = attributes.data();
@@ -451,7 +451,7 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 
-    VertexInputLayout inputLayout;
+    VKVertexInputLayout inputLayout;
     BuildInputLayout(desc.inputVertexAttribs, inputLayout);
     FillVertexInputStateCreateInfo(inputLayout, vertexInputCreateInfo);
 
