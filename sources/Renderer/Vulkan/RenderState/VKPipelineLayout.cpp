@@ -24,20 +24,6 @@
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 
-namespace
-{
-
-// Helper structure to build set of <VkVertexInputBindingDescription> elements
-struct VKCompareVertexBindingDesc
-{
-    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
-    {
-        return (lhs.binding < rhs.binding);
-    }
-};
-
-}
-
 namespace LLGL
 {
 
@@ -56,8 +42,6 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     /* Create pipeline barrier if any barrier flags are specified */
     if ((barrierFlags_ & (BarrierFlags::StorageBuffer | BarrierFlags::StorageTexture)) != 0)
         barrier_ = MakeUnique<VKPipelineBarrier>();
-
-    BuildInputLayout(desc.inputVertexAttribs, inputLayout_);
 
     /* Create Vulkan descriptor set layouts */
     VKSanitizeBindingSlotContext sanitizeContext;
@@ -81,81 +65,6 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     {
         BuildDescriptorSetBindingTables(desc);
         pipelineLayout_ = CreateVkPipelineLayout(device);
-    }
-}
-
-void VKPipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout)
-{
-    const auto numVertexAttribs = attributes.size();
-    const auto* vertexAttribs = attributes.data();
-
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    inputLayout.bindingDescs.reserve(numVertexAttribs);
-
-    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
-
-    for_range(i, numVertexAttribs)
-    {
-        const VertexAttribute& attr = vertexAttribs[i];
-
-        LLGL_ASSERT(
-            !(attr.instanceDivisor > 1),
-            "vertex instance divisor must be 0 or 1 for Vulkan, but %u was specified: %s",
-            attr.instanceDivisor, attr.name.c_str()
-        );
-
-        /* Append vertex input attribute descriptor */
-        VkVertexInputAttributeDescription vertexAttrib;
-        {
-            vertexAttrib.location   = attr.location;
-            vertexAttrib.binding    = attr.slot;
-            vertexAttrib.format     = VKTypes::Map(attr.format);
-            vertexAttrib.offset     = attr.offset;
-        }
-        inputLayout.attribDescs.push_back(vertexAttrib);
-
-        /* Insert vertex binding descriptor */
-        VkVertexInputBindingDescription inputBinding;
-        {
-            inputBinding.binding    = attr.slot;
-            inputBinding.stride     = attr.stride;
-            inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
-        }
-        bindingDescSet.insert(inputBinding);
-    }
-
-    /* Store binding descriptor in vector */
-    inputLayout.bindingDescs.insert(inputLayout.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
-}
-
-void VKPipelineLayout::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
-{
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-
-    if (inputLayout_.bindingDescs.empty())
-    {
-        createInfo.vertexBindingDescriptionCount    = 0;
-        createInfo.pVertexBindingDescriptions       = nullptr;
-    }
-    else
-    {
-        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(inputLayout_.bindingDescs.size());
-        createInfo.pVertexBindingDescriptions       = inputLayout_.bindingDescs.data();
-    }
-
-    if (inputLayout_.attribDescs.empty())
-    {
-        createInfo.vertexAttributeDescriptionCount  = 0;
-        createInfo.pVertexAttributeDescriptions     = nullptr;
-    }
-    else
-    {
-        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(inputLayout_.attribDescs.size());
-        createInfo.pVertexAttributeDescriptions     = inputLayout_.attribDescs.data();
     }
 }
 

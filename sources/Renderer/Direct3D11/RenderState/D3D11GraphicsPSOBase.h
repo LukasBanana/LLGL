@@ -76,6 +76,11 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
             return sampleMask_;
         }
 
+    public:
+
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& output);
+        static void BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides);
+
     private:
 
         void GetD3DNativeShaders(const GraphicsPipelineDescriptor& desc);

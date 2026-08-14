@@ -81,11 +81,6 @@ class D3D11PipelineLayout final : public PipelineLayout
             return ArrayView<UINT>(bufferStrides_, numBufferStrides_);
         }
 
-    public:
-
-        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_INPUT_ELEMENT_DESC>& output);
-        static void BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides);
-
     private:
 
         void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);

@@ -60,8 +60,6 @@ class VKPipelineLayout final : public PipelineLayout
         // Creates a permutation of the specified shader. Should only be used by VKShaderModulePool.
         VKPtr<VkShaderModule> CreateVkShaderModulePermutation(VKShader& shaderVK) const;
 
-        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
-
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
@@ -144,8 +142,6 @@ class VKPipelineLayout final : public PipelineLayout
 
         // Returns the default VkPipelineLayout object.
         static VkPipelineLayout GetDefault();
-
-        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout);
 
     private:
 

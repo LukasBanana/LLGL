@@ -15,7 +15,7 @@
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../PipelineStateUtils.h"
-#include "../RenderState/VKPipelineLayout.h"
+#include "../RenderState/VKGraphicsPSO.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
@@ -51,7 +51,7 @@ VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     device_ { device    }
 {
     BuildShader(desc);
-    VKPipelineLayout::BuildInputLayout(desc.vertex.inputAttribs, inputLayout_);
+    VKGraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, inputLayout_);
     BuildBindingLayout();
     BuildReport();
 }
@@ -75,35 +75,6 @@ void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& create
     createInfo.module               = shaderModule_;
     createInfo.pName                = entryPoint_.c_str();
     createInfo.pSpecializationInfo  = nullptr;
-}
-
-void VKShader::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
-{
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-
-    if (inputLayout_.bindingDescs.empty())
-    {
-        createInfo.vertexBindingDescriptionCount    = 0;
-        createInfo.pVertexBindingDescriptions       = nullptr;
-    }
-    else
-    {
-        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(inputLayout_.bindingDescs.size());
-        createInfo.pVertexBindingDescriptions       = inputLayout_.bindingDescs.data();
-    }
-
-    if (inputLayout_.attribDescs.empty())
-    {
-        createInfo.vertexAttributeDescriptionCount  = 0;
-        createInfo.pVertexAttributeDescriptions     = nullptr;
-    }
-    else
-    {
-        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(inputLayout_.attribDescs.size());
-        createInfo.pVertexAttributeDescriptions     = inputLayout_.attribDescs.data();
-    }
 }
 
 bool VKShader::NeedsShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc) const

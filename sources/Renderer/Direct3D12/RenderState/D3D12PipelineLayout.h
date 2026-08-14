@@ -141,9 +141,6 @@ class D3D12PipelineLayout final : public PipelineLayout
         // Returns the layout of the set of descriptor heaps.
         D3D12DescriptorHeapSetLayout GetDescriptorHeapSetLayout() const;
 
-        bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
-        bool GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const;
-
         // Returns the finalized native ID3D12RootSignature object as ComPtr.
         inline const ComPtr<ID3D12RootSignature>& GetFinalizedRootSignature() const
         {
@@ -216,24 +213,7 @@ class D3D12PipelineLayout final : public PipelineLayout
             return numUAVBarriers_;
         }
 
-    public:
-
-        static void BuildInputLayout(
-            LLGL::ArrayView<VertexAttribute> attributes,
-            std::vector<D3D12_INPUT_ELEMENT_DESC>& output,
-            LinearStringContainer& vertexAttribNames
-        );
-
-        static void BuildStreamOutput(
-            LLGL::ArrayView<VertexAttribute> attributes,
-            std::vector<D3D12_SO_DECLARATION_ENTRY>& output,
-            std::vector<UINT>& bufferStrides,
-            LinearStringContainer& vertexAttribNames
-        );
-
     private:
-
-        void ReserveVertexAttribs(const PipelineLayoutDescriptor& desc);
 
         void BuildRootSignature(
             D3D12RootSignature&             rootSignature,
@@ -309,11 +289,6 @@ class D3D12PipelineLayout final : public PipelineLayout
         D3D12RootSignatureLayout                    descriptorLayout_;
         SmallVector<D3D12DescriptorHeapLocation, 8> descriptorMap_;
         SmallVector<D3D12DescriptorLocation, 8>     rootParameterMap_;
-
-        std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
-        std::vector<D3D12_SO_DECLARATION_ENTRY>     soDeclEntries_;
-        std::vector<UINT>                           soBufferStrides_;
-        LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         UINT                                        numStaticSamplers_      = 0;
         D3D12RootParameterIndices                   rootParameterIndices_;

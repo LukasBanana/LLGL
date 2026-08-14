@@ -10,6 +10,7 @@
 
 
 #include "VKPipelineState.h"
+#include "VertexInputLayout.h"
 
 
 namespace LLGL
@@ -49,6 +50,8 @@ class VKGraphicsPSO final : public VKPipelineState
             PipelineCache*                      pipelineCache       = nullptr
         );
 
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout);
+
         // Returns true if scissors are enabled.
         inline bool IsScissorEnabled() const
         {
@@ -62,6 +65,8 @@ class VKGraphicsPSO final : public VKPipelineState
         }
 
     private:
+
+        static void FillVertexInputStateCreateInfo(const VertexInputLayout& inputLayout, VkPipelineVertexInputStateCreateInfo& createInfo);
 
         void FillAndAppendShaderStageCreateInfo(
             Shader*                                             shader,

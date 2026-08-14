@@ -33,6 +33,23 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         // Binds this graphics PSO to the specified command context.
         void Bind(D3D12CommandContext& commandContext) override;
 
+        void ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc);
+
+    public:
+
+        static void BuildInputLayout(
+            LLGL::ArrayView<VertexAttribute> attributes,
+            LLGL::DynamicVector<D3D12_INPUT_ELEMENT_DESC>& output,
+            LinearStringContainer& vertexAttribNames
+        );
+
+        static void BuildStreamOutput(
+            LLGL::ArrayView<VertexAttribute> attributes,
+            LLGL::DynamicVector<D3D12_SO_DECLARATION_ENTRY>& output,
+            LLGL::DynamicVector<UINT>& bufferStrides,
+            LinearStringContainer& vertexAttribNames
+        );
+
     private:
 
         void CreateNativePSO(
@@ -63,6 +80,11 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
     private:
+
+        DynamicVector<D3D12_INPUT_ELEMENT_DESC>     inputElements_;
+        DynamicVector<D3D12_SO_DECLARATION_ENTRY>   soDeclEntries_;
+        DynamicVector<UINT>                         soBufferStrides_;
+        LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         /*
         Secondary PSO if index format is undefined for strip topologies:

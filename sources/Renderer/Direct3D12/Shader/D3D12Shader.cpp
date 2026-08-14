@@ -7,6 +7,7 @@
 
 #include "D3D12Shader.h"
 #include "../D3D12RenderSystem.h"
+#include "../RenderState/D3D12GraphicsPSO.h"
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/CoreUtils.h"
@@ -39,8 +40,8 @@ D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor
             /* Build input layout and stream-output descriptors for vertex/geometry shaders */
             ReserveVertexAttribs(desc);
             if (GetType() == ShaderType::Vertex)
-                D3D12PipelineLayout::BuildInputLayout(desc.vertex.inputAttribs, inputElements_, vertexAttribNames_);
-            D3D12PipelineLayout::BuildStreamOutput(desc.vertex.outputAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
+                D3D12GraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, inputElements_, vertexAttribNames_);
+            D3D12GraphicsPSO::BuildStreamOutput(desc.vertex.outputAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
         }
     }
 }

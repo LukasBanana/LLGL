@@ -80,9 +80,9 @@ class D3D12Shader final : public Shader
         ComPtr<ID3DBlob>                            byteCode_;
         Report                                      report_;
 
-        std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
-        std::vector<D3D12_SO_DECLARATION_ENTRY>     soDeclEntries_;
-        std::vector<UINT>                           soBufferStrides_;
+        DynamicVector<D3D12_INPUT_ELEMENT_DESC>     inputElements_;
+        DynamicVector<D3D12_SO_DECLARATION_ENTRY>   soDeclEntries_;
+        DynamicVector<UINT>                         soBufferStrides_;
         LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         HRESULT                                     cbufferReflectionResult_    = S_FALSE;

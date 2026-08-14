@@ -6,7 +6,7 @@
  */
 
 #include "D3D11VertexShader.h"
-#include "../RenderState/D3D11PipelineLayout.h"
+#include "../RenderState/D3D11GraphicsPSOBase.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Assertion.h"
@@ -48,8 +48,8 @@ void D3D11VertexShader::BuildInputLayout(ID3D11Device* device, UINT numVertexAtt
     LLGL_ASSERT(GetType() == ShaderType::Vertex, "cannot build input layout for non-vertex-shader");
 
     /* Setup input element descriptors */
-    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    D3D11PipelineLayout::BuildInputLayout({vertexAttribs, numVertexAttribs}, inputElements);
+    DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    D3D11GraphicsPSOBase::BuildInputLayout({vertexAttribs, numVertexAttribs}, inputElements);
 
     /* Create input layout */
     HRESULT hr = device->CreateInputLayout(

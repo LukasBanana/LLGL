@@ -64,7 +64,6 @@ class VKShader final : public Shader
         ) const;
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
-        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
         /*
         Returns true if a shader permutation is needed for the specified binding functor.
@@ -96,6 +95,11 @@ class VKShader final : public Shader
         inline VkDescriptorType GetDescriptorTypeForBinding(const BindingSlot& slot) const
         {
             return bindingLayout_.GetDescriptorTypeForBinding(slot);
+        }
+
+        inline const VertexInputLayout& GetVertexInputLayout() const
+        {
+            return inputLayout_;
         }
 
     private:

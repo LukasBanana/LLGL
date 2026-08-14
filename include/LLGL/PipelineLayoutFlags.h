@@ -474,29 +474,6 @@ struct PipelineLayoutDescriptor
     const char*                                     debugName               = nullptr;
 
     /**
-    \brief Vertex shader input attributes.
-    \remarks All of these attributes must be contained in the \c vertexAttribs list of the vertex buffer that will be used in conjunction with the respective shader.
-    In other words, a shader must not declare any vertex attributes that are not contained in the currently bound vertex buffer.
-    \see BufferDescriptor::vertexAttribs
-    */
-    std::vector<VertexAttribute>                    inputVertexAttribs;
-
-    /**
-    \brief Vertex (or geometry or tessellation-evaluation) shader stream-output attributes.
-    \remarks Some rendering APIs need the output stream attributes for the vertex shader and other APIs need them for the geometry shader.
-    To keep the code logic simple, it is valid to declare the output attributes for both the vertex and geometry shader (or even all that will be used in the same shader program).
-    Output attributes are ignored where they cannot be used.
-    \remarks Stream-output attributes can only have 32-bit floating-point formats, i.e. only the following formats are supported:
-    - Format::R32Float
-    - Format::RG32Float
-    - Format::RGB32Float
-    - Format::RGBA32Float
-    \see RenderingFeatures::hasStreamOutputs
-    \see CommandBuffer::BeginStreamOutput
-    */
-    std::vector<VertexAttribute>                    outputVertexAttribs;
-
-    /**
     \brief List of layout resource heap bindings.
     \remarks These bindings refer to the resource descriptors that are all bound at once with a single ResourceHeap.
     \remarks Only heap bindings can have subresource views as opposed to individual bindings that can only bind the entire resource.

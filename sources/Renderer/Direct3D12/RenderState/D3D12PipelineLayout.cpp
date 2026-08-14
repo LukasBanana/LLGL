@@ -113,21 +113,6 @@ static long ConvoluteLayoutStageFlags(const PipelineLayoutDescriptor& desc)
     return convolutedStageFlags;
 }
 
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    dst.SemanticName            = stringContainer.CopyString(src.name);
-    dst.SemanticIndex           = src.semanticIndex;
-    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
-    dst.InputSlot               = src.slot;
-    dst.AlignedByteOffset       = src.offset;
-    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
-    dst.InstanceDataStepRate    = src.instanceDivisor;
-}
-
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
     /* Keep pointer to D3D12 device */
@@ -148,116 +133,6 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
         finalizedRootSignature_ = rootSignature_->Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
         rootSignature_.reset();
     }
-
-    ReserveVertexAttribs(desc);
-    BuildInputLayout(desc.inputVertexAttribs, inputElements_, vertexAttribNames_);
-    BuildStreamOutput(desc.outputVertexAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
-}
-
-void D3D12PipelineLayout::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D12_INPUT_ELEMENT_DESC>& output, LinearStringContainer& vertexAttribNames)
-{
-    const auto numVertexAttribs = attributes.size();
-
-    /* Build input element descriptors */
-    output.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-        Convert(output[i], attributes[i], vertexAttribNames);
-}
-
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0;
-    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
-    dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;
-    dst.ComponentCount  = GetFormatAttribs(src.format).components;
-    dst.OutputSlot      = src.slot;
-}
-
-void D3D12PipelineLayout::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, std::vector<D3D12_SO_DECLARATION_ENTRY>& soDeclEntries, std::vector<UINT>& soBufferStrides, LinearStringContainer& vertexAttribNames)
-{
-    if (attributes.empty())
-       return;
-
-    const auto numStreamOutputAttribs = attributes.size();
-
-    /* Reserve memory for the buffer strides */
-    UINT maxSlot = 0;
-    for_range(i, numStreamOutputAttribs)
-        maxSlot = std::max(maxSlot, attributes[i].slot);
-
-    soBufferStrides.clear();
-    soBufferStrides.resize(maxSlot + 1, 0);
-
-    /* Build stream-output entries and buffer strides */
-    soDeclEntries.resize(numStreamOutputAttribs);
-    for_range(i, numStreamOutputAttribs)
-    {
-        const VertexAttribute& attr = attributes[i];
-
-        /* Convert vertex attribute to stream-output entry */
-        ConvertSODeclEntry(soDeclEntries[i], attr, vertexAttribNames);
-
-        /* Store buffer stide */
-        UINT& bufferStride = soBufferStrides[attr.slot];
-        if (attr.stride == 0)
-        {
-            /* Error: vertex attribute must not have stride of zero */
-            LLGL_TRAP(
-                "buffer stride in stream-output attribute must not be zero: %s",
-                attr.name.c_str()
-            );
-        }
-        else if (bufferStride == 0)
-        {
-            /* Store new buffer stride */
-            bufferStride = attr.stride;
-        }
-        else if (bufferStride != attr.stride)
-        {
-            LLGL_TRAP(
-                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
-                bufferStride, attr.stride, attr.name.c_str()
-            );
-        }
-    }
-
-    /* Build buffer stride */
-    for_range(i, soBufferStrides.size())
-    {
-        if (soBufferStrides[i] == 0)
-            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
-    }
-}
-
-bool D3D12PipelineLayout::GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const
-{
-    if (!inputElements_.empty())
-    {
-        layoutDesc.pInputElementDescs   = inputElements_.data();
-        layoutDesc.NumElements          = static_cast<UINT>(inputElements_.size());
-        return true;
-    }
-    return false;
-}
-
-bool D3D12PipelineLayout::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const
-{
-    if (!soDeclEntries_.empty())
-    {
-        layoutDesc.pSODeclaration   = soDeclEntries_.data();
-        layoutDesc.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
-        layoutDesc.pBufferStrides   = soBufferStrides_.data();
-        layoutDesc.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
-        layoutDesc.RasterizedStream = 0;
-        return true;
-    }
-    return false;
 }
 
 void D3D12PipelineLayout::ReleaseRootSignature()
@@ -377,16 +252,6 @@ D3D12DescriptorHeapSetLayout D3D12PipelineLayout::GetDescriptorHeapSetLayout() c
 /*
  * ======= Private: =======
  */
-
-void D3D12PipelineLayout::ReserveVertexAttribs(const PipelineLayoutDescriptor& desc)
-{
-    /* Reserve memory for the input element names */
-    vertexAttribNames_.Clear();
-    for (const VertexAttribute& attr : desc.inputVertexAttribs)
-        vertexAttribNames_.Reserve(attr.name.size());
-    for (const VertexAttribute& attr : desc.outputVertexAttribs)
-        vertexAttribNames_.Reserve(attr.name.size());
-}
 
 void D3D12PipelineLayout::BuildRootSignature(
     D3D12RootSignature&             rootSignature,

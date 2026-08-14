@@ -50,6 +50,55 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
 }
 
 
+static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
+{
+    dst.SemanticName            = src.name.c_str();
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
+
+void D3D11GraphicsPSOBase::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& outputAttributes)
+{
+    const auto numVertexAttribs = static_cast<UINT>(attributes.size());
+
+    outputAttributes.resize(numVertexAttribs);
+
+    for_range(i, numVertexAttribs)
+        ConvertInputElementDesc(outputAttributes[i], attributes[i]);
+}
+
+// Converts a vertex attribute to a D3D stream-output entry
+static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
+{
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
+    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = 0;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D11GraphicsPSOBase::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
+{
+    const auto numStreamOutputAttribs = static_cast<UINT>(attributes.size());
+
+    /* Initialize output elements for geometry shader with stream-output */
+    output.resize(numStreamOutputAttribs);
+
+    for_range(i, numStreamOutputAttribs)
+    {
+        ConvertSODeclEntry(output[i], attributes[i]);
+        LLGL_ASSERT(output[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
+        bufferStrides[output[i].OutputSlot] = attributes[i].stride;
+        numBufferStrides = std::max<UINT>(numBufferStrides, output[i].OutputSlot + 1);
+    }
+}
+
 /*
  * ======= Protected: =======
  */
@@ -62,46 +111,46 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
     {
         /* Take input layout and store optional proxy geometry-shader for stream-output */
 
-        const auto* pipelineLayout = GetPipelineLayout();
-
         // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
-        if (pipelineLayout != nullptr)
+
+        auto* vertexByteCode = vertexShaderD3D->GetByteCode();
+
+        DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+        BuildInputLayout(desc.inputVertexAttribs, inputElements);
+
+        if (!inputElements.empty())
         {
-            const auto& inputElements  = pipelineLayout->GetInputElements();
-            const auto& outputElements = pipelineLayout->GetOutputElements();
+            HRESULT hr = device->CreateInputLayout(
+                inputElements.data(),
+                inputElements.size(),
+                vertexByteCode->GetBufferPointer(),
+                vertexByteCode->GetBufferSize(),
+                inputLayout_.ReleaseAndGetAddressOf()
+            );
+            DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+        }
 
-            auto* vertexByteCode = vertexShaderD3D->GetByteCode();
+        std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
+        outputElements.resize(desc.outputVertexAttribs.size());
 
-            if (!inputElements.empty())
-            {
-                HRESULT hr = device->CreateInputLayout(
-                    inputElements.data(),
-                    inputElements.size(),
-                    vertexByteCode->GetBufferPointer(),
-                    vertexByteCode->GetBufferSize(),
-                    inputLayout_.ReleaseAndGetAddressOf()
-                );
-                DXThrowIfFailed(hr, "failed to create D3D11 input layout");
-            }
+        UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
+        UINT numBufferStrides = 0;
 
-            if (!outputElements.empty())
-            {
-                const auto& bufferStrides = pipelineLayout->GetBufferStrides();
-
-                /* Create geometry shader with stream-output declaration */
-                HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
-                    vertexByteCode->GetBufferPointer(),
-                    vertexByteCode->GetBufferSize(),
-                    outputElements.data(),
-                    static_cast<UINT>(outputElements.size()),
-                    bufferStrides.data(),
-                    bufferStrides.size(),
-                    0,
-                    nullptr,
-                    gs_.ReleaseAndGetAddressOf()
-                );
-                DXThrowIfCreateFailed(hr, "failed to create proxy geometry shader");
-            }
+        if (!outputElements.empty())
+        {
+            /* Create geometry shader with stream-output declaration */
+            HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
+                vertexByteCode->GetBufferPointer(),
+                vertexByteCode->GetBufferSize(),
+                outputElements.data(),
+                static_cast<UINT>(outputElements.size()),
+                bufferStrides,
+                numBufferStrides,
+                0,
+                nullptr,
+                gs_.ReleaseAndGetAddressOf()
+            );
+            DXThrowIfCreateFailed(hr, "failed to create proxy geometry shader");
         }
 
         // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.

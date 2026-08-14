@@ -22,7 +22,21 @@
 #include <LLGL/Container/SmallVector.h>
 #include "../../../Core/Assertion.h"
 #include "../../../Core/StringUtils.h"
+#include "VertexInputLayout.h"
 
+namespace
+{
+
+// Helper structure to build set of <VkVertexInputBindingDescription> elements
+struct VKCompareVertexBindingDesc
+{
+    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
+    {
+        return (lhs.binding < rhs.binding);
+    }
+};
+
+}
 
 namespace LLGL
 {
@@ -349,6 +363,81 @@ void VKGraphicsPSO::FillAndAppendShaderStageCreateInfo(
     }
 };
 
+void VKGraphicsPSO::FillVertexInputStateCreateInfo(const VertexInputLayout& inputLayout, VkPipelineVertexInputStateCreateInfo& createInfo)
+{
+    /* Fill vertex input state create info */
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+
+    if (inputLayout.bindingDescs.empty())
+    {
+        createInfo.vertexBindingDescriptionCount    = 0;
+        createInfo.pVertexBindingDescriptions       = nullptr;
+    }
+    else
+    {
+        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(inputLayout.bindingDescs.size());
+        createInfo.pVertexBindingDescriptions       = inputLayout.bindingDescs.data();
+    }
+
+    if (inputLayout.attribDescs.empty())
+    {
+        createInfo.vertexAttributeDescriptionCount  = 0;
+        createInfo.pVertexAttributeDescriptions     = nullptr;
+    }
+    else
+    {
+        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(inputLayout.attribDescs.size());
+        createInfo.pVertexAttributeDescriptions     = inputLayout.attribDescs.data();
+    }
+}
+
+void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VertexInputLayout& inputLayout)
+{
+    const auto numVertexAttribs = attributes.size();
+    const auto* vertexAttribs = attributes.data();
+
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    std::vector<VkVertexInputBindingDescription>   bindingDescs;
+    std::vector<VkVertexInputAttributeDescription> attribDescs;
+
+    bindingDescs.reserve(numVertexAttribs);
+    attribDescs.reserve(numVertexAttribs);
+
+    for_range(i, numVertexAttribs)
+    {
+        const VertexAttribute& attr = vertexAttribs[i];
+
+        LLGL_ASSERT(
+            !(attr.instanceDivisor > 1),
+            "vertex instance divisor must be 0 or 1 for Vulkan, but %u was specified: %s",
+            attr.instanceDivisor, attr.name.c_str()
+        );
+
+        /* Append vertex input attribute descriptor */
+        VkVertexInputAttributeDescription vertexAttrib;
+        {
+            vertexAttrib.location   = attr.location;
+            vertexAttrib.binding    = attr.slot;
+            vertexAttrib.format     = VKTypes::Map(attr.format);
+            vertexAttrib.offset     = attr.offset;
+        }
+        attribDescs.push_back(vertexAttrib);
+
+        /* Insert vertex binding descriptor */
+        VkVertexInputBindingDescription inputBinding;
+        {
+            inputBinding.binding    = attr.slot;
+            inputBinding.stride     = attr.stride;
+            inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+        }
+        bindingDescs.push_back(inputBinding);
+    }
+}
+
 bool VKGraphicsPSO::CreateGraphicsVkPipeline(
     VkDevice                            device,
     const VKRenderPass&                 renderPass,
@@ -379,15 +468,15 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
-    if (pipelineLayoutVK != nullptr)
-    {
-        pipelineLayoutVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
-    }
 
-    // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline layout.
+    VertexInputLayout inputLayout;
+    BuildInputLayout(desc.inputVertexAttribs, inputLayout);
+    FillVertexInputStateCreateInfo(inputLayout, vertexInputCreateInfo);
+
+    // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline descriptor.
     if (vertexInputCreateInfo.pVertexAttributeDescriptions == nullptr)
     {
-        vertexShaderVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+        FillVertexInputStateCreateInfo(vertexShaderVK->GetVertexInputLayout(), vertexInputCreateInfo);
     }
 
     /* Initialize input assembly state */

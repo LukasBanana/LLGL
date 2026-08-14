@@ -8,7 +8,7 @@
 #include "D3D11Shader.h"
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
-#include "../RenderState/D3D11PipelineLayout.h"
+#include "../RenderState/D3D11GraphicsPSOBase.h"
 #include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
@@ -244,13 +244,13 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
             if ((streamOutputAttribs != nullptr && numStreamOutputAttribs > 0) || rasterizedStream == D3D11_SO_NO_RASTERIZED_STREAM)
             {
                 /* Initialize output elements for geometry shader with stream-output */
-                std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
+                DynamicVector<D3D11_SO_DECLARATION_ENTRY> outputElements;
                 outputElements.resize(numStreamOutputAttribs);
 
                 UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
                 UINT numBufferStrides = 0;
 
-                D3D11PipelineLayout::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
+                D3D11GraphicsPSOBase::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
 
                 /* Create geometry shader with stream-output declaration */
                 HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
