@@ -9,7 +9,6 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Trap.h>
 #include "FileUtils.h"
-#include "LLGL/ForwardDecls.h"
 #include <algorithm>
 #include <limits.h>
 #include <sstream>
