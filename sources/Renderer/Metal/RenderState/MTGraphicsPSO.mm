@@ -18,8 +18,11 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Utils/ForRange.h>
+#include <Metal/Metal.h>
 #include <TargetConditionals.h>
+#include <set>
 #include <string.h>
 
 
@@ -57,7 +60,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     /* Convert standalone parameters */
     cullMode_       	= MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
     winding_            = (desc.rasterizer.frontCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
-    fillMode_           = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
+    fillMode_            = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
     primitiveType_  	= MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
     clipMode_           = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
 
@@ -210,6 +213,60 @@ static const MTShader* GetVertexOrPostTessVertexShader(const GraphicsPipelineDes
     return vertexShaderMT;
 }
 
+// Converts the vertex attribute to a Metal vertex buffer layout
+static void Convert(MTLVertexBufferLayoutDescriptor* dst, const VertexAttribute& src, bool isPatchControlPoint)
+{
+    if (src.instanceDivisor > 0)
+    {
+        dst.stepFunction = MTLVertexStepFunctionPerInstance;
+        dst.stepRate     = static_cast<NSUInteger>(src.instanceDivisor);
+    }
+    else
+    {
+        dst.stepFunction = (isPatchControlPoint ? MTLVertexStepFunctionPerPatchControlPoint : MTLVertexStepFunctionPerVertex);
+        dst.stepRate     = 1;
+    }
+    dst.stride = static_cast<NSUInteger>(src.stride);
+}
+
+// Converts the vertex attribute to a Metal vertex attribute
+static void Convert(MTLVertexAttributeDescriptor* dst, const VertexAttribute& src)
+{
+    dst.format      = MTTypes::ToMTLVertexFormat(src.format);
+    dst.offset      = static_cast<NSUInteger>(src.offset);
+    dst.bufferIndex = static_cast<NSUInteger>(src.slot);
+}
+
+void MTGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> vertexAttribs, const MTShader* vertexShader, MTLVertexDescriptor*& vertexDesc)
+{
+    if (vertexAttribs.empty())
+        return;
+
+    /* Allocate new vertex descriptor */
+    if (vertexDesc)
+        [vertexDesc release];
+    vertexDesc = [[MTLVertexDescriptor alloc] init];
+
+    id<MTLFunction> native = vertexShader->GetNative();
+
+    /* If the patch type of the vertex function is not MTLPatchTypeNone, the vertex layout declares a patch control point */
+    bool isPatchControlPoint = (native != nil && [native patchType] != MTLPatchTypeNone);
+
+    /* Convert vertex attributes to Metal vertex buffer layouts and attribute descriptors */
+    std::set<std::uint32_t> slotOccupied;
+
+    for_range(i, vertexAttribs.size())
+    {
+        const auto& attr = vertexAttribs[i];
+
+        auto occupied = slotOccupied.insert(attr.slot);
+        if (occupied.second)
+            Convert(vertexDesc.layouts[attr.slot], attr, isPatchControlPoint);
+
+        Convert(vertexDesc.attributes[attr.location], attr);
+    }
+}
+
 bool MTGraphicsPSO::CreateRenderPipelineState(
     id<MTLDevice>                       device,
     const GraphicsPipelineDescriptor&   desc,
@@ -229,7 +286,7 @@ bool MTGraphicsPSO::CreateRenderPipelineState(
     else
     {
         /* Error: Every graphics PSO needs a valid vertex function */
-        GetMutableReport().Errorf("cannot create Metal graphics PSO without valid vertex function");
+        GetMutableReport().Errorf("cannot create Metal graphics PSO without valid vertex function\n");
         return false;
     }
 
@@ -245,7 +302,16 @@ bool MTGraphicsPSO::CreateRenderPipelineState(
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* psoDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
-        psoDesc.vertexDescriptor        = vertexShaderMT->GetMTLVertexDesc();
+        MTLVertexDescriptor* vertexDesc = nullptr;
+        BuildInputLayout(desc.inputVertexAttribs, vertexShaderMT, vertexDesc);
+        
+        // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline descriptor.
+        if (vertexDesc == nullptr)
+        {
+            vertexDesc = vertexShaderMT->GetMTLVertexDesc();
+        }
+
+        psoDesc.vertexDescriptor        = vertexDesc;
         psoDesc.alphaToCoverageEnabled  = MTBoolean(desc.blend.alphaToCoverageEnabled);
         psoDesc.alphaToOneEnabled       = NO;
         psoDesc.fragmentFunction        = GetNativeMTShader(desc.fragmentShader);
