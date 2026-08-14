@@ -10,6 +10,7 @@
 
 
 #include "D3D12RenderPSOBase.h"
+#include "../../../Core/LinearStringContainer.h"
 
 
 namespace LLGL
