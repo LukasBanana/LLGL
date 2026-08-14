@@ -60,7 +60,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     /* Convert standalone parameters */
     cullMode_       	= MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
     winding_            = (desc.rasterizer.frontCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
-    fillMode_            = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
+    fillMode_           = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
     primitiveType_  	= MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
     clipMode_           = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
 
@@ -246,6 +246,8 @@ void MTGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> vertexAttr
     if (vertexDesc)
         [vertexDesc release];
     vertexDesc = [[MTLVertexDescriptor alloc] init];
+
+    bool isPatchControlPoint
 
     id<MTLFunction> native = vertexShader->GetNative();
 
