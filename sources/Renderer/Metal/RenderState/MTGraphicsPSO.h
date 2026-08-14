@@ -48,7 +48,7 @@ class MTGraphicsPSO final : public MTPipelineState
         ) const;
 
 
-        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> vertexAttributes, const MTShader* vertexShader, MTLVertexDescriptor*& vertexDesc);
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> vertexAttributes, bool isPatchControlPoint, MTLVertexDescriptor*& vertexDesc);
 
         // Returns the native primitive type.
         inline MTLPrimitiveType GetMTLPrimitiveType() const

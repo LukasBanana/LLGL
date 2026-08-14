@@ -25,8 +25,11 @@ MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
 {
     if (Compile(device, desc))
     {
+        /* If the patch type of the vertex function is not MTLPatchTypeNone, the vertex layout declares a patch control point */
+        bool isPatchControlPoint = (native_ != nil && [native_ patchType] != MTLPatchTypeNone);
+
         /* Build vertex input layout */
-        MTGraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, this, vertexDesc_);
+        MTGraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, isPatchControlPoint, vertexDesc_);
 
         /* Store work group size for compute shaders */
         if (desc.type == ShaderType::Compute)
