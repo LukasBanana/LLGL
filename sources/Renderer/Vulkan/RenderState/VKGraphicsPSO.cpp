@@ -437,8 +437,6 @@ bool VKGraphicsPSO::CreateGraphicsVkPipeline(
         return false;
     }
 
-    const VKPipelineLayout* pipelineLayoutVK = LLGL_CAST(const VKPipelineLayout*, desc.pipelineLayout);
-
     /* Get shader stages */
     SmallVector_VkPipelineShaderStageCreateInfo shaderStageCreateInfos;
     bool shaderCreationFailed = false;
