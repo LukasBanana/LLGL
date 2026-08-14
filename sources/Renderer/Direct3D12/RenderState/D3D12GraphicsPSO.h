@@ -34,8 +34,6 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         // Binds this graphics PSO to the specified command context.
         void Bind(D3D12CommandContext& commandContext) override;
 
-        void ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc);
-
     public:
 
         static void BuildInputLayout(
@@ -52,6 +50,8 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         );
 
     private:
+
+        void ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc);
 
         void CreateNativePSO(
             ID3D12Device*                       device,
