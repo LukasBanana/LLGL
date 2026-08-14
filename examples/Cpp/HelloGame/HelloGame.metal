@@ -70,7 +70,7 @@ float3 MeshAnimation(float3 pos, float3 bendDir, float bendIntensity)
 
 float3 WarpPosition(constant Scene& scene, float3 pos)
 {
-    float3 dir = pos - scene.warpCenter;
+    float3 dir = pos - float3(scene.warpCenter);
     float dirLen = length(dir);
     float intensity = WarpIntensityCurve(dirLen, scene.warpScaleInv);
     return pos + normalize(dir) * intensity * scene.warpIntensity;
@@ -160,13 +160,13 @@ fragment float4 PSInstance(
     float4  albedo      = inp.color;
 
     // Diffuse lighting
-    float3  lightVec    = -scene.lightDir.xyz;
+    float3  lightVec    = -float3(scene.lightDir).xyz;
     float3  normal      = normalize(inp.normal);
     float   NdotL       = mix(0.2, 1.0, max(0.0, dot(normal, lightVec)));
     float3  diffuse     = albedo.rgb * NdotL;
 
     // Specular lighting
-    float3  viewDir     = normalize(scene.viewPos - inp.worldPos);
+    float3  viewDir     = normalize(float3(scene.viewPos) - inp.worldPos);
     float3  halfVec     = normalize(viewDir + lightVec);
     float   NdotH       = dot(normal, halfVec);
     float3  specular    = (float3)pow(max(0.0, NdotH), scene.shininess);
@@ -175,7 +175,7 @@ fragment float4 PSInstance(
     float   shadow      = mix(scene.ambientItensity, 1.0, SampleShadowMapPCF(shadowMap, shadowMapSampler, scene, inp.position.xy, inp.worldPos));
 
     // Set final output color
-    float3  light       = scene.lightColor * (diffuse + specular) * shadow;
+    float3  light       = float3(scene.lightColor) * (diffuse + specular) * shadow;
     return float4(light, albedo.a);
 }
 
@@ -212,12 +212,12 @@ fragment float4 PSGround(
     sampler             shadowMapSampler    [[sampler(4)]])
 {
     // Sample color map
-    float4  albedo = colorMap.sample(colorMapSampler, inp.texCoord * scene.groundScale) * float4(scene.groundTint, 1);
+    float4  albedo = colorMap.sample(colorMapSampler, inp.texCoord * scene.groundScale) * float4(float3(scene.groundTint), 1);
 
     // Apply shadow mapping
     float   shadow = mix(scene.ambientItensity, 1.0, SampleShadowMapPCF(shadowMap, shadowMapSampler, scene, inp.position.xy, inp.worldPos));
 
     // Set final output color
-    return float4(albedo.rgb * scene.lightColor * shadow, albedo.a);
+    return float4(albedo.rgb * float3(scene.lightColor) * shadow, albedo.a);
 }
 

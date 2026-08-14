@@ -1048,11 +1048,11 @@ private:
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "1.1" });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "1.1" });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSInstance", "1.1" });
+            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSInstance", "1.1" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "1.1" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "1.1" });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSGround",   "1.1" });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSGround",   "1.1" });
         }
         else
         {

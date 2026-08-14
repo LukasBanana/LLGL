@@ -789,7 +789,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
 
         #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
         // Always load shaders from default library (default.metallib) when compiling for iOS and macOS
-        deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
+        // deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif
 
         // Forward vertex and fragment attributes
