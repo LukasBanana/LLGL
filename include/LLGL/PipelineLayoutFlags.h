@@ -14,7 +14,6 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <vector>

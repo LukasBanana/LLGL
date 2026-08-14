@@ -11,11 +11,9 @@
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../DXCommon/DXTypes.h"
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
-#include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <string>
 #include <algorithm>

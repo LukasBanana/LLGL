@@ -11,7 +11,6 @@
 #include "../Texture/D3D11Sampler.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../ResourceUtils.h"
-#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
