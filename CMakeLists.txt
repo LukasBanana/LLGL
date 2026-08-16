@@ -1053,5 +1053,10 @@ if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
     message(STATUS "Options: ${SUMMARY_FLAGS}")
 endif()
 
+# Warnings about problematic configurations
+if (LLGL_BUILD_TESTS AND LLGL_BUILD_RENDERER_VULKAN AND NOT LLGL_VK_ENABLE_SPIRV_REFLECT)
+    message(WARNING "Vulkan shader reflection is disabled (LLGL_VK_ENABLE_SPIRV_REFLECT), but is required for Vulkan tests (LLGL_BUILD_TESTS).")
+endif()
+
 message(STATUS "~~~~~~~~~~~~~~~~~~~~~")
 
