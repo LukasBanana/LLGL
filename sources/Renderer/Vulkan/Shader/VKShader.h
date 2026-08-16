@@ -13,6 +13,7 @@
 #include <LLGL/Report.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include "../RenderState/VKVertexInputLayout.h"
 #include "VKShaderBindingLayout.h"
 #include <vector>
 #include <functional>
@@ -63,7 +64,6 @@ class VKShader final : public Shader
         ) const;
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
-        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
         /*
         Returns true if a shader permutation is needed for the specified binding functor.
@@ -97,6 +97,11 @@ class VKShader final : public Shader
             return bindingLayout_.GetDescriptorTypeForBinding(slot);
         }
 
+        inline const VKVertexInputLayout& GetVertexInputLayout() const
+        {
+            return inputLayout_;
+        }
+
     private:
 
         // Note: "Success" is a reserved macro by X11 lib.
@@ -111,20 +116,11 @@ class VKShader final : public Shader
     private:
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
-        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
         void BuildBindingLayout();
         void BuildReport();
 
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
-
-    private:
-
-        struct VertexInputLayout
-        {
-            std::vector<VkVertexInputBindingDescription>    bindingDescs;
-            std::vector<VkVertexInputAttributeDescription>  attribDescs;
-        };
 
     private:
 
@@ -135,7 +131,7 @@ class VKShader final : public Shader
         VKShaderBindingLayout   bindingLayout_;
 
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
-        VertexInputLayout       inputLayout_;
+        VKVertexInputLayout     inputLayout_;
 
         std::string             entryPoint_;
         Report                  report_;

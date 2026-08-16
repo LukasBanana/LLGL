@@ -130,13 +130,6 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(const PrimitiveTop
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
-static D3D12_INPUT_LAYOUT_DESC GetD3DInputLayoutDesc(const Shader* vs)
-{
-    D3D12_INPUT_LAYOUT_DESC desc = {};
-    LLGL_CAST(const D3D12Shader*, vs)->GetInputLayoutDesc(desc);
-    return desc;
-}
-
 static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const Shader* ds, const Shader* gs)
 {
     D3D12_STREAM_OUTPUT_DESC desc = {};
@@ -152,6 +145,116 @@ static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const S
 static D3D12_INDEX_BUFFER_STRIP_CUT_VALUE GetIndexFormatStripCutValue(Format format)
 {
     return (format == Format::R16UInt ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF);
+}
+
+void D3D12GraphicsPSO::ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc)
+{
+    /* Reserve memory for the input element names */
+    vertexAttribNames_.Clear();
+    for (const VertexAttribute& attr : desc.inputVertexAttribs)
+        vertexAttribNames_.Reserve(attr.name.size());
+    for (const VertexAttribute& attr : desc.outputVertexAttribs)
+        vertexAttribNames_.Reserve(attr.name.size());
+}
+
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    dst.SemanticName            = stringContainer.CopyString(src.name);
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
+
+void D3D12GraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, DynamicVector<D3D12_INPUT_ELEMENT_DESC>& output, LinearStringContainer& vertexAttribNames)
+{
+    const auto numVertexAttribs = attributes.size();
+
+    /* Build input element descriptors */
+    output.resize(numVertexAttribs);
+    for_range(i, numVertexAttribs)
+        Convert(output[i], attributes[i], vertexAttribNames);
+}
+
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
+    dst.Stream          = 0;
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = 0;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D12GraphicsPSO::BuildStreamOutput(
+    LLGL::ArrayView<VertexAttribute> attributes,
+    LLGL::DynamicVector<D3D12_SO_DECLARATION_ENTRY>& soDeclEntries,
+    LLGL::DynamicVector<UINT>& soBufferStrides,
+    LinearStringContainer& vertexAttribNames)
+{
+    if (attributes.empty())
+       return;
+
+    const auto numStreamOutputAttribs = attributes.size();
+
+    /* Reserve memory for the buffer strides */
+    UINT maxSlot = 0;
+    for_range(i, numStreamOutputAttribs)
+        maxSlot = std::max(maxSlot, attributes[i].slot);
+
+    soBufferStrides.clear();
+    soBufferStrides.resize(maxSlot + 1, 0);
+
+    /* Build stream-output entries and buffer strides */
+    soDeclEntries.resize(numStreamOutputAttribs);
+    for_range(i, numStreamOutputAttribs)
+    {
+        const VertexAttribute& attr = attributes[i];
+
+        /* Convert vertex attribute to stream-output entry */
+        ConvertSODeclEntry(soDeclEntries[i], attr, vertexAttribNames);
+
+        /* Store buffer stide */
+        UINT& bufferStride = soBufferStrides[attr.slot];
+        if (attr.stride == 0)
+        {
+            /* Error: vertex attribute must not have stride of zero */
+            LLGL_TRAP(
+                "buffer stride in stream-output attribute must not be zero: %s",
+                attr.name.c_str()
+            );
+        }
+        else if (bufferStride == 0)
+        {
+            /* Store new buffer stride */
+            bufferStride = attr.stride;
+        }
+        else if (bufferStride != attr.stride)
+        {
+            LLGL_TRAP(
+                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
+                bufferStride, attr.stride, attr.name.c_str()
+            );
+        }
+    }
+
+    /* Build buffer stride */
+    for_range(i, soBufferStrides.size())
+    {
+        if (soBufferStrides[i] == 0)
+            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
+    }
 }
 
 void D3D12GraphicsPSO::CreateNativePSO(
@@ -193,10 +296,39 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Convert depth-stencil state */
     D3DConvertDepthStencilDesc(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
+    ReserveVertexAttribs(desc);
+    BuildInputLayout(desc.inputVertexAttribs, inputElements_, vertexAttribNames_);
+    BuildStreamOutput(desc.outputVertexAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
+
+    /* Set input layout */
+    if (!inputElements_.empty())
+    {
+        stateDesc.InputLayout.pInputElementDescs = inputElements_.data();
+        stateDesc.InputLayout.NumElements        = inputElements_.size();
+    }
+    else
+    {
+        // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline descriptor.
+        LLGL_CAST(const D3D12Shader*, desc.vertexShader)->GetInputLayoutDesc(stateDesc.InputLayout);
+    }
+
+    /* Set stream output */
+    if (!soDeclEntries_.empty())
+    {
+        stateDesc.StreamOutput.pSODeclaration   = soDeclEntries_.data();
+        stateDesc.StreamOutput.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
+        stateDesc.StreamOutput.pBufferStrides   = soBufferStrides_.data();
+        stateDesc.StreamOutput.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
+        stateDesc.StreamOutput.RasterizedStream = 0;
+    }
+    else
+    {
+        // Deprecated feature support: Get stream output from the shaders if we failed to get it from the pipeline descriptor.
+        stateDesc.StreamOutput = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
+    }
+
     /* Convert other states */
     const bool isStripTopology = IsPrimitiveTopologyStrip(desc.primitiveTopology);
-    stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
-    stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;

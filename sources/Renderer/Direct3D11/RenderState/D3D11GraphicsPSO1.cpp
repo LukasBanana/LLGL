@@ -20,7 +20,7 @@ namespace LLGL
 
 
 D3D11GraphicsPSO1::D3D11GraphicsPSO1(ID3D11Device1* device, const GraphicsPipelineDescriptor& desc) :
-    D3D11GraphicsPSOBase { desc }
+    D3D11GraphicsPSOBase { device, desc }
 {
     /* Create render state objects for Direct3D 11.1 */
     CreateDepthStencilState(device, desc.depth, desc.stencil);

@@ -7,6 +7,7 @@
 
 #include "D3D12Shader.h"
 #include "../D3D12RenderSystem.h"
+#include "../RenderState/D3D12GraphicsPSO.h"
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/CoreUtils.h"
@@ -39,8 +40,8 @@ D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor
             /* Build input layout and stream-output descriptors for vertex/geometry shaders */
             ReserveVertexAttribs(desc);
             if (GetType() == ShaderType::Vertex)
-                BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
-            BuildStreamOutput(static_cast<UINT>(desc.vertex.outputAttribs.size()), desc.vertex.outputAttribs.data());
+                D3D12GraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, inputElements_, vertexAttribNames_);
+            D3D12GraphicsPSO::BuildStreamOutput(desc.vertex.outputAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
         }
     }
 }
@@ -135,101 +136,6 @@ void D3D12Shader::ReserveVertexAttribs(const ShaderDescriptor& shaderDesc)
         vertexAttribNames_.Reserve(attr.name.size());
     for (const VertexAttribute& attr : shaderDesc.vertex.outputAttribs)
         vertexAttribNames_.Reserve(attr.name.size());
-}
-
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    dst.SemanticName            = stringContainer.CopyString(src.name);
-    dst.SemanticIndex           = src.semanticIndex;
-    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
-    dst.InputSlot               = src.slot;
-    dst.AlignedByteOffset       = src.offset;
-    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
-    dst.InstanceDataStepRate    = src.instanceDivisor;
-}
-
-void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    /* Build input element descriptors */
-    inputElements_.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-        Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
-}
-
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0;
-    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
-    dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;
-    dst.ComponentCount  = GetFormatAttribs(src.format).components;
-    dst.OutputSlot      = src.slot;
-}
-
-void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    /* Reserve memory for the buffer strides */
-    UINT maxSlot = 0;
-    for_range(i, numVertexAttribs)
-        maxSlot = std::max(maxSlot, vertexAttribs[i].slot);
-
-    soBufferStrides_.clear();
-    soBufferStrides_.resize(maxSlot + 1, 0);
-
-    /* Build stream-output entries and buffer strides */
-    soDeclEntries_.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-    {
-        const VertexAttribute& attr = vertexAttribs[i];
-
-        /* Convert vertex attribute to stream-output entry */
-        ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
-
-        /* Store buffer stide */
-        UINT& bufferStride = soBufferStrides_[attr.slot];
-        if (attr.stride == 0)
-        {
-            /* Error: vertex attribute must not have stride of zero */
-            LLGL_TRAP(
-                "buffer stride in stream-output attribute must not be zero: %s",
-                attr.name.c_str()
-            );
-        }
-        else if (bufferStride == 0)
-        {
-            /* Store new buffer stride */
-            bufferStride = attr.stride;
-        }
-        else if (bufferStride != attr.stride)
-        {
-            LLGL_TRAP(
-                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
-                bufferStride, attr.stride, attr.name.c_str()
-            );
-        }
-    }
-
-    /* Build buffer stride */
-    for_range(i, soBufferStrides_.size())
-    {
-        if (soBufferStrides_[i] == 0)
-            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
-    }
 }
 
 static bool IsProfileDxcAppropriate(const char* target)

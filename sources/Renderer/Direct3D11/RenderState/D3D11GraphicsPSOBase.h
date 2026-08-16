@@ -36,7 +36,7 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
     protected:
 
-        D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc);
+        D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsPipelineDescriptor& desc);
 
         void SetStaticViewportsAndScissors(D3D11StateManager& stateMngr);
 
@@ -75,6 +75,11 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
         {
             return sampleMask_;
         }
+
+    public:
+
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& output);
+        static void BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides);
 
     private:
 

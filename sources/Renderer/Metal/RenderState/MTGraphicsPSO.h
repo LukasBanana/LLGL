@@ -11,7 +11,9 @@
 
 #include "MTPipelineState.h"
 #include "../../StaticStateBuffer.h"
+#include "../Shader/MTShader.h"
 #include <LLGL/Container/DynamicArray.h>
+#include <Metal/Metal.h>
 #include <cstdint>
 
 
@@ -44,6 +46,9 @@ class MTGraphicsPSO final : public MTPipelineState
             MTLScissorRect* outScissorRects,
             NSUInteger&     outScissorRectCount
         ) const;
+
+
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> vertexAttributes, bool isPatchControlPoint, MTLVertexDescriptor*& vertexDesc);
 
         // Returns the native primitive type.
         inline MTLPrimitiveType GetMTLPrimitiveType() const

@@ -6,9 +6,11 @@
  */
 
 #include "D3D11VertexShader.h"
+#include "../RenderState/D3D11GraphicsPSOBase.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -37,18 +39,6 @@ D3D11VertexShader::D3D11VertexShader(ID3D11Device* device, const ShaderDescripto
  * ======= Private: =======
  */
 
-// Converts a vertex attribute to a D3D input element descriptor
-static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
-{
-    dst.SemanticName            = src.name.c_str();
-    dst.SemanticIndex           = src.semanticIndex;
-    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
-    dst.InputSlot               = src.slot;
-    dst.AlignedByteOffset       = src.offset;
-    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
-    dst.InstanceDataStepRate    = src.instanceDivisor;
-}
-
 void D3D11VertexShader::BuildInputLayout(ID3D11Device* device, UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
@@ -58,11 +48,8 @@ void D3D11VertexShader::BuildInputLayout(ID3D11Device* device, UINT numVertexAtt
     LLGL_ASSERT(GetType() == ShaderType::Vertex, "cannot build input layout for non-vertex-shader");
 
     /* Setup input element descriptors */
-    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    inputElements.resize(numVertexAttribs);
-
-    for_range(i, numVertexAttribs)
-        ConvertInputElementDesc(inputElements[i], vertexAttribs[i]);
+    DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    D3D11GraphicsPSOBase::BuildInputLayout({vertexAttribs, numVertexAttribs}, inputElements);
 
     /* Create input layout */
     HRESULT hr = device->CreateInputLayout(
