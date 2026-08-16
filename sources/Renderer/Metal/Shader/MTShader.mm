@@ -127,8 +127,8 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
     /* Configure language version and other flags */
     [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
 
-    if ((shaderDesc.flags & (ShaderCompileFlags::OptimizationLevel1 | ShaderCompileFlags::OptimizationLevel2 | ShaderCompileFlags::OptimizationLevel3)) != 0)
-        [opt setFastMathEnabled:YES];
+    const bool isOptimizationEnabled = ((shaderDesc.flags & ShaderCompileFlags::NoOptimization) == 0);
+    [opt setFastMathEnabled:isOptimizationEnabled];
 
     /* Define preprocessor macros */
     if (shaderDesc.defines != nullptr && shaderDesc.defines[0].name != nullptr)

@@ -160,7 +160,7 @@ fragment float4 PSInstance(
     float4  albedo      = inp.color;
 
     // Diffuse lighting
-    float3  lightVec    = -scene.lightDir.xyz;
+    float3  lightVec    = -scene.lightDir;
     float3  normal      = normalize(inp.normal);
     float   NdotL       = mix(0.2, 1.0, max(0.0, dot(normal, lightVec)));
     float3  diffuse     = albedo.rgb * NdotL;
