@@ -15,9 +15,9 @@ namespace LLGL
 {
 
 
-static void InitNullRendererShadingLanguages(std::vector<ShadingLanguage>& shadingLanguages)
+static void InitNullRendererShadingLanguages(std::vector<ShadingLanguage>& outShadingLanguages)
 {
-    shadingLanguages =
+    outShadingLanguages =
     {
         ShadingLanguage::GLSL,
         ShadingLanguage::ESSL,
@@ -27,26 +27,46 @@ static void InitNullRendererShadingLanguages(std::vector<ShadingLanguage>& shadi
     };
 }
 
-static void InitNullRendererTextureFormats(std::vector<Format>& textureFormats)
+static void InitNullRendererTextureFormats(std::vector<Format>& outTextureFormats)
 {
     constexpr int firstFormatIndex  = static_cast<int>(Format::A8UNorm);
     constexpr int lastFormatIndex   = static_cast<int>(Format::BC5SNorm);
     constexpr int numFormats        = lastFormatIndex - firstFormatIndex + 1;
-    textureFormats.reserve(static_cast<std::size_t>(numFormats));
+    constexpr long allTextureFlags  = (FormatFlags::SupportsTexture1D | FormatFlags::SupportsTexture2D | FormatFlags::SupportsTexture3D | FormatFlags::SupportsTextureCube);
+    outTextureFormats.reserve(static_cast<std::size_t>(numFormats));
     for_range(i, numFormats)
-        textureFormats.push_back(static_cast<Format>(firstFormatIndex + i));
+    {
+        const Format format = static_cast<Format>(firstFormatIndex + i);
+        if ((GetFormatAttribs(format).flags & allTextureFlags) != 0)
+            outTextureFormats.push_back(static_cast<Format>(firstFormatIndex + i));
+    }
 }
 
-static void InitNullRendererSwapChainFormats(std::vector<Format>& colorFormats, std::vector<Format>& depthStencilFormats)
+static void InitNullRendererVertexFormats(std::vector<Format>& outVertexFormats)
+{
+    constexpr int firstFormatIndex  = static_cast<int>(Format::A8UNorm);
+    constexpr int lastFormatIndex   = static_cast<int>(Format::BC5SNorm);
+    constexpr int numFormats        = lastFormatIndex - firstFormatIndex + 1;
+    outVertexFormats.reserve(static_cast<std::size_t>(numFormats));
+    for_range(i, numFormats)
+    {
+        const Format format = static_cast<Format>(firstFormatIndex + i);
+        if ((GetFormatAttribs(format).flags & FormatFlags::SupportsVertex) != 0)
+            outVertexFormats.push_back(format);
+    }
+    outVertexFormats.shrink_to_fit();
+}
+
+static void InitNullRendererSwapChainFormats(std::vector<Format>& outColorFormats, std::vector<Format>& outDepthStencilFormats)
 {
     /* NullSwapChain accepts any color and depth-stencil format the descriptor requests */
-    colorFormats =
+    outColorFormats =
     {
         Format::RGBA8UNorm, Format::RGBA8UNorm_sRGB,
         Format::BGRA8UNorm, Format::BGRA8UNorm_sRGB,
         Format::RGB10A2UNorm, Format::RGBA16Float,
     };
-    depthStencilFormats =
+    outDepthStencilFormats =
     {
         Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, Format::D32FloatS8X24UInt,
     };
@@ -117,6 +137,7 @@ static void GetNullRenderingCaps(RenderingCapabilities& caps)
 {
     InitNullRendererShadingLanguages(caps.shadingLanguages);
     InitNullRendererTextureFormats(caps.textureFormats);
+    InitNullRendererVertexFormats(caps.vertexFormats);
     InitNullRendererSwapChainFormats(caps.swapChainColorFormats, caps.swapChainDepthStencilFormats);
     InitNullRendererFeatures(caps.features);
     InitNullRendererLimits(caps.limits);

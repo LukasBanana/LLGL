@@ -19,6 +19,11 @@
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/QueryHeapFlags.h>
+#include "../../Core/Assertion.h"
+
+
+#define LLGL_TRAP_VK_MAP(TYPE, VALUE, MTLTYPE) \
+    LLGL_TRAP("failed to map LLGL::%s(%d) to %s Vulkan parameter", #TYPE, static_cast<int>(VALUE), #MTLTYPE)
 
 
 namespace LLGL
@@ -29,9 +34,6 @@ namespace VKTypes
 
 
 /* ----- Map functions ----- */
-
-[[noreturn]]
-void MapFailed(const char* typeName, const char* vknTypeName);
 
 VkShaderStageFlagBits   Map( const ShaderType           shaderType        );
 VkFormat                Map( const Format               format            );

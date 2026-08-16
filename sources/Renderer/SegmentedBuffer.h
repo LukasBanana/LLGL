@@ -34,7 +34,7 @@ TSizeType ConsolidateConsecutiveSequences(
     SegmentCallback segmentCallback,
     Predicate       predicate)
 {
-    static_assert(std::is_integral<TSizeType>::value, "ConsolidateIndexSegments<TSizeType,,,>: TSizeType must be an integral type");
+    static_assert(std::is_integral<TSizeType>::value, "ConsolidateConsecutiveSequences<TSizeType,,,>: TSizeType must be an integral type");
 
     TSizeType numSequences = 0;
 

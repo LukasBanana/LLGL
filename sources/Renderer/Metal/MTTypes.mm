@@ -17,17 +17,11 @@ namespace MTTypes
 {
 
 
-[[noreturn]]
-void MapFailed(const char* typeName, const char* mtlTypeName)
-{
-    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Metal parameter", typeName, mtlTypeName);
-}
+#define LLGL_TRAP_MT_MAP(TYPE, VALUE, MTLTYPE) \
+    LLGL_TRAP("failed to map LLGL::%s(%d) to %s Metal parameter", #TYPE, static_cast<int>(VALUE), #MTLTYPE)
 
-[[noreturn]]
-void UnmapFailed(const char* typeName, const char* mtlTypeName)
-{
-    LLGL_TRAP("failed to unmap <LLGL::%s> from <%s> Metal parameter", typeName, mtlTypeName);
-}
+#define LLGL_TRAP_MT_UNMAP(TYPE, VALUE, MTLTYPE) \
+    LLGL_TRAP("failed to unmap LLGL::%s(%d) from %s Metal parameter", #TYPE, static_cast<int>(VALUE), #MTLTYPE)
 
 MTLDataType ToMTLDataType(const DataType dataType)
 {
@@ -48,7 +42,7 @@ MTLDataType ToMTLDataType(const DataType dataType)
         case DataType::Float32:     return MTLDataTypeFloat;
         case DataType::Float64:     break;
     }
-    MapFailed("DataType", "MTLDataType");
+    LLGL_TRAP_MT_MAP(DataType, dataType, MTLDataType);
 }
 
 MTLPixelFormat ToMTLPixelFormat(const Format format)
@@ -219,7 +213,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 
         default:                        break;
     }
-    MapFailed("Format", "MTLPixelFormat");
+    LLGL_TRAP_MT_MAP(Format, format, MTLPixelFormat);
 }
 
 MTLVertexFormat ToMTLVertexFormat(const Format format)
@@ -292,7 +286,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
 
         default:                    break;
     }
-    MapFailed("Format", "MTLVertexFormat");
+    LLGL_TRAP_MT_MAP(Format, format, MTLVertexFormat);
 }
 
 MTLTessellationControlPointIndexType ToMTLPatchIndexType(const Format format)
@@ -304,7 +298,7 @@ MTLTessellationControlPointIndexType ToMTLPatchIndexType(const Format format)
         case Format::R32UInt:   return MTLTessellationControlPointIndexTypeUInt32;
         default:                break;
     }
-    MapFailed("Format", "MTLTessellationControlPointIndexType");
+    LLGL_TRAP_MT_MAP(Format, format, MTLTessellationControlPointIndexType);
 }
 
 MTLTessellationPartitionMode ToMTLPartitionMode(const TessellationPartition partitionMode)
@@ -317,7 +311,7 @@ MTLTessellationPartitionMode ToMTLPartitionMode(const TessellationPartition part
         case TessellationPartition::FractionalOdd:  return MTLTessellationPartitionModeFractionalOdd;
         case TessellationPartition::FractionalEven: return MTLTessellationPartitionModeFractionalEven;
     }
-    MapFailed("TessellationPartition", "MTLTessellationPartitionMode");
+    LLGL_TRAP_MT_MAP(TessellationPartition, partitionMode, MTLTessellationPartitionMode);
 }
 
 MTLTextureType ToMTLTextureType(const TextureType textureType)
@@ -339,7 +333,7 @@ MTLTextureType ToMTLTextureType(const TextureType textureType)
             #endif
             break;
     }
-    MapFailed("TextureType", "MTLTextureType");
+    LLGL_TRAP_MT_MAP(TextureType, textureType, MTLTextureType);
 }
 
 MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
@@ -356,7 +350,7 @@ MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
                 return MTLPrimitiveTypePoint;
             break;
     }
-    MapFailed("PrimitiveTopology", "MTLPrimitiveType");
+    LLGL_TRAP_MT_MAP(PrimitiveTopology, primitiveTopology, MTLPrimitiveType);
 }
 
 MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology primitiveTopology)
@@ -373,7 +367,7 @@ MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology pr
                 return MTLPrimitiveTopologyClassUnspecified;
             break;
     }
-    MapFailed("PrimitiveTopology", "MTLPrimitiveTopologyClass");
+    LLGL_TRAP_MT_MAP(PrimitiveTopology, primitiveTopology, MTLPrimitiveTopologyClass);
 }
 
 MTLCullMode ToMTLCullMode(const CullMode cullMode)
@@ -384,7 +378,7 @@ MTLCullMode ToMTLCullMode(const CullMode cullMode)
         case CullMode::Front:       return MTLCullModeFront;
         case CullMode::Back:        return MTLCullModeBack;
     }
-    MapFailed("CullMode", "MTLCullMode");
+    LLGL_TRAP_MT_MAP(CullMode, cullMode, MTLCullMode);
 }
 
 MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
@@ -400,7 +394,7 @@ MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
         case CompareOp::GreaterEqual:   return MTLCompareFunctionGreaterEqual;
         case CompareOp::AlwaysPass:     return MTLCompareFunctionAlways;
     }
-    MapFailed("CompareOp", "MTLCompareFunction");
+    LLGL_TRAP_MT_MAP(CompareOp, compareOp, MTLCompareFunction);
 }
 
 MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMode)
@@ -418,7 +412,7 @@ MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMo
         case SamplerAddressMode::MirrorOnce:    break;
         #endif // /LLGL_OS_IOS
     }
-    MapFailed("SamplerAddressMode", "MTLSamplerAddressMode");
+    LLGL_TRAP_MT_MAP(SamplerAddressMode, addressMode, MTLSamplerAddressMode);
 }
 
 MTLSamplerMinMagFilter ToMTLSamplerMinMagFilter(const SamplerFilter filter)
@@ -428,7 +422,7 @@ MTLSamplerMinMagFilter ToMTLSamplerMinMagFilter(const SamplerFilter filter)
         case SamplerFilter::Nearest:    return MTLSamplerMinMagFilterNearest;
         case SamplerFilter::Linear:     return MTLSamplerMinMagFilterLinear;
     }
-    MapFailed("SamplerFilter", "MTLSamplerMinMagFilter");
+    LLGL_TRAP_MT_MAP(SamplerFilter, filter, MTLSamplerMinMagFilter);
 }
 
 MTLSamplerMipFilter ToMTLSamplerMipFilter(const SamplerFilter filter)
@@ -438,7 +432,7 @@ MTLSamplerMipFilter ToMTLSamplerMipFilter(const SamplerFilter filter)
         case SamplerFilter::Nearest:    return MTLSamplerMipFilterNearest;
         case SamplerFilter::Linear:     return MTLSamplerMipFilterLinear;
     }
-    MapFailed("SamplerFilter", "MTLSamplerMipFilter");
+    LLGL_TRAP_MT_MAP(SamplerFilter, filter, MTLSamplerMipFilter);
 }
 
 MTLTriangleFillMode ToMTLTriangleFillMode (const PolygonMode polygonMode)
@@ -449,7 +443,7 @@ MTLTriangleFillMode ToMTLTriangleFillMode (const PolygonMode polygonMode)
         case PolygonMode::Wireframe:    return MTLTriangleFillModeLines;
         case PolygonMode::Points:       break;
     }
-    MapFailed("PolygonMode", "MTLTriangleFillMode");
+    LLGL_TRAP_MT_MAP(PolygonMode, polygonMode, MTLTriangleFillMode);
 }
 
 MTLStencilOperation ToMTLStencilOperation(const StencilOp stencilOp)
@@ -465,7 +459,7 @@ MTLStencilOperation ToMTLStencilOperation(const StencilOp stencilOp)
         case StencilOp::IncWrap:    return MTLStencilOperationIncrementWrap;
         case StencilOp::DecWrap:    return MTLStencilOperationDecrementWrap;
     }
-    MapFailed("StencilOp", "MTLStencilOperation");
+    LLGL_TRAP_MT_MAP(StencilOp, stencilOp, MTLStencilOperation);
 }
 
 MTLLoadAction ToMTLLoadAction(const AttachmentLoadOp loadOp)
@@ -476,7 +470,7 @@ MTLLoadAction ToMTLLoadAction(const AttachmentLoadOp loadOp)
         case AttachmentLoadOp::Load:        return MTLLoadActionLoad;
         case AttachmentLoadOp::Clear:       return MTLLoadActionClear;
     }
-    MapFailed("AttachmentLoadOp", "MTLLoadAction");
+    LLGL_TRAP_MT_MAP(AttachmentLoadOp, loadOp, MTLLoadAction);
 }
 
 MTLStoreAction ToMTLStoreAction(const AttachmentStoreOp storeOp)
@@ -486,7 +480,7 @@ MTLStoreAction ToMTLStoreAction(const AttachmentStoreOp storeOp)
         case AttachmentStoreOp::Undefined:  return MTLStoreActionDontCare;
         case AttachmentStoreOp::Store:      return MTLStoreActionStore;
     }
-    MapFailed("AttachmentStoreOp", "MTLStoreAction");
+    LLGL_TRAP_MT_MAP(AttachmentStoreOp, storeOp, MTLStoreAction);
 }
 
 MTLBlendOperation ToMTLBlendOperation(const BlendArithmetic blendArithmetic)
@@ -499,7 +493,7 @@ MTLBlendOperation ToMTLBlendOperation(const BlendArithmetic blendArithmetic)
         case BlendArithmetic::Min:          return MTLBlendOperationMin;
         case BlendArithmetic::Max:          return MTLBlendOperationMax;
     }
-    MapFailed("BlendArithmetic", "MTLBlendOperation");
+    LLGL_TRAP_MT_MAP(BlendArithmetic, blendArithmetic, MTLBlendOperation);
 }
 
 MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
@@ -524,7 +518,7 @@ MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
         case BlendOp::Src1Alpha:        return MTLBlendFactorSource1Alpha;
         case BlendOp::InvSrc1Alpha:     return MTLBlendFactorOneMinusSource1Alpha;
     }
-    MapFailed("BlendOp", "MTLBlendFactor");
+    LLGL_TRAP_MT_MAP(BlendOp, blendOp, MTLBlendFactor);
 }
 
 MTLClearColor ToMTLClearColor(const float color[4])
@@ -549,7 +543,7 @@ MTLTextureSwizzle ToMTLTextureSwizzle(const TextureSwizzle swizzle)
         case TextureSwizzle::Blue:  return MTLTextureSwizzleBlue;
         case TextureSwizzle::Alpha: return MTLTextureSwizzleAlpha;
     }
-    MapFailed("TextureSwizzle", "MTLTextureSwizzle");
+    LLGL_TRAP_MT_MAP(TextureSwizzle, swizzle, MTLTextureSwizzle);
 }
 
 Format ToFormat(const MTLPixelFormat pixelFormat)
@@ -686,7 +680,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
 
         default:                                    break;
     }
-    UnmapFailed("Format", "MTLPixelFormat");
+    LLGL_TRAP_MT_UNMAP(Format, pixelFormat, MTLPixelFormat);
 }
 
 void Convert(MTLOrigin& dst, const Offset3D& src)

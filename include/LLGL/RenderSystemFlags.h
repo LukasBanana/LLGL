@@ -929,6 +929,13 @@ struct RenderingCapabilities
     std::vector<Format>             textureFormats;
 
     /**
+    \brief Specifies the list of supported hardware vertex formats.
+    \remarks This is usually a much shorter list than \c textureFormats and does generally \e not include compressed or sRGB formats.
+    \see Format
+    */
+    std::vector<Format>             vertexFormats;
+
+    /**
     \brief Specifies the list of color formats a swap-chain color buffer can have.
     \remarks This is the set of formats SwapChain::GetColorFormat can return, i.e. a subset of \c textureFormats,
     since a swap-chain color buffer must also be presentable and not every renderable format can be scanned out

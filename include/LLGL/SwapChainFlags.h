@@ -103,6 +103,7 @@ struct SwapChainDescriptor
     \note This field is deprecated and ignored if \c colorFormat is not Format::Undefined; Use \c colorFormat instead!
     \see colorFormat
     \see SwapChain::GetColorFormat
+    \todo Deprecate these as soon as `colorFormat` fields is supported in all backends.
     */
     int             colorBits           = 32;
 
@@ -113,6 +114,7 @@ struct SwapChainDescriptor
     \note This field is deprecated and ignored if \c depthStencilFormat is not Format::Undefined; Use \c depthStencilFormat instead!
     \see depthStencilFormat
     \see SwapChain::GetDepthStencilFormat
+    \todo Deprecate these as soon as `depthStencilFormat` fields is supported in all backends.
     */
     int             depthBits           = 24;
 
@@ -123,6 +125,7 @@ struct SwapChainDescriptor
     \note This field is deprecated and ignored if \c depthStencilFormat is not Format::Undefined; Use \c depthStencilFormat instead!
     \see depthStencilFormat
     \see SwapChain::GetDepthStencilFormat
+    \todo Deprecate these as soon as `depthStencilFormat` fields is supported in all backends.
     */
     int             stencilBits         = 8;
 

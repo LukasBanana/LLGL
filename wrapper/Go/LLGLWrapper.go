@@ -1403,6 +1403,7 @@ type RenderingCapabilities struct {
     ClippingRange                ClippingRange     /* = ClippingRangeZeroToOne */
     ShadingLanguages             []ShadingLanguage /* = nil */
     TextureFormats               []Format          /* = nil */
+    VertexFormats                []Format          /* = nil */
     SwapChainColorFormats        []Format          /* = nil */
     SwapChainDepthStencilFormats []Format          /* = nil */
     Features                     RenderingFeatures

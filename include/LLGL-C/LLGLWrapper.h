@@ -1564,6 +1564,8 @@ typedef struct LLGLRenderingCapabilities
     const LLGLShadingLanguage* shadingLanguages;                /* = NULL */
     size_t                     numTextureFormats;               /* = 0 */
     const LLGLFormat*          textureFormats;                  /* = NULL */
+    size_t                     numVertexFormats;                /* = 0 */
+    const LLGLFormat*          vertexFormats;                   /* = NULL */
     size_t                     numSwapChainColorFormats;        /* = 0 */
     const LLGLFormat*          swapChainColorFormats;           /* = NULL */
     size_t                     numSwapChainDepthStencilFormats; /* = 0 */

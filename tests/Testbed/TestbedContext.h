@@ -132,6 +132,7 @@ class TestbedContext
             VertFmtColored,
             VertFmtColoredSO,
             VertFmtUnprojected,
+            VertFmtUnprojectedBGRA,
             VertFmtEmpty,
             VertFmtLayout0,
             VertFmtLayout1,
@@ -162,6 +163,7 @@ class TestbedContext
             PSDynamic,
 
             VSUnprojected,
+            VSUnprojectedBGRA,
             PSUnprojected,
 
             VSDualSourceBlend,

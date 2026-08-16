@@ -6,7 +6,6 @@
  */
 
 #include "VKTypes.h"
-#include "../../Core/Assertion.h"
 #include <stdexcept>
 #include <string>
 
@@ -19,12 +18,6 @@ namespace VKTypes
 
 
 /* ----- Map functions ----- */
-
-[[noreturn]]
-void MapFailed(const char* typeName, const char* vknTypeName)
-{
-    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Vulkan parameter", typeName, vknTypeName);
-}
 
 VkShaderStageFlagBits Map(const ShaderType shaderType)
 {
@@ -43,7 +36,7 @@ VkShaderStageFlagBits Map(const ShaderType shaderType)
         #endif
         default:                            break;
     }
-    MapFailed("ShaderType", "VkShaderStageFlagBits");
+    LLGL_TRAP_VK_MAP(ShaderType, shaderType, VkShaderStageFlagBits);
 }
 
 VkFormat Map(const Format format)
@@ -200,7 +193,7 @@ VkFormat Map(const Format format)
         case Format::ETC2UNorm:         return VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK;
         case Format::ETC2UNorm_sRGB:    return VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK;
     }
-    MapFailed("Format", "VkFormat");
+    LLGL_TRAP_VK_MAP(Format, format, VkFormat);
 }
 
 VkImageViewType Map(const TextureType textureType)
@@ -217,7 +210,7 @@ VkImageViewType Map(const TextureType textureType)
         case TextureType::Texture2DMS:      return VK_IMAGE_VIEW_TYPE_2D;
         case TextureType::Texture2DMSArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     }
-    MapFailed("TextureType", "VkImageViewType");
+    LLGL_TRAP_VK_MAP(TextureType, textureType, VkImageViewType);
 }
 
 VkPrimitiveTopology Map(const PrimitiveTopology primitiveTopology)
@@ -238,7 +231,7 @@ VkPrimitiveTopology Map(const PrimitiveTopology primitiveTopology)
                 return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
             break;
     }
-    MapFailed("PrimitiveTopology", "VkPrimitiveTopology");
+    LLGL_TRAP_VK_MAP(PrimitiveTopology, primitiveTopology, VkPrimitiveTopology);
 }
 
 VkPolygonMode Map(const PolygonMode polygonMode)
@@ -249,7 +242,7 @@ VkPolygonMode Map(const PolygonMode polygonMode)
         case PolygonMode::Wireframe:    return VK_POLYGON_MODE_LINE;
         case PolygonMode::Points:       return VK_POLYGON_MODE_POINT;
     }
-    MapFailed("PolygonMode", "VkPolygonMode");
+    LLGL_TRAP_VK_MAP(PolygonMode, polygonMode, VkPolygonMode);
 }
 
 VkCullModeFlags Map(const CullMode cullMode)
@@ -260,7 +253,7 @@ VkCullModeFlags Map(const CullMode cullMode)
         case CullMode::Front:       return VK_CULL_MODE_FRONT_BIT;
         case CullMode::Back:        return VK_CULL_MODE_BACK_BIT;
     }
-    MapFailed("CullMode", "VkCullModeFlags");
+    LLGL_TRAP_VK_MAP(CullMode, cullMode, VkCullModeFlags);
 }
 
 VkCompareOp Map(const CompareOp compareOp)
@@ -276,7 +269,7 @@ VkCompareOp Map(const CompareOp compareOp)
         case CompareOp::GreaterEqual:   return VK_COMPARE_OP_GREATER_OR_EQUAL;
         case CompareOp::AlwaysPass:     return VK_COMPARE_OP_ALWAYS;
     }
-    MapFailed("CompareOp", "VkCompareOp");
+    LLGL_TRAP_VK_MAP(CompareOp, compareOp, VkCompareOp);
 }
 
 VkStencilOp Map(const StencilOp stencilOp)
@@ -292,7 +285,7 @@ VkStencilOp Map(const StencilOp stencilOp)
         case StencilOp::IncWrap:    return VK_STENCIL_OP_INCREMENT_AND_WRAP;
         case StencilOp::DecWrap:    return VK_STENCIL_OP_DECREMENT_AND_WRAP;
     }
-    MapFailed("StencilOp", "VkStencilOp");
+    LLGL_TRAP_VK_MAP(StencilOp, stencilOp, VkStencilOp);
 }
 
 VkLogicOp Map(const LogicOp logicOp)
@@ -317,7 +310,7 @@ VkLogicOp Map(const LogicOp logicOp)
         case LogicOp::XOR:          return VK_LOGIC_OP_XOR;
         case LogicOp::Equiv:        return VK_LOGIC_OP_EQUIVALENT;
     }
-    MapFailed("LogicOp", "VkLogicOp");
+    LLGL_TRAP_VK_MAP(LogicOp, logicOp, VkLogicOp);
 }
 
 VkBlendFactor Map(const BlendOp blendOp)
@@ -342,7 +335,7 @@ VkBlendFactor Map(const BlendOp blendOp)
         case BlendOp::Src1Alpha:        return VK_BLEND_FACTOR_SRC1_ALPHA;
         case BlendOp::InvSrc1Alpha:     return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
     }
-    MapFailed("BlendOp", "VkBlendFactor");
+    LLGL_TRAP_VK_MAP(BlendOp, blendOp, VkBlendFactor);
 }
 
 VkBlendOp Map(const BlendArithmetic blendArithmetic)
@@ -355,7 +348,7 @@ VkBlendOp Map(const BlendArithmetic blendArithmetic)
         case BlendArithmetic::Min:          return VK_BLEND_OP_MIN;
         case BlendArithmetic::Max:          return VK_BLEND_OP_MAX;
     }
-    MapFailed("BlendArithmetic", "VkBlendOp");
+    LLGL_TRAP_VK_MAP(BlendArithmetic, blendArithmetic, VkBlendOp);
 }
 
 VkSamplerAddressMode Map(const SamplerAddressMode addressMode)
@@ -368,7 +361,7 @@ VkSamplerAddressMode Map(const SamplerAddressMode addressMode)
         case SamplerAddressMode::Border:        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
         case SamplerAddressMode::MirrorOnce:    return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
     }
-    MapFailed("SamplerAddressMode", "VkSamplerAddressMode");
+    LLGL_TRAP_VK_MAP(SamplerAddressMode, addressMode, VkSamplerAddressMode);
 }
 
 VkQueryType Map(const QueryType queryType)
@@ -383,7 +376,7 @@ VkQueryType Map(const QueryType queryType)
         case QueryType::StreamOutOverflow:              return VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT;
         case QueryType::PipelineStatistics:             return VK_QUERY_TYPE_PIPELINE_STATISTICS;
     }
-    MapFailed("QueryType", "VkQueryType");
+    LLGL_TRAP_VK_MAP(QueryType, queryType, VkQueryType);
 }
 
 VkAttachmentLoadOp Map(const AttachmentLoadOp loadOp)
@@ -394,7 +387,7 @@ VkAttachmentLoadOp Map(const AttachmentLoadOp loadOp)
         case AttachmentLoadOp::Load:        return VK_ATTACHMENT_LOAD_OP_LOAD;
         case AttachmentLoadOp::Clear:       return VK_ATTACHMENT_LOAD_OP_CLEAR;
     }
-    MapFailed("AttachmentLoadOp", "VkAttachmentLoadOp");
+    LLGL_TRAP_VK_MAP(AttachmentLoadOp, loadOp, VkAttachmentLoadOp);
 }
 
 VkAttachmentStoreOp Map(const AttachmentStoreOp storeOp)
@@ -404,7 +397,7 @@ VkAttachmentStoreOp Map(const AttachmentStoreOp storeOp)
         case AttachmentStoreOp::Undefined:  return VK_ATTACHMENT_STORE_OP_DONT_CARE;
         case AttachmentStoreOp::Store:      return VK_ATTACHMENT_STORE_OP_STORE;
     }
-    MapFailed("AttachmentStoreOp", "VkAttachmentStoreOp");
+    LLGL_TRAP_VK_MAP(AttachmentStoreOp, storeOp, VkAttachmentStoreOp);
 }
 
 VkStencilFaceFlags Map(const StencilFace stencilFace)
@@ -415,7 +408,7 @@ VkStencilFaceFlags Map(const StencilFace stencilFace)
         case StencilFace::Front:        return VK_STENCIL_FACE_FRONT_BIT;
         case StencilFace::Back:         return VK_STENCIL_FACE_BACK_BIT;
     }
-    MapFailed("StencilFace", "VkStencilFaceFlags");
+    LLGL_TRAP_VK_MAP(StencilFace, stencilFace, VkStencilFaceFlags);
 }
 
 VkIndexType ToVkIndexType(const Format format)
@@ -427,7 +420,7 @@ VkIndexType ToVkIndexType(const Format format)
         case Format::R32UInt:   return VK_INDEX_TYPE_UINT32;
         default:                break;
     }
-    VKTypes::MapFailed("Format", "VkIndexType");
+    LLGL_TRAP_VK_MAP(Format, format, VkIndexType);
 }
 
 VkSampleCountFlagBits ToVkSampleCountBits(std::uint32_t samples)
@@ -467,7 +460,7 @@ VkComponentSwizzle ToVkComponentSwizzle(const TextureSwizzle swizzle)
         case TextureSwizzle::Blue:  return VK_COMPONENT_SWIZZLE_B;
         case TextureSwizzle::Alpha: return VK_COMPONENT_SWIZZLE_A;
     }
-    VKTypes::MapFailed("TextureSwizzle", "VkComponentSwizzle");
+    LLGL_TRAP_VK_MAP(TextureSwizzle, swizzle, VkComponentSwizzle);
 }
 
 VkColorComponentFlags ToVkColorComponentFlags(std::uint8_t colorMask)

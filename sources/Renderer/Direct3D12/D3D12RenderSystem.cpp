@@ -785,22 +785,12 @@ void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
 
 static std::vector<Format> GetDefaultSupportedDXTextureFormats()
 {
-    std::vector<Format> formats;
-
-    std::size_t numFormats = 0;
-    DXGetDefaultSupportedTextureFormats(nullptr, &numFormats);
-
-    formats.resize(numFormats, Format::Undefined);
-    DXGetDefaultSupportedTextureFormats(formats.data(), nullptr);
-
-    formats.insert(
-        formats.end(),
-        {
-            Format::BC4UNorm,   Format::BC4SNorm,   Format::BC5UNorm, Format::BC5SNorm,
-            Format::BC6HUFloat, Format::BC6HSFloat, Format::BC7UNorm, Format::BC7UNorm_sRGB,
-        }
-    );
-
+    std::vector<Format> formats =
+    {
+        Format::BC4UNorm,   Format::BC4SNorm,   Format::BC5UNorm, Format::BC5SNorm,
+        Format::BC6HUFloat, Format::BC6HSFloat, Format::BC7UNorm, Format::BC7UNorm_sRGB,
+    };
+    DXGetDefaultSupportedTextureFormats(formats);
     return formats;
 }
 

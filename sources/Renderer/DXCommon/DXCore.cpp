@@ -274,33 +274,51 @@ ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID)
     return blob;
 }
 
-static const Format g_D3DDefaultTextureFormats[] =
+static void DXGetSupportedBaseFormats(std::vector<Format>& formats)
 {
-    Format::A8UNorm,
-    Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
-    Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
-    Format::R32UInt,            Format::R32SInt,            Format::R32Float,
-    Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
-    Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
-    Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
-    Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
-    Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
-    Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
-    Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
-    Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
-    Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
-    Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
-    Format::BC1UNorm,           Format::BC1UNorm_sRGB,
-    Format::BC2UNorm,           Format::BC2UNorm_sRGB,
-    Format::BC3UNorm,           Format::BC3UNorm_sRGB,
-};
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+            Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+            Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+            Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+            Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+            Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+            Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
+            Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+            Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+            Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+        }
+    );
+}
 
-void DXGetDefaultSupportedTextureFormats(Format* outFormats, std::size_t* outNumFormats)
+void DXGetDefaultSupportedTextureFormats(std::vector<Format>& textureFormats)
 {
-    if (outFormats != nullptr)
-        ::memcpy(outFormats, g_D3DDefaultTextureFormats, sizeof(g_D3DDefaultTextureFormats));
-    if (outNumFormats != nullptr)
-        *outNumFormats = LLGL_ARRAY_LENGTH(g_D3DDefaultTextureFormats);
+    textureFormats.insert(
+        textureFormats.end(),
+        {
+            Format::A8UNorm,
+            Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
+            Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+            Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
+            Format::BC1UNorm,           Format::BC1UNorm_sRGB,
+            Format::BC2UNorm,           Format::BC2UNorm_sRGB,
+            Format::BC3UNorm,           Format::BC3UNorm_sRGB,
+        }
+    );
+    DXGetSupportedBaseFormats(textureFormats);
+}
+
+void GetSupportedDXVertexFormats(std::vector<Format>& vertexFormats)
+{
+    vertexFormats.insert(
+        vertexFormats.end(),
+        {
+            Format::BGRA8UNorm // Only one BGRA vertex format
+        }
+    );
+    DXGetSupportedBaseFormats(vertexFormats);
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
