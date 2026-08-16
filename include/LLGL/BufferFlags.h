@@ -98,6 +98,8 @@ struct BufferDescriptor
     \remarks This is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
     \see BindFlags::VertexBuffer
     \see VertexShaderAttributes::inputAttribs
+    \todo Deprecate this. Vertex buffers should not have a concept of vertex attributes. This needs to be solely exit in the graphics PSO.
+    D3D needs to take the buffer stride from the `stride` field. GL needs to re-bind the VAO attributes from the PSO to the active GLBuffer.
     */
     ArrayView<VertexAttribute>  vertexAttribs;
 };

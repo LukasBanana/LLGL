@@ -310,15 +310,14 @@ void DXGetDefaultSupportedTextureFormats(std::vector<Format>& textureFormats)
     DXGetSupportedBaseFormats(textureFormats);
 }
 
-void GetSupportedDXVertexFormats(std::vector<Format>& vertexFormats)
+std::vector<Format> GetSupportedDXVertexFormats()
 {
-    vertexFormats.insert(
-        vertexFormats.end(),
-        {
-            Format::BGRA8UNorm // Only one BGRA vertex format
-        }
-    );
+    std::vector<Format> vertexFormats =
+    {
+        Format::BGRA8UNorm // Only one BGRA vertex format
+    };
     DXGetSupportedBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx

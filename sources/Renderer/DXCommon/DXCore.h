@@ -67,7 +67,7 @@ ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID);
 void DXGetDefaultSupportedTextureFormats(std::vector<Format>& formats);
 
 // Returns the default list of supported D3D vertex formats.
-void GetSupportedDXVertexFormats(std::vector<Format>& format);
+std::vector<Format> GetSupportedDXVertexFormats();
 
 // Returns the compiler flags for the 'ShaderCompileFlags' enumeration values for the DirectX Effects Compiler (FXC).
 UINT DXGetFxcCompilerFlags(int flags);

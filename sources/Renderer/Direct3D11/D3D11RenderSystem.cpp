@@ -1008,6 +1008,7 @@ void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = DXGetHLSLVersions(featureLevel);
     caps.textureFormats                             = GetDefaultSupportedDXTextureFormats(featureLevel);
+    caps.vertexFormats                              = GetSupportedDXVertexFormats();
     caps.swapChainColorFormats                      = GetSupportedDXSwapChainColorFormats();
     caps.swapChainDepthStencilFormats               = GetSupportedDXSwapChainDepthStencilFormats(featureLevel);
 
