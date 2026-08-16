@@ -64,11 +64,9 @@ D3D12Texture::D3D12Texture(
     format_         = actualDesc.Format;
     numMipLevels_   = actualDesc.MipLevels;
     numArrayLayers_ = actualDesc.DepthOrArraySize;
-    extent_         = Extent3D{
-        static_cast<std::uint32_t>(actualDesc.Width),
-        actualDesc.Height,
-        1u
-    };
+    extent_.width   = static_cast<std::uint32_t>(actualDesc.Width);
+    extent_.height  = actualDesc.Height;
+    extent_.depth   = 1u;
 
     // The explicit view format comes from the caller-supplied logical (typed) format. Unmap cannot
     // resolve a typeless DXGI format to a concrete LLGL format (it would yield Format::Undefined ->
