@@ -106,7 +106,11 @@ static VkAccessFlags GetBufferVkAccessFlags(long bindFlags)
 static std::uint32_t GetVKBufferStride(const BufferDescriptor& desc)
 {
     /* Just return first vertex attribute stride, since all attributes must have equal strides within the same buffer */
-    return (desc.vertexAttribs.empty() ? 1 : std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride));
+    if (!desc.vertexAttribs.empty())
+        return std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride); //DEPRECATED
+    if (desc.stride > 0)
+        return desc.stride;
+    return 1u;
 }
 
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :

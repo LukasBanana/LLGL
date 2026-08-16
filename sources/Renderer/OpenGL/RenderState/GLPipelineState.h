@@ -49,7 +49,9 @@ class GLPipelineState : public PipelineState
             bool                        isGraphicsPSO,
             const PipelineLayout*       pipelineLayout,
             PipelineCache*              pipelineCache,
-            const ArrayView<Shader*>&   shaders
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {}
         );
         ~GLPipelineState();
 

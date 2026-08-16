@@ -46,7 +46,15 @@ static std::vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescrip
 }
 
 GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits, PipelineCache* pipelineCache) :
-    GLPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, pipelineCache, GetShaderArrayFromDesc(desc) }
+    GLPipelineState
+    {
+        /*isGraphicsPSO:*/ true,
+        desc.pipelineLayout,
+        pipelineCache,
+        GetShaderArrayFromDesc(desc),
+        desc.inputVertexAttribs,
+        desc.outputVertexAttribs
+    }
 {
     /* Convert input-assembler state */
     drawMode_       = GLTypes::ToDrawMode(desc.primitiveTopology);

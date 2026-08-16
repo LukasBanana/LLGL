@@ -84,6 +84,8 @@ static SharedGLShader g_nullFragmentShader;
 
 GLShaderProgram::GLShaderProgram(
     ArrayView<const Shader*>    shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation,
     GLPipelineCache*            pipelineCache)
 :
@@ -94,25 +96,29 @@ GLShaderProgram::GLShaderProgram(
     {
         if (!(pipelineCache->HasProgramBinary(permutation) && pipelineCache->ProgramBinary(permutation, GetID())))
         {
-            BuildProgramBinary(shaders, permutation);
+            BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation);
             pipelineCache->GetProgramBinary(permutation, GetID());
         }
     }
     else
-        BuildProgramBinary(shaders, permutation);
+        BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation);
 
     /* Build pipeline signature */
     BuildSignature(shaders, permutation);
 }
 
 GLShaderProgram::GLShaderProgram(
-    ArrayView<Shader*>      shaders,
-    GLShader::Permutation   permutation,
-    GLPipelineCache*        pipelineCache)
+    ArrayView<Shader*>          shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs,
+    GLShader::Permutation       permutation,
+    GLPipelineCache*            pipelineCache)
 :
     GLShaderProgram
     {
         ArrayView<const Shader*>{ shaders.data(), shaders.size() },
+        inputVertexAttribs,
+        outputVertexAttribs,
         permutation,
         pipelineCache
     }
@@ -197,7 +203,7 @@ void GLShaderProgram::BindAttribLocations(GLuint program, ArrayView<GLShaderAttr
 void GLShaderProgram::BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs)
 {
     #if LLGL_OPENGL && GL_EXT_gpu_shader4
-    /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outputs anyway */
+    /* Only bind if extension is supported, otherwise the shader won't have multiple fragment outputs anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
         for (const auto& attr : fragmentAttribs)
@@ -1047,6 +1053,8 @@ static void AttachGLLegacyShaders(
 
 void GLShaderProgram::BuildProgramBinary(
     ArrayView<const Shader*>    shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation)
 {
     GLOrderedShaders orderedShaders;
@@ -1080,40 +1088,66 @@ void GLShaderProgram::BuildProgramBinary(
     #endif // /LLGL_USE_NULL_FRAGMENT_SHADER
 
     /* Build input layout for vertex shader */
-    if (const GLShader* vs = orderedShaders.vertexShader)
-        GLShaderProgram::BindAttribLocations(GetID(), vs->GetVertexAttribs());
+    LinearStringContainer attribNames;
+
+#if 0
+    if (!inputVertexAttribs.empty())
+    {
+        std::vector<GLShaderAttribute> inputGLVertexAttribs;
+        GLShader::BuildVertexInputLayout(inputVertexAttribs, inputGLVertexAttribs, attribNames);
+        GLShaderProgram::BindAttribLocations(GetID(), inputGLVertexAttribs);
+    }
+    else
+#endif
+    {
+        // Deprecated
+        if (const GLShader* vs = orderedShaders.vertexShader)
+            GLShaderProgram::BindAttribLocations(GetID(), vs->GetVertexAttribs());
+    }
 
     /* Build output layout for fragment shader */
     if (const GLShader* fs = orderedShaders.fragmentShader)
         GLShaderProgram::BindFragDataLocations(GetID(), fs->GetFragmentAttribs());
 
     /* Build transform feedback varyings for vertex or geometry shader and link program */
-    const GLShader* shaderWithVaryings = nullptr;
-
-    if (const GLShader* gs = orderedShaders.geometryShader)
+#if 0
+    if (!outputVertexAttribs.empty())
     {
-        if (!gs->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = gs;
-    }
-    else if (const GLShader* ts = orderedShaders.tessEvaluationShader)
-    {
-        if (!ts->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = ts;
-    }
-    else if (const GLShader* vs = orderedShaders.vertexShader)
-    {
-        if (!vs->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = vs;
-    }
-
-    /* Link shader program */
-    if (shaderWithVaryings != nullptr)
-    {
-        const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
+        std::vector<const char*> varyings;
+        GLShader::BuildTransformFeedbackVaryings(outputVertexAttribs, varyings, attribNames);
         GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
     }
     else
-        GLShaderProgram::LinkProgram(GetID());
+#endif
+    {
+        // Deprecated
+        const GLShader* shaderWithVaryings = nullptr;
+
+        if (const GLShader* gs = orderedShaders.geometryShader)
+        {
+            if (!gs->GetTransformFeedbackVaryings().empty())
+                shaderWithVaryings = gs;
+        }
+        else if (const GLShader* ts = orderedShaders.tessEvaluationShader)
+        {
+            if (!ts->GetTransformFeedbackVaryings().empty())
+                shaderWithVaryings = ts;
+        }
+        else if (const GLShader* vs = orderedShaders.vertexShader)
+        {
+            if (!vs->GetTransformFeedbackVaryings().empty())
+                shaderWithVaryings = vs;
+        }
+
+        /* Link shader program */
+        if (shaderWithVaryings != nullptr)
+        {
+            const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
+            GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
+        }
+        else
+            GLShaderProgram::LinkProgram(GetID());
+    }
 }
 
 

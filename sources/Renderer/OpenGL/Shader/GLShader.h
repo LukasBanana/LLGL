@@ -109,11 +109,10 @@ class GLShader : public Shader
             const char*                 versionOverride     = nullptr
         );
 
-        static bool BuildVertexInputLayout(
+        static void BuildVertexInputLayout(
             ArrayView<VertexAttribute>      inVertexAttribs,
             std::vector<GLShaderAttribute>& outGLVertexAttribs,
-            LinearStringContainer&          outGLAttribNames,
-            Report&                         report
+            LinearStringContainer&          outGLAttribNames
         );
 
         static void BuildFragmentOutputLayout(

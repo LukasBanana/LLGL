@@ -10,6 +10,8 @@
 
 
 #include <LLGL/ShaderReflection.h>
+#include <LLGL/VertexAttribute.h>
+#include <LLGL/Container/ArrayView.h>
 #include "GLShaderPipeline.h"
 #include "GLShaderUniform.h"
 #include <string>
@@ -38,15 +40,19 @@ class GLShaderProgram final : public GLShaderPipeline
 
         GLShaderProgram(
             ArrayView<const Shader*>    shaders,
-            GLShader::Permutation       permutation     = GLShader::PermutationDefault,
-            GLPipelineCache*            pipelineCache   = nullptr
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {},
+            GLShader::Permutation       permutation         = GLShader::PermutationDefault,
+            GLPipelineCache*            pipelineCache       = nullptr
         );
 
         // Wrapper for mutable shaders array view.
         GLShaderProgram(
-            ArrayView<Shader*>      shaders,
-            GLShader::Permutation   permutation     = GLShader::PermutationDefault,
-            GLPipelineCache*        pipelineCache   = nullptr
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {},
+            GLShader::Permutation       permutation         = GLShader::PermutationDefault,
+            GLPipelineCache*            pipelineCache       = nullptr
         );
 
         ~GLShaderProgram();
@@ -82,6 +88,8 @@ class GLShaderProgram final : public GLShaderPipeline
         // Main function for constructor to attach shaders, build attributes, and link program.
         void BuildProgramBinary(
             ArrayView<const Shader*>    shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs,
+            ArrayView<VertexAttribute>  outputVertexAttribs,
             GLShader::Permutation       permutation
         );
 

@@ -99,12 +99,12 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     {
         case ShaderType::Vertex:
             /* Build input layout for vertex shader */
-            GLShaderProgram::BindAttribLocations(program, GetNumVertexAttribs(), GetVertexAttribs());
+            GLShaderProgram::BindAttribLocations(program, GetVertexAttribs());
             break;
 
         case ShaderType::Fragment:
             /* Build output layout for fragment shader */
-            GLShaderProgram::BindFragDataLocations(program, GetNumFragmentAttribs(), GetFragmentAttribs());
+            GLShaderProgram::BindFragDataLocations(program, GetFragmentAttribs());
             break;
 
         default:
@@ -114,7 +114,7 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     /* Build transform feedback varyings for vertex or geometry shader and link program */
     const auto& varyings = GetTransformFeedbackVaryings();
     if (!varyings.empty())
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(program, varyings.size(), varyings.data());
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(program, varyings);
     else
         GLShaderProgram::LinkProgram(program);
 

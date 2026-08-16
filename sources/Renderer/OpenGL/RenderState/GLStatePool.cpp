@@ -210,22 +210,28 @@ static bool HasGLSeparableShaders(ArrayView<Shader*> shaders)
 }
 
 GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
-    ArrayView<Shader*>      shaders,
-    GLShader::Permutation   permutation,
-    GLPipelineCache*        pipelineCache)
+    ArrayView<Shader*>          shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs,
+    GLShader::Permutation       permutation,
+    GLPipelineCache*            pipelineCache)
 {
     #ifdef LLGL_OPENGL
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(shaders))
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, shaders, permutation)
+            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(
+                shaderPipelines_, shaders, permutation
+            )
         );
     }
     else
     #endif
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, shaders, permutation, pipelineCache)
+            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(
+                shaderPipelines_, shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCache
+            )
         );
     }
 }

@@ -69,9 +69,11 @@ class GLStatePool
         /* ----- Shader pipelines ----- */
 
         GLShaderPipelineSPtr CreateShaderPipeline(
-            ArrayView<Shader*>      shaders,
-            GLShader::Permutation   permutation     = GLShader::PermutationDefault,
-            GLPipelineCache*        pipelineCache   = nullptr
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {},
+            GLShader::Permutation       permutation         = GLShader::PermutationDefault,
+            GLPipelineCache*            pipelineCache       = nullptr
         );
         void ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline);
 

@@ -25,7 +25,10 @@ GLPipelineState::GLPipelineState(
     bool                        isGraphicsPSO,
     const PipelineLayout*       pipelineLayout,
     PipelineCache*              pipelineCache,
-    const ArrayView<Shader*>&   shaders)
+    ArrayView<Shader*>          shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs
+)
 :
     isGraphicsPSO_ { isGraphicsPSO }
 {
@@ -38,7 +41,9 @@ GLPipelineState::GLPipelineState(
         if (GLShader::HasAnyShaderPermutation(permutation, shaders))
         {
             /* Create shader pipeline for current permutation */
-            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(shaders, permutation, pipelineCacheGL);
+            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(
+                shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCacheGL
+            );
 
             /* Query information log and stop linking shader pipelines if the default permutation has errors */
             if (permutation == GLShader::PermutationDefault)

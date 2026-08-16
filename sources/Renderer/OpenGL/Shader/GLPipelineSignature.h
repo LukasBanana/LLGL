@@ -41,6 +41,14 @@ class GLPipelineSignature
         // Wrapper for mutable shaders array view.
         GLPipelineSignature(ArrayView<Shader*> shaders, GLShader::Permutation permutation, void* /*pipelineCache*/ = nullptr);
 
+        GLPipelineSignature(
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs,
+            ArrayView<VertexAttribute>  outputVertexAttribs,
+            GLShader::Permutation       permutation,
+            void*                       /*pipelineCache*/ = nullptr
+        );
+
         /*
         Initializes the signature with the specified shaders.
         The internal ID array is sorted by their shader types for matching SWO comparison.

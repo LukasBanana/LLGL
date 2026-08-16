@@ -16,7 +16,6 @@
 #include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <vector>
-#include <stdexcept>
 #include <algorithm>
 
 
@@ -29,7 +28,7 @@ GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
     isSeparable_ { isSeparable }
 {
     ReserveAttribs(desc);
-    GLShader::BuildVertexInputLayout(desc.vertex.inputAttribs, shaderAttribs_, shaderAttribNames_, report_);
+    GLShader::BuildVertexInputLayout(desc.vertex.inputAttribs, shaderAttribs_, shaderAttribNames_);
     GLShader::BuildTransformFeedbackVaryings(desc.vertex.outputAttribs, transformFeedbackVaryings_, shaderAttribNames_);
     GLShader::BuildFragmentOutputLayout(desc.fragment.outputAttribs, shaderAttribs_, shaderAttribNames_);
 }
@@ -196,14 +195,13 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
     shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
 }
 
-bool GLShader::BuildVertexInputLayout(
+void GLShader::BuildVertexInputLayout(
     ArrayView<VertexAttribute>      inVertexAttribs,
     std::vector<GLShaderAttribute>& outGLVertexAttribs,
-    LinearStringContainer&          outGLAttribNames,
-    Report&                         report)
+    LinearStringContainer&          outGLAttribNames)
 {
     if (inVertexAttribs.empty())
-        return true;
+        return;
 
     /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
     constexpr std::uint32_t minSupportedVertexAttribs = 8;
@@ -216,15 +214,11 @@ bool GLShader::BuildVertexInputLayout(
     {
         GLint maxSupportedVertexAttribs = 0;
         glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
-
-        if (highestAttribIndex > static_cast<std::uint32_t>(maxSupportedVertexAttribs))
-        {
-            report.Errorf(
-                "failed build input layout, because too many vertex attributes are specified (%u is specified, but maximum is %u)",
-                highestAttribIndex, maxSupportedVertexAttribs
-            );
-            return false;
-        }
+        LLGL_ASSERT(
+            highestAttribIndex <= static_cast<std::uint32_t>(maxSupportedVertexAttribs),
+            "failed build input layout, because too many vertex attributes are specified (%u is specified, but maximum is %u)",
+            highestAttribIndex, maxSupportedVertexAttribs
+        );
     }
 
     /* Bind all vertex attribute locations */
@@ -234,8 +228,6 @@ bool GLShader::BuildVertexInputLayout(
         if (attr.semanticIndex == 0)
             outGLVertexAttribs.push_back({ attr.location, outGLAttribNames.CopyString(attr.name) });
     }
-
-    return true;
 }
 
 void GLShader::BuildFragmentOutputLayout(

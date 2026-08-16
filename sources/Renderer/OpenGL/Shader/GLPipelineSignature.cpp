@@ -70,6 +70,17 @@ GLPipelineSignature::GLPipelineSignature(ArrayView<const Shader*> shaders, GLSha
     Build(shaders, permutation);
 }
 
+GLPipelineSignature::GLPipelineSignature(
+    ArrayView<Shader*>          shaders,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs,
+    GLShader::Permutation       permutation,
+    void*                       /*pipelineCache*/)
+{
+    //TODO: integrate vertex attributes
+    Build(ArrayView<const Shader*>{ shaders.data(), shaders.size() }, permutation);
+}
+
 // Returns true if the specified array of shaders contains a separable shader
 static bool HasSeparableShaders(ArrayView<const Shader*> shaders)
 {
