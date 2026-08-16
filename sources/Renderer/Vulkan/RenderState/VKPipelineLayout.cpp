@@ -380,7 +380,7 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
         default:
             break;
     }
-    VKTypes::MapFailed("ResourceType", "VkDescriptorType");
+    LLGL_TRAP_VK_MAP(ResourceType, desc.type, VkDescriptorType);
 }
 
 static void ConvertBindingDesc(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
