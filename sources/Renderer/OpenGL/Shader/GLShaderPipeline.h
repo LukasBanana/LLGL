@@ -11,6 +11,7 @@
 
 #include "GLShader.h"
 #include "GLPipelineSignature.h"
+#include <LLGL/Container/ArrayView.h>
 #include <memory>
 #include <string>
 #include <set>
@@ -68,7 +69,7 @@ class GLShaderPipeline
         GLShaderPipeline(GLuint id);
 
         // Builds the pipeline signature for SWO comparison.
-        void BuildSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
+        void BuildSignature(ArrayView<const Shader*> shaders, GLShader::Permutation permutation);
 
         // Stores the native shader pipeline ID.
         inline void SetID(GLuint id)

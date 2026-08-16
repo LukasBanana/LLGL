@@ -19,24 +19,24 @@ namespace LLGL
 {
 
 
-static GLuint SortShaderArray(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation, GLuint* outShaderIDs)
+static GLuint SortShaderArray(ArrayView<const Shader*> shaders, GLShader::Permutation permutation, GLuint* outShaderIDs)
 {
     constexpr auto numShaderTypes = (static_cast<int>(ShaderType::Compute) + 1);
 
     /* Find shaders that are affected by permutation */
     const GLShader* finalGLPositionShader = nullptr;
     if (permutation == GLShader::PermutationFlippedYPosition)
-        finalGLPositionShader = GLPipelineSignature::FindFinalGLPositionShader(numShaders, shaders);
+        finalGLPositionShader = GLPipelineSignature::FindFinalGLPositionShader(shaders);
 
     /* Put all shaders into order */
     const GLShader* shadersOrderedByType[numShaderTypes] = {};
-    for_range(i, numShaders)
+    for (const Shader* shader : shaders)
     {
-        LLGL_ASSERT_PTR(shaders[i]);
-        const ShaderType shaderType = shaders[i]->GetType();
-        const int shaderIndex = static_cast<int>(shaderType);
-        LLGL_ASSERT(shadersOrderedByType[shaderIndex] == nullptr, "duplicate definitions of %s shader in one pipeline", ToString(shaderType));
-        shadersOrderedByType[shaderIndex] = LLGL_CAST(const GLShader*, shaders[i]);
+        LLGL_ASSERT_PTR(shader);
+        const ShaderType shaderType = shader->GetType();
+        const int shaderTypeIndex = static_cast<int>(shaderType);
+        LLGL_ASSERT(shadersOrderedByType[shaderTypeIndex] == nullptr, "duplicate definitions of %s shader in one pipeline", ToString(shaderType));
+        shadersOrderedByType[shaderTypeIndex] = LLGL_CAST(const GLShader*, shader);
     }
 
     /* Condense output by omitting unused shader stages */
@@ -60,22 +60,27 @@ static GLuint SortShaderArray(std::size_t numShaders, const Shader* const* shade
     return outIndex;
 }
 
-GLPipelineSignature::GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation, void* /*pipelineCache*/)
+GLPipelineSignature::GLPipelineSignature(ArrayView<Shader*> shaders, GLShader::Permutation permutation, void* /*pipelineCache*/)
 {
-    Build(numShaders, shaders, permutation);
+    Build(ArrayView<const Shader*>{ shaders.data(), shaders.size() }, permutation);
+}
+
+GLPipelineSignature::GLPipelineSignature(ArrayView<const Shader*> shaders, GLShader::Permutation permutation, void* /*pipelineCache*/)
+{
+    Build(shaders, permutation);
 }
 
 // Returns true if the specified array of shaders contains a separable shader
-static bool HasSeparableShaders(std::size_t numShaders, const Shader* const* shaders)
+static bool HasSeparableShaders(ArrayView<const Shader*> shaders)
 {
-    return (numShaders > 0 && shaders[0] != nullptr && LLGL_CAST(const GLShader*, shaders[0])->IsSeparable());
+    return (!shaders.empty() && shaders[0] != nullptr && LLGL_CAST(const GLShader*, shaders[0])->IsSeparable());
 }
 
-void GLPipelineSignature::Build(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation)
+void GLPipelineSignature::Build(ArrayView<const Shader*> shaders, GLShader::Permutation permutation)
 {
-    LLGL_ASSERT(numShaders <= LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE);
-    data_.isSeparablePipeline = HasSeparableShaders(numShaders, shaders);
-    data_.numShaders = SortShaderArray(numShaders, shaders, permutation, data_.shaders);
+    LLGL_ASSERT(shaders.size() <= LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE);
+    data_.isSeparablePipeline   = HasSeparableShaders(shaders);
+    data_.numShaders            = SortShaderArray(shaders, permutation, data_.shaders);
 }
 
 int GLPipelineSignature::CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs)
@@ -93,13 +98,13 @@ static int GetShaderPipelineOrder(const Shader* shader)
     return (shader != nullptr ? static_cast<int>(shader->GetType()) : 0);
 }
 
-const GLShader* GLPipelineSignature::FindFinalGLPositionShader(std::size_t numShaders, const Shader* const* shaders)
+const GLShader* GLPipelineSignature::FindFinalGLPositionShader(ArrayView<const Shader*> shaders)
 {
     const GLShader* finalGLPositionShader = nullptr;
 
-    for_range(i, numShaders)
+    for (const Shader* shader : shaders)
     {
-        if (const Shader* shader = shaders[i])
+        if (shader != nullptr)
         {
             const GLShader* shaderGL = LLGL_CAST(const GLShader*, shader);
             switch (shaderGL->GetType())

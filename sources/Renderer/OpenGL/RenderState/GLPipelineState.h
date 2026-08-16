@@ -29,7 +29,6 @@ namespace LLGL
 class PipelineLayout;
 class PipelineCache;
 class GLStateManager;
-class GLShaderProgram;
 
 // GL uniform location with size and type information.
 struct GLUniformLocation

@@ -29,9 +29,9 @@ GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
     isSeparable_ { isSeparable }
 {
     ReserveAttribs(desc);
-    BuildVertexInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
-    BuildTransformFeedbackVaryings(desc.vertex.outputAttribs.size(), desc.vertex.outputAttribs.data());
-    BuildFragmentOutputLayout(desc.fragment.outputAttribs.size(), desc.fragment.outputAttribs.data());
+    GLShader::BuildVertexInputLayout(desc.vertex.inputAttribs, shaderAttribs_, shaderAttribNames_, report_);
+    GLShader::BuildTransformFeedbackVaryings(desc.vertex.outputAttribs, transformFeedbackVaryings_, shaderAttribNames_);
+    GLShader::BuildFragmentOutputLayout(desc.fragment.outputAttribs, shaderAttribs_, shaderAttribNames_);
 }
 
 const Report* GLShader::GetReport() const
@@ -39,30 +39,20 @@ const Report* GLShader::GetReport() const
     return (report_ ? &report_ : nullptr);
 }
 
-const GLShaderAttribute* GLShader::GetVertexAttribs() const
+ArrayView<GLShaderAttribute> GLShader::GetVertexAttribs() const
 {
     if (!shaderAttribs_.empty())
-        return &shaderAttribs_[0];
+        return ArrayView<GLShaderAttribute>{ &shaderAttribs_[0], numVertexAttribs_ };
     else
-        return nullptr;
+        return {};
 }
 
-std::size_t GLShader::GetNumVertexAttribs() const
-{
-    return numVertexAttribs_;
-}
-
-const GLShaderAttribute* GLShader::GetFragmentAttribs() const
+ArrayView<GLShaderAttribute> GLShader::GetFragmentAttribs() const
 {
     if (numVertexAttribs_ < shaderAttribs_.size())
-        return &shaderAttribs_[numVertexAttribs_];
+        return ArrayView<GLShaderAttribute>{ &shaderAttribs_[numVertexAttribs_], (shaderAttribs_.size() - numVertexAttribs_) };
     else
-        return nullptr;
-}
-
-std::size_t GLShader::GetNumFragmentAttribs() const
-{
-    return (shaderAttribs_.size() - numVertexAttribs_);
+        return {};
 }
 
 GLenum GLShader::GetGLType() const
@@ -206,17 +196,21 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
     shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
 }
 
-bool GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+bool GLShader::BuildVertexInputLayout(
+    ArrayView<VertexAttribute>      inVertexAttribs,
+    std::vector<GLShaderAttribute>& outGLVertexAttribs,
+    LinearStringContainer&          outGLAttribNames,
+    Report&                         report)
 {
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+    if (inVertexAttribs.empty())
         return true;
 
     /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
     constexpr std::uint32_t minSupportedVertexAttribs = 8;
 
     std::uint32_t highestAttribIndex = 0;
-    for_range(i, numVertexAttribs)
-        highestAttribIndex = std::max(highestAttribIndex, vertexAttribs[i].location);
+    for (const VertexAttribute& attr : inVertexAttribs)
+        highestAttribIndex = std::max(highestAttribIndex, attr.location);
 
     if (highestAttribIndex > minSupportedVertexAttribs)
     {
@@ -225,7 +219,7 @@ bool GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const Vertex
 
         if (highestAttribIndex > static_cast<std::uint32_t>(maxSupportedVertexAttribs))
         {
-            report_.Errorf(
+            report.Errorf(
                 "failed build input layout, because too many vertex attributes are specified (%u is specified, but maximum is %u)",
                 highestAttribIndex, maxSupportedVertexAttribs
             );
@@ -234,43 +228,52 @@ bool GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const Vertex
     }
 
     /* Bind all vertex attribute locations */
-    for_range(i, numVertexAttribs)
+    for (const VertexAttribute& attr : inVertexAttribs)
     {
         /* Store attribute meta data (matrices only use the 1st column) */
-        const auto& attr = vertexAttribs[i];
         if (attr.semanticIndex == 0)
-            shaderAttribs_.push_back({ attr.location, shaderAttribNames_.CopyString(attr.name) });
+            outGLVertexAttribs.push_back({ attr.location, outGLAttribNames.CopyString(attr.name) });
     }
 
     return true;
 }
 
-void GLShader::BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs)
+void GLShader::BuildFragmentOutputLayout(
+    ArrayView<FragmentAttribute>    inFragmentAttribs,
+    std::vector<GLShaderAttribute>& outGLFragmentAttribs,
+    LinearStringContainer&          outGLAttribNames)
 {
-    if (numFragmentAttribs == 0 || fragmentAttribs == nullptr)
+    if (inFragmentAttribs.empty())
         return;
 
     /* Bind all fragment attribute locations */
-    for_range(i, numFragmentAttribs)
+    outGLFragmentAttribs.reserve(outGLFragmentAttribs.size() + inFragmentAttribs.size());
+    for (const FragmentAttribute& attr : inFragmentAttribs)
     {
         /* Store attribute meta data (matrices only use the 1st column) */
-        const auto& attr = fragmentAttribs[i];
-        shaderAttribs_.push_back({ attr.location, shaderAttribNames_.CopyString(attr.name) });
+        outGLFragmentAttribs.push_back({ attr.location, outGLAttribNames.CopyString(attr.name) });
     }
 }
 
-void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings)
+void GLShader::BuildTransformFeedbackVaryings(
+    ArrayView<VertexAttribute>      inVaryings,
+    std::vector<const char*>&       outGLTransformFeedbackVaryings,
+    LinearStringContainer&          outGLAttribNames)
 {
-    if (numVaryings > 0 && varyings != nullptr)
+    if (inVaryings.empty())
+        return;
+
+    outGLTransformFeedbackVaryings.reserve(inVaryings.size());
+    for (const VertexAttribute& attr : inVaryings)
     {
-        transformFeedbackVaryings_.reserve(numVaryings);
-        for_range(i, numVaryings)
-        {
-            if (const char* systemValueName = GLTypes::SystemValueToString(varyings[i].systemValue, GetType()))
-                transformFeedbackVaryings_.push_back(systemValueName);
-            else
-                transformFeedbackVaryings_.push_back(shaderAttribNames_.CopyString(varyings[i].name));
-        }
+        /*
+        Always assume vertex shader type here;
+        This parameter only matters for `gl_FragCoord` for fragment shaders, but transform feedback does not matter to fragment shaders.
+        */
+        if (const char* systemValueName = GLTypes::SystemValueToString(attr.systemValue, ShaderType::Vertex))
+            outGLTransformFeedbackVaryings.push_back(systemValueName);
+        else
+            outGLTransformFeedbackVaryings.push_back(outGLAttribNames.CopyString(attr.name));
     }
 }
 

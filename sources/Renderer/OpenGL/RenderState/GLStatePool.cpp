@@ -204,29 +204,28 @@ static bool IsGLSeparableShader(const Shader* shader)
 
 // Returns true if the specified list of shaders has separable shaders.
 // Actually all shaders must be of the same type, but full validation is handled in the debug layer.
-static bool HasGLSeparableShaders(std::size_t numShaders, Shader* const* shaders)
+static bool HasGLSeparableShaders(ArrayView<Shader*> shaders)
 {
-    return (numShaders > 0 && IsGLSeparableShader(shaders[0]));
+    return (!shaders.empty() && IsGLSeparableShader(shaders[0]));
 }
 
 GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
-    std::size_t             numShaders,
-    Shader* const*          shaders,
+    ArrayView<Shader*>      shaders,
     GLShader::Permutation   permutation,
     GLPipelineCache*        pipelineCache)
 {
     #ifdef LLGL_OPENGL
-    if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(numShaders, shaders))
+    if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(shaders))
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation)
+            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, shaders, permutation)
         );
     }
     else
     #endif
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation, pipelineCache)
+            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, shaders, permutation, pipelineCache)
         );
     }
 }

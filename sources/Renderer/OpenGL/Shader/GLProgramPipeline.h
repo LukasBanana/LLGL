@@ -26,8 +26,7 @@ class GLProgramPipeline final : public GLShaderPipeline
     public:
 
         GLProgramPipeline(
-            std::size_t             numShaders,
-            Shader* const*          shaders,
+            ArrayView<Shader*>      shaders,
             GLShader::Permutation   permutation = GLShader::PermutationDefault
         );
         ~GLProgramPipeline();
@@ -40,7 +39,7 @@ class GLProgramPipeline final : public GLShaderPipeline
     private:
 
         // Binds the specified separable shaders to this program pipeline and their respective pipeline stages.
-        void UseProgramStages(std::size_t numShaders, GLSeparableShader* const* shaders, GLShader::Permutation permutation);
+        void UseProgramStages(ArrayView<Shader*> shaders, GLShader::Permutation permutation);
 
     private:
 

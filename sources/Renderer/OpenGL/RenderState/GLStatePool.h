@@ -69,8 +69,7 @@ class GLStatePool
         /* ----- Shader pipelines ----- */
 
         GLShaderPipelineSPtr CreateShaderPipeline(
-            std::size_t             numShaders,
-            Shader* const*          shaders,
+            ArrayView<Shader*>      shaders,
             GLShader::Permutation   permutation     = GLShader::PermutationDefault,
             GLPipelineCache*        pipelineCache   = nullptr
         );

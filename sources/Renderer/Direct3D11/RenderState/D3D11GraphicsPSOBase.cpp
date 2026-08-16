@@ -63,7 +63,7 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
 
 void D3D11GraphicsPSOBase::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& outputAttributes)
 {
-    const auto numVertexAttribs = static_cast<UINT>(attributes.size());
+    const UINT numVertexAttribs = static_cast<UINT>(attributes.size());
 
     outputAttributes.resize(numVertexAttribs);
 
@@ -85,7 +85,7 @@ static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttr
 
 void D3D11GraphicsPSOBase::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
 {
-    const auto numStreamOutputAttribs = static_cast<UINT>(attributes.size());
+    const UINT numStreamOutputAttribs = static_cast<UINT>(attributes.size());
 
     /* Initialize output elements for geometry shader with stream-output */
     output.resize(numStreamOutputAttribs);
@@ -122,7 +122,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
         {
             HRESULT hr = device->CreateInputLayout(
                 inputElements.data(),
-                inputElements.size(),
+                static_cast<UINT>(inputElements.size()),
                 vertexByteCode->GetBufferPointer(),
                 vertexByteCode->GetBufferSize(),
                 inputLayout_.ReleaseAndGetAddressOf()

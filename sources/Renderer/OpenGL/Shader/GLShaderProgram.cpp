@@ -83,10 +83,9 @@ static SharedGLShader g_nullFragmentShader;
 #endif // /LLGL_USE_NULL_FRAGMENT_SHADER
 
 GLShaderProgram::GLShaderProgram(
-    std::size_t             numShaders,
-    const Shader* const*    shaders,
-    GLShader::Permutation   permutation,
-    GLPipelineCache*        pipelineCache)
+    ArrayView<const Shader*>    shaders,
+    GLShader::Permutation       permutation,
+    GLPipelineCache*            pipelineCache)
 :
     GLShaderPipeline { glCreateProgram() }
 {
@@ -95,15 +94,29 @@ GLShaderProgram::GLShaderProgram(
     {
         if (!(pipelineCache->HasProgramBinary(permutation) && pipelineCache->ProgramBinary(permutation, GetID())))
         {
-            BuildProgramBinary(numShaders, shaders, permutation);
+            BuildProgramBinary(shaders, permutation);
             pipelineCache->GetProgramBinary(permutation, GetID());
         }
     }
     else
-        BuildProgramBinary(numShaders, shaders, permutation);
+        BuildProgramBinary(shaders, permutation);
 
     /* Build pipeline signature */
-    BuildSignature(numShaders, shaders, permutation);
+    BuildSignature(shaders, permutation);
+}
+
+GLShaderProgram::GLShaderProgram(
+    ArrayView<Shader*>      shaders,
+    GLShader::Permutation   permutation,
+    GLPipelineCache*        pipelineCache)
+:
+    GLShaderProgram
+    {
+        ArrayView<const Shader*>{ shaders.data(), shaders.size() },
+        permutation,
+        pipelineCache
+    }
+{
 }
 
 GLShaderProgram::~GLShaderProgram()
@@ -174,43 +187,37 @@ std::string GLShaderProgram::GetGLProgramLog(GLuint program)
     return "";
 }
 
-void GLShaderProgram::BindAttribLocations(GLuint program, std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs)
+void GLShaderProgram::BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs)
 {
     /* Bind all vertex attribute locations */
-    for_range(i, numVertexAttribs)
-    {
-        const auto& attr = vertexAttribs[i];
+    for (const auto& attr : vertexAttribs)
         glBindAttribLocation(program, attr.index, attr.name);
-    }
 }
 
-void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
+void GLShaderProgram::BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs)
 {
     #if LLGL_OPENGL && GL_EXT_gpu_shader4
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outputs anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
-        for_range(i, numFragmentAttribs)
-        {
-            const auto& attr = fragmentAttribs[i];
+        for (const auto& attr : fragmentAttribs)
             glBindFragDataLocation(program, attr.index, attr.name);
-        }
     }
     #endif
 }
 
-static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVaryings, const char* const* varyings)
+static void BuildTransformFeedbackVaryingsEXT(GLuint program, ArrayView<const char*> varyings)
 {
     #if !LLGL_GL_ENABLE_OPENGL2X
 
-    if (numVaryings == 0 || varyings == nullptr)
+    if (varyings.empty())
         return;
 
     /* Specify transform-feedback varyings by names */
     glTransformFeedbackVaryings(
         program,
-        static_cast<GLsizei>(numVaryings),
-        reinterpret_cast<const GLchar* const*>(varyings),
+        static_cast<GLsizei>(varyings.size()),
+        reinterpret_cast<const GLchar* const*>(varyings.data()),
         GL_INTERLEAVED_ATTRIBS
     );
 
@@ -219,23 +226,23 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVar
 
 #if GL_NV_transform_feedback
 
-static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVaryings, const char* const* varyings)
+static void BuildTransformFeedbackVaryingsNV(GLuint program, ArrayView<const char*> varyings)
 {
-    if (numVaryings == 0 || varyings == nullptr)
+    if (varyings.empty())
         return;
 
     /* Specify transform-feedback varyings by locations */
     std::vector<GLint> varyingLocations;
-    varyingLocations.reserve(numVaryings);
+    varyingLocations.reserve(varyings.size());
 
-    for_range(i, numVaryings)
+    for (const char* varyingName : varyings)
     {
         /*
         Get varying location by its name.
         Silently ignore invalid names since the EXT extension doesn't report errors either
         and NV extension fails on gl_Position input.
         */
-        GLint location = glGetVaryingLocationNV(program, varyings[i]);
+        GLint location = glGetVaryingLocationNV(program, varyingName);
         if (location >= 0)
             varyingLocations.push_back(location);
     }
@@ -250,17 +257,17 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVary
 
 #endif
 
-void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, std::size_t numVaryings, const char* const* varyings)
+void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings)
 {
     /* Check if transform-feedback varyings must be specified (before or after shader linking) */
-    if (numVaryings > 0 && varyings != nullptr)
+    if (!varyings.empty())
     {
         /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
         #ifndef __APPLE__
         if (HasExtension(GLExt::EXT_transform_feedback))
         #endif
         {
-            BuildTransformFeedbackVaryingsEXT(program, numVaryings, varyings);
+            BuildTransformFeedbackVaryingsEXT(program, varyings);
             glLinkProgram(program);
             return;
         }
@@ -270,7 +277,7 @@ void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, s
         if (HasExtension(GLExt::NV_transform_feedback))
         {
             glLinkProgram(program);
-            BuildTransformFeedbackVaryingsNV(program, numVaryings, varyings);
+            BuildTransformFeedbackVaryingsNV(program, varyings);
             return;
         }
         #endif
@@ -1005,32 +1012,31 @@ struct GLOrderedShaders
 };
 
 static void AttachGLLegacyShaders(
-    GLuint                  program,
-    std::size_t             numShaders,
-    const Shader* const*    shaders,
-    GLOrderedShaders&       orderedShaders)
+    GLuint                      program,
+    ArrayView<const Shader*>    inShaders,
+    GLOrderedShaders&           outOrderedShaders)
 {
-    for_range(i, numShaders)
+    for (const Shader* shader : inShaders)
     {
-        if (const Shader* shader = shaders[i])
+        if (shader != nullptr)
         {
             /* Attach shader to shader program */
             auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
-            glAttachShader(program, orderedShaders.GetGLShaderID(shaderGL));
+            glAttachShader(program, outOrderedShaders.GetGLShaderID(shaderGL));
 
             switch (shaderGL->GetType())
             {
                 case ShaderType::Vertex:
-                    orderedShaders.vertexShader = shaderGL;
+                    outOrderedShaders.vertexShader = shaderGL;
                     break;
                 case ShaderType::TessEvaluation:
-                    orderedShaders.tessEvaluationShader = shaderGL;
+                    outOrderedShaders.tessEvaluationShader = shaderGL;
                     break;
                 case ShaderType::Geometry:
-                    orderedShaders.geometryShader = shaderGL;
+                    outOrderedShaders.geometryShader = shaderGL;
                     break;
                 case ShaderType::Fragment:
-                    orderedShaders.fragmentShader = shaderGL;
+                    outOrderedShaders.fragmentShader = shaderGL;
                     break;
                 default:
                     break;
@@ -1040,18 +1046,17 @@ static void AttachGLLegacyShaders(
 }
 
 void GLShaderProgram::BuildProgramBinary(
-    std::size_t             numShaders,
-    const Shader* const*    shaders,
-    GLShader::Permutation   permutation)
+    ArrayView<const Shader*>    shaders,
+    GLShader::Permutation       permutation)
 {
     GLOrderedShaders orderedShaders;
 
     /* Find last shader in pipeline that transforms gl_Position if such permutation is requested */
     if (permutation == GLShader::PermutationFlippedYPosition)
-        orderedShaders.shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(numShaders, shaders);
+        orderedShaders.shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(shaders);
 
     /* Attach all specified shaders to this shader program */
-    AttachGLLegacyShaders(GetID(), numShaders, shaders, orderedShaders);
+    AttachGLLegacyShaders(GetID(), shaders, orderedShaders);
 
     #if LLGL_USE_NULL_FRAGMENT_SHADER
     /*
@@ -1076,11 +1081,11 @@ void GLShaderProgram::BuildProgramBinary(
 
     /* Build input layout for vertex shader */
     if (const GLShader* vs = orderedShaders.vertexShader)
-        GLShaderProgram::BindAttribLocations(GetID(), vs->GetNumVertexAttribs(), vs->GetVertexAttribs());
+        GLShaderProgram::BindAttribLocations(GetID(), vs->GetVertexAttribs());
 
     /* Build output layout for fragment shader */
     if (const GLShader* fs = orderedShaders.fragmentShader)
-        GLShaderProgram::BindFragDataLocations(GetID(), fs->GetNumFragmentAttribs(), fs->GetFragmentAttribs());
+        GLShaderProgram::BindFragDataLocations(GetID(), fs->GetFragmentAttribs());
 
     /* Build transform feedback varyings for vertex or geometry shader and link program */
     const GLShader* shaderWithVaryings = nullptr;
@@ -1105,7 +1110,7 @@ void GLShaderProgram::BuildProgramBinary(
     if (shaderWithVaryings != nullptr)
     {
         const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings.size(), varyings.data());
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
     }
     else
         GLShaderProgram::LinkProgram(GetID());

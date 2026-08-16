@@ -20,9 +20,9 @@ GLShaderPipeline::GLShaderPipeline(GLuint id) :
 {
 }
 
-void GLShaderPipeline::BuildSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation)
+void GLShaderPipeline::BuildSignature(ArrayView<const Shader*> shaders, GLShader::Permutation permutation)
 {
-    signature_.Build(numShaders, shaders, permutation);
+    signature_.Build(shaders, permutation);
 }
 
 int GLShaderPipeline::CompareSWO(const GLShaderPipeline& lhs, const GLShaderPipeline& rhs)

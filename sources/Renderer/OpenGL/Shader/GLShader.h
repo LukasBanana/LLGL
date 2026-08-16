@@ -11,6 +11,7 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/Report.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../OpenGL.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <functional>
@@ -50,12 +51,10 @@ class GLShader : public Shader
     public:
 
         // Returns the vertex input attributes:
-        const GLShaderAttribute* GetVertexAttribs() const;
-        std::size_t GetNumVertexAttribs() const;
+        ArrayView<GLShaderAttribute> GetVertexAttribs() const;
 
         // Returns the vertex input attributes:
-        const GLShaderAttribute* GetFragmentAttribs() const;
-        std::size_t GetNumFragmentAttribs() const;
+        ArrayView<GLShaderAttribute> GetFragmentAttribs() const;
 
         // Returns the GLenum for this shader type, e.g. GL_VERTEX_SHADER.
         GLenum GetGLType() const;
@@ -110,6 +109,25 @@ class GLShader : public Shader
             const char*                 versionOverride     = nullptr
         );
 
+        static bool BuildVertexInputLayout(
+            ArrayView<VertexAttribute>      inVertexAttribs,
+            std::vector<GLShaderAttribute>& outGLVertexAttribs,
+            LinearStringContainer&          outGLAttribNames,
+            Report&                         report
+        );
+
+        static void BuildFragmentOutputLayout(
+            ArrayView<FragmentAttribute>    inFragmentAttribs,
+            std::vector<GLShaderAttribute>& outGLFragmentAttribs,
+            LinearStringContainer&          outGLAttribNames
+        );
+
+        static void BuildTransformFeedbackVaryings(
+            ArrayView<VertexAttribute>      inVaryings,
+            std::vector<const char*>&       outGLTransformFeedbackVaryings,
+            LinearStringContainer&          outGLAttribNames
+        );
+
     protected:
 
         GLShader(const bool isSeparable, const ShaderDescriptor& desc);
@@ -126,9 +144,6 @@ class GLShader : public Shader
     private:
 
         void ReserveAttribs(const ShaderDescriptor& desc);
-        bool BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
-        void BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs);
-        void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
 
     private:
 

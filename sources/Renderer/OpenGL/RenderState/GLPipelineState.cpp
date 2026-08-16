@@ -38,7 +38,7 @@ GLPipelineState::GLPipelineState(
         if (GLShader::HasAnyShaderPermutation(permutation, shaders))
         {
             /* Create shader pipeline for current permutation */
-            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(shaders.size(), shaders.data(), permutation, pipelineCacheGL);
+            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(shaders, permutation, pipelineCacheGL);
 
             /* Query information log and stop linking shader pipelines if the default permutation has errors */
             if (permutation == GLShader::PermutationDefault)

@@ -11,6 +11,7 @@
 
 #include "../OpenGL.h"
 #include "GLShader.h"
+#include <LLGL/Container/ArrayView.h>
 #include <cstddef>
 #include <type_traits>
 
@@ -35,14 +36,17 @@ class GLPipelineSignature
         Initializes the signature with the specified shaders. Equivalent of calling Build.
         Pipeline cache parameter is just for compatibility in GLStatePool template functions.
         */
-        GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation, void* /*pipelineCache*/ = nullptr);
+        GLPipelineSignature(ArrayView<const Shader*> shaders, GLShader::Permutation permutation, void* /*pipelineCache*/ = nullptr);
+
+        // Wrapper for mutable shaders array view.
+        GLPipelineSignature(ArrayView<Shader*> shaders, GLShader::Permutation permutation, void* /*pipelineCache*/ = nullptr);
 
         /*
         Initializes the signature with the specified shaders.
         The internal ID array is sorted by their shader types for matching SWO comparison.
         The number of shaders must be less than or equal to LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE.
         */
-        void Build(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
+        void Build(ArrayView<const Shader*> shaders, GLShader::Permutation permutation);
 
     public:
 
@@ -50,7 +54,7 @@ class GLPipelineSignature
         static int CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs);
 
         // Returns the last shader in the pipeline that modifies gl_Position.
-        static const GLShader* FindFinalGLPositionShader(std::size_t numShaders, const Shader* const* shaders);
+        static const GLShader* FindFinalGLPositionShader(ArrayView<const Shader*> shaders);
 
     public:
 
