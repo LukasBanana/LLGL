@@ -91,6 +91,7 @@ DECL_TEST( ResourceCopy );
 DECL_TEST( CombinedTexSamplers );
 DECL_TEST( MeshShaders );
 DECL_TEST( Multiview );
+DECL_TEST( BGRAVertexFormat );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );
