@@ -109,26 +109,48 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
+static void GetDefaultSupportedGLBaseFormats(std::vector<Format>& formats)
+{
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+            Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+            Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+            Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+            Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+            Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+            Format::RGB8UNorm,          Format::RGB8SNorm,          Format::RGB8UInt,           Format::RGB8SInt,
+            Format::RGB16UNorm,         Format::RGB16SNorm,         Format::RGB16UInt,          Format::RGB16SInt,          Format::RGB16Float,
+            Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
+            Format::RGBA8UNorm,         Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+            Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+            Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+        }
+    );
+}
+
 static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
-    return
+    std::vector<Format> textureFormats =
     {
         Format::A8UNorm,
         Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
-        Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
-        Format::R32UInt,            Format::R32SInt,            Format::R32Float,
-        Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
-        Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
-        Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
-        Format::RGB8UNorm,          Format::RGB8SNorm,          Format::RGB8UInt,           Format::RGB8SInt,
-        Format::RGB16UNorm,         Format::RGB16SNorm,         Format::RGB16UInt,          Format::RGB16SInt,          Format::RGB16Float,
-        Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
-        Format::RGBA8UNorm,         Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
-        Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
-        Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
         Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,    Format::BGRA8SNorm,         Format::BGRA8UInt,          Format::BGRA8SInt,
         Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
     };
+    GetDefaultSupportedGLBaseFormats(textureFormats);
+    return textureFormats;
+}
+
+static std::vector<Format> GLGetSupportedVertexFormats()
+{
+    std::vector<Format> vertexFormats =
+    {
+        Format::BGRA8UNorm, // Only one BGRA vertex format (GL_ARB_vertex_array_bgra)
+    };
+    GetDefaultSupportedGLBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 static void GLGetRenderingAttribs(RenderingCapabilities& caps)
@@ -403,6 +425,7 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
 {
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
+    caps.vertexFormats                  = GLGetSupportedVertexFormats();
     caps.swapChainColorFormats          = GLGetSupportedSwapChainColorFormats();
     caps.swapChainDepthStencilFormats   = GLGetSupportedSwapChainDepthStencilFormats();
     GLGetSupportedFeatures(caps.features);

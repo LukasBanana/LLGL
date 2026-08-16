@@ -2178,6 +2178,7 @@ namespace LLGL
         public ClippingRange     ClippingRange { get; set; }                = ClippingRange.ZeroToOne;
         public ShadingLanguage[] ShadingLanguages { get; set; }
         public Format[]          TextureFormats { get; set; }
+        public Format[]          VertexFormats { get; set; }
         public Format[]          SwapChainColorFormats { get; set; }
         public Format[]          SwapChainDepthStencilFormats { get; set; }
         public RenderingFeatures Features { get; set; }                     = new RenderingFeatures();
@@ -2207,6 +2208,11 @@ namespace LLGL
                     for (int i = 0; i < TextureFormats.Length; ++i)
                     {
                         TextureFormats[i] = value.textureFormats[i];
+                    }
+                    VertexFormats                = new Format[(int)value.numVertexFormats];
+                    for (int i = 0; i < VertexFormats.Length; ++i)
+                    {
+                        VertexFormats[i] = value.vertexFormats[i];
                     }
                     SwapChainColorFormats        = new Format[(int)value.numSwapChainColorFormats];
                     for (int i = 0; i < SwapChainColorFormats.Length; ++i)
@@ -4177,6 +4183,8 @@ namespace LLGL
             public ShadingLanguage*  shadingLanguages;
             public IntPtr            numTextureFormats;
             public Format*           textureFormats;
+            public IntPtr            numVertexFormats;
+            public Format*           vertexFormats;
             public IntPtr            numSwapChainColorFormats;
             public Format*           swapChainColorFormats;
             public IntPtr            numSwapChainDepthStencilFormats;

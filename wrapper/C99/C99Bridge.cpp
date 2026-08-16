@@ -53,6 +53,9 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     wrapper.textureFormats.resize(src.textureFormats.size());
     ::memcpy(wrapper.textureFormats.data(), src.textureFormats.data(), sizeof(LLGLFormat) * src.textureFormats.size());
 
+    wrapper.vertexFormats.resize(src.vertexFormats.size());
+    ::memcpy(wrapper.vertexFormats.data(), src.vertexFormats.data(), sizeof(LLGLFormat) * src.vertexFormats.size());
+
     wrapper.swapChainColorFormats.resize(src.swapChainColorFormats.size());
     ::memcpy(wrapper.swapChainColorFormats.data(), src.swapChainColorFormats.data(), sizeof(LLGLFormat) * src.swapChainColorFormats.size());
 
@@ -65,6 +68,8 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     dst.shadingLanguages                    = wrapper.shadingLanguages.data();
     dst.numTextureFormats                   = wrapper.textureFormats.size();
     dst.textureFormats                      = wrapper.textureFormats.data();
+    dst.numVertexFormats                    = wrapper.vertexFormats.size();
+    dst.vertexFormats                       = wrapper.vertexFormats.data();
     dst.numSwapChainColorFormats            = wrapper.swapChainColorFormats.size();
     dst.swapChainColorFormats               = wrapper.swapChainColorFormats.data();
     dst.numSwapChainDepthStencilFormats     = wrapper.swapChainDepthStencilFormats.size();

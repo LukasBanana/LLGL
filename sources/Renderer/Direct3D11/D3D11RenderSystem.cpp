@@ -923,12 +923,7 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
 static std::vector<Format> GetDefaultSupportedDXTextureFormats(D3D_FEATURE_LEVEL featureLevel)
 {
     std::vector<Format> formats;
-
-    std::size_t numFormats = 0;
-    DXGetDefaultSupportedTextureFormats(nullptr, &numFormats);
-
-    formats.resize(numFormats, Format::Undefined);
-    DXGetDefaultSupportedTextureFormats(formats.data(), nullptr);
+    DXGetDefaultSupportedTextureFormats(formats);
 
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0)
     {

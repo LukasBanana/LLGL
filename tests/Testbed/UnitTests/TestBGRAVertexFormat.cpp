@@ -15,6 +15,14 @@
 // Renders a triangle in two viewports each, left one is RGBA vertex input and right one is BGRA vertex input.
 DEF_TEST( BGRAVertexFormat )
 {
+    // Skip if BGRA vertex formats are not supported by backend
+    if (shaders[VSUnprojectedBGRA] == nullptr)
+    {
+        if (opt.verbose)
+            Log::Printf("BGRA vertex format not supported\n");
+        return TestResult::Skipped;
+    }
+
     // Create unprojected 2D vertices in BGRA color formats
     UnprojectedVertex vertices[3] =
     {

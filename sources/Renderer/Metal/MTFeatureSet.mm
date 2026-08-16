@@ -52,23 +52,32 @@ static int FeatureSetToVersion(MTLFeatureSet fset)
     return 100; // 1.0
 }
 
+static void GetDefaultSupportedMTBaseFormats(std::vector<Format>& formats)
+{
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+            Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+            Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+            Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+            Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+            Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+            Format::RGBA8UNorm,         Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+            Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+            Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+        }
+    );
+}
+
 static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 {
-    return
+    std::vector<Format> textureFormats =
     {
         Format::A8UNorm,
-        Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
-        Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
-        Format::R32UInt,            Format::R32SInt,            Format::R32Float,
-        Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
-        Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
-        Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
-        Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
-        Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
-        Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
-        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
-        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
 
+        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+        Format::RGBA8UNorm_sRGB,    Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
         Format::D16UNorm,           Format::D32Float,           Format::D32FloatS8X24UInt,
 
         #ifndef LLGL_OS_IOS
@@ -98,6 +107,15 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 
         Format::ETC2UNorm,          Format::ETC2UNorm_sRGB,
     };
+    GetDefaultSupportedMTBaseFormats(textureFormats);
+    return textureFormats;
+}
+
+static std::vector<Format> MTGetSupportedVertexFormats()
+{
+    std::vector<Format> vertexFormats;
+    GetDefaultSupportedMTBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
@@ -132,6 +150,9 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
         }
     }
     #endif
+
+    /* Query supported hardware vertex formats */
+    caps.vertexFormats = MTGetSupportedVertexFormats();
 
     /*
     Query supported swap-chain formats.

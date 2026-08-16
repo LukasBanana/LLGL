@@ -217,12 +217,25 @@ const RendererInfo& RenderSystem::GetRendererInfo()
     return pimpl_->info;
 }
 
+template <typename T>
+static void SortVector(std::vector<T>& cont)
+{
+    std::sort(cont.begin(), cont.end());
+}
+
 const RenderingCapabilities& RenderSystem::GetRenderingCaps()
 {
     if (!pimpl_->hasCaps)
     {
         if (QueryRendererDetails(nullptr, &(pimpl_->caps)))
+        {
+            /* Sort format entries in ascending order */
+            SortVector(pimpl_->caps.textureFormats);
+            SortVector(pimpl_->caps.vertexFormats);
+            SortVector(pimpl_->caps.swapChainColorFormats);
+            SortVector(pimpl_->caps.swapChainDepthStencilFormats);
             pimpl_->hasCaps = true;
+        }
     }
     return pimpl_->caps;
 }

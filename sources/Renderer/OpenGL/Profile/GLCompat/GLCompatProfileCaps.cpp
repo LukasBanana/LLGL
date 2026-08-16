@@ -109,22 +109,41 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
+static void GetDefaultSupportedGLBaseFormats(std::vector<Format>& formats)
+{
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,        Format::R16UNorm,
+            Format::RG8UNorm,       Format::RG16UNorm,
+            Format::RGB8UNorm,      Format::RGB16UNorm,
+            Format::RGBA8UNorm,     Format::RGBA16UNorm,
+            Format::BGRA8UNorm,
+        }
+    );
+}
+
 static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
-    return
+    std::vector<Format> textureFormats =
     {
         Format::A8UNorm,
-        Format::R8UNorm,
-        Format::R16UNorm,
-        Format::RG8UNorm,
-        Format::RG16UNorm,
-        Format::RGB8UNorm,          Format::RGB8UNorm_sRGB,
-        Format::RGB16UNorm,
-        Format::RGBA8UNorm,
-        Format::RGBA16UNorm,
-        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
+        Format::RGB8UNorm_sRGB,
+        Format::BGRA8UNorm_sRGB,
         Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
     };
+    GetDefaultSupportedGLBaseFormats(textureFormats);
+    return textureFormats;
+}
+
+static std::vector<Format> GLGetSupportedVertexFormats()
+{
+    std::vector<Format> vertexFormats =
+    {
+        Format::BGRA8UNorm, // Only one BGRA vertex format (GL_ARB_vertex_array_bgra)
+    };
+    GetDefaultSupportedGLBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 static void GLGetRenderingAttribs(RenderingCapabilities& caps)
@@ -341,6 +360,7 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
 {
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
+    caps.vertexFormats                  = GLGetSupportedVertexFormats();
     caps.swapChainColorFormats          = GLGetSupportedSwapChainColorFormats();
     caps.swapChainDepthStencilFormats   = GLGetSupportedSwapChainDepthStencilFormats();
     GLGetSupportedFeatures(caps.features);
