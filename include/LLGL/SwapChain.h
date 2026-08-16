@@ -201,21 +201,6 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         */
         virtual bool ResizeBuffersPrimary(const Extent2D& resolution) = 0;
 
-        /**
-        \brief Overrides the reported swap-chain resolution with the one that was actually allocated.
-        \remarks A requested resolution is only ever a hint: the platform may clamp it to what the
-        surface permits, e.g. Vulkan clamps every swap-chain extent to \c VkSurfaceCapabilitiesKHR::minImageExtent
-        and \c maxImageExtent, which on most windowing systems both equal the window's current client area.
-        Backends should call this from wherever they allocate the swap buffers so that GetResolution()
-        describes the buffers that exist rather than the ones that were asked for; reporting the request
-        instead leaves callers deriving viewports, scissors and projection matrices from a resolution the
-        backbuffer does not have. Calling this is optional - a backend that does not override the resolution
-        keeps the value ResizeBuffers() recorded.
-        \see GetResolution
-        \see ResizeBuffersPrimary
-        */
-        void SetResolution(const Extent2D& resolution);
-
     protected:
 
         //! Allocates the internal data.
@@ -264,6 +249,21 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \see SetDisplayFullscreenMode
         */
         bool ResetDisplayFullscreenMode();
+
+        /**
+        \brief Overrides the reported swap-chain resolution with the one that was actually allocated.
+        \remarks A requested resolution is only ever a hint: the platform may clamp it to what the
+        surface permits, e.g. Vulkan clamps every swap-chain extent to \c VkSurfaceCapabilitiesKHR::minImageExtent
+        and \c maxImageExtent, which on most windowing systems both equal the window's current client area.
+        Backends should call this from wherever they allocate the swap buffers so that GetResolution()
+        describes the buffers that exist rather than the ones that were asked for; reporting the request
+        instead leaves callers deriving viewports, scissors and projection matrices from a resolution the
+        backbuffer does not have. Calling this is optional - a backend that does not override the resolution
+        keeps the value ResizeBuffers() recorded.
+        \see GetResolution
+        \see ResizeBuffersPrimary
+        */
+        void SetResolution(const Extent2D &resolution);
 
     protected:
 
