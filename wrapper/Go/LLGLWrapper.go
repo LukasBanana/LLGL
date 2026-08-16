@@ -963,9 +963,10 @@ const (
 
 type ResizeBuffersFlags int
 const (
-    ResizeBuffersAdaptSurface   = (1 << 0)
-    ResizeBuffersFullscreenMode = (1 << 1)
-    ResizeBuffersWindowedMode   = (1 << 2)
+    ResizeBuffersAdaptSurface     = (1 << 0)
+    ResizeBuffersFullscreenMode   = (1 << 1)
+    ResizeBuffersWindowedMode     = (1 << 2)
+    ResizeBuffersStrictResolution = (1 << 3)
 )
 
 type WindowFlags int

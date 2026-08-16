@@ -100,18 +100,17 @@ const RenderPass* DbgSwapChain::GetRenderPass() const
     return renderPass_.get();
 }
 
-bool DbgSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
+Extent2D DbgSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     if (!instance.ResizeBuffers(resolution))
-        return false;
+        return Extent2D{};
 
     /*
-    Mirror the resolution the wrapped swap-chain actually allocated, which may have been clamped
+    Report the resolution the wrapped swap-chain actually allocated, which may have been clamped
     to what the surface permits. Otherwise the debug layer validates viewports and scissors against
     the requested extent while the real backbuffer has a different one.
     */
-    SetResolution(instance.GetResolution());
-    return true;
+    return instance.GetResolution();
 }
 
 void DbgSwapChain::NotifyNextRenderPass(RenderingDebugger* debugger, const RenderPass* renderPass)

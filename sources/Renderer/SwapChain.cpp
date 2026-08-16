@@ -68,6 +68,8 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
     const bool toggleFullscreen = ((flags & (ResizeBuffersFlags::FullscreenMode | ResizeBuffersFlags::WindowedMode)) != 0);
     const bool adaptSurface     = (toggleFullscreen || (flags & ResizeBuffersFlags::AdaptSurface) != 0);
 
+    Extent2D finalResolution;
+
     if (adaptSurface)
     {
         /* Reset fullscreen mode or store surface position for windowed mode */
@@ -84,44 +86,37 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         /* Adapt surface for new resolution */
         auto size = resolution;
         if (GetSurface().AdaptForVideoMode(&size, (toggleFullscreen ? &fullscreen : nullptr)))
-        {
-            if (ResizeBuffersPrimaryAndStoreResolution(size))
-                return true;
-        }
+            finalResolution = ResizeBuffersPrimary(size);
 
-        /* Switch to fullscreen or restore surface position for windowed mode */
-        if (toggleFullscreen)
+        if (finalResolution == Extent2D{})
         {
-            if (fullscreen)
-                SetDisplayFullscreenMode(size);
-            else
-                RestoreSurfacePosition();
+            /* Switch to fullscreen or restore surface position for windowed mode */
+            if (toggleFullscreen)
+            {
+                if (fullscreen)
+                    SetDisplayFullscreenMode(size);
+                else
+                    RestoreSurfacePosition();
+            }
+            return false;
         }
     }
     else
     {
         /* Only resize swap buffers */
-        if (ResizeBuffersPrimaryAndStoreResolution(resolution))
-            return true;
+        finalResolution = ResizeBuffersPrimary(resolution);
+        if (finalResolution == Extent2D{})
+            return false;
     }
 
-    return false;
-}
+    /* Store the resolution the backend actually allocated, which may differ from the request */
+    SetResolution(finalResolution);
 
-/*
-Records the requested resolution *before* resizing so that a backend which clamps the extent can
-report what it actually allocated via SetResolution(); on failure the previous value is restored.
-*/
-bool SwapChain::ResizeBuffersPrimaryAndStoreResolution(const Extent2D& resolution)
-{
-    const Extent2D prevResolution = pimpl_->resolution;
+    /* With StrictResolution, only report success if the exact requested resolution was allocated */
+    if ((flags & ResizeBuffersFlags::StrictResolution) != 0)
+        return (finalResolution == resolution);
 
-    pimpl_->resolution = resolution;
-    if (ResizeBuffersPrimary(resolution))
-        return true;
-
-    pimpl_->resolution = prevResolution;
-    return false;
+    return true;
 }
 
 void SwapChain::SetResolution(const Extent2D& resolution)

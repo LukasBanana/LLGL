@@ -55,7 +55,7 @@ class GLSwapChain final : public SwapChain
 
     private:
 
-        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
+        Extent2D ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetSwapInterval(int swapInterval);
 

@@ -1017,9 +1017,10 @@ LLGLStageFlags;
 
 typedef enum LLGLResizeBuffersFlags
 {
-    LLGLResizeBuffersAdaptSurface   = (1 << 0),
-    LLGLResizeBuffersFullscreenMode = (1 << 1),
-    LLGLResizeBuffersWindowedMode   = (1 << 2),
+    LLGLResizeBuffersAdaptSurface     = (1 << 0),
+    LLGLResizeBuffersFullscreenMode   = (1 << 1),
+    LLGLResizeBuffersWindowedMode     = (1 << 2),
+    LLGLResizeBuffersStrictResolution = (1 << 3),
 }
 LLGLResizeBuffersFlags;
 
