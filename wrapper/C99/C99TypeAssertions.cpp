@@ -1052,6 +1052,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, views);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, colorAttachments);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, resolveAttachments);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, depthStencilAttachment);
+LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, depthStencilResolveAttachment);
 
 LLGL_STATIC_ASSERT_SIZE(BindingSlot);
 LLGL_STATIC_ASSERT_OFFSET(BindingSlot, index);
