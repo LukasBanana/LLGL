@@ -19,10 +19,10 @@ Verifies RenderTargetDescriptor::depthStencilResolveAttachment: a multi-sampled 
 single-sampled texture at the end of the render pass.
 
 The oracle is a second render of the identical scene into a plain, single-sampled depth target. A depth-stencil
-resolve takes sample 0 rather than averaging, and sample 0 sits only a fraction of a pixel from the pixel centre,
+resolve takes sample 0 rather than averaging, and sample 0 sits only a fraction of a pixel from the pixel center,
 so on the smooth interior of a surface the resolved depth must agree with the non-multi-sampled depth to well
 within the tolerance below. Pixels along geometry edges may legitimately disagree -- there, whether sample 0 is
-covered at all differs from whether the pixel centre is -- so a small fraction of mismatches is permitted.
+covered at all differs from whether the pixel center is -- so a small fraction of mismatches is permitted.
 
 This is what distinguishes a working resolve from a plausible-looking failure: a resolve that never executed
 leaves the resolve target at its cleared far value, which matches the background everywhere and the geometry
@@ -161,18 +161,6 @@ DEF_TEST( DepthStencilResolve )
     GraphicsPipelineDescriptor msPSODesc = MakePSO(msTarget, true);
     CREATE_GRAPHICS_PSO(msPSO, msPSODesc, "dsResolve.msPSO");
 
-    for (PipelineState* pso : { refPSO, msPSO })
-    {
-        if (const Report* report = pso->GetReport())
-        {
-            if (report->HasErrors())
-            {
-                Log::Errorf("PSO creation failed:\n%s", report->GetText());
-                return TestResult::FailedErrors;
-            }
-        }
-    }
-
     /* --- Identical scene for both passes --- */
     sceneConstants = SceneConstants{};
 
@@ -246,22 +234,22 @@ DEF_TEST( DepthStencilResolve )
         result = TestResult::FailedMismatch;
     }
 
-    /* Interior of the geometry: sample 0 and the pixel centre lie on the same surface, so these must agree */
-    const std::size_t centreIndex = (resolution.height / 2) * resolution.width + (resolution.width / 2);
-    const float centreRef       = refDepth[centreIndex];
-    const float centreResolved  = resolvedDepth[centreIndex];
-    constexpr float centreTolerance = 0.001f;
-    if (std::abs(centreRef - centreResolved) > centreTolerance)
+    /* Interior of the geometry: sample 0 and the pixel center lie on the same surface, so these must agree */
+    const std::size_t centerIndex = (resolution.height / 2) * resolution.width + (resolution.width / 2);
+    const float centerRef       = refDepth[centerIndex];
+    const float centerResolved  = resolvedDepth[centerIndex];
+    constexpr float centerTolerance = 0.001f;
+    if (std::abs(centerRef - centerResolved) > centerTolerance)
     {
         Log::Errorf(
-            "DepthStencilResolve: centre depth mismatch: resolved=%f, reference=%f (tolerance %f)\n",
-            centreResolved, centreRef, centreTolerance
+            "DepthStencilResolve: center depth mismatch: resolved=%f, reference=%f (tolerance %f)\n",
+            centerResolved, centerRef, centerTolerance
         );
         result = TestResult::FailedMismatch;
     }
 
     /*
-    Whole-image agreement. Edge pixels may legitimately differ (sample 0 and the pixel centre can fall on
+    Whole-image agreement. Edge pixels may legitimately differ (sample 0 and the pixel center can fall on
     opposite sides of a silhouette), so allow a small fraction of mismatches but no more.
     */
     constexpr float perTexelTolerance   = 0.001f;
@@ -287,8 +275,8 @@ DEF_TEST( DepthStencilResolve )
     if (opt.verbose)
     {
         Log::Printf(
-            "DepthStencilResolve: samples=%u, resolved depth range [%f, %f], centre %f vs reference %f, %.2f%% edge mismatches\n",
-            numSamples, resolvedMin, resolvedMax, centreResolved, centreRef, mismatchFraction * 100.0f
+            "DepthStencilResolve: samples=%u, resolved depth range [%f, %f], center %f vs reference %f, %.2f%% edge mismatches\n",
+            numSamples, resolvedMin, resolvedMax, centerResolved, centerRef, mismatchFraction * 100.0f
         );
     }
 

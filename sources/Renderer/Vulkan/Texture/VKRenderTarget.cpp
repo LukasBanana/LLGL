@@ -185,7 +185,7 @@ void VKRenderTarget::CreateRenderPass(
     VkAttachmentLoadOp              attachmentsLoadOp)
 {
     /* Uninitialized stack memory for attachment descriptors (one extra slot for the depth-stencil resolve target) */
-    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1];
+    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS * 2];
 
     /* Initialize attachment descriptors */
     const bool          hasDepthStencil         = IsAttachmentEnabled(desc.depthStencilAttachment);
@@ -339,11 +339,11 @@ void VKRenderTarget::CreateFramebuffer(
 {
     /* Create image view for each attachment */
     const bool          hasDepthStencil         = IsAttachmentEnabled(desc.depthStencilAttachment);
-    const std::uint32_t numTargetAttachments    = (hasDepthStencil ? numColorAttachments_ + 1 : numColorAttachments_);
-    const std::uint32_t numResolveAttachments   = NumActiveResolveAttachments(desc);
     const bool          hasDepthStencilResolve  = HasDepthStencilResolve(desc);
+    const std::uint32_t numTargetAttachments    = (hasDepthStencil ? numColorAttachments_ + 1 : numColorAttachments_);
+    const std::uint32_t numResolveAttachments   = NumActiveResolveAttachments(desc) + (hasDepthStencilResolve ? 1u : 0u);
 
-    attachmentViews_.reserve(numTargetAttachments + numResolveAttachments + (hasDepthStencilResolve ? 1u : 0u));
+    attachmentViews_.reserve(numTargetAttachments + numResolveAttachments);
 
     VkImageView attachmentImageViews[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 2];
 

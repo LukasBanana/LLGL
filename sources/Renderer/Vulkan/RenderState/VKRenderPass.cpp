@@ -330,7 +330,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     VkAttachmentReference depthStencilAttachmentRef;
     VkAttachmentReference depthStencilResolveAttachmentRef;
 
-    SmallVector<VkAttachmentDescription, LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1> sanitizedAttachmentDescs;
+    SmallVector<VkAttachmentDescription, LLGL_MAX_NUM_ATTACHMENTS * 2> sanitizedAttachmentDescs;
 
     /* Store sample count bits and number of color attachments (required for default blend states in VKGraphicsPipeline) */
     sampleCountBits_        = sampleCountBits;

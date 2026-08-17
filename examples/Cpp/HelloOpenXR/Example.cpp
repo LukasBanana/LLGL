@@ -48,7 +48,7 @@ class MyXRRenderer
 
     LLGL::XRSystemPtr               xrSystem;
     LLGL::RenderSystemPtr           renderer;
-#if defined(_DEBUG) || defined(LLGL_DEBUG)
+#if defined(LLGL_DEBUG)
     LLGL::RenderingDebugger         renderDebugger;
 #endif
     LLGL::XRSession*                session         = nullptr;
