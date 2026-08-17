@@ -352,14 +352,14 @@ HRESULT D3D12SwapChain::CopySubresourceRegion(
  * ======= Private: =======
  */
 
-bool D3D12SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
+Extent2D D3D12SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     CreateResolutionDependentResources(resolution);
 
     /* Mark presentation as dirty to avoid vsync on the next presentation; This allows a smooth window resizing like in other backends */
     isPresentationDirty_ = true;
 
-    return true;
+    return resolution;
 }
 
 bool D3D12SwapChain::SetPresentSyncInterval(UINT syncInterval)

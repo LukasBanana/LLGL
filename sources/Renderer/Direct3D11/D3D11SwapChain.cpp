@@ -267,7 +267,7 @@ void D3D11SwapChain::ResolveSubresources(ID3D11DeviceContext* context)
  * ======= Private: =======
  */
 
-bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
+Extent2D D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Store current debug names */
     std::string debugNames[5];
@@ -303,7 +303,7 @@ bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     if (hasDebugName_)
         RestoreDebugNames(debugNames);
 
-    return true;
+    return resolution;
 }
 
 bool D3D11SwapChain::SetPresentSyncInterval(UINT syncInterval)

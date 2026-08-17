@@ -976,9 +976,10 @@ namespace LLGL
     [Flags]
     public enum ResizeBuffersFlags : int
     {
-        AdaptSurface   = (1 << 0),
-        FullscreenMode = (1 << 1),
-        WindowedMode   = (1 << 2),
+        AdaptSurface     = (1 << 0),
+        FullscreenMode   = (1 << 1),
+        WindowedMode     = (1 << 2),
+        StrictResolution = (1 << 3),
     }
 
     [Flags]

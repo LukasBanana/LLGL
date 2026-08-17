@@ -49,6 +49,17 @@ struct ResizeBuffersFlags
         \see SwapChain::SwitchFullscreen
         */
         WindowedMode    = (1 << 2),
+
+        /**
+        \brief Only reports success if the swap buffers were resized to the exact resolution requested.
+        \remarks A requested resolution is only a hint: the platform may clamp it to what the surface permits.
+        By default, SwapChain::ResizeBuffers returns true as long as the swap buffers were resized to a valid
+        resolution, even if it differs from the request. With this flag, it returns false on such a mismatch.
+        The swap buffers are resized either way and SwapChain::GetResolution reports what was actually allocated.
+        \see SwapChain::ResizeBuffers
+        \see SwapChain::GetResolution
+        */
+        StrictResolution = (1 << 3),
     };
 };
 

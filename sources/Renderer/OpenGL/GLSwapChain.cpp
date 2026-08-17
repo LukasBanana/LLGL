@@ -197,7 +197,7 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
  * ======= Private: =======
  */
 
-bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
+Extent2D GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Notify GL context of a resize */
     swapChainContext_->Resize(resolution);
@@ -207,7 +207,7 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     GetStateManager().ResetFramebufferHeight(height);
     framebufferHeight_ = height;
 
-    return true;
+    return resolution;
 }
 
 bool GLSwapChain::SetSwapInterval(int swapInterval)

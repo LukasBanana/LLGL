@@ -117,9 +117,9 @@ const RenderPass* NullSwapChain::GetRenderPass() const
     return renderPass_;
 }
 
-bool NullSwapChain::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
+Extent2D NullSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
-    return true;
+    return resolution;
 }
 
 

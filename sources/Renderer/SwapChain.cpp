@@ -68,6 +68,8 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
     const bool toggleFullscreen = ((flags & (ResizeBuffersFlags::FullscreenMode | ResizeBuffersFlags::WindowedMode)) != 0);
     const bool adaptSurface     = (toggleFullscreen || (flags & ResizeBuffersFlags::AdaptSurface) != 0);
 
+    Extent2D finalResolution;
+
     if (adaptSurface)
     {
         /* Reset fullscreen mode or store surface position for windowed mode */
@@ -84,34 +86,42 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         /* Adapt surface for new resolution */
         auto size = resolution;
         if (GetSurface().AdaptForVideoMode(&size, (toggleFullscreen ? &fullscreen : nullptr)))
-        {
-            if (ResizeBuffersPrimary(size))
-            {
-                pimpl_->resolution = size;
-                return true;
-            }
-        }
+            finalResolution = ResizeBuffersPrimary(size);
 
-        /* Switch to fullscreen or restore surface position for windowed mode */
-        if (toggleFullscreen)
+        if (finalResolution == Extent2D{})
         {
-            if (fullscreen)
-                SetDisplayFullscreenMode(size);
-            else
-                RestoreSurfacePosition();
+            /* Switch to fullscreen or restore surface position for windowed mode */
+            if (toggleFullscreen)
+            {
+                if (fullscreen)
+                    SetDisplayFullscreenMode(size);
+                else
+                    RestoreSurfacePosition();
+            }
+            return false;
         }
     }
     else
     {
         /* Only resize swap buffers */
-        if (ResizeBuffersPrimary(resolution))
-        {
-            pimpl_->resolution = resolution;
-            return true;
-        }
+        finalResolution = ResizeBuffersPrimary(resolution);
+        if (finalResolution == Extent2D{})
+            return false;
     }
 
-    return false;
+    /* Store the resolution the backend actually allocated, which may differ from the request */
+    SetResolution(finalResolution);
+
+    /* With StrictResolution, only report success if the exact requested resolution was allocated */
+    if ((flags & ResizeBuffersFlags::StrictResolution) != 0)
+        return (finalResolution == resolution);
+
+    return true;
+}
+
+void SwapChain::SetResolution(const Extent2D& resolution)
+{
+    pimpl_->resolution = resolution;
 }
 
 /* ----- Configuration ----- */
