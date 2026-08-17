@@ -304,7 +304,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
     if (!inputElements_.empty())
     {
         stateDesc.InputLayout.pInputElementDescs = inputElements_.data();
-        stateDesc.InputLayout.NumElements        = inputElements_.size();
+        stateDesc.InputLayout.NumElements        = static_cast<UINT>(inputElements_.size());
     }
     else
     {

@@ -32,7 +32,7 @@ struct ResizeBuffersFlags
         \brief Adapts the swap-chain's surface for the new resolution.
         \see Surface::AdaptForVideoMode
         */
-        AdaptSurface    = (1 << 0),
+        AdaptSurface        = (1 << 0),
 
         /**
         \brief Puts the swap-chain into fullscreen mode.
@@ -40,7 +40,7 @@ struct ResizeBuffersFlags
         \see WindowedMode
         \see SwapChain::SwitchFullscreen
         */
-        FullscreenMode  = (1 << 1),
+        FullscreenMode      = (1 << 1),
 
         /**
         \brief Puts the swap-chain into windowed mode.
@@ -48,7 +48,7 @@ struct ResizeBuffersFlags
         \see FullscreenMode
         \see SwapChain::SwitchFullscreen
         */
-        WindowedMode    = (1 << 2),
+        WindowedMode        = (1 << 2),
 
         /**
         \brief Only reports success if the swap buffers were resized to the exact resolution requested.
@@ -56,10 +56,12 @@ struct ResizeBuffersFlags
         By default, SwapChain::ResizeBuffers returns true as long as the swap buffers were resized to a valid
         resolution, even if it differs from the request. With this flag, it returns false on such a mismatch.
         The swap buffers are resized either way and SwapChain::GetResolution reports what was actually allocated.
+        \todo This flag should indicate that a failed swap-chain resize should have no effect other than returning false;
+        As of this writing, this only results in returning false, but does not guarantee that the backend won't re-create the swap-chain and not restore it.
         \see SwapChain::ResizeBuffers
         \see SwapChain::GetResolution
         */
-        StrictResolution = (1 << 3),
+        StrictResolution    = (1 << 3),
     };
 };
 

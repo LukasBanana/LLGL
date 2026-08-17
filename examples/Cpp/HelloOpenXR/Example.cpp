@@ -138,7 +138,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     sampleCount = (requestSampleCount > 0 ? requestSampleCount : 1);
 
     std::int32_t xrSystemDescFlags = 0;
-#if defined(_DEBUG) || defined(LLGL_DEBUG)
+#if defined(LLGL_DEBUG)
     xrSystemDescFlags = LLGL::XRSystemFlags::DebugDevice;
 #endif
 
@@ -162,7 +162,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::Log::Printf("OpenXR runtime: %s\n", xrSystem->GetRuntimeName());
 
     std::int32_t renderDescFlags = 0;
-#if defined(_DEBUG) || defined(LLGL_DEBUG)
+#if defined(LLGL_DEBUG)
     renderDescFlags = LLGL::RenderSystemFlags::DebugDevice | LLGL::RenderSystemFlags::DebugBreakOnError;
 #endif
 
@@ -170,7 +170,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::RenderSystemDescriptor renderSystemDesc;
     renderSystemDesc.moduleName = rendererModule;
     renderSystemDesc.flags = renderDescFlags;
-#if defined(_DEBUG) || defined(LLGL_DEBUG)
+#if defined(LLGL_DEBUG)
     renderSystemDesc.debugger = &renderDebugger;
 #endif
 

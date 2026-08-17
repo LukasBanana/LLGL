@@ -84,7 +84,7 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         }
 
         /* Adapt surface for new resolution */
-        auto size = resolution;
+        Extent2D size = resolution;
         if (GetSurface().AdaptForVideoMode(&size, (toggleFullscreen ? &fullscreen : nullptr)))
             finalResolution = ResizeBuffersPrimary(size);
 
