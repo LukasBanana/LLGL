@@ -617,7 +617,9 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
     /* Copy descriptors before binding the active heaps */
+    bool isDescriptorHeapDirty = false;
     D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandles[2] = {};
+
     for_range(i, 2)
     {
         const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
@@ -628,16 +630,20 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
                 heapType,
                 resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
                 0,
-                resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
+                resourceHeapD3D.GetNumDescriptorsPerSet(heapType),
+                &isDescriptorHeapDirty
             );
         }
     }
 
-    /* Rebind in case copying descriptors advanced either pool to a new chunk */
-    commandContext_.SetStagingDescriptorHeaps(
-        boundPipelineLayout_->GetDescriptorHeapSetLayout(),
-        boundPipelineLayout_->GetRootParameterIndices()
-    );
+    /* Rebind descriptor heaps when copying descriptors advanced either pool to a new chunk */
+    if (isDescriptorHeapDirty)
+    {
+        commandContext_.SetStagingDescriptorHeaps(
+            boundPipelineLayout_->GetDescriptorHeapSetLayout(),
+            boundPipelineLayout_->GetRootParameterIndices()
+        );
+    }
 
     for_range(i, 2)
     {

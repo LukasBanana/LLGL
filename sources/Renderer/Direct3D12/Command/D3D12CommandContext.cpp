@@ -588,7 +588,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     D3D12_DESCRIPTOR_HEAP_TYPE  type,
     D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
     UINT                        firstDescriptor,
-    UINT                        numDescriptors)
+    UINT                        numDescriptors,
+    bool*                       outIsDescriptorHeapDirty)
 {
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
@@ -596,7 +597,17 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     D3D12StagingDescriptorHeapPool& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Copy descriptors into shader-visible descriptor heap */
-    return descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
+    ID3D12DescriptorHeap* oldDescriptorHeap = descriptorHeapPool.GetDescriptorHeap();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
+
+    /* Return whether the copy descriptors operation created a new chunk and invalidated the bound D3D12 descriptor heap */
+    if (outIsDescriptorHeapDirty != nullptr)
+    {
+        if (oldDescriptorHeap != descriptorHeapPool.GetDescriptorHeap())
+            *outIsDescriptorHeapDirty = true;
+    }
+
+    return gpuDescHandle;
 }
 
 void D3D12CommandContext::EmplaceDescriptorForStaging(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation)

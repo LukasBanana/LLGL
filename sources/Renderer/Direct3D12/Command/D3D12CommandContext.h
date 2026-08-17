@@ -161,7 +161,8 @@ class D3D12CommandContext
             D3D12_DESCRIPTOR_HEAP_TYPE  type,
             D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
             UINT                        firstDescriptor,
-            UINT                        numDescriptors
+            UINT                        numDescriptors,
+            bool*                       outIsDescriptorHeapDirty = nullptr
         );
 
         void EmplaceDescriptorForStaging(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation);
