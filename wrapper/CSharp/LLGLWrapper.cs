@@ -1473,6 +1473,7 @@ namespace LLGL
         public bool HasIndirectDrawing { get; set; }           = false;
         public bool HasViewportArrays { get; set; }            = false;
         public bool HasMultiview { get; set; }                 = false;
+        public bool HasDepthStencilResolve { get; set; }       = false;
         public bool HasConservativeRasterization { get; set; } = false;
         public bool HasStreamOutputs { get; set; }             = false;
         public bool HasLogicOp { get; set; }                   = false;
@@ -1514,6 +1515,7 @@ namespace LLGL
                 HasIndirectDrawing           = value.hasIndirectDrawing;
                 HasViewportArrays            = value.hasViewportArrays;
                 HasMultiview                 = value.hasMultiview;
+                HasDepthStencilResolve       = value.hasDepthStencilResolve;
                 HasConservativeRasterization = value.hasConservativeRasterization;
                 HasStreamOutputs             = value.hasStreamOutputs;
                 HasLogicOp                   = value.hasLogicOp;
@@ -3921,6 +3923,8 @@ namespace LLGL
             [MarshalAs(UnmanagedType.I1)]
             public bool hasMultiview;                 /* = false */
             [MarshalAs(UnmanagedType.I1)]
+            public bool hasDepthStencilResolve;       /* = false */
+            [MarshalAs(UnmanagedType.I1)]
             public bool hasConservativeRasterization; /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasStreamOutputs;             /* = false */
@@ -4354,11 +4358,11 @@ namespace LLGL
 
         public unsafe struct RenderTargetDescriptor
         {
-            public byte*                debugName;              /* = null */
-            public RenderPass           renderPass;             /* = null */
+            public byte*                debugName;                     /* = null */
+            public RenderPass           renderPass;                    /* = null */
             public Extent2D             resolution;
-            public int                  samples;                /* = 1 */
-            public int                  views;                  /* = 1 */
+            public int                  samples;                       /* = 1 */
+            public int                  views;                         /* = 1 */
             public AttachmentDescriptor colorAttachments0;
             public AttachmentDescriptor colorAttachments1;
             public AttachmentDescriptor colorAttachments2;
@@ -4376,6 +4380,7 @@ namespace LLGL
             public AttachmentDescriptor resolveAttachments6;
             public AttachmentDescriptor resolveAttachments7;
             public AttachmentDescriptor depthStencilAttachment;
+            public AttachmentDescriptor depthStencilResolveAttachment;
         }
 
         public unsafe struct VertexShaderAttributes

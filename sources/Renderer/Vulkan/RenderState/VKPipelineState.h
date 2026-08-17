@@ -13,7 +13,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include "VKPipelineLayout.h"
 #include "VKPipelineLayoutPermutation.h"
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
 #include <cstdint>

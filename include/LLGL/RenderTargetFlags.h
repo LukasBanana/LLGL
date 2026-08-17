@@ -180,6 +180,21 @@ struct RenderTargetDescriptor
     \see TextureDescriptor::samples
     */
     AttachmentDescriptor    depthStencilAttachment;
+
+    /**
+    \brief Specifies the attachment descriptor the multi-sampled depth-stencil attachment will be resolved into after a render pass.
+    \remarks If a texture is specified for this attachment, RenderTargetDescriptor::depthStencilAttachment must also specify one,
+    the texture must have 1 sample, must have the same size as specified by RenderTargetDescriptor::resolution,
+    must have the same depth and stencil components as the depth-stencil attachment,
+    and must have been created with the binding flag BindFlags::DepthStencilAttachment.
+    \remarks Unlike a color resolve, which averages the samples, a depth-stencil resolve takes sample 0 unmodified:
+    averaging depth is not meaningful, and taking a single sample is the only mode every implementation supports.
+    \remarks Requires RenderingFeatures::hasDepthStencilResolve. Leave this attachment disabled if the multi-sampled
+    depth buffer is only used for depth testing within the pass, which lets the backend keep it in tile memory.
+    \note Only supported with: Vulkan.
+    \see RenderingFeatures::hasDepthStencilResolve
+    */
+    AttachmentDescriptor    depthStencilResolveAttachment;
 };
 
 

@@ -106,12 +106,29 @@ void VKRenderTarget::OverrideImageLayoutsForRenderPass()
  * ======= Private: =======
  */
 
-static VkImageLayout GetFinalLayoutForAttachment(VkFormat format, long bindFlags)
+/*
+The layout an attachment is left in once the render pass ends. An attachment whose texture
+will be sampled has to end in SHADER_READ_ONLY_OPTIMAL, because the next thing to touch it
+is a descriptor that declares that layout.
+
+This is one rule for every attachment - color, depth-stencil, and both kinds of resolve
+target - and it has to be applied identically in two places: the render pass's finalLayout,
+and the layout CreateAttachmentImageView records for the texture. Those are the same
+question asked about the same texture, and answering it differently in the two places is
+what leaves an image's tracked layout out of step with the one it is actually in.
+*/
+static VkImageLayout GetFinalLayoutForAttachment(bool isDepthStencilFormat, long bindFlags)
 {
     if ((bindFlags & BindFlags::Sampled) != 0)
         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     else
-        return (VKTypes::IsVkFormatDepthStencil(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        return (isDepthStencilFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+}
+
+/* Bind flags of the texture backing an attachment; 0 for an anonymous attachment, which cannot be sampled. */
+static long GetAttachmentBindFlags(const AttachmentDescriptor& attachmentDesc)
+{
+    return (attachmentDesc.texture != nullptr ? attachmentDesc.texture->GetBindFlags() : 0);
 }
 
 static void InitVkAttachmentDesc(
@@ -136,8 +153,9 @@ static void InitVkAttachmentDesc(
         outDesc.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         outDesc.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     }
-    outDesc.initialLayout       = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? GetFinalLayoutForAttachment(format, bindFlags) : VK_IMAGE_LAYOUT_UNDEFINED);
-    outDesc.finalLayout         = GetFinalLayoutForAttachment(format, bindFlags);
+    const VkImageLayout finalLayout = GetFinalLayoutForAttachment(VKTypes::IsVkFormatDepthStencil(format), bindFlags);
+    outDesc.initialLayout       = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? finalLayout : VK_IMAGE_LAYOUT_UNDEFINED);
+    outDesc.finalLayout         = finalLayout;
 }
 
 static VkFormat GetDepthStencilVkFormat(const Format format)
@@ -150,14 +168,24 @@ static VkFormat GetDepthStencilVkFormat(const Format format)
         LLGL_TRAP("unknown attachment type to render target that has no texture");
 }
 
+bool VKRenderTarget::HasDepthStencilResolve(const RenderTargetDescriptor& desc) const
+{
+    return
+    (
+        HasMultiSampling()                                      &&
+        IsAttachmentEnabled(desc.depthStencilAttachment)        &&
+        desc.depthStencilResolveAttachment.texture != nullptr
+    );
+}
+
 void VKRenderTarget::CreateRenderPass(
     VkDevice                        device,
     const RenderTargetDescriptor&   desc,
     VKRenderPass&                   renderPass,
     VkAttachmentLoadOp              attachmentsLoadOp)
 {
-    /* Uninitialized stack memory for attachment descriptors */
-    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    /* Uninitialized stack memory for attachment descriptors (one extra slot for the depth-stencil resolve target) */
+    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS * 2];
 
     /* Initialize attachment descriptors */
     const bool          hasDepthStencil         = IsAttachmentEnabled(desc.depthStencilAttachment);
@@ -168,8 +196,7 @@ void VKRenderTarget::CreateRenderPass(
         /* Write Vulkan descriptor for color attachment */
         const AttachmentDescriptor& colorAttachment = desc.colorAttachments[i];
         VkFormat format = VKTypes::Map(GetAttachmentFormat(colorAttachment));
-        long bindFlags = (colorAttachment.texture != nullptr ? colorAttachment.texture->GetBindFlags() : 0);
-        InitVkAttachmentDesc(attachmentDescs[i], format, bindFlags, sampleCountBits_, attachmentsLoadOp);
+        InitVkAttachmentDesc(attachmentDescs[i], format, GetAttachmentBindFlags(colorAttachment), sampleCountBits_, attachmentsLoadOp);
     }
 
     if (hasDepthStencil)
@@ -177,8 +204,7 @@ void VKRenderTarget::CreateRenderPass(
         /* Write Vulkan descriptor for depth-stencil attachment */
         const AttachmentDescriptor& depthStencilAttachment = desc.depthStencilAttachment;
         VkFormat format = GetDepthStencilVkFormat(GetAttachmentFormat(depthStencilAttachment));
-        long bindFlags = (depthStencilAttachment.texture != nullptr ? depthStencilAttachment.texture->GetBindFlags() : 0);
-        InitVkAttachmentDesc(attachmentDescs[numColorAttachments_], format, bindFlags, sampleCountBits_, attachmentsLoadOp);
+        InitVkAttachmentDesc(attachmentDescs[numColorAttachments_], format, GetAttachmentBindFlags(depthStencilAttachment), sampleCountBits_, attachmentsLoadOp);
     }
 
     /* Initialize attachment descriptors for multi-sampled color attachments */
@@ -188,11 +214,10 @@ void VKRenderTarget::CreateRenderPass(
         for_range(i, numColorAttachments_)
         {
             const AttachmentDescriptor& resolveAttachment = desc.resolveAttachments[i];
-            constexpr long bindFlags = 0;
             if (resolveAttachment.texture != nullptr)
             {
                 VkFormat format = VKTypes::Map(GetAttachmentFormat(resolveAttachment));
-                InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], format, bindFlags, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+                InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], format, GetAttachmentBindFlags(resolveAttachment), VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 
                 /*
                 The multi-sampled color attachment is resolved into the attachment above, so its own contents are
@@ -208,13 +233,32 @@ void VKRenderTarget::CreateRenderPass(
             else
             {
                 /* Default initialize descriptor to disable this resolve attachment */
-                InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], VK_FORMAT_UNDEFINED, bindFlags, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+                InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + i], VK_FORMAT_UNDEFINED, /*bindFlags:*/ 0, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
             }
         }
     }
 
+    /* Initialize attachment descriptor for the multi-sampled depth-stencil attachment's resolve target */
+    const bool hasDepthStencilResolve = HasDepthStencilResolve(desc);
+    if (hasDepthStencilResolve)
+    {
+        const AttachmentDescriptor& depthStencilResolveAttachment = desc.depthStencilResolveAttachment;
+        VkFormat format = GetDepthStencilVkFormat(GetAttachmentFormat(depthStencilResolveAttachment));
+
+        InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + numColorAttachments_], format, GetAttachmentBindFlags(depthStencilResolveAttachment), VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+
+        /* Same reasoning as the color resolve above: the multi-sampled depth is resolved into the attachment and
+           never read after the pass, so it need not be written out -- again only for the DONT_CARE variant, since
+           the secondary pass reloads what it would be discarding. */
+        if (attachmentsLoadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
+        {
+            attachmentDescs[numColorAttachments_].storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachmentDescs[numColorAttachments_].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        }
+    }
+
     /* Create native Vulkan render pass with attachment descriptors (multiview view count must match the framebuffer image views) */
-    renderPass.CreateVkRenderPassWithDescriptors(device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_, numViews_);
+    renderPass.CreateVkRenderPassWithDescriptors(device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_, numViews_, hasDepthStencilResolve);
 }
 
 void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
@@ -252,8 +296,12 @@ VkImageView VKRenderTarget::CreateAttachmentImageView(
         );
     }
 
-    /* Create new image view for MIP-level and array layer range specified in attachment descriptor */
-    const VkImageLayout renderPassImageLayout = (IsDepthOrStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    /*
+    Create new image view for MIP-level and array layer range specified in attachment descriptor.
+    The layout recorded here is what BeginRenderPass writes into the texture's tracked layout, so it
+    must be derived the same way as the render pass's finalLayout - see GetFinalLayoutForAttachment.
+    */
+    const VkImageLayout renderPassImageLayout = GetFinalLayoutForAttachment(IsDepthOrStencilFormat(format), textureVK->GetBindFlags());
     VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
     {
         textureVK->CreateImageView(device, TextureSubresource{ attachmentDesc.arrayLayer, numLayers, attachmentDesc.mipLevel, 1u }, format, imageView);
@@ -291,12 +339,13 @@ void VKRenderTarget::CreateFramebuffer(
 {
     /* Create image view for each attachment */
     const bool          hasDepthStencil         = IsAttachmentEnabled(desc.depthStencilAttachment);
+    const bool          hasDepthStencilResolve  = HasDepthStencilResolve(desc);
     const std::uint32_t numTargetAttachments    = (hasDepthStencil ? numColorAttachments_ + 1 : numColorAttachments_);
-    const std::uint32_t numResolveAttachments   = NumActiveResolveAttachments(desc);
+    const std::uint32_t numResolveAttachments   = NumActiveResolveAttachments(desc) + (hasDepthStencilResolve ? 1u : 0u);
 
     attachmentViews_.reserve(numTargetAttachments + numResolveAttachments);
 
-    VkImageView attachmentImageViews[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 1];
+    VkImageView attachmentImageViews[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 2];
 
     for_range(i, numColorAttachments_)
     {
@@ -351,6 +400,15 @@ void VKRenderTarget::CreateFramebuffer(
                 attachmentImageViews[attachmentCount++] = CreateAttachmentImageView(device, textureVK, colorFormat, resolveAttachment);
             }
         }
+    }
+
+    /* Create the depth-stencil resolve view; must come last, matching the attachment order in CreateRenderPass */
+    if (hasDepthStencilResolve)
+    {
+        const AttachmentDescriptor& depthStencilResolveAttachment = desc.depthStencilResolveAttachment;
+        auto* textureVK = LLGL_CAST(VKTexture*, depthStencilResolveAttachment.texture);
+        const Format resolveFormat = GetAttachmentFormat(depthStencilResolveAttachment);
+        attachmentImageViews[attachmentCount++] = CreateAttachmentImageView(device, textureVK, resolveFormat, depthStencilResolveAttachment);
     }
 
     #if VK_KHR_imageless_framebuffer

@@ -9,7 +9,7 @@
 #define LLGL_VK_INITIALIZERS_H
 
 
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 
 
 namespace LLGL

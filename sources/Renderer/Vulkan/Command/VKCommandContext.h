@@ -10,7 +10,7 @@
 
 
 #include "../VKPtr.h"
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <memory>
 #include <cstdint>
 

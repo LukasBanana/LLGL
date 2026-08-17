@@ -9,7 +9,7 @@
 #define LLGL_VK_POOL_SIZE_ACCUMULATOR_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <LLGL/Container/SmallVector.h>
 #include <cstdint>
 

@@ -660,6 +660,18 @@ struct RenderingFeatures
     bool hasMultiview                   = false;
 
     /**
+    \brief Specifies whether a multi-sampled depth-stencil attachment can be resolved.
+    \remarks Color attachments can always be resolved, but depth requires dedicated support: the implementation
+    must be told how to combine the samples (the depth of one sample, or their minimum or maximum) rather than
+    averaging them. Without this, a multi-sampled depth attachment's contents cannot be transferred to a
+    single-sampled texture, which matters when the single-sampled image is owned by something else - an XR
+    runtime submitting depth for reprojection, for instance.
+    \note Only supported with: Vulkan.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+    bool hasDepthStencilResolve         = false;
+
+    /**
     \brief Specifies whether conservative rasterization is supported.
     \see RasterizerDescriptor::conservativeRasterization
     */

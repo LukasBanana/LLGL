@@ -1261,6 +1261,7 @@ typedef struct LLGLRenderingFeatures
     bool hasIndirectDrawing;           /* = false */
     bool hasViewportArrays;            /* = false */
     bool hasMultiview;                 /* = false */
+    bool hasDepthStencilResolve;       /* = false */
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */
@@ -1750,14 +1751,15 @@ LLGLRenderPassDescriptor;
 
 typedef struct LLGLRenderTargetDescriptor
 {
-    const char*              debugName;              /* = NULL */
-    LLGLRenderPass           renderPass;             /* = LLGL_NULL_OBJECT */
+    const char*              debugName;                     /* = NULL */
+    LLGLRenderPass           renderPass;                    /* = LLGL_NULL_OBJECT */
     LLGLExtent2D             resolution;
-    uint32_t                 samples;                /* = 1 */
-    uint32_t                 views;                  /* = 1 */
+    uint32_t                 samples;                       /* = 1 */
+    uint32_t                 views;                         /* = 1 */
     LLGLAttachmentDescriptor colorAttachments[8];
     LLGLAttachmentDescriptor resolveAttachments[8];
     LLGLAttachmentDescriptor depthStencilAttachment;
+    LLGLAttachmentDescriptor depthStencilResolveAttachment;
 }
 LLGLRenderTargetDescriptor;
 

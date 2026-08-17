@@ -9,7 +9,7 @@
 #define LLGL_VK_PIPELINE_CACHE_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <LLGL/PipelineCache.h>
 #include "../VKPtr.h"
 

@@ -48,7 +48,7 @@ class MyXRRenderer
 
     LLGL::XRSystemPtr               xrSystem;
     LLGL::RenderSystemPtr           renderer;
-#if defined(_DEBUG)
+#if defined(LLGL_DEBUG)
     LLGL::RenderingDebugger         renderDebugger;
 #endif
     LLGL::XRSession*                session         = nullptr;
@@ -138,7 +138,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     sampleCount = (requestSampleCount > 0 ? requestSampleCount : 1);
 
     std::int32_t xrSystemDescFlags = 0;
-#if defined(_DEBUG)
+#if defined(_DEBUG) || defined(LLGL_DEBUG)
     xrSystemDescFlags = LLGL::XRSystemFlags::DebugDevice;
 #endif
 
@@ -162,7 +162,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::Log::Printf("OpenXR runtime: %s\n", xrSystem->GetRuntimeName());
 
     std::int32_t renderDescFlags = 0;
-#if defined(_DEBUG)
+#if defined(_DEBUG) || defined(LLGL_DEBUG)
     renderDescFlags = LLGL::RenderSystemFlags::DebugDevice | LLGL::RenderSystemFlags::DebugBreakOnError;
 #endif
 
@@ -170,7 +170,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::RenderSystemDescriptor renderSystemDesc;
     renderSystemDesc.moduleName = rendererModule;
     renderSystemDesc.flags = renderDescFlags;
-#if defined(_DEBUG)
+#if defined(_DEBUG) || defined(LLGL_DEBUG)
     renderSystemDesc.debugger = &renderDebugger;
 #endif
 
@@ -267,13 +267,16 @@ void MyXRRenderer::CreateSwapChains()
     LLGL::Log::Printf("Multi-sampling: %ux\n", sampleCount);
 
     // Reported after the sample count is known, because it is not decided by the runtime alone: submitting depth
-    // needs XR_KHR_composition_layer_depth AND no multi-sampling (a multi-sampled depth attachment cannot be
-    // resolved into the runtime's single-sampled depth image), so with MSAA the swap-chain keeps depth private.
+    // needs XR_KHR_composition_layer_depth, and while multi-sampling it additionally needs depth-stencil resolve
+    // to get the multi-sampled depth into the runtime's single-sampled image. Without that the swap-chain keeps
+    // depth private and reprojection is unavailable.
+    const bool canResolveDepth = renderer->GetRenderingCaps().features.hasDepthStencilResolve;
     LLGL::Log::Printf(
         "Depth submission: %s\n",
-        depthFormats.empty()  ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
-        sampleCount > 1       ? "disabled (not available with multi-sampling)" :
-                                "enabled"
+        depthFormats.empty()                    ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
+        sampleCount > 1 && !canResolveDepth     ? "disabled (multi-sampling requires depth-stencil resolve)" :
+        sampleCount > 1                         ? "enabled (multi-sampled depth resolved for reprojection)" :
+                                                  "enabled"
     );
 
     // Requesting a depth-stencil format makes the swap-chain provision and manage the depth buffer and per-image

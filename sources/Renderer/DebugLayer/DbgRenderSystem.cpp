@@ -455,6 +455,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
             TransferDbgAttachment(instanceDesc.resolveAttachments[colorTarget], colorTarget, /*isResolveAttachment:*/ true, /*isDepthStencilAttachment:*/ false);
         }
         TransferDbgAttachment(instanceDesc.depthStencilAttachment, 0, /*isResolveAttachment:*/ false, /*isDepthStencilAttachment:*/ true);
+        TransferDbgAttachment(instanceDesc.depthStencilResolveAttachment, 0, /*isResolveAttachment:*/ true, /*isDepthStencilAttachment:*/ true);
     }
     return renderTargets_.emplace<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), renderTargetDesc);
 }
@@ -1539,7 +1540,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         }
         else
         {
-            if (isResolveAttachment)
+            if (isResolveAttachment && !isDepthStencilAttachment)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
@@ -2629,6 +2630,36 @@ void DbgRenderSystem::ValidateRenderTargetDesc(const RenderTargetDescriptor &ren
                 ErrorType::InvalidArgument,
                 "maximum number of supported views is %u, but render-target specified %u views",
                 GetRenderingCaps().limits.maxViews, numViews);
+        }
+    }
+
+    /* Validate depth-stencil resolve feature support and its prerequisites */
+    if (IsAttachmentEnabled(renderTargetDesc.depthStencilResolveAttachment))
+    {
+        if (!GetRenderingCaps().features.hasDepthStencilResolve)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::UnsupportedFeature,
+                "depth-stencil resolve not supported, but render-target specified a depth-stencil resolve attachment");
+        }
+        else if (!IsAttachmentEnabled(renderTargetDesc.depthStencilAttachment))
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target with a depth-stencil resolve attachment must also have a depth-stencil attachment");
+        }
+        else if (renderTargetDesc.samples <= 1)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target with a depth-stencil resolve attachment must be multi-sampled, but only %u sample(s) were specified",
+                renderTargetDesc.samples);
+        }
+        else if (renderTargetDesc.depthStencilResolveAttachment.texture == nullptr)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "depth-stencil resolve attachment must reference a texture; there is nothing to resolve into otherwise");
         }
     }
 }

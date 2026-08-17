@@ -9,7 +9,7 @@
 #define LLGL_VK_TYPES_H
 
 
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
