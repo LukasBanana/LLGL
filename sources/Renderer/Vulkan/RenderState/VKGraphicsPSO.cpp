@@ -15,6 +15,7 @@
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
+#include <algorithm>
 #include <cstddef>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Utils/ForRange.h>
@@ -411,14 +412,44 @@ void VKGraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes
         }
         inputLayout.attribDescs.push_back(vertexAttrib);
 
-        /* Insert vertex binding descriptor */
-        VkVertexInputBindingDescription inputBinding;
+        /*
+        Insert vertex binding descriptor unless this slot was already registered.
+        Multiple attributes share a slot when they are interleaved in the same vertex buffer,
+        but Vulkan requires all binding descriptions to have distinct binding numbers.
+        */
+        const auto bindingDescIter = std::find_if(
+            inputLayout.bindingDescs.begin(),
+            inputLayout.bindingDescs.end(),
+            [&attr](const VkVertexInputBindingDescription& bindingDesc) -> bool
+            {
+                return (bindingDesc.binding == attr.slot);
+            }
+        );
+
+        if (bindingDescIter == inputLayout.bindingDescs.end())
         {
-            inputBinding.binding    = attr.slot;
-            inputBinding.stride     = attr.stride;
-            inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+            VkVertexInputBindingDescription inputBinding;
+            {
+                inputBinding.binding    = attr.slot;
+                inputBinding.stride     = attr.stride;
+                inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+            }
+            inputLayout.bindingDescs.push_back(inputBinding);
         }
-        inputLayout.bindingDescs.push_back(inputBinding);
+        else
+        {
+            /* A binding number only carries one stride and input rate, so the attributes sharing it must agree */
+            LLGL_DEBUG_ASSERT(
+                bindingDescIter->stride == attr.stride,
+                "vertex attributes at slot %u must all have the same stride, but %u and %u were specified: %s",
+                attr.slot, bindingDescIter->stride, attr.stride, attr.name.c_str()
+            );
+            LLGL_DEBUG_ASSERT(
+                bindingDescIter->inputRate == (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX),
+                "vertex attributes at slot %u must all have the same instance divisor: %s",
+                attr.slot, attr.name.c_str()
+            );
+        }
     }
 }
 
