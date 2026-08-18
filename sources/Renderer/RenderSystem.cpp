@@ -94,7 +94,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
 
-    AndroidApp::Get().Initialize(renderSystemDesc.androidApp);
+    AndroidApp::Get().Initialize(renderSystemDesc.androidContext, renderSystemDesc.androidApp);
 
     #endif
 

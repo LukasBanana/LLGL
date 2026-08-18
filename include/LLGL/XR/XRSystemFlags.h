@@ -17,7 +17,7 @@
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
-#   include <android_native_app_glue.h>
+#   include <LLGL/Platform/Android/AndroidContext.h>
 #endif
 
 #include <cstdint>
@@ -151,14 +151,13 @@ struct XRSystemDescriptor
     #ifdef LLGL_OS_ANDROID
 
     /**
-    \brief Android-specific application descriptor. \b Required on Android.
-    \remarks This must point to the \c android_app structure delivered to the application's
-    \c android_main(android_app*) entry point. The OpenXR loader uses the embedded JavaVM
-    and Activity instance to discover and bind to the system XR runtime via
-    \c xrInitializeLoaderKHR and \c XrInstanceCreateInfoAndroidKHR.
+    \brief Native Android objects LLGL needs to bring up the XR system. \b Required on Android.
+    \remarks Only applicationVM and applicationActivity are read: the OpenXR loader needs both to
+    discover and bind to the system XR runtime, via \c xrInitializeLoaderKHR and
+    \c XrInstanceCreateInfoAndroidKHR.
     \note Only required on: Android.
     */
-    android_app*            androidApp          = nullptr;
+    AndroidContext          androidContext;
 
     #endif // /LLGL_OS_ANDROID
 };
