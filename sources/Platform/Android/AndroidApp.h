@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Types.h>
+#include <LLGL/Platform/Android/AndroidContext.h>
 #include <android_native_app_glue.h>
 
 
@@ -31,8 +32,18 @@ class AndroidApp
         // Returns the size of the content rect of the specified Android app state.
         static Extent2D GetContentRectSize(android_app* appState);
 
-        // Initializes the Android app state. This should be called once when the device is created.
-        void Initialize(android_app* state);
+        /*
+        Initializes the Android objects LLGL was given. This should be called once when the device is
+        created. The app state is optional and only carried for LLGL's own windowing; where it is given,
+        this waits for the native window and installs the default input handler.
+        */
+        void Initialize(const AndroidContext& context, android_app* state);
+
+        // Returns the native objects the application supplied.
+        inline const AndroidContext& GetContext() const
+        {
+            return context_;
+        }
 
         // Returns the android_app instance provided by the "native app glue" entry point.
         inline android_app* GetState() const
@@ -46,7 +57,8 @@ class AndroidApp
         
     private:
 
-        android_app* state_ = nullptr;
+        AndroidContext  context_;
+        android_app*    state_      = nullptr;
 
 };
 

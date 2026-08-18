@@ -44,11 +44,8 @@ static std::vector<char> ReadFileBufferPrimary(const char* filename)
 
     if (filename != nullptr && *filename != '\0')
     {
-        ANativeActivity* activity = AndroidApp::Get().GetState()->activity;
-        LLGL_ASSERT(activity != nullptr, "ANativeActivity not set");
-
-        AAssetManager* assetMngr = activity->assetManager;
-        LLGL_ASSERT(assetMngr != nullptr, "AAssetManager not set");
+        AAssetManager* assetMngr = AndroidApp::Get().GetContext().assetManager;
+        LLGL_ASSERT(assetMngr != nullptr, "AndroidContext::assetManager must be set to read files by path");
 
         if (AAsset* asset = AAssetManager_open(assetMngr, filename, AASSET_MODE_STREAMING))
         {

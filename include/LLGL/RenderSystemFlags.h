@@ -20,6 +20,7 @@
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
+#   include <LLGL/Platform/Android/AndroidContext.h>
 #   include <android_native_app_glue.h>
 #endif
 
@@ -437,42 +438,42 @@ struct RenderSystemDescriptor
     #ifdef LLGL_OS_ANDROID
 
     /**
-    \brief Android specific application descriptor. This descriptor is defined by the "native app glue" from the Android NDK.
-    \remarks This \b must be specified when compiling for the Android platform.
-    \remarks Here is an example for the main entry point on Android:
+    \brief Native Android objects the render system is brought up with. \b Required on Android.
+    \remarks Any field left null here is taken from ::androidApp when that is supplied, so a
+    NativeActivity-based application need only set ::androidApp as before:
     \code
-    #include <LLGL/LLGL.h>
-
-    ...
-
-    void MyMain(const LLGL::RenderSystemDescriptor& desc)
-    {
-       myRenderSystem = LLGL::RenderSystem::Load(desc);
-       ...
-    }
-
-    #if defined LLGL_OS_ANDROID
-
-    // Android specific main function
     void android_main(android_app* state)
     {
         LLGL::RenderSystemDescriptor desc{ "OpenGLES3" };
         desc.androidApp = state;
-        MyMain(desc);
+        myRenderSystem = LLGL::RenderSystem::Load(desc);
     }
-
-    #else
-
-    // Standard C/C++ main function
-    int main()
-    {
-        MyMain("OpenGL");
-        return 0;
-    }
-
-    #endif
     \endcode
+    \remarks An application whose Activity is written in Java - as with SDL - has no \c android_app to
+    give, and fills this in from its windowing library instead:
+    \code
+    desc.androidContext.applicationVM       = vm;        // from the JNI environment
+    desc.androidContext.applicationActivity = activity;  // a global reference
+    \endcode
+    \note Only required on: Android.
+    \see androidApp
+    */
+    AndroidContext      androidContext;
+
+    /**
+    \brief Android application state from the NDK's "native app glue".
+    \remarks \b Required of any application entered through \c android_main(android_app*). Such an
+    application advances through its startup lifecycle only while the glue's event loop is pumped, and
+    RenderSystem::Load does that pumping until the native window and content are ready. Omitting it
+    leaves the Activity in a state the platform never sees become ready - and any XR runtime waiting
+    on that, as xrCreateSession does, waits forever.
+    \remarks It is also what LLGL's own windowing is built on: Canvas, Display, and the input events
+    they deliver all come from this loop, and LLGL installs its \c onInputEvent handler here.
+    \remarks Leave it null only when the application drives its own event loop. One whose Activity is
+    written in Java, as with SDL, has none to give in any case: the structure is only ever produced by
+    \c ANativeActivity_onCreate. Whatever ::androidContext left blank is filled in from this.
     \note Only supported on: Android.
+    \see androidContext
     */
     android_app*        androidApp          = nullptr;
 

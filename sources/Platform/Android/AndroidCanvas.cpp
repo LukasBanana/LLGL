@@ -9,6 +9,7 @@
 #include "AndroidApp.h"
 #include "AndroidInputEventHandler.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -54,13 +55,24 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 }
 
 
+// LLGL's own windowing is driven by the "native app glue" event loop, so a Canvas is only
+// available to an application that supplied RenderSystemDescriptor::androidApp.  One that
+// brings its own Surface - or whose Activity is written in Java and has no app state to give -
+// never reaches here.
+static ANativeWindow* GetNativeWindowFromAppState()
+{
+    android_app* appState = AndroidApp::Get().GetState();
+    LLGL_ASSERT(appState != nullptr, "LLGL::Canvas on Android requires RenderSystemDescriptor::androidApp");
+    return appState->window;
+}
+
 /*
  * AndroidCanvas class
  */
 
 AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :
     desc_   { desc                                 },
-    window_ { AndroidApp::Get().GetState()->window }
+    window_ { GetNativeWindowFromAppState() }
 {
     AndroidInputEventHandler::Get().RegisterCanvas(this);
 }
