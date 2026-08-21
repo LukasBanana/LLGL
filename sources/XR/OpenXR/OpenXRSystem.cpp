@@ -59,12 +59,12 @@ bool OpenXRSystem::Startup(const XRSystemDescriptor& desc, Report* report)
     Report* outReport = report != nullptr ? report : &report_;
 
 #ifdef LLGL_OS_ANDROID
-    if (desc.androidApp == nullptr)
+    if (desc.androidContext.applicationVM == nullptr || desc.androidContext.applicationActivity == nullptr)
     {
-        outReport->Errorf("XRRenderSystem::Load failed on Android: XRSystemDescriptor::androidApp must not be null\n");
+        outReport->Errorf("XRRenderSystem::Load failed on Android: XRSystemDescriptor::androidContext requires applicationVM and applicationActivity\n");
         return false;
     }
-    androidApp_ = desc.androidApp;
+    androidContext_ = desc.androidContext;
 
     // The Android OpenXR loader requires a one-time initialization with the JavaVM and Activity
     // before any other XR call. xrInitializeLoaderKHR is loaded with XR_NULL_HANDLE for the instance.
@@ -79,8 +79,8 @@ bool OpenXRSystem::Startup(const XRSystemDescriptor& desc, Report* report)
     }
 
     XrLoaderInitInfoAndroidKHR loaderInit{ XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR };
-    loaderInit.applicationVM      = androidApp_->activity->vm;
-    loaderInit.applicationContext = androidApp_->activity->clazz;
+    loaderInit.applicationVM      = androidContext_.applicationVM;
+    loaderInit.applicationContext = androidContext_.applicationActivity;
     XrResult initResult = pfnInitializeLoader(reinterpret_cast<const XrLoaderInitInfoBaseHeaderKHR*>(&loaderInit));
     if (Failed(initResult))
     {
@@ -204,8 +204,8 @@ bool OpenXRSystem::CreateInstance(const XRSystemDescriptor& desc, Report* report
     // Android runtimes (Quest, HTC Wave, Pico, etc.) require the JavaVM and Activity to be
     // chained into instance creation via KHR_android_create_instance.
     XrInstanceCreateInfoAndroidKHR androidInfo{ XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR };
-    androidInfo.applicationVM       = androidApp_->activity->vm;
-    androidInfo.applicationActivity = androidApp_->activity->clazz;
+    androidInfo.applicationVM       = androidContext_.applicationVM;
+    androidInfo.applicationActivity = androidContext_.applicationActivity;
     info.next = &androidInfo;
 #endif
     std::snprintf(info.applicationInfo.applicationName, XR_MAX_APPLICATION_NAME_SIZE, "%s", desc.application.applicationName);
@@ -332,10 +332,18 @@ RenderSystemPtr OpenXRSystem::CreateRenderSystem(const RenderSystemDescriptor& r
 
     RenderSystemDescriptor effectiveDesc = renderSystemDesc;
 #ifdef LLGL_OS_ANDROID
-    // Auto-forward the android_app captured at Load() time so applications don't need to repeat it.
-    // An explicitly-set value on the descriptor wins (lets advanced cases override).
-    if (effectiveDesc.androidApp == nullptr)
-        effectiveDesc.androidApp = androidApp_;
+    /*
+    Auto-forward the Android objects captured at Load() time so applications don't repeat them.
+    An explicitly-set value wins.  RenderSystemDescriptor::androidApp is NOT forwarded: it heads
+    the glue event loop that only LLGL's own windowing uses, and an XR application draws into
+    swap chains owned by the XR runtime rather than a Canvas.
+    */
+    if (effectiveDesc.androidContext.applicationVM == nullptr)
+        effectiveDesc.androidContext.applicationVM = androidContext_.applicationVM;
+    if (effectiveDesc.androidContext.applicationActivity == nullptr)
+        effectiveDesc.androidContext.applicationActivity = androidContext_.applicationActivity;
+    if (effectiveDesc.androidContext.assetManager == nullptr)
+        effectiveDesc.androidContext.assetManager = androidContext_.assetManager;
 #endif
 
     RenderSystemPtr renderSystem = binding->CreateRenderSystem(instance_, systemId_, effectiveDesc, outReport);

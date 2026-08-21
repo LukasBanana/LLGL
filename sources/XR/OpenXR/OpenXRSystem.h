@@ -74,8 +74,9 @@ class OpenXRSystem final : public XRSystem
         bool                                                        depthSubmissionEnabled_     = false;
 
     #ifdef LLGL_OS_ANDROID
-        // Cached Android app context for the duration of the XR session lifecycle.
-        android_app*                                                androidApp_                 = nullptr;
+        // Cached for the duration of the XR session lifecycle, and forwarded to the render
+        // system so an XR application does not have to repeat itself.
+        AndroidContext                                              androidContext_;
     #endif
 
         char                                                        runtimeName_[XR_MAX_RUNTIME_NAME_SIZE] = { 0 };
