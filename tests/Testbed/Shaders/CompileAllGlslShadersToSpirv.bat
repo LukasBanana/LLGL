@@ -2,8 +2,10 @@
 
 glslangValidator -V -DENABLE_SPIRV=1 -o TriangleMesh\TriangleMesh.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o TriangleMesh\TriangleMesh.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag
-glslangValidator -V -DENABLE_SPIRV=1 -DENABLE_TEXTURING=1 -o TriangleMesh\TriangleMesh.Textured.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
-glslangValidator -V -DENABLE_SPIRV=1 -DENABLE_TEXTURING=1 -o TriangleMesh\TriangleMesh.Textured.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag
+glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=1 -o TriangleMesh\TriangleMesh.Textured.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=1 -o TriangleMesh\TriangleMesh.Textured.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag
+glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=8 -o TriangleMesh\TriangleMesh.Textured8.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=8 -o TriangleMesh\TriangleMesh.Textured8.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o UnprojectedMesh\UnprojectedMesh.450core.vert.spv UnprojectedMesh\UnprojectedMesh.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o UnprojectedMesh\UnprojectedMesh.450core.frag.spv UnprojectedMesh\UnprojectedMesh.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o DualSourceBlending\DualSourceBlending.450core.vert.spv DualSourceBlending\DualSourceBlending.450core.vert

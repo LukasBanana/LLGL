@@ -135,6 +135,7 @@ static void PrintHelpDocs()
         "  --intel ............................ Prefer Intel device\n"
         "  --nvidia ........................... Prefer NVIDIA device\n"
         "  --ref .............................. Use software device as reference\n"
+        "  --update ........................... Override reference images and skip diffs\n"
         "\n"
         "NOTE:\n"
         "  Single character options can be combined, e.g. -cdf is equivalent to -c -d -f\n",

@@ -7,8 +7,8 @@
 
 #version 450 core
 
-#ifndef ENABLE_TEXTURING
-#define ENABLE_TEXTURING 0
+#ifndef NUM_TEXTURES
+#define NUM_TEXTURES 0
 #endif
 
 layout(binding = 1, std140) uniform Scene
@@ -30,7 +30,7 @@ out gl_PerVertex
 
 layout(location = 0) out vec3 vNormal;
 
-#if ENABLE_TEXTURING
+#if NUM_TEXTURES != 0
 layout(location = 1) out vec2 vTexCoord;
 #endif
 
@@ -38,7 +38,7 @@ void main()
 {
     gl_Position = vpMatrix * (wMatrix * vec4(position, 1));
     vNormal = normalize(wMatrix * vec4(normal, 0)).xyz;
-    #if ENABLE_TEXTURING
+    #if NUM_TEXTURES != 0
     vTexCoord = texCoord;
     #endif
 }

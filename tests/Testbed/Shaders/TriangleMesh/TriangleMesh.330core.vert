@@ -7,8 +7,8 @@
 
 #version 330 core
 
-#ifndef ENABLE_TEXTURING
-#define ENABLE_TEXTURING 0
+#ifndef NUM_TEXTURES
+#define NUM_TEXTURES 0
 #endif
 
 layout(std140) uniform Scene
@@ -25,7 +25,7 @@ in vec2 texCoord;
 
 out vec3 vNormal;
 
-#if ENABLE_TEXTURING
+#if NUM_TEXTURES != 0
 out vec2 vTexCoord;
 #endif
 
@@ -33,7 +33,7 @@ void main()
 {
     gl_Position = vpMatrix * (wMatrix * vec4(position, 1));
     vNormal = normalize(wMatrix * vec4(normal, 0)).xyz;
-    #if ENABLE_TEXTURING
+    #if NUM_TEXTURES != 0
     vTexCoord = texCoord;
     #endif
 }

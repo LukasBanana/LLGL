@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef ENABLE_TEXTURING
-#define ENABLE_TEXTURING 0
+#ifndef NUM_TEXTURES
+#define NUM_TEXTURES 0
 #endif
 
 cbuffer Scene : register(b1)
@@ -28,7 +28,7 @@ struct VertexOut
 {
     float4 position : SV_Position;
     float3 normal   : NORMAL;
-    #if ENABLE_TEXTURING
+    #if NUM_TEXTURES != 0
     float2 texCoord : TEXCOORD;
     #endif
 };
@@ -37,14 +37,30 @@ void VSMain(VertexIn inp, out VertexOut outp)
 {
     outp.position = mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
     outp.normal   = normalize(mul(wMatrix, float4(inp.normal, 0)).xyz);
-    #if ENABLE_TEXTURING
+    #if NUM_TEXTURES != 0
     outp.texCoord = inp.texCoord;
     #endif
 }
 
-#if ENABLE_TEXTURING
+#if NUM_TEXTURES == 1
+
 Texture2D colorMap : register(t2);
 SamplerState linearSampler : register(s3);
+
+#elif NUM_TEXTURES == 8
+
+Texture2D colorMap0 : register(t2);
+Texture2D colorMap1 : register(t3);
+Texture2D colorMap2 : register(t4);
+Texture2D colorMap3 : register(t5);
+Texture2D colorMap4 : register(t6);
+Texture2D colorMap5 : register(t7);
+Texture2D colorMap6 : register(t8);
+Texture2D colorMap7 : register(t9);
+
+SamplerState texSampler0 : register(s10);
+SamplerState texSampler1 : register(s11);
+
 #endif
 
 float4 PSMain(VertexOut inp) : SV_Target
@@ -52,10 +68,32 @@ float4 PSMain(VertexOut inp) : SV_Target
     float3 normal = normalize(inp.normal);
     float NdotL = saturate(dot(lightVec, normal));
     float shading = lerp(0.2, 1.0, NdotL);
-    #if ENABLE_TEXTURING
+
+    #if NUM_TEXTURES == 8
+    
+    // Multi texturing
+    float4 albedo = (float4)0;
+    albedo += colorMap0.Sample(texSampler0, inp.texCoord);
+    albedo += colorMap1.Sample(texSampler1, inp.texCoord);
+    albedo += colorMap2.Sample(texSampler0, inp.texCoord);
+    albedo += colorMap3.Sample(texSampler1, inp.texCoord);
+    albedo += colorMap4.Sample(texSampler0, inp.texCoord);
+    albedo += colorMap5.Sample(texSampler1, inp.texCoord);
+    albedo += colorMap6.Sample(texSampler0, inp.texCoord);
+    albedo += colorMap7.Sample(texSampler1, inp.texCoord);
+    albedo /= NUM_TEXTURES;
+
+    #elif NUM_TEXTURES == 1
+
+    // Single texture
     float4 albedo = colorMap.Sample(linearSampler, inp.texCoord);
+
     #else
+
+    // Solid color only
     float4 albedo = (float4)1;
+
     #endif
+
     return solidColor * albedo * float4((float3)shading, 1.0);
 }

@@ -84,6 +84,7 @@ class D3D11RenderTargetHandles final
 
     private:
 
+        //TODO: use different element type for `data` with maximum alignment of fields encoded into the container
         char*   data_                       = nullptr;
         UINT    numRenderTargetViews_ : 4; // Number of bits to store ( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT )
         UINT    hasDepthStencilView_  : 1;

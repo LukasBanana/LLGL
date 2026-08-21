@@ -159,11 +159,13 @@ class TestbedContext
             VSTextured,
             PSTextured,
 
+            VSTextured8,
+            PSTextured8,
+
             VSDynamic,
             PSDynamic,
 
             VSUnprojected,
-            VSUnprojectedBGRA,
             PSUnprojected,
 
             VSDualSourceBlend,
@@ -257,6 +259,7 @@ class TestbedContext
             bool                        sanityCheck = false; // This is 'very verbose' and dumps out all intermediate data on successful tests
             bool                        showTiming  = false;
             bool                        fastTest    = false; // Skip slow buffer/texture creations to speed up test run
+            bool                        updateRefs  = false; // Generate new reference images, this outputs images with the `.Ref.png` suffix instead of `.Result.png`.
             LLGL::Extent2D              resolution;
             std::vector<std::string>    selectedTests;
 
@@ -457,6 +460,9 @@ class TestbedContext
             void*               data,
             std::size_t         dataSize
         );
+
+        const char* GetResultFileSuffix() const;
+        std::string GetResultPath() const;
 
     private:
 

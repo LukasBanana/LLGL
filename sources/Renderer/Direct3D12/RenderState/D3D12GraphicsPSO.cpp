@@ -172,14 +172,17 @@ static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, L
     dst.InstanceDataStepRate    = src.instanceDivisor;
 }
 
-void D3D12GraphicsPSO::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, DynamicVector<D3D12_INPUT_ELEMENT_DESC>& output, LinearStringContainer& vertexAttribNames)
+void D3D12GraphicsPSO::BuildInputLayout(
+    LLGL::ArrayView<VertexAttribute>            inAttributes,
+    DynamicVector<D3D12_INPUT_ELEMENT_DESC>&    outAttributes,
+    LinearStringContainer&                      vertexAttribNames)
 {
-    const auto numVertexAttribs = attributes.size();
+    const std::size_t numVertexAttribs = inAttributes.size();
 
     /* Build input element descriptors */
-    output.resize(numVertexAttribs);
+    outAttributes.resize(numVertexAttribs);
     for_range(i, numVertexAttribs)
-        Convert(output[i], attributes[i], vertexAttribNames);
+        Convert(outAttributes[i], inAttributes[i], vertexAttribNames);
 }
 
 /*
@@ -198,35 +201,35 @@ static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttr
 }
 
 void D3D12GraphicsPSO::BuildStreamOutput(
-    LLGL::ArrayView<VertexAttribute> attributes,
-    LLGL::DynamicVector<D3D12_SO_DECLARATION_ENTRY>& soDeclEntries,
-    LLGL::DynamicVector<UINT>& soBufferStrides,
-    LinearStringContainer& vertexAttribNames)
+    LLGL::ArrayView<VertexAttribute>                    inAttributes,
+    LLGL::DynamicVector<D3D12_SO_DECLARATION_ENTRY>&    outSODeclEntries,
+    LLGL::DynamicVector<UINT>&                          outSOBufferStrides,
+    LinearStringContainer&                              vertexAttribNames)
 {
-    if (attributes.empty())
+    if (inAttributes.empty())
        return;
 
-    const auto numStreamOutputAttribs = attributes.size();
+    const std::size_t numStreamOutputAttribs = inAttributes.size();
 
     /* Reserve memory for the buffer strides */
     UINT maxSlot = 0;
     for_range(i, numStreamOutputAttribs)
-        maxSlot = std::max(maxSlot, attributes[i].slot);
+        maxSlot = std::max<UINT>(maxSlot, inAttributes[i].slot);
 
-    soBufferStrides.clear();
-    soBufferStrides.resize(maxSlot + 1, 0);
+    outSOBufferStrides.clear();
+    outSOBufferStrides.resize(maxSlot + 1, 0);
 
     /* Build stream-output entries and buffer strides */
-    soDeclEntries.resize(numStreamOutputAttribs);
+    outSODeclEntries.resize(numStreamOutputAttribs);
     for_range(i, numStreamOutputAttribs)
     {
-        const VertexAttribute& attr = attributes[i];
+        const VertexAttribute& attr = inAttributes[i];
 
         /* Convert vertex attribute to stream-output entry */
-        ConvertSODeclEntry(soDeclEntries[i], attr, vertexAttribNames);
+        ConvertSODeclEntry(outSODeclEntries[i], attr, vertexAttribNames);
 
         /* Store buffer stide */
-        UINT& bufferStride = soBufferStrides[attr.slot];
+        UINT& bufferStride = outSOBufferStrides[attr.slot];
         if (attr.stride == 0)
         {
             /* Error: vertex attribute must not have stride of zero */
@@ -250,9 +253,9 @@ void D3D12GraphicsPSO::BuildStreamOutput(
     }
 
     /* Build buffer stride */
-    for_range(i, soBufferStrides.size())
+    for_range(i, outSOBufferStrides.size())
     {
-        if (soBufferStrides[i] == 0)
+        if (outSOBufferStrides[i] == 0)
             LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
     }
 }
@@ -495,7 +498,7 @@ ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithStreamDesc(
     HRESULT hr = device->CreatePipelineState(&psoStreamDesc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        GetMutableReport().Errorf("Failed to create view-instanced D3D12 graphics pipeline state [%s] (HRESULT = %s)\n", GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
+        GetMutableReport().Errorf("Failed to create D3D12 graphics pipeline state [%s] with stream descriptor (HRESULT = %s)\n", GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
         return nullptr;
     }
     return pipelineState;

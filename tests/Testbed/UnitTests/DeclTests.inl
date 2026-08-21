@@ -93,6 +93,7 @@ DECL_TEST( MeshShaders );
 DECL_TEST( Multiview );
 DECL_TEST( DepthStencilResolve );
 DECL_TEST( BGRAVertexFormat );
+DECL_TEST( DescriptorCache );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );
