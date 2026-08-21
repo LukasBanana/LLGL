@@ -169,6 +169,12 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
+        // Ignore warning C26439 - missing noexcept specifier
+        #if _MSC_VER
+        #   pragma warning(push)
+        #   pragma warning(disable : 26439)
+        #endif
+
         /**
         \brief Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
         \remarks This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
@@ -178,6 +184,10 @@ class LLGL_EXPORT SmallVector
         {
             operator = (std::forward<SmallVector&&>(other));
         }
+
+        #if _MSC_VER
+        #   pragma warning(pop)
+        #endif
 
         //! Initializes the vector with the specified elements in the half-open range <code>[from, to)</code>.
         template <typename InputIter>
@@ -599,6 +609,12 @@ class LLGL_EXPORT SmallVector
             insert(end(), rhs.begin(), rhs.end());
             return *this;
         }
+        
+        // Ignore warning C26439 - missing noexcept specifier
+        #if _MSC_VER
+        #   pragma warning(push)
+        #   pragma warning(disable : 26439)
+        #endif
 
         /**
         \brief Takes the ownership of dynamically allocated elements from the \c rhs vector or copies all elements if the dynamic allocation is not used yet.
@@ -634,6 +650,10 @@ class LLGL_EXPORT SmallVector
             }
             return *this;
         }
+        
+        #if _MSC_VER
+        #   pragma warning(pop)
+        #endif
 
         const_reference operator [] (size_type pos) const
         {

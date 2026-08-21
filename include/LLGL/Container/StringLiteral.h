@@ -97,6 +97,12 @@ class LLGL_EXPORT BasicStringLiteral
             return *this;
         }
 
+        // Ignore warning C26439 - missing noexcept specifier
+        #if _MSC_VER
+        #   pragma warning(push)
+        #   pragma warning(disable : 26439)
+        #endif
+
         BasicStringLiteral& operator = (BasicStringLiteral&& rhs)
         {
             clear();
@@ -106,6 +112,10 @@ class LLGL_EXPORT BasicStringLiteral
             rhs.size_ = size_type(-1);
             return *this;
         }
+
+        #if _MSC_VER
+        #   pragma warning(pop)
+        #endif
 
         //! Initializes the string literal as a reference (non-managed).
         BasicStringLiteral(const_pointer str) :
