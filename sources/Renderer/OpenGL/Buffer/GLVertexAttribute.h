@@ -26,9 +26,9 @@ struct GLVertexAttribute
     GLenum      type;
     GLboolean   normalized;
     GLsizei     stride;
-    GLsizeiptr  offsetPtrSized;
-    GLuint      divisor; // for use with glVertexAttribDivisor()
-    bool        isInteger; // meta data for use with glVertexAttribIPointer()
+    GLsizeiptr  offsetPtrSized; // Byte offset from start of VBO (plus potential buffer base offset) to vertex attribute
+    GLuint      divisor;        // For use with glVertexAttribDivisor()
+    bool        isInteger;      // Meta data for use with glVertexAttribIPointer()
 };
 
 // Converts the specified vertex attribute into a GL specific attributes.

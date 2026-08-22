@@ -328,19 +328,6 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
-void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
-{
-    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
-    {
-        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        SetBufferInputLayout(&vertexBufferGL);
-
-        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
-        SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
-    }
-}
-
 void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)

@@ -135,7 +135,6 @@ class DbgCommandBuffer final : public CommandBufferTier1
         void ValidateAttachmentClear(const AttachmentClear& attachment);
 
         void ValidateVertexLayout();
-        void ValidateVertexLayoutAttributes(const ArrayView<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers);
 
         void ValidateNumVertices(std::uint32_t numVertices);
         void ValidateNumInstances(std::uint32_t numInstances);

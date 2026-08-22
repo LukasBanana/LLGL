@@ -779,10 +779,9 @@ struct GraphicsPipelineDescriptor
     const RenderPass*                renderPass              = nullptr;
 
     /**
-    \brief Vertex shader input attributes.
-    \remarks All of these attributes must be contained in the \c vertexAttribs list of the vertex buffer that will be used in conjunction with the respective shader.
-    In other words, a shader must not declare any vertex attributes that are not contained in the currently bound vertex buffer.
-    \see BufferDescriptor::vertexAttribs
+    \brief Vertex input attributes.
+    \remarks In previous versions of LLGL, vertex attributes were tied to both the vertex shader and vertex buffer. The new API makes them part of the graphics PSO only.
+    This reduces the declaration to a single point of truth and also allows a vertex buffer to be used with different vertex formats.
     */
     DynamicVector<VertexAttribute>   inputVertexAttribs;
 

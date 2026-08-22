@@ -560,16 +560,6 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
     BindVertexBuffer(bufferVK);
 }
 
-void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
-    {
-        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-        bufferVK.SetStride(vertexAttribs[0].stride);
-        BindVertexBuffer(bufferVK);
-    }
-}
-
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayVK = LLGL_CAST(VKBufferArray&, bufferArray);

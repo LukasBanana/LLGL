@@ -297,20 +297,6 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
-void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
-{
-    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
-    {
-        /* Bind vertex buffer and update vertex array */
-        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        SetBufferInputLayout(&vertexBufferGL);
-
-        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
-        SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
-    }
-}
-
 void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)

@@ -15,6 +15,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 
 
@@ -46,13 +47,14 @@ struct BufferDescriptor
     std::uint64_t               size            = 0;
 
     /**
-    \brief Optional stride for structured buffers. By default 0.
-    \remarks This is only used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
+    \brief Optional stride for vertex and structured buffers. By default 0.
+    \remarks This is used for vertex buffers to describe the stride (in bytes) between vertices.
+    \remarks This is also used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
     \remarks If this is non-zero, the \c format attribute is ignored for sampled and storage buffers, i.e. buffers with the binding flags BindFlags::Sampled or BindFlags::Storage.
     \note If the buffer has the binding flag BindFlags::IndirectBuffer, this \b must be 0.
-    \note Only supported with: Direct3D 11, Direct3D 12.
     \see MiscFlags::Append
     \see MiscFlags::Counter
+    \todo Make this optional for vertex buffers, so that a secondary `SetVertexBuffer(Buffer&, uint32_t stride, uint64_t offset)` function can be used.
     */
     std::uint32_t               stride          = 0;
 
@@ -94,13 +96,10 @@ struct BufferDescriptor
     long                        miscFlags       = 0;
 
     /**
-    \brief Specifies the list of vertex attributes.
-    \remarks This is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
-    \see BindFlags::VertexBuffer
-    \see VertexShaderAttributes::inputAttribs
-    \todo Deprecate this. Vertex buffers should not have a concept of vertex attributes. This needs to be solely exit in the graphics PSO.
-    D3D needs to take the buffer stride from the `stride` field. GL needs to re-bind the VAO attributes from the PSO to the active GLBuffer.
+    \deprecated Since 0.05b; Use `BufferDescriptor::stride` and `GraphicsPipelineDescriptor::inputVertexAttribs` instead.
+    \see GraphicsPipelineDescriptor::inputVertexAttribs
     */
+    LLGL_DEPRECATED("BufferDescriptor::vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor::inputVertexAttribs instead!", "stride")
     ArrayView<VertexAttribute>  vertexAttribs;
 };
 

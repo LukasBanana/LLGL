@@ -11,12 +11,6 @@ virtual void SetVertexBuffer(
     LLGL::Buffer&                   buffer
 ) override final;
 
-virtual void SetVertexBuffer(
-    LLGL::Buffer&                   buffer,
-    std::uint32_t                   numVertexAttribs,
-    const LLGL::VertexAttribute*    vertexAttribs
-) override final;
-
 virtual void SetVertexBufferArray(
     LLGL::BufferArray&              bufferArray
 ) override final;

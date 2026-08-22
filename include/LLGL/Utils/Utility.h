@@ -93,7 +93,13 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 \brief Returns a BufferDescriptor structure for a vertex buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat& vertexFormat, long cpuAccessFlags = 0);
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, long cpuAccessFlags = 0);
+
+//! \deprecated Since 0.05b; Use new version without `vertexFormat` parameter.
+inline BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat& /*vertexFormat*/, long cpuAccessFlags = 0)
+{
+    return VertexBufferDesc(size, cpuAccessFlags);
+}
 
 /**
 \brief Returns a BufferDescriptor structure for an index buffer.

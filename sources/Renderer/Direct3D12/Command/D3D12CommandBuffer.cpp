@@ -560,16 +560,6 @@ void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
     SetVertexBufferAndTransitionResource(bufferD3D);
 }
 
-void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
-    {
-        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-        bufferD3D.UpdateVertexBufferStride(vertexAttribs[0].stride);
-        SetVertexBufferAndTransitionResource(bufferD3D);
-    }
-}
-
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D12BufferArray&, bufferArray);

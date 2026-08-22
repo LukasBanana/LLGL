@@ -632,23 +632,6 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     profile_.commandBufferRecord.vertexBufferBindings++;
 }
 
-void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
-
-    bufferDbg.SetDebugVertexAttribs(ArrayView<VertexAttribute>{ vertexAttribs, numVertexAttribs });
-
-    if (LLGL_DBG_SOURCE())
-        BindVertexBuffer(bufferDbg);
-
-    LLGL_DBG_COMMAND_EXT(
-        instance.SetVertexBuffer(bufferDbg.instance, numVertexAttribs, vertexAttribs),
-        "SetVertexBuffer(%s, %u, %p)", GetResourceLabel(buffer), numVertexAttribs, vertexAttribs
-    );
-
-    profile_.commandBufferRecord.vertexBufferBindings++;
-}
-
 void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayDbg = LLGL_DBG_CAST(DbgBufferArray&, bufferArray);
@@ -1067,8 +1050,6 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             if (auto* vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
             {
                 auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
-                //TODO: store bound vertex shader
-                bindings_.anyShaderAttributes = !(vertexShaderDbg->desc.vertex.inputAttribs.empty());
             }
             if (auto* fragmentShader = pipelineStateDbg.graphicsDesc.fragmentShader)
             {
@@ -1077,8 +1058,9 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             }
 
             /* Store dynamic states */
-            bindings_.blendFactorSet = !pipelineStateDbg.HasDynamicBlendFactor();
-            bindings_.stencilRefSet = !pipelineStateDbg.HasDynamicStencilRef();
+            bindings_.blendFactorSet        = !pipelineStateDbg.HasDynamicBlendFactor();
+            bindings_.stencilRefSet         = !pipelineStateDbg.HasDynamicStencilRef();
+            bindings_.anyShaderAttributes   = !(pipelineStateDbg.graphicsDesc.inputVertexAttribs.empty());
 
             /* If the PSO was created with static viewports, this PSO dictates the number of bound viewports */
             if (!pipelineStateDbg.graphicsDesc.viewports.empty())
@@ -1938,42 +1920,34 @@ void DbgCommandBuffer::ValidateVertexLayout()
 {
     if (auto pso = bindings_.pipelineState)
     {
-        if (pso->isGraphicsPSO && bindings_.numVertexBuffers > 0)
+        if (pso->isGraphicsPSO)
         {
-            if (auto vertexShader = pso->graphicsDesc.vertexShader)
+            for_range(i, pso->graphicsDesc.inputVertexAttribs.size())
             {
-                auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
-                const auto& inputAttribs = vertexShaderDbg->desc.vertex.inputAttribs;
-                if (!inputAttribs.empty())
-                    ValidateVertexLayoutAttributes(inputAttribs, bindings_.vertexBuffers, bindings_.numVertexBuffers);
+                const VertexAttribute& attrib = pso->graphicsDesc.inputVertexAttribs[i];
+                if (attrib.slot < bindings_.numVertexBuffers)
+                {
+                    DbgBuffer* vertexBufferDbg = bindings_.vertexBuffers[attrib.slot];
+                    if (attrib.stride != vertexBufferDbg->desc.stride)
+                    {
+                        LLGL_DBG_ERROR(
+                            ErrorType::InvalidState,
+                            "mismatch between vertex attribute '%s' (%u) stride=%u in current graphics PSO and bound vertex buffer stride=%u",
+                            attrib.name.c_str(), i, attrib.stride, vertexBufferDbg->desc.stride
+                        );
+                    }
+                }
+                else
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidState,
+                        "vertex attribute '%s' (%u) slot=%u in current graphics PSO exceeded the upper bound of vertex buffers (%u)",
+                        attrib.name.c_str(), i, attrib.slot, bindings_.numVertexBuffers
+                    );
+                }
             }
         }
     }
-}
-
-void DbgCommandBuffer::ValidateVertexLayoutAttributes(const ArrayView<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
-{
-    /* Check if all vertex attributes are served by active vertex buffer(s) */
-    std::size_t attribIndex = 0;
-
-    for (std::uint32_t bufferIndex = 0; attribIndex < shaderVertexAttribs.size() && bufferIndex < numVertexBuffers; ++bufferIndex)
-    {
-        /* Compare remaining shader attributes with next vertex buffer attributes */
-        const auto& bufferVertexAttribs = vertexBuffers[bufferIndex]->desc.vertexAttribs;
-
-        for (std::size_t i = 0; i < bufferVertexAttribs.size() && attribIndex < shaderVertexAttribs.size(); ++i, ++attribIndex)
-        {
-            /* Compare current vertex attributes */
-            const auto& attribLhs = shaderVertexAttribs[attribIndex];
-            const auto& attribRhs = bufferVertexAttribs[i];
-
-            if (attribLhs != attribRhs)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)");
-        }
-    }
-
-    if (attribIndex < shaderVertexAttribs.size())
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "not all vertex attributes in the shader pipeline are covered by the bound vertex buffer(s)");
 }
 
 void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)

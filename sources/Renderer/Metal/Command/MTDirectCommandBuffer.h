@@ -56,8 +56,6 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
         // Returns the texture of the current drawable from the active framebuffer.
         id<MTLTexture> GetCurrentDrawableTexture() const;
 
-        void SetVertexBufferInternal(Buffer& buffer);
-
     private:
 
         id<MTLCommandBuffer>            cmdBuffer_          = nil;
