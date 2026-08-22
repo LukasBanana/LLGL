@@ -31,10 +31,10 @@ void GL3PlusSharedContextVertexArray::BuildVertexLayout(const ArrayView<GLVertex
     inputLayout_.Append(attributes);
 }
 
-void GL3PlusSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
+/*void GL3PlusSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
 {
     inputLayout_.Append(bufferID, attributes);
-}
+}*/
 
 void GL3PlusSharedContextVertexArray::Finalize()
 {

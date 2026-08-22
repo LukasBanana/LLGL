@@ -11,6 +11,9 @@
 
 #include <LLGL/CommandBuffer.h>
 #include "../OpenGL.h"
+#include "../Buffer/GLSharedContextVertexArray.h"
+#include "../Buffer/GLVertexInputLayout.h"
+#include "../Buffer/GLBufferInputLayout.h"
 #include "../RenderState/GLPipelineState.h"
 #include "../RenderState/GLState.h"
 #include "../../../Core/CompilerExtensions.h"
@@ -64,6 +67,10 @@ class GLCommandBuffer : public CommandBuffer
         // Flush any invalidated memory barriers().
         LLGL_NODISCARD
         GLbitfield FlushAndGetMemoryBarriers();
+
+        void SetVertexInputLayout(const GLVertexInputLayout& vertexInputLayout);
+        void SetBufferInputLayout(const GLBufferInputLayout& bufferInputLayout);
+        GLSharedContextVertexArray* FlushVertexInput();
 
     protected:
 
@@ -119,7 +126,17 @@ class GLCommandBuffer : public CommandBuffer
 
     private:
 
-        GLRenderState renderState_;
+        struct VertexInputState
+        {
+            bool                dirtyBit            = false;  // If true, VAO description must be updated and bound before the next draw command
+            GLVertexInputLayout vertexInputLayout;
+            GLBufferInputLayout bufferInputLayout;
+        };
+
+    private:
+
+        GLRenderState       renderState_;
+        VertexInputState    vertexInputState_;
 
 };
 

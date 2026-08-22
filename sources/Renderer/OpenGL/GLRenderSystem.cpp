@@ -20,6 +20,7 @@
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferWithXFB.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
+#include "Buffer/GLVertexArrayCache.h"
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
@@ -76,6 +77,7 @@ GLRenderSystem::~GLRenderSystem()
     GLTextureViewPool::Get().Clear();
     GLMipGenerator::Get().Clear();
     GLStatePool::Get().Clear();
+    GLVertexArrayCache::Get().Clear();
 }
 
 /* ----- Swap-chain ----- */

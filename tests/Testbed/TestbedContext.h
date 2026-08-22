@@ -166,7 +166,6 @@ class TestbedContext
             PSDynamic,
 
             VSUnprojected,
-            VSUnprojectedBGRA,
             PSUnprojected,
 
             VSDualSourceBlend,

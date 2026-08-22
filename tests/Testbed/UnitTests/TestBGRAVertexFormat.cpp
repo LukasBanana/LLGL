@@ -16,7 +16,8 @@
 DEF_TEST( BGRAVertexFormat )
 {
     // Skip if BGRA vertex formats are not supported by backend
-    if (shaders[VSUnprojectedBGRA] == nullptr)
+    const bool isBGRAVertexFormatSupported = (std::find(caps.vertexFormats.begin(), caps.vertexFormats.end(), Format::BGRA8UNorm) != caps.vertexFormats.end());
+    if (!isBGRAVertexFormatSupported)
     {
         if (opt.verbose)
             Log::Printf("BGRA vertex format not supported\n");
@@ -34,27 +35,24 @@ DEF_TEST( BGRAVertexFormat )
     BufferDescriptor vertexBufDesc;
     {
         vertexBufDesc.size          = sizeof(vertices);
+        vertexBufDesc.stride        = sizeof(UnprojectedVertex);
         vertexBufDesc.bindFlags     = BindFlags::VertexBuffer;
-        vertexBufDesc.vertexAttribs = vertexFormats[VertFmtUnprojected].attributes;
     }
-    CREATE_BUFFER(vertexBufRGBA, vertexBufDesc, "vertices2DRGBA", vertices);
-    {
-        vertexBufDesc.vertexAttribs = vertexFormats[VertFmtUnprojectedBGRA].attributes;
-    }
-    CREATE_BUFFER(vertexBufBGRA, vertexBufDesc, "vertices2DBGRA", vertices);
+    CREATE_BUFFER(vertexBuf, vertexBufDesc, "vertices2D.BGRAVertexFormat", vertices);
 
     // Create PSO for rendering triangle strips
     GraphicsPipelineDescriptor psoDesc;
     {
         psoDesc.pipelineLayout      = nullptr; // No resource bindings, therefore no pipeline layout
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtUnprojected].attributes;
         psoDesc.vertexShader        = shaders[VSUnprojected];
         psoDesc.fragmentShader      = shaders[PSUnprojected];
         psoDesc.primitiveTopology   = PrimitiveTopology::TriangleList;
     }
     CREATE_GRAPHICS_PSO(psoRGBA, psoDesc, "Test.BGRAVertexFormat.RGBAPso");
     {
-        psoDesc.vertexShader        = shaders[VSUnprojectedBGRA];
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtUnprojectedBGRA].attributes;
     }
     CREATE_GRAPHICS_PSO(psoBGRA, psoDesc, "Test.BGRAVertexFormat.BGRAPso");
 
@@ -65,6 +63,8 @@ DEF_TEST( BGRAVertexFormat )
     // Render scene
     BEGIN();
     {
+        cmdBuffer->SetVertexBuffer(*vertexBuf);
+
         cmdBuffer->BeginRenderPass(*swapChain);
         {
             cmdBuffer->Clear(ClearFlags::Color);
@@ -72,13 +72,11 @@ DEF_TEST( BGRAVertexFormat )
                 // Draw RGBA vertices
                 cmdBuffer->SetViewport(Viewport{ 0.0f, 0.0f, resWidthHalf, resHeight });
                 cmdBuffer->SetPipelineState(*psoRGBA);
-                cmdBuffer->SetVertexBuffer(*vertexBufRGBA);
                 cmdBuffer->Draw(3, 0);
 
                 // Draw BGRA vertices
                 cmdBuffer->SetViewport(Viewport{ resWidthHalf, 0.0f, resWidthHalf, resHeight });
                 cmdBuffer->SetPipelineState(*psoBGRA);
-                cmdBuffer->SetVertexBuffer(*vertexBufBGRA);
                 cmdBuffer->Draw(3, 0);
             }
             readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
@@ -95,6 +93,7 @@ DEF_TEST( BGRAVertexFormat )
     TestResult result = diff.Evaluate("BGRA vertex format");
 
     // Clear resources
+    renderer->Release(*vertexBuf);
     renderer->Release(*psoRGBA);
     renderer->Release(*psoBGRA);
 

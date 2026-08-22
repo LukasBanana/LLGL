@@ -9,6 +9,8 @@
 #define LLGL_GL_SHARED_CONTEXT_VERTEX_ARRAY_H
 
 
+#include <memory>
+
 #if LLGL_GL_ENABLE_OPENGL2X
 #   include "GL2XSharedContextVertexArray.h"
 #else
@@ -25,6 +27,8 @@ using GLSharedContextVertexArray = GL2XSharedContextVertexArray;
 #else
 using GLSharedContextVertexArray = GL3PlusSharedContextVertexArray;
 #endif
+
+using GLSharedContextVertexArrayPtr = std::unique_ptr<GLSharedContextVertexArray>;
 
 
 } // /namespace LLGL

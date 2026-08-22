@@ -10,15 +10,27 @@
 #include "../RenderState/GLStateManager.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
+static std::vector<GLBuffer*> GetAsGLBuffers(ArrayView<Buffer*> inBuffers)
+{
+    std::vector<GLBuffer*> outBuffers;
+    outBuffers.resize(inBuffers.size());
+    for_range(i, inBuffers.size())
+        outBuffers[i] = LLGL_CAST(GLBuffer*, inBuffers[i]);
+    return outBuffers;
+}
+
 GLBufferArrayWithVAO::GLBufferArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    GLBufferArray { numBuffers, bufferArray }
+    GLBufferArray      { numBuffers, bufferArray                                       },
+    bufferInputLayout_ { GetAsGLBuffers(ArrayView<Buffer*>{ bufferArray, numBuffers }) }
 {
     /* Build vertex array and finalize afterwards as it references multiple buffers */
     while (GLBuffer* bufferGL = NextArrayResource<GLBuffer>(numBuffers, bufferArray))

@@ -5,6 +5,8 @@ Version 0.05 removed all features that were deprecatd in 0.04 and refactored a f
 ## Table of Contents
 
 - [Swap-chain formats](#swap-chain-formats)
+- [Vertex attributes](#vertex-attributes)
+- [Vertex buffers](#vertex-buffers)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -67,6 +69,28 @@ vertexBufferDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
 
 LLGL::GraphicsPipelineDescriptor graphicsPSODesc;
 graphicsPSODesc.inputVertexAttribs = myVertexAttributes;
+```
+
+
+## Vertex buffers
+
+**NOTE**: This is planned, but not implemented yet.
+
+As mentioned in section the [Vertex attributes](#vertex-attributes) section, vertex buffers no longer need their attributes specified.
+This also sunsets the secondary `SetVertexBuffer` function that modified the attributes as a workaround to use a vertex buffer for multiple formats.
+It is superseded (TODO: not implemented yet) by a new secondary function that specfies byte offset (this wasn't previously supported).
+The stride, however, cannot be changed as it was never supported by Vulkan since it is tied to the graphics PSO.
+
+Before:
+```cpp
+// Interface
+LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint32_t numVertexAttribs, const LLGL::VertexAttribute* vertexAttribs);
+```
+
+After:
+```cpp
+// Interface
+LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint64_t offset = 0);
 ```
 
 

@@ -11,6 +11,7 @@
 
 #include "GLBufferArray.h"
 #include "GLSharedContextVertexArray.h"
+#include "GLBufferInputLayout.h"
 
 
 namespace LLGL
@@ -34,9 +35,16 @@ class GLBufferArrayWithVAO final : public GLBufferArray
             return &vertexArray_;
         }
 
+        // Returns the GL buffer input layout with hash over all buffers.
+        inline const GLBufferInputLayout& GetInputLayout() const
+        {
+            return bufferInputLayout_;
+        }
+
     private:
 
-        GLSharedContextVertexArray vertexArray_;
+        GLSharedContextVertexArray  vertexArray_; //DEPRECATED
+        GLBufferInputLayout         bufferInputLayout_;
 
 };
 

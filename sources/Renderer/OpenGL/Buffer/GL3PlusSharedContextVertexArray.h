@@ -35,7 +35,7 @@ class GL3PlusSharedContextVertexArray
 
         // Stores the vertex attributes for later use via glVertexAttrib*Pointer() functions.
         void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
-        void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
+        //void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
 
         // Finalize the vertex array.
         void Finalize();

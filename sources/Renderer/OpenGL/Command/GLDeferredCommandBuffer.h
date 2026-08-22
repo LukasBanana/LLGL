@@ -78,6 +78,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindEmulatedSampler(const GLEmulatedSampler& emulatedSamplerGL, std::uint32_t slot);
 
         void FlushMemoryBarriers();
+        void FlushBindVertexArray();
 
         // Allocates only an opcode for empty commands.
         void AllocOpcode(const GLOpcode opcode);

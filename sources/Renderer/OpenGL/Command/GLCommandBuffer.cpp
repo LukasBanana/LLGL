@@ -7,6 +7,7 @@
 
 #include "GLCommandBuffer.h"
 #include "../Buffer/GLBufferWithXFB.h"
+#include "../Buffer/GLVertexArrayCache.h"
 #include "../RenderState/GLState.h"
 #include "../RenderState/GLPipelineLayout.h"
 #include "../RenderState/GLPipelineState.h"
@@ -55,6 +56,7 @@ void GLCommandBuffer::SetPipelineRenderState(const GLPipelineState& pipelineStat
         auto& graphicsPSO = LLGL_CAST(const GLGraphicsPSO&, pipelineStateGL);
         renderState_.drawMode       = graphicsPSO.GetDrawMode();
         renderState_.primitiveMode  = graphicsPSO.GetPrimitiveMode();
+        SetVertexInputLayout(graphicsPSO.GetVertexInputLayout());
     }
 
     /* Store barrier flags; These must be invalidated when a new resource or resource-heap is set */
@@ -135,6 +137,34 @@ GLbitfield GLCommandBuffer::FlushAndGetMemoryBarriers()
     GLbitfield barriers = renderState_.dirtyBarriers;
     renderState_.dirtyBarriers &= renderState_.implicitBarriers; // Only keep implicit barriers
     return barriers;
+}
+
+void GLCommandBuffer::SetVertexInputLayout(const GLVertexInputLayout& vertexInputLayout)
+{
+    if (vertexInputState_.vertexInputLayout.GetHash() != vertexInputLayout.GetHash())
+    {
+        vertexInputState_.dirtyBit          = true;
+        vertexInputState_.vertexInputLayout = vertexInputLayout;
+    }
+}
+
+void GLCommandBuffer::SetBufferInputLayout(const GLBufferInputLayout& bufferInputLayout)
+{
+    if (vertexInputState_.bufferInputLayout.GetHash() != bufferInputLayout.GetHash())
+    {
+        vertexInputState_.dirtyBit          = true;
+        vertexInputState_.bufferInputLayout = bufferInputLayout;
+    }
+}
+
+GLSharedContextVertexArray* GLCommandBuffer::FlushVertexInput()
+{
+    if (vertexInputState_.dirtyBit)
+    {
+        vertexInputState_.dirtyBit = false;
+        return GLVertexArrayCache::Get().GetVertexArray(vertexInputState_.vertexInputLayout, vertexInputState_.bufferInputLayout);
+    }
+    return nullptr;
 }
 
 /* ----- Extensions ----- */

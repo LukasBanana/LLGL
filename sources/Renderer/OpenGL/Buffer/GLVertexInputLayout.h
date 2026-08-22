@@ -29,15 +29,15 @@ class GLVertexInputLayout
         // Resets all vertex attributes and the hash.
         void Reset();
 
-        // Appends the specified vertex attributes and the hash over all of them.
-        void Append(const ArrayView<GLVertexAttribute>& attributes);
-        void Append(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
+        // Appends the specified vertex attributes. Call Finalize() after all invocations of Append().
+        void Append(ArrayView<GLVertexAttribute> attributes);
+        void Append(ArrayView<VertexAttribute> attributes);
 
         // Finalizes the input layout by updating the hash.
         void Finalize();
 
         // Returns the array of input vertex attributes this shader was created with. This is a direct copy of the input attributes.
-        inline const std::vector<GLVertexAttribute>& GetAttribs() const
+        inline ArrayView<GLVertexAttribute> GetAttribs() const
         {
             return attribs_;
         }

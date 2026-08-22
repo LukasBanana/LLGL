@@ -19,19 +19,19 @@ void GLVertexInputLayout::Reset()
     attribsHash_.Reset();
 }
 
-void GLVertexInputLayout::Append(const ArrayView<GLVertexAttribute>& attributes)
+void GLVertexInputLayout::Append(ArrayView<GLVertexAttribute> attributes)
 {
     attribs_.insert(attribs_.end(), attributes.begin(), attributes.end());
 }
 
-void GLVertexInputLayout::Append(const GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
+void GLVertexInputLayout::Append(ArrayView<VertexAttribute> attributes)
 {
     /* Convert to GLVertexAttribute */
     const std::size_t startOffset = attribs_.size();
     attribs_.resize(startOffset + attributes.size());
 
     for_range(i, attributes.size())
-        GLConvertVertexAttrib(attribs_[startOffset + i], attributes[i], bufferID);
+        GLConvertVertexAttrib(attribs_[startOffset + i], attributes[i], attributes[i].slot);
 }
 
 void GLVertexInputLayout::Finalize()
