@@ -2579,6 +2579,7 @@ namespace LLGL
         public BindFlags         BindFlags { get; set; }      = 0;
         public CPUAccessFlags    CPUAccessFlags { get; set; } = 0;
         public MiscFlags         MiscFlags { get; set; }      = 0;
+        [Obsolete("BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead!")]
         private VertexAttribute[] vertexAttribs;
         private NativeLLGL.VertexAttribute[] vertexAttribsNative;
         public VertexAttribute[] VertexAttribs
@@ -2633,14 +2634,6 @@ namespace LLGL
                     native.bindFlags      = (int)BindFlags;
                     native.cpuAccessFlags = (int)CPUAccessFlags;
                     native.miscFlags      = (int)MiscFlags;
-                    if (vertexAttribs != null)
-                    {
-                        native.numVertexAttribs = (IntPtr)vertexAttribs.Length;
-                        fixed (NativeLLGL.VertexAttribute* vertexAttribsPtr = vertexAttribsNative)
-                        {
-                            native.vertexAttribs = vertexAttribsPtr;
-                        }
-                    }
                 }
                 return native;
             }
@@ -2655,11 +2648,6 @@ namespace LLGL
                     BindFlags      = (BindFlags)value.bindFlags;
                     CPUAccessFlags = (CPUAccessFlags)value.cpuAccessFlags;
                     MiscFlags      = (MiscFlags)value.miscFlags;
-                    VertexAttribs  = new VertexAttribute[(int)value.numVertexAttribs];
-                    for (int i = 0; i < VertexAttribs.Length; ++i)
-                    {
-                        VertexAttribs[i] = new VertexAttribute(value.vertexAttribs[i]);
-                    }
                 }
             }
         }
@@ -3203,6 +3191,64 @@ namespace LLGL
         public AnsiString             DebugName { get; set; }            = null;
         public PipelineLayout         PipelineLayout { get; set; }       = null;
         public RenderPass             RenderPass { get; set; }           = null;
+        private VertexAttribute[] inputVertexAttribs;
+        private NativeLLGL.VertexAttribute[] inputVertexAttribsNative;
+        public VertexAttribute[] InputVertexAttribs
+        {
+            get
+            {
+                return inputVertexAttribs;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    inputVertexAttribs = value;
+                    inputVertexAttribsNative = new NativeLLGL.VertexAttribute[inputVertexAttribs.Length];
+                    for (int inputVertexAttribsIndex = 0; inputVertexAttribsIndex < inputVertexAttribs.Length; ++inputVertexAttribsIndex)
+                    {
+                        if (inputVertexAttribs[inputVertexAttribsIndex] != null)
+                        {
+                            inputVertexAttribsNative[inputVertexAttribsIndex] = inputVertexAttribs[inputVertexAttribsIndex].Native;
+                        }
+                    }
+                }
+                else
+                {
+                    inputVertexAttribs = null;
+                    inputVertexAttribsNative = null;
+                }
+            }
+        }
+        private VertexAttribute[] outputVertexAttribs;
+        private NativeLLGL.VertexAttribute[] outputVertexAttribsNative;
+        public VertexAttribute[] OutputVertexAttribs
+        {
+            get
+            {
+                return outputVertexAttribs;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    outputVertexAttribs = value;
+                    outputVertexAttribsNative = new NativeLLGL.VertexAttribute[outputVertexAttribs.Length];
+                    for (int outputVertexAttribsIndex = 0; outputVertexAttribsIndex < outputVertexAttribs.Length; ++outputVertexAttribsIndex)
+                    {
+                        if (outputVertexAttribs[outputVertexAttribsIndex] != null)
+                        {
+                            outputVertexAttribsNative[outputVertexAttribsIndex] = outputVertexAttribs[outputVertexAttribsIndex].Native;
+                        }
+                    }
+                }
+                else
+                {
+                    outputVertexAttribs = null;
+                    outputVertexAttribsNative = null;
+                }
+            }
+        }
         public Shader                 VertexShader { get; set; }         = null;
         public Shader                 TessControlShader { get; set; }    = null;
         public Shader                 TessEvaluationShader { get; set; } = null;
@@ -3236,6 +3282,22 @@ namespace LLGL
                     if (RenderPass != null)
                     {
                         native.renderPass = RenderPass.Native;
+                    }
+                    if (inputVertexAttribs != null)
+                    {
+                        native.numInputVertexAttribs = (IntPtr)inputVertexAttribs.Length;
+                        fixed (NativeLLGL.VertexAttribute* inputVertexAttribsPtr = inputVertexAttribsNative)
+                        {
+                            native.inputVertexAttribs = inputVertexAttribsPtr;
+                        }
+                    }
+                    if (outputVertexAttribs != null)
+                    {
+                        native.numOutputVertexAttribs = (IntPtr)outputVertexAttribs.Length;
+                        fixed (NativeLLGL.VertexAttribute* outputVertexAttribsPtr = outputVertexAttribsNative)
+                        {
+                            native.outputVertexAttribs = outputVertexAttribsPtr;
+                        }
                     }
                     if (VertexShader != null)
                     {
@@ -4297,6 +4359,7 @@ namespace LLGL
             public int              cpuAccessFlags;   /* = 0 */
             public int              miscFlags;        /* = 0 */
             public IntPtr           numVertexAttribs;
+            [Obsolete("BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead!")]
             public VertexAttribute* vertexAttribs;
         }
 
@@ -4430,16 +4493,20 @@ namespace LLGL
 
         public unsafe struct GraphicsPipelineDescriptor
         {
-            public byte*                  debugName;            /* = null */
-            public PipelineLayout         pipelineLayout;       /* = null */
-            public RenderPass             renderPass;           /* = null */
-            public Shader                 vertexShader;         /* = null */
-            public Shader                 tessControlShader;    /* = null */
-            public Shader                 tessEvaluationShader; /* = null */
-            public Shader                 geometryShader;       /* = null */
-            public Shader                 fragmentShader;       /* = null */
-            public Format                 indexFormat;          /* = Format.Undefined */
-            public PrimitiveTopology      primitiveTopology;    /* = PrimitiveTopology.TriangleList */
+            public byte*                  debugName;              /* = null */
+            public PipelineLayout         pipelineLayout;         /* = null */
+            public RenderPass             renderPass;             /* = null */
+            public IntPtr                 numInputVertexAttribs;
+            public VertexAttribute*       inputVertexAttribs;
+            public IntPtr                 numOutputVertexAttribs;
+            public VertexAttribute*       outputVertexAttribs;
+            public Shader                 vertexShader;           /* = null */
+            public Shader                 tessControlShader;      /* = null */
+            public Shader                 tessEvaluationShader;   /* = null */
+            public Shader                 geometryShader;         /* = null */
+            public Shader                 fragmentShader;         /* = null */
+            public Format                 indexFormat;            /* = Format.Undefined */
+            public PrimitiveTopology      primitiveTopology;      /* = PrimitiveTopology.TriangleList */
             public IntPtr                 numViewports;
             public Viewport*              viewports;
             public IntPtr                 numScissors;
@@ -4490,6 +4557,7 @@ namespace LLGL
             public byte*                    profile;    /* = null */
             public ShaderMacro*             defines;    /* = null */
             public int                      flags;      /* = 0 */
+            [Obsolete("LLGL.ShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGL.GraphicsPipelineDescriptor instead")]
             public VertexShaderAttributes   vertex;
             public FragmentShaderAttributes fragment;
             public ComputeShaderAttributes  compute;

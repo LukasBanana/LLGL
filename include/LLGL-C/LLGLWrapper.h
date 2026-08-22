@@ -1704,7 +1704,7 @@ typedef struct LLGLBufferDescriptor
     long                       cpuAccessFlags;   /* = 0 */
     long                       miscFlags;        /* = 0 */
     size_t                     numVertexAttribs; /* = 0 */
-    const LLGLVertexAttribute* vertexAttribs;    /* = NULL */
+    const LLGLVertexAttribute* vertexAttribs;    /* BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead! */
 }
 LLGLBufferDescriptor;
 
@@ -1815,20 +1815,24 @@ LLGLPipelineLayoutDescriptor;
 
 typedef struct LLGLGraphicsPipelineDescriptor
 {
-    const char*                debugName;            /* = NULL */
-    LLGLPipelineLayout         pipelineLayout;       /* = LLGL_NULL_OBJECT */
-    LLGLRenderPass             renderPass;           /* = LLGL_NULL_OBJECT */
-    LLGLShader                 vertexShader;         /* = LLGL_NULL_OBJECT */
-    LLGLShader                 tessControlShader;    /* = LLGL_NULL_OBJECT */
-    LLGLShader                 tessEvaluationShader; /* = LLGL_NULL_OBJECT */
-    LLGLShader                 geometryShader;       /* = LLGL_NULL_OBJECT */
-    LLGLShader                 fragmentShader;       /* = LLGL_NULL_OBJECT */
-    LLGLFormat                 indexFormat;          /* = LLGLFormatUndefined */
-    LLGLPrimitiveTopology      primitiveTopology;    /* = LLGLPrimitiveTopologyTriangleList */
-    size_t                     numViewports;         /* = 0 */
-    const LLGLViewport*        viewports;            /* = NULL */
-    size_t                     numScissors;          /* = 0 */
-    const LLGLScissor*         scissors;             /* = NULL */
+    const char*                debugName;              /* = NULL */
+    LLGLPipelineLayout         pipelineLayout;         /* = LLGL_NULL_OBJECT */
+    LLGLRenderPass             renderPass;             /* = LLGL_NULL_OBJECT */
+    size_t                     numInputVertexAttribs;  /* = 0 */
+    const LLGLVertexAttribute* inputVertexAttribs;     /* = NULL */
+    size_t                     numOutputVertexAttribs; /* = 0 */
+    const LLGLVertexAttribute* outputVertexAttribs;    /* = NULL */
+    LLGLShader                 vertexShader;           /* = LLGL_NULL_OBJECT */
+    LLGLShader                 tessControlShader;      /* = LLGL_NULL_OBJECT */
+    LLGLShader                 tessEvaluationShader;   /* = LLGL_NULL_OBJECT */
+    LLGLShader                 geometryShader;         /* = LLGL_NULL_OBJECT */
+    LLGLShader                 fragmentShader;         /* = LLGL_NULL_OBJECT */
+    LLGLFormat                 indexFormat;            /* = LLGLFormatUndefined */
+    LLGLPrimitiveTopology      primitiveTopology;      /* = LLGLPrimitiveTopologyTriangleList */
+    size_t                     numViewports;           /* = 0 */
+    const LLGLViewport*        viewports;              /* = NULL */
+    size_t                     numScissors;            /* = 0 */
+    const LLGLScissor*         scissors;               /* = NULL */
     LLGLDepthDescriptor        depth;
     LLGLStencilDescriptor      stencil;
     LLGLRasterizerDescriptor   rasterizer;
@@ -1877,7 +1881,7 @@ typedef struct LLGLShaderDescriptor
     const char*                  profile;    /* = NULL */
     const LLGLShaderMacro*       defines;    /* = NULL */
     long                         flags;      /* = 0 */
-    LLGLVertexShaderAttributes   vertex;
+    LLGLVertexShaderAttributes   vertex;     /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;
 }

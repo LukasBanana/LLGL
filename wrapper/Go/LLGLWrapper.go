@@ -1517,7 +1517,7 @@ type BufferDescriptor struct {
     BindFlags      uint              /* = 0 */
     CPUAccessFlags uint              /* = 0 */
     MiscFlags      uint              /* = 0 */
-    VertexAttribs  []VertexAttribute /* = nil */
+    VertexAttribs  []VertexAttribute /* BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead! */
 }
 
 type StaticSamplerDescriptor struct {
@@ -1601,6 +1601,8 @@ type GraphicsPipelineDescriptor struct {
     DebugName            string                 /* = "" */
     PipelineLayout       *PipelineLayout        /* = nil */
     RenderPass           *RenderPass            /* = nil */
+    InputVertexAttribs   []VertexAttribute      /* = nil */
+    OutputVertexAttribs  []VertexAttribute      /* = nil */
     VertexShader         *Shader                /* = nil */
     TessControlShader    *Shader                /* = nil */
     TessEvaluationShader *Shader                /* = nil */
@@ -1650,7 +1652,7 @@ type ShaderDescriptor struct {
     Profile    string                   /* = "" */
     Defines    *ShaderMacro             /* = nil */
     Flags      uint                     /* = 0 */
-    Vertex     VertexShaderAttributes
+    Vertex     VertexShaderAttributes   /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
     Fragment   FragmentShaderAttributes
     Compute    ComputeShaderAttributes
 }

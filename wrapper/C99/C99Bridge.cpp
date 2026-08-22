@@ -78,25 +78,8 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     ::memcpy(&(dst.limits), &(src.limits), sizeof(LLGLRenderingLimits));
 }
 
-void ConvertVertexAttrib(VertexAttribute& dst, const LLGLVertexAttribute& src)
+void ConvertBufferDesc(BufferDescriptor& dst, const LLGLBufferDescriptor& src)
 {
-    dst.name                = src.name;
-    dst.format              = static_cast<Format>(src.format);
-    dst.location            = src.location;
-    dst.semanticIndex       = src.semanticIndex;
-    dst.systemValue         = static_cast<SystemValue>(src.systemValue);
-    dst.slot                = src.slot;
-    dst.offset              = src.offset;
-    dst.stride              = src.stride;
-    dst.instanceDivisor     = src.instanceDivisor;
-}
-
-void ConvertBufferDesc(BufferDescriptor& dst, SmallVector<VertexAttribute>& dstVertexAttribs, const LLGLBufferDescriptor& src)
-{
-    dstVertexAttribs.resize(src.numVertexAttribs);
-    for_range(i, src.numVertexAttribs)
-        ConvertVertexAttrib(dstVertexAttribs[i], src.vertexAttribs[i]);
-
     dst.debugName       = src.debugName;
     dst.size            = src.size;
     dst.stride          = src.stride;
@@ -104,18 +87,6 @@ void ConvertBufferDesc(BufferDescriptor& dst, SmallVector<VertexAttribute>& dstV
     dst.bindFlags       = src.bindFlags;
     dst.cpuAccessFlags  = src.cpuAccessFlags;
     dst.miscFlags       = src.miscFlags;
-    dst.vertexAttribs   = dstVertexAttribs;
-}
-
-void ConvertVertexShaderAttribs(VertexShaderAttributes& dst, const LLGLVertexShaderAttributes& src)
-{
-    dst.inputAttribs.resize(src.numInputAttribs);
-    for_range(i, src.numInputAttribs)
-        ConvertVertexAttrib(dst.inputAttribs[i], src.inputAttribs[i]);
-
-    dst.outputAttribs.resize(src.numOutputAttribs);
-    for_range(i, src.numOutputAttribs)
-        ConvertVertexAttrib(dst.outputAttribs[i], src.outputAttribs[i]);
 }
 
 void ConvertFragmentAttrib(FragmentAttribute& dst, const LLGLFragmentAttribute& src)
@@ -149,7 +120,6 @@ void ConvertShaderDesc(ShaderDescriptor& dst, const LLGLShaderDescriptor& src)
     dst.defines     = reinterpret_cast<const ShaderMacro*>(src.defines);
     dst.flags       = src.flags;
 
-    ConvertVertexShaderAttribs(dst.vertex, src.vertex);
     ConvertFragmentShaderAttribs(dst.fragment, src.fragment);
     ConvertComputeShaderAttribs(dst.compute, src.compute);
 }
@@ -214,6 +184,19 @@ void ConvertPipelineLayoutDesc(PipelineLayoutDescriptor& dst, const LLGLPipeline
     dst.barrierFlags = src.barrierFlags;
 }
 
+void ConvertVertexAttrib(VertexAttribute& dst, const LLGLVertexAttribute& src)
+{
+    dst.name                = src.name;
+    dst.format              = static_cast<Format>(src.format);
+    dst.location            = src.location;
+    dst.semanticIndex       = src.semanticIndex;
+    dst.systemValue         = static_cast<SystemValue>(src.systemValue);
+    dst.slot                = src.slot;
+    dst.offset              = src.offset;
+    dst.stride              = src.stride;
+    dst.instanceDivisor     = src.instanceDivisor;
+}
+
 void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const LLGLGraphicsPipelineDescriptor& src)
 {
     dst.debugName               = src.debugName;
@@ -226,6 +209,14 @@ void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const LLGLGrap
     dst.fragmentShader          = LLGL_PTR(Shader, src.fragmentShader);
     dst.indexFormat             = static_cast<Format>(src.indexFormat);
     dst.primitiveTopology       = static_cast<PrimitiveTopology>(src.primitiveTopology);
+
+    dst.inputVertexAttribs.resize(src.numInputVertexAttribs);
+    for_range(i, src.numInputVertexAttribs)
+        ConvertVertexAttrib(dst.inputVertexAttribs[i], src.inputVertexAttribs[i]);
+
+    dst.outputVertexAttribs.resize(src.numOutputVertexAttribs);
+    for_range(i, src.numOutputVertexAttribs)
+        ConvertVertexAttrib(dst.outputVertexAttribs[i], src.outputVertexAttribs[i]);
 
     dst.viewports.resize(src.numViewports);
     ::memcpy(dst.viewports.data(), src.viewports, src.numViewports * sizeof(LLGLViewport));

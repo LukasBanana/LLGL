@@ -116,13 +116,10 @@ LLGL_C_EXPORT void llglSetVertexBuffer(LLGLBuffer buffer)
     g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer));
 }
 
-LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t numVertexAttribs, const LLGLVertexAttribute* vertexAttribs LLGL_ANNOTATE([numVertexAttribs]))
+//DEPRECATED
+LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t /*numVertexAttribs*/, const LLGLVertexAttribute* /*vertexAttribs LLGL_ANNOTATE([numVertexAttribs])*/)
 {
-    SmallVector<VertexAttribute> internalVertexAttribs;
-    internalVertexAttribs.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-        ConvertVertexAttrib(internalVertexAttribs[i], vertexAttribs[i]);
-    g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer), numVertexAttribs, internalVertexAttribs.data());
+    g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer));
 }
 
 LLGL_C_EXPORT void llglSetVertexBufferArray(LLGLBufferArray bufferArray)
