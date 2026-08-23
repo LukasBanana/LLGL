@@ -107,6 +107,7 @@ DEF_TEST( DescriptorCache )
         psoDesc.debugName           = "MultiTextured[16]";
         psoDesc.pipelineLayout      = psoLayout;
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader        = shaders[VSTextured8];
         psoDesc.fragmentShader      = shaders[PSTextured8];
         psoDesc.primitiveTopology   = PrimitiveTopology::TriangleList;

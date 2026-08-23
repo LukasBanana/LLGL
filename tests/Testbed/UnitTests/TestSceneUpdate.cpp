@@ -35,6 +35,7 @@ DEF_TEST( SceneUpdate )
         {
             psoDesc.pipelineLayout      = layouts[PipelineSolid];
             psoDesc.renderPass          = swapChain->GetRenderPass();
+            psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
             psoDesc.vertexShader        = shaders[VSSolid];
             psoDesc.fragmentShader      = shaders[PSSolid];
             psoDesc.depth.testEnabled   = true;

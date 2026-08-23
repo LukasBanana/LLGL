@@ -149,11 +149,12 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 
 /* ----- BufferDescriptor utility functions ----- */
 
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, long cpuAccessFlags)
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, std::uint32_t stride, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
         desc.size           = size;
+        desc.stride         = stride;
         desc.bindFlags      = BindFlags::VertexBuffer;
         desc.cpuAccessFlags = cpuAccessFlags;
     }

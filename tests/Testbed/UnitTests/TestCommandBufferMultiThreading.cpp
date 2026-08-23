@@ -117,6 +117,7 @@ DEF_TEST( CommandBufferMultiThreading )
         {
             psoDesc.pipelineLayout      = layouts[PipelineTextured];
             psoDesc.renderPass          = renderPass;
+            psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
             psoDesc.vertexShader        = shaders[VSTextured];
             psoDesc.fragmentShader      = shaders[PSTextured];
             psoDesc.depth.testEnabled   = true;

@@ -60,6 +60,7 @@ DEF_TEST( CombinedTexSamplers )
     {
         psoDesc.pipelineLayout      = psoLayout;
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader        = shaders[VSCombinedSamplers];
         psoDesc.fragmentShader      = shaders[PSCombinedSamplers];
         psoDesc.depth.testEnabled   = true;

@@ -205,10 +205,8 @@ class TestbedContext
 
             CSReadAfterWrite,
 
-            VSVertexFormat0,
-            VSVertexFormat1,
-            VSVertexFormat2,
-            VSVertexFormat3,
+            VSVertexFormatA,
+            VSVertexFormatB,
             PSVertexFormat,
 
             MSMeshlet,
@@ -435,9 +433,7 @@ class TestbedContext
             LLGL::ShaderType            type,
             const char*                 entry       = nullptr,
             const char*                 profile     = nullptr,
-            const LLGL::ShaderMacro*    defines     = nullptr,
-            VertFmt                     vertFmt     = VertFmtStd,
-            VertFmt                     vertOutFmt  = VertFmtCount
+            const LLGL::ShaderMacro*    defines     = nullptr
         );
 
         void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);

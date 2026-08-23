@@ -622,7 +622,7 @@ DEF_TEST( ResourceBinding )
             }
 
             // Render with graphics shaders
-            cmdBuf.SetVertexBuffer(*meshBuffer);
+            cmdBuf.SetVertexBuffer(*meshBuffer); // Dummy
 
             switch ((frame/2) % 3)
             {

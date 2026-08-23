@@ -60,7 +60,7 @@ DEF_TEST( CommandBufferEncode )
             if (renderer->GetRendererID() == LLGL::RendererID::Vulkan)
                 cmdBuf.SetViewport(swapChain->GetResolution());
 
-            cmdBuf.SetVertexBuffer(*this->meshBuffer);
+            cmdBuf.SetVertexBuffer(*this->meshBuffer); // Dummy
             cmdBuf.SetUniforms(0, clearValue.color, sizeof(clearValue.color));
             cmdBuf.Draw(3, 0);
         }
@@ -137,7 +137,7 @@ DEF_TEST( CommandBufferEncode )
             psoDesc.renderPass          = swapChain->GetRenderPass();
             psoDesc.vertexShader        = shaders[VSClear];
             psoDesc.fragmentShader      = shaders[PSClear];
-            //psoDesc.primitiveTopology   = PrimitiveTopology::PointList;
+          //psoDesc.primitiveTopology   = PrimitiveTopology::PointList;
         }
         CREATE_GRAPHICS_PSO_EXT(pso, psoDesc, "psoCmdBufEncode");
     }
@@ -189,6 +189,7 @@ DEF_TEST( CommandBufferEncode )
             else
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between framebuffer[%u] color [%02X %02X %02X %02X] and clear value [%02X %02X %02X %02X]\n",
                     i,
                     framebufferResult[0], framebufferResult[1], framebufferResult[2], framebufferResult[3],

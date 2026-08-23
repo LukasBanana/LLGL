@@ -147,11 +147,12 @@ DEF_TEST( ResourceCopy )
         // Create graphics PSO
         GraphicsPipelineDescriptor psoDesc;
         {
-            psoDesc.debugName       = "Test.ResourceCopy.PSO";
-            psoDesc.pipelineLayout  = layouts[PipelineTextured];
-            psoDesc.renderPass      = swapChain->GetRenderPass();
-            psoDesc.vertexShader    = shaders[VSTextured];
-            psoDesc.fragmentShader  = shaders[PSTextured];
+            psoDesc.debugName           = "Test.ResourceCopy.PSO";
+            psoDesc.pipelineLayout      = layouts[PipelineTextured];
+            psoDesc.renderPass          = swapChain->GetRenderPass();
+            psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
+            psoDesc.vertexShader        = shaders[VSTextured];
+            psoDesc.fragmentShader      = shaders[PSTextured];
         }
         CREATE_GRAPHICS_PSO_EXT(pso, psoDesc, nullptr);
 

@@ -48,10 +48,11 @@ DEF_TEST( BlendStates )
 
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout  = layouts[PipelineTextured];
-        psoDesc.renderPass      = swapChain->GetRenderPass();
-        psoDesc.vertexShader    = shaders[VSTextured];
-        psoDesc.fragmentShader  = shaders[PSTextured];
+        psoDesc.pipelineLayout      = layouts[PipelineTextured];
+        psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
+        psoDesc.vertexShader        = shaders[VSTextured];
+        psoDesc.fragmentShader      = shaders[PSTextured];
     }
 
     BlendTargetDescriptor& target0Desc = psoDesc.blend.targets[0];

@@ -60,6 +60,7 @@ DEF_TEST( Uniforms )
             psoDesc.debugName                       = "Test.Uniforms.PSO";
             psoDesc.pipelineLayout                  = psoLayout;
             psoDesc.renderPass                      = swapChain->GetRenderPass();
+            psoDesc.inputVertexAttribs              = vertexFormats[VertFmtStd].attributes;
             psoDesc.vertexShader                    = shaders[VSDynamic];
             psoDesc.fragmentShader                  = shaders[PSDynamic];
             psoDesc.depth.testEnabled               = true;

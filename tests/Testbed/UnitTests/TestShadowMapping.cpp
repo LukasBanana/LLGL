@@ -104,6 +104,7 @@ DEF_TEST( ShadowMapping )
         {
             psoDesc.pipelineLayout      = psoLayout;
             psoDesc.renderPass          = loadContentRenderPass;
+            psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
             psoDesc.vertexShader        = shaders[VSShadowedScene];
             psoDesc.fragmentShader      = shaders[PSShadowedScene];
             psoDesc.depth.testEnabled   = true;
@@ -171,6 +172,7 @@ DEF_TEST( ShadowMapping )
         {
             psoDesc.pipelineLayout                      = layouts[PipelineSolid];
             psoDesc.renderPass                          = resources.target->GetRenderPass();
+            psoDesc.inputVertexAttribs                  = vertexFormats[VertFmtStd].attributes;
             psoDesc.vertexShader                        = shaders[VSShadowMap];
             psoDesc.viewports                           = { Viewport{ resolution } };
             psoDesc.depth.testEnabled                   = true;

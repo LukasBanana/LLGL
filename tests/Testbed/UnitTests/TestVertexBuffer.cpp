@@ -49,10 +49,8 @@ DEF_TEST( VertexBuffer )
 
     if (frame == 0)
     {
-        if (shaders[VSVertexFormat0] == nullptr ||
-            shaders[VSVertexFormat1] == nullptr ||
-            shaders[VSVertexFormat2] == nullptr ||
-            shaders[VSVertexFormat3] == nullptr ||
+        if (shaders[VSVertexFormatA] == nullptr ||
+            shaders[VSVertexFormatB] == nullptr ||
             shaders[PSVertexFormat] == nullptr)
         {
             Log::Errorf("Missing shaders for backend\n");
@@ -62,9 +60,8 @@ DEF_TEST( VertexBuffer )
         // Create vertex buffer
         BufferDescriptor bufDesc;
         {
-            bufDesc.size            = sizeof(interleavedVertices);
-            bufDesc.bindFlags       = BindFlags::VertexBuffer | BindFlags::CopyDst;
-            bufDesc.vertexAttribs   = vertexFormats[VertFmtLayout0].attributes;
+            bufDesc.size        = sizeof(interleavedVertices);
+            bufDesc.bindFlags   = BindFlags::VertexBuffer | BindFlags::CopyDst;
         }
         vertexBuffer = renderer->CreateBuffer(bufDesc, interleavedVertices);
     }
@@ -74,7 +71,8 @@ DEF_TEST( VertexBuffer )
     {
         psoDesc.pipelineLayout      = layouts[PipelineSolid];
         psoDesc.renderPass          = swapChain->GetRenderPass();
-        psoDesc.vertexShader        = shaders[VSVertexFormat0 + frame];
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtLayout0 + frame].attributes;
+        psoDesc.vertexShader        = shaders[frame == 2 ? VSVertexFormatB : VSVertexFormatA];
         psoDesc.fragmentShader      = shaders[PSVertexFormat];
         psoDesc.primitiveTopology   = PrimitiveTopology::TriangleStrip;
     }
@@ -110,10 +108,9 @@ DEF_TEST( VertexBuffer )
             cmdBuffer->UpdateBuffer(*vertexBuffer, 0, simple2DVertices, sizeof(simple2DVertices));
         }
 
-        // Set vertex buffer with new attributes for each frame
-        const VertexFormat& vertexFormat = vertexFormats[VertFmtLayout0 + frame];
-        cmdBuffer->SetVertexBuffer(*vertexBuffer, static_cast<std::uint32_t>(vertexFormat.attributes.size()), vertexFormat.attributes.data());
-
+        //TODO: this needs to use a new `SetVertexBuffer()` function to accept the different vertex strides
+        // Set always the same vertex buffer and let the PSO determine the vertex format
+        cmdBuffer->SetVertexBuffer(*vertexBuffer);
         cmdBuffer->SetPipelineState(*pso);
 
         cmdBuffer->BeginRenderPass(*swapChain);

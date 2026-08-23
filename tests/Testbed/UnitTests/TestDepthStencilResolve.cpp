@@ -144,14 +144,13 @@ DEF_TEST( DepthStencilResolve )
         GraphicsPipelineDescriptor psoDesc;
         psoDesc.pipelineLayout                  = layouts[PipelineSolid];
         psoDesc.renderPass                      = target->GetRenderPass();
+        psoDesc.inputVertexAttribs              = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader                    = shaders[VSSolid];
         psoDesc.depth.testEnabled               = true;
         psoDesc.depth.writeEnabled              = true;
         psoDesc.rasterizer.cullMode             = CullMode::Back;
-        /* Required for the PSO to inherit the render pass' sample count */
-        psoDesc.rasterizer.multiSampleEnabled   = multiSampled;
-        /* No fragment shader; rasterize for depth only */
-        psoDesc.blend.targets[0].colorMask      = 0;
+        psoDesc.rasterizer.multiSampleEnabled   = multiSampled; // Required for the PSO to inherit the render pass' sample count
+        psoDesc.blend.targets[0].colorMask      = 0; // No fragment shader; rasterize for depth only
         return psoDesc;
     };
 

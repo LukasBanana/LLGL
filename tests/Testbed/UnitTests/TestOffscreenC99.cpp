@@ -7,9 +7,14 @@
 
 #include "Testbed.h"
 #include <LLGL-C/LLGL.h>
+#include <stdint.h>
+#include <stddef.h>
 
 
 #if LLGL_TESTBED_INCLUDE_C99_TESTS
+
+// Number of vertices used to render a triangle strip
+#define NUM_VERTICES 16
 
 /*
 Creates a new RenderSystem instance to be used with the C99 wrapper and renders into a RenderTarget only.
@@ -80,8 +85,6 @@ DEF_TEST( OffscreenC99 )
     TEST_INFO_STR(vendorName);
     TEST_INFO_STR(shadingLanguageName);
 
-    // 
-
     // Create texture to render into
     LLGLTextureDescriptor tex0Desc = {};
     {
@@ -124,10 +127,9 @@ DEF_TEST( OffscreenC99 )
         LLGLVertexAttribute{ "color",    LLGLFormatRGBA8UNorm, 1, 0, LLGLSystemValueUndefined, 0, offsetof(UnprojectedVertex, color),    sizeof(UnprojectedVertex) },
     };
 
-    std::vector<UnprojectedVertex> vertices;
-    vertices.resize(16);
+    UnprojectedVertex vertices[NUM_VERTICES];
 
-    const std::uint8_t colorPalette[8][3] =
+    const uint8_t colorPalette[8][3] =
     {
         { 255,   0,   0 },
         {   0, 255,   0 },
@@ -139,10 +141,10 @@ DEF_TEST( OffscreenC99 )
         {  64, 128, 255 },
     };
 
-    for (std::size_t i = 0; i < vertices.size(); ++i)
+    for (size_t i = 0; i < NUM_VERTICES; ++i)
     {
         UnprojectedVertex& vert = vertices[i];
-        const float interp = static_cast<float>(i) / static_cast<float>(vertices.size() - 1);
+        const float interp = static_cast<float>(i) / static_cast<float>(NUM_VERTICES - 1);
         vert.position[0]    = 0.9f * interp - 0.9f * (1.0f - interp);
         vert.position[1]    = (i % 2 == 0 ? -0.2f : +0.2f);
         vert.color[0]       = colorPalette[i % 8][0];
@@ -154,12 +156,11 @@ DEF_TEST( OffscreenC99 )
     LLGLBufferDescriptor vertBufferDesc = {};
     {
         vertBufferDesc.debugName        = "C99.VertexBuffer";
-        vertBufferDesc.size             = vertices.size() * sizeof(UnprojectedVertex);
+        vertBufferDesc.size             = NUM_VERTICES * sizeof(UnprojectedVertex);
         vertBufferDesc.bindFlags        = LLGLBindVertexBuffer;
-        vertBufferDesc.numVertexAttribs = sizeof(vertAttribs)/sizeof(vertAttribs[0]);
-        vertBufferDesc.vertexAttribs    = vertAttribs;
+        vertBufferDesc.stride           = sizeof(UnprojectedVertex);
     }
-    LLGLBuffer vertBuffer = llglCreateBuffer(&vertBufferDesc, vertices.data());
+    LLGLBuffer vertBuffer = llglCreateBuffer(&vertBufferDesc, vertices);
 
     // Determine what shading language is supported
     LLGLRenderingCapabilities caps = {};
@@ -170,13 +171,11 @@ DEF_TEST( OffscreenC99 )
     // Create vertex shader
     LLGLShaderDescriptor vertShaderDesc = {};
     {
-        vertShaderDesc.debugName                = "C99.VertexShader";
-        vertShaderDesc.type                     = LLGLShaderTypeVertex;
-        vertShaderDesc.sourceSize               = 0;
-        vertShaderDesc.sourceType               = LLGLShaderSourceTypeCodeFile;
-        vertShaderDesc.flags                    = LLGLShaderCompilePatchClippingOrigin;
-        vertShaderDesc.vertex.numInputAttribs   = sizeof(vertAttribs)/sizeof(vertAttribs[0]);
-        vertShaderDesc.vertex.inputAttribs      = vertAttribs;
+        vertShaderDesc.debugName    = "C99.VertexShader";
+        vertShaderDesc.type         = LLGLShaderTypeVertex;
+        vertShaderDesc.sourceSize   = 0;
+        vertShaderDesc.sourceType   = LLGLShaderSourceTypeCodeFile;
+        vertShaderDesc.flags        = LLGLShaderCompilePatchClippingOrigin;
 
         if (shadingLanguage == LLGLShadingLanguageGLSL)
         {
@@ -249,6 +248,8 @@ DEF_TEST( OffscreenC99 )
     {
         pso0Desc.debugName                  = "C99.GraphicsPSO";
         pso0Desc.renderPass                 = llglGetRenderTargetRenderPass(renderTarget0);
+        pso0Desc.numInputVertexAttribs      = sizeof(vertAttribs)/sizeof(vertAttribs[0]);
+        pso0Desc.inputVertexAttribs         = vertAttribs;
         pso0Desc.vertexShader               = vertShader;
         pso0Desc.fragmentShader             = fragShader;
         pso0Desc.primitiveTopology          = LLGLPrimitiveTopologyTriangleStrip;
@@ -290,13 +291,13 @@ DEF_TEST( OffscreenC99 )
             llglSetVertexBuffer(vertBuffer);
             llglSetViewport(&viewport);
             llglClear(LLGLClearColor, &bgClearBlack);
-            llglDraw(static_cast<std::uint32_t>(vertices.size()), 0);
+            llglDraw(NUM_VERTICES, 0);
         }
         llglEndRenderPass();
     }
     llglEnd();
 
-    // Read texture result
+    // Read texture result (STL needed here to interact with TestbedContext)
     static_assert(sizeof(LLGL::ColorRGBub) == 3, "LLGL::ColorRGBAub must have a size of 4 bytes for OffscreenC99 test");
 
     std::vector<LLGL::ColorRGBub> pixels;
@@ -319,7 +320,7 @@ DEF_TEST( OffscreenC99 )
     llglReadTexture(tex0, &tex0Region, &dstImgView);
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "OffscreenC99";
+    const char* colorBufferName = "OffscreenC99";
 
     SaveColorImage(pixels, Extent2D{ tex0Desc.extent.width, tex0Desc.extent.height }, colorBufferName);
 

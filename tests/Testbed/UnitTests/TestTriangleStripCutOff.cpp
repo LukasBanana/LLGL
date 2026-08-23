@@ -64,6 +64,7 @@ DEF_TEST( TriangleStripCutOff )
     {
         psoDesc.pipelineLayout      = nullptr; // No resource bindings, therefore no pipeline layout
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtUnprojected].attributes;
         psoDesc.vertexShader        = shaders[VSUnprojected];
         psoDesc.fragmentShader      = shaders[PSUnprojected];
         psoDesc.primitiveTopology   = PrimitiveTopology::TriangleStrip;

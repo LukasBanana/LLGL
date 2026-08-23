@@ -55,12 +55,12 @@ DEF_TEST( Multiview )
 
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL_6_1))
     {
-        vertShader = LoadShaderFromFile("Multiview.hlsl", ShaderType::Vertex,   "VSMain", "vs_6_1", nullptr, VertFmtEmpty);
+        vertShader = LoadShaderFromFile("Multiview.hlsl", ShaderType::Vertex,   "VSMain", "vs_6_1");
         fragShader = LoadShaderFromFile("Multiview.hlsl", ShaderType::Fragment, "PSMain", "ps_6_1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
-        vertShader = LoadShaderFromFile("Multiview.450core.vert.spv", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        vertShader = LoadShaderFromFile("Multiview.450core.vert.spv", ShaderType::Vertex,   nullptr, nullptr);
         fragShader = LoadShaderFromFile("Multiview.450core.frag.spv", ShaderType::Fragment, nullptr, nullptr);
     }
 

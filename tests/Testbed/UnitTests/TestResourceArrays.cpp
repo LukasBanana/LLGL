@@ -45,6 +45,7 @@ DEF_TEST( ResourceArrays )
     {
         psoDesc.pipelineLayout      = psoLayout;
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader        = shaders[VSResourceArrays];
         psoDesc.fragmentShader      = shaders[PSResourceArrays];
         psoDesc.depth.testEnabled   = true;
