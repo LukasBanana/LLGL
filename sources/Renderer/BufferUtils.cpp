@@ -17,12 +17,17 @@ namespace LLGL
 
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc)
 {
+    /*
+    Prioritize typed buffers (via format property) over structured buffers (via stride property),
+    since typed buffers can be used in combination with vertex buffers, which might need a different stride than typed buffers.
+    So this function needs to return the stride for storage buffers (typed or structured), not the stride for vertex buffers.
+    */
     if (IsByteAddressBuffer(desc))
         return 4;
-    else if (desc.stride > 0)
-        return desc.stride;
     else if (desc.format != Format::Undefined)
         return std::max(1u, (GetFormatAttribs(desc.format).bitSize / 8u));
+    else if (desc.stride > 0)
+        return desc.stride;
     else
         return 1;
 }

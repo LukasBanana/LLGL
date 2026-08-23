@@ -143,15 +143,9 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
         info.deviceName.c_str()
     );
 
-    // Vertex format
-    LLGL::VertexFormat vertexFormat;
-    vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
     // Create vertex buffer
     vertexBuffer = renderer->CreateBuffer(
-        LLGL::VertexBufferDesc(sizeof(TexturedVertex) * vertices.size(), vertexFormat),
+        LLGL::VertexBufferDesc(sizeof(TexturedVertex) * vertices.size(), sizeof(TexturedVertex)),
         vertices.data()
     );
 
@@ -203,8 +197,6 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     else
         LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
 
-    vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
-
     vertShader = renderer->CreateShader(vertShaderDesc);
     fragShader = renderer->CreateShader(fragShaderDesc);
 
@@ -232,6 +224,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     {
+        pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
         pipelineDesc.vertexShader                   = vertShader;
         pipelineDesc.fragmentShader                 = fragShader;
         pipelineDesc.pipelineLayout                 = layout;

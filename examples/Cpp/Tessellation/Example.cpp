@@ -71,8 +71,8 @@ public:
         SetTessellationFactor(scene.tessLevelInner, scene.tessLevelOuter);
 
         // Create graphics object
-        LLGL::VertexFormat vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreateTextures();
         CreatePipelines();
 
@@ -88,49 +88,39 @@ public:
         );
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position",  LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",    LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "tangent",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "bitangent", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord",  LLGL::Format::RG32Float  });
-
         // Load cube model with minor pre-tessellation.
         // A cube with only 8 vertices would only allow a rough tessellation depending on the displacement map.
         std::vector<TexturedVertex> texuturedVertices;
         model = Load3DModel(texuturedVertices, "UVCube2x.obj", 4);
 
         // Create buffers for a simple 3D cube model
-        vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceQuadVertices(texuturedVertices), vertexFormat);
+        vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceQuadVertices(texuturedVertices), sizeof(TangentSpaceVertex));
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeQuadIndices(model.numVertices, model.firstVertex), LLGL::Format::R32UInt);
         sceneBuffer = CreateConstantBuffer(scene);
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.vert" }, { vertexFormat });
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.vert" });
             shaderPipeline.hs = LoadShader({ LLGL::ShaderType::TessControl,    "Example.tesc" });
             shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.tese" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.450core.vert.spv" }, { vertexFormat });
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.450core.vert.spv" });
             shaderPipeline.hs = LoadShader({ LLGL::ShaderType::TessControl,    "Example.450core.tesc.spv" });
             shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.450core.tese.spv" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat });
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.hlsl", "VS", "vs_5_0" });
             shaderPipeline.hs = LoadShader({ LLGL::ShaderType::TessControl,    "Example.hlsl", "HS", "hs_5_0" });
             shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.hlsl", "DS", "ds_5_0" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.hlsl", "PS", "ps_5_0" });
@@ -138,7 +128,7 @@ public:
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderPipeline.hs = LoadShader({ LLGL::ShaderType::Compute,        "Example.metal", "HS", "2.0" });
-            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" }, { vertexFormat });
+            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.metal", "PS", "2.0" });
         }
     }
@@ -185,10 +175,20 @@ public:
         }
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);
 
+        // Specify vertex format
+        const LLGL::DynamicVector<LLGL::VertexAttribute> vertexAttribs = LLGL::Parse(
+            "rgb32f(position),"
+            "rgb32f(normal),"
+            "rgb32f(tangent),"
+            "rgb32f(bitangent),"
+            "rg32f(texCoord),"
+        );
+
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set references to shader program, render pass, and pipeline layout
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.tessControlShader              = shaderPipeline.hs;
             pipelineDesc.tessEvaluationShader           = shaderPipeline.ds;

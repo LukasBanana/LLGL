@@ -51,10 +51,13 @@ struct BufferDescriptor
     \remarks This \e can be used for vertex buffers to describe the stride (in bytes) between vertices. If this is zero, the stride \b must be set via the extended \c SetVertexBuffer function.
     \remarks This is also used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
     \remarks If this is non-zero, the \c format attribute is ignored for sampled and storage buffers, i.e. buffers with the binding flags BindFlags::Sampled or BindFlags::Storage.
+    \remarks To create a typed-buffer, this must be zero unless \c bindFlags also contains BindFlags::VertexBuffer since vertex buffers and structured buffers are mutually exclusive in D3D.
     \note If the buffer has the binding flag BindFlags::IndirectBuffer, this \b must be 0.
     \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
     \see MiscFlags::Append
     \see MiscFlags::Counter
+    \see IsTypedBuffer
+    \see IsStructuredBuffer
     */
     std::uint32_t               stride          = 0;
 
@@ -163,12 +166,17 @@ struct BufferViewDescriptor
 @{
 */
 
-//! Returns true if the buffer descriptor denotes a typed buffer, i.e. \c Buffer or \c RWBuffer in HLSL.
+/**
+\brief Returns true if the buffer descriptor denotes a typed buffer, i.e. \c Buffer or \c RWBuffer in HLSL.
+\remarks This requires that the stride is zero, unless the bind flags contain BindFlags::VertexBuffer,
+since it cam no longer be considered a structured buffer as those are mutually exclusive in D3D.
+*/
 LLGL_EXPORT bool IsTypedBuffer(const BufferDescriptor& desc);
 
 /**
 \brief Returns true if the buffer descriptor denotes a structured buffer,
 i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, or \c ConsumeStructuredBuffer in HLSL.
+\remarks If the bind flags contain BindFlags::VertexBuffer, it is not considered a structured buffer since those are mutually exclusive in D3D.
 */
 LLGL_EXPORT bool IsStructuredBuffer(const BufferDescriptor& desc);
 

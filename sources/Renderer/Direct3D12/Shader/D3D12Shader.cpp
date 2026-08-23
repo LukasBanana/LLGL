@@ -27,6 +27,8 @@ namespace LLGL
 {
 
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc) :
     Shader        { desc.type    },
     renderSystem_ { renderSystem }
@@ -45,6 +47,8 @@ D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor
         }
     }
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 const Report* D3D12Shader::GetReport() const
 {

@@ -215,61 +215,23 @@ private:
     void MainLoop();
 
     // Internal function to load a shader.
-    LLGL::Shader* LoadShaderInternal(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-        const LLGL::VertexFormat&                   streamOutputFormat,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-        const LLGL::ShaderMacro*                    defines,
-        bool                                        patchClippingOrigin
-    );
+    LLGL::Shader* LoadShaderInternal(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines, bool patchClippingOrigin);
 
 protected:
 
     // Loads a shader from file with optional vertex formats and stream-output format.
-    LLGL::Shader* LoadShader(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
-        const LLGL::VertexFormat&                   streamOutputFormat  = {},
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
-
-    // Loads a shader from file with fragment attributes.
-    LLGL::Shader* LoadShader(
-        const ShaderDescWrapper&                    shaderDesc,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
+    LLGL::Shader* LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
 
     // Load a shader from file and adds 'PatchClippingOrigin' to the compile flags if the screen origin is lower-left; see IsScreenOriginLowerLeft().
-    LLGL::Shader* LoadShaderAndPatchClippingOrigin(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
-        const LLGL::VertexFormat&                   streamOutputFormat  = {},
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
+    LLGL::Shader* LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
 
-    // Loads a vertex shader with standard filename convention.
-    LLGL::Shader* LoadStandardVertexShader(
-        const char*                                 entryPoint      = "VS",
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats   = {},
-        const LLGL::ShaderMacro*                    defines         = nullptr);
-
-    // Loads a fragment shader with standard filename convention.
-    LLGL::Shader* LoadStandardFragmentShader(
-        const char*                                 entryPoint      = "PS",
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs = {},
-        const LLGL::ShaderMacro*                    defines         = nullptr
-    );
-
-    // Loads a compute shader with standard filename convention.
-    LLGL::Shader* LoadStandardComputeShader(
-        const char*                 entryPoint  = "CS",
-        const LLGL::ShaderMacro*    defines     = nullptr
-    );
+    // Loads a vertex/fragment/compute shader with standard filename convention.
+    LLGL::Shader* LoadStandardVertexShader(const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr);
+    LLGL::Shader* LoadStandardFragmentShader(const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr);
+    LLGL::Shader* LoadStandardComputeShader(const char* entryPoint  = "CS", const LLGL::ShaderMacro* defines = nullptr);
 
     // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
-    ShaderPipeline LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats);
+    ShaderPipeline LoadStandardShaderPipeline();
 
     // Throws an exception if the specified PSO creation failed.
     bool ReportPSOErrors(const LLGL::PipelineState* pso);
@@ -337,6 +299,9 @@ protected:
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
 
+    // Quits the application by closing the window. This is used to quit prematurely when loading a PSO has failed.
+    void Quit();
+
     // Returns the number of samples that was used when the swap-chain was created.
     inline std::uint32_t GetSampleCount() const
     {
@@ -363,9 +328,9 @@ protected:
     }
 
     template <typename Container>
-    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, const LLGL::VertexFormat& vertexFormat)
+    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, std::uint32_t stride)
     {
-        LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), vertexFormat);
+        LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), stride);
         bufferDesc.debugName = "VertexBuffer";
         return renderer->CreateBuffer(bufferDesc, &vertices[0]);
     }

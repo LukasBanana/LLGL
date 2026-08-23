@@ -899,9 +899,9 @@ public:
         ExampleBase { "LLGL Example: HelloGame" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateResources();
+        CreateResources();
         CreateShaders();
-        CreatePipelines(vertexFormat);
+        CreatePipelines();
         LoadLevels();
         SelectLevel(0);
 
@@ -914,19 +914,10 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateResources()
+    void CreateResources()
     {
         // Initialize instance buffer
         instanceBuffer.Init(renderer->GetRenderingCaps());
-
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.attributes =
-        {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, offsetof(Vertex, position), sizeof(Vertex) },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1, offsetof(Vertex, normal  ), sizeof(Vertex) },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 2, offsetof(Vertex, texCoord), sizeof(Vertex) },
-        };
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
@@ -936,7 +927,7 @@ private:
         mdlGround   = Load3DModel(vertices, "HelloGame_Ground.obj");
 
         // Create vertex, index, and constant buffer
-        vertexBuffer    = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer    = CreateVertexBuffer(vertices, sizeof(Vertex));
         cbufferScene    = CreateConstantBuffer(scene);
 
         // Load texture and sampler
@@ -993,8 +984,6 @@ private:
 
         // Pass inverse size of shadow map to shader for PCF shadow mapping
         scene.shadowSizeInv = 1.0f / static_cast<float>(shadowMapSize);
-
-        return vertexFormat;
     }
 
     static std::string BytesToString(std::uint64_t val)
@@ -1059,7 +1048,7 @@ private:
         }
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         const bool needsExplicitMultiSample = (GetSampleCount() > 1 && !IsDirect3D());
         const bool needsUniqueBindingSlots  = (IsVulkan());
@@ -1079,12 +1068,15 @@ private:
             )
         );
 
+        // Specify vertex format
+        LLGL::DynamicVector<LLGL::VertexAttribute> vertexAttribs = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
+
         LLGL::GraphicsPipelineDescriptor scenePSODesc;
         {
             scenePSODesc.debugName                      = "InstancedMesh.PSO";
             scenePSODesc.pipelineLayout                 = scenePSOLayout[0];
             scenePSODesc.renderPass                     = swapChain->GetRenderPass();
-            scenePSODesc.inputVertexAttribs             = vertexFormat.attributes;
+            scenePSODesc.inputVertexAttribs             = vertexAttribs;
             scenePSODesc.vertexShader                   = sceneShaders.vs;
             scenePSODesc.fragmentShader                 = sceneShaders.ps;
             scenePSODesc.depth.testEnabled              = true;
@@ -1112,7 +1104,6 @@ private:
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
             scenePSODesc.pipelineLayout                         = scenePSOLayout[1];
             scenePSODesc.renderPass                             = shadowMapTarget->GetRenderPass();
-            scenePSODesc.inputVertexAttribs                     = vertexFormat.attributes;
             scenePSODesc.fragmentShader                         = nullptr;
             scenePSODesc.rasterizer.depthBias.constantFactor    = 1.0f;
             scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.0f;
@@ -1141,10 +1132,10 @@ private:
         {
             groundPSODesc.debugName                     = "Ground.PSO";
             groundPSODesc.pipelineLayout                = groundPSOLayout;
+            groundPSODesc.inputVertexAttribs            = vertexAttribs;
             groundPSODesc.vertexShader                  = groundShaders.vs;
             groundPSODesc.fragmentShader                = groundShaders.ps;
             groundPSODesc.renderPass                    = swapChain->GetRenderPass();
-            groundPSODesc.inputVertexAttribs            = vertexFormat.attributes;
             groundPSODesc.depth.testEnabled             = true;
             groundPSODesc.depth.writeEnabled            = true;
             groundPSODesc.rasterizer.cullMode           = LLGL::CullMode::Back;

@@ -60,8 +60,7 @@ public:
         ExampleBase { "LLGL Example: Query" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
+        CreateBuffers();
         CreatePipelines();
         CreateQueries();
 
@@ -72,33 +71,35 @@ public:
         LLGL::Log::Printf("press SPACE KEY to enable/disable animation of occluder\n");
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load models
         auto vertices = Load3DModel("Pyramid.obj");
         model0.numVertices = static_cast<std::uint32_t>(vertices.size());
 
         // Create vertex and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
     void CreatePipelines()
     {
+        shaderPipeline = LoadStandardShaderPipeline();
+
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(Settings@1):vert:frag"));
+
+        // Specify vertex format
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
 
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;

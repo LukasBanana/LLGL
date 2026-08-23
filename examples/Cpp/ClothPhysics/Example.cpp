@@ -52,8 +52,6 @@ class Example_ClothPhysics : public ExampleBase
     float                   stiffnessFactor                     = 1.0f; // Should be in [0, 1]
     const Gs::Vector3f      viewPos                             = { 0, -0.75f, -5 };
 
-    LLGL::VertexFormat      vertexFormat;
-
     LLGL::Buffer*           constantBuffer                      = nullptr;
     LLGL::Buffer*           indexBuffer                         = nullptr;
 
@@ -213,10 +211,10 @@ public:
 
     // Creates and initializes the particle buffer specified by <attrib>
     void CreateParticleBuffer(
-        ParticleAttribute               attrib,
-        LLGL::StorageBufferType         storageType,
-        const void*                     initialData     = nullptr,
-        const LLGL::VertexAttribute*    vertexAttrib    = nullptr)
+        ParticleAttribute       attrib,
+        LLGL::StorageBufferType storageType,
+        const void*             initialData     = nullptr,
+        std::uint32_t           vertexStride    = 0)
     {
         #ifdef ENABLE_STORAGE_TEXTURES
 
@@ -247,7 +245,7 @@ public:
 
         // Initialize binding flags
         long bindFlags = 0;
-        if (vertexAttrib != nullptr)
+        if (vertexStride != 0)
             bindFlags |= LLGL::BindFlags::VertexBuffer;
 
         if (storageType == LLGL::StorageBufferType::TypedBuffer)
@@ -259,10 +257,9 @@ public:
         LLGL::BufferDescriptor bufferDesc;
         {
             bufferDesc.size         = sizeof(Gs::Vector4f) * numClothVertices;
+            bufferDesc.stride       = vertexStride;
             bufferDesc.bindFlags    = bindFlags;
             bufferDesc.format       = LLGL::Format::RGBA32Float;
-            if (vertexAttrib != nullptr)
-                bufferDesc.vertexAttribs = { *vertexAttrib };
         }
         particleBuffers[attrib] = renderer->CreateBuffer(bufferDesc, initialData);
 
@@ -271,14 +268,6 @@ public:
 
     void CreateBuffers()
     {
-        // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
-        vertexFormat.attributes =
-        {
-            LLGL::VertexAttribute{ "pos",      LLGL::Format::RGBA32Float, /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, /*location:*/ 1, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 1 },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   /*location:*/ 2, /*offset:*/ 0, /*stride:*/ sizeof(ParticleBase), /*slot:*/ 2 },
-        };
-
         // Generate vertex and index data and store number of vertices and indices for draw commands
         std::vector<ParticleBase> verticesBase;
         std::vector<Gs::Vector4f> verticesPos;
@@ -296,12 +285,12 @@ public:
         constantBuffer = CreateConstantBuffer(sceneState);
 
         // Create particle buffers for each attribute
-        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::TypedBuffer,   verticesBase.data(), &(vertexFormat.attributes[2]));
+        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::TypedBuffer,   verticesBase.data(), sizeof(ParticleBase));
         CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
         CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
-        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data(), &(vertexFormat.attributes[0]));
+        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data(), sizeof(Gs::Vector4f));
         CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
-        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), &(vertexFormat.attributes[1]));
+        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), sizeof(Gs::Vector4f));
 
         #ifdef ENABLE_STORAGE_TEXTURES
 
@@ -361,9 +350,9 @@ public:
         // Create compute shader
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSForces",             "cs_5_0" }, {}, {}, g_shaderMacros);
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSStretchConstraints", "cs_5_0" }, {}, {}, g_shaderMacros);
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation",         "cs_5_0" }, {}, {}, g_shaderMacros);
+            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSForces",             "cs_5_0" }, g_shaderMacros);
+            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSStretchConstraints", "cs_5_0" }, g_shaderMacros);
+            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation",         "cs_5_0" }, g_shaderMacros);
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
@@ -453,29 +442,25 @@ public:
     void CreateGraphicsPipeline()
     {
         // Create graphics shader
-        std::vector<LLGL::VertexFormat> usedVertexFormats;
-        #ifndef ENABLE_STORAGE_TEXTURES
-        usedVertexFormats = { vertexFormat };
-        #endif
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, usedVertexFormats, {}, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, {}, g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, g_shaderMacros);
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.vert" }, usedVertexFormats, {}, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.frag" }, {}, g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.vert" }, g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.frag" }, g_shaderMacros);
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.450core.vert.spv" }, usedVertexFormats, {}, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.450core.frag.spv" }, {}, g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.450core.vert.spv" }, g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.450core.frag.spv" }, g_shaderMacros);
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" }, usedVertexFormats, {}, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" }, {}, g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" }, g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" }, g_shaderMacros);
         }
         else
             LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
@@ -499,11 +484,20 @@ public:
 
         #endif // /ENABLE_STORAGE_TEXTURES
 
+        // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "pos",      LLGL::Format::RGBA32Float, /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, /*location:*/ 1, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 1 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   /*location:*/ 2, /*offset:*/ 0, /*stride:*/ sizeof(ParticleBase), /*slot:*/ 2 },
+        };
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "Scene.PSO";
             pipelineDesc.pipelineLayout                 = graphicsLayout;
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = graphicsShaderPipeline.vs;
             pipelineDesc.fragmentShader                 = graphicsShaderPipeline.ps;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;

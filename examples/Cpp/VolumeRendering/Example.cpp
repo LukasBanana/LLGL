@@ -62,8 +62,8 @@ public:
         ExampleBase { "LLGL Example: VolumeRendering" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreateTextures();
         CreateSamplers();
         CreatePipelineLayouts();
@@ -82,46 +82,38 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         mesh = Load3DModel(vertices, "Suzanne.obj");
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         // Load shader programs
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
         }
         else
@@ -225,10 +217,18 @@ private:
 
     void CreatePipelines()
     {
+        // Specify vertex format
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for depth-range pass
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.renderPass                     = depthRangeRenderTarget->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
@@ -240,12 +240,14 @@ private:
                 pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineRangePass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineRangePass);
         }
 
         // Create graphics pipeline for Z-pre pass
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
@@ -257,12 +259,14 @@ private:
                 pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineZPrePass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineZPrePass);
         }
 
         // Create graphics pipeline for final scene rendering
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
@@ -281,6 +285,7 @@ private:
                 blendTarget.srcColor                        = LLGL::BlendOp::SrcAlpha;
             }
             pipelineFinalPass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineFinalPass);
         }
     }
 

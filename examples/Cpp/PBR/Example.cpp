@@ -73,8 +73,8 @@ public:
         LLGL::ValidateRenderingCaps(renderer->GetRenderingCaps(), caps);
 
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreatePipelines();
         CreateTextures();
         CreateResourceHeaps();
@@ -89,36 +89,26 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position",  LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",    LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "tangent",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "bitangent", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord",  LLGL::Format::RG32Float  });
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         meshes.push_back(Load3DModel(vertices, "UVSphere.obj"));
         meshes.push_back(Load3DModel(vertices, "WiredBox.obj"));
 
         // Create vertex and constant buffer
-        vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), vertexFormat);
+        vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), sizeof(TangentSpaceVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VSky", "vs_5_0" });
             shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PSky", "ps_5_0" });
 
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" }, { vertexFormat });
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" });
             shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PMesh", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
@@ -126,7 +116,7 @@ private:
             shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.vert" });
             shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.frag" });
 
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.vert" }, { vertexFormat });
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.vert" });
             shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
@@ -134,7 +124,7 @@ private:
             shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.450core.vert.spv" });
             shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.450core.frag.spv" });
 
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.450core.vert.spv" }, { vertexFormat });
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.450core.vert.spv" });
             shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
@@ -142,7 +132,7 @@ private:
             shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" });
             shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PSky", "1.1" });
 
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" }, { vertexFormat });
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" });
             shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PMesh", "1.1" });
         }
         else
@@ -163,10 +153,20 @@ private:
             )
         );
 
+        // Vertex attributes
+        const LLGL::DynamicVector<LLGL::VertexAttribute> vertexAttribs = LLGL::Parse(
+            "rgb32f(position),"
+            "rgb32f(normal),"
+            "rgb32f(tangent),"
+            "rgb32f(bitangent),"
+            "rg32f(texCoord),"
+        );
+
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
         {
             pipelineDescSky.debugName                       = "Sky.PSO";
+            pipelineDescSky.inputVertexAttribs              = vertexAttribs;
             pipelineDescSky.vertexShader                    = shaderPipelineSky.vs;
             pipelineDescSky.fragmentShader                  = shaderPipelineSky.ps;
             pipelineDescSky.pipelineLayout                  = layoutSky;
@@ -197,6 +197,7 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
         {
             pipelineDescMeshes.debugName                        = "Mesh.PSO";
+            pipelineDescMeshes.inputVertexAttribs               = vertexAttribs;
             pipelineDescMeshes.vertexShader                     = shaderPipelineMeshes.vs;
             pipelineDescMeshes.fragmentShader                   = shaderPipelineMeshes.ps;
             pipelineDescMeshes.pipelineLayout                   = layoutMeshes;

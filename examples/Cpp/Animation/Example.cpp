@@ -81,11 +81,11 @@ public:
         ExampleBase { "LLGL Example: Animation" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
+        CreateBuffers();
         CreateTextures();
         CreateSamplers();
         CreatePipelineLayouts();
-        CreatePipelines(vertexFormat);
+        CreatePipelines();
         CreateResourceHeaps();
 
         // Update vectors for projection
@@ -102,15 +102,8 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         meshStairsTop       = Load3DModel(vertices, "PenroseStairs-Top.obj");
@@ -121,10 +114,8 @@ private:
         meshStairsBottom.color  = { 1.0f, 1.0f, 0.0f, 0.0f };
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
     void CreateTextures()
@@ -154,12 +145,13 @@ private:
         );
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         // Create graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS");
             pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout                 = pipelineLayout;

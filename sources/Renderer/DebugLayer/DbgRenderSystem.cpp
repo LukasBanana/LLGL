@@ -143,6 +143,18 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
         auto* bufferDbg         = LLGL_CAST(DbgBuffer*, bufferArray[i]);
         bufferInstanceArray[i]  = &(bufferDbg->instance);
         bufferDbgArray[i]       = bufferDbg;
+
+        if (LLGL_DBG_SOURCE())
+        {
+            if (bufferDbg->desc.stride == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot create buffer array with buffer [%u] missing a default stride; they are fixed once created",
+                    i
+                );
+            }
+        }
     }
 
     /* Create native buffer and debug buffer */

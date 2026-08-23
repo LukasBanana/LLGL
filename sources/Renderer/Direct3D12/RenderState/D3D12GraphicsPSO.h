@@ -51,8 +51,6 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
 
     private:
 
-        void ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc);
-
         void CreateNativePSO(
             ID3D12Device*                       device,
             const D3D12PipelineLayout&          pipelineLayout,
@@ -81,11 +79,6 @@ class D3D12GraphicsPSO final : public D3D12RenderPSOBase
         #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
 
     private:
-
-        DynamicVector<D3D12_INPUT_ELEMENT_DESC>     inputElements_;
-        DynamicVector<D3D12_SO_DECLARATION_ENTRY>   soDeclEntries_;
-        DynamicVector<UINT>                         soBufferStrides_;
-        LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
 
         /*
         Secondary PSO if index format is undefined for strip topologies:

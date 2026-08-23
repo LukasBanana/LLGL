@@ -58,7 +58,8 @@ class Example_RenderTarget : public ExampleBase
 
     Gs::Matrix4f            renderTargetProj;
 
-    Gs::Vector2f            rotation                = { Gs::Deg2Rad(-20.0f), Gs::Deg2Rad(-30.0f) };
+    float                   outerCubeRotation       = Gs::Deg2Rad(-20.0f);
+    float                   innerCubeRotation       = Gs::Deg2Rad(-30.0f);
 
     #if ENABLE_CBUFFER_RANGE
     std::uint64_t           cbufferAlignment        = 0;
@@ -86,8 +87,8 @@ public:
         ExampleBase { "LLGL Example: RenderTarget" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
@@ -108,14 +109,8 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
         // Initialize vertices (scale texture-coordinates a little bit, to show the texture border)
         const bool isRightHanded = HasRightHandedProjection();
         auto vertices = GenerateTexturedCubeVertices(isRightHanded);
@@ -125,7 +120,7 @@ private:
             v.texCoord = (v.texCoord - Gs::Vector2f(0.5f))*(1.0f + borderSize) + Gs::Vector2f(0.5f);
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::Format::R32UInt);
 
         #if ENABLE_CBUFFER_RANGE
@@ -144,11 +139,9 @@ private:
         constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Settings)));
 
         #endif
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         LLGL::ShaderMacro psDefines[] =
         {
@@ -161,30 +154,30 @@ private:
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat });
-            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, {}, psDefines);
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" });
+            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, psDefines);
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             // Patch clipping origin in vertex shader in case the GL server does not support GL_ARB_clip_control
-            shaderPipeline.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
+            shaderPipeline.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Example.vert" });
             shaderPipeline.ps = LoadShader(
                 #ifdef __APPLE__
                 { LLGL::ShaderType::Fragment, "Example.410core.frag" },
                 #else
                 { LLGL::ShaderType::Fragment, "Example.frag" },
                 #endif
-                {}, psDefines
+                psDefines
             );
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" }, { vertexFormat });
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" }, { vertexFormat });
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
         }
     }
@@ -217,6 +210,7 @@ private:
         // Create graphics pipeline for swap-chain
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
@@ -395,7 +389,7 @@ private:
         const float projZAxis = GetProjectionZAxis();
 
         // Update model transformation with render-target projection
-        UpdateModelTransform(settings, renderTargetProj, rotation.y * projZAxis, Gs::Vector3f{ 1, 1, projZAxis });
+        UpdateModelTransform(settings, renderTargetProj, innerCubeRotation * projZAxis, Gs::Vector3f{ 1, 1, projZAxis });
 
         #if ENABLE_CUSTOM_MULTISAMPLING
 
@@ -414,16 +408,16 @@ private:
 
         #endif // ENABLE_CUSTOM_MULTISAMPLING
 
-        UpdateModelTransform(settings, projection, rotation.x * GetProjectionZAxis());
+        UpdateModelTransform(settings, projection, outerCubeRotation * GetProjectionZAxis());
     }
 
     void UpdateScene()
     {
         // Update scene animation (simple rotation)
         if (input.KeyPressed(LLGL::Key::LButton))
-            rotation.x += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+            outerCubeRotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
         if (input.KeyPressed(LLGL::Key::RButton))
-            rotation.y += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+            innerCubeRotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
 
         // Check if user wants to sage the render target texture to file
         if (input.KeyDown(LLGL::Key::F4))

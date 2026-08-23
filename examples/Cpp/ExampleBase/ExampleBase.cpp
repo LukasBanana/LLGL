@@ -751,12 +751,9 @@ void ExampleBase::MainLoop()
 
 //private
 LLGL::Shader* ExampleBase::LoadShaderInternal(
-    const ShaderDescWrapper&                    shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-    const LLGL::VertexFormat&                   streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines,
-    bool                                        patchClippingOrigin)
+    const ShaderDescWrapper&    shaderDesc,
+    const LLGL::ShaderMacro*    defines,
+    bool                        patchClippingOrigin)
 {
     LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
 
@@ -766,18 +763,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const std::string filename = shaderDesc.filename;
     #endif
 
-    std::vector<LLGL::Shader*>          shaders;
-    std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
-
-    // Store vertex input attributes
-    for (const auto& vtxFmt : vertexFormats)
-    {
-        vertexInputAttribs.insert(
-            vertexInputAttribs.end(),
-            vtxFmt.attributes.begin(),
-            vtxFmt.attributes.end()
-        );
-    }
+    std::vector<LLGL::Shader*> shaders;
 
     // Create shader
     LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
@@ -791,21 +777,6 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         // Always load shaders from default library (default.metallib) when compiling for iOS and macOS
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif
-
-        // Forward vertex and fragment attributes
-        switch (shaderDesc.type)
-        {
-            case LLGL::ShaderType::Vertex:
-            case LLGL::ShaderType::Geometry:
-                deviceShaderDesc.vertex.inputAttribs  = vertexInputAttribs;
-                deviceShaderDesc.vertex.outputAttribs = streamOutputFormat.attributes;
-                break;
-            case LLGL::ShaderType::Fragment:
-                deviceShaderDesc.fragment.outputAttribs = fragmentAttribs;
-                break;
-            default:
-                break;
-        }
 
         // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
         if (patchClippingOrigin && IsScreenOriginLowerLeft())
@@ -840,62 +811,40 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     return shader;
 }
 
-LLGL::Shader* ExampleBase::LoadShader(
-    const ShaderDescWrapper&                        shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const LLGL::ShaderMacro*                        defines)
+LLGL::Shader* ExampleBase::LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
 {
-    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ false);
+    return LoadShaderInternal(shaderDesc, defines, /*patchClippingOrigin:*/ false);
 }
 
-LLGL::Shader* ExampleBase::LoadShader(
-    const ShaderDescWrapper&                    shaderDesc,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines)
+LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
 {
-    return LoadShaderInternal(shaderDesc, {}, {}, fragmentAttribs, defines, /*patchClippingOrigin:*/ false);
+    return LoadShaderInternal(shaderDesc, defines, /*patchClippingOrigin:*/ true);
 }
 
-LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(
-    const ShaderDescWrapper&                        shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const LLGL::ShaderMacro*                        defines)
-{
-    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ true);
-}
-
-LLGL::Shader* ExampleBase::LoadStandardVertexShader(
-    const char*                                 entryPoint,
-    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-    const LLGL::ShaderMacro*                    defines)
+LLGL::Shader* ExampleBase::LoadStandardVertexShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
 {
     // Load shader program
     if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, vertexFormats, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, vertexFormats, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, defines);
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, vertexFormats, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, vertexFormats, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, defines);
     return nullptr;
 }
 
-LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
-    const char*                                 entryPoint,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines)
+LLGL::Shader* ExampleBase::LoadStandardFragmentShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
 {
     if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, fragmentAttribs, defines);
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, fragmentAttribs, defines);
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, defines);
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, fragmentAttribs, defines);
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, fragmentAttribs, defines);
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, defines);
     return nullptr;
 }
 
@@ -904,21 +853,21 @@ LLGL::Shader* ExampleBase::LoadStandardComputeShader(
     const LLGL::ShaderMacro*    defines)
 {
     if (Supported(LLGL::ShadingLanguage::GLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, defines);
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, {}, defines);
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, defines);
     return nullptr;
 }
 
-ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats)
+ShaderPipeline ExampleBase::LoadStandardShaderPipeline()
 {
     ShaderPipeline shaderPipeline;
     {
-        shaderPipeline.vs = LoadStandardVertexShader("VS", vertexFormats);
+        shaderPipeline.vs = LoadStandardVertexShader("VS");
         shaderPipeline.ps = LoadStandardFragmentShader("PS");
     }
     return shaderPipeline;
@@ -933,6 +882,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
             if (report->HasErrors())
             {
                 LLGL::Log::Errorf("%s", report->GetText());
+                Quit();
                 return true;
             }
         }
@@ -940,6 +890,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
     else
     {
         LLGL::Log::Errorf("null pointer passed to ReportPSOErrors()");
+        Quit();
         return true;
     }
     return false;
@@ -1179,6 +1130,12 @@ bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
 {
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
     return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
+}
+
+void ExampleBase::Quit()
+{
+    if (LLGL::Window* window = LLGL::CastTo<LLGL::Window>(&(swapChain->GetSurface())))
+        window->PostQuit();
 }
 
 const std::string& ExampleBase::GetModuleName()

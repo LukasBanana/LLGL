@@ -37,8 +37,6 @@ class Example_PostProcessing : public ExampleBase
     LLGL::ResourceHeap*     resourceHeapBlur    = nullptr;
     LLGL::ResourceHeap*     resourceHeapFinal   = nullptr;
 
-    LLGL::VertexFormat      vertexFormatScene;
-
     std::uint32_t           numSceneVertices    = 0;
 
     LLGL::Buffer*           vertexBufferScene   = nullptr;
@@ -118,16 +116,11 @@ public:
 
     void CreateBuffers()
     {
-        // Specify vertex format for scene
-        vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormatScene.SetStride(sizeof(TexturedVertex));
-
         // Create scene buffers
         auto sceneVertices = Load3DModel("WiredBox.obj");
         numSceneVertices = static_cast<std::uint32_t>(sceneVertices.size());
 
-        vertexBufferScene = CreateVertexBuffer(sceneVertices, vertexFormatScene);
+        vertexBufferScene = CreateVertexBuffer(sceneVertices, sizeof(TexturedVertex));
         constantBufferScene = CreateConstantBuffer(sceneSettings);
 
         // Create empty vertex buffer for post-processors,
@@ -148,7 +141,7 @@ public:
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormatScene });
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
             shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
 
             // Load blur shader program
@@ -162,7 +155,7 @@ public:
         else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             // Load scene shader program
-            shaderPipelineScene.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormatScene });
+            shaderPipelineScene.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Scene.vert" });
             shaderPipelineScene.ps = LoadShader                      ({ LLGL::ShaderType::Fragment, "Scene.frag" });
 
             // Load blur shader program
@@ -176,7 +169,7 @@ public:
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormatScene });
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" });
             shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
 
             // Load blur shader program
@@ -190,8 +183,8 @@ public:
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormatScene });
-            shaderPipelineScene.ps = LoadShader( { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
+            shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
 
             // Load blur shader program
             shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VPP",   "1.1" });
@@ -342,9 +335,17 @@ public:
 
     void CreatePipelines()
     {
+        // Specify vertex format for scene
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDescScene;
         {
+            pipelineDescScene.inputVertexAttribs            = vertexAttribs;
             pipelineDescScene.vertexShader                  = shaderPipelineScene.vs;
             pipelineDescScene.fragmentShader                = shaderPipelineScene.ps;
             pipelineDescScene.renderPass                    = renderTargetScene->GetRenderPass();

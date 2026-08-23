@@ -147,14 +147,14 @@ static D3D12_INDEX_BUFFER_STRIP_CUT_VALUE GetIndexFormatStripCutValue(Format for
     return (format == Format::R16UInt ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF);
 }
 
-void D3D12GraphicsPSO::ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc)
+static void ReserveVertexAttribs(const GraphicsPipelineDescriptor& desc, LinearStringContainer& outVertexAttribNames)
 {
     /* Reserve memory for the input element names */
-    vertexAttribNames_.Clear();
+    outVertexAttribNames.Clear();
     for (const VertexAttribute& attr : desc.inputVertexAttribs)
-        vertexAttribNames_.Reserve(attr.name.size());
+        outVertexAttribNames.Reserve(attr.name.size());
     for (const VertexAttribute& attr : desc.outputVertexAttribs)
-        vertexAttribNames_.Reserve(attr.name.size());
+        outVertexAttribNames.Reserve(attr.name.size());
 }
 
 /*
@@ -299,15 +299,21 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Convert depth-stencil state */
     D3DConvertDepthStencilDesc(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
-    ReserveVertexAttribs(desc);
-    BuildInputLayout(desc.inputVertexAttribs, inputElements_, vertexAttribNames_);
-    BuildStreamOutput(desc.outputVertexAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
+    /* Convert input assembly state */
+    DynamicVector<D3D12_INPUT_ELEMENT_DESC> inputElements;
+    DynamicVector<D3D12_SO_DECLARATION_ENTRY> soDeclEntries;
+    DynamicVector<UINT> soBufferStrides;
+    LinearStringContainer vertexAttribNames;
+
+    ReserveVertexAttribs(desc, vertexAttribNames);
+    BuildInputLayout(desc.inputVertexAttribs, inputElements, vertexAttribNames);
+    BuildStreamOutput(desc.outputVertexAttribs, soDeclEntries, soBufferStrides, vertexAttribNames);
 
     /* Set input layout */
-    if (!inputElements_.empty())
+    if (!inputElements.empty())
     {
-        stateDesc.InputLayout.pInputElementDescs = inputElements_.data();
-        stateDesc.InputLayout.NumElements        = static_cast<UINT>(inputElements_.size());
+        stateDesc.InputLayout.pInputElementDescs = inputElements.data();
+        stateDesc.InputLayout.NumElements        = static_cast<UINT>(inputElements.size());
     }
     else
     {
@@ -316,12 +322,12 @@ void D3D12GraphicsPSO::CreateNativePSO(
     }
 
     /* Set stream output */
-    if (!soDeclEntries_.empty())
+    if (!soDeclEntries.empty())
     {
-        stateDesc.StreamOutput.pSODeclaration   = soDeclEntries_.data();
-        stateDesc.StreamOutput.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
-        stateDesc.StreamOutput.pBufferStrides   = soBufferStrides_.data();
-        stateDesc.StreamOutput.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
+        stateDesc.StreamOutput.pSODeclaration   = soDeclEntries.data();
+        stateDesc.StreamOutput.NumEntries       = static_cast<UINT>(soDeclEntries.size());
+        stateDesc.StreamOutput.pBufferStrides   = soBufferStrides.data();
+        stateDesc.StreamOutput.NumStrides       = static_cast<UINT>(soBufferStrides.size());
         stateDesc.StreamOutput.RasterizedStream = 0;
     }
     else

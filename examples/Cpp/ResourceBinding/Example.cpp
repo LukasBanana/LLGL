@@ -56,10 +56,9 @@ public:
     {
         // Create all graphics objects
         LoadModels();
-        auto vertexFormat = CreateBuffers();
+        CreateBuffers();
         CreateTextures();
-        CreatePipelines(vertexFormat);
-        const auto caps = renderer->GetRenderingCaps();
+        CreatePipelines();
 
         // Update vectors for projection
         lightVec.z *= GetProjectionZAxis();
@@ -92,22 +91,15 @@ private:
         LoadModel("UVSphere.obj", Gs::Vector3f{ +1.5f, 0.0f, 5.0f }, 2, /*scale:*/ 0.5f);
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float, /*location:*/ 0 });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 2 });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.debugName      = "Vertices";
-            vertexBufferDesc.size           = sizeof(TexturedVertex) * vertices.size();
-            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexAttribs  = vertexFormat.attributes;
+            vertexBufferDesc.debugName  = "Vertices";
+            vertexBufferDesc.size       = sizeof(TexturedVertex) * vertices.size();
+            vertexBufferDesc.stride     = sizeof(TexturedVertex);
+            vertexBufferDesc.bindFlags  = LLGL::BindFlags::VertexBuffer;
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
 
@@ -129,8 +121,6 @@ private:
             transformBufferDesc.bindFlags   = LLGL::BindFlags::Sampled;
         }
         transformBuffer = renderer->CreateBuffer(transformBufferDesc);
-
-        return vertexFormat;
     }
 
     void CreateTextures()
@@ -140,10 +130,10 @@ private:
         colorMaps[2] = LoadTexture("TilesBlue512.jpg");
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VSMain", { vertexFormat });
+        vertexShader    = LoadStandardVertexShader("VSMain");
         fragmentShader  = LoadStandardFragmentShader("PSMain");
 
         // Create pipeline layout
@@ -217,6 +207,7 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "PSO";
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = vertexShader;
             pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;

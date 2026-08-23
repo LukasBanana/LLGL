@@ -57,8 +57,7 @@ public:
         ExampleBase { "LLGL Example: Texturing" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
+        CreateBuffers();
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
@@ -75,26 +74,20 @@ public:
         ::fflush(stdout);
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
         // Create vertex and index buffers
-        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), vertexFormat);
+        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), sizeof(TexturedVertex));
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::Format::R32UInt);
 
         // Create constant buffer
         sceneBuffer = CreateConstantBuffer(scene);
-
-        return vertexFormat;
     }
 
     void CreatePipelines()
     {
+        shaderPipeline = LoadStandardShaderPipeline();
+
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
@@ -114,6 +107,7 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;

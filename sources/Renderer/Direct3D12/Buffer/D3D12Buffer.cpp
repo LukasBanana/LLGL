@@ -392,10 +392,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
 
     /* Determine actual resource size */
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-    {
         internalSize_   = bufferSize_ + g_soBufferFillSizeLen;
-        stride_         = (desc.vertexAttribs.empty() ? desc.stride : desc.vertexAttribs[0].stride);
-    }
     else
         internalSize_ = bufferSize_;
 
@@ -471,12 +468,16 @@ void D3D12Buffer::CreateIntermediateUAVBuffer()
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for buffer subresource UAV");
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)
 {
     vertexBufferView_.BufferLocation    = GetNative()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes       = static_cast<UINT>(GetBufferSize());
     vertexBufferView_.StrideInBytes     = (desc.vertexAttribs.empty() ? desc.stride : desc.vertexAttribs.front().stride);
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 {

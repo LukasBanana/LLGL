@@ -87,6 +87,9 @@ struct CommandBufferFlags
         - Compute commands (CommandBuffer::Dispatch, CommandBuffer::DispatchIndirect)
         \see CommandBuffer::Execute
         \see CommandBufferDescriptor::renderPass
+        \note This is not fully supported in some backends and should only be used for experimental use!
+        \todo Redefine what this flag should accomplish and how it should translate to D3D12 and Vulkan backends
+        as their concepts of 'command list bundles' and 'secondary command buffers' respectively are fundamentally different.
         */
         Secondary       = (1 << 0),
 

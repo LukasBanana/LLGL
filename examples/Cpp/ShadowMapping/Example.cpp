@@ -57,8 +57,8 @@ public:
     {
         // Create all graphics objects
         CreateShadowMap();
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreatePipelineLayouts();
         CreatePipelines();
         CreateResourceHeaps();
@@ -78,14 +78,8 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         meshes.push_back(Load3DModel(vertices, "SimpleRoom.obj"));
@@ -94,41 +88,39 @@ private:
         meshes[1].color = { 0.4f, 0.5f, 1.0f };
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
-            vsShadowMap = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex, "ShadowMap.vert" }, { vertexFormat });
+            vsShadowMap = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex, "ShadowMap.vert" });
 
-            vsScene     = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormat });
+            vsScene     = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" });
             fsScene     = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" }, { vertexFormat });
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" });
 
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" }, { vertexFormat });
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" });
 
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" }, { vertexFormat });
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" });
 
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
         }
         else
@@ -220,10 +212,18 @@ private:
 
     void CreatePipelines()
     {
+        // Specify vertex format
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for shadow-map rendering
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs                     = vertexAttribs;
                 pipelineDesc.vertexShader                           = vsShadowMap;
                 pipelineDesc.renderPass                             = shadowMapRenderTarget->GetRenderPass();
                 pipelineDesc.pipelineLayout                         = pipelineLayoutShadowMap;
@@ -243,6 +243,7 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();

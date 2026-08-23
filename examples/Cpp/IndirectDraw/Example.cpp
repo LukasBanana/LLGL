@@ -16,8 +16,6 @@ class Example_IndirectDraw : public ExampleBase
 
     static const std::uint32_t maxNumSceneObjects = 64;
 
-    LLGL::VertexFormat      vertexFormat[2];
-
     LLGL::Buffer*           perVertexDataBuf        = nullptr;
     LLGL::Buffer*           perInstanceDataBuf      = nullptr;
     LLGL::BufferArray*      vertexBufferArray       = nullptr;
@@ -43,11 +41,17 @@ class Example_IndirectDraw : public ExampleBase
     }
     sceneState;
 
+    struct Vertex
+    {
+        float           coord[2];
+        std::uint8_t    color[4];
+    };
+
     struct SceneObject
     {
-        float rotation[2][2];
-        float position[2];
-        float _pad0[2];
+        float           rotation[2][2];
+        float           position[2];
+        float           _pad0[2];
     };
 
 public:
@@ -68,26 +72,6 @@ public:
 
     void CreateBuffers()
     {
-        // Specify vertex format
-        struct Vertex
-        {
-            float           coord[2];
-            std::uint8_t    color[4];
-        };
-
-        vertexFormat[0].attributes =
-        {
-            LLGL::VertexAttribute{ "coord", LLGL::Format::RG32Float,  /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "color", LLGL::Format::RGBA8UNorm, /*location:*/ 1, /*offset:*/ 8, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-        };
-
-        vertexFormat[1].attributes =
-        {
-            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 0, LLGL::Format::RG32Float, /*location:*/ 2, /*offset:*/  0, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 1, LLGL::Format::RG32Float, /*location:*/ 3, /*offset:*/  8, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "position",                       LLGL::Format::RG32Float, /*location:*/ 4, /*offset:*/ 16, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-        };
-
         // Define vertex buffer data
         auto CircleX = [](float a) { return std::sin(a*Gs::pi/180.0f); };
         auto CircleY = [](float a) { return std::cos(a*Gs::pi/180.0f); };
@@ -109,21 +93,21 @@ public:
         // Create vertex buffer
         LLGL::BufferDescriptor perVertexDataDesc;
         {
-            perVertexDataDesc.debugName     = "Vertices";
-            perVertexDataDesc.size          = sizeof(vertices);
-            perVertexDataDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
-            perVertexDataDesc.vertexAttribs = vertexFormat[0].attributes;
+            perVertexDataDesc.debugName = "Vertices";
+            perVertexDataDesc.size      = sizeof(vertices);
+            perVertexDataDesc.stride    = sizeof(Vertex);
+            perVertexDataDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         perVertexDataBuf = renderer->CreateBuffer(perVertexDataDesc, vertices);
 
         // Create instance buffer
         LLGL::BufferDescriptor perInstanceDataDesc;
         {
-            perInstanceDataDesc.debugName       = "Instances";
-            perInstanceDataDesc.size            = sizeof(SceneObject) * maxNumSceneObjects;
-            perInstanceDataDesc.bindFlags       = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
-            perInstanceDataDesc.vertexAttribs   = vertexFormat[1].attributes;
-            perInstanceDataDesc.format          = LLGL::Format::RGBA32Float;
+            perInstanceDataDesc.debugName   = "Instances";
+            perInstanceDataDesc.size        = sizeof(SceneObject) * maxNumSceneObjects;
+            perInstanceDataDesc.stride      = sizeof(SceneObject);
+            perInstanceDataDesc.bindFlags   = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
+            perInstanceDataDesc.format      = LLGL::Format::RGBA32Float;
         }
         perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc);
 
@@ -196,22 +180,22 @@ public:
         // Create graphics shader
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
             graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert.spv" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert.spv" });
             graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" });
             graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" });
             graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
         }
         else
@@ -224,11 +208,23 @@ public:
             )
         );
 
+        // Input vertex attributes (references two vertex buffer slots)
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "coord", LLGL::Format::RG32Float,  /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "color", LLGL::Format::RGBA8UNorm, /*location:*/ 1, /*offset:*/ 8, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+
+            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 0, LLGL::Format::RG32Float, /*location:*/ 2, /*offset:*/  0, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 1, LLGL::Format::RG32Float, /*location:*/ 3, /*offset:*/  8, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "position",                       LLGL::Format::RG32Float, /*location:*/ 4, /*offset:*/ 16, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+        };
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "GraphicsPSO";
             pipelineDesc.pipelineLayout                 = graphicsLayout;
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = graphicsVertexShader;
             pipelineDesc.fragmentShader                 = graphicsFragmentShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;

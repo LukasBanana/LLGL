@@ -211,6 +211,16 @@ class LLGL_EXPORT SmallVector
         {
         }
 
+        /**
+        \brief Initializes the vector with a copy of all elements from the specified data with a fixed size array.
+        \remarks The size of this container will be equal to the template parameter \c <N>.
+        */
+        template <std::size_t N>
+        SmallVector(const T (&data)[N]) :
+            SmallVector { std::begin(data), std::end(data) }
+        {
+        }
+
         //! Initializes the vector with the specified number of elements and initial default value.
         explicit SmallVector(size_type count) :
             SmallVector {}

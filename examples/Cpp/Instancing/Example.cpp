@@ -51,6 +51,19 @@ class Example_Instancing : public ExampleBase
     }
     settings;
 
+    struct Vertex
+    {
+        float           position[3];
+        float           texCoord[2];
+    };
+
+    struct Instance
+    {
+        LLGL::ColorRGBf color;      // Instance color
+        float           arrayLayer; // Array texture layer
+        Gs::Matrix4f    wMatrix;    // World matrix
+    };
+
 public:
 
     Example_Instancing() :
@@ -59,11 +72,10 @@ public:
         UpdateAnimation();
 
         // Create all graphics objects
-        auto vertexFormats = CreateBuffers();
+        CreateBuffers();
         CreateTextures();
         CreateSamplers();
-        CreatePipelines(vertexFormats);
-        const auto caps = renderer->GetRenderingCaps();
+        CreatePipelines();
 
         // Set debugging names
         arrayTexture->SetDebugName("SceneTexture");
@@ -88,7 +100,7 @@ private:
         return a + (b - a) * rnd;
     }
 
-    std::vector<LLGL::VertexFormat> CreateBuffers()
+    void CreateBuffers()
     {
         const float projZAxis = GetProjectionZAxis();
 
@@ -96,12 +108,7 @@ private:
         static const float grassSize    = 100.0f;
         static const float grassTexSize = 40.0f;
 
-        struct Vertex
-        {
-            float position[3];
-            float texCoord[2];
-        }
-        vertexData[] =
+        Vertex vertexData[] =
         {
             // Vertices for plants plane
             { { -1, 0, 0 }, { 0, 1 } },
@@ -117,13 +124,6 @@ private:
         };
 
         // Initialize per-instance data (use dynamic container to avoid a stack overflow)
-        struct Instance
-        {
-            LLGL::ColorRGBf color;      // Instance color
-            float           arrayLayer; // Array texture layer
-            Gs::Matrix4f    wMatrix;    // World matrix
-        };
-
         std::vector<Instance> instanceData(numPlantInstances + 1);
 
         for (std::size_t i = 0; i < numPlantInstances; ++i)
@@ -156,25 +156,6 @@ private:
             Gs::Scale(instance.wMatrix, Gs::Vector3f(Random(0.7f, 1.5f)));
         }
 
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormatPerVertex;
-        vertexFormatPerVertex.attributes =
-        {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ offsetof(Vertex, texCoord), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-        };
-
-        LLGL::VertexFormat vertexFormatPerInstance;
-        vertexFormatPerInstance.attributes =
-        {
-            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  offsetof(Instance, color),        /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 2, LLGL::Format::RGBA32Float, /*location:*/ 6, /*offset:*/  offsetof(Instance, wMatrix) + 32, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-        };
-
         // Initialize last instance (for grass plane)
         auto& grassPlane = instanceData[numPlantInstances];
         grassPlane.arrayLayer = static_cast<float>(numPlantImages + 1);
@@ -182,20 +163,20 @@ private:
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor perVertexDataDesc;
         {
-            perVertexDataDesc.debugName     = "Vertices";
-            perVertexDataDesc.size          = sizeof(vertexData);
-            perVertexDataDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
-            perVertexDataDesc.vertexAttribs = vertexFormatPerVertex.attributes;
+            perVertexDataDesc.debugName = "Vertices";
+            perVertexDataDesc.size      = sizeof(vertexData);
+            perVertexDataDesc.stride    = sizeof(Vertex);
+            perVertexDataDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         perVertexDataBuf = renderer->CreateBuffer(perVertexDataDesc, vertexData);
 
         // Create buffer for per-instance data
         LLGL::BufferDescriptor perInstanceDataDesc;
         {
-            perInstanceDataDesc.debugName       = "Instances";
-            perInstanceDataDesc.size            = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
-            perInstanceDataDesc.bindFlags       = LLGL::BindFlags::VertexBuffer;
-            perInstanceDataDesc.vertexAttribs   = vertexFormatPerInstance.attributes;
+            perInstanceDataDesc.debugName   = "Instances";
+            perInstanceDataDesc.size        = sizeof(Instance) * instanceData.size();
+            perInstanceDataDesc.stride      = sizeof(Instance);
+            perInstanceDataDesc.bindFlags   = LLGL::BindFlags::VertexBuffer;
         }
         perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc, instanceData.data());
 
@@ -205,8 +186,6 @@ private:
 
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(settings);
-
-        return { vertexFormatPerVertex, vertexFormatPerInstance };
     }
 
     void CreateTextures()
@@ -287,10 +266,10 @@ private:
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreatePipelines(const std::vector<LLGL::VertexFormat>& vertexFormats)
+    void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VS", vertexFormats);
+        vertexShader    = LoadStandardVertexShader("VS");
         fragmentShader  = LoadStandardFragmentShader("PS");
 
         // Create pipeline layout
@@ -313,9 +292,26 @@ private:
         };
         resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
 
+        // Specify vertex formats
+        LLGL::VertexAttribute vertexAttribs[] =
+        {
+            // Per-vertex attributes
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ offsetof(Vertex, texCoord), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+
+            // Per-instance attributes
+            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  offsetof(Instance, color),        /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 2, LLGL::Format::RGBA32Float, /*location:*/ 6, /*offset:*/  offsetof(Instance, wMatrix) + 32, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+        };
+
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = vertexShader;
             pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;

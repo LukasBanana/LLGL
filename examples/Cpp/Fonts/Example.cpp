@@ -98,8 +98,8 @@ public:
         ExampleBase { "LLGL Example: Fonts" }
     {
         // Create all graphics objects
-        const LLGL::VertexFormat vertexFormat = CreateBuffers();
-        CreatePipelines(vertexFormat);
+        CreateBuffers();
+        CreatePipelines();
         swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
 
         // Create all fonts atlases
@@ -111,30 +111,22 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG16SInt   });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG16SInt   });
-        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
-
         // Allocate CPU local array for glyph batch (2 triangles with 3 vertices each = 6 vertices per glyph)
         vertexBatch.resize(maxGlyphsPerBatch*6);
 
         // Create vertex buffer for a batch of glyphs
         LLGL::BufferDescriptor bufferDesc;
         {
-            bufferDesc.size             = vertexBatch.size() * sizeof(Vertex);
-            bufferDesc.bindFlags        = LLGL::BindFlags::VertexBuffer;
-            bufferDesc.vertexAttribs    = vertexFormat.attributes;
+            bufferDesc.size         = vertexBatch.size() * sizeof(Vertex);
+            bufferDesc.bindFlags    = LLGL::BindFlags::VertexBuffer;
+            bufferDesc.stride       = sizeof(Vertex);
         }
         vertexBuffer = renderer->CreateBuffer(bufferDesc);
-
-        return vertexFormat;
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
@@ -152,7 +144,8 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rg16i(position),rg16i(texCoord),rgba8unorm(color)");
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS");
             pipelineDesc.fragmentShader                 = LoadStandardFragmentShader();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
