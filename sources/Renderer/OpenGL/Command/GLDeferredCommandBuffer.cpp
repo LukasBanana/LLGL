@@ -1011,9 +1011,9 @@ void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t 
 
 void GLDeferredCommandBuffer::DrawStreamOutput()
 {
-    LLGL_FLUSH_DRAW_COMMAND_STATES();
     if (GLBufferWithXFB* bufferWithXfbGL = GetRenderState().boundBufferWithFxb)
     {
+        LLGL_FLUSH_DRAW_COMMAND_STATES();
         #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         if (HasExtension(GLExt::ARB_transform_feedback2))
         {

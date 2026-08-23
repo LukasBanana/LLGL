@@ -36,14 +36,9 @@ void GLVertexArrayCache::Clear()
 
 GLSharedContextVertexArray* GLVertexArrayCache::GetVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout)
 {
+    /* Always return a VAO, even when there are no input attributes since GL always needs a bound VAO for drawing */
     const ArrayView<GLVertexAttribute>  attribs = vertexInputLayout.GetAttribs();
     const ArrayView<GLBuffer*>          buffers = bufferInputLayout.GetBuffers();
-
-    if (attribs.empty() || vertexInputLayout.GetHash() == 0 ||
-        buffers.empty() || bufferInputLayout.GetHash() == 0)
-    {
-        return nullptr;
-    }
 
     /* Get combination of vertex input and buffer input hashes */
     std::size_t combinedHash = 0;

@@ -1007,6 +1007,12 @@ static void IncludeImpliedExtensions(GLExtensionMap& extensions)
     };
     ImplyExtension("GL_ARB_gpu_shader5", { "GL_ARB_geometry_shader4" });
     ImplyExtension("GL_ARB_occlusion_query2", { "GL_ARB_occlusion_query" });
+
+    /*
+    This is a workaround, GL_ARB_transform_feedback2 does *not* imply support for GL_EXT_transform_feedback,
+    but since this extension is already loaded without the EXT suffixes, simply enable this extension
+    */
+    ImplyExtension("GL_ARB_transform_feedback2", { "GL_EXT_transform_feedback" });
 }
 
 #endif // /__APPLE__

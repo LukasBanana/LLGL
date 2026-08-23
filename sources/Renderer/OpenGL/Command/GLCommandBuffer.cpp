@@ -23,9 +23,14 @@ namespace LLGL
 
 void GLCommandBuffer::ResetRenderState()
 {
+    /* Reset pointers to bound pipeline objects */
     renderState_.boundPipelineLayout    = nullptr;
     renderState_.boundPipelineState     = nullptr;
     renderState_.boundBufferWithFxb     = nullptr;
+
+    /* Reset vertex input state to ensure VAOs are bound correctly */
+    vertexInputState_.vertexInputLayout.Reset();
+    vertexInputState_.bufferInputLayout.Reset();
 }
 
 void GLCommandBuffer::SetIndexFormat(bool indexType16Bits, std::uint64_t offset)

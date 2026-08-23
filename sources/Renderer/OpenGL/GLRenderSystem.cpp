@@ -697,6 +697,7 @@ static void GLQueryRendererInfo(RendererInfo& info)
 
     const std::set<const char*>& extensionNames = GetLoadedOpenGLExtensions();
     info.extensionNames = std::vector<UTF8String>(extensionNames.begin(), extensionNames.end());
+    std::sort(info.extensionNames.begin(), info.extensionNames.end());
 
     GLQueryPipelineCacheID(info.pipelineCacheID);
 }

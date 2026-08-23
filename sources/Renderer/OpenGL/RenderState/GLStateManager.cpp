@@ -1757,6 +1757,9 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
     }
 }
 
+//TODO:
+// `GL_RASTERIZER_DISCARD` must also be taken into account! From OpenGL man pages:
+// "GL_RASTERIZER_DISCARD [...] when enabled, glClear, glClearBufferData, glClearBufferSubData, glClearTexImage, and glClearTexSubImage are ignored."
 void GLStateManager::Clear(long flags)
 {
     GLFramebufferClearState clearState;

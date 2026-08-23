@@ -1090,7 +1090,6 @@ void GLShaderProgram::BuildProgramBinary(
     /* Build input layout for vertex shader */
     LinearStringContainer attribNames;
 
-#if 0
     if (!inputVertexAttribs.empty())
     {
         std::vector<GLShaderAttribute> inputGLVertexAttribs;
@@ -1098,7 +1097,6 @@ void GLShaderProgram::BuildProgramBinary(
         GLShaderProgram::BindAttribLocations(GetID(), inputGLVertexAttribs);
     }
     else
-#endif
     {
         // Deprecated
         if (const GLShader* vs = orderedShaders.vertexShader)
@@ -1110,7 +1108,6 @@ void GLShaderProgram::BuildProgramBinary(
         GLShaderProgram::BindFragDataLocations(GetID(), fs->GetFragmentAttribs());
 
     /* Build transform feedback varyings for vertex or geometry shader and link program */
-#if 0
     if (!outputVertexAttribs.empty())
     {
         std::vector<const char*> varyings;
@@ -1118,7 +1115,6 @@ void GLShaderProgram::BuildProgramBinary(
         GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
     }
     else
-#endif
     {
         // Deprecated
         const GLShader* shaderWithVaryings = nullptr;
