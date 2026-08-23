@@ -826,7 +826,9 @@ void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& c
     }
 }
 
-void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut)
+LLGL_DEPRECATED_IGNORE_PUSH()
+
+void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* outFormatSize)
 {
     /* Validate flags */
     ValidateBindFlags(bufferDesc.bindFlags, bufferDesc.format, ResourceType::Buffer);
@@ -841,20 +843,49 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
 
     std::uint32_t formatSize = 0;
 
-    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0 && !bufferDesc.vertexAttribs.empty())
+    const std::string bufferLabel = (bufferDesc.debugName != nullptr && *bufferDesc.debugName != '\0' ? " '" + std::string(bufferDesc.debugName) + '\'' : "");
+
+    // Deprecated {
+    if (!bufferDesc.vertexAttribs.empty())
     {
-        /* Validate all vertex attributes have the same binding slot */
-        if (bufferDesc.vertexAttribs.size() >= 2)
+        LLGL_DBG_WARN(
+            WarningType::DeprecatedFeature,
+            "`LLGL::BufferDescriptor::vertexAttribs` used for buffer%s, but is deprecated since 0.05b; Use `LLGL::BufferDescriptor::stride` and `LLGL::GraphicsPipelineDescriptor::inputVertexAttribs` instead!",
+            bufferLabel.c_str()
+        );
+        if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) == 0)
         {
-            for (std::size_t i = 0; i + 1 < bufferDesc.vertexAttribs.size(); ++i)
-                ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "`LLGL::BufferDescriptor::vertexAttribs` used for buffer%s that is *not* declared as a vertex buffer (i.e. LLGL::BindFlags::VertexBuffer)`",
+                bufferLabel.c_str()
+            );
+        }
+    }
+
+    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
+    {
+        if (!bufferDesc.vertexAttribs.empty())
+        {
+            /* Validate all vertex attributes have the same binding slot */
+            if (bufferDesc.vertexAttribs.size() >= 2)
+            {
+                for (std::size_t i = 0; i + 1 < bufferDesc.vertexAttribs.size(); ++i)
+                    ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
+            }
+            formatSize = bufferDesc.vertexAttribs.front().stride;
+        }
+        else
+        {
+            /* Take format size from stride */
+            formatSize = bufferDesc.stride;
         }
 
         /* Validate buffer size for specified vertex format, unless it's also used for as index buffer */
-        formatSize = bufferDesc.vertexAttribs.front().stride;
         if (formatSize > 0 && bufferDesc.size % formatSize != 0 && (bufferDesc.bindFlags & BindFlags::IndexBuffer) == 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of %u %s", formatSize, ToByteLabel(formatSize));
     }
+    // } Deprecated
 
     if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
     {
@@ -903,9 +934,11 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
         );
     }
 
-    if (formatSizeOut)
-        *formatSizeOut = formatSize;
+    if (outFormatSize)
+        *outFormatSize = formatSize;
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void DbgRenderSystem::ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs)
 {
@@ -1640,6 +1673,34 @@ static bool IsStreamOutputCompatibleFormat(const Format format)
 
 void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 {
+    if (!shaderDesc.vertex.outputAttribs.empty())
+    {
+        const std::string shaderLabel =
+        (
+            shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
+                ? " '" + std::string(shaderDesc.debugName) + "'"
+                : ""
+        );
+
+        LLGL_DBG_WARN(
+            WarningType::DeprecatedFeature,
+            "`LLGL::ShaderDescriptor::vertex` used for shader%s output attributes, but is deprecated since 0.05b; Use `LLGL::GraphicsPipelineDescriptor::outputVertexAttribs` instead!",
+            shaderLabel.c_str()
+        );
+        ValidateVertexOutputAttribs(shaderDesc.vertex.outputAttribs, "shader", shaderDesc.debugName);
+    }
+}
+
+void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
+{
+    const std::string labelPrefix =
+    (
+        inputName != nullptr && *inputName != '\0' &&
+        debugName != nullptr && *debugName != '\0'
+            ? std::string(inputName) + " '" + std::string(debugName) + "': "
+            : ""
+    );
+
     /* Validate shader output-stream attributes */
     std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
     std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>> attribSVToIndexMap;
@@ -1651,20 +1712,14 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
     };
     BufferStrideRef bufferStridesRefs[LLGL_MAX_NUM_SO_BUFFERS];
 
-    const std::string shaderLabelPrefix =
-    (
-        shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
-            ? "shader '" + std::string(shaderDesc.debugName) + "': "
-            : ""
-    );
     std::string attribLabel;
 
-    for_range(i, shaderDesc.vertex.outputAttribs.size())
+    for_range(i, vertexAttribs.size())
     {
-        const VertexAttribute& attrib = shaderDesc.vertex.outputAttribs[i];
+        const VertexAttribute& attrib = vertexAttribs[i];
 
         /* Construct label for each attribute */;
-        attribLabel = shaderLabelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
+        attribLabel = labelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
         if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
             attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
 
@@ -2180,6 +2235,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
+    ValidateVertexOutputAttribs(pipelineStateDesc.outputVertexAttribs, "PSO", pipelineStateDesc.debugName);
 
     if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
     {

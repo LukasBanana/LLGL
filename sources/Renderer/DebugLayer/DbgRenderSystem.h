@@ -65,7 +65,7 @@ class DbgRenderSystem final : public RenderSystem
 
         void ValidateCommandBufferDesc(const CommandBufferDescriptor& commandBufferDesc);
 
-        void ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut = nullptr);
+        void ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* outFormatSize = nullptr);
         void ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs);
         void ValidateBufferSize(std::uint64_t size);
         void ValidateConstantBufferSize(std::uint64_t size);
@@ -94,6 +94,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment);
 
         void ValidateShaderDesc(const ShaderDescriptor& shaderDesc);
+        void ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName = nullptr, const char* debugName = nullptr);
 
         void ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor& pipelineLayoutDesc);
 

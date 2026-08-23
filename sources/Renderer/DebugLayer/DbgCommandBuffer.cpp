@@ -2869,7 +2869,7 @@ void DbgCommandBuffer::AssertVertexBufferBound()
         for_range(i, bindings_.numVertexBuffers)
         {
             /* Check if buffer is initialized (ignore empty buffers) */
-            auto buffer = bindings_.vertexBuffers[i];
+            DbgBuffer* buffer = bindings_.vertexBuffers[i];
             if (buffer->elements > 0 && !buffer->initialized)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot %u", i);
             if (buffer->IsMappedForCPUAccess())
