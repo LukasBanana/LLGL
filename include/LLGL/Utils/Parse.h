@@ -266,6 +266,27 @@ class LLGL_EXPORT ParseContext
         */
         TextureSwizzleRGBA AsTextureSwizzleRGBA() const;
 
+        /**
+        \brief Generates a basic vertex attribute descriptor from this parse context. This only includes format and identifier.
+        \remarks The syntax for this conversion is as follows:
+        - Attribute type translates to Format, e.g. 'rgb32float' translates to RGB32Float.
+        - Followed by the name in parenthesis, e.g. '(position)'.
+        \remarks Format identifiers can be abbreviated as follows:
+        - \c 'float' can be abbreviated with \c 'f', e.g. \c 'rgb32float' as \c 'rgb32f'.
+        - \c 'sint' can be abbreviated with \c 'i', e.g. \c 'rgba16sint' as \c 'rgba16i'.
+        - \c 'uint' can be abbreviated with \c 'u', e.g. \c 'rgba16uint' as \c 'rgba16u'.
+        \remarks A full vertex attribute might look like this \c "rgb32f(position)".
+        */
+        VertexAttribute AsVertexAttribute() const;
+
+        /**
+        \brief Generates a vector of basic vertex attributes from this parse context.
+        \remarks This parses a comma separated list of vertex attributes, the last comma being optional.
+        \remarks A full vertex attribute list might look like this \c "rgb32f(position),rgba8unorm(color),".
+        \see AsVertexAttribute
+        */
+        DynamicVector<VertexAttribute> AsVertexAttributeVector() const;
+
     public:
 
         /**
@@ -320,6 +341,25 @@ class LLGL_EXPORT ParseContext
         inline operator TextureSwizzleRGBA() const
         {
             return AsTextureSwizzleRGBA();
+        }
+
+        /**
+        \brief Implicit conversion to VertexAttribute.
+        \see AsVertexAttribute
+        */
+        inline operator VertexAttribute() const
+        {
+            return AsVertexAttribute();
+        }
+
+
+        /**
+        \brief Implicit conversion to DynamicVector<VertexAttribute>.
+        \see AsVertexAttributeVector
+        */
+        inline operator DynamicVector<VertexAttribute>() const
+        {
+            return AsVertexAttributeVector();
         }
 
     private:

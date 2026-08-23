@@ -9,6 +9,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Report.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <vector>
 #include <string>
 #include <cstring>
@@ -1617,6 +1618,212 @@ TextureSwizzleRGBA ParseContext::AsTextureSwizzleRGBA() const
     swizzle.b = ParseTextureSwizzle(tok, tok[2]);
     swizzle.a = ParseTextureSwizzle(tok, tok[3]);
     return swizzle;
+}
+
+static Format StringToFormat(StringView tok)
+{
+    if (tok == "a8unorm")                               return Format::A8UNorm;
+
+    if (tok == "r8unorm")                               return Format::R8UNorm;
+    if (tok == "r8snorm")                               return Format::R8SNorm;
+    if (tok == "r8uint" || tok == "r8u")                return Format::R8UInt;
+    if (tok == "r8sint" || tok == "r8i")                return Format::R8SInt;
+    
+    if (tok == "r16unorm")                              return Format::R16UNorm;
+    if (tok == "r16snorm")                              return Format::R16SNorm;
+    if (tok == "r16uint" || tok == "r16u")              return Format::R16UInt;
+    if (tok == "r16sint" || tok == "r16i")              return Format::R16SInt;
+    if (tok == "r16float" || tok == "r16f")             return Format::R16Float;
+    
+    if (tok == "r32uint" || tok == "r32u")              return Format::R32UInt;
+    if (tok == "r32sint" || tok == "r32i")              return Format::R32SInt;
+    if (tok == "r32float" || tok == "r32f")             return Format::R32Float;
+    
+    if (tok == "r64float" || tok == "r64f")             return Format::R64Float;
+    
+    if (tok == "rg8unorm")                              return Format::RG8UNorm;
+    if (tok == "rg8snorm")                              return Format::RG8SNorm;
+    if (tok == "rg8uint" || tok == "rg8u")              return Format::RG8UInt;
+    if (tok == "rg8sint" || tok == "rg8i")              return Format::RG8SInt;
+    
+    if (tok == "rg16unorm")                             return Format::RG16UNorm;
+    if (tok == "rg16snorm")                             return Format::RG16SNorm;
+    if (tok == "rg16uint" || tok == "rg16u")            return Format::RG16UInt;
+    if (tok == "rg16sint" || tok == "rg16i")            return Format::RG16SInt;
+    if (tok == "rg16float" || tok == "rg16f")           return Format::RG16Float;
+    
+    if (tok == "rg32uint" || tok == "rg32u")            return Format::RG32UInt;
+    if (tok == "rg32sint" || tok == "rg32i")            return Format::RG32SInt;
+    if (tok == "rg32float" || tok == "rg32f")           return Format::RG32Float;
+    
+    if (tok == "rg64float" || tok == "rg64f")           return Format::RG64Float;
+    
+    if (tok == "rgb8unorm")                             return Format::RGB8UNorm;
+    if (tok == "rgb8unorm_srgb")                        return Format::RGB8UNorm_sRGB;
+    if (tok == "rgb8snorm")                             return Format::RGB8SNorm;
+    if (tok == "rgb8uint" || tok == "rgb8u")            return Format::RGB8UInt;
+    if (tok == "rgb8sint" || tok == "rgb8i")            return Format::RGB8SInt;
+    
+    if (tok == "rgb16unorm")                            return Format::RGB16UNorm;
+    if (tok == "rgb16snorm")                            return Format::RGB16SNorm;
+    if (tok == "rgb16uint" || tok == "rgb16u")          return Format::RGB16UInt;
+    if (tok == "rgb16sint" || tok == "rgb16i")          return Format::RGB16SInt;
+    if (tok == "rgb16float" || tok == "rgb16f")         return Format::RGB16Float;
+    
+    if (tok == "rgb32uint" || tok == "rgb32u")          return Format::RGB32UInt;
+    if (tok == "rgb32sint" || tok == "rgb32i")          return Format::RGB32SInt;
+    if (tok == "rgb32float" || tok == "rgb32f")         return Format::RGB32Float;
+    
+    if (tok == "rgb64float" || tok == "rgb64f")         return Format::RGB64Float;
+    
+    if (tok == "rgba8unorm")                            return Format::RGBA8UNorm;
+    if (tok == "rgba8unorm_srgb")                       return Format::RGBA8UNorm_sRGB;
+    if (tok == "rgba8snorm")                            return Format::RGBA8SNorm;
+    if (tok == "rgba8uint" || tok == "rgba8u")          return Format::RGBA8UInt;
+    if (tok == "rgba8sint" || tok == "rgba8i")          return Format::RGBA8SInt;
+    
+    if (tok == "rgba16unorm")                           return Format::RGBA16UNorm;
+    if (tok == "rgba16snorm")                           return Format::RGBA16SNorm;
+    if (tok == "rgba16uint" || tok == "rgba16u")        return Format::RGBA16UInt;
+    if (tok == "rgba16sint" || tok == "rgba16i")        return Format::RGBA16SInt;
+    if (tok == "rgba16float" || tok == "rgba16f")       return Format::RGBA16Float;
+    
+    if (tok == "rgba32uint" || tok == "rgba32u")        return Format::RGBA32UInt;
+    if (tok == "rgba32sint" || tok == "rgba32i")        return Format::RGBA32SInt;
+    if (tok == "rgba32float" || tok == "rgba32f")       return Format::RGBA32Float;
+    
+    if (tok == "rgba64float" || tok == "rgba64f")       return Format::RGBA64Float;
+    
+    if (tok == "bgra8unorm")                            return Format::BGRA8UNorm;
+    if (tok == "bgra8unorm_srgb")                       return Format::BGRA8UNorm_sRGB;
+    if (tok == "bgra8snorm")                            return Format::BGRA8SNorm;
+    if (tok == "bgra8uint" || tok == "bgra8u")          return Format::BGRA8UInt;
+    if (tok == "bgra8sint" || tok == "bgra8i")          return Format::BGRA8SInt;
+    
+    if (tok == "rgb10a2unorm")                          return Format::RGB10A2UNorm;
+    if (tok == "rgb10a2uint" || tok == "rgb10a2u")      return Format::RGB10A2UInt;
+    if (tok == "rg11b10float" || tok == "rg11b10f")     return Format::RG11B10Float;
+    if (tok == "rgb9e5float" || tok == "rgb9e5f")       return Format::RGB9E5Float;
+    if (tok == "bgr5a1unorm")                           return Format::BGR5A1UNorm;
+    
+    if (tok == "d16unorm")                              return Format::D16UNorm;
+    if (tok == "d24unorm_s8uint")                       return Format::D24UNormS8UInt;
+    if (tok == "d32float" || tok == "d32f")             return Format::D32Float;
+    if (tok == "d32float_s8uint" || tok == "d32f_s8u")  return Format::D32FloatS8X24UInt;
+    
+    if (tok == "bc1unorm")                              return Format::BC1UNorm;
+    if (tok == "bc1unorm_srgb")                         return Format::BC1UNorm_sRGB;
+    if (tok == "bc2unorm")                              return Format::BC2UNorm;
+    if (tok == "bc2unorm_srgb")                         return Format::BC2UNorm_sRGB;
+    if (tok == "bc3unorm")                              return Format::BC3UNorm;
+    if (tok == "bc3unorm_srgb")                         return Format::BC3UNorm_sRGB;
+    if (tok == "bc4unorm")                              return Format::BC4UNorm;
+    if (tok == "bc4snorm")                              return Format::BC4SNorm;
+    if (tok == "bc5unorm")                              return Format::BC5UNorm;
+    if (tok == "bc5snorm")                              return Format::BC5SNorm;
+    if (tok == "bc6hufloat")                            return Format::BC6HUFloat;
+    if (tok == "bc6hsfloat")                            return Format::BC6HSFloat;
+    if (tok == "bc7unorm")                              return Format::BC7UNorm;
+    if (tok == "bc7unorm_srgb")                         return Format::BC7UNorm_sRGB;
+
+    if (tok == "astc4x4")                               return Format::ASTC4x4;
+    if (tok == "astc4x4_srgb")                          return Format::ASTC4x4_sRGB;
+    if (tok == "astc5x4")                               return Format::ASTC5x4;
+    if (tok == "astc5x4_srgb")                          return Format::ASTC5x4_sRGB;
+    if (tok == "astc5x5")                               return Format::ASTC5x5;
+    if (tok == "astc5x5_srgb")                          return Format::ASTC5x5_sRGB;
+    if (tok == "astc6x5")                               return Format::ASTC6x5;
+    if (tok == "astc6x5_srgb")                          return Format::ASTC6x5_sRGB;
+    if (tok == "astc6x6")                               return Format::ASTC6x6;
+    if (tok == "astc6x6_srgb")                          return Format::ASTC6x6_sRGB;
+    if (tok == "astc8x5")                               return Format::ASTC8x5;
+    if (tok == "astc8x5_srgb")                          return Format::ASTC8x5_sRGB;
+    if (tok == "astc8x6")                               return Format::ASTC8x6;
+    if (tok == "astc8x6_srgb")                          return Format::ASTC8x6_sRGB;
+    if (tok == "astc8x8")                               return Format::ASTC8x8;
+    if (tok == "astc8x8_srgb")                          return Format::ASTC8x8_sRGB;
+    if (tok == "astc10x5")                              return Format::ASTC10x5;
+    if (tok == "astc10x5_srgb")                         return Format::ASTC10x5_sRGB;
+    if (tok == "astc10x6")                              return Format::ASTC10x6;
+    if (tok == "astc10x6_srgb")                         return Format::ASTC10x6_sRGB;
+    if (tok == "astc10x8")                              return Format::ASTC10x8;
+    if (tok == "astc10x8_srgb")                         return Format::ASTC10x8_sRGB;
+    if (tok == "astc10x10")                             return Format::ASTC10x10;
+    if (tok == "astc10x10_srgb")                        return Format::ASTC10x10_sRGB;
+    if (tok == "astc12x10")                             return Format::ASTC12x10;
+    if (tok == "astc12x10_srgb")                        return Format::ASTC12x10_sRGB;
+    if (tok == "astc12x12")                             return Format::ASTC12x12;
+    if (tok == "astc12x12_srgb")                        return Format::ASTC12x12_sRGB;
+
+    if (tok == "etc1unorm")                             return Format::ETC1UNorm;
+    if (tok == "etc2unorm")                             return Format::ETC2UNorm;
+    if (tok == "etc2unorm_srgb")                        return Format::ETC2UNorm_sRGB;
+
+    //LLGL_TRAP("unknown format: %.*s", static_cast<int>(tok.size()), tok.data());
+    return Format::Undefined;
+}
+
+static bool ParseVertexAttribute(Parser& parser, VertexAttribute& outAttrib)
+{
+    /* Parse format identifier */
+    if (!parser.MatchIdent())
+        return ReturnWithParseError(parser, "expected format identifier");
+
+    const StringView formatTok = parser.Accept();
+
+    /* Convert format string to Format enum */
+    outAttrib.format = StringToFormat(formatTok);
+    if (outAttrib.format == Format::Undefined)
+        return ReturnWithParseError(parser, "unknown format", formatTok);
+
+    /* Parse attribute name in parenthesis */
+    if (!parser.Accept("("))
+        return ReturnWithParseError(parser, "expected open parenthesis '(' after format");
+
+    if (!parser.MatchIdent())
+        return ReturnWithParseError(parser, "expected attribute name");
+
+    outAttrib.name = parser.Accept();
+
+    if (!parser.Accept(")"))
+        return ReturnWithParseError(parser, "expected close parenthesis ')' after attribute name");
+
+    return true;
+}
+
+VertexAttribute ParseContext::AsVertexAttribute() const
+{
+    VertexAttribute attrib;
+    Parser parser{ tokens_ };
+    if (!ParseVertexAttribute(parser, attrib))
+        RaiseParsingError(parser, "VertexAttribute");
+    return attrib;
+}
+
+static bool ParseAttributeVector(Parser& parser, VertexFormat& outVertexFormat)
+{
+    while (parser.Feed())
+    {
+        /* Parse next vertex attribute */
+        VertexAttribute newAttrib;
+        if (!ParseVertexAttribute(parser, newAttrib))
+            return false;
+        outVertexFormat.AppendAttribute(newAttrib);
+
+        /* If there's no comma, the descriptor must end */
+        if (!parser.Accept(",") && parser.Feed())
+            return ReturnWithParseError(parser, "expected comma separator ',' after vertex attribute");
+    }
+    return true;
+}
+
+DynamicVector<VertexAttribute> ParseContext::AsVertexAttributeVector() const
+{
+    Parser parser{ tokens_ };
+    VertexFormat vertexFormat;
+    if (!ParseAttributeVector(parser, vertexFormat))
+        RaiseParsingError(parser, "VertexAttribute");
+    return std::move(vertexFormat.attributes);
 }
 
 
