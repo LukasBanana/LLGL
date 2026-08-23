@@ -402,11 +402,25 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetVertexBuffer(Buffer& buffer) = 0;
 
-        //! \deprecated Since 0.05b; Use primary SetVertexBuffer(Buffer&) function and GraphicsPipelineDescriptor::inputVertexAttribs instead!
-        LLGL_DEPRECATED("Secondary `SetVertexBuffer()` function is deprecated since 0.05b; Use primary `SetVertexBuffer()` function and GraphicsPipelineDescriptor::inputVertexAttribs instead")
-        inline void SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
+        /**
+        \brief Sets the specified vertex buffer for subsequent drawing operations with a new stride and optional base offset.
+        \remarks Use this function either when the specified vertex buffer was not created with a default stride
+        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
+        \param[in] stride Specifies the stride (in bytes) between vertices. This \b must either be zero or equal to the stride of all vertex attributes that reference this buffer slot (0)
+        described in the graphics PSO that is used in subsequent draw commands.
+        If this is zero, the stride is implied by the default buffer stride, which in this case <b>must not</b> be zero itself.
+        \param[in] offset Specifies an optional base offset (in bytes) where to start reading the vertex buffer. By default 0.
+        \remarks Having to specify the same stride as used in the graphics PSO seems redundant, but it's a compromise of keeping the API lightweight and backend agnostic.
+        D3D defines the strides with their vertex buffers while Vulkan and Metal tie them to the graphics PSO. Letting LLGL track those states adds costs that can be avoided.
+        \see BufferDescriptor::stride
+        */
+        virtual void SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset = 0) = 0;
+
+        //! \deprecated Since 0.05b; Use primary SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t) function and GraphicsPipelineDescriptor::inputVertexAttribs instead!
+        LLGL_DEPRECATED("`SetVertexBuffer(Buffer&, std::uint32_t, const VertexAttribute*)` function is deprecated since 0.05b; Use `SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)` function and GraphicsPipelineDescriptor::inputVertexAttribs instead")
+        inline void SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
         {
-            SetVertexBuffer(buffer);
+            SetVertexBuffer(buffer, (numVertexAttribs > 0 && vertexAttribs != nullptr ? vertexAttribs[0].stride : 0));
         }
 
         /**
@@ -650,7 +664,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \remarks A <b>graphics pipeline state</b> will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline state must always be set before any drawing operation can be performed,
-        and a graphics pipeline state \b can be set \b inside and \b outside a render pass section.
+        and a graphics pipeline state \e can be set \b inside and \b outside a render pass section.
 
         \remarks A <b>compute pipeline state</b> will set shader states for dispatch compute commands.
         A valid compute pipeline state must always be set before any dispatch compute operation cam ne performed,

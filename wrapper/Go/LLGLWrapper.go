@@ -590,6 +590,7 @@ const (
     WarningTypeImproperState
     WarningTypePointlessOperation
     WarningTypeVaryingBehavior
+    WarningTypeDeprecatedFeature
 )
 
 type AttachmentLoadOp int

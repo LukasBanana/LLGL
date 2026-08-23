@@ -538,10 +538,10 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 /* ----- Input Assembly ------ */
 
 //private
-void VKCommandBuffer::BindVertexBuffer(VKBuffer& bufferVK)
+void VKCommandBuffer::BindVertexBuffer(VKBuffer& bufferVK, VkDeviceSize offset)
 {
     VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
-    VkDeviceSize offsets[] = { 0 };
+    VkDeviceSize offsets[] = { offset };
 
     vkCmdBindVertexBuffers(commandBuffer_, 0, 1, buffers, offsets);
 
@@ -558,6 +558,13 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     BindVertexBuffer(bufferVK);
+}
+
+// Vulkan does not support setting vertex stride per buffer, it is tied to the graphics PSO
+void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    BindVertexBuffer(bufferVK, offset);
 }
 
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

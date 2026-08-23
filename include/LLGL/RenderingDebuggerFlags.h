@@ -38,6 +38,7 @@ enum class WarningType
     ImproperState,      //!< Warning due to improper state (e.g. rendering while viewport is not visible).
     PointlessOperation, //!< Warning due to a operation without any effect (e.g. drawing with 0 vertices).
     VaryingBehavior,    //!< Warning due to a varying behavior between the native APIs (e.g. \c SV_VertexID in HLSL behaves different to \c gl_VertexID in GLSL or \c gl_VertexIndex in SPIRV).
+    DeprecatedFeature,  //!< Warning due to use of a deprecated feature.
 };
 
 

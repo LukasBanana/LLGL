@@ -48,13 +48,13 @@ struct BufferDescriptor
 
     /**
     \brief Optional stride for vertex and structured buffers. By default 0.
-    \remarks This is used for vertex buffers to describe the stride (in bytes) between vertices.
+    \remarks This \e can be used for vertex buffers to describe the stride (in bytes) between vertices. If this is zero, the stride \b must be set via the extended \c SetVertexBuffer function.
     \remarks This is also used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
     \remarks If this is non-zero, the \c format attribute is ignored for sampled and storage buffers, i.e. buffers with the binding flags BindFlags::Sampled or BindFlags::Storage.
     \note If the buffer has the binding flag BindFlags::IndirectBuffer, this \b must be 0.
+    \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
     \see MiscFlags::Append
     \see MiscFlags::Counter
-    \todo Make this optional for vertex buffers, so that a secondary `SetVertexBuffer(Buffer&, uint32_t stride, uint64_t offset)` function can be used.
     */
     std::uint32_t               stride          = 0;
 

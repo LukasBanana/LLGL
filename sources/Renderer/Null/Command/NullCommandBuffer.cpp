@@ -24,6 +24,9 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
 
+#include <algorithm> // std::transform
+#include <iterator> // std::back_inserter
+
 
 namespace LLGL
 {
@@ -275,13 +278,41 @@ void NullCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sc
 void NullCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    renderState_.vertexBuffers = { &bufferNull };
+    renderState_.vertexBuffers          = { &bufferNull };
+    renderState_.vertexBufferStrides    = { bufferNull.desc.stride };
+    renderState_.vertexBufferOffsets    = { 0 };
+}
+
+void NullCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    renderState_.vertexBuffers          = { &bufferNull };
+    renderState_.vertexBufferStrides    = { stride };
+    renderState_.vertexBufferOffsets    = { offset };
 }
 
 void NullCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayNull = LLGL_CAST(NullBufferArray&, bufferArray);
-    renderState_.vertexBuffers = SmallVector<const NullBuffer*>(bufferArrayNull.buffers.begin(), bufferArrayNull.buffers.end());
+    renderState_.vertexBuffers          = SmallVector<const NullBuffer*>(bufferArrayNull.buffers.begin(), bufferArrayNull.buffers.end());
+    std::transform(
+        bufferArrayNull.buffers.begin(),
+        bufferArrayNull.buffers.end(),
+        std::back_inserter(renderState_.vertexBufferStrides),
+        [](const NullBuffer* entry)
+        {
+            return entry->desc.stride;
+        }
+    );
+    std::transform(
+        bufferArrayNull.buffers.begin(),
+        bufferArrayNull.buffers.end(),
+        std::back_inserter(renderState_.vertexBufferOffsets),
+        [](const NullBuffer* entry)
+        {
+            return 0; // dummy
+        }
+    );
 }
 
 void NullCommandBuffer::SetIndexBuffer(Buffer& buffer)

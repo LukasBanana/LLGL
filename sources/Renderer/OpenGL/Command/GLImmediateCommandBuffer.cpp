@@ -297,6 +297,12 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
+//TODO: integrate stride and offset into VAO cache
+void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    SetVertexBuffer(buffer);
+}
+
 void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)

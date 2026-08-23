@@ -588,6 +588,7 @@ namespace LLGL
         ImproperState,
         PointlessOperation,
         VaryingBehavior,
+        DeprecatedFeature,
     }
 
     public enum AttachmentLoadOp
@@ -4763,7 +4764,7 @@ namespace LLGL
         public static extern unsafe void SetVertexBuffer(Buffer buffer);
 
         [DllImport(DllName, EntryPoint="llglSetVertexBufferExt", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void SetVertexBufferExt(Buffer buffer, int numVertexAttribs, VertexAttribute* vertexAttribs);
+        public static extern unsafe void SetVertexBufferExt(Buffer buffer, int stride, long offset);
 
         [DllImport(DllName, EntryPoint="llglSetVertexBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBufferArray(BufferArray bufferArray);

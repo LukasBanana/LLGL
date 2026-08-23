@@ -607,14 +607,12 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
 /* ----- Buffers ------ */
 
 //private
-void DbgCommandBuffer::BindVertexBuffer(DbgBuffer& bufferDbg)
+void DbgCommandBuffer::BindVertexBuffer(DbgBuffer& bufferDbg, std::uint32_t stride, std::uint64_t offset)
 {
     AssertRecording();
     ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
 
-    bindings_.vertexBufferStore[0]  = (&bufferDbg);
-    bindings_.vertexBuffers         = bindings_.vertexBufferStore;
-    bindings_.numVertexBuffers      = 1;
+    bindings_.vertexBuffers = { VertexBufferSlot{ &bufferDbg, stride, offset } };
 }
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -632,6 +630,40 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     profile_.commandBufferRecord.vertexBufferBindings++;
 }
 
+void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
+
+    if (LLGL_DBG_SOURCE())
+    {
+        BindVertexBuffer(bufferDbg, stride, offset);
+
+        if (stride > bufferDbg.desc.size)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "vertex buffer stride out of bounds: %" PRIu64 " specified but limit is %" PRIu64,
+                stride, bufferDbg.desc.size
+            );
+        }
+        if (offset > bufferDbg.desc.size)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "vertex buffer offset out of bounds: %" PRIu64 " specified but limit is %" PRIu64,
+                offset, bufferDbg.desc.size
+            );
+        }
+    }
+
+    LLGL_DBG_COMMAND_EXT(
+        instance.SetVertexBuffer(bufferDbg.instance, stride, offset),
+        "SetVertexBuffer(%s)", GetResourceLabel(buffer)
+    );
+
+    profile_.commandBufferRecord.vertexBufferBindings++;
+}
+
 void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayDbg = LLGL_DBG_CAST(DbgBufferArray&, bufferArray);
@@ -641,8 +673,15 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         AssertRecording();
         ValidateBindFlags(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, BindFlags::VertexBuffer, "LLGL::BufferArray");
 
-        bindings_.vertexBuffers     = bufferArrayDbg.buffers.data();
-        bindings_.numVertexBuffers  = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
+        std::transform(
+            bufferArrayDbg.buffers.begin(),
+            bufferArrayDbg.buffers.end(),
+            std::back_inserter(bindings_.vertexBuffers),
+            [](DbgBuffer* buffer)
+            {
+                return VertexBufferSlot{ buffer };
+            }
+        );
     }
 
     LLGL_DBG_COMMAND( instance.SetVertexBufferArray(bufferArrayDbg.instance), "SetVertexBufferArray()" );
@@ -1925,9 +1964,9 @@ void DbgCommandBuffer::ValidateVertexLayout()
             for_range(i, pso->graphicsDesc.inputVertexAttribs.size())
             {
                 const VertexAttribute& attrib = pso->graphicsDesc.inputVertexAttribs[i];
-                if (attrib.slot < bindings_.numVertexBuffers)
+                if (attrib.slot < bindings_.vertexBuffers.size())
                 {
-                    DbgBuffer* vertexBufferDbg = bindings_.vertexBuffers[attrib.slot];
+                    DbgBuffer* vertexBufferDbg = bindings_.vertexBuffers[attrib.slot].buffer;
                     if (attrib.stride != vertexBufferDbg->desc.stride)
                     {
                         LLGL_DBG_ERROR(
@@ -1941,8 +1980,8 @@ void DbgCommandBuffer::ValidateVertexLayout()
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidState,
-                        "vertex attribute '%s' (%u) slot=%u in current graphics PSO exceeded the upper bound of vertex buffers (%u)",
-                        attrib.name.c_str(), i, attrib.slot, bindings_.numVertexBuffers
+                        "vertex attribute '%s' (%u) slot=%u in current graphics PSO exceeded the upper bound of vertex buffers (%zu)",
+                        attrib.name.c_str(), i, attrib.slot, bindings_.vertexBuffers.size()
                     );
                 }
             }
@@ -2073,8 +2112,8 @@ void DbgCommandBuffer::ValidateDrawCmd(
     ValidateBindingTable();
     ValidateBlendStates();
 
-    if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
-        ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
+    if (!bindings_.vertexBuffers.empty() && bindings_.anyShaderAttributes)
+        ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0].buffer->elements));
 }
 
 void DbgCommandBuffer::ValidateDrawIndexedCmd(
@@ -2126,9 +2165,9 @@ void DbgCommandBuffer::ValidateDrawStreamOutputCmd()
     ValidateBlendStates();
 
     /* Don't check for empty vertex buffer arrays here, this is already done in AssertVertexBufferBound() */
-    if (bindings_.numVertexBuffers == 1)
+    if (bindings_.vertexBuffers.size() == 1)
     {
-        if ((bindings_.vertexBuffers[0]->desc.bindFlags & BindFlags::StreamOutputBuffer) == 0)
+        if ((bindings_.vertexBuffers[0].buffer->desc.bindFlags & BindFlags::StreamOutputBuffer) == 0)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
@@ -2136,12 +2175,12 @@ void DbgCommandBuffer::ValidateDrawStreamOutputCmd()
             );
         }
     }
-    else if (bindings_.numVertexBuffers > 1)
+    else if (bindings_.vertexBuffers.size() > 1)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidState,
-            "automatic draw commands only support a single vertex buffer, but %u are bound",
-            bindings_.numVertexBuffers
+            "automatic draw commands only support a single vertex buffer, but %zu are bound",
+            bindings_.vertexBuffers.size()
         );
     }
 }
@@ -2864,12 +2903,12 @@ void DbgCommandBuffer::AssertComputePipelineBound()
 
 void DbgCommandBuffer::AssertVertexBufferBound()
 {
-    if (bindings_.numVertexBuffers > 0)
+    if (!bindings_.vertexBuffers.empty())
     {
-        for_range(i, bindings_.numVertexBuffers)
+        for_range(i, bindings_.vertexBuffers.size())
         {
             /* Check if buffer is initialized (ignore empty buffers) */
-            DbgBuffer* buffer = bindings_.vertexBuffers[i];
+            DbgBuffer* buffer = bindings_.vertexBuffers[i].buffer;
             if (buffer->elements > 0 && !buffer->initialized)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot %u", i);
             if (buffer->IsMappedForCPUAccess())
@@ -3039,6 +3078,18 @@ void DbgCommandBuffer::SetAndValidateScissorRects(std::uint32_t numScissors, con
         bindings_.scissorRects[i] = {};
 
     bindings_.numScissorRects = numScissors;
+}
+
+
+/*
+ * VertexBufferSlot struct
+ */
+
+DbgCommandBuffer::VertexBufferSlot::VertexBufferSlot(DbgBuffer* buffer, std::uint32_t stride, std::uint64_t offset) :
+    buffer { buffer                                                             },
+    stride { stride != 0 ? stride : buffer != nullptr ? buffer->desc.stride : 0 },
+    offset { offset                                                             }
+{
 }
 
 

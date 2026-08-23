@@ -126,7 +126,7 @@ class D3D12CommandBuffer final : public CommandBufferTier1
         void SubmitTransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState);
         void SubmitTransitionResource(Resource& resource, D3D12_RESOURCE_STATES newState);
 
-        void SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D);
+        void SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D, const D3D12_VERTEX_BUFFER_VIEW& bufferView);
 
     private:
 

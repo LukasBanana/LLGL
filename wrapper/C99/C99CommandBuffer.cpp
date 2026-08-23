@@ -116,10 +116,9 @@ LLGL_C_EXPORT void llglSetVertexBuffer(LLGLBuffer buffer)
     g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer));
 }
 
-//DEPRECATED
-LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t /*numVertexAttribs*/, const LLGLVertexAttribute* /*vertexAttribs LLGL_ANNOTATE([numVertexAttribs])*/)
+LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t stride, uint64_t offset)
 {
-    g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer));
+    g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer), stride, offset);
 }
 
 LLGL_C_EXPORT void llglSetVertexBufferArray(LLGLBufferArray bufferArray)

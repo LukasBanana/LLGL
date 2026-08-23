@@ -328,6 +328,13 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
+//TODO: integrate offset into VAO cache, stride is already part of the vertex layout which is handled by the PSO
+void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
+{
+    SetVertexBuffer(buffer);
+}
+
+
 void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)

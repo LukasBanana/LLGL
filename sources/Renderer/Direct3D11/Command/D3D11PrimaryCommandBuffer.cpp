@@ -768,6 +768,12 @@ void D3D11PrimaryCommandBuffer::SetVertexBuffer(Buffer& buffer)
     context_.SetVertexBuffer(bufferD3D, bufferD3D.GetStride());
 }
 
+void D3D11PrimaryCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_.SetVertexBuffer(bufferD3D, stride > 0 ? stride : bufferD3D.GetStride(), static_cast<UINT>(offset));
+}
+
 void D3D11PrimaryCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);

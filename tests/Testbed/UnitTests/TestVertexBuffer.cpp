@@ -108,9 +108,9 @@ DEF_TEST( VertexBuffer )
             cmdBuffer->UpdateBuffer(*vertexBuffer, 0, simple2DVertices, sizeof(simple2DVertices));
         }
 
-        //TODO: this needs to use a new `SetVertexBuffer()` function to accept the different vertex strides
-        // Set always the same vertex buffer and let the PSO determine the vertex format
-        cmdBuffer->SetVertexBuffer(*vertexBuffer);
+        // Set always the same vertex buffer and let the PSO determine the vertex format.
+        // However, we need to set the vertex format stride when binding the vertex buffer as some APIs need this per buffer while Vulkan ties it to the PSO.
+        cmdBuffer->SetVertexBuffer(*vertexBuffer, vertexFormats[VertFmtLayout0 + frame].GetStride());
         cmdBuffer->SetPipelineState(*pso);
 
         cmdBuffer->BeginRenderPass(*swapChain);

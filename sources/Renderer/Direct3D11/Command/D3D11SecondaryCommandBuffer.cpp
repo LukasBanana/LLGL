@@ -158,6 +158,18 @@ void D3D11SecondaryCommandBuffer::SetVertexBuffer(Buffer& buffer)
     {
         cmd->buffer = bufferD3D;
         cmd->stride = bufferD3D->GetStride();
+        cmd->offset = 0;
+    }
+}
+
+void D3D11SecondaryCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    auto* bufferD3D = LLGL_CAST(D3D11Buffer*, &buffer);
+    auto cmd = AllocCommand<D3D11CmdSetVertexBuffer>(D3D11OpcodeSetVertexBuffer);
+    {
+        cmd->buffer = bufferD3D;
+        cmd->stride = (stride > 0 ? stride : bufferD3D->GetStride());
+        cmd->offset = static_cast<UINT>(offset);
     }
 }
 

@@ -900,8 +900,8 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateResources();
-        CreateShaders(vertexFormat);
-        CreatePipelines();
+        CreateShaders();
+        CreatePipelines(vertexFormat);
         LoadLevels();
         SelectLevel(0);
 
@@ -1011,46 +1011,46 @@ private:
         return std::string(buf);
     }
 
-    void CreateShaders(const LLGL::VertexFormat& vertexFormat)
+    void CreateShaders()
     {
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "vs_5_0" }, { vertexFormat });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "vs_5_0" });
             sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "ps_5_0" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" }, { vertexFormat });
+            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" });
             sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" }, { vertexFormat });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::ESSL))
         {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.300es.vert" }, { vertexFormat });
+            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.300es.vert" });
             sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.300es.frag" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.300es.vert" }, { vertexFormat });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.300es.vert" });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.300es.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert.spv" }, { vertexFormat });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert.spv" });
             sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag.spv" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" }, { vertexFormat });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSInstance", "1.1" }, { vertexFormat });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSInstance", "1.1" });
             sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSInstance", "1.1" });
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSGround",   "1.1" }, { vertexFormat });
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSGround",   "1.1" });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSGround",   "1.1" });
         }
         else
@@ -1059,7 +1059,7 @@ private:
         }
     }
 
-    void CreatePipelines()
+    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
     {
         const bool needsExplicitMultiSample = (GetSampleCount() > 1 && !IsDirect3D());
         const bool needsUniqueBindingSlots  = (IsVulkan());
@@ -1084,6 +1084,7 @@ private:
             scenePSODesc.debugName                      = "InstancedMesh.PSO";
             scenePSODesc.pipelineLayout                 = scenePSOLayout[0];
             scenePSODesc.renderPass                     = swapChain->GetRenderPass();
+            scenePSODesc.inputVertexAttribs             = vertexFormat.attributes;
             scenePSODesc.vertexShader                   = sceneShaders.vs;
             scenePSODesc.fragmentShader                 = sceneShaders.ps;
             scenePSODesc.depth.testEnabled              = true;
@@ -1111,6 +1112,7 @@ private:
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
             scenePSODesc.pipelineLayout                         = scenePSOLayout[1];
             scenePSODesc.renderPass                             = shadowMapTarget->GetRenderPass();
+            scenePSODesc.inputVertexAttribs                     = vertexFormat.attributes;
             scenePSODesc.fragmentShader                         = nullptr;
             scenePSODesc.rasterizer.depthBias.constantFactor    = 1.0f;
             scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.0f;
@@ -1142,6 +1144,7 @@ private:
             groundPSODesc.vertexShader                  = groundShaders.vs;
             groundPSODesc.fragmentShader                = groundShaders.ps;
             groundPSODesc.renderPass                    = swapChain->GetRenderPass();
+            groundPSODesc.inputVertexAttribs            = vertexFormat.attributes;
             groundPSODesc.depth.testEnabled             = true;
             groundPSODesc.depth.writeEnabled            = true;
             groundPSODesc.rasterizer.cullMode           = LLGL::CullMode::Back;

@@ -614,6 +614,7 @@ typedef enum LLGLWarningType
     LLGLWarningTypeImproperState,
     LLGLWarningTypePointlessOperation,
     LLGLWarningTypeVaryingBehavior,
+    LLGLWarningTypeDeprecatedFeature,
 }
 LLGLWarningType;
 

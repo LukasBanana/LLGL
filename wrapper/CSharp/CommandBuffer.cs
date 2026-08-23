@@ -146,23 +146,15 @@ namespace LLGL
             NativeLLGL.SetVertexBuffer(buffer.Native);
         }
 
+        public void SetVertexBuffer(Buffer buffer, int stride, long offset = 0)
+        {
+            NativeLLGL.SetVertexBufferExt(buffer.Native, stride, offset);
+        }
+
+        [Obsolete("`SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)` function is deprecated since 0.05b; Use `SetVertexBuffer(Buffer buffer, int stride, long offset)` function and GraphicsPipelineDescriptor.InputVertexAttribs instead")]
         public void SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)
         {
-            if (vertexAttribs.Length > 0)
-            {
-                var nativeVertexAttribs = new NativeLLGL.VertexAttribute[vertexAttribs.Length];
-                for (int i = 0; i < vertexAttribs.Length; ++i)
-                {
-                    nativeVertexAttribs[i] = vertexAttribs[i].Native;
-                }
-                unsafe
-                {
-                    fixed (NativeLLGL.VertexAttribute* nativeVertexAttribsPtr = nativeVertexAttribs)
-                    {
-                        NativeLLGL.SetVertexBufferExt(buffer.Native, nativeVertexAttribs.Length, nativeVertexAttribsPtr);
-                    }
-                }
-            }
+            SetVertexBuffer(buffer, (vertexAttribs.Length > 0 ? vertexAttribs[0].Stride : 0));
         }
 
         public void SetVertexBufferArray(BufferArray bufferArray)

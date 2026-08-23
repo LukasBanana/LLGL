@@ -397,6 +397,12 @@ void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer)
     context_.SetVertexBuffer(bufferMT.GetNative(), 0);
 }
 
+void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    context_.SetVertexBuffer(bufferMT.GetNative(), static_cast<NSUInteger>(offset));
+}
+
 void MTDirectCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayMT = LLGL_CAST(MTBufferArray&, bufferArray);

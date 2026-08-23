@@ -644,6 +644,7 @@ LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperArgument);
 LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperState);
 LLGL_STATIC_ASSERT_ENUM(WarningType, PointlessOperation);
 LLGL_STATIC_ASSERT_ENUM(WarningType, VaryingBehavior);
+LLGL_STATIC_ASSERT_ENUM(WarningType, DeprecatedFeature);
 
 
 /* ----- Flags ----- */

@@ -28,6 +28,7 @@ struct D3D11CmdSetVertexBuffer
 {
     D3D11Buffer*    buffer;
     UINT            stride;
+    UINT            offset;
 };
 
 struct D3D11CmdSetVertexBufferArray
