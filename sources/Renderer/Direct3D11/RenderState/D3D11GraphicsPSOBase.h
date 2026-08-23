@@ -78,8 +78,17 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
     public:
 
-        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& output);
-        static void BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides);
+        static void BuildInputLayout(
+            ArrayView<VertexAttribute>                  inAttributes,
+            DynamicVector<D3D11_INPUT_ELEMENT_DESC>&    outAttributes
+        );
+
+        static void BuildStreamOutput(
+            ArrayView<VertexAttribute>                  inAttributes,
+            DynamicVector<D3D11_SO_DECLARATION_ENTRY>&  outAttributes,
+            UINT                                        outBufferStrides[D3D11_SO_BUFFER_SLOT_COUNT],
+            UINT&                                       outNumBufferStrides
+        );
 
     private:
 

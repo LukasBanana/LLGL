@@ -61,21 +61,23 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
     dst.InstanceDataStepRate    = src.instanceDivisor;
 }
 
-void D3D11GraphicsPSOBase::BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_INPUT_ELEMENT_DESC>& outputAttributes)
+void D3D11GraphicsPSOBase::BuildInputLayout(
+    ArrayView<VertexAttribute>                  inAttributes,
+    DynamicVector<D3D11_INPUT_ELEMENT_DESC>&    outAttributes)
 {
-    const UINT numVertexAttribs = static_cast<UINT>(attributes.size());
+    const UINT numVertexAttribs = static_cast<UINT>(inAttributes.size());
 
-    outputAttributes.resize(numVertexAttribs);
+    outAttributes.resize(numVertexAttribs);
 
     for_range(i, numVertexAttribs)
-        ConvertInputElementDesc(outputAttributes[i], attributes[i]);
+        ConvertInputElementDesc(outAttributes[i], inAttributes[i]);
 }
 
 // Converts a vertex attribute to a D3D stream-output entry
 static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
     const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for
+    dst.Stream          = src.slot; // Stream refers to the HLSL output stream, but LLGL does not make such a distinction
     dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
     dst.SemanticIndex   = src.semanticIndex;
     dst.StartComponent  = 0;
@@ -83,21 +85,26 @@ static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttr
     dst.OutputSlot      = src.slot;
 }
 
-void D3D11GraphicsPSOBase::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> attributes, LLGL::DynamicVector<D3D11_SO_DECLARATION_ENTRY>& output, UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT], UINT& numBufferStrides)
+void D3D11GraphicsPSOBase::BuildStreamOutput(
+    ArrayView<VertexAttribute>                  inAttributes,
+    DynamicVector<D3D11_SO_DECLARATION_ENTRY>&  outAttributes,
+    UINT                                        outBufferStrides[D3D11_SO_BUFFER_SLOT_COUNT],
+    UINT&                                       outNumBufferStrides)
 {
-    const UINT numStreamOutputAttribs = static_cast<UINT>(attributes.size());
+    const UINT numStreamOutputAttribs = static_cast<UINT>(inAttributes.size());
 
     /* Initialize output elements for geometry shader with stream-output */
-    output.resize(numStreamOutputAttribs);
+    outAttributes.resize(numStreamOutputAttribs);
 
     for_range(i, numStreamOutputAttribs)
     {
-        ConvertSODeclEntry(output[i], attributes[i]);
-        LLGL_ASSERT(output[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
-        bufferStrides[output[i].OutputSlot] = attributes[i].stride;
-        numBufferStrides = std::max<UINT>(numBufferStrides, output[i].OutputSlot + 1);
+        ConvertSODeclEntry(outAttributes[i], inAttributes[i]);
+        LLGL_ASSERT(outAttributes[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
+        outBufferStrides[outAttributes[i].OutputSlot] = inAttributes[i].stride;
+        outNumBufferStrides = std::max<UINT>(outNumBufferStrides, outAttributes[i].OutputSlot + 1);
     }
 }
+
 
 /*
  * ======= Protected: =======
@@ -106,6 +113,29 @@ void D3D11GraphicsPSOBase::BuildStreamOutput(LLGL::ArrayView<VertexAttribute> at
 D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsPipelineDescriptor& desc) :
     D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
+    /* Retrieve all D3D shaders from descriptor */
+    GetD3DNativeShaders(desc);
+
+    /* First, try to obtain a pre-allocated geometry shader for stream-output attributes */
+    ID3DBlob* streamOutputShaderByteCode = nullptr;
+    if (auto* geometryShaderD3D = LLGL_CAST(const D3D11Shader*, desc.geometryShader))
+    {
+        /* Use geometry shader as potential stream-outpout byte code */
+        streamOutputShaderByteCode = geometryShaderD3D->GetByteCode();
+    }
+    else if (auto* domainShaderD3D = LLGL_CAST(const D3D11DomainShader*, desc.tessEvaluationShader))
+    {
+        /* Use domain shader as potential stream-output byte code and take its proxy geometry shader */
+        streamOutputShaderByteCode = domainShaderD3D->GetByteCode();
+        gs_ = domainShaderD3D->GetProxyGeometryShader();
+    }
+    else if (auto* vertexShaderD3D = LLGL_CAST(const D3D11VertexShader*, desc.vertexShader))
+    {
+        /* Use vertex shader as potential stream-output byte code and take its proxy geometry shader */
+        streamOutputShaderByteCode = vertexShaderD3D->GetByteCode();
+        gs_ = vertexShaderD3D->GetProxyGeometryShader();
+    }
+
     /* Validate pointers and get D3D shader objects */
     if (auto* vertexShaderD3D = LLGL_CAST(const D3D11VertexShader*, desc.vertexShader))
     {
@@ -113,70 +143,42 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
 
         // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
 
-        auto* vertexByteCode = vertexShaderD3D->GetByteCode();
-
-        DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-        BuildInputLayout(desc.inputVertexAttribs, inputElements);
-
-        if (!inputElements.empty())
+        if (!desc.inputVertexAttribs.empty())
         {
+            ID3DBlob* vertexByteCode = vertexShaderD3D->GetByteCode();
+
+            DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+            BuildInputLayout(desc.inputVertexAttribs, inputElements);
+
             HRESULT hr = device->CreateInputLayout(
                 inputElements.data(),
                 static_cast<UINT>(inputElements.size()),
                 vertexByteCode->GetBufferPointer(),
                 vertexByteCode->GetBufferSize(),
-                inputLayout_.ReleaseAndGetAddressOf()
+                inputLayout_.GetAddressOf()
             );
             DXThrowIfFailed(hr, "failed to create D3D11 input layout");
         }
 
-        std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
-        outputElements.resize(desc.outputVertexAttribs.size());
-
-        UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
-        UINT numBufferStrides = 0;
-
-        if (!outputElements.empty())
+        if (!desc.outputVertexAttribs.empty())
         {
             // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3784385726
             /* Create geometry shader with stream-output declaration */
-            HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
-                vertexByteCode->GetBufferPointer(),
-                vertexByteCode->GetBufferSize(),
-                outputElements.data(),
-                static_cast<UINT>(outputElements.size()),
-                bufferStrides,
-                numBufferStrides,
-                0,
-                nullptr,
-                gs_.ReleaseAndGetAddressOf()
-            );
-            DXThrowIfCreateFailed(hr, "failed to create proxy geometry shader");
+            D3D11Shader::CreateNativeShaderFromBlob(
+                device,
+                ShaderType::Geometry,
+                streamOutputShaderByteCode,
+                desc.outputVertexAttribs.size(),
+                desc.outputVertexAttribs.data()
+            ).As<ID3D11GeometryShader>(&gs_);
         }
 
         // Deprecated feature support: Get input layout from the vertex shader if we failed to get it from the pipeline descriptor.
         if (inputLayout_ == nullptr)
-        {
             inputLayout_ = vertexShaderD3D->GetInputLayout();
-        }
-
-        // Deprecated feature support: Get proxy geometry shader from the vertex shader if we failed to get it from the pipeline descriptor.
-        if (gs_ == nullptr)
-        {
-            gs_ = vertexShaderD3D->GetProxyGeometryShader();
-        }
     }
     else
         ResetReport("cannot create D3D graphics PSO without vertex shader", true);
-
-    /* Override proxy geometry shader if the domain shader has one */
-    if (auto* domainShaderD3D = LLGL_CAST(const D3D11DomainShader*, desc.tessEvaluationShader))
-    {
-        if (domainShaderD3D->GetProxyGeometryShader())
-            gs_ = domainShaderD3D->GetProxyGeometryShader();
-    }
-
-    GetD3DNativeShaders(desc);
 
     /* Store dynamic pipeline states */
     primitiveTopology_  = DXTypes::ToD3DPrimitiveTopology(desc.primitiveTopology);

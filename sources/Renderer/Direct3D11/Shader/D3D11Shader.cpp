@@ -245,12 +245,10 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
             {
                 /* Initialize output elements for geometry shader with stream-output */
                 DynamicVector<D3D11_SO_DECLARATION_ENTRY> outputElements;
-                outputElements.resize(numStreamOutputAttribs);
-
                 UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
                 UINT numBufferStrides = 0;
 
-                D3D11GraphicsPSOBase::BuildStreamOutput({streamOutputAttribs, numStreamOutputAttribs}, outputElements, bufferStrides, numBufferStrides);
+                D3D11GraphicsPSOBase::BuildStreamOutput({ streamOutputAttribs, numStreamOutputAttribs }, outputElements, bufferStrides, numBufferStrides);
 
                 /* Create geometry shader with stream-output declaration */
                 HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
