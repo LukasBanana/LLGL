@@ -26,12 +26,11 @@ DEF_TEST( ShaderErrors )
     {
         ShaderDescriptor shaderDesc;
         {
-            shaderDesc.type                 = type;
-            shaderDesc.source               = filename.c_str();
-            shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
-            shaderDesc.entryPoint           = entry;
-            shaderDesc.profile              = profile;
-            shaderDesc.vertex.inputAttribs  = vertexFormats[VertFmtStd].attributes;
+            shaderDesc.type         = type;
+            shaderDesc.source       = filename.c_str();
+            shaderDesc.sourceType   = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
+            shaderDesc.entryPoint   = entry;
+            shaderDesc.profile      = profile;
         }
         return renderer->CreateShader(shaderDesc);
     };
@@ -149,9 +148,10 @@ DEF_TEST( ShaderErrors )
 
     GraphicsPipelineDescriptor graphicsPSODesc;
     {
-        graphicsPSODesc.pipelineLayout  = graphicsPSOLayout;
-        graphicsPSODesc.vertexShader    = LoadShader("SemanticErrors.VSMain", ShaderType::Vertex, true);
-        graphicsPSODesc.fragmentShader  = LoadShader("SemanticErrors.PSMain", ShaderType::Fragment, false);
+        graphicsPSODesc.pipelineLayout      = graphicsPSOLayout;
+        graphicsPSODesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
+        graphicsPSODesc.vertexShader        = LoadShader("SemanticErrors.VSMain", ShaderType::Vertex, true);
+        graphicsPSODesc.fragmentShader      = LoadShader("SemanticErrors.PSMain", ShaderType::Fragment, false);
     }
     PipelineState* graphicsPSO = renderer->CreatePipelineState(graphicsPSODesc);
 

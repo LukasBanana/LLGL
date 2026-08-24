@@ -143,10 +143,10 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
 
         // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3767429388
 
-        if (!desc.inputVertexAttribs.empty())
-        {
-            ID3DBlob* vertexByteCode = vertexShaderD3D->GetByteCode();
+        ID3DBlob* vertexByteCode = vertexShaderD3D->GetByteCode();
 
+        if (!desc.inputVertexAttribs.empty() && vertexByteCode != nullptr)
+        {
             DynamicVector<D3D11_INPUT_ELEMENT_DESC> inputElements;
             BuildInputLayout(desc.inputVertexAttribs, inputElements);
 

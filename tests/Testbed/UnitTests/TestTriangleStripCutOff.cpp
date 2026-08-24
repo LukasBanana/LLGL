@@ -34,9 +34,9 @@ DEF_TEST( TriangleStripCutOff )
 
     BufferDescriptor vertexBufDesc;
     {
-        vertexBufDesc.size          = sizeof(vertices);
-        vertexBufDesc.bindFlags     = BindFlags::VertexBuffer;
-        vertexBufDesc.vertexAttribs = vertexFormats[VertFmtUnprojected].attributes;
+        vertexBufDesc.size      = sizeof(vertices);
+        vertexBufDesc.stride    = sizeof(UnprojectedVertex);
+        vertexBufDesc.bindFlags = BindFlags::VertexBuffer;
     }
     CREATE_BUFFER(vertexBuf, vertexBufDesc, "vertices2D", vertices);
 

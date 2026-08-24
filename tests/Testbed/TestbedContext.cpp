@@ -1032,7 +1032,8 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
             "Configuration:\n"
             " - Profile: %s\n"
             " - DSA extension: %s\n"
-            " - %s\n",
+            " - %s\n"
+            "--------------------\n",
             renderer->GetName(),
             (hasDSAExtension ? "Yes" : "No"),
             cmdBufferContextInfo
@@ -1042,16 +1043,19 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
     {
         Log::Printf(
             "Configuration:\n"
-            " - %s\n",
+            " - %s\n"
+            "--------------------\n",
             cmdBufferContextInfo
         );
     }
 
-#if 1 //TEST
-    Log::Printf("Extensions:\n");
-    for (const UTF8String& extName : info.extensionNames)
-        Log::Printf("  %s\n", extName.c_str());
-#endif
+    if (opt.verbose && !info.extensionNames.empty())
+    {
+        Log::Printf("Extensions:\n");
+        for (const UTF8String& extName : info.extensionNames)
+            Log::Printf("  %s\n", extName.c_str());
+        Log::Printf("--------------------\n");
+    }
 }
 
 bool TestbedContext::LoadShaders()

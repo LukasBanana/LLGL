@@ -1683,6 +1683,8 @@ static bool IsStreamOutputCompatibleFormat(const Format format)
     }
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 {
     if (!shaderDesc.vertex.outputAttribs.empty())
@@ -1702,6 +1704,8 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
         ValidateVertexOutputAttribs(shaderDesc.vertex.outputAttribs, "shader", shaderDesc.debugName);
     }
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
 {

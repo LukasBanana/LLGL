@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 D3D11VertexShader::D3D11VertexShader(ID3D11Device* device, const ShaderDescriptor& desc) :
     D3D11Shader { desc.type }
 {
@@ -33,6 +35,8 @@ D3D11VertexShader::D3D11VertexShader(ID3D11Device* device, const ShaderDescripto
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 
 /*

@@ -35,21 +35,7 @@ const Report* NullShader::GetReport() const
 
 bool NullShader::Reflect(ShaderReflection& reflection) const
 {
-    switch (GetType())
-    {
-        case ShaderType::Vertex:
-            reflection.vertex = desc.vertex;
-            break;
-        case ShaderType::Fragment:
-            reflection.fragment = desc.fragment;
-            break;
-        case ShaderType::Compute:
-            reflection.compute = desc.compute;
-            break;
-        default:
-            break;
-    }
-    return true;
+    return false; // dummy
 }
 
 

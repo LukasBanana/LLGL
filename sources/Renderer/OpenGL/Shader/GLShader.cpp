@@ -23,6 +23,8 @@ namespace LLGL
 {
 
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
     Shader       { desc.type   },
     isSeparable_ { isSeparable }
@@ -32,6 +34,8 @@ GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
     GLShader::BuildTransformFeedbackVaryings(desc.vertex.outputAttribs, transformFeedbackVaryings_, shaderAttribNames_);
     GLShader::BuildFragmentOutputLayout(desc.fragment.outputAttribs, shaderAttribs_, shaderAttribNames_);
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 const Report* GLShader::GetReport() const
 {

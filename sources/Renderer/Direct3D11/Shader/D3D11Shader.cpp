@@ -80,6 +80,8 @@ bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shad
         return LoadBinary(device, shaderDesc);
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 bool D3D11Shader::BuildProxyGeometryShader(
     ID3D11Device*                   device,
     const ShaderDescriptor&         shaderDesc,
@@ -112,7 +114,6 @@ bool D3D11Shader::BuildProxyGeometryShader(
 /*
  * ======= Private: =======
  */
-
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
 bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
@@ -196,6 +197,8 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
     report_.Errorf("%s shader error: missing DXBC bytecode\n", ToString(shaderDesc.type));
     return false;
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
     ID3D11Device*           device,

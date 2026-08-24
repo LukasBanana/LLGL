@@ -177,6 +177,8 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     return bufferGL;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 // private
 GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
@@ -187,7 +189,8 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
+            if (!bufferDesc.vertexAttribs.empty())
+                bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -199,7 +202,8 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
+            if (!bufferDesc.vertexAttribs.empty())
+                bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -213,6 +217,8 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         return bufferGL;
     }
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 // Returns true if at least one of the buffers in the specified array has a VertexBuffer binding flag.
 static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffer* const * bufferArray)

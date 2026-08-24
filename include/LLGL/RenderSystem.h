@@ -279,6 +279,8 @@ class LLGL_EXPORT RenderSystem : public Interface
         \throws std::invalid_argument If any of the pointers in the array are null.
         \throws std::invalid_argument If not all buffers have the same binding flags.
         \see BufferDescriptor::bindFlags
+
+        \todo Change parameters to ArrayView analogous to CreateResourceHeap() and WriteResourceHeap().
         */
         virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 

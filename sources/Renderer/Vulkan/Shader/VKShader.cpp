@@ -46,6 +46,8 @@ static VKPtr<VkShaderModule> CreateVkShaderModule(VkDevice device, const std::ve
     return shaderModule;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     Shader  { desc.type },
     device_ { device    }
@@ -55,6 +57,8 @@ VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     BuildBindingLayout();
     BuildReport();
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 VKShader::~VKShader()
 {
