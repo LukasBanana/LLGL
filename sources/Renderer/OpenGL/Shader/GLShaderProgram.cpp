@@ -202,7 +202,7 @@ void GLShaderProgram::BindAttribLocations(GLuint program, ArrayView<GLShaderAttr
 
 void GLShaderProgram::BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs)
 {
-    #if LLGL_OPENGL && GL_EXT_gpu_shader4
+    #if LLGL_OPENGL && GL_EXT_gpu_shader4 && !LLGL_GL_ENABLE_OPENGL2X
     /* Only bind if extension is supported, otherwise the shader won't have multiple fragment outputs anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {

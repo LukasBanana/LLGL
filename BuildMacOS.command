@@ -212,7 +212,7 @@ if [ $LEGACY -ne 0 ]; then
         CC=$LEGACY_CC
         cmake
         -DLLGL_MACOS_ENABLE_COREVIDEO=OFF
-        -DLLGL_GL_ENABLE_OPENGL2X=ON
+        -DLLGL_GL_PROFILES="OpenGL Compatibility"
     )
     if [ $PROJECT_ONLY -eq 0 ]; then
         if [ -z "$GENERATOR" ]; then

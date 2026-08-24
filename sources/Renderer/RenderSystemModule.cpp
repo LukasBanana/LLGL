@@ -56,6 +56,8 @@ std::vector<std::string> RenderSystemModule::FindModules()
         "OpenGLES3",
         #else
         "OpenGL",
+        "OpenGLCore",
+        "OpenGLCompat",
         #endif
 
         "Null",

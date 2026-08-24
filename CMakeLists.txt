@@ -128,6 +128,10 @@ macro(ADD_PROJECT_DEFINE TARGET_NAME IDENT)
     target_compile_definitions(${TARGET_NAME} PRIVATE "-D${IDENT}")
 endmacro()
 
+macro(ADD_PROJECT_DEFINE_VALUE TARGET_NAME IDENT VALUE)
+    target_compile_definitions(${TARGET_NAME} PRIVATE "-D${IDENT}=${VALUE}")
+endmacro()
+
 macro(ADD_DEBUG_DEFINE IDENT)
     # Requires CMake 3.12
     add_compile_definitions("$<$<CONFIG:Debug>:${IDENT}>")
@@ -994,7 +998,11 @@ if(LLGL_BUILD_RENDERER_NULL)
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
-    message(STATUS "Build Renderer: OpenGL")
+    if(DEFINED LLGL_GL_PROFILES)
+        message(STATUS "Build Renderer: ${LLGL_GL_PROFILES}")
+    else()
+        message(STATUS "Build Renderer: OpenGL")
+    endif()
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)

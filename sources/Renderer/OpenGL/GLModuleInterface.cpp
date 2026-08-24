@@ -10,13 +10,14 @@
 #include "Profile/GLProfile.h"
 
 
-#if defined(LLGL_OPENGLES3)
-LLGL_IMPLEMENT_RENDERER_MODULE(OpenGLES3, LLGL::GLProfile::GetRendererName(), LLGL::GLProfile::GetRendererID(), LLGL::GLRenderSystem, 100);
-#elif defined(LLGL_WEBGL)
-LLGL_IMPLEMENT_RENDERER_MODULE(WebGL, LLGL::GLProfile::GetRendererName(), LLGL::GLProfile::GetRendererID(), LLGL::GLRenderSystem, 100);
-#else
-LLGL_IMPLEMENT_RENDERER_MODULE(OpenGL, LLGL::GLProfile::GetRendererName(), LLGL::GLProfile::GetRendererID(), LLGL::GLRenderSystem, 100);
-#endif
+/*
+Use indirection to solve macro expansion dependency.
+LLGL_OPENGL_PROFILE nees to be expanded before begin passed to LLGL_IMPLEMENT_RENDERER_MODULE().
+*/
+#define LLGL_IMPLEMENT_RENDERER_MODULE_OPENGL(PROFILE) \
+    LLGL_IMPLEMENT_RENDERER_MODULE(PROFILE, LLGL::GLProfile::GetRendererName(), LLGL::GLProfile::GetRendererID(), LLGL::GLRenderSystem, 100)
+
+LLGL_IMPLEMENT_RENDERER_MODULE_OPENGL(LLGL_OPENGL_PROFILE);
 
 
 

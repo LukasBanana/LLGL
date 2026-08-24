@@ -216,7 +216,7 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
     GLShader::Permutation       permutation,
     GLPipelineCache*            pipelineCache)
 {
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(shaders))
     {
         return std::static_pointer_cast<GLShaderPipeline>(

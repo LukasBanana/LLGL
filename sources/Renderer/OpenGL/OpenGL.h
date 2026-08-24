@@ -10,7 +10,11 @@
 
 
 #if LLGL_OPENGL
-#   include "Profile/GLCore/OpenGLCore.h"
+#   if LLGL_GL_ENABLE_OPENGL2X
+#       include "Profile/GLCompat/OpenGLCompat.h"
+#   else
+#       include "Profile/GLCore/OpenGLCore.h"
+#   endif
 #elif LLGL_OPENGLES3
 #   include "Profile/GLES/OpenGLES.h"
 #elif LLGL_WEBGL

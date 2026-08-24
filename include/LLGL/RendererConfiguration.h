@@ -11,6 +11,7 @@
 
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 
 
@@ -49,7 +50,7 @@ enum class OpenGLContextProfile
     ESProfile,
 
     //! \deprecated Since 0.04b; Use OpenGLContextProfile::Auto instead!
-    DefaultProfile = Auto, // DEPRECATED
+    DefaultProfile LLGL_DEPRECATED_ENUMCASE("Identifier `DefaultProfile` is deprecated since 0.05b; Use `Auto` instead!", "Auto") = Auto, // DEPRECATED
 };
 
 
