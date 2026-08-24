@@ -114,19 +114,12 @@ struct HelloUWPExampleApp : winrt::implements<HelloUWPExampleApp, IFrameworkView
                 { { -0.5f, -0.5f }, 0xFFFF0000 }, // blue
             };
 
-            // Vertex format
-            LLGL::VertexAttribute vertexAttribs[2] =
-            {
-                LLGL::VertexAttribute{ "POSITION", LLGL::Format::RG32Float,  0, offsetof(Vertex, position), sizeof(Vertex) },
-                LLGL::VertexAttribute{ "COLOR",    LLGL::Format::RGBA8UNorm, 1, offsetof(Vertex, color   ), sizeof(Vertex) },
-            };
-
             // Create vertex buffer
             LLGL::BufferDescriptor vertexBufferDesc;
             {
-                vertexBufferDesc.size           = sizeof(vertices);
-                vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-                vertexBufferDesc.vertexAttribs  = vertexAttribs;
+                vertexBufferDesc.size       = sizeof(vertices);
+                vertexBufferDesc.stride     = sizeof(Vertex);
+                vertexBufferDesc.bindFlags  = LLGL::BindFlags::VertexBuffer;
             }
             vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
@@ -135,9 +128,8 @@ struct HelloUWPExampleApp : winrt::implements<HelloUWPExampleApp, IFrameworkView
             LLGL::ShaderDescriptor fragShaderDesc = { LLGL::ShaderType::Fragment, "HelloUWP.Example.PS.dxbc", "PS", "ps_4_0" };
 
             // Specify vertex attributes for vertex shader
-            vertShaderDesc.vertex.inputAttribs  = { std::begin(vertexAttribs), std::end(vertexAttribs) };
-            vertShaderDesc.sourceType           = LLGL::ShaderSourceType::BinaryFile;
-            fragShaderDesc.sourceType           = LLGL::ShaderSourceType::BinaryFile;
+            vertShaderDesc.sourceType = LLGL::ShaderSourceType::BinaryFile;
+            fragShaderDesc.sourceType = LLGL::ShaderSourceType::BinaryFile;
 
             LLGL::Shader* vertShader = renderer->CreateShader(vertShaderDesc);
             LLGL::Shader* fragShader = renderer->CreateShader(fragShaderDesc);
@@ -148,12 +140,20 @@ struct HelloUWPExampleApp : winrt::implements<HelloUWPExampleApp, IFrameworkView
                     LLGL::Log::Errorf("%s", report->GetText());
             }
 
+            // Vertex format
+            const LLGL::VertexAttribute vertexAttribs[2] =
+            {
+                LLGL::VertexAttribute{ "POSITION", LLGL::Format::RG32Float,  0, offsetof(Vertex, position), sizeof(Vertex) },
+                LLGL::VertexAttribute{ "COLOR",    LLGL::Format::RGBA8UNorm, 1, offsetof(Vertex, color   ), sizeof(Vertex) },
+            };
+
             // Create graphics pipeline
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.vertexShader   = vertShader;
-                pipelineDesc.fragmentShader = fragShader;
-                pipelineDesc.renderPass     = swapChain->GetRenderPass();
+                pipelineDesc.inputVertexAttribs = vertexAttribs;
+                pipelineDesc.vertexShader       = vertShader;
+                pipelineDesc.fragmentShader     = fragShader;
+                pipelineDesc.renderPass         = swapChain->GetRenderPass();
             }
             pipeline = renderer->CreatePipelineState(pipelineDesc);
 

@@ -113,7 +113,7 @@ public:
 private:
 
     void CreateSwapChains();
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat);
+    void LoadShaders();
     LLGL::Shader* LoadShader(LLGL::ShaderDescriptor shaderDesc, const std::string& assetName);
 
     // Renders the scene once per eye into its own swap-chain (conventional path).
@@ -318,12 +318,6 @@ void MyXRRenderer::CreateSwapChains()
 
 void MyXRRenderer::CreateResources()
 {
-    // Vertex format: position + per-vertex color.
-    LLGL::VertexFormat vertexFormat;
-    vertexFormat.AppendAttribute({ "POSITION", LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "COLOR",    LLGL::Format::RGB32Float });
-    vertexFormat.SetStride(sizeof(ColoredVertex));
-
     // Axis-coloured unit cube from the shared geometry utilities (+X red, -X cyan, +Y green,
     // -Y magenta, +Z blue, -Z yellow).
     const std::vector<ColoredVertex>    vertices = GenerateColoredCubeVertices();
@@ -331,7 +325,7 @@ void MyXRRenderer::CreateResources()
     numIndices = static_cast<std::uint32_t>(indices.size());
 
     vertexBuffer = renderer->CreateBuffer(
-        LLGL::VertexBufferDesc(vertices.size() * sizeof(ColoredVertex), vertexFormat),
+        LLGL::VertexBufferDesc(vertices.size() * sizeof(ColoredVertex), sizeof(ColoredVertex)),
         vertices.data()
     );
     indexBuffer = renderer->CreateBuffer(
@@ -353,11 +347,19 @@ void MyXRRenderer::CreateResources()
     resourceHeap = renderer->CreateResourceHeap(layout, { viewProjBuffer });
 
     // Shaders.
-    LoadShaders(vertexFormat);
+    LoadShaders();
+
+    // Vertex format: position + per-vertex color.
+    const LLGL::VertexAttribute vertexAttribs[] =
+    {
+        LLGL::VertexAttribute{ "POSITION", LLGL::Format::RGB32Float, 0, offsetof(ColoredVertex, position), sizeof(ColoredVertex) },
+        LLGL::VertexAttribute{ "COLOR",    LLGL::Format::RGB32Float, 1, offsetof(ColoredVertex, color   ), sizeof(ColoredVertex) },
+    };
 
     // Graphics pipeline.
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     pipelineDesc.pipelineLayout         = layout;
+    pipelineDesc.inputVertexAttribs     = vertexAttribs;
     pipelineDesc.vertexShader           = vertShader;
     pipelineDesc.fragmentShader         = fragShader;
     pipelineDesc.depth.testEnabled      = true;
@@ -411,7 +413,7 @@ LLGL::Shader* MyXRRenderer::LoadShader(LLGL::ShaderDescriptor shaderDesc, const 
     return shader;
 }
 
-void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
+void MyXRRenderer::LoadShaders()
 {
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
     const auto HasLanguage = [&languages](LLGL::ShadingLanguage lang) -> bool
@@ -426,7 +428,6 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
         LLGL::ShaderDescriptor vsDesc;
         vsDesc.type                 = LLGL::ShaderType::Vertex;
         vsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
-        vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
         vertShader = LoadShader(vsDesc, useMultiview ? "Example.multiview.450core.vert.spv" : "Example.450core.vert.spv");
 
         LLGL::ShaderDescriptor fsDesc;
@@ -443,7 +444,6 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
         vsDesc.sourceType           = LLGL::ShaderSourceType::CodeString;
         vsDesc.entryPoint           = (useMultiview ? "VSMultiview" : "VS");
         vsDesc.profile              = (useMultiview ? "vs_6_1" : "vs_5_0");
-        vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
         vertShader = LoadShader(vsDesc, "Example.hlsl");
 
         // The pixel shader must use the same shader model tier as the vertex shader within one PSO: D3D12 rejects
