@@ -93,9 +93,10 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetVertexArray(const GLVertexInp
 void GLVertexArrayCache::NotifyBufferRelease(const GLBuffer& buffer)
 {
     /* Run through all vertex buffer bindings to see which one must be destroyed */
+    const GLBuffer* bufferPtr = &buffer;
     RemoveAllFromListIf(
         vertexBindings_,
-        [bufferPtr = &buffer](const VertexBufferBinding& entry) -> bool
+        [bufferPtr](const VertexBufferBinding& entry) -> bool
         {
             return (std::find(entry.buffers.begin(), entry.buffers.end(), bufferPtr) != entry.buffers.end());
         }

@@ -171,6 +171,8 @@ void GLShader::ReportStatusAndLog(bool status, const std::string& log)
  * ======= Private: =======
  */
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
 {
     /* Reset attributes and their name storage */
@@ -198,6 +200,8 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
     /* Reserve memory for vertex input and fragment output attributes */
     shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void GLShader::BuildVertexInputLayout(
     ArrayView<VertexAttribute>      inVertexAttribs,

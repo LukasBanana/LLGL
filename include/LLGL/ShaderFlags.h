@@ -310,9 +310,19 @@ struct ComputeShaderAttributes
 */
 struct ShaderDescriptor
 {
-    ShaderDescriptor() = default;
+    //TODO: remove these delcaration once deprecation has ended {
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    ShaderDescriptor(const ShaderDescriptor&) = default;
+    ShaderDescriptor(ShaderDescriptor&&) = default;
+    ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
+    ShaderDescriptor& operator = (ShaderDescriptor&&) = default;
+    ~ShaderDescriptor() = default;
+    LLGL_DEPRECATED_IGNORE_POP()
+    // }
 
     LLGL_DEPRECATED_IGNORE_PUSH()
+
+    ShaderDescriptor() = default;
 
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :

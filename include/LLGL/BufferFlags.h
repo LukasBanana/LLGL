@@ -31,6 +31,17 @@ namespace LLGL
 */
 struct BufferDescriptor
 {
+    //TODO: remove these delcaration once deprecation has ended {
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    BufferDescriptor() = default;
+    BufferDescriptor(const BufferDescriptor&) = default;
+    BufferDescriptor(BufferDescriptor&&) = default;
+    BufferDescriptor& operator = (const BufferDescriptor&) = default;
+    BufferDescriptor& operator = (BufferDescriptor&&) = default;
+    ~BufferDescriptor() = default;
+    LLGL_DEPRECATED_IGNORE_POP()
+    // }
+
     /**
     \brief Optional name for debugging purposes. By default null.
     \remarks The final name of the native hardware resource is implementation defined.

@@ -20,6 +20,7 @@
 #include <LLGL/ShaderReflection.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -97,6 +98,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, std::uint32_t stride = 0, long cpuAccessFlags = 0);
 
 //! \deprecated Since 0.05b; Use new version without `vertexFormat` parameter.
+LLGL_DEPRECATED("This version of `VertexBufferDesc()` is deprecated since 0.05b; Use the version with `stride` parameter instead of `vertexFormat`!")
 inline BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFormat& vertexFormat, long cpuAccessFlags = 0)
 {
     return VertexBufferDesc(size, vertexFormat.GetStride(), cpuAccessFlags);

@@ -404,12 +404,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations with a new stride and optional base offset.
-        \remarks Use this function either when the specified vertex buffer was not created with a default stride
         \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
         \param[in] stride Specifies the stride (in bytes) between vertices. This \b must either be zero or equal to the stride of all vertex attributes that reference this buffer slot (0)
         described in the graphics PSO that is used in subsequent draw commands.
-        If this is zero, the stride is implied by the default buffer stride, which in this case <b>must not</b> be zero itself.
+        If this is zero, the stride is implied by the stride this buffer was created with, which in turn <b>must not</b> be zero and is also subject to the same constraint of the PSO's input layout.
         \param[in] offset Specifies an optional base offset (in bytes) where to start reading the vertex buffer. By default 0.
+        \remarks Use this function either when the specified vertex buffer was not created with a default stride
+        or the graphics PSO for subsequent draw commands has a vertex input layout with a stride different from the buffer's default stride.
         \remarks Having to specify the same stride as used in the graphics PSO seems redundant, but it's a compromise of keeping the API lightweight and backend agnostic.
         D3D defines the strides with their vertex buffers while Vulkan and Metal tie them to the graphics PSO. Letting LLGL track those states adds costs that can be avoided.
         \see BufferDescriptor::stride
