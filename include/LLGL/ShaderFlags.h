@@ -312,6 +312,8 @@ struct ShaderDescriptor
 {
     ShaderDescriptor() = default;
 
+    LLGL_DEPRECATED_IGNORE_PUSH()
+
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
         type   { type   },
@@ -334,6 +336,8 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
+
+    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.

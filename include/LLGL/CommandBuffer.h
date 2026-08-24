@@ -413,6 +413,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks Having to specify the same stride as used in the graphics PSO seems redundant, but it's a compromise of keeping the API lightweight and backend agnostic.
         D3D defines the strides with their vertex buffers while Vulkan and Metal tie them to the graphics PSO. Letting LLGL track those states adds costs that can be avoided.
         \see BufferDescriptor::stride
+        \note \c offset is not implemented for all backends yet (WIP)!
         */
         virtual void SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset = 0) = 0;
 

@@ -56,8 +56,8 @@ class GLVertexArrayCache
 
         struct VertexBufferBinding
         {
-            std::size_t                     combinedInputHash   = 0;    // Combined hash between vertex input and buffer input.
-            SmallVector<GLBuffer*, 1>       buffers;                    // Buffer array to keep track what VAOs must be destroyed when a buffer is released.
+            std::size_t                     combinedInputHash;  // Combined hash between vertex input and buffer input.
+            SmallVector<GLBuffer*, 1>       buffers;            // Buffer array to keep track what VAOs must be destroyed when a buffer is released.
             GLSharedContextVertexArrayPtr   vertexArray;
         };
 

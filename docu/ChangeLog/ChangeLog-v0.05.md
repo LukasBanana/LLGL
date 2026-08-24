@@ -74,12 +74,12 @@ graphicsPSODesc.inputVertexAttribs = myVertexAttributes;
 
 ## Vertex buffers
 
-**NOTE**: This is planned, but not implemented yet.
-
 As mentioned in section the [Vertex attributes](#vertex-attributes) section, vertex buffers no longer need their attributes specified.
-This also sunsets the secondary `SetVertexBuffer` function that modified the attributes as a workaround to use a vertex buffer for multiple formats.
-It is superseded (TODO: not implemented yet) by a new secondary function that specfies byte offset (this wasn't previously supported).
-The stride, however, cannot be changed as it was never supported by Vulkan since it is tied to the graphics PSO.
+This also sunsets the old secondary `SetVertexBuffer` function that modified the attributes as a workaround to use a vertex buffer for multiple formats.
+It is superseded by a new secondary function that specfies stride and base offset (this wasn't previously supported).
+The stride, however, cannot be changed as it was never supported by Vulkan and Metal; They tie the stride to the graphics PSO.
+As a compromise to keep the API lightweight and backend agnostic, a vertex buffer must either have a default stride (via `BufferDescriptor::stride`) or
+a custom stride via this new function, both of which *must* match the stride specified for the respective vertex attributes in the graphics PSO (via `GraphicsPipelineDescriptor::inputVertexAttribs`).
 
 Before:
 ```cpp
@@ -90,7 +90,7 @@ LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint32_t numVert
 After:
 ```cpp
 // Interface
-LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint64_t offset = 0);
+LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint32_t stride, std::uint64_t offset = 0);
 ```
 
 
