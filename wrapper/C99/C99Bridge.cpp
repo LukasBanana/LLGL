@@ -26,8 +26,12 @@ void ConvertRenderSystemDesc(RenderSystemDescriptor& dst, const LLGLRenderSystem
     dst.debugger            = LLGL_PTR(RenderingDebugger, src.debugger);
     dst.rendererConfig      = src.rendererConfig;
     dst.rendererConfigSize  = src.rendererConfigSize;
+    dst.platformContext     = src.platformContext;
+    dst.platformContextSize = src.platformContextSize;
     #ifdef LLGL_OS_ANDROID
+    LLGL_DEPRECATED_IGNORE_PUSH()
     dst.androidApp          = src.androidApp;
+    LLGL_DEPRECATED_IGNORE_POP()
     #endif
 }
 

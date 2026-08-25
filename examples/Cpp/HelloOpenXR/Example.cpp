@@ -151,9 +151,13 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     xrDesc.formFactor                       = LLGL::XRFormFactor::HeadMountedDisplay;
     xrDesc.viewConfiguration                = LLGL::XRViewConfiguration::Stereo;
     xrDesc.flags                            = xrSystemDescFlags;
-    #if defined LLGL_OS_ANDROID
-    xrDesc.androidApp = ExampleBase::GetAndroidApp();
-    #endif
+#if defined LLGL_OS_ANDROID
+    // The XR system needs the JavaVM and Activity; LLGL pulls both out of the app state a
+    // NativeActivity application was handed, identified by its size.
+    android_app* androidApp = ExampleBase::GetAndroidApp();
+    xrDesc.platformContext     = androidApp;
+    xrDesc.platformContextSize = sizeof(*androidApp);
+#endif
 
     LLGL::Report report;
     xrSystem = LLGL::XRSystem::Load(xrDesc, &report);
@@ -172,6 +176,13 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     renderSystemDesc.flags = renderDescFlags;
 #if defined(LLGL_DEBUG)
     renderSystemDesc.debugger = &renderDebugger;
+#endif
+#if defined LLGL_OS_ANDROID
+    // A native_app_glue application must hand over its app state: RenderSystem::Load pumps the
+    // glue event loop until the native window and content are ready.  Without that the activity
+    // never reaches the state the XR runtime waits for in xrCreateSession.
+    renderSystemDesc.platformContext     = androidApp;
+    renderSystemDesc.platformContextSize = sizeof(*androidApp);
 #endif
 
     renderer = xrSystem->CreateRenderSystem(renderSystemDesc, &report);

@@ -12,14 +12,16 @@
 #include <LLGL/Export.h>
 #include <LLGL/Format.h>
 #include <LLGL/Types.h>
+#include <LLGL/Deprecated.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <LLGL/RendererConfiguration.h>
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
-#   include <android_native_app_glue.h>
+struct android_app;
 #endif
 
+#include <cstddef>
 #include <cstdint>
 
 
@@ -102,6 +104,7 @@ struct XRSystemFlags
 \brief XR system descriptor structure.
 \see XRSystem::Load
 */
+LLGL_DEPRECATED_IGNORE_PUSH() // Suppress warnings the deprecated ::androidApp member raises via the implicit copy functions
 struct XRSystemDescriptor
 {
     /**
@@ -148,20 +151,36 @@ struct XRSystemDescriptor
     */
     std::size_t xrConfigSize = 0;
 
-    #ifdef LLGL_OS_ANDROID
+    /**
+    \brief Optional raw pointer to a platform specific context structure the XR system is brought up with. By default null.
+    \remarks The structure it points to is identified by ::platformContextSize. Currently only used on Android,
+    where it is \b required and points to either the \c android_app state of a NativeActivity-based application,
+    or an LLGL::AndroidContext filled in by an application - as with SDL - that has no \c android_app.
+    \remarks Only the Java VM and Activity are read: the OpenXR loader needs both to discover and bind to the
+    system XR runtime, via \c xrInitializeLoaderKHR and \c XrInstanceCreateInfoAndroidKHR.
+    \see platformContextSize
+    \see RenderSystemDescriptor::platformContext
+    \see AndroidContext
+    */
+    void*       platformContext     = nullptr;
 
     /**
-    \brief Android-specific application descriptor. \b Required on Android.
-    \remarks This must point to the \c android_app structure delivered to the application's
-    \c android_main(android_app*) entry point. The OpenXR loader uses the embedded JavaVM
-    and Activity instance to discover and bind to the system XR runtime via
-    \c xrInitializeLoaderKHR and \c XrInstanceCreateInfoAndroidKHR.
-    \note Only required on: Android.
+    \brief Specifies the size (in bytes) of the structure \c platformContext points to (use \c sizeof with the respective structure). By default 0.
+    \remarks This size is what identifies which structure \c platformContext points to.
+    \remarks If \c platformContext is null then this field is ignored.
+    \see platformContext
     */
-    android_app*            androidApp          = nullptr;
+    std::size_t platformContextSize = 0;
+
+    #ifdef LLGL_OS_ANDROID
+
+    //! \deprecated Since 0.05b; Use platformContext instead!
+    LLGL_DEPRECATED("Identifier `androidApp` is deprecated since 0.05b; Use `platformContext` instead!", "platformContext")
+    android_app*    androidApp      = nullptr;
 
     #endif // /LLGL_OS_ANDROID
 };
+LLGL_DEPRECATED_IGNORE_POP()
 
 /**
 \brief XR session descriptor structure.

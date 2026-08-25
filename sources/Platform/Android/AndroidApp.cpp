@@ -114,10 +114,22 @@ AndroidApp& AndroidApp::Get()
     return instance;
 }
 
-void AndroidApp::Initialize(android_app* state)
+void AndroidApp::Initialize(const AndroidContext& context, android_app* state)
 {
-    LLGL_ASSERT_PTR(state);
+    context_ = context;
+
+    /*
+    The app state is optional, but a "native app glue" application must supply it: the pump below
+    is what advances such an application through its startup lifecycle, and skipping it leaves the
+    Activity in a state the platform - and any XR runtime waiting on it - never sees become ready.
+    An application that drives its own event loop, such as one whose Activity is written in Java,
+    has no app state to give and does not need this.
+    */
+    if (state == nullptr)
+        return;
+
     state_ = state;
+
     if (state_->window == nullptr)
     {
         /* Process events until native window is initialized (APP_CMD_INIT_WINDOW) */

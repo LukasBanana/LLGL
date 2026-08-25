@@ -539,7 +539,10 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::RendererConfigurationOpenGL cfgGL;
 
     if (android_app* app = ExampleBase::androidApp_)
-        rendererDesc.androidApp = app;
+    {
+        rendererDesc.platformContext     = app;
+        rendererDesc.platformContextSize = sizeof(*app);
+    }
     else
         LLGL_THROW_INVALID_ARGUMENT("'android_app' state was not specified");
 

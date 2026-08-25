@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 
     #ifdef LLGL_OS_ANDROID
     rendererDesc.moduleName = "OpenGLES3";
-    rendererDesc.androidApp = androidApp;
+    rendererDesc.platformContext     = androidApp;
+    rendererDesc.platformContextSize = sizeof(*androidApp);
     #else
     const std::string rendererModule = GetSelectedRendererModule(argc, argv);
     rendererDesc.moduleName = rendererModule;
