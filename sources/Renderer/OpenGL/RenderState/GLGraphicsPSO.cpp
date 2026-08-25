@@ -79,8 +79,7 @@ GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const Rende
         patchVertices_ = 0;
 
     /* Create vertex input layout */
-    vertexInputLayout_.Append(desc.inputVertexAttribs);
-    vertexInputLayout_.Finalize();
+    vertexInputLayout_.SetAttribs(desc.inputVertexAttribs);
 
     /* Create depth-stencil state */
     depthStencilState_ = GLStatePool::Get().CreateDepthStencilState(desc.depth, desc.stencil);

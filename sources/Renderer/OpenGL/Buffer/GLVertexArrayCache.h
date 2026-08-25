@@ -12,7 +12,6 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/SmallVector.h>
 #include "GLSharedContextVertexArray.h"
-#include "GLVertexArrayHash.h"
 #include "GLBufferInputLayout.h"
 #include <vector>
 #include <mutex>
@@ -58,8 +57,8 @@ class GLVertexArrayCache
 
         struct VertexBufferBinding
         {
-            std::size_t                     combinedInputHash;  // Combined hash between vertex input and buffer input.
-            SmallVector<GLBuffer*, 1>       buffers;            // Buffer array to keep track what VAOs must be destroyed when a buffer is released.
+            GLVertexInputLayout             vertexInputLayout;
+            GLBufferInputLayout             bufferInputLayout;
             GLSharedContextVertexArrayPtr   vertexArray;
         };
 

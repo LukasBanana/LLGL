@@ -39,13 +39,11 @@ void GL3PlusSharedContextVertexArray::Reset()
 
 void GL3PlusSharedContextVertexArray::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
 {
-    inputLayout_.Append(attributes);
+    inputLayout_.SetAttribs(attributes);
 }
 
 void GL3PlusSharedContextVertexArray::Finalize()
 {
-    inputLayout_.Finalize();
-
     /* Mark all previously generated VAOs as dirty */
     for (GLContextVAO& contextVAO : contextDependentVAOs_)
         contextVAO.isDirty = true;

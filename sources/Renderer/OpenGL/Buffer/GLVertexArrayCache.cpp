@@ -26,12 +26,6 @@ GLVertexArrayCache& GLVertexArrayCache::Get()
 void GLVertexArrayCache::Clear()
 {
     std::lock_guard<std::mutex> guard{ mutex_ };
-#if 0//TODO: this needs to call `GLVertexArrayObject::Release()`, but they are GL context dependent, so this needs a deferred deletion mechanism
-    for (VertexBufferBinding& vertexBinding : vertexBindings_)
-    {
-        vertexBinding.vertexArray->Reset();
-    }
-#endif
     vertexBindings_.clear();
 }
 
@@ -43,19 +37,21 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVer
     const ArrayView<GLVertexAttribute>  attribs = vertexInputLayout.GetAttribs();
     const ArrayView<GLBuffer*>          buffers = bufferInputLayout.GetBuffers();
 
-    /* Get combination of vertex input and buffer input hashes */
-    std::size_t combinedHash = 0;
-    HashCombine(combinedHash, vertexInputLayout.GetHash());
-    HashCombine(combinedHash, bufferInputLayout.GetHash());
-
     /* Try to find existing vertex buffer binding for input combination */
     std::size_t insertPosition = 0;
     VertexBufferBinding* vertexBinding = FindInSortedArray<VertexBufferBinding>(
         vertexBindings_.data(),
         vertexBindings_.size(),
-        [combinedHash](const VertexBufferBinding& entry) -> int
+        [&vertexInputLayout, &bufferInputLayout](const VertexBufferBinding& entry) -> int
         {
-            LLGL_COMPARE_SEPARATE_MEMBERS_SWO(combinedHash, entry.combinedInputHash);
+            int cmpVertexInputLayout = GLVertexInputLayout::CompareSWO(entry.vertexInputLayout, vertexInputLayout);
+            if (cmpVertexInputLayout != 0)
+                return cmpVertexInputLayout;
+
+            int cmpBufferInputLayout = GLBufferInputLayout::CompareSWO(entry.bufferInputLayout, bufferInputLayout);
+            if (cmpBufferInputLayout != 0)
+                return cmpBufferInputLayout;
+
             return 0;
         },
         &insertPosition
@@ -87,7 +83,7 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVer
     /* Cache new vertex array in sorted list */
     auto itNewEntry = vertexBindings_.insert(
         vertexBindings_.begin() + insertPosition,
-        VertexBufferBinding{ combinedHash, SmallVector<GLBuffer*, 1>{ buffers.begin(), buffers.end() }, std::move(newVertexArray) }
+        VertexBufferBinding{ vertexInputLayout, bufferInputLayout, std::move(newVertexArray) }
     );
     return itNewEntry->vertexArray.get();
 }
@@ -102,7 +98,8 @@ void GLVertexArrayCache::NotifyBufferRelease(const GLBuffer& buffer)
         vertexBindings_,
         [bufferPtr](const VertexBufferBinding& entry) -> bool
         {
-            return (std::find(entry.buffers.begin(), entry.buffers.end(), bufferPtr) != entry.buffers.end());
+            ArrayView<GLBuffer*> buffers = entry.bufferInputLayout.GetBuffers();
+            return (std::find(buffers.begin(), buffers.end(), bufferPtr) != buffers.end());
         }
     );
 }

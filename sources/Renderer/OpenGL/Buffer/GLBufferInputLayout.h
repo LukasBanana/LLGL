@@ -41,14 +41,11 @@ class GLBufferInputLayout
         // Initializes the hash with an array of GL buffers.
         GLBufferInputLayout(ArrayView<GLBuffer*> buffers);
 
-        // Resets the hash.
+        // Reset the buffers.
         void Reset();
 
         // Appends the specified vertex attributes. Call Finalize() after all invocations of Append().
-        void Append(ArrayView<GLBuffer*> buffers);
-
-        // Finalizes the input layout by updating the hash.
-        void Finalize();
+        void SetBuffers(ArrayView<GLBuffer*> buffers);
 
         // Returns the array of input vertex attributes this shader was created with. This is a direct copy of the input attributes.
         inline ArrayView<GLBuffer*> GetBuffers() const
@@ -56,16 +53,13 @@ class GLBufferInputLayout
             return buffers_;
         }
 
-        // Returns the hash over all vertex attributes.
-        inline std::size_t GetHash() const
-        {
-            return hash_;
-        }
+    public:
+
+        static int CompareSWO(const GLBufferInputLayout& lhs, const GLBufferInputLayout& rhs);
 
     private:
 
-        SmallVector<GLBuffer*, 1>   buffers_;
-        std::size_t                 hash_       = 0;
+        SmallVector<GLBuffer*, 1> buffers_;
 
 };
 

@@ -34,6 +34,8 @@ struct GLVertexAttribute
 // Converts the specified vertex attribute into a GL specific attributes.
 void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, GLuint srcBuffer);
 
+int CompareSWO(const GLVertexAttribute& lhs, const GLVertexAttribute& rhs);
+
 
 } // /namespace LLGL
 

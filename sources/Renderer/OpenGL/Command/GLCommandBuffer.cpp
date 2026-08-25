@@ -146,7 +146,7 @@ GLbitfield GLCommandBuffer::FlushAndGetMemoryBarriers()
 
 void GLCommandBuffer::SetVertexInputLayout(const GLVertexInputLayout& vertexInputLayout)
 {
-    if (vertexInputState_.vertexInputLayout.GetHash() != vertexInputLayout.GetHash())
+    if (GLVertexInputLayout::CompareSWO(vertexInputState_.vertexInputLayout, vertexInputLayout) != 0)
     {
         vertexInputState_.dirtyBit          = true;
         vertexInputState_.vertexInputLayout = vertexInputLayout;
@@ -155,7 +155,7 @@ void GLCommandBuffer::SetVertexInputLayout(const GLVertexInputLayout& vertexInpu
 
 void GLCommandBuffer::SetBufferInputLayout(const GLBufferInputLayout& bufferInputLayout)
 {
-    if (vertexInputState_.bufferInputLayout.GetHash() != bufferInputLayout.GetHash())
+    if (GLBufferInputLayout::CompareSWO(vertexInputState_.bufferInputLayout, bufferInputLayout) != 0)
     {
         vertexInputState_.dirtyBit          = true;
         vertexInputState_.bufferInputLayout = bufferInputLayout;

@@ -6,6 +6,7 @@
  */
 
 #include "GLVertexInputLayout.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -16,28 +17,31 @@ namespace LLGL
 void GLVertexInputLayout::Reset()
 {
     attribs_.clear();
-    attribsHash_.Reset();
 }
 
-void GLVertexInputLayout::Append(ArrayView<GLVertexAttribute> attributes)
+void GLVertexInputLayout::SetAttribs(ArrayView<GLVertexAttribute> attributes)
 {
-    attribs_.insert(attribs_.end(), attributes.begin(), attributes.end());
+    attribs_ = std::vector<GLVertexAttribute>(attributes.begin(), attributes.end());
 }
 
-void GLVertexInputLayout::Append(ArrayView<VertexAttribute> attributes)
+void GLVertexInputLayout::SetAttribs(ArrayView<VertexAttribute> attributes)
 {
     /* Convert to GLVertexAttribute */
-    const std::size_t startOffset = attribs_.size();
-    attribs_.resize(startOffset + attributes.size());
-
+    attribs_.resize(attributes.size());
     for_range(i, attributes.size())
-        GLConvertVertexAttrib(attribs_[startOffset + i], attributes[i], attributes[i].slot);
+        GLConvertVertexAttrib(attribs_[i], attributes[i], attributes[i].slot);
 }
 
-void GLVertexInputLayout::Finalize()
+int GLVertexInputLayout::CompareSWO(const GLVertexInputLayout& lhs, const GLVertexInputLayout& rhs)
 {
-    /* Update vertex attributes hash */
-    attribsHash_.Update(attribs_);
+    LLGL_COMPARE_SEPARATE_MEMBERS_SWO( lhs.attribs_.size(), rhs.attribs_.size() );
+    for_range(i, lhs.attribs_.size())
+    {
+        int cmpAttrib = LLGL::CompareSWO(lhs.attribs_[i], rhs.attribs_[i]);
+        if (cmpAttrib != 0)
+            return cmpAttrib;
+    }
+    return 0;
 }
 
 

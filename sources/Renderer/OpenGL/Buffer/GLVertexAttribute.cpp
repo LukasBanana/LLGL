@@ -9,6 +9,7 @@
 #include "../GLCore.h"
 #include "../GLTypes.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Utils/TypeNames.h>
 
 
@@ -54,6 +55,20 @@ void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, G
     {
         dst.size = static_cast<GLint>(formatAttribs.components);
     }
+}
+
+int CompareSWO(const GLVertexAttribute& lhs, const GLVertexAttribute& rhs)
+{
+    LLGL_COMPARE_MEMBER_SWO( buffer );
+    LLGL_COMPARE_MEMBER_SWO( index );
+    LLGL_COMPARE_MEMBER_SWO( size );
+    LLGL_COMPARE_MEMBER_SWO( type );
+    LLGL_COMPARE_MEMBER_SWO( normalized );
+    LLGL_COMPARE_MEMBER_SWO( stride );
+    LLGL_COMPARE_MEMBER_SWO( offsetPtrSized );
+    LLGL_COMPARE_MEMBER_SWO( divisor );
+    LLGL_COMPARE_BOOL_MEMBER_SWO( isInteger );
+    return 0;
 }
 
 

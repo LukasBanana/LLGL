@@ -7,6 +7,8 @@
 
 #include "GLBufferInputLayout.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/MacroUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -15,32 +17,32 @@ namespace LLGL
 
 GLBufferInputLayout::GLBufferInputLayout(GLBuffer* buffer)
 {
-    Append({ buffer });
-    Finalize();
+    SetBuffers({ buffer });
 }
 
 GLBufferInputLayout::GLBufferInputLayout(ArrayView<GLBuffer*> buffers)
 {
-    Append(buffers);
-    Finalize();
+    SetBuffers(buffers);
 }
 
 void GLBufferInputLayout::Reset()
 {
     buffers_.clear();
-    hash_ = 0;
 }
 
-void GLBufferInputLayout::Append(ArrayView<GLBuffer*> buffers)
+void GLBufferInputLayout::SetBuffers(ArrayView<GLBuffer*> buffers)
 {
     buffers_.insert(buffers_.end(), buffers.begin(), buffers.end());
 }
 
-void GLBufferInputLayout::Finalize()
+int GLBufferInputLayout::CompareSWO(const GLBufferInputLayout& lhs, const GLBufferInputLayout& rhs)
 {
-    hash_ = 0;
-    for (GLBuffer* buffer : buffers_)
-        HashCombine(hash_, buffer);
+    LLGL_COMPARE_SEPARATE_MEMBERS_SWO( lhs.buffers_.size(), rhs.buffers_.size() );
+    for_range(i, lhs.buffers_.size())
+    {
+        LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.buffers_[i], rhs.buffers_[i]);
+    }
+    return 0;
 }
 
 
