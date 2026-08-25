@@ -21,11 +21,11 @@ namespace LLGL
 
 class GLBuffer;
 
-/*struct GLVertexBufferBinding
+struct GLBufferView
 {
     GLBuffer*   buffer;
     GLintptr    offset;
-};*/
+};
 
 // Stores an array of GL buffers and a hash over their pointers.
 class GLBufferInputLayout
@@ -35,22 +35,25 @@ class GLBufferInputLayout
 
         GLBufferInputLayout() = default;
 
-        // Initializes the hash with a single GL buffer.
-        GLBufferInputLayout(GLBuffer* buffer);
+        // Initializes the layout with a single GL buffer and optional base offset.
+        GLBufferInputLayout(GLBuffer* buffer, GLintptr offset = 0);
 
-        // Initializes the hash with an array of GL buffers.
+        // Initializes the layout with an array of GL buffers and puts all offsets to 0.
         GLBufferInputLayout(ArrayView<GLBuffer*> buffers);
+
+        // Initializes the layout with an array of GL buffer views.
+        GLBufferInputLayout(ArrayView<GLBufferView> bufferViews);
 
         // Reset the buffers.
         void Reset();
 
         // Appends the specified vertex attributes. Call Finalize() after all invocations of Append().
-        void SetBuffers(ArrayView<GLBuffer*> buffers);
+        void SetBufferViews(ArrayView<GLBufferView> bufferViews);
 
         // Returns the array of input vertex attributes this shader was created with. This is a direct copy of the input attributes.
-        inline ArrayView<GLBuffer*> GetBuffers() const
+        inline ArrayView<GLBufferView> GetBufferViews() const
         {
-            return buffers_;
+            return bufferViews_;
         }
 
     public:
@@ -59,7 +62,7 @@ class GLBufferInputLayout
 
     private:
 
-        SmallVector<GLBuffer*, 1> buffers_;
+        SmallVector<GLBufferView, 1> bufferViews_;
 
 };
 

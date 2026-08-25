@@ -34,8 +34,8 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVer
     std::lock_guard<std::mutex> guard{ mutex_ };
 
     /* Always return a VAO, even when there are no input attributes since GL always needs a bound VAO for drawing */
-    const ArrayView<GLVertexAttribute>  attribs = vertexInputLayout.GetAttribs();
-    const ArrayView<GLBuffer*>          buffers = bufferInputLayout.GetBuffers();
+    const ArrayView<GLVertexAttribute>  attribs     = vertexInputLayout.GetAttribs();
+    const ArrayView<GLBufferView>       bufferViews = bufferInputLayout.GetBufferViews();
 
     /* Try to find existing vertex buffer binding for input combination */
     std::size_t insertPosition = 0;
@@ -69,11 +69,12 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVer
     {
         const std::uint32_t bufferSlot = vertexAttribs[i].buffer;
         LLGL_ASSERT(
-            bufferSlot < buffers.size(),
+            bufferSlot < bufferViews.size(),
             "GLVertexAttribute::buffer=%u exceeded upper bound of %zu buffers",
-            i, buffers.size()
+            i, bufferViews.size()
         );
-        vertexAttribs[i].buffer = buffers[bufferSlot]->GetID();
+        vertexAttribs[i].buffer         = bufferViews[bufferSlot].buffer->GetID();
+        vertexAttribs[i].offsetPtrSized += bufferViews[bufferSlot].offset;
     }
 
     /* Build vertex layout and finalize immediately as it only references a single buffer */
@@ -98,8 +99,16 @@ void GLVertexArrayCache::NotifyBufferRelease(const GLBuffer& buffer)
         vertexBindings_,
         [bufferPtr](const VertexBufferBinding& entry) -> bool
         {
-            ArrayView<GLBuffer*> buffers = entry.bufferInputLayout.GetBuffers();
-            return (std::find(buffers.begin(), buffers.end(), bufferPtr) != buffers.end());
+            ArrayView<GLBufferView> bufferViews = entry.bufferInputLayout.GetBufferViews();
+            auto it = std::find_if(
+                bufferViews.begin(),
+                bufferViews.end(),
+                [bufferPtr](const GLBufferView& bufferViewEntry) -> bool
+                {
+                    return (bufferViewEntry.buffer == bufferPtr);
+                }
+            );
+            return (it != bufferViews.end());
         }
     );
 }

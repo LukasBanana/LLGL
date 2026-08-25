@@ -283,13 +283,14 @@ void GLImmediateCommandBuffer::SetScissors(std::uint32_t numScissors, const Scis
 
 /* ----- Input Assembly ------ */
 
-void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
+//private
+void GLImmediateCommandBuffer::SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset)
 {
     if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
         /* Bind vertex buffer */
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        SetBufferInputLayout(&vertexBufferGL);
+        SetBufferInputLayout(GLBufferInputLayout{ &vertexBufferGL, static_cast<GLintptr>(offset) });
 
         #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
         SetTransformFeedbackChecked(vertexBufferGL);
@@ -297,10 +298,18 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
-//TODO: integrate stride and offset into VAO cache
-void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
+void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    SetVertexBuffer(buffer);
+    SetVertexBufferInternal(buffer, 0);
+}
+
+void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
+{
+    /*
+    Ignores the stride, since it's already part of the PSO and it must match that value per function contract.
+    This parameter is intended for other backends, like D3D.
+    */
+    SetVertexBufferInternal(buffer, offset);
 }
 
 void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

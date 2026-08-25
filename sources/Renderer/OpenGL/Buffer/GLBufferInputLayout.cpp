@@ -15,32 +15,40 @@ namespace LLGL
 {
 
 
-GLBufferInputLayout::GLBufferInputLayout(GLBuffer* buffer)
+GLBufferInputLayout::GLBufferInputLayout(GLBuffer* buffer, GLintptr offset)
 {
-    SetBuffers({ buffer });
+    SetBufferViews({ GLBufferView{ buffer, offset } });
 }
 
 GLBufferInputLayout::GLBufferInputLayout(ArrayView<GLBuffer*> buffers)
 {
-    SetBuffers(buffers);
+    bufferViews_.resize(buffers.size());
+    for_range(i, buffers.size())
+        bufferViews_[i] = GLBufferView{ buffers[i], 0 };
+}
+
+GLBufferInputLayout::GLBufferInputLayout(ArrayView<GLBufferView> buffers)
+{
+    SetBufferViews(buffers);
 }
 
 void GLBufferInputLayout::Reset()
 {
-    buffers_.clear();
+    bufferViews_.clear();
 }
 
-void GLBufferInputLayout::SetBuffers(ArrayView<GLBuffer*> buffers)
+void GLBufferInputLayout::SetBufferViews(ArrayView<GLBufferView> bufferViews)
 {
-    buffers_.insert(buffers_.end(), buffers.begin(), buffers.end());
+    bufferViews_.insert(bufferViews_.end(), bufferViews.begin(), bufferViews.end());
 }
 
 int GLBufferInputLayout::CompareSWO(const GLBufferInputLayout& lhs, const GLBufferInputLayout& rhs)
 {
-    LLGL_COMPARE_SEPARATE_MEMBERS_SWO( lhs.buffers_.size(), rhs.buffers_.size() );
-    for_range(i, lhs.buffers_.size())
+    LLGL_COMPARE_SEPARATE_MEMBERS_SWO( lhs.bufferViews_.size(), rhs.bufferViews_.size() );
+    for_range(i, lhs.bufferViews_.size())
     {
-        LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.buffers_[i], rhs.buffers_[i]);
+        LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.bufferViews_[i].buffer, rhs.bufferViews_[i].buffer);
+        LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.bufferViews_[i].offset, rhs.bufferViews_[i].offset);
     }
     return 0;
 }
