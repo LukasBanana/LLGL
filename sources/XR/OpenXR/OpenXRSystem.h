@@ -14,6 +14,11 @@
 #include <LLGL/Container/DynamicVector.h>
 #include <LLGL/Container/SmallVector.h>
 
+#include <LLGL/Platform/Platform.h>
+#ifdef LLGL_OS_ANDROID
+#   include <LLGL/Platform/Android/AndroidContext.h>
+#endif
+
 #include "OpenXRPlatform.h"
 
 #include <memory>

@@ -26,11 +26,13 @@ namespace LLGL
 because that structure is only ever produced by \c ANativeActivity_onCreate - the entry point of a
 NativeActivity-based application. An application whose Activity is written in Java, as with SDL,
 never has one, but can readily supply everything here.
-\remarks An application entered through \c android_main(android_app*) fills this in from its app
-state; see the LLGL examples. Bringing up a render system or XR system requires nothing beyond
-this structure.
-\see RenderSystemDescriptor::androidContext
-\see XRSystemDescriptor::androidContext
+\remarks Supply it through the \c platformContext and \c platformContextSize fields of the
+respective descriptor (use \c sizeof(LLGL::AndroidContext) as the size). An application entered
+through \c android_main(android_app*) passes its app state there instead and does not need this
+structure; see the LLGL examples. Bringing up a render system or XR system requires nothing
+beyond this structure.
+\see RenderSystemDescriptor::platformContext
+\see XRSystemDescriptor::platformContext
 */
 struct AndroidContext
 {

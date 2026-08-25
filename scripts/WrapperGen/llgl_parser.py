@@ -479,6 +479,10 @@ class Parser:
                 if name.startswith('LLGL'):
                     name = name[len('LLGL'):]
 
+                # Ignore forward declarations
+                if self.scanner.acceptIf(';'):
+                    continue
+
                 # Parse optional inheritance
                 inheritedFields = []
                 if self.scanner.acceptIf(':'):

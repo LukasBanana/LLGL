@@ -94,7 +94,28 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
 
-    AndroidApp::Get().Initialize(renderSystemDesc.androidContext, renderSystemDesc.androidApp);
+    void* platformContext           = renderSystemDesc.platformContext;
+    std::size_t platformContextSize = renderSystemDesc.platformContextSize;
+
+    /* For backwards compatibility, fall back to the deprecated ::androidApp field */
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    if (platformContext == nullptr && renderSystemDesc.androidApp != nullptr)
+    {
+        platformContext     = renderSystemDesc.androidApp;
+        platformContextSize = sizeof(android_app);
+    }
+    LLGL_DEPRECATED_IGNORE_POP()
+
+    AndroidContext androidContext;
+    android_app* androidAppState = nullptr;
+    if (!AndroidInterpretPlatformContext(androidContext, androidAppState, platformContext, platformContextSize))
+    {
+        return ReportException(
+            report, "RenderSystemDescriptor::platformContextSize (%u) matches neither android_app nor LLGL::AndroidContext",
+            static_cast<unsigned>(platformContextSize));
+    }
+
+    AndroidApp::Get().Initialize(androidContext, androidAppState);
 
     #endif
 

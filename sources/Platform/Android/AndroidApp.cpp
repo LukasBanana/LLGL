@@ -130,21 +130,6 @@ void AndroidApp::Initialize(const AndroidContext& context, android_app* state)
 
     state_ = state;
 
-    /*
-    Fill in anything the application left blank from the app state, so that one which supplies
-    only androidApp - as every "native app glue" application did before AndroidContext existed -
-    keeps working with no changes.
-    */
-    if (state_->activity != nullptr)
-    {
-        if (context_.applicationVM == nullptr)
-            context_.applicationVM = state_->activity->vm;
-        if (context_.applicationActivity == nullptr)
-            context_.applicationActivity = state_->activity->clazz;
-        if (context_.assetManager == nullptr)
-            context_.assetManager = state_->activity->assetManager;
-    }
-
     if (state_->window == nullptr)
     {
         /* Process events until native window is initialized (APP_CMD_INIT_WINDOW) */

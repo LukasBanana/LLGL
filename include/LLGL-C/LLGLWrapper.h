@@ -1546,15 +1546,17 @@ LLGLAttachmentFormatDescriptor;
 typedef struct LLGLRenderSystemDescriptor
 {
     const char*           moduleName;
-    long                  flags;              /* = 0 */
-    void*                 profiler;           /* = NULL */
-    LLGLRenderingDebugger debugger;           /* = LLGL_NULL_OBJECT */
-    const void*           rendererConfig;     /* = NULL */
-    size_t                rendererConfigSize; /* = 0 */
-    const void*           nativeHandle;       /* = NULL */
-    size_t                nativeHandleSize;   /* = 0 */
+    long                  flags;               /* = 0 */
+    void*                 profiler;            /* = NULL */
+    LLGLRenderingDebugger debugger;            /* = LLGL_NULL_OBJECT */
+    const void*           rendererConfig;      /* = NULL */
+    size_t                rendererConfigSize;  /* = 0 */
+    const void*           nativeHandle;        /* = NULL */
+    size_t                nativeHandleSize;    /* = 0 */
+    void*                 platformContext;     /* = NULL */
+    size_t                platformContextSize; /* = 0 */
 #if __ANDROID__
-    struct android_app*   androidApp;         /* = NULL */
+    struct android_app*   androidApp;          /* Identifier `androidApp` is deprecated since 0.05b; Use `platformContext` instead! */
 #endif /* __ANDROID__ */
 }
 LLGLRenderSystemDescriptor;

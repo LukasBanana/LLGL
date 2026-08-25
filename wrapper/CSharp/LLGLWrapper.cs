@@ -4234,13 +4234,15 @@ namespace LLGL
         public unsafe struct RenderSystemDescriptor
         {
             public byte*             moduleName;
-            public int               flags;              /* = 0 */
-            public void*             profiler;           /* = null */
-            public RenderingDebugger debugger;           /* = null */
-            public void*             rendererConfig;     /* = null */
-            public IntPtr            rendererConfigSize; /* = 0 */
-            public void*             nativeHandle;       /* = null */
-            public IntPtr            nativeHandleSize;   /* = 0 */
+            public int               flags;               /* = 0 */
+            public void*             profiler;            /* = null */
+            public RenderingDebugger debugger;            /* = null */
+            public void*             rendererConfig;      /* = null */
+            public IntPtr            rendererConfigSize;  /* = 0 */
+            public void*             nativeHandle;        /* = null */
+            public IntPtr            nativeHandleSize;    /* = 0 */
+            public void*             platformContext;     /* = null */
+            public IntPtr            platformContextSize; /* = 0 */
         }
 
         public unsafe struct RenderingCapabilities

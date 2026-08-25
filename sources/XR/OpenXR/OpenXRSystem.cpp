@@ -13,6 +13,10 @@
 #include <LLGL/Backend/OpenXR/NativeHandle.h>
 #include <LLGL/XR/XRConfiguration.h>
 
+#ifdef LLGL_OS_ANDROID
+#   include "../../Platform/Android/AndroidApp.h"
+#endif
+
 #include <cstring>
 #include <cstdio>
 
@@ -59,12 +63,29 @@ bool OpenXRSystem::Startup(const XRSystemDescriptor& desc, Report* report)
     Report* outReport = report != nullptr ? report : &report_;
 
 #ifdef LLGL_OS_ANDROID
-    if (desc.androidContext.applicationVM == nullptr || desc.androidContext.applicationActivity == nullptr)
+    void* platformContext           = desc.platformContext;
+    std::size_t platformContextSize = desc.platformContextSize;
+
+    /* For backwards compatibility, fall back to the deprecated ::androidApp field */
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    if (platformContext == nullptr && desc.androidApp != nullptr)
     {
-        outReport->Errorf("XRRenderSystem::Load failed on Android: XRSystemDescriptor::androidContext requires applicationVM and applicationActivity\n");
+        platformContext     = desc.androidApp;
+        platformContextSize = sizeof(android_app);
+    }
+    LLGL_DEPRECATED_IGNORE_POP()
+
+    android_app* appState = nullptr;
+    if (!AndroidInterpretPlatformContext(androidContext_, appState, platformContext, platformContextSize))
+    {
+        outReport->Errorf("XRRenderSystem::Load failed on Android: XRSystemDescriptor::platformContextSize matches neither android_app nor LLGL::AndroidContext\n");
         return false;
     }
-    androidContext_ = desc.androidContext;
+    if (androidContext_.applicationVM == nullptr || androidContext_.applicationActivity == nullptr)
+    {
+        outReport->Errorf("XRRenderSystem::Load failed on Android: XRSystemDescriptor::platformContext must supply applicationVM and applicationActivity\n");
+        return false;
+    }
 
     // The Android OpenXR loader requires a one-time initialization with the JavaVM and Activity
     // before any other XR call. xrInitializeLoaderKHR is loaded with XR_NULL_HANDLE for the instance.
@@ -334,16 +355,18 @@ RenderSystemPtr OpenXRSystem::CreateRenderSystem(const RenderSystemDescriptor& r
 #ifdef LLGL_OS_ANDROID
     /*
     Auto-forward the Android objects captured at Load() time so applications don't repeat them.
-    An explicitly-set value wins.  RenderSystemDescriptor::androidApp is NOT forwarded: it heads
-    the glue event loop that only LLGL's own windowing uses, and an XR application draws into
-    swap chains owned by the XR runtime rather than a Canvas.
+    An explicitly-set platform context wins.  Note that only the AndroidContext is forwarded, never
+    an android_app state: that heads the glue event loop which only LLGL's own windowing uses, and
+    an XR application draws into swap chains owned by the XR runtime rather than a Canvas.
     */
-    if (effectiveDesc.androidContext.applicationVM == nullptr)
-        effectiveDesc.androidContext.applicationVM = androidContext_.applicationVM;
-    if (effectiveDesc.androidContext.applicationActivity == nullptr)
-        effectiveDesc.androidContext.applicationActivity = androidContext_.applicationActivity;
-    if (effectiveDesc.androidContext.assetManager == nullptr)
-        effectiveDesc.androidContext.assetManager = androidContext_.assetManager;
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    const bool hasExplicitPlatformContext = (effectiveDesc.platformContext != nullptr || effectiveDesc.androidApp != nullptr);
+    LLGL_DEPRECATED_IGNORE_POP()
+    if (!hasExplicitPlatformContext)
+    {
+        effectiveDesc.platformContext     = &androidContext_;
+        effectiveDesc.platformContextSize = sizeof(androidContext_);
+    }
 #endif
 
     RenderSystemPtr renderSystem = binding->CreateRenderSystem(instance_, systemId_, effectiveDesc, outReport);

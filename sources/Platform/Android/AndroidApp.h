@@ -12,6 +12,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/Platform/Android/AndroidContext.h>
 #include <android_native_app_glue.h>
+#include <cstddef>
 
 
 namespace LLGL
@@ -61,6 +62,44 @@ class AndroidApp
         android_app*    state_      = nullptr;
 
 };
+
+
+/*
+Interprets the platform context of a RenderSystemDescriptor or XRSystemDescriptor: identified by
+its declared size, it is either the android_app state of a NativeActivity ("native app glue")
+application, or an AndroidContext supplied by an application that has none. Returns false if the
+size matches neither structure. Defined inline so the XR frontend can share it without linking
+against internal symbols of the core library.
+*/
+inline bool AndroidInterpretPlatformContext(AndroidContext& outContext, android_app*& outAppState, void* platformContext, std::size_t platformContextSize)
+{
+    outContext  = AndroidContext{};
+    outAppState = nullptr;
+
+    if (platformContext == nullptr)
+        return true;
+
+    if (platformContextSize == sizeof(android_app))
+    {
+        android_app* appState = static_cast<android_app*>(platformContext);
+        outAppState = appState;
+        if (appState->activity != nullptr)
+        {
+            outContext.applicationVM        = appState->activity->vm;
+            outContext.applicationActivity  = appState->activity->clazz;
+            outContext.assetManager         = appState->activity->assetManager;
+        }
+        return true;
+    }
+
+    if (platformContextSize == sizeof(AndroidContext))
+    {
+        outContext = *static_cast<const AndroidContext*>(platformContext);
+        return true;
+    }
+
+    return false;
+}
 
 
 } // /namespace LLGL

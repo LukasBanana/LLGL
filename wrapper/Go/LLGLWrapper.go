@@ -1391,14 +1391,16 @@ type AttachmentFormatDescriptor struct {
 }
 
 type RenderSystemDescriptor struct {
-    ModuleName         string
-    Flags              uint               /* = 0 */
-    Profiler           unsafe.Pointer     /* = nil */
-    Debugger           *RenderingDebugger /* = nil */
-    RendererConfig     unsafe.Pointer     /* = nil */
-    RendererConfigSize uintptr            /* = 0 */
-    NativeHandle       unsafe.Pointer     /* = nil */
-    NativeHandleSize   uintptr            /* = 0 */
+    ModuleName          string
+    Flags               uint               /* = 0 */
+    Profiler            unsafe.Pointer     /* = nil */
+    Debugger            *RenderingDebugger /* = nil */
+    RendererConfig      unsafe.Pointer     /* = nil */
+    RendererConfigSize  uintptr            /* = 0 */
+    NativeHandle        unsafe.Pointer     /* = nil */
+    NativeHandleSize    uintptr            /* = 0 */
+    PlatformContext     unsafe.Pointer     /* = nil */
+    PlatformContextSize uintptr            /* = 0 */
 }
 
 type RenderingCapabilities struct {
