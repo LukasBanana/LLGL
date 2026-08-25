@@ -199,6 +199,11 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
 
     /* Reserve memory for vertex input and fragment output attributes */
     shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
+
+    /* Store GLVertexAttribute list for backwards compatibility */
+    vertexAttribs_.resize(desc.vertex.inputAttribs.size());
+    for_range(i, vertexAttribs_.size())
+        GLConvertVertexAttrib(vertexAttribs_[i], desc.vertex.inputAttribs[i], desc.vertex.inputAttribs[i].slot);
 }
 
 LLGL_DEPRECATED_IGNORE_POP()

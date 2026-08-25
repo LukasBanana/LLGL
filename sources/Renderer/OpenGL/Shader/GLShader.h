@@ -13,6 +13,7 @@
 #include <LLGL/Report.h>
 #include <LLGL/Container/ArrayView.h>
 #include "../OpenGL.h"
+#include "../Buffer/GLVertexAttribute.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <functional>
 
@@ -83,6 +84,12 @@ class GLShader : public Shader
             return isSeparable_;
         }
 
+        // For backwards compatibility only.
+        inline const std::vector<GLVertexAttribute>& GetGLVertexAttributes() const
+        {
+            return vertexAttribs_;
+        }
+
     public:
 
         // Returns true if the specified shader descriptor requires the permutation with flipped Y-position; See PermutationFlippedYPosition.
@@ -148,11 +155,15 @@ class GLShader : public Shader
 
         const bool                      isSeparable_;
         GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
+        Report                          report_;
+
+        //DEPRECATED {
         LinearStringContainer           shaderAttribNames_;
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
-        Report                          report_;
+        std::vector<GLVertexAttribute>  vertexAttribs_; // Needed for backwards compatibility to build vertex input layout as fallback
+        // }
 
 };
 

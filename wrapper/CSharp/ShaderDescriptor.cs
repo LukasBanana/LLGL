@@ -224,7 +224,9 @@ namespace LLGL
                     native.flags = (int)Flags;
                     if (Vertex != null)
                     {
+                        #pragma warning disable 0618 // Disable warning about obsolete fields
                         native.vertex = Vertex.Native;
+                        #pragma warning restore 0618 // Restore warning about obsolete fields
                     }
                     if (Fragment != null)
                     {
