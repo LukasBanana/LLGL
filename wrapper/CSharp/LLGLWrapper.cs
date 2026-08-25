@@ -995,6 +995,8 @@ namespace LLGL
         DisableSizeScaling   = (1 << 6),
     }
 
+    #pragma warning disable 0618 // Disable warning about obsolete fields
+
     /* ----- Structures ----- */
 
     public struct DrawIndirectArguments
@@ -1374,6 +1376,7 @@ namespace LLGL
                 TextureWrites            = value.textureWrites;
                 TextureReads             = value.textureReads;
                 CommandBufferSubmissions = value.commandBufferSubmissions;
+                CommandBufferSubmittions = value.commandBufferSubmittions;
                 FenceSubmissions         = value.fenceSubmissions;
             }
         }
@@ -2102,8 +2105,6 @@ namespace LLGL
     {
         public ProfileCommandQueueRecord  CommandQueueRecord { get; set; }  = new ProfileCommandQueueRecord();
         public ProfileCommandBufferRecord CommandBufferRecord { get; set; } = new ProfileCommandBufferRecord();
-        private ProfileTimeRecord[] timeRecords;
-        private NativeLLGL.ProfileTimeRecord[] timeRecordsNative;
         public ProfileTimeRecord[] TimeRecords
         {
             get
@@ -2131,6 +2132,8 @@ namespace LLGL
                 }
             }
         }
+        private ProfileTimeRecord[] timeRecords;
+        private NativeLLGL.ProfileTimeRecord[] timeRecordsNative;
 
         public FrameProfile() { }
 
@@ -2581,8 +2584,6 @@ namespace LLGL
         public CPUAccessFlags    CPUAccessFlags { get; set; } = 0;
         public MiscFlags         MiscFlags { get; set; }      = 0;
         [Obsolete("BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead!")]
-        private VertexAttribute[] vertexAttribs;
-        private NativeLLGL.VertexAttribute[] vertexAttribsNative;
         public VertexAttribute[] VertexAttribs
         {
             get
@@ -2610,6 +2611,8 @@ namespace LLGL
                 }
             }
         }
+        private VertexAttribute[] vertexAttribs;
+        private NativeLLGL.VertexAttribute[] vertexAttribsNative;
 
         public BufferDescriptor() { }
 
@@ -2635,6 +2638,14 @@ namespace LLGL
                     native.bindFlags      = (int)BindFlags;
                     native.cpuAccessFlags = (int)CPUAccessFlags;
                     native.miscFlags      = (int)MiscFlags;
+                    if (vertexAttribs != null)
+                    {
+                        native.numVertexAttribs = (IntPtr)vertexAttribs.Length;
+                        fixed (NativeLLGL.VertexAttribute* vertexAttribsPtr = vertexAttribsNative)
+                        {
+                            native.vertexAttribs = vertexAttribsPtr;
+                        }
+                    }
                 }
                 return native;
             }
@@ -2649,6 +2660,11 @@ namespace LLGL
                     BindFlags      = (BindFlags)value.bindFlags;
                     CPUAccessFlags = (CPUAccessFlags)value.cpuAccessFlags;
                     MiscFlags      = (MiscFlags)value.miscFlags;
+                    VertexAttribs  = new VertexAttribute[(int)value.numVertexAttribs];
+                    for (int i = 0; i < VertexAttribs.Length; ++i)
+                    {
+                        VertexAttribs[i] = new VertexAttribute(value.vertexAttribs[i]);
+                    }
                 }
             }
         }
@@ -2736,8 +2752,6 @@ namespace LLGL
             OutputAttribs = outputAttribs;
         }
 
-        private VertexAttribute[] inputAttribs;
-        private NativeLLGL.VertexAttribute[] inputAttribsNative;
         public VertexAttribute[] InputAttribs
         {
             get
@@ -2765,8 +2779,8 @@ namespace LLGL
                 }
             }
         }
-        private VertexAttribute[] outputAttribs;
-        private NativeLLGL.VertexAttribute[] outputAttribsNative;
+        private VertexAttribute[] inputAttribs;
+        private NativeLLGL.VertexAttribute[] inputAttribsNative;
         public VertexAttribute[] OutputAttribs
         {
             get
@@ -2794,6 +2808,8 @@ namespace LLGL
                 }
             }
         }
+        private VertexAttribute[] outputAttribs;
+        private NativeLLGL.VertexAttribute[] outputAttribsNative;
 
         public VertexShaderAttributes() { }
 
@@ -2854,8 +2870,6 @@ namespace LLGL
             OutputAttribs = outputAttribs;
         }
 
-        private FragmentAttribute[] outputAttribs;
-        private NativeLLGL.FragmentAttribute[] outputAttribsNative;
         public FragmentAttribute[] OutputAttribs
         {
             get
@@ -2883,6 +2897,8 @@ namespace LLGL
                 }
             }
         }
+        private FragmentAttribute[] outputAttribs;
+        private NativeLLGL.FragmentAttribute[] outputAttribsNative;
 
         public FragmentShaderAttributes() { }
 
@@ -2982,8 +2998,6 @@ namespace LLGL
     public class PipelineLayoutDescriptor
     {
         public AnsiString                         DebugName { get; set; }               = null;
-        private BindingDescriptor[] heapBindings;
-        private NativeLLGL.BindingDescriptor[] heapBindingsNative;
         public BindingDescriptor[] HeapBindings
         {
             get
@@ -3011,8 +3025,8 @@ namespace LLGL
                 }
             }
         }
-        private BindingDescriptor[] bindings;
-        private NativeLLGL.BindingDescriptor[] bindingsNative;
+        private BindingDescriptor[] heapBindings;
+        private NativeLLGL.BindingDescriptor[] heapBindingsNative;
         public BindingDescriptor[] Bindings
         {
             get
@@ -3040,8 +3054,8 @@ namespace LLGL
                 }
             }
         }
-        private StaticSamplerDescriptor[] staticSamplers;
-        private NativeLLGL.StaticSamplerDescriptor[] staticSamplersNative;
+        private BindingDescriptor[] bindings;
+        private NativeLLGL.BindingDescriptor[] bindingsNative;
         public StaticSamplerDescriptor[] StaticSamplers
         {
             get
@@ -3069,8 +3083,8 @@ namespace LLGL
                 }
             }
         }
-        private UniformDescriptor[] uniforms;
-        private NativeLLGL.UniformDescriptor[] uniformsNative;
+        private StaticSamplerDescriptor[] staticSamplers;
+        private NativeLLGL.StaticSamplerDescriptor[] staticSamplersNative;
         public UniformDescriptor[] Uniforms
         {
             get
@@ -3098,8 +3112,8 @@ namespace LLGL
                 }
             }
         }
-        private CombinedTextureSamplerDescriptor[] combinedTextureSamplers;
-        private NativeLLGL.CombinedTextureSamplerDescriptor[] combinedTextureSamplersNative;
+        private UniformDescriptor[] uniforms;
+        private NativeLLGL.UniformDescriptor[] uniformsNative;
         public CombinedTextureSamplerDescriptor[] CombinedTextureSamplers
         {
             get
@@ -3127,6 +3141,8 @@ namespace LLGL
                 }
             }
         }
+        private CombinedTextureSamplerDescriptor[] combinedTextureSamplers;
+        private NativeLLGL.CombinedTextureSamplerDescriptor[] combinedTextureSamplersNative;
         public BarrierFlags                       BarrierFlags { get; set; }            = 0;
 
         internal NativeLLGL.PipelineLayoutDescriptor Native
@@ -3192,8 +3208,6 @@ namespace LLGL
         public AnsiString             DebugName { get; set; }            = null;
         public PipelineLayout         PipelineLayout { get; set; }       = null;
         public RenderPass             RenderPass { get; set; }           = null;
-        private VertexAttribute[] inputVertexAttribs;
-        private NativeLLGL.VertexAttribute[] inputVertexAttribsNative;
         public VertexAttribute[] InputVertexAttribs
         {
             get
@@ -3221,8 +3235,8 @@ namespace LLGL
                 }
             }
         }
-        private VertexAttribute[] outputVertexAttribs;
-        private NativeLLGL.VertexAttribute[] outputVertexAttribsNative;
+        private VertexAttribute[] inputVertexAttribs;
+        private NativeLLGL.VertexAttribute[] inputVertexAttribsNative;
         public VertexAttribute[] OutputVertexAttribs
         {
             get
@@ -3250,6 +3264,8 @@ namespace LLGL
                 }
             }
         }
+        private VertexAttribute[] outputVertexAttribs;
+        private NativeLLGL.VertexAttribute[] outputVertexAttribsNative;
         public Shader                 VertexShader { get; set; }         = null;
         public Shader                 TessControlShader { get; set; }    = null;
         public Shader                 TessEvaluationShader { get; set; } = null;
@@ -3404,6 +3420,10 @@ namespace LLGL
                     {
                         native.taskShader = TaskShader.Native;
                     }
+                    if (AmplificationShader != null)
+                    {
+                        native.amplificationShader = AmplificationShader.Native;
+                    }
                     if (MeshShader != null)
                     {
                         native.meshShader = MeshShader.Native;
@@ -3482,8 +3502,6 @@ namespace LLGL
 
     public class ShaderReflection
     {
-        private ShaderResourceReflection[] resources;
-        private NativeLLGL.ShaderResourceReflection[] resourcesNative;
         public ShaderResourceReflection[] Resources
         {
             get
@@ -3511,8 +3529,8 @@ namespace LLGL
                 }
             }
         }
-        private UniformDescriptor[] uniforms;
-        private NativeLLGL.UniformDescriptor[] uniformsNative;
+        private ShaderResourceReflection[] resources;
+        private NativeLLGL.ShaderResourceReflection[] resourcesNative;
         public UniformDescriptor[] Uniforms
         {
             get
@@ -3540,6 +3558,8 @@ namespace LLGL
                 }
             }
         }
+        private UniformDescriptor[] uniforms;
+        private NativeLLGL.UniformDescriptor[] uniformsNative;
         public VertexShaderAttributes     Vertex { get; set; }    = new VertexShaderAttributes();
         public FragmentShaderAttributes   Fragment { get; set; }  = new FragmentShaderAttributes();
         public ComputeShaderAttributes    Compute { get; set; }   = new ComputeShaderAttributes();
@@ -3574,6 +3594,8 @@ namespace LLGL
             }
         }
     }
+
+    #pragma warning restore 0618 // Restore warning about obsolete fields
 
     #region NativeLLGL - native interface to LLGL using P/Invoke
 

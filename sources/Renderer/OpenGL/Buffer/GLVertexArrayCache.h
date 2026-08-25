@@ -45,7 +45,7 @@ class GLVertexArrayCache
           This class must interpret `GLVertexAttribute::buffer` as a zero-based index, not the actual GL buffer ID!
           This function converts that index to the respective GL buffer ID from the `bufferInputLayout` parameter/
         */
-        GLSharedContextVertexArray* GetOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout);
+        GLSharedContextVertexArray* FindOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout);
 
         /*
         Notifies this cache that the specified GL buffer has been released.

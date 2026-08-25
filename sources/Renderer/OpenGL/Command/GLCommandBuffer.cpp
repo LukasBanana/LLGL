@@ -167,7 +167,7 @@ GLSharedContextVertexArray* GLCommandBuffer::FlushVertexInput()
     if (vertexInputState_.dirtyBit)
     {
         vertexInputState_.dirtyBit = false;
-        return GLVertexArrayCache::Get().GetOrMakeVertexArray(vertexInputState_.vertexInputLayout, vertexInputState_.bufferInputLayout);
+        return GLVertexArrayCache::Get().FindOrMakeVertexArray(vertexInputState_.vertexInputLayout, vertexInputState_.bufferInputLayout);
     }
     return nullptr;
 }

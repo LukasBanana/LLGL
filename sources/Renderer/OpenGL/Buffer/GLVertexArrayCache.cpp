@@ -29,7 +29,7 @@ void GLVertexArrayCache::Clear()
     vertexBindings_.clear();
 }
 
-GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout)
+GLSharedContextVertexArray* GLVertexArrayCache::FindOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout)
 {
     std::lock_guard<std::mutex> guard{ mutex_ };
 

@@ -38,7 +38,8 @@ void ConvertRenderSystemDesc(LLGL::RenderSystemDescriptor& dst, const LLGLRender
 void ConvertRendererInfo(RendererInfoC99Wrapper& wrapper, LLGLRendererInfo& dst, const LLGL::RendererInfo& src);
 void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderingCapabilities& dst, const LLGL::RenderingCapabilities& src);
 void ConvertVertexAttrib(LLGL::VertexAttribute& dst, const LLGLVertexAttribute& src);
-void ConvertBufferDesc(LLGL::BufferDescriptor& dst, const LLGLBufferDescriptor& src);
+void ConvertBufferDesc(LLGL::BufferDescriptor& dst, LLGL::SmallVector<LLGL::VertexAttribute>& dstVertexAttribs, const LLGLBufferDescriptor& src);
+void ConvertVertexShaderAttribs(LLGL::VertexShaderAttributes& dst, const LLGLVertexShaderAttributes& src);
 void ConvertFragmentAttrib(LLGL::FragmentAttribute& dst, const LLGLFragmentAttribute& src);
 void ConvertFragmentShaderAttribs(LLGL::FragmentShaderAttributes& dst, const LLGLFragmentShaderAttributes& src);
 void ConvertComputeShaderAttribs(LLGL::ComputeShaderAttributes& dst, const LLGLComputeShaderAttributes& src);

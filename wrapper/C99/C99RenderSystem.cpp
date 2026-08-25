@@ -160,7 +160,8 @@ LLGL_C_EXPORT LLGLBuffer llglCreateBuffer(const LLGLBufferDescriptor* bufferDesc
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(bufferDesc);
     BufferDescriptor internalBufferDesc;
-    ConvertBufferDesc(internalBufferDesc, *bufferDesc);
+    SmallVector<VertexAttribute> internalVertexAttribs;
+    ConvertBufferDesc(internalBufferDesc, internalVertexAttribs, *bufferDesc);
     return LLGLBuffer{ g_CurrentRenderSystem->CreateBuffer(internalBufferDesc, initialData) };
 }
 
