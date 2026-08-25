@@ -9,6 +9,7 @@
 #define LLGL_GL_BUFFER_ARRAY_HASH_H
 
 
+#include "../OpenGL.h"
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
 #include <vector>
@@ -19,6 +20,12 @@ namespace LLGL
 
 
 class GLBuffer;
+
+/*struct GLVertexBufferBinding
+{
+    GLBuffer*   buffer;
+    GLintptr    offset;
+};*/
 
 // Stores an array of GL buffers and a hash over their pointers.
 class GLBufferInputLayout

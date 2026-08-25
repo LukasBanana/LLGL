@@ -11,6 +11,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../Profile/GLProfile.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
 #include <cstring>
@@ -20,15 +21,23 @@ namespace LLGL
 {
 
 
-GLContextManager::GLContextManager(
+GLContextManager& GLContextManager::Get()
+{
+    static GLContextManager instance;
+    return instance;
+}
+
+void GLContextManager::Initialize(
     const RendererConfigurationOpenGL&  profile,
     const NewGLContextCallback&         newContextCallback,
     const void*                         customNativeHandle,
     std::size_t                         customNativeHandleSize)
-:
-    profile_            { profile            },
-    newContextCallback_ { newContextCallback }
 {
+    LLGL_ASSERT(!IsInitialized(), "cannot initialize GLContextManager more than once");
+
+    profile_            = profile;
+    newContextCallback_ = newContextCallback;
+
     /* Adjust context profile if Auto-selection is specified */
     if (profile_.contextProfile == OpenGLContextProfile::Auto)
         profile_.contextProfile = GLProfile::GetContextProfile();
@@ -38,6 +47,28 @@ GLContextManager::GLContextManager(
         customNativeHandle_.resize(customNativeHandleSize, UninitializeTag{});
         std::memcpy(customNativeHandle_.get(), customNativeHandle, customNativeHandleSize);
     }
+
+    isInitialized_ = true;
+}
+
+void GLContextManager::Clear()
+{
+    LLGL_ASSERT(IsInitialized(), "cannot tear down GLContextManager before it has been initialized");
+
+    /* Clean up all GL contexts */
+    for (GLPixelFormatWithContext& pixelFormat : pixelFormats_)
+    {
+        GLContext::SetCurrent(pixelFormat.context.get());
+        pixelFormat.context->GetVertexArrayPool().Purge();
+    }
+
+    /* Reset all fields and clear containers */
+    isInitialized_      = false;
+    profile_            = {};
+    newContextCallback_ = {};
+
+    pixelFormats_       .clear();
+    customNativeHandle_ .clear();
 }
 
 std::shared_ptr<GLContext> GLContextManager::AllocContext(
@@ -49,6 +80,24 @@ std::shared_ptr<GLContext> GLContextManager::AllocContext(
         return FindOrMakeContextWithPixelFormat(*pixelFormat, acceptCompatibleFormat, surface);
     else
         return FindOrMakeAnyContext();
+}
+
+GLContext* GLContextManager::FindContextByGlobalIndex(unsigned contextIndex) const
+{
+    /* Global context indices start at 1, skip if input is 0 */
+    if (contextIndex > 0)
+    {
+        auto it = std::find_if(
+            pixelFormats_.begin(),
+            pixelFormats_.end(),
+            [contextIndex](const GLPixelFormatWithContext& pixelFormat) -> bool
+            {
+                return (pixelFormat.context->GetGlobalIndex() == contextIndex);
+            }
+        );
+        return (it != pixelFormats_.end() ? it->context.get() : nullptr);
+    }
+    return nullptr;
 }
 
 
@@ -88,7 +137,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     /* Use shared GL context if there already is one */
     GLContext* sharedContext = (pixelFormats_.empty() ? nullptr : pixelFormats_.front().context.get());
 
-    /* Create new GL context and append to pixel format list */
+    /* Create new GL context and append to pixel format list. */
     GLPixelFormatWithContext formatWithContext;
     {
         formatWithContext.pixelFormat   = pixelFormat;

@@ -25,6 +25,7 @@ GLVertexArrayCache& GLVertexArrayCache::Get()
 
 void GLVertexArrayCache::Clear()
 {
+    std::lock_guard<std::mutex> guard{ mutex_ };
 #if 0//TODO: this needs to call `GLVertexArrayObject::Release()`, but they are GL context dependent, so this needs a deferred deletion mechanism
     for (VertexBufferBinding& vertexBinding : vertexBindings_)
     {
@@ -34,8 +35,10 @@ void GLVertexArrayCache::Clear()
     vertexBindings_.clear();
 }
 
-GLSharedContextVertexArray* GLVertexArrayCache::GetVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout)
+GLSharedContextVertexArray* GLVertexArrayCache::GetOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout)
 {
+    std::lock_guard<std::mutex> guard{ mutex_ };
+
     /* Always return a VAO, even when there are no input attributes since GL always needs a bound VAO for drawing */
     const ArrayView<GLVertexAttribute>  attribs = vertexInputLayout.GetAttribs();
     const ArrayView<GLBuffer*>          buffers = bufferInputLayout.GetBuffers();
@@ -93,6 +96,7 @@ GLSharedContextVertexArray* GLVertexArrayCache::GetVertexArray(const GLVertexInp
 void GLVertexArrayCache::NotifyBufferRelease(const GLBuffer& buffer)
 {
     /* Run through all vertex buffer bindings to see which one must be destroyed */
+    std::lock_guard<std::mutex> guard{ mutex_ };
     const GLBuffer* bufferPtr = &buffer;
     RemoveAllFromListIf(
         vertexBindings_,

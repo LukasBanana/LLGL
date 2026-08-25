@@ -15,13 +15,15 @@
 #include "GLVertexArrayHash.h"
 #include "GLBufferInputLayout.h"
 #include <vector>
+#include <mutex>
 
 
 namespace LLGL
 {
 
 
-// Caching of VAOs for combinations between vertex buffers and vertex input layouts.
+// Singleton for caching VAOs for combinations between vertex buffers and vertex input layouts.
+// These VAOs are shared across contexts (GLSharedContextVertexArray).
 class GLVertexArrayCache
 {
 
@@ -44,7 +46,7 @@ class GLVertexArrayCache
           This class must interpret `GLVertexAttribute::buffer` as a zero-based index, not the actual GL buffer ID!
           This function converts that index to the respective GL buffer ID from the `bufferInputLayout` parameter/
         */
-        GLSharedContextVertexArray* GetVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout);
+        GLSharedContextVertexArray* GetOrMakeVertexArray(const GLVertexInputLayout& vertexInputLayout, const GLBufferInputLayout& bufferInputLayout);
 
         /*
         Notifies this cache that the specified GL buffer has been released.
@@ -67,7 +69,8 @@ class GLVertexArrayCache
 
     private:
 
-        std::vector<VertexBufferBinding> vertexBindings_;
+        std::mutex                          mutex_;
+        std::vector<VertexBufferBinding>    vertexBindings_;
 
 };
 

@@ -9,6 +9,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
+#include "../Platform/GLContextManager.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../GLObjectUtils.h"
@@ -21,6 +22,16 @@ namespace LLGL
 {
 
 
+GL3PlusSharedContextVertexArray::~GL3PlusSharedContextVertexArray()
+{
+    for_range(i, contextDependentVAOs_.size())
+    {
+        const unsigned contextIndex = static_cast<unsigned>(i + 1);
+        if (GLContext* context = GLContextManager::Get().FindContextByGlobalIndex(contextIndex))
+            contextDependentVAOs_[i].vao.Release(context->GetVertexArrayPool());
+    }
+}
+
 void GL3PlusSharedContextVertexArray::Reset()
 {
     inputLayout_.Reset();
@@ -31,14 +42,13 @@ void GL3PlusSharedContextVertexArray::BuildVertexLayout(const ArrayView<GLVertex
     inputLayout_.Append(attributes);
 }
 
-/*void GL3PlusSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
-{
-    inputLayout_.Append(bufferID, attributes);
-}*/
-
 void GL3PlusSharedContextVertexArray::Finalize()
 {
     inputLayout_.Finalize();
+
+    /* Mark all previously generated VAOs as dirty */
+    for (GLContextVAO& contextVAO : contextDependentVAOs_)
+        contextVAO.isDirty = true;
 }
 
 void GL3PlusSharedContextVertexArray::Bind(GLStateManager& stateMngr)
@@ -68,7 +78,10 @@ void GL3PlusSharedContextVertexArray::SetDebugName(const char* name)
 GLVertexArrayObject& GL3PlusSharedContextVertexArray::GetVAOForCurrentContext()
 {
     /* Check if there's already an entry for the current context */
-    const unsigned contextIndex = GLContext::GetCurrentGlobalIndex();
+    GLContext* context = GLContext::GetCurrent();
+    LLGL_ASSERT_PTR(context);
+
+    const unsigned contextIndex = context->GetGlobalIndex();
     LLGL_ASSERT(contextIndex > 0);
 
     const std::size_t vaoIndex = static_cast<std::size_t>(contextIndex) - 1;
@@ -76,29 +89,39 @@ GLVertexArrayObject& GL3PlusSharedContextVertexArray::GetVAOForCurrentContext()
     {
         /* Resize container and fill new entry */
         contextDependentVAOs_.resize(vaoIndex + 1);
-        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
+        GLContextVAO& contextVAO = contextDependentVAOs_[vaoIndex];
+
+        contextVAO.isDirty = false;
+        contextVAO.vao.BuildVertexLayout(context->GetVertexArrayPool(), inputLayout_);
         if (!debugName_.empty())
-            contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
-    }
-    else if (contextDependentVAOs_[vaoIndex].vao.GetID() == 0)
-    {
-        /* Fill empty entry in container */
-        contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
-        if (!debugName_.empty())
-            contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
+            contextVAO.SetObjectLabel(debugName_.c_str());
     }
     else
     {
-        if (inputLayout_.GetHash() != contextDependentVAOs_[vaoIndex].vao.GetInputLayoutHash())
+        GLContextVAO& contextVAO = contextDependentVAOs_[vaoIndex];
+
+        if (contextVAO.vao.GetID() == 0)
         {
-            /* Update vertex attributes if the input layout has changed (i.e. hashes don't match anymore) */
-            contextDependentVAOs_[vaoIndex].vao.BuildVertexLayout(inputLayout_);
-        }
-        if (contextDependentVAOs_[vaoIndex].isObjectLabelDirty)
-        {
-            /* Update debug label if it has been invalidated */
+            /* Fill empty entry in container */
+            contextVAO.isDirty = false;
+            contextVAO.vao.BuildVertexLayout(context->GetVertexArrayPool(), inputLayout_);
             if (!debugName_.empty())
-                contextDependentVAOs_[vaoIndex].SetObjectLabel(debugName_.c_str());
+                contextVAO.SetObjectLabel(debugName_.c_str());
+        }
+        else
+        {
+            if (contextVAO.isDirty)
+            {
+                /* Update vertex attributes if the input layout has changed (i.e. hashes don't match anymore) */
+                contextVAO.isDirty = false;
+                contextVAO.vao.BuildVertexLayout(context->GetVertexArrayPool(), inputLayout_);
+            }
+            if (contextVAO.isObjectLabelDirty)
+            {
+                /* Update debug label if it has been invalidated */
+                if (!debugName_.empty())
+                    contextVAO.SetObjectLabel(debugName_.c_str());
+            }
         }
     }
 

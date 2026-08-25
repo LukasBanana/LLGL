@@ -44,7 +44,7 @@ class GLBufferWithVAO : public GLBuffer
     private:
 
         std::vector<GLVertexAttribute>  vertexAttribs_;
-        GLSharedContextVertexArray      vertexArray_;
+        GLSharedContextVertexArray      vertexArray_; //DEPRECATED
 
 };
 

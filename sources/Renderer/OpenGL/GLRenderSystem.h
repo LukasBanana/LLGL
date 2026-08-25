@@ -93,7 +93,7 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        GLContextManager                        contextMngr_;
+        GLContextManagerScope                   contextMngrScope_;
         GLCommandQueue                          commandQueue_;
         bool                                    debugContext_           = false;
         bool                                    isBreakOnErrorEnabled_  = false;

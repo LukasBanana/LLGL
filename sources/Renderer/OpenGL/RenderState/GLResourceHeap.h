@@ -44,13 +44,13 @@ class GLResourceHeap final : public ResourceHeap
     public:
 
         GLResourceHeap(
-            const ResourceHeapDescriptor&               desc,
-            const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
+            const ResourceHeapDescriptor&       desc,
+            ArrayView<ResourceViewDescriptor>   initialResourceViews = {}
         );
         ~GLResourceHeap();
 
         // Writes the specified resource views to this resource heap and generates texture views as required.
-        std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
+        std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews);
 
         // Binds this resource heap with the specified GL state manager.
         void Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
@@ -97,11 +97,11 @@ class GLResourceHeap final : public ResourceHeap
 
         void AllocSegmentsUBO(GLHeapBindingIterator& bindingIter);
         void AllocSegmentsBuffer(GLHeapBindingIterator& bindingIter);
-        void AllocSegmentsTexture(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
+        void AllocSegmentsTexture(GLHeapBindingIterator& bindingIter, ArrayView<GLuint> combinedSamplerSlots);
         void AllocSegmentsImage(GLHeapBindingIterator& bindingIter);
-        void AllocSegmentsSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
-        void AllocSegmentsNativeSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
-        void AllocSegmentsEmulatedSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
+        void AllocSegmentsSampler(GLHeapBindingIterator& bindingIter, ArrayView<GLuint> combinedSamplerSlots);
+        void AllocSegmentsNativeSampler(GLHeapBindingIterator& bindingIter, ArrayView<GLuint> combinedSamplerSlots);
+        void AllocSegmentsEmulatedSampler(GLHeapBindingIterator& bindingIter, ArrayView<GLuint> combinedSamplerSlots);
 
         void Alloc1PartSegment(
             GLResourceType              type,
@@ -150,17 +150,17 @@ class GLResourceHeap final : public ResourceHeap
         void WriteResourceViewEmulatedSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
 
         std::vector<GLResourceBinding> FilterAndSortGLBindingSlots(
-            GLHeapBindingIterator&      bindingIter,
-            ResourceType                resourceType,
-            long                        resourceBindFlags,
-            const ArrayView<GLuint>&    combinedSamplerSlots = {}
+            GLHeapBindingIterator&  bindingIter,
+            ResourceType            resourceType,
+            long                    resourceBindFlags,
+            ArrayView<GLuint>       combinedSamplerSlots = {}
         );
 
     private:
 
         static SegmentationSizeType ConsolidateSegments(
-            const ArrayView<GLResourceBinding>& bindingSlots,
-            const AllocSegmentFunc&             allocSegmentFunc
+            ArrayView<GLResourceBinding>    bindingSlots,
+            const AllocSegmentFunc&         allocSegmentFunc
         );
 
     private:

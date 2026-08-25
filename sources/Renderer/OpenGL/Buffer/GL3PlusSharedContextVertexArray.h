@@ -30,12 +30,13 @@ class GL3PlusSharedContextVertexArray
 
     public:
 
+        ~GL3PlusSharedContextVertexArray();
+
         // Resets the vertex layout.
         void Reset();
 
         // Stores the vertex attributes for later use via glVertexAttrib*Pointer() functions.
         void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
-        //void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
 
         // Finalize the vertex array.
         void Finalize();
@@ -51,7 +52,8 @@ class GL3PlusSharedContextVertexArray
         struct GLContextVAO
         {
             GLVertexArrayObject vao;
-            bool                isObjectLabelDirty = false;
+            bool                isDirty             = true;
+            bool                isObjectLabelDirty  = false;
 
             void SetObjectLabel(const char* label);
         };

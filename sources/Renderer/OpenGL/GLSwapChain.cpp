@@ -8,6 +8,7 @@
 #include "GLSwapChain.h"
 #include "GLRenderSystem.h"
 #include "../TextureUtils.h"
+#include "../../Core/Assertion.h"
 #include "Platform/GLContextManager.h"
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Platform/Platform.h>
@@ -75,11 +76,12 @@ static void GetGLDepthStencilBits(const SwapChainDescriptor& desc, int& outDepth
 GLSwapChain::GLSwapChain(
     GLRenderSystem&                 renderSystem,
     const SwapChainDescriptor&      desc,
-    const std::shared_ptr<Surface>& surface,
-    GLContextManager&               contextMngr)
+    const std::shared_ptr<Surface>& surface)
 :
     SwapChain { desc }
 {
+    LLGL_ASSERT(GLContextManager::Get().IsInitialized(), "cannot initialize GLSwapChain before GLContextManager is initialized");
+
     /* Set up pixel format for GL context */
     GLPixelFormat pixelFormat;
     pixelFormat.colorBits   = GetGLColorBits(desc);
@@ -118,7 +120,7 @@ GLSwapChain::GLSwapChain(
     framebufferHeight_ = GetFramebufferHeight(GetResolution());
 
     /* Create platform dependent OpenGL context */
-    context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
+    context_ = GLContextManager::Get().AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
     swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
     GLSwapChainContext::MakeCurrent(swapChainContext_.get());
 

@@ -19,8 +19,10 @@ namespace LLGL
 
 
 class GLStateManager;
+class GLVertexArrayPool;
 struct GLVertexAttribute;
 
+//TODO: rename, this is no longer managing the GL VAO, only its input layout
 // Wrapper class for an OpenGL Vertex-Array-Object (VAO), for GL 3.0+.
 class GLVertexArrayObject
 {
@@ -28,21 +30,15 @@ class GLVertexArrayObject
     public:
 
         // Release VAO from GL context.
-        void Release();
+        void Release(GLVertexArrayPool& vaoPool);
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexLayout(const GLVertexInputLayout& inputLayout);
+        void BuildVertexLayout(GLVertexArrayPool& vaoPool, const GLVertexInputLayout& inputLayout);
 
         // Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const
         {
             return id_;
-        }
-
-        // Returns the input layout hash from the last time BuildVertexLayout was called.
-        inline std::size_t GetInputLayoutHash() const
-        {
-            return inputLayoutHash_;
         }
 
     private:
@@ -51,9 +47,8 @@ class GLVertexArrayObject
 
     private:
 
-        GLuint      id_                 = 0; // Vertex array object ID.
-        GLuint      attribIndexEnd_     = 0; // Last VAO attribute index; This is needed when the input layout changes.
-        std::size_t inputLayoutHash_    = 0;
+        GLuint id_              = 0; // Vertex array object ID.
+        GLuint attribIndexEnd_  = 0; // Last VAO attribute index; This is needed when the input layout changes.
 
 };
 

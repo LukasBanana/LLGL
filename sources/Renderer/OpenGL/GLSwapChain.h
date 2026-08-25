@@ -40,8 +40,7 @@ class GLSwapChain final : public SwapChain
         GLSwapChain(
             GLRenderSystem&                 renderSystem,
             const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface,
-            GLContextManager&               contextMngr
+            const std::shared_ptr<Surface>& surface
         );
 
         // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.

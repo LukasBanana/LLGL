@@ -14,6 +14,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
+#include "../Buffer/GLVertexArrayPool.h"
 
 
 namespace LLGL
@@ -46,6 +47,9 @@ class GLContext
 
     public:
 
+        GLContext(const GLContext&) = delete;
+        GLContext& operator = (const GLContext&) = delete;
+
         virtual ~GLContext() = default;
 
         // Returns the number of samples for this GL context. Must be in range [1, 64].
@@ -75,6 +79,12 @@ class GLContext
         inline GLStateManager& GetStateManager()
         {
             return stateMngr_;
+        }
+
+        // Returns the vertex array object (VAO) pool of this context since VAOs cannot be natively shared across GL contexts.
+        inline GLVertexArrayPool& GetVertexArrayPool()
+        {
+            return vertexArrayPool_;
         }
 
         // Returns the global index of this GL context. This is assigned when the context is created. The first index starts with 1. The invalid index is 0.
@@ -130,10 +140,11 @@ class GLContext
 
     private:
 
-        GLStateManager  stateMngr_;
-        Format          colorFormat_        = Format::Undefined;
-        Format          depthStencilFormat_ = Format::Undefined;
-        unsigned        globalIndex_        = 0;
+        GLStateManager      stateMngr_;
+        GLVertexArrayPool   vertexArrayPool_;
+        Format              colorFormat_        = Format::Undefined;
+        Format              depthStencilFormat_ = Format::Undefined;
+        unsigned            globalIndex_        = 0;
 
 };
 

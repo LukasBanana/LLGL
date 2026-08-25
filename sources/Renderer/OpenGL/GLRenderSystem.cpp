@@ -56,7 +56,7 @@ static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescri
 }
 
 GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    contextMngr_
+    contextMngrScope_
     {
         GetGLProfileFromDesc(renderSystemDesc),
         std::bind(&GLRenderSystem::RegisterNewGLContext, this, std::placeholders::_1, std::placeholders::_2),
@@ -84,7 +84,7 @@ GLRenderSystem::~GLRenderSystem()
 
 SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<GLSwapChain>(*this, swapChainDesc, surface, contextMngr_);
+    return swapChains_.emplace<GLSwapChain>(*this, swapChainDesc, surface);
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
@@ -598,7 +598,7 @@ void GLRenderSystem::Release(Fence& fence)
 bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize != 0)
-        return contextMngr_.AllocContext()->GetNativeHandle(nativeHandle, nativeHandleSize);
+        return GLContextManager::Get().AllocContext()->GetNativeHandle(nativeHandle, nativeHandleSize);
     else
         return false;
 }
@@ -610,7 +610,7 @@ bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
 void GLRenderSystem::CreateGLContextOnce()
 {
-    (void)contextMngr_.AllocContext();
+    (void)GLContextManager::Get().AllocContext();
 }
 
 void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelFormat& pixelFormat)
