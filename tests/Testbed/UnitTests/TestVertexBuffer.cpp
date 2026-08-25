@@ -14,7 +14,7 @@
 
 /*
 Renders simple geometry multiple times with a different vertex format each iteration but from the same vertex buffer source.
-This tests if changing the vertex buffer attributes during command recording works correctly.
+This tests if changing the vertex buffer attributes from different PSOs with different strides as well as differnt base offestes works correctly.
 */
 DEF_TEST( VertexBuffer )
 {
@@ -60,10 +60,14 @@ DEF_TEST( VertexBuffer )
         // Create vertex buffer
         BufferDescriptor bufDesc;
         {
-            bufDesc.size        = sizeof(interleavedVertices);
+            bufDesc.size        = sizeof(interleavedVertices) + sizeof(simple2DVertices);
             bufDesc.bindFlags   = BindFlags::VertexBuffer | BindFlags::CopyDst;
         }
-        vertexBuffer = renderer->CreateBuffer(bufDesc, interleavedVertices);
+        vertexBuffer = renderer->CreateBuffer(bufDesc);
+
+        // Write two different types of vertices into the same buffer
+        renderer->WriteBuffer(*vertexBuffer, 0,                           interleavedVertices, sizeof(interleavedVertices));
+        renderer->WriteBuffer(*vertexBuffer, sizeof(interleavedVertices), simple2DVertices,    sizeof(simple2DVertices   ));
     }
 
     // Create PSO
@@ -101,16 +105,14 @@ DEF_TEST( VertexBuffer )
 
     BEGIN();
     {
-        if (frame + 1 == numFrames)
-        {
-            // Last frame uses the first format but with smaller stride
-            cmdBuffer->FillBuffer(*vertexBuffer, 0, 0x00000000);
-            cmdBuffer->UpdateBuffer(*vertexBuffer, 0, simple2DVertices, sizeof(simple2DVertices));
-        }
-
         // Set always the same vertex buffer and let the PSO determine the vertex format.
         // However, we need to set the vertex format stride when binding the vertex buffer as some APIs need this per buffer while Vulkan ties it to the PSO.
-        cmdBuffer->SetVertexBuffer(*vertexBuffer, vertexFormats[VertFmtLayout0 + frame].GetStride());
+        // Also use a base offset for the last geometry to stream vertices from the `simple2DVertices` data.
+        cmdBuffer->SetVertexBuffer(
+            /*buffer:*/ *vertexBuffer,
+            /*stride:*/ vertexFormats[VertFmtLayout0 + frame].GetStride(),
+            /*offset:*/ std::uint64_t(frame + 1 == numFrames ? sizeof(interleavedVertices) : 0)
+        );
         cmdBuffer->SetPipelineState(*pso);
 
         cmdBuffer->BeginRenderPass(*swapChain);
