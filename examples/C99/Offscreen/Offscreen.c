@@ -143,21 +143,13 @@ int ExampleInit()
         vertices[i*2 + 1].color[2]    = b;
     }
 
-    // Vertex format with 2D floating-point vector for position and 4D byte vector for color
-    LLGLVertexAttribute vertexAttributes[2] =
-    {
-        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = offsetof(Vertex, position), .stride = sizeof(Vertex) },
-        { .name = "color",    .format = LLGLFormatRGB32Float, .location = 1, .offset = offsetof(Vertex, color   ), .stride = sizeof(Vertex) },
-    };
-
     // Create vertex buffer
-    LLGLBufferDescriptor vertexBufferDesc =
+    const LLGLBufferDescriptor vertexBufferDesc =
     {
-        .debugName          = "VertexBuffer",
-        .size               = vertexBufferSize,     // Size (in bytes) of the vertex buffer
-        .bindFlags          = LLGLBindVertexBuffer, // Enables the buffer to be bound to a vertex buffer slot
-        .numVertexAttribs   = 2,
-        .vertexAttribs      = vertexAttributes,     // Vertex format layout
+        .debugName  = "VertexBuffer",
+        .size       = vertexBufferSize,     // Size (in bytes) of the vertex buffer
+        .stride     = sizeof(Vertex),       // Stride (in bytes) between vertices
+        .bindFlags  = LLGLBindVertexBuffer, // Enables the buffer to be bound to a vertex buffer slot
     };
     LLGLBuffer vertexBuffer = llglCreateBuffer(&vertexBufferDesc, vertices);
 
@@ -165,7 +157,7 @@ int ExampleInit()
     free(vertices);
 
     // Create shaders
-    LLGLShaderDescriptor vertShaderDesc =
+    const LLGLShaderDescriptor vertShaderDesc =
     {
         .debugName  = "VertexShader",
         .type       = LLGLShaderTypeVertex,
@@ -176,7 +168,7 @@ int ExampleInit()
         .profile    = "300 es",
 #endif
     };
-    LLGLShaderDescriptor fragShaderDesc =
+    const LLGLShaderDescriptor fragShaderDesc =
     {
         .debugName  = "FragmentShader",
         .type       = LLGLShaderTypeFragment,
@@ -186,10 +178,6 @@ int ExampleInit()
         .profile    = "300 es",
 #endif
     };
-
-    // Specify vertex attributes for vertex shader
-    vertShaderDesc.vertex.numInputAttribs   = 2;
-    vertShaderDesc.vertex.inputAttribs      = vertexAttributes;
 
     LLGLShader shaders[2] =
     {
@@ -208,7 +196,7 @@ int ExampleInit()
     }
 
     // Create texture to render into and read results from
-    LLGLTextureDescriptor textureDesc =
+    const LLGLTextureDescriptor textureDesc =
     {
         .debugName  = "Offscreen.Texture",
         .type       = LLGLTextureTypeTexture2D,
@@ -221,7 +209,7 @@ int ExampleInit()
     LLGLTexture texture = llglCreateTexture(&textureDesc, NULL);
 
     // Create offscreen render target to render into
-    LLGLRenderTargetDescriptor renderTargetDesc =
+    const LLGLRenderTargetDescriptor renderTargetDesc =
     {
         .debugName              = "Offscreen.RenderTarget",
         .renderPass             = NULL,
@@ -236,9 +224,18 @@ int ExampleInit()
     };
     LLGLRenderTarget renderTarget = llglCreateRenderTarget(&renderTargetDesc);
 
-    // Create graphics pipeline
-    LLGLGraphicsPipelineDescriptor pipelineDesc =
+    // Vertex format with 2D floating-point vector for position and 4D byte vector for color
+    const LLGLVertexAttribute vertexAttributes[2] =
     {
+        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = offsetof(Vertex, position), .stride = sizeof(Vertex) },
+        { .name = "color",    .format = LLGLFormatRGB32Float, .location = 1, .offset = offsetof(Vertex, color   ), .stride = sizeof(Vertex) },
+    };
+
+    // Create graphics pipeline
+    const LLGLGraphicsPipelineDescriptor pipelineDesc =
+    {
+        .numInputVertexAttribs          = ARRAY_SIZE(vertexAttributes),
+        .inputVertexAttribs             = vertexAttributes,
         .vertexShader                   = shaders[0],
         .fragmentShader                 = shaders[1],
         .renderPass                     = llglGetRenderTargetRenderPass(renderTarget),

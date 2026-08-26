@@ -51,21 +51,12 @@ int TexturingInit()
 
     get_textured_cube(&vertices, &vertexCount, &indices, &g_example.indexCount);
 
-    // Vertex format with 3D position, normal, and texture-coordinates
-    const LLGLVertexAttribute vertexAttributes[3] =
-    {
-        { .name = "position", .format = LLGLFormatRGB32Float, .location = 0, .offset = offsetof(TexturedVertex, position), .stride = sizeof(TexturedVertex) },
-        { .name = "normal",   .format = LLGLFormatRGB32Float, .location = 1, .offset = offsetof(TexturedVertex, normal),   .stride = sizeof(TexturedVertex) },
-        { .name = "texCoord", .format = LLGLFormatRG32Float,  .location = 2, .offset = offsetof(TexturedVertex, texCoord), .stride = sizeof(TexturedVertex) },
-    };
-
     // Create vertex buffer
     const LLGLBufferDescriptor vertexBufferDesc =
     {
-        .size               = sizeof(TexturedVertex)*vertexCount,   // Size (in bytes) of the vertex buffer
-        .bindFlags          = LLGLBindVertexBuffer,                 // Enables the buffer to be bound to a vertex buffer slot
-        .numVertexAttribs   = ARRAY_SIZE(vertexAttributes),
-        .vertexAttribs      = vertexAttributes,                     // Vertex format layout
+        .size       = sizeof(TexturedVertex)*vertexCount,   // Size (in bytes) of the vertex buffer
+        .stride     = sizeof(TexturedVertex),
+        .bindFlags  = LLGLBindVertexBuffer,                 // Enables the buffer to be bound to a vertex buffer slot
     };
     g_example.vertexBuffer = llglCreateBuffer(&vertexBufferDesc, vertices);
 
@@ -155,8 +146,6 @@ int TexturingInit()
         .type                   = LLGLShaderTypeVertex,
         .source                 = "Texturing.vert",
         .sourceType             = LLGLShaderSourceTypeCodeFile,
-        .vertex.numInputAttribs = ARRAY_SIZE(vertexAttributes),
-        .vertex.inputAttribs    = vertexAttributes,
 #if LLGLEXAMPLE_MOBILE
         .profile                = "300 es",
 #endif
@@ -202,10 +191,20 @@ int TexturingInit()
     };
     LLGLPipelineLayout pipelineLayout = llglCreatePipelineLayout(&psoLayoutDesc);
 
+    // Vertex format with 3D position, normal, and texture-coordinates
+    const LLGLVertexAttribute vertexAttributes[3] =
+    {
+        { .name = "position", .format = LLGLFormatRGB32Float, .location = 0, .offset = offsetof(TexturedVertex, position), .stride = sizeof(TexturedVertex) },
+        { .name = "normal",   .format = LLGLFormatRGB32Float, .location = 1, .offset = offsetof(TexturedVertex, normal),   .stride = sizeof(TexturedVertex) },
+        { .name = "texCoord", .format = LLGLFormatRG32Float,  .location = 2, .offset = offsetof(TexturedVertex, texCoord), .stride = sizeof(TexturedVertex) },
+    };
+
     // Create graphics pipeline
     const LLGLGraphicsPipelineDescriptor pipelineDesc =
     {
         .pipelineLayout             = pipelineLayout,
+        .numInputVertexAttribs      = ARRAY_SIZE(vertexAttributes),
+        .inputVertexAttribs         = vertexAttributes,
         .vertexShader               = shaders[0],
         .fragmentShader             = shaders[1],
         .renderPass                 = llglGetRenderTargetRenderPass(LLGL_GET_AS(LLGLRenderTarget, g_swapChain)),
