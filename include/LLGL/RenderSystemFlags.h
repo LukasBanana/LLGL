@@ -490,6 +490,7 @@ LLGL_DEPRECATED_IGNORE_POP()
 /**
 \brief Contains the attributes for all supported rendering features.
 \see RenderingCapabilities::features
+\todo Add bitmask `:1` to all fields to drastically reduce size of this struct. This will be a breaking change as they can no longer be referenced individually.
 */
 struct RenderingFeatures
 {
@@ -624,6 +625,8 @@ struct RenderingFeatures
     \see ShaderType::Task
     \see ShaderType::Mesh
     \see RenderSystem::CreatePipelineState(const MeshPipelineDescriptor&)
+    \see CommandBufferTier1::DrawMesh
+    \see CommandBufferTier1::DrawMeshIndirect
     */
     bool hasMeshShaders                 = false;
 
@@ -722,6 +725,13 @@ struct RenderingFeatures
     \see CommandBuffer:BeginRenderCondition
     */
     bool hasRenderCondition             = false;
+
+    /**
+    \brief Specifies whether variable rate shading (VRS) is supported.
+    \note Only supported with: Direct3D 12, Vulkan.
+    \see CommandBufferTier1::SetShadingRate
+    */
+    bool hasVariableRateShading         = false;
 };
 
 /**

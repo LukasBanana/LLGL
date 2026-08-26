@@ -62,6 +62,26 @@ const (
     StencilFaceBack
 )
 
+type ShadingRate int
+const (
+    ShadingRateSize1x1 ShadingRate = iota
+    ShadingRateSize1x2
+    ShadingRateSize2x1
+    ShadingRateSize2x2
+    ShadingRateSize2x4
+    ShadingRateSize4x2
+    ShadingRateSize4x4
+)
+
+type ShadingRateOp int
+const (
+    ShadingRateOpKeep ShadingRateOp = iota
+    ShadingRateOpReplace
+    ShadingRateOpMin
+    ShadingRateOpMax
+    ShadingRateOpSum
+)
+
 type Format int
 const (
     FormatUndefined Format = iota
@@ -1172,6 +1192,7 @@ type RenderingFeatures struct {
     HasPipelineCaching           bool /* = false */
     HasPipelineStatistics        bool /* = false */
     HasRenderCondition           bool /* = false */
+    HasVariableRateShading       bool /* = false */
 }
 
 type RenderingLimits struct {

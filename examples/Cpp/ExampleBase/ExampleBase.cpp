@@ -611,6 +611,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
             cmdBufferDesc.flags = LLGL::CommandBufferFlags::ImmediateSubmit;
     }
     commands = renderer->CreateCommandBuffer(cmdBufferDesc);
+    commandsTier1 = LLGL::CastTo<LLGL::CommandBufferTier1>(commands);
 
     // Get command queue
     commandQueue = renderer->GetCommandQueue();

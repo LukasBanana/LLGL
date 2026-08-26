@@ -1680,6 +1680,30 @@ bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHan
     return instance.GetNativeHandle(nativeHandle, nativeHandleSize);
 }
 
+/* ----- Variable Rate Shading (VRS) ----- */
+
+void DbgCommandBuffer::SetShadingRate(ShadingRate shadingRate)
+{
+    CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    const Extent2D shadingRateSize = GetShadingRateSize(shadingRate);
+    LLGL_DBG_COMMAND_EXT(
+        instanceTier1->SetShadingRate(shadingRate),
+        "SetShadingRate(%ux%u)", shadingRateSize.width, shadingRateSize.height
+    );
+}
+
+void DbgCommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+{
+    CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    const Extent2D shadingRateSize = GetShadingRateSize(shadingRate);
+    LLGL_DBG_COMMAND_EXT(
+        instanceTier1->SetShadingRate(shadingRate, combinerOpX, combinerOpY),
+        "SetShadingRate(%ux%u, 0x%X, 0x%X)", shadingRateSize.width, shadingRateSize.height, static_cast<int>(combinerOpX), static_cast<int>(combinerOpY)
+    );
+}
+
 /* ----- Mesh pipeline ----- */
 
 void DbgCommandBuffer::DrawMesh(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

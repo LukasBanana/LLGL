@@ -69,6 +69,28 @@ typedef enum LLGLStencilFace
 }
 LLGLStencilFace;
 
+typedef enum LLGLShadingRate
+{
+    LLGLShadingRateSize1x1,
+    LLGLShadingRateSize1x2,
+    LLGLShadingRateSize2x1,
+    LLGLShadingRateSize2x2,
+    LLGLShadingRateSize2x4,
+    LLGLShadingRateSize4x2,
+    LLGLShadingRateSize4x4,
+}
+LLGLShadingRate;
+
+typedef enum LLGLShadingRateOp
+{
+    LLGLShadingRateOpKeep,
+    LLGLShadingRateOpReplace,
+    LLGLShadingRateOpMin,
+    LLGLShadingRateOpMax,
+    LLGLShadingRateOpSum,
+}
+LLGLShadingRateOp;
+
 typedef enum LLGLFormat
 {
     LLGLFormatUndefined,
@@ -1269,6 +1291,7 @@ typedef struct LLGLRenderingFeatures
     bool hasPipelineCaching;           /* = false */
     bool hasPipelineStatistics;        /* = false */
     bool hasRenderCondition;           /* = false */
+    bool hasVariableRateShading;       /* = false */
 }
 LLGLRenderingFeatures;
 

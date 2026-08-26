@@ -1191,6 +1191,57 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
     return false;
 }
 
+/* ----- Variable Rate Shading (VRS) ----- */
+
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+static D3D12_SHADING_RATE ToD3DShadingRate(ShadingRate shadingRate)
+{
+    switch (shadingRate)
+    {
+        case ShadingRate::Size1x1: return D3D12_SHADING_RATE_1X1;
+        case ShadingRate::Size1x2: return D3D12_SHADING_RATE_1X2;
+        case ShadingRate::Size2x1: return D3D12_SHADING_RATE_2X1;
+        case ShadingRate::Size2x2: return D3D12_SHADING_RATE_2X2;
+        case ShadingRate::Size2x4: return D3D12_SHADING_RATE_2X4;
+        case ShadingRate::Size4x2: return D3D12_SHADING_RATE_4X2;
+        case ShadingRate::Size4x4: return D3D12_SHADING_RATE_4X4;
+    }
+    LLGL_TRAP_DX_MAP(ShadingRate, shadingRate, D3D12_SHADING_RATE);
+}
+
+static D3D12_SHADING_RATE_COMBINER ToD3DShadingRateCombiner(ShadingRateOp shadingRateOp)
+{
+    switch (shadingRateOp)
+    {
+        case ShadingRateOp::Keep:       return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH;
+        case ShadingRateOp::Replace:    return D3D12_SHADING_RATE_COMBINER_OVERRIDE;
+        case ShadingRateOp::Min:        return D3D12_SHADING_RATE_COMBINER_MIN;
+        case ShadingRateOp::Max:        return D3D12_SHADING_RATE_COMBINER_MAX;
+        case ShadingRateOp::Sum:        return D3D12_SHADING_RATE_COMBINER_SUM;
+    }
+    LLGL_TRAP_DX_MAP(ShadingRateOp, shadingRateOp, D3D12_SHADING_RATE_COMBINER);
+}
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
+
+void D3D12CommandBuffer::SetShadingRate(ShadingRate shadingRate)
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    D3D12_SHADING_RATE shadingRateD3D = ToD3DShadingRate(shadingRate);
+    commandContext_.SetShadingRate(shadingRateD3D, nullptr);
+    #endif
+}
+
+void D3D12CommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    D3D12_SHADING_RATE shadingRateD3D = ToD3DShadingRate(shadingRate);
+    const D3D12_SHADING_RATE_COMBINER combinersD3D[2] = { ToD3DShadingRateCombiner(combinerOpX), ToD3DShadingRateCombiner(combinerOpY) };
+    commandContext_.SetShadingRate(shadingRateD3D, combinersD3D);
+    #endif
+}
+
 /* ----- Mesh pipeline ----- */
 
 void D3D12CommandBuffer::DrawMesh(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

@@ -856,6 +856,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
     deviceCaps_.viewInstancingTier = options3.ViewInstancingTier;
 
+    /* Check variable rate shading support */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6));
+    deviceCaps_.variableShadingRateTier = options6.VariableShadingRateTier;
+
     /* Check mesh shader support */
     D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
@@ -906,6 +911,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasPipelineCaching                = true;
     caps.features.hasPipelineStatistics             = true;
     caps.features.hasRenderCondition                = true;
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    caps.features.hasVariableRateShading            = (deviceCaps_.variableShadingRateTier != D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED);
+    #else
+    caps.features.hasMeshShaders                    = false;
+    #endif
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;

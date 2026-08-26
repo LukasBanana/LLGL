@@ -453,6 +453,16 @@ namespace LLGL
 
         /* ----- CommandBufferTier1 ----- */
 
+        public void SetShadingRate(ShadingRate shadingRate)
+        {
+            NativeLLGL.SetShadingRate(shadingRate);
+        }
+
+        public void SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+        {
+            NativeLLGL.SetShadingRateExt(shadingRate, combinerOpX, combinerOpY);
+        }
+
         public void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ)
         {
             NativeLLGL.DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);

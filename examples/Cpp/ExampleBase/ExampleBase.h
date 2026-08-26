@@ -185,6 +185,9 @@ protected:
     // Main command buffer
     LLGL::CommandBuffer*                        commands            = nullptr;
 
+    // If Tier1 is supported, this points to the same command buffer as `commands`. Otherwise, null.
+    LLGL::CommandBufferTier1*                   commandsTier1       = LLGL::CastTo<LLGL::CommandBufferTier1>(commands);
+
     // Command queue
     LLGL::CommandQueue*                         commandQueue        = nullptr;
 

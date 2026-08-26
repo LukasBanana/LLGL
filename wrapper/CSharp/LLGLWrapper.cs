@@ -60,6 +60,26 @@ namespace LLGL
         Back,
     }
 
+    public enum ShadingRate
+    {
+        Size1x1,
+        Size1x2,
+        Size2x1,
+        Size2x2,
+        Size2x4,
+        Size4x2,
+        Size4x4,
+    }
+
+    public enum ShadingRateOp
+    {
+        Keep,
+        Replace,
+        Min,
+        Max,
+        Sum,
+    }
+
     public enum Format
     {
         Undefined,
@@ -1484,6 +1504,7 @@ namespace LLGL
         public bool HasPipelineCaching { get; set; }           = false;
         public bool HasPipelineStatistics { get; set; }        = false;
         public bool HasRenderCondition { get; set; }           = false;
+        public bool HasVariableRateShading { get; set; }       = false;
 
         public RenderingFeatures() { }
 
@@ -1526,6 +1547,7 @@ namespace LLGL
                 HasPipelineCaching           = value.hasPipelineCaching;
                 HasPipelineStatistics        = value.hasPipelineStatistics;
                 HasRenderCondition           = value.hasRenderCondition;
+                HasVariableRateShading       = value.hasVariableRateShading;
             }
         }
     }
@@ -4021,6 +4043,8 @@ namespace LLGL
             public bool hasPipelineStatistics;        /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasRenderCondition;           /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool hasVariableRateShading;       /* = false */
         }
 
         public unsafe struct RenderingLimits
@@ -4907,6 +4931,12 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglGetNativeHandle", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
         public static extern unsafe bool GetNativeHandle(void* nativeHandle, IntPtr nativeHandleSize);
+
+        [DllImport(DllName, EntryPoint="llglSetShadingRate", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetShadingRate(ShadingRate shadingRate);
+
+        [DllImport(DllName, EntryPoint="llglSetShadingRateExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetShadingRateExt(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY);
 
         [DllImport(DllName, EntryPoint="llglDrawMesh", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ);

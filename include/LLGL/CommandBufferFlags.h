@@ -9,6 +9,8 @@
 #define LLGL_COMMAND_BUFFER_FLAGS_H
 
 
+#include <LLGL/Export.h>
+#include <LLGL/Types.h>
 #include <cstdint>
 
 
@@ -58,6 +60,45 @@ enum class StencilFace
     \note Only supported with: OpenGL, Vulkan, Metal.
     */
     Back,
+};
+
+/**
+\brief Variable rate shading enumeration.
+\see CommandBufferTier1::SetShadingRate
+\see RenderingFeatures::hasVariableRateShading
+\note Only supported with: Direct3D 12, Vulkan.
+*/
+enum class ShadingRate
+{
+    Size1x1, //!< No change in shading rate (Default).
+    Size1x2, //!< Reduce vertical resolution by 2x.
+    Size2x1, //!< Reduce horizontal resolution by 2x.
+    Size2x2, //!< Reduce horizontal and vertical resolution by 2x.
+    Size2x4, //!< Reduce horizontal resolution by 2x and vertical resolition by 4x.
+    Size4x2, //!< Reduce horizontal resolution by 4x and vertical resolition by 2x.
+    Size4x4, //!< Reduce horizontal and vertical resolution by 4x.
+};
+
+/**
+\brief Shading rate combiner operation enumeration.
+\see CommandBufferTier1::SetShadingRate
+\see RenderingFeatures::hasVariableRateShading
+\note Only supported with: Direct3D 12, Vulkan.
+*/
+enum class ShadingRateOp
+{
+    Keep,       //!< Specifies the combiners as passthrough from input A.
+    Replace,    //!< Specifies the combiners as override from input B.
+    Min,        //!< Specifies the combiners minimum between inputs A and B.
+    Max,        //!< Specifies the combiners maximum between inputs A and B.
+
+    /**
+    \brief Specifies the combiners as sum of both inputs A and B.
+    \remarks While the D3D12 equivalent \c D3D12_SHADING_RATE_COMBINER_SUM and
+    Vulkan equivalent \c VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR sound they use different operations,
+    they have the same effect on the result. They only have a different definition of how combiners are calculated.
+    */
+    Sum,
 };
 
 
@@ -312,6 +353,12 @@ struct CommandBufferDescriptor
     */
     const RenderPass*   renderPass          = nullptr;
 };
+
+
+/* ----- Functions ----- */
+
+//! Returns the dimensions of the specified shading rate.
+LLGL_EXPORT Extent2D GetShadingRateSize(ShadingRate shadingRate);
 
 
 } // /namespace LLGL

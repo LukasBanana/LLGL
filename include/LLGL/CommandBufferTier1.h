@@ -19,8 +19,8 @@ namespace LLGL
 /**
 \brief Extended tier-1 command buffer interface.
 \remarks This command buffer extends the base interface with functions to record advanced rendering commands such as mesh pipeline tasks.
+\note Only supported with: Direct3D 12, Vulkan.
 \see RenderSystem::CreateCommandBuffer
-\note Only supported with: Direct3D 12.
 */
 class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
 {
@@ -28,6 +28,24 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         LLGL_DECLARE_INTERFACE( InterfaceID::CommandBufferTier1 );
 
     public:
+
+        /* ----- Variable Rate Shading (VRS) ----- */
+
+        /**
+        \brief Sets the shading rate for subsequent drawing commands.
+        \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
+        \see RenderingFeatures::hasVariableRateShading
+        */
+        virtual void SetShadingRate(ShadingRate shadingRate) = 0;
+
+        /**
+        \brief Sets the shading rate for subsequent drawing commands.
+        \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
+        \param[in combinerOpX Specifies how rendered primitives combine their X-axis shading rates.
+        \param[in combinerOpY Specifies how rendered primitives combine their Y-axis shading rates.
+        \see RenderingFeatures::hasVariableRateShading
+        */
+        virtual void SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY) = 0;
 
         /* ----- Mesh pipeline ----- */
 

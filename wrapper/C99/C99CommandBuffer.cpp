@@ -348,22 +348,29 @@ LLGL_C_EXPORT bool llglGetNativeHandle(void* nativeHandle, size_t nativeHandleSi
     return g_CurrentCmdBuf->GetNativeHandle(nativeHandle, nativeHandleSize);
 }
 
+LLGL_C_EXPORT void llglSetShadingRate(LLGLShadingRate shadingRate)
+{
+    g_CurrentCmdBufTier1->SetShadingRate((ShadingRate)shadingRate);
+}
+
+LLGL_C_EXPORT void llglSetShadingRateExt(LLGLShadingRate shadingRate, LLGLShadingRateOp combinerOpX, LLGLShadingRateOp combinerOpY)
+{
+    g_CurrentCmdBufTier1->SetShadingRate((ShadingRate)shadingRate, (ShadingRateOp)combinerOpX, (ShadingRateOp)combinerOpY);
+}
+
 LLGL_C_EXPORT void llglDrawMesh(uint32_t numWorkGroupsX, uint32_t numWorkGroupsY, uint32_t numWorkGroupsZ)
 {
-    if (g_CurrentCmdBufTier1)
-        g_CurrentCmdBufTier1->DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    g_CurrentCmdBufTier1->DrawMesh(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 LLGL_C_EXPORT void llglDrawMeshIndirect(LLGLBuffer buffer, uint64_t offset, uint32_t numCommands, uint32_t stride)
 {
-    if (g_CurrentCmdBufTier1)
-        g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, buffer), offset, numCommands, stride);
+    g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, buffer), offset, numCommands, stride);
 }
 
 LLGL_C_EXPORT void llglDrawMeshIndirectExt(LLGLBuffer argumentsBuffer, uint64_t argumentsOffset, LLGLBuffer countBuffer, uint64_t countOffset, uint32_t maxNumCommands, uint32_t stride)
 {
-    if (g_CurrentCmdBufTier1)
-        g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, argumentsBuffer), argumentsOffset, LLGL_REF(Buffer, countBuffer), countOffset, maxNumCommands, stride);
+    g_CurrentCmdBufTier1->DrawMeshIndirect(LLGL_REF(Buffer, argumentsBuffer), argumentsOffset, LLGL_REF(Buffer, countBuffer), countOffset, maxNumCommands, stride);
 }
 
 

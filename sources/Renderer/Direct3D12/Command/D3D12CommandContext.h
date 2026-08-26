@@ -155,6 +155,8 @@ class D3D12CommandContext
 
         void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
+        void SetShadingRate(D3D12_SHADING_RATE baseShadingRate, const D3D12_SHADING_RATE_COMBINER* combiners);
+
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const;
 
         D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptorsForStaging(
@@ -328,7 +330,9 @@ class D3D12CommandContext
 
         ComPtr<ID3D12GraphicsCommandList>       commandList_;
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        ComPtr<ID3D12GraphicsCommandList6>      commandList6_;
+      //ComPtr<ID3D12GraphicsCommandList4>      commandList4_; // Ray-Tracing (DXR)
+        ComPtr<ID3D12GraphicsCommandList5>      commandList5_; // Variable Rate Shading (VRS)
+        ComPtr<ID3D12GraphicsCommandList6>      commandList6_; // Mesh Pipeline
         #endif
 
         D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];

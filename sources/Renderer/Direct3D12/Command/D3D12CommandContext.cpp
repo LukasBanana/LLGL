@@ -90,7 +90,8 @@ void D3D12CommandContext::Create(
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Check if newer version of command list is available */
-    commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+    if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList5_))))
+        commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
     #endif
 
     /* Clear cache alongside device object initialization */
@@ -571,6 +572,14 @@ void D3D12CommandContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBuf
 {
     commandList_->IASetIndexBuffer(&indexBufferView);
     stateCache_.stateBits.is16BitIndexFormat = (indexBufferView.Format == DXGI_FORMAT_R16_UINT ? 1 : 0);
+}
+
+void D3D12CommandContext::SetShadingRate(D3D12_SHADING_RATE baseShadingRate, const D3D12_SHADING_RATE_COMBINER* combiners)
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    if (commandList5_)
+        commandList5_->RSSetShadingRate(baseShadingRate, combiners);
+    #endif
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const
