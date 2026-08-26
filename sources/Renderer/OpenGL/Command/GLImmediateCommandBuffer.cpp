@@ -1034,6 +1034,7 @@ bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
 
 
 #undef LLGL_FLUSH_MEMORY_BARRIERS
+#undef LLGL_FLUSH_VERTEX_ARRAY
 
 
 } // /namespace LLGL

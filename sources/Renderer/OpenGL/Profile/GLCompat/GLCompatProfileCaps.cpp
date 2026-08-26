@@ -30,16 +30,6 @@ static std::uint32_t GLGetUInt(GLenum param)
     return static_cast<std::uint32_t>(GLGetInt(param));
 };
 
-static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
-{
-    GLint attr = 0;
-    #if GL_EXT_draw_buffers2
-    if (HasExtension(GLExt::EXT_draw_buffers2))
-        glGetIntegeri_v(param, index, &attr);
-    #endif
-    return static_cast<std::uint32_t>(attr);
-};
-
 static float GLGetFloat(GLenum param)
 {
     GLfloat attr = 0.0f;

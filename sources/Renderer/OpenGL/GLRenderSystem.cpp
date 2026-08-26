@@ -182,7 +182,7 @@ LLGL_DEPRECATED_IGNORE_PUSH()
 // private
 GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2 || defined(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
     if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
         /* Create buffer with VAO and transform feedback object */
@@ -195,7 +195,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         return bufferGL;
     }
     else
-    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2 / GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */

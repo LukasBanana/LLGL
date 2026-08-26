@@ -96,6 +96,7 @@ static GLsizei GetVertexCountForPrimitiveMode(GLenum primitiveMode)
 
 void GLBufferWithXFB::BeginTransformFeedback(GLStateManager& stateMngr, GLBufferWithXFB& bufferWithXfbGL, GLenum primitiveMode)
 {
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2 || defined(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
     /* Store number of vertices per primitive and reset cached output vertex count */
     bufferWithXfbGL.primitiveVertexCount_   = GetVertexCountForPrimitiveMode(primitiveMode);
     bufferWithXfbGL.cachedVertexCount_      = -1;
@@ -105,14 +106,17 @@ void GLBufferWithXFB::BeginTransformFeedback(GLStateManager& stateMngr, GLBuffer
         stateMngr.BindTransformFeedback(bufferWithXfbGL.GetTransformFeedbackID());
     else
         glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, bufferWithXfbGL.GetTransformFeedbackID());
+    #endif
 }
 
 void GLBufferWithXFB::EndTransformFeedback(GLStateManager& stateMngr)
 {
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2 || defined(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
     if (HasExtension(GLExt::ARB_transform_feedback2))
         stateMngr.BindTransformFeedback(0);
     else
         glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+    #endif
 }
 
 

@@ -167,6 +167,11 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
     // dummy
 }
 
+void GLProgramPipeline::QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const
+{
+    // dummy
+}
+
 #endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 

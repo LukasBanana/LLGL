@@ -56,6 +56,10 @@ GLuint GLVertexArrayPool::Allocate()
 
     return vaos[0];
 
+    #else
+
+    return 0; // dummy
+
     #endif
 }
 
