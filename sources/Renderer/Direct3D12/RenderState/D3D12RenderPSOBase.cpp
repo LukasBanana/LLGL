@@ -7,6 +7,7 @@
 
 #include "D3D12RenderPSOBase.h"
 #include "D3D12PipelineStateUtils.h"
+#include "../Command/D3D12CommandContext.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/Utils/ForRange.h>
@@ -21,6 +22,7 @@ D3D12RenderPSOBase::D3D12RenderPSOBase(
     D3D12PipelineType           type,
 
     const StencilDescriptor&    stencilDesc,
+    const RasterizerDescriptor& rasterizerDesc,
     const BlendDescriptor&      blendDesc,
     bool                        isScissorEnabled,
     const ArrayView<Viewport>&  staticViewports,
@@ -34,6 +36,7 @@ D3D12RenderPSOBase::D3D12RenderPSOBase(
 {
     /* Store dynamic pipeline states */
     scissorEnabled_     = (isScissorEnabled ? 1 : 0);
+    shadingRateEnabled_ = (rasterizerDesc.shadingRateEnabled ? 1 : 0);
 
     stencilRefEnabled_  = (IsStaticStencilRefEnabled(stencilDesc) ? 1 : 0);
     stencilRef_         = stencilDesc.front.reference;
@@ -49,14 +52,20 @@ D3D12RenderPSOBase::D3D12RenderPSOBase(
         BuildStaticStateBuffer(staticViewports, staticScissors);
 }
 
-void D3D12RenderPSOBase::BindOutputMergerAndStaticStates(ID3D12GraphicsCommandList* commandList)
+void D3D12RenderPSOBase::BindOutputMergerAndStaticStates(D3D12CommandContext& commandContext)
 {
+    ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+
     if (stencilRefEnabled_ != 0)
         commandList->OMSetStencilRef(stencilRef_);
     if (blendFactorEnabled_ != 0)
         commandList->OMSetBlendFactor(blendFactor_);
 
     SetStaticViewportsAndScissors(commandList);
+
+    /* Reset shading rate if PSO does not enable it */
+    if (IsShadingRateEnabled())
+        commandContext.ResetShadingRate();
 }
 
 UINT D3D12RenderPSOBase::NumDefaultScissorRects() const

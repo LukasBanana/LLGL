@@ -1516,6 +1516,7 @@ typedef struct LLGLRasterizerDescriptor
     bool                    antiAliasedLineEnabled;    /* = false */
     bool                    conservativeRasterization; /* = false */
     float                   lineWidth;                 /* = 1.0f */
+    bool                    shadingRateEnabled;        /* = false */
 }
 LLGLRasterizerDescriptor;
 

@@ -1350,6 +1350,55 @@ bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
     return false;
 }
 
+/* ----- Variable Rate Shading (VRS) ----- */
+
+void VKCommandBuffer::SetShadingRate(ShadingRate shadingRate)
+{
+    #if VK_KHR_fragment_shading_rate
+    if (HasExtension(VKExt::KHR_fragment_shading_rate))
+    {
+        const VkExtent2D fragmentSize = VKTypes::ToVkExtent(GetShadingRateSize(shadingRate));
+        const VkFragmentShadingRateCombinerOpKHR combinerOps[2] =
+        {
+            VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR,
+            VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR,
+        };
+        vkCmdSetFragmentShadingRateKHR(commandBuffer_, &fragmentSize, combinerOps);
+    }
+    #endif
+}
+
+#if VK_KHR_fragment_shading_rate
+static VkFragmentShadingRateCombinerOpKHR ToVkShadingRateOp(ShadingRateOp shadingRateOp)
+{
+    switch (shadingRateOp)
+    {
+        case ShadingRateOp::Keep:       return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+        case ShadingRateOp::Replace:    return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+        case ShadingRateOp::Min:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MIN_KHR;
+        case ShadingRateOp::Max:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MAX_KHR;
+        case ShadingRateOp::Sum:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR;
+    }
+    LLGL_TRAP_VK_MAP(ShadingRateOp, shadingRateOp, VkFragmentShadingRateCombinerOpKHR);
+}
+#endif
+
+void VKCommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+{
+    #if VK_KHR_fragment_shading_rate
+    if (HasExtension(VKExt::KHR_fragment_shading_rate))
+    {
+        const VkExtent2D fragmentSize = VKTypes::ToVkExtent(GetShadingRateSize(shadingRate));
+        const VkFragmentShadingRateCombinerOpKHR combinerOps[2] =
+        {
+            ToVkShadingRateOp(combinerOpX),
+            ToVkShadingRateOp(combinerOpY),
+        };
+        vkCmdSetFragmentShadingRateKHR(commandBuffer_, &fragmentSize, combinerOps);
+    }
+    #endif
+}
+
 /* ----- Mesh pipeline ----- */
 
 void VKCommandBuffer::DrawMesh(

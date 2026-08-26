@@ -1373,6 +1373,7 @@ type RasterizerDescriptor struct {
     AntiAliasedLineEnabled    bool                /* = false */
     ConservativeRasterization bool                /* = false */
     LineWidth                 float32             /* = 1.0 */
+    ShadingRateEnabled        bool                /* = false */
 }
 
 type BlendTargetDescriptor struct {

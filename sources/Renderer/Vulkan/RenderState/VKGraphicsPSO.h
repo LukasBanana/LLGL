@@ -20,8 +20,9 @@ namespace LLGL
 // Vulkan graphics pipeline limitations structure.
 struct VKGraphicsPipelineLimits
 {
-    float lineWidthRange[2];
-    float lineWidthGranularity;
+    float   lineWidthRange[2];
+    float   lineWidthGranularity;
+    bool    hasFragmentShadingRate;
 };
 
 struct GraphicsPipelineDescriptor;

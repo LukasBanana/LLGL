@@ -426,6 +426,9 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     #if VK_EXT_conditional_rendering
     caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
     #endif
+    #if VK_KHR_fragment_shading_rate
+    caps.features.hasVariableRateShading            = SupportsExtension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME);
+    #endif
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
@@ -464,15 +467,23 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.storageResourceStageFlags           = StageFlags::AllStages;
 }
 
-void VKPhysicalDevice::QueryPipelineLimits(VKGraphicsPipelineLimits& pipelineLimits)
+void VKPhysicalDevice::QueryPipelineLimits(VKGraphicsPipelineLimits& outPipelineLimits)
 {
     /* Map limits to output rendering capabilities */
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Store graphics pipeline specific limitations */
-    pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];
-    pipelineLimits.lineWidthRange[1]    = limits.lineWidthRange[1];
-    pipelineLimits.lineWidthGranularity = limits.lineWidthGranularity;
+    outPipelineLimits.lineWidthRange[0]         = limits.lineWidthRange[0];
+    outPipelineLimits.lineWidthRange[1]         = limits.lineWidthRange[1];
+    outPipelineLimits.lineWidthGranularity      = limits.lineWidthGranularity;
+
+    /* Store additional meta-data */
+    #if VK_KHR_fragment_shading_rate
+    outPipelineLimits.hasFragmentShadingRate    = SupportsExtension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME);
+    #else
+    outPipelineLimits.hasFragmentShadingRate    = false;
+    #endif
+
 
     /*
     TODO: extension limits

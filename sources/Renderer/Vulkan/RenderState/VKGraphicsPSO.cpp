@@ -319,6 +319,8 @@ static void CreateDynamicState(
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_BLEND_CONSTANTS);
     if (desc.stencil.referenceDynamic)
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
+    if (desc.rasterizer.shadingRateEnabled)
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR);
 
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;

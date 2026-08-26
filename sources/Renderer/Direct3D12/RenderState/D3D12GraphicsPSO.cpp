@@ -40,6 +40,7 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     {
         D3D12PipelineType::Graphics,
         desc.stencil,
+        desc.rasterizer,
         desc.blend,
         desc.rasterizer.scissorTestEnabled,
         desc.viewports,
@@ -96,11 +97,9 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
         commandContext.SetPipelineState(GetNative());
 
     /* Set dynamic pipeline states */
-    ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+    commandContext.GetCommandList()->IASetPrimitiveTopology(primitiveTopology_);
 
-    commandList->IASetPrimitiveTopology(primitiveTopology_);
-
-    BindOutputMergerAndStaticStates(commandList);
+    BindOutputMergerAndStaticStates(commandContext);
 }
 
 static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(const PrimitiveTopology topology)

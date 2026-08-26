@@ -34,6 +34,8 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         /**
         \brief Sets the shading rate for subsequent drawing commands.
         \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
+        \remarks This must only be used on a graphics or mesh pipeline that has variable rate shading enabled.
+        \see RasterizerState::shadingRateEnabled
         \see RenderingFeatures::hasVariableRateShading
         */
         virtual void SetShadingRate(ShadingRate shadingRate) = 0;
@@ -43,6 +45,8 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
         \param[in combinerOpX Specifies how rendered primitives combine their X-axis shading rates.
         \param[in combinerOpY Specifies how rendered primitives combine their Y-axis shading rates.
+        \remarks This must only be used on a graphics or mesh pipeline that has variable rate shading enabled.
+        \see RasterizerState::shadingRateEnabled
         \see RenderingFeatures::hasVariableRateShading
         */
         virtual void SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY) = 0;

@@ -600,6 +600,15 @@ struct RasterizerDescriptor
     \see RenderingLimits::lineWidthRange
     */
     float               lineWidth                   = 1.0f;
+
+    /**
+    \brief If true, variable rate shading (VRS) is enabled for the rasterizer. By default disabled.
+    \remarks If enabled, a shading rate must be specified before the first draw command.
+    \note Only supported with: Direct3D 12, Vulkan.
+    \see CommandBufferTier1::SetShadingRate
+    \see RenderingFeatures::hasVariableRateShading
+    */
+    bool                shadingRateEnabled          = false;
 };
 
 /**

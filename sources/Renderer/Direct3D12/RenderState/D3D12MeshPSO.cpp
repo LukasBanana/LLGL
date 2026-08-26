@@ -38,6 +38,7 @@ D3D12MeshPSO::D3D12MeshPSO(
     {
         D3D12PipelineType::Mesh,
         desc.stencil,
+        desc.rasterizer,
         desc.blend,
         desc.rasterizer.scissorTestEnabled,
         desc.viewports,
@@ -88,7 +89,7 @@ void D3D12MeshPSO::Bind(D3D12CommandContext& commandContext)
     commandContext.SetPipelineState(GetNative());
 
     /* Set dynamic pipeline states */
-    BindOutputMergerAndStaticStates(commandContext.GetCommandList());
+    BindOutputMergerAndStaticStates(commandContext);
 }
 
 

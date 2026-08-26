@@ -157,6 +157,9 @@ class D3D12CommandContext
 
         void SetShadingRate(D3D12_SHADING_RATE baseShadingRate, const D3D12_SHADING_RATE_COMBINER* combiners);
 
+        // Resets the shading rate to its default value for PSOs that do not enable it.
+        void ResetShadingRate();
+
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const;
 
         D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptorsForStaging(
@@ -269,6 +272,7 @@ class D3D12CommandContext
                 std::uint32_t   graphicsRootSignature   : 1;
                 std::uint32_t   computeRootSignature    : 1;
                 std::uint32_t   descriptorHeaps         : 1;
+                std::uint32_t   shadingRate1x1          : 1;
             }
             dirtyBits;
 

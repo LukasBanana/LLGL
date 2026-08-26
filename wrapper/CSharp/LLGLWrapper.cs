@@ -2023,6 +2023,7 @@ namespace LLGL
         public bool                AntiAliasedLineEnabled { get; set; }    = false;
         public bool                ConservativeRasterization { get; set; } = false;
         public float               LineWidth { get; set; }                 = 1.0f;
+        public bool                ShadingRateEnabled { get; set; }        = false;
 
         internal NativeLLGL.RasterizerDescriptor Native
         {
@@ -2043,6 +2044,7 @@ namespace LLGL
                 native.antiAliasedLineEnabled    = AntiAliasedLineEnabled;
                 native.conservativeRasterization = ConservativeRasterization;
                 native.lineWidth                 = LineWidth;
+                native.shadingRateEnabled        = ShadingRateEnabled;
                 return native;
             }
         }
@@ -4230,6 +4232,8 @@ namespace LLGL
             [MarshalAs(UnmanagedType.I1)]
             public bool                conservativeRasterization; /* = false */
             public float               lineWidth;                 /* = 1.0f */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool                shadingRateEnabled;        /* = false */
         }
 
         public unsafe struct BlendTargetDescriptor

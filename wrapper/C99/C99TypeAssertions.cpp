@@ -833,6 +833,7 @@ LLGL_STATIC_ASSERT_OFFSET(RasterizerDescriptor, multiSampleEnabled);
 LLGL_STATIC_ASSERT_OFFSET(RasterizerDescriptor, antiAliasedLineEnabled);
 LLGL_STATIC_ASSERT_OFFSET(RasterizerDescriptor, conservativeRasterization);
 LLGL_STATIC_ASSERT_OFFSET(RasterizerDescriptor, lineWidth);
+LLGL_STATIC_ASSERT_OFFSET(RasterizerDescriptor, shadingRateEnabled);
 
 LLGL_STATIC_ASSERT_SIZE(BlendTargetDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(BlendTargetDescriptor, blendEnabled);
