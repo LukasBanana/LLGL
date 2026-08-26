@@ -33,7 +33,7 @@
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferWithXFB.h"
-#include "../Buffer/GLBufferArrayWithVAO.h"
+#include "../Buffer/GLBufferArray.h"
 
 #include "../RenderState/GLStateManager.h"
 #include "../RenderState/GLGraphicsPSO.h"
@@ -317,8 +317,8 @@ void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
         /* Bind vertex buffer */
-        auto& vertexBufferArrayGL = LLGL_CAST(GLBufferArrayWithVAO&, bufferArray);
-        SetBufferInputLayout(vertexBufferArrayGL.GetInputLayout());
+        auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
+        SetBufferInputLayout(bufferArrayGL.GetInputLayout());
     }
 }
 

@@ -19,7 +19,7 @@
 #include "Shader/GLLegacyShader.h"
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferWithXFB.h"
-#include "Buffer/GLBufferArrayWithVAO.h"
+#include "Buffer/GLBufferArray.h"
 #include "Buffer/GLVertexArrayCache.h"
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
@@ -189,8 +189,6 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            if (!bufferDesc.vertexAttribs.empty())
-                bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -202,8 +200,6 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            if (!bufferDesc.vertexAttribs.empty())
-                bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -220,27 +216,11 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
 
 LLGL_DEPRECATED_IGNORE_POP()
 
-// Returns true if at least one of the buffers in the specified array has a VertexBuffer binding flag.
-static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    for_range(i, numBuffers)
-    {
-        if ((bufferArray[i]->GetBindFlags() & BindFlags::VertexBuffer) != 0)
-            return true;
-    }
-    return false;
-}
-
 BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     CreateGLContextOnce();
     RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-
-    /* Create vertex buffer array and build VAO if there is at least one buffer with VertexBuffer binding */
-    if (IsBufferArrayWithVertexBufferBinding(numBuffers, bufferArray))
-        return bufferArrays_.emplace<GLBufferArrayWithVAO>(numBuffers, bufferArray);
-    else
-        return bufferArrays_.emplace<GLBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<GLBufferArray>(numBuffers, bufferArray);
 }
 
 void GLRenderSystem::Release(Buffer& buffer)

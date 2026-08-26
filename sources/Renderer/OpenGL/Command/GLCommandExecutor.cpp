@@ -28,7 +28,6 @@
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferWithXFB.h"
-#include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
 #include "../RenderState/GLPipelineState.h"

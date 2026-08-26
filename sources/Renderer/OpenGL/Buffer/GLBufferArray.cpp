@@ -10,30 +10,26 @@
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-GLBufferArray::GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+static std::vector<GLBuffer*> GetAsGLBuffers(ArrayView<Buffer*> inBuffers)
 {
-    BuildArray(numBuffers, bufferArray);
+    std::vector<GLBuffer*> outBuffers;
+    outBuffers.resize(inBuffers.size());
+    for_range(i, inBuffers.size())
+        outBuffers[i] = LLGL_CAST(GLBuffer*, inBuffers[i]);
+    return outBuffers;
 }
 
-
-/*
- * ======= Protected: =======
- */
-
-void GLBufferArray::BuildArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+GLBufferArray::GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray        { GetCombinedBindFlags(numBuffers, bufferArray)                 },
+    bufferInputLayout_ { GetAsGLBuffers(ArrayView<Buffer*>{ bufferArray, numBuffers }) }
 {
-    /* Store the ID of each GLBuffer inside the array */
-    idArray_.clear();
-    idArray_.reserve(numBuffers);
-    while (GLBuffer* next = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
-        idArray_.push_back(next->GetID());
 }
 
 

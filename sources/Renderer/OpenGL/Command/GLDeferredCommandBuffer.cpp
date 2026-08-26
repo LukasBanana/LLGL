@@ -28,7 +28,7 @@
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferWithXFB.h"
-#include "../Buffer/GLBufferArrayWithVAO.h"
+#include "../Buffer/GLBufferArray.h"
 
 #include "../RenderState/GLStateManager.h"
 #include "../RenderState/GLGraphicsPSO.h"
@@ -346,8 +346,8 @@ void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
-        auto& bufferArrayWithVAO = LLGL_CAST(GLBufferArrayWithVAO&, bufferArray);
-        SetBufferInputLayout(bufferArrayWithVAO.GetInputLayout());
+        auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
+        SetBufferInputLayout(bufferArrayGL.GetInputLayout());
     }
 }
 

@@ -26,25 +26,9 @@ class GLBufferWithVAO : public GLBuffer
 
         GLBufferWithVAO(const BufferDescriptor& bufferDesc);
 
-        void BuildVertexArray(const ArrayView<GLVertexAttribute>& vertexAttribs);
-        void BuildVertexArray(const ArrayView<VertexAttribute>& vertexAttribs);
-
-        // Returns the list of vertex attributes.
-        inline const std::vector<GLVertexAttribute>& GetVertexAttribs() const
-        {
-            return vertexAttribs_;
-        }
-
-        // Returns the vertex array which can be shared across multiple GL contexts.
-        inline GLSharedContextVertexArray* GetVertexArray()
-        {
-            return &vertexArray_;
-        }
-
     private:
 
-        std::vector<GLVertexAttribute>  vertexAttribs_;
-        GLSharedContextVertexArray      vertexArray_; //DEPRECATED
+        //TODO: some form of VAO caching
 
 };
 
