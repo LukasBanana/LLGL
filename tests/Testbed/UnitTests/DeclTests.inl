@@ -6,99 +6,92 @@
  */
 
 
-/* --- Renderer independent (RI) tests --- */
-
-#ifndef DECL_RITEST
-#   ifdef GATHER_KNOWN_TESTS
-#       define DECL_RITEST(NAME) \
-            knownTests.push_back(#NAME)
-#   else
-#       define DECL_RITEST(NAME) \
-            static TestResult Test##NAME(const Options& opt)
-#   endif
+#ifndef LLGL_STANDALONE_UNIT_TEST
+#   define LLGL_STANDALONE_UNIT_TEST(NAME) // Dummy
 #endif
 
-DECL_RITEST( ContainerDynamicArray );
-DECL_RITEST( ContainerSmallVector );
-DECL_RITEST( ContainerUTF8String );
-DECL_RITEST( ContainerStringLiteral );
-DECL_RITEST( ContainerStringOperators );
-DECL_RITEST( ParseUtil );
-DECL_RITEST( ImageConversions );
-DECL_RITEST( ImageStrides );
-DECL_RITEST( FormatAttribs );
+#ifndef LLGL_UNIT_TEST
+#   define LLGL_UNIT_TEST(NAME) // Dummy
+#endif
 
-#undef DECL_RITEST
+#ifndef LLGL_CUSTOM_PRESENT_UNIT_TEST
+#   define LLGL_CUSTOM_PRESENT_UNIT_TEST(NAME) // Dummy
+#endif
+
+/* --- Renderer independent (RI) tests --- */
+
+LLGL_STANDALONE_UNIT_TEST( ContainerDynamicArray );
+LLGL_STANDALONE_UNIT_TEST( ContainerSmallVector );
+LLGL_STANDALONE_UNIT_TEST( ContainerUTF8String );
+LLGL_STANDALONE_UNIT_TEST( ContainerStringLiteral );
+LLGL_STANDALONE_UNIT_TEST( ContainerStringOperators );
+LLGL_STANDALONE_UNIT_TEST( ParseUtil );
+LLGL_STANDALONE_UNIT_TEST( ImageConversions );
+LLGL_STANDALONE_UNIT_TEST( ImageStrides );
+LLGL_STANDALONE_UNIT_TEST( FormatAttribs );
 
 /* --- Main tests --- */
 
-#ifndef DECL_TEST
-#   ifdef GATHER_KNOWN_TESTS
-#       define DECL_TEST(NAME) \
-            knownTests.push_back(#NAME)
-#   else
-    #   define DECL_TEST(NAME) \
-            TestResult Test##NAME(unsigned frame)
-#   endif
-#endif
-
 // Command buffer tests
-DECL_TEST( CommandBufferSubmit );
-DECL_TEST( CommandBufferEncode );
-DECL_TEST( CommandBufferSecondary );
-DECL_TEST( CommandBufferMultiThreading );
+LLGL_UNIT_TEST( CommandBufferSubmit );
+LLGL_UNIT_TEST( CommandBufferEncode );
+LLGL_UNIT_TEST( CommandBufferSecondary );
+//LLGL_UNIT_TEST( CommandBufferMultiThreading ); //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
 
-// Resource tests
-DECL_TEST( BufferWriteAndRead );
-DECL_TEST( BufferMap );
-DECL_TEST( BufferFill );
-DECL_TEST( BufferUpdate );
-DECL_TEST( BufferCopy );
-DECL_TEST( BufferToTextureCopy );
-DECL_TEST( TextureCopy );
-DECL_TEST( TextureToBufferCopy );
-DECL_TEST( TextureWriteAndRead );
-DECL_TEST( TextureTypes );
-DECL_TEST( RenderTargetNoAttachments );
-DECL_TEST( RenderTarget1Attachment );
-DECL_TEST( RenderTargetNAttachments );
-DECL_TEST( MipMaps );
-DECL_TEST( PipelineCaching );
-DECL_TEST( ShaderErrors );
-DECL_TEST( SamplerBuffer );
-DECL_TEST( ByteBuffer );
-DECL_TEST( NativeHandle );
-DECL_TEST( BarrierReadAfterWrite );
+// Resource tests - these don't render to the screen, they either only test resource creation or render to an offscreen framebuffer.
+LLGL_UNIT_TEST( BufferWriteAndRead );
+LLGL_UNIT_TEST( BufferMap );
+LLGL_UNIT_TEST( BufferFill );
+LLGL_UNIT_TEST( BufferUpdate );
+LLGL_UNIT_TEST( BufferCopy );
+LLGL_UNIT_TEST( BufferToTextureCopy );
+LLGL_UNIT_TEST( TextureCopy );
+LLGL_UNIT_TEST( TextureToBufferCopy );
+LLGL_UNIT_TEST( TextureWriteAndRead );
+LLGL_UNIT_TEST( TextureTypes );
+LLGL_UNIT_TEST( RenderTargetNoAttachments );
+LLGL_UNIT_TEST( RenderTarget1Attachment );
+LLGL_UNIT_TEST( RenderTargetNAttachments );
+LLGL_UNIT_TEST( MipMaps );
+LLGL_UNIT_TEST( PipelineCaching );
+LLGL_UNIT_TEST( ShaderErrors );
+LLGL_UNIT_TEST( SamplerBuffer );
+LLGL_UNIT_TEST( ByteBuffer );
+LLGL_UNIT_TEST( NativeHandle );
+LLGL_UNIT_TEST( BarrierReadAfterWrite );
 
-// Rendering tests
-DECL_TEST( DepthBuffer );
-DECL_TEST( StencilBuffer );
-DECL_TEST( SceneUpdate );
-DECL_TEST( VertexBuffer );
-DECL_TEST( BlendStates );
-DECL_TEST( DualSourceBlending );
-DECL_TEST( AlphaOnlyTexture );
-DECL_TEST( TriangleStripCutOff );
-DECL_TEST( TextureViews );
-DECL_TEST( TextureStrides );
-DECL_TEST( Uniforms );
-DECL_TEST( ShadowMapping );
-DECL_TEST( ViewportAndScissor );
-DECL_TEST( ResourceBinding );
-DECL_TEST( ResourceArrays );
-DECL_TEST( StreamOutput );
-DECL_TEST( ResourceCopy );
-DECL_TEST( CombinedTexSamplers );
-DECL_TEST( MeshShaders );
-DECL_TEST( Multiview );
-DECL_TEST( DepthStencilResolve );
-DECL_TEST( BGRAVertexFormat );
-DECL_TEST( DescriptorCache );
+// Rendering tests - these are meant to render to the Testbed output window.
+LLGL_UNIT_TEST( DepthBuffer );
+LLGL_UNIT_TEST( StencilBuffer );
+LLGL_UNIT_TEST( SceneUpdate );
+LLGL_UNIT_TEST( VertexBuffer );
+LLGL_UNIT_TEST( BlendStates );
+LLGL_UNIT_TEST( DualSourceBlending );
+LLGL_UNIT_TEST( AlphaOnlyTexture );
+LLGL_UNIT_TEST( TriangleStripCutOff );
+LLGL_UNIT_TEST( TextureViews );
+LLGL_UNIT_TEST( TextureStrides );
+LLGL_UNIT_TEST( Uniforms );
+LLGL_UNIT_TEST( ShadowMapping );
+LLGL_UNIT_TEST( ViewportAndScissor );
+LLGL_UNIT_TEST( ResourceBinding );
+LLGL_UNIT_TEST( ResourceArrays );
+LLGL_UNIT_TEST( StreamOutput );
+LLGL_UNIT_TEST( ResourceCopy );
+LLGL_UNIT_TEST( CombinedTexSamplers );
+LLGL_UNIT_TEST( MeshShaders );
+LLGL_UNIT_TEST( Multiview );
+LLGL_UNIT_TEST( DepthStencilResolve );
+LLGL_UNIT_TEST( BGRAVertexFormat );
+LLGL_UNIT_TEST( DescriptorCache );
 
-// C99 tests
-DECL_TEST( OffscreenC99 );
+// C99 tests - must be declared last, since these tests reset the main renderer!
+LLGL_CUSTOM_PRESENT_UNIT_TEST( OffscreenC99 );
 
-#undef DECL_TEST
+
+#undef LLGL_STANDALONE_UNIT_TEST
+#undef LLGL_UNIT_TEST
+#undef LLGL_CUSTOM_PRESENT_UNIT_TEST
 
 
 

@@ -5,6 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#if 0 //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
+
 #include "Testbed.h"
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Utils/Parse.h>
@@ -310,5 +312,7 @@ DEF_TEST( CommandBufferMultiThreading )
 
     return result;
 }
+
+#endif //TODO
 
 

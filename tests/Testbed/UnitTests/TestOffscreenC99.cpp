@@ -22,6 +22,10 @@ This way we can test offscreen rendering while also avoiding to disturb the user
 */
 DEF_TEST( OffscreenC99 )
 {
+    // Reset main renderer and run C99 tests
+    // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)
+    renderer.reset();
+
     // Create render system
     LLGLReport report = llglAllocReport();
     LLGLRenderingDebugger debugger = llglAllocRenderingDebugger();

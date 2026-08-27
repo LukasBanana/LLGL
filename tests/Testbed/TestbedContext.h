@@ -393,6 +393,10 @@ class TestbedContext
 
     private:
 
+        #define LLGL_STANDALONE_UNIT_TEST(NAME)     static TestResult Test##NAME(const Options& opt)
+        #define LLGL_UNIT_TEST(NAME)                TestResult Test##NAME(unsigned frame)
+        #define LLGL_CUSTOM_PRESENT_UNIT_TEST(NAME) LLGL_UNIT_TEST(NAME)
+
         #include "UnitTests/DeclTests.inl"
 
     private:

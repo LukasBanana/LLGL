@@ -365,7 +365,7 @@ unsigned TestbedContext::RunAllTests()
         return failures;
     }
 
-    #define RUN_TEST(TEST)                                                          \
+    #define LLGL_UNIT_TEST(TEST)                                                    \
         if (opt.ContainsTest(#TEST))                                                \
         {                                                                           \
             const TestResult result = RunTest(                                      \
@@ -374,72 +374,14 @@ unsigned TestbedContext::RunAllTests()
             RecordTestResult(result, #TEST);                                        \
         }
 
-    #define RUN_C99_TEST(TEST)                          \
+    #define LLGL_CUSTOM_PRESENT_UNIT_TEST(TEST)         \
         if (opt.ContainsTest(#TEST))                    \
         {                                               \
             const TestResult result = Test##TEST(0);    \
             RecordTestResult(result, #TEST);            \
         }
 
-    // Run all command buffer tests
-    RUN_TEST( CommandBufferSubmit         );
-    RUN_TEST( CommandBufferEncode         );
-
-    // Run all resource tests (these don't render to the screen)
-    RUN_TEST( NativeHandle                );
-    RUN_TEST( BufferWriteAndRead          );
-    RUN_TEST( BufferMap                   );
-    RUN_TEST( BufferFill                  );
-    RUN_TEST( BufferUpdate                );
-    RUN_TEST( BufferCopy                  );
-    RUN_TEST( TextureTypes                );
-    RUN_TEST( TextureWriteAndRead         );
-    RUN_TEST( TextureCopy                 );
-    RUN_TEST( TextureToBufferCopy         );
-    RUN_TEST( BufferToTextureCopy         );
-    RUN_TEST( RenderTargetNoAttachments   );
-    RUN_TEST( RenderTarget1Attachment     );
-    RUN_TEST( RenderTargetNAttachments    );
-    RUN_TEST( MipMaps                     );
-    RUN_TEST( PipelineCaching             );
-    RUN_TEST( ShaderErrors                );
-    RUN_TEST( SamplerBuffer               );
-    RUN_TEST( ByteBuffer                  );
-    RUN_TEST( BarrierReadAfterWrite       );
-    RUN_TEST( Multiview                   );
-    RUN_TEST( DepthStencilResolve         );
-
-    // Run all rendering tests (these are meant to render to the Testbed output window)
-    RUN_TEST( DepthBuffer                 );
-    RUN_TEST( StencilBuffer               );
-    RUN_TEST( SceneUpdate                 );
-    RUN_TEST( VertexBuffer                );
-    RUN_TEST( BlendStates                 );
-    RUN_TEST( DualSourceBlending          );
-    RUN_TEST( AlphaOnlyTexture            );
-    //RUN_TEST( CommandBufferMultiThreading ); //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
-    RUN_TEST( CommandBufferSecondary      );
-    RUN_TEST( TriangleStripCutOff         );
-    RUN_TEST( TextureViews                );
-    RUN_TEST( TextureStrides              );
-    RUN_TEST( Uniforms                    );
-    RUN_TEST( ShadowMapping               );
-    RUN_TEST( ViewportAndScissor          );
-    RUN_TEST( ResourceBinding             );
-    RUN_TEST( ResourceArrays              );
-    RUN_TEST( StreamOutput                );
-    RUN_TEST( ResourceCopy                );
-    RUN_TEST( CombinedTexSamplers         );
-    RUN_TEST( MeshShaders                 );
-    RUN_TEST( BGRAVertexFormat            );
-    RUN_TEST( DescriptorCache             );
-
-    // Reset main renderer and run C99 tests
-    // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)
-    renderer.reset();
-    RUN_C99_TEST( OffscreenC99 );
-
-    #undef RUN_TEST
+    #include "UnitTests/DeclTests.inl"
 
     // Print summary
     PrintTestSummary(failures);
@@ -457,34 +399,33 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     if (!opt.selectedTests.empty())
     {
         std::vector<const char*> knownTests;
-        #define GATHER_KNOWN_TESTS
+
+        #define LLGL_ADD_KNOWN_TEST(NAME) \
+            knownTests.push_back(#NAME)
+
+        #define LLGL_STANDALONE_UNIT_TEST(NAME)     LLGL_ADD_KNOWN_TEST(NAME)
+        #define LLGL_UNIT_TEST(NAME)                LLGL_ADD_KNOWN_TEST(NAME)
+        #define LLGL_CUSTOM_PRESENT_UNIT_TEST(NAME) LLGL_ADD_KNOWN_TEST(NAME)
+
         #include "UnitTests/DeclTests.inl"
-        #undef GATHER_KNOWN_TESTS
+
+        #undef LLGL_ADD_KNOWN_TEST
+
         PrintUnknownTests(opt.selectedTests, knownTests);
     }
 
-    #define RUN_TEST(TEST)                                                  \
+    #define LLGL_STANDALONE_UNIT_TEST(NAME)                                 \
         {                                                                   \
-            if (opt.ContainsTest(#TEST))                                    \
+            if (opt.ContainsTest(#NAME))                                    \
             {                                                               \
-                const TestResult result = TestbedContext::Test##TEST(opt);  \
-                PrintTestResult(result, #TEST);                             \
+                const TestResult result = TestbedContext::Test##NAME(opt);  \
+                PrintTestResult(result, #NAME);                             \
                 if (TestFailed(result))                                     \
                     ++failures;                                             \
             }                                                               \
         }
 
-    RUN_TEST( ContainerDynamicArray );
-    RUN_TEST( ContainerSmallVector );
-    RUN_TEST( ContainerUTF8String );
-    RUN_TEST( ContainerStringLiteral );
-    RUN_TEST( ContainerStringOperators );
-    RUN_TEST( ParseUtil );
-    RUN_TEST( ImageConversions );
-    RUN_TEST( ImageStrides );
-    RUN_TEST( FormatAttribs );
-
-    #undef RUN_TEST
+    #include "UnitTests/DeclTests.inl"
 
     // Print summary
     PrintTestSummary(failures);

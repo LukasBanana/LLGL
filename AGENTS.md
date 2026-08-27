@@ -142,8 +142,6 @@ The test setups are gated by `LLGL_BUILD_TESTS`:
 - **Reach for `-d gpu+cpu` early.** It is what surfaces the real message above. A near-total
   image mismatch was once mistaken for a regression and chased across three worktrees before
   debug layers named it.
-- **A new test needs two registrations**: `DECL_TEST` in `UnitTests/DeclTests.inl` *and*
-  `RUN_TEST(...)` in `TestbedContext.cpp`. Miss the second and it silently never runs.
 - The Testbed prompts for a keypress at startup; feed it `</dev/null` in scripted runs.
 
 ## Architecture
