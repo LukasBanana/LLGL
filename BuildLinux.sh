@@ -189,8 +189,8 @@ OPTIONS=(
 )
 
 if [ $PROJECT_ONLY -eq 0 ]; then
-    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE "${OPTIONS[@]}"
     cmake --build "$OUTPUT_DIR"
 else
-    cmake ${OPTIONS[@]} -G "$GENERATOR"
+    cmake "${OPTIONS[@]}" -G "$GENERATOR"
 fi

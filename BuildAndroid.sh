@@ -219,10 +219,10 @@ build_with_android_abi()
     if [ $PROJECT_ONLY -eq 0 ]; then
         # Force Ninja: CMake's default on Windows is Visual Studio, which can't cross-compile
         # to Android via the NDK toolchain file.
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE "${OPTIONS[@]}"
         cmake --build "$CURRENT_OUTPUT_DIR"
     else
-        cmake ${OPTIONS[@]} -G "$GENERATOR"
+        cmake "${OPTIONS[@]}" -G "$GENERATOR"
     fi
 }
 
