@@ -221,7 +221,7 @@ if [ $LEGACY -ne 0 ]; then
         else
             cmake "${LEGACY_OPTIONS[@]}" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} -G "$GENERATOR"
         fi
-        cmake --build "$OUTPUT_DIR" -- -j 2
+        cmake --build "$OUTPUT_DIR"
     else
         if [ -z "$GENERATOR" ]; then
             GENERATOR="Xcode" # Default to Xcode for project solution

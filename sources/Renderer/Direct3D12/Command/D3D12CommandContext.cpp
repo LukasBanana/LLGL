@@ -574,6 +574,8 @@ void D3D12CommandContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBuf
     stateCache_.stateBits.is16BitIndexFormat = (indexBufferView.Format == DXGI_FORMAT_R16_UINT ? 1 : 0);
 }
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
 LLGL_MAYBE_UNUSED
 static bool IsD3DPassthroughCombiners(const D3D12_SHADING_RATE_COMBINER* combiners)
 {
@@ -582,25 +584,23 @@ static bool IsD3DPassthroughCombiners(const D3D12_SHADING_RATE_COMBINER* combine
 
 void D3D12CommandContext::SetShadingRate(D3D12_SHADING_RATE baseShadingRate, const D3D12_SHADING_RATE_COMBINER* combiners)
 {
-    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (commandList5_)
     {
         commandList5_->RSSetShadingRate(baseShadingRate, combiners);
         stateCache_.dirtyBits.shadingRate1x1 = (baseShadingRate != D3D12_SHADING_RATE_1X1 || !IsD3DPassthroughCombiners(combiners) ? 1 : 0);
     }
-    #endif
 }
 
 void D3D12CommandContext::ResetShadingRate()
 {
-#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     if (commandList5_ && stateCache_.dirtyBits.shadingRate1x1)
     {
         stateCache_.dirtyBits.shadingRate1x1 = 0;
         commandList5_->RSSetShadingRate(D3D12_SHADING_RATE_1X1, nullptr);
     }
-#endif
 }
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const
 {

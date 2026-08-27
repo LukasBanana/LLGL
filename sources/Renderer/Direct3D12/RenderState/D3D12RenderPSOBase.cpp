@@ -63,9 +63,11 @@ void D3D12RenderPSOBase::BindOutputMergerAndStaticStates(D3D12CommandContext& co
 
     SetStaticViewportsAndScissors(commandList);
 
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Reset shading rate if PSO does not enable it */
     if (!IsShadingRateEnabled())
         commandContext.ResetShadingRate();
+    #endif
 }
 
 UINT D3D12RenderPSOBase::NumDefaultScissorRects() const
