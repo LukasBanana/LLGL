@@ -211,6 +211,12 @@ class LLGL_EXPORT SmallVector
         {
         }
 
+        //! Initializes the vector with a copy of all elements from the specified array view.
+        SmallVector(ArrayView<T> list) :
+            SmallVector { list.begin(), list.end() }
+        {
+        }
+
         /**
         \brief Initializes the vector with a copy of all elements from the specified data with a fixed size array.
         \remarks The size of this container will be equal to the template parameter \c <N>.
