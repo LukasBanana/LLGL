@@ -84,6 +84,7 @@ LLGL_UNIT_TEST( Multiview );
 LLGL_UNIT_TEST( DepthStencilResolve );
 LLGL_UNIT_TEST( BGRAVertexFormat );
 LLGL_UNIT_TEST( DescriptorCache );
+LLGL_UNIT_TEST( VariableRateShading );
 
 // C99 tests - must be declared last, since these tests reset the main renderer!
 LLGL_CUSTOM_PRESENT_UNIT_TEST( OffscreenC99 );

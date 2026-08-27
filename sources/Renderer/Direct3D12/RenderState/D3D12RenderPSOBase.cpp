@@ -64,7 +64,7 @@ void D3D12RenderPSOBase::BindOutputMergerAndStaticStates(D3D12CommandContext& co
     SetStaticViewportsAndScissors(commandList);
 
     /* Reset shading rate if PSO does not enable it */
-    if (IsShadingRateEnabled())
+    if (!IsShadingRateEnabled())
         commandContext.ResetShadingRate();
 }
 
