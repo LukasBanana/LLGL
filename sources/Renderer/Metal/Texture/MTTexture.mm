@@ -438,6 +438,9 @@ static void CopyIntermediateBufferToImageBuffer(
     );
 }
 
+//TODO:
+// this function probably doesn't handle MIP levels and array layers correctly!
+// CopyIntermediateBufferToImageBuffer() only takes spatial dimensions, but not MIP levels or array layers.
 void MTTexture::ReadRegionFromPrivateMemory(
     const MTLRegion&            	    region,
     const TextureSubresource&           subresource,

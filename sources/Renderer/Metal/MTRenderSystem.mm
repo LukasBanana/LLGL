@@ -170,7 +170,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 [blitCmdEncoder generateMipmapsForTexture:textureMT->GetNative()];
                 [blitCmdEncoder endEncoding];
             }
-            [cmdBuffer commit];
+            commandQueue_->SubmitCommandBuffer(cmdBuffer);
         }
     }
 
