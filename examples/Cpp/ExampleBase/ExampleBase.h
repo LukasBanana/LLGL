@@ -23,7 +23,6 @@
 #include <map>
 #include <type_traits>
 #include "GeometryUtils.h"
-#include "Stopwatch.h"
 
 #ifdef LLGL_OS_ANDROID
 #   include <android_native_app_glue.h>
@@ -155,57 +154,56 @@ private:
 private:
 
     #ifdef LLGL_OS_ANDROID
-    static android_app*                         androidApp_;
+    static android_app*         androidApp_;
     #endif
 
-    std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
+    using RenderingDebuggerPtr = std::unique_ptr<LLGL::RenderingDebugger>;
 
-    bool                                        loadingDone_        = false;
-    std::uint32_t                               samples_            = 1;
-    LLGL::Extent2D                              initialResolution_;
-    bool                                        showTimeRecords_    = false;
-    bool                                        fullscreen_         = false;
-    bool                                        useRightHandedProj_ = false;
+    RenderingDebuggerPtr        debuggerObj_;
 
-    LLGL::Extent2D                              drawableSize_;
+    bool                        loadingDone_        = false;
+    std::uint32_t               samples_            = 1;
+    LLGL::Extent2D              initialResolution_;
+    LLGL::Extent2D              drawableSize_;
+    bool                        showTimeRecords_    = false;
+    bool                        fullscreen_         = false;
+    bool                        useRightHandedProj_ = false;
+    std::uint64_t               lastFrameTick_      = 0;
 
 protected:
 
     friend class ResizeEventHandler;
 
     // Default background color for all tutorials
-    const float                                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f, 1.0f };
+    const float                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f, 1.0f };
 
     // Render system
-    LLGL::RenderSystemPtr                       renderer;
+    LLGL::RenderSystemPtr       renderer;
 
     // Main swap-chain
-    LLGL::SwapChain*                            swapChain           = nullptr;
+    LLGL::SwapChain*            swapChain           = nullptr;
 
     // Main command buffer
-    LLGL::CommandBuffer*                        commands            = nullptr;
+    LLGL::CommandBuffer*        commands            = nullptr;
 
     // If Tier1 is supported, this points to the same command buffer as `commands`. Otherwise, null.
-    LLGL::CommandBufferTier1*                   commandsTier1       = LLGL::CastTo<LLGL::CommandBufferTier1>(commands);
+    LLGL::CommandBufferTier1*   commandsTier1       = nullptr;
 
     // Command queue
-    LLGL::CommandQueue*                         commandQueue        = nullptr;
+    LLGL::CommandQueue*         commandQueue        = nullptr;
 
     // User input event listener
-    LLGL::Input                                 input;
-
-    // Primary timer object
-    Stopwatch                                   timer;
+    LLGL::Input                 input;
 
     // Primary camera projection
-    Gs::Matrix4f                                projection;
+    Gs::Matrix4f                projection;
 
 protected:
 
     ExampleBase(const LLGL::UTF8String& title);
 
     // Callback to draw each frame
-    virtual void OnDrawFrame() = 0;
+    virtual void OnDrawFrame(float deltaTime) = 0;
 
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
     virtual void OnResize(const LLGL::Extent2D& resolution);

@@ -36,7 +36,7 @@ namespace LLGLExamples
             public override void OnResize(LLGL.Window sender, LLGL.Extent2D clientAreaSize)
             {
                 App.OnResize(clientAreaSize);
-                App.OnDrawFrame();
+                App.DrawFrame();
             }
         };
 
@@ -136,8 +136,7 @@ namespace LLGLExamples
                 {
                     // Record frame timings
                     Debugger.TimeRecording = true;
-                    OnDrawFrame();
-                    SwapChain.Present();
+                    DrawFrame();
                     Debugger.TimeRecording = false;
 
                     // Print frame profile results to console
@@ -146,13 +145,29 @@ namespace LLGLExamples
                 }
                 else
                 {
-                    OnDrawFrame();
-                    SwapChain.Present();
+                    DrawFrame();
                 }
                 ++frameNo;
             }
 
             return 0;
+        }
+
+        private long lastFrameTick = 0;
+
+        public void DrawFrame()
+        {
+            // Measure time since last frame
+            long newFrameTick = LLGL.Timer.Tick;
+            long elapsedTicks = lastFrameTick > 0 ? lastFrameTick - newFrameTick : 0;
+            double deltaTime = (double)elapsedTicks / (double)LLGL.Timer.Frequency;
+            lastFrameTick = newFrameTick;
+
+            if (SwapChain.IsPresentable)
+            {
+                OnDrawFrame((float)deltaTime);
+                SwapChain.Present();
+            }
         }
 
         private bool profileNextFrame = false;
@@ -186,7 +201,7 @@ namespace LLGLExamples
 
         protected abstract void OnInitialize();
 
-        public abstract void OnDrawFrame();
+        public abstract void OnDrawFrame(float deltaTime);
 
         public virtual void OnResize(LLGL.Extent2D resolution) { }
     }

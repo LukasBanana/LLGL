@@ -242,15 +242,13 @@ public:
 
 private:
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        timer.MeasureTime();
-
         // Record and submit compute commands
         commands->Begin();
         {
             // Update timer
-            sceneState.time += static_cast<float>(timer.GetDeltaTime());
+            sceneState.time += dt;
             sceneState.aspectRatio = 1.0f / GetAspectRatio();
             commands->UpdateBuffer(*inputBuffer, 0, &sceneState, sizeof(sceneState));
 

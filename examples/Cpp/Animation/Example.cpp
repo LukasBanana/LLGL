@@ -309,11 +309,10 @@ private:
             RenderBall(ball);
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
-        timer.MeasureTime();
-        UpdateScene(static_cast<float>(timer.GetDeltaTime()));
+        UpdateScene(dt);
 
         commands->Begin();
         {

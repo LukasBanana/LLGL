@@ -131,27 +131,21 @@ public:
         LLGL::ImageView imageView = reader.GetImageView();
 
         // Upload image data onto hardware texture and stop the time
-        timer.Start();
+        LLGL::TextureDescriptor texDesc;
         {
-            // Create texture
-            LLGL::TextureDescriptor texDesc;
-            {
-                // Texture type: 2D
-                texDesc.type        = LLGL::TextureType::Texture2D;
+            // Texture type: 2D
+            texDesc.type        = LLGL::TextureType::Texture2D;
 
-                // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format      = LLGL::Format::RGBA8UNorm; //BGRA8UNorm
+            // Texture hardware format: RGBA with normalized 8-bit unsigned char type
+            texDesc.format      = LLGL::Format::RGBA8UNorm; //BGRA8UNorm
 
-                // Texture size
-                texDesc.extent      = reader.GetTextureDesc().extent;
+            // Texture size
+            texDesc.extent      = reader.GetTextureDesc().extent;
 
-                // Generate all MIP-map levels for this texture
-                texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
-            }
-            colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
+            // Generate all MIP-map levels for this texture
+            texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
         }
-        double texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
-        LLGL::Log::Printf("texture creation time: %f ms\n", texCreationTime * 1000.0);
+        colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
     }
 
     void LoadCompressedTexture(const std::string& filename)
@@ -227,7 +221,7 @@ public:
 
 private:
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         const float projZAxis = GetProjectionZAxis();
 

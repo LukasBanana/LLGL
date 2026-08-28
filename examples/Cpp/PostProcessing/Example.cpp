@@ -7,11 +7,6 @@
 
 #include <ExampleBase.h>
 
-//#define DEBUG_FPS
-#ifdef DEBUG_FPS
-#include <chrono>//!!!
-#endif
-
 // Enables custom render pass to clear at the begin of a render pass section (more efficient)
 #define ENABLE_CUSTOM_RENDER_PASS 1
 
@@ -494,28 +489,8 @@ private:
         UpdateScreenSize();
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        #ifdef DEBUG_FPS
-        // Show frame time
-        static std::unique_ptr<LLGL::Timer> frameTimer;
-        static std::chrono::time_point<std::chrono::system_clock> printTime;
-        if (!frameTimer)
-            frameTimer = LLGL::Timer::Create();
-
-        frameTimer->MeasureTime();
-
-        auto currentTime = std::chrono::system_clock::now();
-        auto elapsedTime = (currentTime - printTime);
-        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
-
-        if (elapsedMs > 250)
-        {
-            printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
-            printTime = currentTime;
-        }
-        #endif
-
         // Update rotation of inner model
         animation.innerModelRotation += 0.01f;
 

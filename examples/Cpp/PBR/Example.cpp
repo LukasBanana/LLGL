@@ -518,7 +518,7 @@ private:
         commands->EndRenderPass();
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         UpdateScene();
 

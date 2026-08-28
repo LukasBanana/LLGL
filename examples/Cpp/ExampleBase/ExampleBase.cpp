@@ -472,10 +472,16 @@ void ExampleBase::Run()
 
 void ExampleBase::DrawFrame()
 {
+    // Measure time since last frame
+    const std::uint64_t newFrameTick =  LLGL::Timer::Tick();
+    const std::uint64_t elapsedTicks = (lastFrameTick_ > 0 ? newFrameTick - lastFrameTick_ : 0ull);
+    const double deltaTime = static_cast<double>(elapsedTicks) / static_cast<double>(LLGL::Timer::Frequency());
+    lastFrameTick_ = newFrameTick;
+
     if (IsDrawable())
     {
         // Draw frame in respective example project
-        OnDrawFrame();
+        OnDrawFrame(static_cast<float>(deltaTime));
 
         #ifndef LLGL_OS_IOS
         // Present the result on the screen - cannot be explicitly invoked on mobile platforms

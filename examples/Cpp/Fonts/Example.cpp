@@ -391,7 +391,7 @@ private:
         return DrawFont(font, text.c_str(), x, y, color, flags);
     }
 
-    void ProcessInput()
+    void ProcessInput(float dt)
     {
         // Check on user input
         if (input.KeyDown(LLGL::Key::Space))
@@ -409,12 +409,15 @@ private:
         displayNumbers.frameCounter++;
 
         // Update average FPS every 500 milliseconds
-        const double fps = 1.0 / timer.GetDeltaTime();
-
-        if (!std::isinf(fps))
+        if (dt > 0.0f)
         {
-            avgFPS.samples++;
-            avgFPS.sum += fps;
+            const double fps = 1.0 / dt;
+
+            if (!std::isinf(fps))
+            {
+                avgFPS.samples++;
+                avgFPS.sum += fps;
+            }
         }
 
         auto currentTimePoint = std::chrono::system_clock::now();
@@ -531,11 +534,9 @@ private:
 
 private:
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        timer.MeasureTime();
-
-        ProcessInput();
+        ProcessInput(dt);
 
         // Initial atlas texture must always be bound when start a new frame, so reset this state
         currentAtlasTexture = nullptr;

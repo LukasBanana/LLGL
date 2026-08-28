@@ -360,7 +360,7 @@ private:
         settings.animVec[1] = std::cos(animationTime) * animationRadius;
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene animation and user input
         UpdateAnimation();

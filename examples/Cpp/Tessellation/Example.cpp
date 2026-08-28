@@ -335,7 +335,7 @@ private:
         commandQueue->Submit(*commands);
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         UpdateUserInput();
         DrawScene();

@@ -287,7 +287,7 @@ private:
         RenderMesh(meshObject2);
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
         UpdateScene();

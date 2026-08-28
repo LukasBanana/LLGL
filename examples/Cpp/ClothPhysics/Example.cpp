@@ -536,7 +536,7 @@ public:
 
 private:
 
-    void UpdateScene()
+    void UpdateScene(float dt)
     {
         const float projZAxis = GetProjectionZAxis();
 
@@ -559,9 +559,8 @@ private:
         }
 
         // Update timer
-        timer.MeasureTime();
         sceneState.damping      = (1.0f - std::pow(10.0f, -dampingFactor));
-        sceneState.dTime        = std::max(0.0001f, std::min(static_cast<float>(timer.GetDeltaTime()), 1.0f));
+        sceneState.dTime        = std::max(0.0001f, std::min(dt, 1.0f));
         sceneState.dStiffness   = 1.0f - std::pow(1.0f - stiffnessFactor, 1.0f / static_cast<float>(numSolverIterations));
         sceneState.gravity      = Gs::Vector4f{ gravityVector, 0.0f };
 
@@ -579,9 +578,9 @@ private:
         sceneState.wvpMatrix = projection * vMatrix * sceneState.wMatrix;
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        UpdateScene();
+        UpdateScene(dt);
 
         // Record and submit compute commands
         commands->Begin();

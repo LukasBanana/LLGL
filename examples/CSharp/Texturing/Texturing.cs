@@ -186,7 +186,7 @@ namespace LLGLExamples
             CreatePipeline();
         }
 
-        public override void OnDrawFrame()
+        public override void OnDrawFrame(float deltaTime)
         {
             CmdBuffer.Begin();
             {

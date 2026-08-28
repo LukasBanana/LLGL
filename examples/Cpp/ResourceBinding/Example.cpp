@@ -241,7 +241,7 @@ private:
         }
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         scene.vpMatrix = projection;
 

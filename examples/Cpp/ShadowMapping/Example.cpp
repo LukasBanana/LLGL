@@ -357,7 +357,7 @@ private:
         commands->EndRenderPass();
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
         UpdateScene();

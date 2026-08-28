@@ -535,7 +535,7 @@ private:
 
     #endif // /ENABLE_CBUFFER_RANGE
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
         UpdateScene();
