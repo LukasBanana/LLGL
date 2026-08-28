@@ -114,7 +114,6 @@ static float RandomFloat32()
 std::vector<float> GenerateFloats(std::size_t count)
 {
     std::vector<float> colors;
-    count *= 2;
     colors.resize(count);
     for_range(i, count)
         colors[i] = RandomFloat32();
