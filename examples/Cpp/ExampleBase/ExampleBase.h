@@ -64,6 +64,23 @@ struct ShaderPipeline
     LLGL::Shader* cs = nullptr; // Compute shader
 };
 
+class TrackballRotationModel
+{
+    LLGL::Offset2D  cursorStartPosition_;
+    Gs::Vector3f    cursorStartVector_;
+    Gs::Quaternionf modelStartRotation_;
+
+public:
+    void Rotate(
+        Gs::Quaternionf&        rotation,
+        const LLGL::Viewport&   viewport,
+        const LLGL::Offset2D&   cursorPosition,
+        bool                    isStartPosition = false,
+        float                   projZAxis       = 1.0f
+    );
+
+};
+
 class ExampleBase
 {
 
@@ -153,15 +170,14 @@ private:
 
 private:
 
+    using RenderingDebuggerPtr = std::unique_ptr<LLGL::RenderingDebugger>;
+
     #ifdef LLGL_OS_ANDROID
     static android_app*         androidApp_;
     #endif
 
-    using RenderingDebuggerPtr = std::unique_ptr<LLGL::RenderingDebugger>;
-
     RenderingDebuggerPtr        debuggerObj_;
 
-    bool                        loadingDone_        = false;
     std::uint32_t               samples_            = 1;
     LLGL::Extent2D              initialResolution_;
     LLGL::Extent2D              drawableSize_;
@@ -169,6 +185,8 @@ private:
     bool                        fullscreen_         = false;
     bool                        useRightHandedProj_ = false;
     std::uint64_t               lastFrameTick_      = 0;
+
+    TrackballRotationModel      trackballRotation_;
 
 protected:
 
@@ -272,9 +290,6 @@ protected:
     // Returns true if Metal is used as rendering API.
     bool IsMetal() const;
 
-    // Used by the window resize handler
-    bool IsLoadingDone() const;
-
     // Returns true if the screen origin of the selected renderer is lower-left. See RenderingCapabilities::screenOrigin.
     bool IsScreenOriginLowerLeft() const;
 
@@ -292,10 +307,10 @@ protected:
     Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far) const;
 
     // Returns a quoternion for the specified rotation
-    Gs::Quaternionf Rotation(float x, float y) const;
+    Gs::Quaternionf Rotation(float pitch, float yaw) const;
 
-    // Rotates the specified quaternion for a model-to-world transformation matrix.
-    Gs::Matrix4f RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const;
+    // Rotates the specified quaternion in a trackball motion (like in Blender).
+    void TrackballRotation(Gs::Quaternionf& rotation, bool isStartPosition = false, const LLGL::Offset2D* cursorPosition = nullptr);
 
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;

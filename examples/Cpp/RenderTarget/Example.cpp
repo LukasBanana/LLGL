@@ -58,8 +58,8 @@ class Example_RenderTarget : public ExampleBase
 
     Gs::Matrix4f            renderTargetProj;
 
-    float                   outerCubeRotation       = Gs::Deg2Rad(-20.0f);
-    float                   innerCubeRotation       = Gs::Deg2Rad(-30.0f);
+    Gs::Quaternionf         outerCubeRotation;
+    float                   innerCubeRotation       = 0.0f;
 
     #if ENABLE_CBUFFER_RANGE
     std::uint64_t           cbufferAlignment        = 0;
@@ -98,6 +98,7 @@ public:
 
         // Update vectors for projection
         settings.lightDir.z *= GetProjectionZAxis();
+        outerCubeRotation = Rotation(Gs::Deg2Rad(-20.0f * GetProjectionZAxis()), 0.0f);
 
         // Show some information
         LLGL::Log::Printf(
@@ -225,7 +226,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipelines[1] = renderer->CreatePipelineState(pipelineDesc);
-        ReportPSOErrors(pipelines[0]);
+        ReportPSOErrors(pipelines[1]);
 
         // Create graphics pipeline for render target
         {
@@ -239,7 +240,7 @@ private:
             #endif
         }
         pipelines[0] = renderer->CreatePipelineState(pipelineDesc);
-        ReportPSOErrors(pipelines[1]);
+        ReportPSOErrors(pipelines[0]);
     }
 
     void CreateColorMap()
@@ -373,12 +374,12 @@ private:
 
     #endif // /ENABLE_RESOURCE_HEAP
 
-    void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
+    void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, const Gs::Matrix4f& rotation)
     {
         const float projZAxis = GetProjectionZAxis();
         settings.wMatrix.LoadIdentity();
         Gs::Translate(settings.wMatrix, { 0, 0, 5 * projZAxis });
-        Gs::RotateFree(settings.wMatrix, axis.Normalized(), rotation);
+        settings.wMatrix *= rotation;
         settings.wvpMatrix = proj * settings.wMatrix;
     }
 
@@ -389,7 +390,9 @@ private:
         const float projZAxis = GetProjectionZAxis();
 
         // Update model transformation with render-target projection
-        UpdateModelTransform(settings, renderTargetProj, innerCubeRotation * projZAxis, Gs::Vector3f{ 1, 1, projZAxis });
+        Gs::Matrix4f rotationMatrix;
+        Gs::RotateFree(rotationMatrix, Gs::Vector3f{ 1, 1, projZAxis }.Normalized(), innerCubeRotation * projZAxis);
+        UpdateModelTransform(settings, renderTargetProj, rotationMatrix);
 
         #if ENABLE_CUSTOM_MULTISAMPLING
 
@@ -408,16 +411,18 @@ private:
 
         #endif // ENABLE_CUSTOM_MULTISAMPLING
 
-        UpdateModelTransform(settings, projection, outerCubeRotation * GetProjectionZAxis());
+        Gs::Matrix4f rotationMatrix;
+        Gs::QuaternionToMatrix(rotationMatrix, outerCubeRotation);
+        UpdateModelTransform(settings, projection, rotationMatrix);
     }
 
-    void UpdateScene()
+    void UpdateScene(float dt)
     {
         // Update scene animation (simple rotation)
         if (input.KeyPressed(LLGL::Key::LButton))
-            outerCubeRotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
-        if (input.KeyPressed(LLGL::Key::RButton))
-            innerCubeRotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+            TrackballRotation(outerCubeRotation, input.KeyDown(LLGL::Key::LButton));
+
+        innerCubeRotation += dt;
 
         // Check if user wants to sage the render target texture to file
         if (input.KeyDown(LLGL::Key::F4))
@@ -538,7 +543,7 @@ private:
     void OnDrawFrame(float dt) override
     {
         // Update scene by user input
-        UpdateScene();
+        UpdateScene(dt);
 
         commands->Begin();
         {

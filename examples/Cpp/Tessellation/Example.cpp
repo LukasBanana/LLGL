@@ -239,12 +239,11 @@ private:
         // Update tessellation levels by user input
         const LLGL::Offset2D motion = input.GetMouseMotion();
         const float deltaX = static_cast<float>(motion.x)*0.1f;
-        const float deltaY = static_cast<float>(motion.y)*0.1f;
         const float rotateSpeed = 0.05f * projZAxis;
 
         static Gs::Quaternionf rotation = Rotation(Gs::Deg2Rad(-20.0f), 0.0f);
         if (input.KeyPressed(LLGL::Key::LButton))
-            RotateModel(rotation, deltaX*rotateSpeed, deltaY*rotateSpeed);
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
 
         if (input.KeyPressed(LLGL::Key::RButton))
             SetTessellationFactor(scene.tessLevelInner + deltaX, scene.tessLevelOuter + deltaX);

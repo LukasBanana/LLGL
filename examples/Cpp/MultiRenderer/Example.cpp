@@ -450,23 +450,21 @@ int main(int argc, char* argv[])
         Gs::Matrix4f viewMatrix, worldMatrix;
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
+        // Rotation data
+        Gs::Quaternionf modelRotation;
+        TrackballRotationModel trackballRotation;
+        const LLGL::Viewport fullViewport{ mainWindow->GetContentSize() };
+
         // Enter main loop
         while (LLGL::Surface::ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update scene transformation
             if (input.KeyPressed(LLGL::Key::LButton))
             {
-                const auto mouseMotion = Gs::Vector2f
-                {
-                    static_cast<float>(input.GetMouseMotion().x),
-                    static_cast<float>(input.GetMouseMotion().y),
-                } * 0.005f;
-
                 // Rotate model around X and Y axes
-                Gs::Matrix4f deltaRotation;
-                Gs::RotateFree(deltaRotation, { 1, 0, 0 }, mouseMotion.y);
-                Gs::RotateFree(deltaRotation, { 0, 1, 0 }, mouseMotion.x);
-                worldMatrix = deltaRotation * worldMatrix;
+                const LLGL::Offset2D cursorPositionRelativeToMainWindow = LLGL::Display::GetCursorPosition() - mainWindow->GetPosition();
+                trackballRotation.Rotate(modelRotation, fullViewport, cursorPositionRelativeToMainWindow, input.KeyDown(LLGL::Key::LButton));
+                Gs::QuaternionToMatrix(worldMatrix, modelRotation);
             }
 
             // Draw scene for all renderers

@@ -264,6 +264,88 @@ static bool ParseSwapChain(std::uint32_t& samples, int argc, char* argv[])
 
 
 /*
+ * TrackballRotationModel struct
+ */
+
+// Returns a 3D unit vector from a 2D coordinate that is centered around the speified viewport.
+static Gs::Vector3f Unit3DVectorFrom2DPosition(const LLGL::Viewport& viewport, LLGL::Offset2D coord, float projZAxis, float sphereRadius = 1.0f)
+{
+    /* Convert 2D coordinate into NDC space */
+    Gs::Vector2f ndc
+    {
+          (static_cast<float>(coord.x) - viewport.x) / viewport.width  * 2.0f - 1.0f,
+        -((static_cast<float>(coord.y) - viewport.y) / viewport.height * 2.0f - 1.0f),
+    };
+
+    if (viewport.width > viewport.height)
+    {
+        const float aspectRatio = viewport.width / viewport.height;
+        ndc.x *= aspectRatio;
+    }
+    else
+    {
+        const float aspectRatio = viewport.height / viewport.width;
+        ndc.y *= aspectRatio;
+    }
+
+    /* Check if NDC coordinate is inside or outside the sphere projection */
+    Gs::Vector3f vec{ ndc.x, ndc.y, 0.0f };
+
+    const float lenSq = Gs::LengthSq(ndc);
+    const float radiusSq = sphereRadius*sphereRadius;
+    if (lenSq > radiusSq*0.5f)
+    {
+        vec.z = -projZAxis * radiusSq / (2.0f * std::sqrtf(lenSq)); // Outside
+    }
+    else
+    {
+        vec.z = -projZAxis * std::sqrt(radiusSq - lenSq); // Inside
+    }
+
+    vec.Normalize();
+    return vec;
+}
+
+void TrackballRotationModel::Rotate(
+    Gs::Quaternionf&        rotation,
+    const LLGL::Viewport&   viewport,
+    const LLGL::Offset2D&   cursorPosition,
+    bool                    isStartPosition,
+    float                   projZAxis)
+{
+    if (isStartPosition)
+    {
+        cursorStartPosition_    = cursorPosition;
+        cursorStartVector_      = Unit3DVectorFrom2DPosition(viewport, cursorPosition, projZAxis);
+        modelStartRotation_     = rotation;
+    }
+
+    if (cursorStartPosition_ != cursorPosition)
+    {
+        const Gs::Vector3f cursorTargetVector = Unit3DVectorFrom2DPosition(viewport, cursorPosition, projZAxis);
+        const Gs::Vector3f rotationAxis = Gs::Cross(cursorStartVector_, cursorTargetVector);
+
+        // see https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+        Gs::Quaternionf rodriguesRotation
+        {
+            rotationAxis.x,
+            rotationAxis.y,
+            rotationAxis.z,
+            1.0f + Gs::Dot(cursorStartVector_, cursorTargetVector)
+        };
+        rodriguesRotation.Normalize();
+
+        rotation = modelStartRotation_ * Gs::Quaternionf{ rodriguesRotation };
+    }
+    else
+    {
+        /* Reset rotation if cursor has not moved (or moved back to its original position) */
+        rotation = modelStartRotation_;
+    }
+}
+
+
+/*
  * ShaderDescWrapper struct
  */
 
@@ -316,8 +398,7 @@ void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL:
 void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
 {
     // Re-draw frame
-    if (app_.IsLoadingDone())
-        app_.DrawFrame();
+    app_.DrawFrame();
 }
 
 /*
@@ -500,17 +581,14 @@ void ExampleBase::Resize(const LLGL::Extent2D& clientAreaSize)
         swapChain->ResizeBuffers(drawableSize_);
 
         // Re-draw frame
-        if (IsLoadingDone())
-        {
-            OnResize(drawableSize_);
-            DrawFrame();
-        }
+        OnResize(drawableSize_);
+        DrawFrame();
     }
 }
 
 bool ExampleBase::IsDrawable() const
 {
-    return (drawableSize_.width >= 4 && drawableSize_.height >= 4);
+    return (swapChain != nullptr && drawableSize_.width >= 4 && drawableSize_.height >= 4);
 }
 
 static LLGL::Extent2D ScaleResolution(const LLGL::Extent2D& res, float scale)
@@ -666,6 +744,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         LLGL::Log::Printf("\n");
     }
 
+    // Initialize default projection matrix
+    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
+
     #ifdef LLGL_MOBILE_PLATFORM
 
     // Set canvas title
@@ -694,12 +775,6 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     // Listen for window/canvas events
     input.Listen(swapChain->GetSurface());
-
-    // Initialize default projection matrix
-    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
-    // Store information that loading is done
-    loadingDone_ = true;
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
@@ -1085,11 +1160,6 @@ bool ExampleBase::IsMetal() const
     return (renderer->GetRendererID() == LLGL::RendererID::Metal);
 }
 
-bool ExampleBase::IsLoadingDone() const
-{
-    return loadingDone_;
-}
-
 bool ExampleBase::IsScreenOriginLowerLeft() const
 {
     return (renderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft);
@@ -1117,23 +1187,22 @@ Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float 
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
 }
 
-Gs::Quaternionf ExampleBase::Rotation(float x, float y) const
+Gs::Quaternionf ExampleBase::Rotation(float pitch, float yaw) const
 {
     Gs::Matrix3f mat;
-    Gs::RotateFree(mat, Gs::Vector3f{ 1, 0, 0 }, y);
-    Gs::RotateFree(mat, Gs::Vector3f{ 0, 1, 0 }, x);
+    Gs::RotateFree(mat, Gs::Vector3f{ 1, 0, 0 }, yaw);
+    Gs::RotateFree(mat, Gs::Vector3f{ 0, 1, 0 }, pitch);
     Gs::Quaternionf rotation;
     Gs::MatrixToQuaternion(rotation, mat);
     return rotation;
 }
 
-Gs::Matrix4f ExampleBase::RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const
+void ExampleBase::TrackballRotation(Gs::Quaternionf& rotation, bool isStartPosition, const LLGL::Offset2D* cursorPosition)
 {
-    // Generate absolute matrix
-    rotation *= Rotation(dx, dy);
-    Gs::Matrix4f mat;
-    Gs::QuaternionToMatrix(mat, rotation);
-    return mat;
+    const LLGL::Viewport fullViewport{ swapChain->GetResolution() };
+    const LLGL::Offset2D targetCursorPosition = (cursorPosition != nullptr ? *cursorPosition : input.GetMousePosition());
+
+    trackballRotation_.Rotate(rotation, fullViewport, targetCursorPosition, isStartPosition, GetProjectionZAxis());
 }
 
 bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const

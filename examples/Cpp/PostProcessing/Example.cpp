@@ -453,19 +453,14 @@ private:
         commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
     }
 
-    void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
+    void SetSceneSettingsOuterModel(const Gs::Quaternionf& outerModelRotation)
     {
         const float projZAxis = GetProjectionZAxis();
-
-        // Rotate model around X and Y axes
-        Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, projZAxis * deltaPitch);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, projZAxis * deltaYaw);
-        animation.rotation = deltaRotation * animation.rotation;
 
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
         Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 * projZAxis });
+        Gs::QuaternionToMatrix(animation.rotation, outerModelRotation);
         sceneSettings.wMatrix *= animation.rotation;
 
         // Set colors and matrix
@@ -501,9 +496,9 @@ private:
             static_cast<float>(input.GetMouseMotion().y),
         };
 
-        Gs::Vector2f outerModelDeltaRotation;
+        static Gs::Quaternionf outerModelRotation;
         if (input.KeyPressed(LLGL::Key::LButton))
-            outerModelDeltaRotation = mouseMotion*0.005f;
+            TrackballRotation(outerModelRotation, input.KeyDown(LLGL::Key::LButton));
 
         // Update effect intensity animation
         if (input.KeyPressed(LLGL::Key::RButton))
@@ -566,7 +561,7 @@ private:
                 commands->SetResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
-                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
+                SetSceneSettingsOuterModel(outerModelRotation);
                 commands->Draw(numSceneVertices, 0);
 
                 // Draw inner scene model

@@ -37,7 +37,7 @@ class Example_VolumeRendering : public ExampleBase
     LLGL::RenderTarget*         depthRangeRenderTarget  = nullptr;
 
     TriangleMesh                mesh;
-    Gs::Matrix4f                rotation;
+    Gs::Quaternionf             rotation;
 
     PerlinNoise                 perlinNoise;
 
@@ -315,15 +315,14 @@ private:
         const float projZAxis = GetProjectionZAxis();
 
         // Update input
+        if (input.KeyPressed(LLGL::Key::LButton))
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
+
         const Gs::Vector2f mouseMotion
         {
             static_cast<float>(input.GetMouseMotion().x),
             static_cast<float>(input.GetMouseMotion().y),
         };
-
-        Gs::Vector2f rotationVec;
-        if (input.KeyPressed(LLGL::Key::LButton))
-            rotationVec = mouseMotion*0.005f;
 
         // Update density threshold
         if (input.KeyPressed(LLGL::Key::RButton))
@@ -337,16 +336,12 @@ private:
             ::fflush(stdout);
         }
 
-        // Rotate model around X and Y axes
-        Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, rotationVec.y * projZAxis);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, rotationVec.x * projZAxis);
-        rotation = deltaRotation * rotation;
-
         // Transform scene mesh
         settings.wMatrix.LoadIdentity();
         Gs::Translate(settings.wMatrix, { 0, 0, 5 * projZAxis });
-        settings.wMatrix *= rotation;
+        Gs::Matrix4f rotationMatrix;
+        Gs::QuaternionToMatrix(rotationMatrix, rotation);
+        settings.wMatrix *= rotationMatrix;
 
         settings.wMatrixInv = settings.wMatrix.Inverse();
 

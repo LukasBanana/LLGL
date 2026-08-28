@@ -158,7 +158,7 @@ void CSForces(uint2 threadID : SV_DispatchThreadID)
 
     // Accumulate force and multiply by inverse mass
     float invMass = parBase[idx].z;
-    float4 force = gravity;
+    float4 force = mul(gravity, wMatrix);
     force *= invMass;
 
     // Apply velocity and damping

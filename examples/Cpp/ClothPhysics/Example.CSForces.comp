@@ -52,7 +52,7 @@ void main()
     
     // Accumulate force and multiply by inverse mass
     float invMass = g_parBase[idx].z;
-    vec4 force = gravity;
+    vec4 force = wMatrix * gravity;
     force *= vec4(invMass);
     
     // Apply velocity and damping

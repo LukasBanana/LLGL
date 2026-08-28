@@ -248,13 +248,16 @@ private:
         }
 
         // Update scene constants
-        static float rotation = Gs::Deg2Rad(-20.0f);
-        if (input.KeyPressed(LLGL::Key::LButton) || input.KeyPressed(LLGL::Key::RButton))
-            rotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+        static Gs::Quaternionf rotation = Rotation(Gs::Deg2Rad(-20.0f), 0.0f);
+        if (input.KeyPressed(LLGL::Key::LButton))
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
 
         scene.wMatrix.LoadIdentity();
         Gs::Translate(scene.wMatrix, Gs::Vector3f{ 0, 0, 5 * projZAxis });
-        Gs::RotateFree(scene.wMatrix, Gs::Vector3f{ 0, 1, 0 }, rotation * projZAxis);
+
+        Gs::Matrix4f rotationMatrix;
+        Gs::QuaternionToMatrix(rotationMatrix, rotation);
+        scene.wMatrix *= rotationMatrix;
 
         scene.wvpMatrix = projection;
         scene.wvpMatrix *= scene.wMatrix;

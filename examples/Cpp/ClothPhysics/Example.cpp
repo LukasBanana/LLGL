@@ -9,13 +9,13 @@
 
 // Enables storage textures instead of typed buffers for physics particles (i.e. RWTexture2D instead of RWBuffer in HLSL for instance).
 // Currently only supported for D3D11 and D3D12
-//#define ENABLE_STORAGE_TEXTURES
+#define ENABLE_STORAGE_TEXTURES 0
 
 // Enable wireframe polygon mode
-//#define ENABLE_WIREFRAME
+#define ENABLE_WIREFRAME        0
 
 
-#ifdef ENABLE_STORAGE_TEXTURES
+#if ENABLE_STORAGE_TEXTURES
 const LLGL::ShaderMacro g_shaderMacros[] = { { "ENABLE_STORAGE_TEXTURES" }, {} };
 #else
 const LLGL::ShaderMacro g_shaderMacros[] = { {} };
@@ -55,7 +55,7 @@ class Example_ClothPhysics : public ExampleBase
     LLGL::Buffer*           constantBuffer                      = nullptr;
     LLGL::Buffer*           indexBuffer                         = nullptr;
 
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
 
     LLGL::Buffer*           vertexBufferNull                    = nullptr;
     LLGL::Texture*          particleBuffers[NumAttribs]         = {};
@@ -84,7 +84,6 @@ class Example_ClothPhysics : public ExampleBase
     std::uint32_t           numClothVertices                    = 0;
     std::uint32_t           numClothIndices                     = 0;
     std::uint32_t           swapBufferIndex                     = 0; // Index to swap particle buffer heaps
-    Gs::Vector2f            viewRotation;
 
     struct SceneState
     {
@@ -216,7 +215,7 @@ public:
         const void*             initialData     = nullptr,
         std::uint32_t           vertexStride    = 0)
     {
-        #ifdef ENABLE_STORAGE_TEXTURES
+        #if ENABLE_STORAGE_TEXTURES
 
         // Initialize binding flags
         long bindFlags = LLGL::BindFlags::Sampled;
@@ -292,7 +291,7 @@ public:
         CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
         CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), sizeof(Gs::Vector4f));
 
-        #ifdef ENABLE_STORAGE_TEXTURES
+        #if ENABLE_STORAGE_TEXTURES
 
         // Create dummy vertex buffer
         LLGL::BufferDescriptor vbNullDesc;
@@ -386,7 +385,7 @@ public:
             LLGL::Parse(
                 "heap{"
                 "cbuffer(SceneState@0):comp,"
-                #ifdef ENABLE_STORAGE_TEXTURES
+                #if ENABLE_STORAGE_TEXTURES
                 "texture(parBase@1):comp,"
                 "rwtexture(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
                 #else
@@ -466,7 +465,7 @@ public:
             LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
 
         // Create graphics pipeline layout
-        #ifdef ENABLE_STORAGE_TEXTURES
+        #if ENABLE_STORAGE_TEXTURES
 
         graphicsLayout = renderer->CreatePipelineLayout(
             IsMetal() || IsVulkan()
@@ -504,7 +503,7 @@ public:
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-            #ifdef ENABLE_WIREFRAME
+            #if ENABLE_WIREFRAME
             pipelineDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
             #endif
 
@@ -520,7 +519,7 @@ public:
             constantBuffer,
             colorMap,
             linearSampler,
-            #ifdef ENABLE_STORAGE_TEXTURES
+            #if ENABLE_STORAGE_TEXTURES
             particleBuffers[AttribBase],
             particleBuffers[AttribCurrPos],
             particleBuffers[AttribNormal],
@@ -543,13 +542,6 @@ private:
         // Update user input
         auto motion = input.GetMouseMotion();
 
-        if (input.KeyPressed(LLGL::Key::LButton))
-        {
-            viewRotation.x += static_cast<float>(motion.y) * 0.25f;
-            viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 90.0f);
-            viewRotation.y += static_cast<float>(motion.x) * 0.25f;
-        }
-
         if (input.KeyPressed(LLGL::Key::RButton))
         {
             float delta = motion.x*0.01f;
@@ -564,13 +556,16 @@ private:
         sceneState.dStiffness   = 1.0f - std::pow(1.0f - stiffnessFactor, 1.0f / static_cast<float>(numSolverIterations));
         sceneState.gravity      = Gs::Vector4f{ gravityVector, 0.0f };
 
+        static Gs::Quaternionf rotation;
+        if (input.KeyPressed(LLGL::Key::LButton))
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
+
         // Update world matrix
         sceneState.wMatrix.LoadIdentity();
+        Gs::QuaternionToMatrix(sceneState.wMatrix, rotation);
 
         // Update view matrix
         Gs::Matrix4f vMatrix;
-        Gs::RotateFree(vMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y * projZAxis));
-        Gs::RotateFree(vMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x * projZAxis));
         Gs::Translate(vMatrix, { viewPos.x, viewPos.y, viewPos.z * projZAxis });
         vMatrix.MakeInverse();
 
@@ -629,7 +624,7 @@ private:
                 commands->SetViewport(swapChain->GetResolution());
 
                 // Set vertex and index buffers
-                #ifdef ENABLE_STORAGE_TEXTURES
+                #if ENABLE_STORAGE_TEXTURES
                 commands->SetVertexBuffer(*vertexBufferNull);
                 #else
                 commands->SetVertexBufferArray(*vertexBufferArray);

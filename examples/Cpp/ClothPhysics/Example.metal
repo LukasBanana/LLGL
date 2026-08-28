@@ -153,7 +153,7 @@ kernel void CSForces(
 
     // Accumulate force and multiply by inverse mass
     float invMass = parBase[idx].z;
-    float4 force = sceneState.gravity;
+    float4 force = sceneState.wMatrix * sceneState.gravity;
     force *= invMass;
 
     // Apply velocity and damping

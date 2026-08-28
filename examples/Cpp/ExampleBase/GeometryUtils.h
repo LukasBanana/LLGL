@@ -40,7 +40,7 @@ struct TangentSpaceVertex
     Gs::Vector2f texCoord;
 };
 
-//TODO: rename to ModelView, since this can also be used for quad primitives and does not contain any vertex data
+//TODO: rename to MeshView, since this can also be used for quad primitives and does not contain any vertex data
 struct TriangleMesh
 {
     std::uint32_t       firstVertex = 0;
