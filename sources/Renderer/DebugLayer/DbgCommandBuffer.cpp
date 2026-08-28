@@ -106,6 +106,11 @@ static const char* GetLabelOrDefault(const char* label, const char* defaultLabel
     return (label != nullptr ? label : defaultLabel);
 }
 
+static std::string GetFormattedLabel(const std::string& label)
+{
+    return (!label.empty() ? " \'" + label + '\'' : "");
+}
+
 static const char* GetResourceLabel(const Resource& resource)
 {
     switch (resource.GetResourceType())
@@ -1151,6 +1156,9 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         profile_.commandBufferRecord.meshCommands++;
     else
         profile_.commandBufferRecord.computePipelineBindings++;
+
+    /* Reset certain binding states */
+    bindings_.shadingRateSet = false;
 }
 
 void DbgCommandBuffer::SetBlendFactor(const float color[4])
@@ -1686,6 +1694,11 @@ void DbgCommandBuffer::SetShadingRate(ShadingRate shadingRate)
 {
     CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
 
+    if (LLGL_DBG_SOURCE())
+    {
+        ValidateSetShadingRate();
+    }
+
     const Extent2D shadingRateSize = GetShadingRateSize(shadingRate);
     LLGL_DBG_COMMAND_EXT(
         instanceTier1->SetShadingRate(shadingRate),
@@ -1696,6 +1709,11 @@ void DbgCommandBuffer::SetShadingRate(ShadingRate shadingRate)
 void DbgCommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
 {
     CommandBufferTier1* instanceTier1 = LLGL_DBG_GET_TIER1();
+
+    if (LLGL_DBG_SOURCE())
+    {
+        ValidateSetShadingRate();
+    }
 
     const Extent2D shadingRateSize = GetShadingRateSize(shadingRate);
     LLGL_DBG_COMMAND_EXT(
@@ -2812,14 +2830,72 @@ void DbgCommandBuffer::ValidateDynamicStates()
     }
     if (DbgPipelineState* pipelineStateDbg = bindings_.pipelineState)
     {
-        const GraphicsPipelineDescriptor& graphicsPSODesc = pipelineStateDbg->graphicsDesc;
-        if (graphicsPSODesc.rasterizer.scissorTestEnabled && graphicsPSODesc.scissors.empty() && bindings_.numScissorRects == 0)
+        if (pipelineStateDbg->isGraphicsPSO)
         {
-            LLGL_DBG_WARN(
-                WarningType::ImproperState,
-                "dynamic scissor test enabled but no scissor rectangles set"
-            );
+            const GraphicsPipelineDescriptor& graphicsPSODesc = pipelineStateDbg->graphicsDesc;
+            ValidateRasterizerState(graphicsPSODesc.rasterizer, graphicsPSODesc.scissors, pipelineStateDbg->label);
         }
+        else if (pipelineStateDbg->isMeshPSO)
+        {
+            const MeshPipelineDescriptor& meshPSODesc = pipelineStateDbg->meshDesc;
+            ValidateRasterizerState(meshPSODesc.rasterizer, meshPSODesc.scissors, pipelineStateDbg->label);
+        }
+    }
+}
+
+void DbgCommandBuffer::ValidateRasterizerState(const RasterizerDescriptor& rasterizerDesc, ArrayView<Scissor> psoDescScissors, const std::string& psoLabel)
+{
+    if (rasterizerDesc.scissorTestEnabled && psoDescScissors.empty() && bindings_.numScissorRects == 0)
+    {
+        LLGL_DBG_WARN(
+            WarningType::ImproperState,
+            "dynamic scissor test enabled but no scissor rectangles set"
+        );
+    }
+    if (rasterizerDesc.shadingRateEnabled && !bindings_.shadingRateSet)
+    {
+        const std::string psoLabelFormatted = GetFormattedLabel(psoLabel);
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "PSO%s has shading rate enabled (via `RasterizerDescriptor::shadingRateEnabled`) but no shading rate has been set (via `CommandBufferTier1::SetShadingRate()`)",
+            psoLabelFormatted.c_str()
+        );
+    }
+}
+
+static bool IsShadingRateEnabledInPSO(DbgPipelineState* pipelineStateDbg)
+{
+    if (pipelineStateDbg != nullptr)
+    {
+        if (pipelineStateDbg->isGraphicsPSO)
+        {
+            const GraphicsPipelineDescriptor& graphicsPSODesc = pipelineStateDbg->graphicsDesc;
+            return graphicsPSODesc.rasterizer.shadingRateEnabled;
+        }
+        else if (pipelineStateDbg->isMeshPSO)
+        {
+            const MeshPipelineDescriptor& meshPSODesc = pipelineStateDbg->meshDesc;
+            return meshPSODesc.rasterizer.shadingRateEnabled;
+        }
+    }
+    return false;
+}
+
+void DbgCommandBuffer::ValidateSetShadingRate()
+{
+    if (IsShadingRateEnabledInPSO(bindings_.pipelineState))
+    {
+        /* Keep track that shading rate has been set */
+        bindings_.shadingRateSet = true;
+    }
+    else
+    {
+        const std::string psoLabel = (bindings_.pipelineState != nullptr ? GetFormattedLabel(bindings_.pipelineState->label) : "");
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "cannot set shading rate as long as PSO%s does not enable it (via `RasterizerDescriptor::shadingRateEnabled`)",
+            psoLabel.c_str()
+        );
     }
 }
 
@@ -2827,7 +2903,7 @@ void DbgCommandBuffer::ValidateBindingTable()
 {
     auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
     {
-        const std::string psoLabel = (!pso.label.empty() ? " \'" + pso.label + '\'' : "");
+        const std::string psoLabel = GetFormattedLabel(pso.label);
         LLGL_ASSERT(table.resources.size() == layoutDesc.bindings.size());
         for_range(i, table.resources.size())
         {
@@ -2862,7 +2938,7 @@ void DbgCommandBuffer::ValidateBlendStates()
             /* If fragment discard is disabled and there is any fragment shader output, this configuration might have been unintentional */
             if (!pso->graphicsDesc.rasterizer.discardEnabled && bindings_.anyFragmentOutput)
             {
-                const std::string psoLabel = (!pso->label.empty() ? " \'" + pso->label + '\'' : "");
+                const std::string psoLabel = GetFormattedLabel(pso->label);
                 LLGL_DBG_WARN(
                     WarningType::PointlessOperation,
                     "drawing to output merger with pipeline state%s [blend.sampleMask=0] might be unintentional",

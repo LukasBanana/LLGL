@@ -12,7 +12,6 @@ class Example_StencilBuffer : public ExampleBase
 {
 
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
-    LLGL::ResourceHeap*         resourceHeap            = {};
 
     LLGL::Shader*               vsScene                 = nullptr;
     LLGL::Shader*               fsScene                 = nullptr;
@@ -23,7 +22,7 @@ class Example_StencilBuffer : public ExampleBase
     LLGL::PipelineState*        pipelineStencilRead     = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
-    LLGL::Buffer*               constantBuffer          = nullptr;
+    LLGL::Buffer*               viewCbuffer             = nullptr;
 
     TriangleMesh                meshScene;
     TriangleMesh                meshPortal;
@@ -37,8 +36,8 @@ class Example_StencilBuffer : public ExampleBase
     {
         alignas(16) Gs::Matrix4f        wMatrix;
         alignas(16) Gs::Matrix4f        vpMatrix;
-        alignas(16) Gs::Vector3f        lightDir        = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
-        alignas(16) LLGL::ColorRGBAf    diffuse         = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alignas(16) Gs::Vector3f        lightDir    = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        alignas(16) LLGL::ColorRGBAf    diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
     settings;
 
@@ -51,19 +50,9 @@ public:
         CreateBuffers();
         LoadShaders();
         CreatePipelines();
-        CreateResourceHeaps();
 
         // Update vectors for projection
         settings.lightDir.z *= GetProjectionZAxis();
-
-        #if 0
-        // Show some information
-        LLGL::Log::Printf(
-            "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube\n"
-            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube\n"
-            "press RETURN KEY to save the render target texture to a PNG file\n"
-        );
-        #endif
     }
 
 private:
@@ -82,7 +71,7 @@ private:
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
-        constantBuffer = CreateConstantBuffer(settings);
+        viewCbuffer = CreateConstantBuffer(settings);
     }
 
     void LoadShaders()
@@ -124,7 +113,7 @@ private:
     {
         // Create pipeline layouts for shadow-map and scene rendering
         pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse( "heap{ cbuffer(Settings@1):frag:vert }" )
+            LLGL::Parse( "cbuffer(Settings@1):frag:vert" )
         );
 
         // Specify vertex format
@@ -200,12 +189,6 @@ private:
         }
     }
 
-    void CreateResourceHeaps()
-    {
-        // Create resource heap for scene rendering
-        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
-    }
-
     void UpdateScene()
     {
         static float animation;
@@ -252,7 +235,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.diffuse = mesh.color;
-        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+        commands->UpdateBuffer(*viewCbuffer, 0, &settings, sizeof(settings));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
@@ -263,7 +246,7 @@ private:
 
         // Render scene background
         commands->SetPipelineState(*pipelineScene);
-        commands->SetResourceHeap(*resourceHeap);
+        commands->SetResource(0, *viewCbuffer);
         RenderMesh(meshScene);
     }
 

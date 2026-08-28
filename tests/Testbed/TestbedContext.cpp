@@ -1381,6 +1381,7 @@ void TestbedContext::CreateTriangleMeshes()
     // Create GPU mesh buffer
     BufferDescriptor meshBufferDesc;
     {
+        meshBufferDesc.debugName    = "Testbed.MeshBuffer";
         meshBufferDesc.size         = vertexBufferSize + indexBufferSize;
         meshBufferDesc.bindFlags    = BindFlags::VertexBuffer | BindFlags::IndexBuffer;
         meshBufferDesc.stride       = sizeof(StandardVertex);

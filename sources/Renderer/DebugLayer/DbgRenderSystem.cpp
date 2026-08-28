@@ -939,10 +939,10 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
     /* Validate buffer stride */
     if (bufferDesc.stride > 0 && bufferDesc.size % bufferDesc.stride != 0)
     {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "buffer stride (%u) is non-zero, but buffer size (%" PRIu64 ") is not a multiple of stride",
-            bufferDesc.stride, bufferDesc.size
+        LLGL_DBG_WARN(
+            WarningType::ImproperArgument,
+            "buffer%s stride (%u) is non-zero, but size (%" PRIu64 ") is not a multiple of stride",
+            bufferLabel.c_str(), bufferDesc.stride, bufferDesc.size
         );
     }
 

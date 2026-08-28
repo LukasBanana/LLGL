@@ -110,6 +110,7 @@ class DbgCommandBuffer final : public CommandBufferTier1
             const DbgShader*        vertexShader                                        = nullptr;
             bool                    blendFactorSet                                      = false;
             bool                    stencilRefSet                                       = false;
+            bool                    shadingRateSet                                      = false;
             Scissor                 scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
             std::uint32_t           numScissorRects                                     = 0;
             BindingTable            bindingTable;
@@ -189,6 +190,8 @@ class DbgCommandBuffer final : public CommandBufferTier1
         void ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize);
 
         void ValidateDynamicStates();
+        void ValidateRasterizerState(const RasterizerDescriptor& rasterizerDesc, ArrayView<Scissor> psoDescScissors, const std::string& psoLabel);
+        void ValidateSetShadingRate();
         void ValidateBindingTable();
         void ValidateBlendStates();
 
