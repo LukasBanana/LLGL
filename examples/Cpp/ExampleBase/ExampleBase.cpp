@@ -12,6 +12,7 @@
 #include "FileUtils.h"
 #include <stdio.h>
 #include <thread>
+#include <cmath>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -295,7 +296,7 @@ static Gs::Vector3f Unit3DVectorFrom2DPosition(const LLGL::Viewport& viewport, L
     const float radiusSq = sphereRadius*sphereRadius;
     if (lenSq > radiusSq*0.5f)
     {
-        vec.z = -projZAxis * radiusSq / (2.0f * std::sqrtf(lenSq)); // Outside
+        vec.z = -projZAxis * radiusSq / (2.0f * std::sqrt(lenSq)); // Outside
     }
     else
     {
