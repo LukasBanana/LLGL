@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Crate.jpg", "start": 0, "end": 59686}, {"filename": "/assets/Example.410core.frag", "start": 59686, "end": 60216}, {"filename": "/assets/Example.450core.frag", "start": 60216, "end": 61521}, {"filename": "/assets/Example.450core.vert", "start": 61521, "end": 62050}, {"filename": "/assets/Example.frag", "start": 62050, "end": 63297}, {"filename": "/assets/Example.vert", "start": 63297, "end": 63735}], "remote_package_size": 63735});
+    loadPackage({"files": [{"filename": "/assets/Crate.jpg", "start": 0, "end": 59686}, {"filename": "/assets/Example.410core.frag", "start": 59686, "end": 60194}, {"filename": "/assets/Example.450core.frag", "start": 60194, "end": 61477}, {"filename": "/assets/Example.450core.vert", "start": 61477, "end": 62022}, {"filename": "/assets/Example.frag", "start": 62022, "end": 63247}, {"filename": "/assets/Example.vert", "start": 63247, "end": 63701}], "remote_package_size": 63701});
 
   })();

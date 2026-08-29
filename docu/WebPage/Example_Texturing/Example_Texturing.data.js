@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Crate-DXT1-MipMapped.dds", "start": 0, "end": 174904}, {"filename": "/assets/Crate.jpg", "start": 174904, "end": 234590}, {"filename": "/assets/Example.450core.frag", "start": 234590, "end": 235229}, {"filename": "/assets/Example.450core.vert", "start": 235229, "end": 235738}, {"filename": "/assets/Example.frag", "start": 235738, "end": 236185}, {"filename": "/assets/Example.vert", "start": 236185, "end": 236580}], "remote_package_size": 236580});
+    loadPackage({"files": [{"filename": "/assets/Crate-DXT1-MipMapped.dds", "start": 0, "end": 174904}, {"filename": "/assets/Crate.jpg", "start": 174904, "end": 234590}, {"filename": "/assets/Example.450core.frag", "start": 234590, "end": 235206}, {"filename": "/assets/Example.450core.vert", "start": 235206, "end": 235731}, {"filename": "/assets/Example.frag", "start": 235731, "end": 236222}, {"filename": "/assets/Example.vert", "start": 236222, "end": 236633}], "remote_package_size": 236633});
 
   })();

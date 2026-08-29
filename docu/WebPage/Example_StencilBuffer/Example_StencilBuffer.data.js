@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Portal-Scene.obj", "start": 0, "end": 5440}, {"filename": "/assets/Portal-Stencil.obj", "start": 5440, "end": 5716}, {"filename": "/assets/Pyramid.obj", "start": 5716, "end": 8607}, {"filename": "/assets/Scene.450core.frag", "start": 8607, "end": 9083}, {"filename": "/assets/Scene.450core.vert", "start": 9083, "end": 9496}, {"filename": "/assets/Scene.frag", "start": 9496, "end": 9963}, {"filename": "/assets/Scene.vert", "start": 9963, "end": 10346}, {"filename": "/assets/Stencil.450core.vert", "start": 10346, "end": 10637}, {"filename": "/assets/Stencil.vert", "start": 10637, "end": 10894}, {"filename": "/assets/WiredBox.obj", "start": 10894, "end": 28816}], "remote_package_size": 28816});
+    loadPackage({"files": [{"filename": "/assets/Portal-Scene.obj", "start": 0, "end": 5440}, {"filename": "/assets/Portal-Stencil.obj", "start": 5440, "end": 5713}, {"filename": "/assets/Pyramid.obj", "start": 5713, "end": 8626}, {"filename": "/assets/Scene.450core.frag", "start": 8626, "end": 9102}, {"filename": "/assets/Scene.450core.vert", "start": 9102, "end": 9515}, {"filename": "/assets/Scene.frag", "start": 9515, "end": 9982}, {"filename": "/assets/Scene.vert", "start": 9982, "end": 10365}, {"filename": "/assets/Stencil.450core.vert", "start": 10365, "end": 10656}, {"filename": "/assets/Stencil.vert", "start": 10656, "end": 10913}, {"filename": "/assets/WiredBox.obj", "start": 10913, "end": 28835}], "remote_package_size": 28835});
 
   })();
