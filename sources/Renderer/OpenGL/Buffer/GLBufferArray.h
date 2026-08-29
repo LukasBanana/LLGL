@@ -20,6 +20,7 @@ namespace LLGL
 
 
 class Buffer;
+class GLBufferWithXFB;
 
 // GL implementation of BufferArray interface for vertex buffer input layouts.
 class GLBufferArray : public BufferArray
@@ -35,9 +36,16 @@ class GLBufferArray : public BufferArray
             return bufferInputLayout_;
         }
 
+        // Returns a pointer to a transform-feedback buffer in slot 0, if the buffer array was created with one. Otherwise, null.
+        inline GLBufferWithXFB* GetBufferSlot0WithXFB() const
+        {
+            return bufferSlot0WithXFB_;
+        }
+
     private:
 
         GLBufferInputLayout bufferInputLayout_;
+        GLBufferWithXFB*    bufferSlot0WithXFB_ = nullptr;
 
 };
 

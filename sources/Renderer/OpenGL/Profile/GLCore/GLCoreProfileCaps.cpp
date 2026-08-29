@@ -302,6 +302,18 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
     #endif
 
+    /* Determine maximum number of vertex buffer bindings */
+    /*#if GL_ARB_vertex_attrib_binding
+    if (HasExtension(GLExt::ARB_vertex_attrib_binding))
+    {
+        limits.maxVertexBufferInputs        = static_cast<std::uint32_t>(GLGetUInt(GL_MAX_VERTEX_ATTRIB_BINDINGS));
+    }
+    else
+    #endif*/
+    {
+        limits.maxVertexBufferInputs        = static_cast<std::uint32_t>(GLGetUInt(GL_MAX_VERTEX_ATTRIBS));
+    }
+
     /* Determine maximum number of stream-outputs */
     #if GL_ARB_transform_feedback3
     if (HasExtension(GLExt::ARB_transform_feedback3))

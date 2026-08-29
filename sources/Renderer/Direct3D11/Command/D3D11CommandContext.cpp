@@ -239,6 +239,23 @@ void D3D11CommandContext::SetVertexBufferArray(D3D11BufferArray& bufferArrayD3D)
     );
 }
 
+void D3D11CommandContext::SetVertexBuffers(
+    UINT                            count,
+    ID3D11Buffer* const*            buffers,
+    const UINT*                     strides,
+    const UINT*                     offsets,
+    D3D11BindingLocator* const *    locators)
+{
+    bindingTable_->SetVertexBuffers(
+        0,
+        count,
+        buffers,
+        strides,
+        offsets,
+        locators
+    );
+}
+
 void D3D11CommandContext::SetIndexBuffer(D3D11Buffer& bufferD3D, DXGI_FORMAT format, UINT offset)
 {
     bindingTable_->SetIndexBuffer(

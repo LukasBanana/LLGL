@@ -132,9 +132,24 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
 
 BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
+    const bool isDebuggerEnabled = LLGL_DBG_SOURCE();
+
     /* Create temporary buffer array with buffer instances */
     std::vector<VertexBufferView> bufferInstanceLocations(bufferViews.size());
     std::vector<DbgBuffer*> bufferDbgArray(bufferViews.size());
+
+    if (isDebuggerEnabled)
+    {
+        const RenderingLimits& limits = GetRenderingCaps().limits;
+        if (bufferViews.size() > limits.maxVertexBufferInputs)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "number of vertex buffer inputs (%zu) for buffer array exceeded limit (%u)",
+                bufferViews.size(), limits.maxVertexBufferInputs
+            );
+        }
+    }
 
     for_range(i, bufferViews.size())
     {
@@ -143,7 +158,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> buff
         bufferInstanceLocations[i]      = VertexBufferView{ &(bufferDbg->instance), view.stride, view.offset };
         bufferDbgArray[i]               = bufferDbg;
 
-        if (LLGL_DBG_SOURCE())
+        if (isDebuggerEnabled)
         {
             if (view.stride == 0 && bufferDbg->desc.stride == 0)
             {

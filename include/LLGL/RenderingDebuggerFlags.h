@@ -148,6 +148,7 @@ struct ProfileCommandBufferRecord
     /**
     \brief Counter for all vertex buffer and vertex buffer array bindings.
     \see CommandBuffer::SetVertexBuffer
+    \see CommandBuffer::SetVertexBuffers
     \see CommandBuffer::SetVertexBufferArray
     */
     std::uint32_t vertexBufferBindings      = 0;

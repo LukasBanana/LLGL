@@ -6,7 +6,7 @@
  */
 
 #include "GLBufferArray.h"
-#include "GLBuffer.h"
+#include "GLBufferWithXFB.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
 #include <LLGL/Utils/ForRange.h>
@@ -32,6 +32,9 @@ GLBufferArray::GLBufferArray(ArrayView<VertexBufferView> bufferViews) :
     BufferArray        { GetCombinedBindFlags(bufferViews) },
     bufferInputLayout_ { GetAsGLBufferViews(bufferViews)   }
 {
+    /* Store pointer to first buffer slot if it a transform-feedback buffer */
+    if (!bufferViews.empty() && (bufferViews.front().buffer->GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+        bufferSlot0WithXFB_ = LLGL_CAST(GLBufferWithXFB*, bufferViews.front().buffer);
 }
 
 

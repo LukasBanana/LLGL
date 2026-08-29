@@ -74,6 +74,13 @@ class MTCommandBuffer : public CommandBuffer
             NSUInteger&     outSrcOffset
         );
 
+        void TranslateVertexBufferViews(
+            std::uint32_t           numBufferViews,
+            const VertexBufferView* inBufferViews,
+            id<MTLBuffer>*          outBuffers,
+            NSUInteger*             outOffsets
+        );
+
     private:
 
         id<MTLDevice>                   device_                 = nil;

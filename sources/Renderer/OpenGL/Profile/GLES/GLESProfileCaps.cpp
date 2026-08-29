@@ -208,6 +208,18 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     limits.maxBufferSize                    = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
 
+    /* Determine maximum number of vertex buffer bindings */
+    #if GL_ES_VERSION_3_1
+    if (version >= 310)
+    {
+        limits.maxVertexAttribBindings      = GLGetUInt(GL_MAX_VERTEX_ATTRIB_BINDINGS);
+    }
+    else
+    #endif
+    {
+        limits.maxVertexAttribBindings      = GLGetUInt(GL_MAX_VERTEX_ATTRIBS);
+    }
+
     /* Presume that at least one stream-output is supported */
     limits.maxStreamOutputs                 = 1u;
 

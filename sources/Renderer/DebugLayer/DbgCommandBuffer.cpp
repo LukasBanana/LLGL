@@ -639,6 +639,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std
 {
     auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
 
+    std::string annotation;
     if (LLGL_DBG_SOURCE())
     {
         BindVertexBuffer(bufferDbg, stride, offset);
@@ -659,12 +660,103 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std
                 offset, bufferDbg.desc.size
             );
         }
+
+        if (stride > 0)
+        {
+            annotation.append(", stride=");
+            annotation.append(std::to_string(stride));
+        }
+        if (offset > 0)
+        {
+            annotation.append(", offset=");
+            annotation.append(std::to_string(offset));
+        }
     }
 
     LLGL_DBG_COMMAND_EXT(
         instance.SetVertexBuffer(bufferDbg.instance, stride, offset),
-        "SetVertexBuffer(%s)", GetResourceLabel(buffer)
+        "SetVertexBuffer(%s%s)", GetResourceLabel(buffer), annotation.c_str()
     );
+
+    profile_.commandBufferRecord.vertexBufferBindings++;
+}
+
+void DbgCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    const bool isDebuggerEnabled = LLGL_DBG_SOURCE();
+
+    const char* buffersLabel = (numBufferViews == 1 ? "buffer" : "buffers");
+
+    if (isDebuggerEnabled)
+    {
+        if (numBufferViews == 0)
+        {
+            LLGL_DBG_WARN(WarningType::PointlessOperation, "setting zero vertex buffers");
+        }
+        else if (bufferViews == nullptr)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "setting %u vertex %s, but `bufferViews` pointer is null",
+                numBufferViews, buffersLabel
+            );
+        }
+        else if (numBufferViews > limits_.maxVertexBufferInputs)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "number of vertex buffer inputs (%zu) exceeded limit (%u)",
+                numBufferViews, limits_.maxVertexBufferInputs
+            );
+        }
+    }
+
+    /* Resolve debug buffers in vertex buffer views */
+    SmallVector<VertexBufferView> internalBufferViews;
+    internalBufferViews.resize(numBufferViews);
+
+    if (bufferViews != nullptr)
+    {
+        for_range(i, numBufferViews)
+        {
+            auto* bufferDbg = LLGL_CAST(DbgBuffer*, bufferViews[i].buffer);
+
+            if (isDebuggerEnabled)
+            {
+                if (bufferDbg == nullptr)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "setting %u vertex %s with [%u] being a null pointer",
+                        numBufferViews, buffersLabel, i
+                    );
+                    continue;
+                }
+                if (bufferViews[i].stride == 0 && bufferDbg->desc.stride == 0)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "setting %u vertex %s with [%u] missing stride; use either LLGL::BufferDescriptor::stride or LLGL::VertexBufferView::stride",
+                        numBufferViews, buffersLabel, i
+                    );
+                }
+                if (bufferViews[i].offset >= bufferDbg->desc.size)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "setting %u vertex %s with offset (%" PRIu64 ") in [%u] exceeding upper bound (%" PRIu64 ")",
+                        numBufferViews, buffersLabel, bufferViews[i].offset, i, bufferDbg->desc.size
+                    );
+                }
+            }
+
+            internalBufferViews[i].buffer = &(bufferDbg->instance);
+            internalBufferViews[i].stride = bufferViews[i].stride;
+            internalBufferViews[i].offset = bufferViews[i].offset;
+        }
+    }
+
+    LLGL_DBG_COMMAND_EXT( instance.SetVertexBuffers(numBufferViews, internalBufferViews.data()), "SetVertexBuffers(count=%u)", numBufferViews );
 
     profile_.commandBufferRecord.vertexBufferBindings++;
 }
@@ -689,7 +781,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         );
     }
 
-    LLGL_DBG_COMMAND( instance.SetVertexBufferArray(bufferArrayDbg.instance), "SetVertexBufferArray()" );
+    LLGL_DBG_COMMAND_EXT( instance.SetVertexBufferArray(bufferArrayDbg.instance), "SetVertexBufferArray(count=%zu)", bufferArrayDbg.buffers.size() );
 
     profile_.commandBufferRecord.vertexBufferBindings++;
 }

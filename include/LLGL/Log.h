@@ -104,7 +104,7 @@ struct ColorFlags
         \code
         // Print error with RGB color (red=200, green=50, blue=0)
         LLGL::Log::Printf(LLGL_LOG_RGB(200, 50, 0), "error");
-        \encode
+        \endcode
         */
         FullRGB         = (1 << 7),
 

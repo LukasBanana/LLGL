@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/AlignedArray.h>
+#include <LLGL/Tags.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -241,6 +242,13 @@ class LLGL_EXPORT SmallVector
             resize(count, value);
         }
 
+        //! Pre-allocates the vector with the specified number of elements but keeps them all uninitialized.
+        explicit SmallVector(size_type count, UninitializeTag) :
+            SmallVector {}
+        {
+            resize(count, UninitializeTag{});
+        }
+
         //! Destroys all elements in this vector.
         ~SmallVector()
         {
@@ -371,6 +379,26 @@ class LLGL_EXPORT SmallVector
             {
                 reserve(size);
                 construct_single(begin() + size_, begin() + size, value);
+                size_ = size;
+            }
+            else if (size_ > size)
+            {
+                destroy_range(begin() + size, end());
+                size_ = size;
+            }
+        }
+
+        /**
+        \brief Resizes this vector to the new size and explicitly keeps all newly elements uninitialized.
+        \param[in] size Specifies the new vector size (in number of elements).
+        \remarks After this call, \c size() returns the same value as the input parameter \c size.
+        \see resize(size_type)
+        */
+        void resize(size_type size, UninitializeTag)
+        {
+            if (size_ < size)
+            {
+                reserve(size);
                 size_ = size;
             }
             else if (size_ > size)

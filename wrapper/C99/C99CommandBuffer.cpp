@@ -121,6 +121,11 @@ LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t stride, ui
     g_CurrentCmdBuf->SetVertexBuffer(LLGL_REF(Buffer, buffer), stride, offset);
 }
 
+LLGL_C_EXPORT void llglSetVertexBuffers(uint32_t numBufferViews, const LLGLVertexBufferView* bufferViews)
+{
+    g_CurrentCmdBuf->SetVertexBuffers(numBufferViews, (const VertexBufferView*)bufferViews);
+}
+
 LLGL_C_EXPORT void llglSetVertexBufferArray(LLGLBufferArray bufferArray)
 {
     g_CurrentCmdBuf->SetVertexBufferArray(LLGL_REF(BufferArray, bufferArray));

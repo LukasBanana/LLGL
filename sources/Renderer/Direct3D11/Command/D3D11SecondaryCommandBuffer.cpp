@@ -173,6 +173,54 @@ void D3D11SecondaryCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t 
     }
 }
 
+void D3D11SecondaryCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    if (numBufferViews > D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT)
+        return /*E_BOUNDS*/;
+
+    /* First, determine whether binding locators are required if any buffer has RW access */
+    bool hasAnyRWBuffers = false;
+    for_range(i, numBufferViews)
+    {
+        auto* bufferD3D = LLGL_CAST(D3D11Buffer*, bufferViews[i].buffer);
+        if (bufferD3D == nullptr)
+            return /*E_INVALIDARG*/;
+
+        if (bufferD3D->GetBindingLocator()->type == D3D11BindingLocator::D3DLocator_RWBuffer)
+        {
+            hasAnyRWBuffers = true;
+            break;
+        }
+    }
+
+    const std::size_t payloadSize = (hasAnyRWBuffers ? D3D11CmdSetVertexBuffers::payloadSizePerViewRW : D3D11CmdSetVertexBuffers::payloadSizePerView) * numBufferViews;
+    auto cmd = AllocCommand<D3D11CmdSetVertexBuffers>(D3D11OpcodeSetVertexBuffers, payloadSize);
+    {
+        cmd->count              = numBufferViews;
+        cmd->hasAnyRWBuffers    = (hasAnyRWBuffers ? 1 : 0);
+
+        /* Transfer input arguments into separate arrays for D3D11's IASetVertexBuffers() API */
+        char*                   dstBase         = reinterpret_cast<char*>(cmd + 1);
+
+        ID3D11Buffer**          buffersD3D      = reinterpret_cast< ID3D11Buffer**        >( dstBase );
+        UINT*                   strides         = reinterpret_cast< UINT*                 >( dstBase + sizeof(ID3D11Buffer*)*numBufferViews );
+        UINT*                   offsets         = reinterpret_cast< UINT*                 >( dstBase + (sizeof(ID3D11Buffer*) + sizeof(UINT))*numBufferViews );
+        D3D11BindingLocator**   bindingLocators = reinterpret_cast< D3D11BindingLocator** >( dstBase + (sizeof(ID3D11Buffer*) + sizeof(UINT) + sizeof(UINT))*numBufferViews );
+
+        for_range(i, numBufferViews)
+        {
+            auto* bufferD3D = LLGL_CAST(D3D11Buffer*, bufferViews[i].buffer);
+
+            buffersD3D[i] = bufferD3D->GetNative();
+            strides[i] = (bufferViews[i].stride > 0 ? bufferViews[i].stride : bufferD3D->GetStride());
+            offsets[i] = static_cast<UINT>(bufferViews[i].offset);
+
+            if (hasAnyRWBuffers)
+                bindingLocators[i] = bufferD3D->GetBindingLocator();
+        }
+    }
+}
+
 void D3D11SecondaryCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto* bufferArrayD3D = LLGL_CAST(D3D11BufferArray*, &bufferArray);

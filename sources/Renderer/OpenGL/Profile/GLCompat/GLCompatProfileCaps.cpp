@@ -250,6 +250,7 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     #ifdef GL_MAX_UNIFORM_BLOCK_SIZE
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
     #endif
+    limits.maxVertexBufferInputs            = static_cast<std::uint32_t>(GLGetUInt(GL_MAX_VERTEX_ATTRIBS));
 
     /* Determine maximum number of stream-outputs */
     #ifdef GL_ARB_transform_feedback3

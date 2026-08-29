@@ -796,9 +796,7 @@ struct GraphicsPipelineDescriptor
 
     /**
     \brief Vertex (or geometry or tessellation-evaluation) shader stream-output attributes.
-    \remarks Some rendering APIs need the output stream attributes for the vertex shader and other APIs need them for the geometry shader.
-    To keep the code logic simple, it is valid to declare the output attributes for both the vertex and geometry shader (or even all that will be used in the same shader program).
-    Output attributes are ignored where they cannot be used.
+    \remarks The binding slot of each output vertex attribute must be less than \c LLGL_MAX_NUM_SO_BUFFERS.
     \remarks Stream-output attributes can only have 32-bit floating-point formats, i.e. only the following formats are supported:
     - Format::R32Float
     - Format::RG32Float

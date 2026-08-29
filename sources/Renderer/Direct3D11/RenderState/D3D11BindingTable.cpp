@@ -40,7 +40,7 @@ void D3D11BindingTable::SetVertexBuffer(
         PutVertexBuffer(locator, startSlot);
     }
     context_->IASetVertexBuffers(startSlot, 1, &buffer, &stride, &offset);
-    vbCount_ = 1;
+    vbCount_ = startSlot + 1;
 }
 
 void D3D11BindingTable::SetVertexBuffers(

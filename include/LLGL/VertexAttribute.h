@@ -163,6 +163,7 @@ struct LLGL_EXPORT VertexAttribute
     or stream-output buffer indices (determined by \c BeginStreamOutput).
     \note Only supported with: Direct3D 11, Direct3D 12, Vulkan, Metal.
     \note For OpenGL, the vertex binding slots are automatically generated in ascending order and beginning with zero.
+    \see CommandBuffer::SetVertexBuffers
     \see CommandBuffer::SetVertexBufferArray
     \see CommandBuffer::BeginStreamOutput
     */

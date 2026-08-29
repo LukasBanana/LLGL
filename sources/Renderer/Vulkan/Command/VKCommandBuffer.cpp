@@ -567,6 +567,34 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, 
     BindVertexBuffer(bufferVK, offset);
 }
 
+void VKCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    SmallVector<VkBuffer> buffers{ numBufferViews, UninitializeTag{} };
+    SmallVector<VkDeviceSize> offsets{ numBufferViews, UninitializeTag{} };
+
+    for_range(i, numBufferViews)
+    {
+        Buffer* buffer = bufferViews[i].buffer;
+        if (buffer == nullptr)
+            return; // Invalid argument
+
+        auto* bufferVK = LLGL_CAST(VKBuffer*, buffer);
+        buffers[i] = bufferVK->GetVkBuffer();
+        offsets[i] = static_cast<VkDeviceSize>(bufferViews[i].offset);
+    }
+
+    vkCmdBindVertexBuffers(commandBuffer_, 0, numBufferViews, buffers.data(), offsets.data());
+
+    /* Store input-assembly state for slot 0 in case it's used for stream-output */
+    if (numBufferViews > 0 && (bufferViews[0].buffer->GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+    {
+        auto* bufferVK = LLGL_CAST(VKBuffer*, bufferViews[0].buffer);
+        iaState_.ia0VertexStride            = bufferVK->GetStride();
+        iaState_.ia0XfbCounterBuffer        = bufferVK->GetVkBuffer();
+        iaState_.ia0XfbCounterBufferOffset  = bufferVK->GetXfbCounterOffset();
+    }
+}
+
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayVK = LLGL_CAST(VKBufferArray&, bufferArray);

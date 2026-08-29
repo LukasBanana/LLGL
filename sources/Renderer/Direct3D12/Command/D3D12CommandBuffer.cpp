@@ -574,6 +574,36 @@ void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, s
     }
 }
 
+void D3D12CommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    if (numBufferViews > D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT)
+        return /*E_BOUNDS*/;
+
+    D3D12_VERTEX_BUFFER_VIEW bufferViewsD3D[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+
+    for_range(i, numBufferViews)
+    {
+        auto* bufferD3D = LLGL_CAST(D3D12Buffer*, bufferViews[i].buffer);
+        if (bufferD3D == nullptr)
+            return /*E_POINTER*/;
+
+        bufferViewsD3D[i] = bufferD3D->GetVertexBufferView();
+
+        if (!(bufferViewsD3D[i].SizeInBytes > bufferViews[i].offset))
+            return /*E_INVALIDARG*/;
+
+        bufferViewsD3D[i].BufferLocation += bufferViews[i].offset;
+        bufferViewsD3D[i].SizeInBytes    -= static_cast<UINT>(bufferViews[i].offset);
+
+        if (bufferViews[i].stride > 0)
+            bufferViewsD3D[i].StrideInBytes = bufferViews[i].stride;
+
+        SubmitTransitionResource(bufferD3D->GetResource(), bufferD3D->GetResource().usageState);
+    }
+
+    GetNative()->IASetVertexBuffers(0, numBufferViews, bufferViewsD3D);
+}
+
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D12BufferArray&, bufferArray);

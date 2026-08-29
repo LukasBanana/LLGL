@@ -941,6 +941,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;
     caps.limits.maxConstantBufferSize               = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+    caps.limits.maxVertexBufferInputs               = (featureLevel >= D3D_FEATURE_LEVEL_10_1 ? D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT : 16);
     caps.limits.maxStreamOutputs                    = 4u;
     caps.limits.maxTessFactor                       = 64u;
     caps.limits.minConstantBufferAlignment          = 256u;

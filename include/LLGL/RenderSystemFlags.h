@@ -851,6 +851,14 @@ struct RenderingLimits
     std::uint64_t   maxConstantBufferSize               = 0;
 
     /**
+    \brief Specifies the maximum number of vertex buffer input slots that is supported by the graphics device.
+    \remarks
+    \see RenderSystem::CreateBufferArray
+    \see CommandBuffer::SetVertexBuffers
+    */
+    std::uint32_t   maxVertexBufferInputs               = 0;
+
+    /**
     \brief Specifies the maximum number of simultaneous stream-output buffers.
     \remarks This must not be larger than \c LLGL_MAX_NUM_SO_BUFFERS which is 4.
     \see CommandBuffer::BeginStreamOutput

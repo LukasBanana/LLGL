@@ -17,6 +17,11 @@ virtual void SetVertexBuffer(
     std::uint64_t                   offset = 0
 ) override final;
 
+virtual void SetVertexBuffers(
+    std::uint32_t                   numBufferViews,
+    const LLGL::VertexBufferView*   bufferViews
+) override final;
+
 virtual void SetVertexBufferArray(
     LLGL::BufferArray&              bufferArray
 ) override final;

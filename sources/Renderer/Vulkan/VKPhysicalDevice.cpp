@@ -455,7 +455,10 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     #endif
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
+    caps.limits.maxVertexBufferInputs               = limits.maxVertexInputBindings;
+    #if VK_EXT_transform_feedback
     caps.limits.maxStreamOutputs                    = properties_.transformFeedback.maxTransformFeedbackBuffers;
+    #endif
     caps.limits.maxTessFactor                       = limits.maxTessellationGenerationLevel;
     caps.limits.minConstantBufferAlignment          = limits.minUniformBufferOffsetAlignment;
     caps.limits.minSampledBufferAlignment           = limits.minStorageBufferOffsetAlignment; // Use SSBO for both sampled and storage buffers

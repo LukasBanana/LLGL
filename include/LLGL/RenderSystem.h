@@ -273,6 +273,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
         \see BufferDescriptor::bindFlags
+        \see RenderingLimits::maxVertexBufferInputs
         */
         virtual BufferArray* CreateBufferArray(ArrayView<VertexBufferView> bufferViews) = 0;
 

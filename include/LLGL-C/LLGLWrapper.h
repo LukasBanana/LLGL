@@ -1321,6 +1321,7 @@ typedef struct LLGLRenderingLimits
     uint32_t maxViews;                         /* = 0 */
     uint64_t maxBufferSize;                    /* = 0 */
     uint64_t maxConstantBufferSize;            /* = 0 */
+    uint32_t maxVertexBufferInputs;            /* = 0 */
     uint32_t maxStreamOutputs;                 /* = 0 */
     uint32_t maxTessFactor;                    /* = 0 */
     uint64_t minConstantBufferAlignment;       /* = 0 */

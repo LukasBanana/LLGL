@@ -157,6 +157,21 @@ namespace LLGL
             SetVertexBuffer(buffer, (vertexAttribs.Length > 0 ? vertexAttribs[0].Stride : 0));
         }
 
+        public void SetVertexBuffers(VertexBufferView[] bufferViews)
+        {
+            unsafe
+            {
+                var nativeBufferViews = stackalloc NativeLLGL.VertexBufferView[bufferViews.Length];
+                for (int i = 0; i < bufferViews.Length; ++i)
+                {
+                    nativeBufferViews[i].buffer = bufferViews[i].Buffer.Native;
+                    nativeBufferViews[i].stride = bufferViews[i].Stride;
+                    nativeBufferViews[i].offset = bufferViews[i].Offset;
+                }
+                NativeLLGL.SetVertexBuffers(bufferViews.Length, nativeBufferViews);
+            }
+        }
+
         public void SetVertexBufferArray(BufferArray bufferArray)
         {
             NativeLLGL.SetVertexBufferArray(bufferArray.Native);

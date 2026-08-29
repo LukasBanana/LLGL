@@ -60,6 +60,14 @@ class D3D11CommandContext
         void SetVertexBuffer(D3D11Buffer& bufferD3D, UINT stride, UINT offset = 0);
         void SetVertexBufferArray(D3D11BufferArray& bufferArrayD3D);
 
+        void SetVertexBuffers(
+            UINT                            count,
+            ID3D11Buffer* const*            buffers,
+            const UINT*                     strides,
+            const UINT*                     offsets,
+            D3D11BindingLocator* const *    locators
+        );
+
         void SetIndexBuffer(D3D11Buffer& bufferD3D, DXGI_FORMAT format, UINT offset);
 
         HRESULT SetResourceHeap(D3D11ResourceHeap& resourceHeapD3D, std::uint32_t descriptorSet);

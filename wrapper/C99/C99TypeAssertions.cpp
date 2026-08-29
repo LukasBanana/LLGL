@@ -1003,6 +1003,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxViewportSize);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxViews);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxBufferSize);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxConstantBufferSize);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxVertexBufferInputs);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxStreamOutputs);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxTessFactor);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, minConstantBufferAlignment);

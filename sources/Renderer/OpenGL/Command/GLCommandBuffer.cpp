@@ -172,6 +172,48 @@ GLSharedContextVertexArray* GLCommandBuffer::FlushVertexInput()
     return nullptr;
 }
 
+void GLCommandBuffer::SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset)
+{
+    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
+    {
+        /* Bind vertex buffer */
+        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
+        SetBufferInputLayout(GLBufferInputLayout{ &vertexBufferGL, static_cast<GLintptr>(offset) });
+
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
+        SetTransformFeedbackChecked(vertexBufferGL);
+        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    }
+}
+
+void GLCommandBuffer::SetVertexBuffersInternal(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    /* Translate input arguments to OpenGL buffer views */
+    SmallVector<GLBufferView> bufferViewsGL{ numBufferViews, UninitializeTag{} };
+
+    for_range(i, numBufferViews)
+    {
+        Buffer* buffer = bufferViews[i].buffer;
+        if (!(buffer != nullptr && (buffer->GetBindFlags() & BindFlags::VertexBuffer) != 0))
+            return; // Invalid argument
+
+        auto* vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, buffer);
+        bufferViewsGL[i].buffer = vertexBufferGL;
+        bufferViewsGL[i].offset = static_cast<GLintptr>(bufferViews[i].offset);
+    }
+
+    SetBufferInputLayout(GLBufferInputLayout{ bufferViewsGL });
+
+    /* Bind first input buffer as transform-feedback if it's binding flags enabled it */
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    if (numBufferViews > 0 && (bufferViews[0].buffer->GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+    {
+        GLBufferWithXFB* bufferWithXbf = LLGL_CAST(GLBufferWithXFB*, bufferViews[0].buffer);
+        SetTransformFeedback(*bufferWithXbf);
+    }
+    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
+}
+
 /* ----- Extensions ----- */
 
 bool GLCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)

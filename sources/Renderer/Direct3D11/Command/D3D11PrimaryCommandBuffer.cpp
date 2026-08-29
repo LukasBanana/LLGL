@@ -774,6 +774,40 @@ void D3D11PrimaryCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t st
     context_.SetVertexBuffer(bufferD3D, stride > 0 ? stride : bufferD3D.GetStride(), static_cast<UINT>(offset));
 }
 
+void D3D11PrimaryCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    if (numBufferViews > D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT)
+        return /*E_BOUNDS*/;
+
+    ID3D11Buffer* buffersD3D[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    UINT strides[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    UINT offsets[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    D3D11BindingLocator* bindingLocators[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    bool hasAnyRWBuffers = false;
+
+    for_range(i, numBufferViews)
+    {
+        auto* bufferD3D = LLGL_CAST(D3D11Buffer*, bufferViews[i].buffer);
+        if (bufferD3D == nullptr)
+            return /*E_INVALIDARG*/;
+
+        /* Transfer input arguments into separate arrays for D3D11's IASetVertexBuffers() API */
+        buffersD3D[i] = bufferD3D->GetNative();
+        strides[i] = (bufferViews[i].stride > 0 ? bufferViews[i].stride : bufferD3D->GetStride());
+        offsets[i] = static_cast<UINT>(bufferViews[i].offset);
+
+        /*
+        Check if the buffer locator is a RW buffer.
+        If not, the SetVertexBuffers() function below can skip iterating through this array.
+        */
+        bindingLocators[i] = bufferD3D->GetBindingLocator();
+        if (bindingLocators[i]->type == D3D11BindingLocator::D3DLocator_RWBuffer)
+            hasAnyRWBuffers = true;
+    }
+
+    context_.SetVertexBuffers(numBufferViews, buffersD3D, strides, offsets, (hasAnyRWBuffers ? bindingLocators : nullptr));
+}
+
 void D3D11PrimaryCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);

@@ -55,6 +55,11 @@ class MTCommandContext
 
     public:
 
+        static constexpr NSUInteger maxNumVertexBuffers         = 32;
+        static constexpr NSUInteger maxNumViewportsAndScissors  = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
+
+    public:
+
         // Initializes internal buffers with the Metal device.
         MTCommandContext(id<MTLDevice> device);
 
@@ -246,9 +251,6 @@ class MTCommandContext
         void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
 
     private:
-
-        static constexpr NSUInteger maxNumVertexBuffers         = 32;
-        static constexpr NSUInteger maxNumViewportsAndScissors  = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
 
         enum DirtyBits
         {

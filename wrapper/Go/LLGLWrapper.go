@@ -1218,6 +1218,7 @@ type RenderingLimits struct {
     MaxViews                      uint32     /* = 0 */
     MaxBufferSize                 uint64     /* = 0 */
     MaxConstantBufferSize         uint64     /* = 0 */
+    MaxVertexBufferInputs         uint32     /* = 0 */
     MaxStreamOutputs              uint32     /* = 0 */
     MaxTessFactor                 uint32     /* = 0 */
     MinConstantBufferAlignment    uint64     /* = 0 */

@@ -374,6 +374,18 @@ void MTMultiSubmitCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /
     SetNativeVertexBuffers(1, &bufferId, &bufferOffset);
 }
 
+void MTMultiSubmitCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    if (numBufferViews == 0 || bufferViews == nullptr)
+        return;
+
+    id<MTLBuffer> buffers[MTCommandContext::maxNumVertexBuffers];
+    NSUInteger offsets[MTCommandContext::maxNumVertexBuffers];
+    TranslateVertexBufferViews(numBufferViews, bufferViews, buffers, offsets);
+    
+    SetNativeVertexBuffers(static_cast<NSUInteger>(numBufferViews), buffers, offsets);
+}
+
 void MTMultiSubmitCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayMT = LLGL_CAST(MTBufferArray&, bufferArray);

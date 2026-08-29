@@ -172,7 +172,7 @@ struct BufferViewDescriptor
 /**
 \brief Vertex buffer view structure for buffer array initialization.
 \see RenderSystem::CreateBufferArray
-\see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
+\see CommandBuffer::SetVertexBuffers
 */
 struct VertexBufferView
 {
@@ -209,7 +209,7 @@ struct VertexBufferView
     \remarks This can be used for offsets when creating a BufferArray, similar to binding a single vertex buffer with offset:
     \code
     myCmdBuffer->SetVertexBuffer(buffer, stride, offset).
-    \encode
+    \endcode
     \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
     */
     std::uint64_t   offset  = 0;

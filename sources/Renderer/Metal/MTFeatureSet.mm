@@ -8,6 +8,7 @@
 #include "MTFeatureSet.h"
 #include "MTDevice.h"
 #include "OSXAvailability.h"
+#include "Command/MTCommandContext.h"
 #include <LLGL/ShaderFlags.h>
 #include <AvailabilityMacros.h>
 #include <initializer_list>
@@ -218,6 +219,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
 
     limits.maxBufferSize                    = GetMaxMTBufferSize(device);
     limits.maxConstantBufferSize            = 65536u;
+    limits.maxVertexBufferCount             = MTCommandContext::maxNumVertexBuffers;
     limits.max1DTextureSize                 = 16384u;
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;

@@ -33,6 +33,7 @@ LLGL_C_EXPORT void llglSetScissor(const LLGLScissor* scissor);
 LLGL_C_EXPORT void llglSetScissors(uint32_t numScissors, const LLGLScissor* scissors LLGL_ANNOTATE([numScissors]));
 LLGL_C_EXPORT void llglSetVertexBuffer(LLGLBuffer buffer);
 LLGL_C_EXPORT void llglSetVertexBufferExt(LLGLBuffer buffer, uint32_t stride, uint64_t offset);
+LLGL_C_EXPORT void llglSetVertexBuffers(uint32_t numBufferViews, const LLGLVertexBufferView* bufferViews LLGL_ANNOTATE([numBufferViews]));
 LLGL_C_EXPORT void llglSetVertexBufferArray(LLGLBufferArray bufferArray);
 LLGL_C_EXPORT void llglSetIndexBuffer(LLGLBuffer buffer);
 LLGL_C_EXPORT void llglSetIndexBufferExt(LLGLBuffer buffer, LLGLFormat format, uint64_t offset);

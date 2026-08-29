@@ -372,7 +372,7 @@ class LLGL_EXPORT ParseContext
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] format Specifies the input string. This is treated just like a \c ::printf input string
+\param[in] format Specifies the input string. This is treated just like a \c ::printf input string
 and each token preceded with a \c '%' character will be substituted with the next variadic argument.
 If no \c '%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
@@ -382,7 +382,7 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...);
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
+\param[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */

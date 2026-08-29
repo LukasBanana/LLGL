@@ -66,8 +66,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        void SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset);
-
         void BindResource(GLResourceType type, GLuint slot, std::uint32_t descriptor, Resource& resource);
         void BindCombinedResource(GLResourceType type, const GLuint* slots, std::uint32_t numSlots, Resource& resource);
 

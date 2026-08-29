@@ -283,21 +283,6 @@ void GLImmediateCommandBuffer::SetScissors(std::uint32_t numScissors, const Scis
 
 /* ----- Input Assembly ------ */
 
-//private
-void GLImmediateCommandBuffer::SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset)
-{
-    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
-    {
-        /* Bind vertex buffer */
-        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        SetBufferInputLayout(GLBufferInputLayout{ &vertexBufferGL, static_cast<GLintptr>(offset) });
-
-        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
-        SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
-    }
-}
-
 void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     SetVertexBufferInternal(buffer, 0);
@@ -312,6 +297,11 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*s
     SetVertexBufferInternal(buffer, offset);
 }
 
+void GLImmediateCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    SetVertexBuffersInternal(numBufferViews, bufferViews);
+}
+
 void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
@@ -319,6 +309,11 @@ void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         /* Bind vertex buffer */
         auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
         SetBufferInputLayout(bufferArrayGL.GetInputLayout());
+
+        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
+        if (GLBufferWithXFB* bufferWithXFB = bufferArrayGL.GetBufferSlot0WithXFB())
+            SetTransformFeedback(*bufferWithXFB);
+        #endif
     }
 }
 

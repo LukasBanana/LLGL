@@ -1599,6 +1599,7 @@ namespace LLGL
         public int     MaxViews { get; set; }                      = 0;
         public long    MaxBufferSize { get; set; }                 = 0;
         public long    MaxConstantBufferSize { get; set; }         = 0;
+        public int     MaxVertexBufferInputs { get; set; }         = 0;
         public int     MaxStreamOutputs { get; set; }              = 0;
         public int     MaxTessFactor { get; set; }                 = 0;
         public long    MinConstantBufferAlignment { get; set; }    = 0;
@@ -1645,6 +1646,7 @@ namespace LLGL
                     MaxViews                         = value.maxViews;
                     MaxBufferSize                    = value.maxBufferSize;
                     MaxConstantBufferSize            = value.maxConstantBufferSize;
+                    MaxVertexBufferInputs            = value.maxVertexBufferInputs;
                     MaxStreamOutputs                 = value.maxStreamOutputs;
                     MaxTessFactor                    = value.maxTessFactor;
                     MinConstantBufferAlignment       = value.minConstantBufferAlignment;
@@ -4103,6 +4105,7 @@ namespace LLGL
             public int         maxViews;                         /* = 0 */
             public long        maxBufferSize;                    /* = 0 */
             public long        maxConstantBufferSize;            /* = 0 */
+            public int         maxVertexBufferInputs;            /* = 0 */
             public int         maxStreamOutputs;                 /* = 0 */
             public int         maxTessFactor;                    /* = 0 */
             public long        minConstantBufferAlignment;       /* = 0 */
@@ -4853,6 +4856,9 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglSetVertexBufferExt", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBufferExt(Buffer buffer, int stride, long offset);
+
+        [DllImport(DllName, EntryPoint="llglSetVertexBuffers", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetVertexBuffers(int numBufferViews, VertexBufferView* bufferViews);
 
         [DllImport(DllName, EntryPoint="llglSetVertexBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetVertexBufferArray(BufferArray bufferArray);

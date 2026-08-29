@@ -23,12 +23,26 @@ class D3D11Buffer;
 class D3D11BufferArray;
 class D3D11ResourceHeap;
 class D3D11PipelineState;
+struct D3D11BindingLocator;
 
 struct D3D11CmdSetVertexBuffer
 {
     D3D11Buffer*    buffer;
     UINT            stride;
     UINT            offset;
+};
+
+struct D3D11CmdSetVertexBuffers
+{
+    constexpr static UINT payloadSizePerView    = (sizeof(ID3D11Buffer*) + sizeof(UINT) + sizeof(UINT));
+    constexpr static UINT payloadSizePerViewRW  = (payloadSizePerView + sizeof(D3D11BindingLocator*));
+
+    UINT                    count           : 31;
+    UINT                    hasAnyRWBuffers  : 1;
+  //ID3D11Buffer*           bufferD3D[count];
+  //UINT                    stride[count];
+  //UINT                    offset[count];
+  //D3D11BindingLocator*    bufferLocators[count];
 };
 
 struct D3D11CmdSetVertexBufferArray

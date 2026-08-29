@@ -315,22 +315,9 @@ void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Sciss
 
 /* ----- Input Assembly ------ */
 
-void GLDeferredCommandBuffer::SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset)
-{
-    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
-    {
-        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        SetBufferInputLayout(GLBufferInputLayout{ &vertexBufferGL, static_cast<GLintptr>(offset) });
-
-        #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
-        SetTransformFeedbackChecked(vertexBufferGL);
-        #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
-    }
-}
-
 void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    SetVertexBuffer(buffer, 0);
+    SetVertexBufferInternal(buffer, 0);
 }
 
 void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
@@ -340,6 +327,11 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*st
     This parameter is intended for other backends, like D3D.
     */
     SetVertexBufferInternal(buffer, offset);
+}
+
+void GLDeferredCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    SetVertexBuffersInternal(numBufferViews, bufferViews);
 }
 
 void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

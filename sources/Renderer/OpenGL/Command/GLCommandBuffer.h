@@ -24,6 +24,7 @@ namespace LLGL
 
 
 struct GLRenderState;
+struct VertexBufferView;
 class GLBufferWithVAO;
 class GLBufferWithXFB;
 
@@ -71,6 +72,9 @@ class GLCommandBuffer : public CommandBuffer
         void SetVertexInputLayout(const GLVertexInputLayout& vertexInputLayout);
         void SetBufferInputLayout(const GLBufferInputLayout& bufferInputLayout);
         GLSharedContextVertexArray* FlushVertexInput();
+
+        void SetVertexBufferInternal(Buffer& buffer, std::uint64_t offset);
+        void SetVertexBuffersInternal(std::uint32_t numBufferViews, const VertexBufferView* bufferViews);
 
     protected:
 

@@ -398,6 +398,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
+        \see SetVertexBuffers
         \see SetVertexBufferArray
         */
         virtual void SetVertexBuffer(Buffer& buffer) = 0;
@@ -430,10 +431,21 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         #endif
 
         /**
+        \brief Sets the specified number of vertex buffers for subsequent drawing operations with optional strides and base offsets.
+        \param[in] numBufferViews Specifies the number of vertex buffers to bind. This <b>must not</b> exceed the limit of vertex buffers the render system supports.
+        \param[in] bufferViews Pointer to an array of vertex buffer views. This <b>must not</b> be null and must point to an array with at least \c numBufferViews elements.
+        \remarks This is a more convenient alternative to binding multiple vertex buffer slots 'on the fly' compared to binding via a BufferArray that needs to be pre-allocated.
+        \see RenderingLimits::maxVertexBufferInputs
+        */
+        virtual void SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews) = 0;
+
+        /**
         \brief Sets the specified array of vertex buffers for subsequent drawing operations.
         \param[in] bufferArray Specifies the vertex buffer array to set.
+        \remarks This serves as minor performance optimization over SetVertexBuffers
+        since the BufferArray interface allows backends to pre-allocate their internal representation for their native resources, strides, and offsets.
         \see RenderSystem::CreateBufferArray
-        \see SetVertexBuffer
+        \see SetVertexBuffers
         */
         virtual void SetVertexBufferArray(BufferArray& bufferArray) = 0;
 

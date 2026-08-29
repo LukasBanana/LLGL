@@ -32,6 +32,29 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
             context.SetVertexBuffer(*(cmd->buffer), cmd->stride, cmd->offset);
             return sizeof(*cmd);
         }
+        case D3D11OpcodeSetVertexBuffers:
+        {
+            auto cmd = static_cast<const D3D11CmdSetVertexBuffers*>(pc);
+            const char* srcBase = reinterpret_cast<const char*>(cmd + 1);
+
+            ID3D11Buffer* const *   buffersD3D  = reinterpret_cast< ID3D11Buffer* const * >( srcBase );
+            const UINT*             strides     = reinterpret_cast< const UINT*           >( srcBase + sizeof(ID3D11Buffer*)*cmd->count );
+            const UINT*             offsets     = reinterpret_cast< const UINT*           >( srcBase + (sizeof(ID3D11Buffer*) + sizeof(UINT))*cmd->count );
+
+            if (cmd->hasAnyRWBuffers != 0)
+            {
+                D3D11BindingLocator* const * bindingLocators = reinterpret_cast<D3D11BindingLocator* const *>(
+                    srcBase + (sizeof(ID3D11Buffer*) + sizeof(UINT) + sizeof(UINT))*cmd->count
+                );
+                context.SetVertexBuffers(cmd->count, buffersD3D, strides, offsets, bindingLocators);
+                return (sizeof(*cmd) + D3D11CmdSetVertexBuffers::payloadSizePerViewRW * cmd->count);
+            }
+            else
+            {
+                context.SetVertexBuffers(cmd->count, buffersD3D, strides, offsets, nullptr);
+                return (sizeof(*cmd) + D3D11CmdSetVertexBuffers::payloadSizePerView * cmd->count);
+            }
+        }
         case D3D11OpcodeSetVertexBufferArray:
         {
             auto cmd = static_cast<const D3D11CmdSetVertexBufferArray*>(pc);
