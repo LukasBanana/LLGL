@@ -7,6 +7,7 @@ Version 0.05 removed all features that were deprecatd in 0.04 and refactored a f
 - [Swap-chain formats](#swap-chain-formats)
 - [Vertex attributes](#vertex-attributes)
 - [Vertex buffers](#vertex-buffers)
+- [Vertex arrays](#vertex-arrays)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -91,6 +92,30 @@ After:
 ```cpp
 // Interface
 LLGL::CommandBuffer::SetVertexBuffer(LLGL::Buffer& buffer, std::uint32_t stride, std::uint64_t offset = 0);
+```
+
+
+## Vertex arrays
+
+To create vertex arrays, use the `ArrayView` initializer. This is analogous to `CreateResourceHeap()` and `WriteResourceHeap()`.
+
+Before:
+```cpp
+// Interface
+LLGL::BufferArray* LLGL::RenderSystem::CreateBufferArray(std::uint32_t numBuffers, LLGL::Buffer* const * bufferArray);
+
+// Usage
+LLGL::Buffer* myBuffers[] = { bufA, bufB };
+LLGL::BufferArray myBufferArray = myRenderer->CreateBufferArray(sizeof(myBuffers)/sizeof(myBuffers[0]), myBuffers);
+```
+
+After:
+```cpp
+// Interface
+LLGL::BufferArray* LLGL::RenderSystem::CreateBufferArray(ArrayView<BufferLocation> bufferLocations);
+
+// Usage
+LLGL::BufferArray myBufferArray = myRenderer->CreateBufferArray({ bufA, bufB });
 ```
 
 

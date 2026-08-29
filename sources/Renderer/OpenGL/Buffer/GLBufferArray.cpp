@@ -9,7 +9,6 @@
 #include "GLBuffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -17,18 +16,21 @@ namespace LLGL
 {
 
 
-static std::vector<GLBuffer*> GetAsGLBuffers(ArrayView<Buffer*> inBuffers)
+static std::vector<GLBufferView> GetAsGLBufferViews(ArrayView<VertexBufferView> bufferViews)
 {
-    std::vector<GLBuffer*> outBuffers;
-    outBuffers.resize(inBuffers.size());
-    for_range(i, inBuffers.size())
-        outBuffers[i] = LLGL_CAST(GLBuffer*, inBuffers[i]);
-    return outBuffers;
+    std::vector<GLBufferView> outBufferViews;
+    outBufferViews.resize(bufferViews.size());
+    for_range(i, bufferViews.size())
+    {
+        outBufferViews[i].buffer = LLGL_CAST(GLBuffer*, bufferViews[i].buffer);
+        outBufferViews[i].offset = static_cast<GLintptr>(bufferViews[i].offset);
+    }
+    return outBufferViews;
 }
 
-GLBufferArray::GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray        { GetCombinedBindFlags(numBuffers, bufferArray)                 },
-    bufferInputLayout_ { GetAsGLBuffers(ArrayView<Buffer*>{ bufferArray, numBuffers }) }
+GLBufferArray::GLBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray        { GetCombinedBindFlags(bufferViews) },
+    bufferInputLayout_ { GetAsGLBufferViews(bufferViews)   }
 {
 }
 

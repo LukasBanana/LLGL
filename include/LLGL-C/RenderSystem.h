@@ -40,6 +40,7 @@ LLGL_C_EXPORT void* llglMapBufferRange(LLGLBuffer buffer, LLGLCPUAccess access, 
 LLGL_C_EXPORT void llglUnmapBuffer(LLGLBuffer buffer);
 
 LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArray(uint32_t numBuffers, const LLGLBuffer* buffers LLGL_ANNOTATE([numBuffers]));
+LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArrayExt(uint32_t numBufferViews, const LLGLVertexBufferView* bufferViews LLGL_ANNOTATE([numBufferViews]));
 LLGL_C_EXPORT void llglReleaseBufferArray(LLGLBufferArray bufferArray);
 
 LLGL_C_EXPORT LLGLTexture llglCreateTexture(const LLGLTextureDescriptor* textureDesc, const LLGLImageView* initialImage LLGL_ANNOTATE(NULL));

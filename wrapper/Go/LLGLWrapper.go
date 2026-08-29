@@ -1004,6 +1004,12 @@ const (
 
 /* ----- Structures ----- */
 
+type VertexBufferView struct {
+    Buffer *Buffer /* = nil */
+    Stride uint32  /* = 0 */
+    Offset uint64  /* = 0 */
+}
+
 type CanvasDescriptor struct {
     Title string
     Flags uint   /* = 0 */

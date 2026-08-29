@@ -1212,6 +1212,35 @@ namespace LLGL
 
     /* ----- Classes ----- */
 
+    public class VertexBufferView
+    {
+        public VertexBufferView(Buffer buffer = null, int stride = 0, long offset = 0)
+        {
+            Buffer = buffer;
+            Stride = stride;
+            Offset = offset;
+        }
+
+        public Buffer Buffer { get; set; } = null;
+        public int    Stride { get; set; } = 0;
+        public long   Offset { get; set; } = 0;
+
+        internal NativeLLGL.VertexBufferView Native
+        {
+            get
+            {
+                var native = new NativeLLGL.VertexBufferView();
+                if (Buffer != null)
+                {
+                    native.buffer = Buffer.Native;
+                }
+                native.stride = Stride;
+                native.offset = Offset;
+                return native;
+            }
+        }
+    }
+
     public class CommandBufferDescriptor
     {
         public AnsiString         DebugName { get; set; }          = null;
@@ -3868,6 +3897,13 @@ namespace LLGL
 
         /* ----- Native structures ----- */
 
+        public unsafe struct VertexBufferView
+        {
+            public Buffer buffer; /* = null */
+            public int    stride; /* = 0 */
+            public long   offset; /* = 0 */
+        }
+
         public unsafe struct CanvasDescriptor
         {
             public byte* title;
@@ -5137,6 +5173,9 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglCreateBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe BufferArray CreateBufferArray(int numBuffers, Buffer* buffers);
+
+        [DllImport(DllName, EntryPoint="llglCreateBufferArrayExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe BufferArray CreateBufferArrayExt(int numBufferViews, VertexBufferView* bufferViews);
 
         [DllImport(DllName, EntryPoint="llglReleaseBufferArray", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ReleaseBufferArray(BufferArray bufferArray);

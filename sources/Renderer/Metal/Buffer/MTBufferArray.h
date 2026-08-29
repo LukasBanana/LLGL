@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/ArrayView.h>
 #include <vector>
 
 
@@ -28,7 +29,7 @@ class MTBufferArray final : public BufferArray
 
         using NativeType = id<MTLBuffer>;
 
-        MTBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        MTBufferArray(ArrayView<BufferLocation> bufferLocations);
 
         // Returns the array of buffer IDs.
         inline const std::vector<NativeType>& GetIDArray() const

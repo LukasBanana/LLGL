@@ -885,6 +885,16 @@ LLGL_STATIC_ASSERT_OFFSET(FormatAttributes, format);
 LLGL_STATIC_ASSERT_OFFSET(FormatAttributes, dataType);
 LLGL_STATIC_ASSERT_OFFSET(FormatAttributes, flags);
 
+LLGL_STATIC_ASSERT_SIZE(BufferViewDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(BufferViewDescriptor, format);
+LLGL_STATIC_ASSERT_OFFSET(BufferViewDescriptor, offset);
+LLGL_STATIC_ASSERT_OFFSET(BufferViewDescriptor, size);
+
+LLGL_STATIC_ASSERT_SIZE(VertexBufferView);
+LLGL_STATIC_ASSERT_OFFSET(VertexBufferView, buffer);
+LLGL_STATIC_ASSERT_OFFSET(VertexBufferView, stride);
+LLGL_STATIC_ASSERT_OFFSET(VertexBufferView, offset);
+
 LLGL_STATIC_ASSERT_SIZE(TextureSwizzleRGBA);
 //LLGL_STATIC_ASSERT_OFFSET(TextureSwizzleRGBA, r);
 //LLGL_STATIC_ASSERT_OFFSET(TextureSwizzleRGBA, g);

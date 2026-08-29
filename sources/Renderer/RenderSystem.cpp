@@ -311,25 +311,6 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
     );
 }
 
-static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const char* resourceName)
-{
-    /* Validate number of buffers */
-    LLGL_ASSERT(!(numResources == 0), "cannot create %s array with zero elements", resourceName);
-
-    /* Validate array pointer */
-    LLGL_ASSERT(!(resourceArray == nullptr), "cannot create %s array with null pointer for array", resourceName);
-
-    /* Validate pointers in array */
-    for_range(i, numResources)
-        LLGL_ASSERT(!(resourceArray[i] == nullptr), "cannot create %s array with null pointer for array element [%u]", resourceName, i);
-}
-
-void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
-}
-
 void RenderSystem::AssertCreateShader(const ShaderDescriptor& shaderDesc)
 {
     LLGL_ASSERT(

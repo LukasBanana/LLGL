@@ -9,24 +9,27 @@
 #include "VKBuffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-VKBufferArray::VKBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+VKBufferArray::VKBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) }
 {
     /* Store the object of each VKBuffer inside the array and  */
-    buffers_.reserve(numBuffers);
-    offsets_.reserve(numBuffers);
+    buffers_.resize(bufferViews.size());
+    offsets_.resize(bufferViews.size());
 
-    while (VKBuffer* next = NextArrayResource<VKBuffer>(numBuffers, bufferArray))
+    for_range(i, bufferViews.size())
     {
-        buffers_.push_back(next->GetVkBuffer());
-        offsets_.push_back(0);//next->GetOffset()
+        const VertexBufferView& view = bufferViews[i];
+        auto* bufferVK = LLGL_CAST(VKBuffer*, view.buffer);
+
+        buffers_[i] = bufferVK->GetVkBuffer();
+        offsets_[i] = static_cast<VkDeviceSize>(view.offset);
     }
 }
 

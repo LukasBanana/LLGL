@@ -267,22 +267,27 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Creates a new buffer array.
 
-        \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
-        \param[in] bufferArray Pointer to an array of Buffer object pointers. This must not be null.
+        \param[in] bufferViews Array of vertex buffer buffer views with optional strides and offsets.
 
         \remarks All buffers within this array must have the same binding flags.
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
-
-        \throws std::invalid_argument If \c numBuffers is 0.
-        \throws std::invalid_argument If \c bufferArray is null.
-        \throws std::invalid_argument If any of the pointers in the array are null.
-        \throws std::invalid_argument If not all buffers have the same binding flags.
         \see BufferDescriptor::bindFlags
-
-        \todo Change parameters to ArrayView analogous to CreateResourceHeap() and WriteResourceHeap().
         */
-        virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
+        virtual BufferArray* CreateBufferArray(ArrayView<VertexBufferView> bufferViews) = 0;
+
+        #ifndef DOXYGEN_SHOULD_SKIP_THIS
+        //! \deprecated Since 0.05b; Use primary CreateBufferArray(ArrayView<VertexBufferView>) function instead!
+        LLGL_DEPRECATED("`This version of the `CreateBufferArray()` function is deprecated since 0.05b; Use `CreateBufferArray(ArrayView<VertexBufferView>)` function instead")
+        inline BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+        {
+            SmallVector<VertexBufferView> bufferViews;
+            bufferViews.resize(numBuffers);
+            for (std::uint32_t i = 0; i < numBuffers; ++i)
+                bufferViews[i] = VertexBufferView{ bufferArray[i] };
+            return CreateBufferArray(bufferViews);
+        }
+        #endif
 
         //! Releases the specified buffer object. After this call, the specified object must no longer be used.
         virtual void Release(Buffer& buffer) = 0;
@@ -460,7 +465,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see WriteResourceHeap
         \see ResourceHeapDescriptor::numResourceViews
         */
-        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {}) = 0;
+        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews = {}) = 0;
 
         //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
         virtual void Release(ResourceHeap& resourceHeap) = 0;
@@ -486,7 +491,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see PipelineLayout::GetNumHeapBindings
         \see CommandBuffer::SetResourceHeap
         */
-        virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
+        virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews) = 0;
 
         /* ----- Render Passes ----- */
 
@@ -703,9 +708,6 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
         static void AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize);
-
-        //! Validates the specified arguments to be used for buffer array creation.
-        static void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Validates the specified shader descriptor.
         static void AssertCreateShader(const ShaderDescriptor& shaderDesc);

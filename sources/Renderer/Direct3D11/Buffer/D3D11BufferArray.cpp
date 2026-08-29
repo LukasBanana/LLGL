@@ -9,28 +9,30 @@
 #include "D3D11Buffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-D3D11BufferArray::D3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+D3D11BufferArray::D3D11BufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) }
 {
     /* Store the pointer of each ID3D11Buffer, strides, and offsets inside the arrays */
-    buffersAndBindingLocators_.resize(numBuffers * 2);
-    stridesAndOffsets_.resize(numBuffers * 2);
+    buffersAndBindingLocators_.resize(bufferViews.size() * 2);
+    stridesAndOffsets_.resize(bufferViews.size() * 2);
 
-    const std::uint32_t firstOffset = numBuffers;
+    const std::size_t secondBucketOffset = bufferViews.size();
 
-    for (std::size_t i = 0; D3D11Buffer* next = NextArrayResource<D3D11Buffer>(numBuffers, bufferArray); ++i)
+    for_range(i, bufferViews.size())
     {
-        buffersAndBindingLocators_[i]               = next->GetNative();
-        buffersAndBindingLocators_[i + firstOffset] = next->GetBindingLocator();
-        stridesAndOffsets_[i]                       = next->GetStride();
-        stridesAndOffsets_[i + firstOffset]         = 0;//next->GetOffset());
+        const VertexBufferView& view = bufferViews[i];
+        auto* bufferD3D = LLGL_CAST(D3D11Buffer*, view.buffer);
+        buffersAndBindingLocators_[i]                       = bufferD3D;
+        buffersAndBindingLocators_[i + secondBucketOffset]  = bufferD3D->GetBindingLocator();
+        stridesAndOffsets_[i]                               = (view.stride > 0 ? view.stride : bufferD3D->GetStride());
+        stridesAndOffsets_[i + secondBucketOffset]          = static_cast<UINT>(view.offset);
     }
 }
 

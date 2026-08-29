@@ -181,8 +181,7 @@ private:
         perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc, instanceData.data());
 
         // Create vertex buffer array
-        LLGL::Buffer* vertexBuffers[2] = { perVertexDataBuf, perInstanceDataBuf };
-        vertexBufferArray = renderer->CreateBufferArray(2, vertexBuffers);
+        vertexBufferArray = renderer->CreateBufferArray({ perVertexDataBuf, perInstanceDataBuf });
 
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(settings);

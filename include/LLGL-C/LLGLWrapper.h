@@ -1062,6 +1062,14 @@ LLGLWindowFlags;
 
 /* ----- Structures ----- */
 
+typedef struct LLGLVertexBufferView
+{
+    LLGLBuffer buffer; /* = LLGL_NULL_OBJECT */
+    uint32_t   stride; /* = 0 */
+    uint64_t   offset; /* = 0 */
+}
+LLGLVertexBufferView;
+
 typedef struct LLGLCanvasDescriptor
 {
     const char* title;

@@ -11,6 +11,7 @@
 
 #include "../OpenGL.h"
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/ArrayView.h>
 #include "GLBufferInputLayout.h"
 
 
@@ -26,7 +27,7 @@ class GLBufferArray : public BufferArray
 
     public:
 
-        GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        GLBufferArray(ArrayView<VertexBufferView> bufferViews);
 
         // Returns the GL buffer input layout with hash over all buffers.
         inline const GLBufferInputLayout& GetInputLayout() const

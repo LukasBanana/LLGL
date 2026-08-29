@@ -10,9 +10,9 @@
 
 
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../Vulkan.h"
 #include <vector>
-#include <cstdint>
 
 
 namespace LLGL
@@ -26,7 +26,7 @@ class VKBufferArray final : public BufferArray
 
     public:
 
-        VKBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        VKBufferArray(ArrayView<VertexBufferView> bufferViews);
 
         // Returns the array of buffer objects.
         inline const std::vector<VkBuffer>& GetBuffers() const

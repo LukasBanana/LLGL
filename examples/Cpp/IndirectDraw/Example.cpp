@@ -112,8 +112,7 @@ public:
         perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc);
 
         // Create vertex array buffer
-        LLGL::Buffer* buffers[2] = { perVertexDataBuf, perInstanceDataBuf };
-        vertexBufferArray = renderer->CreateBufferArray(2, buffers);
+        vertexBufferArray = renderer->CreateBufferArray({ perVertexDataBuf, perInstanceDataBuf });
 
         // Create scene state buffer
         LLGL::BufferDescriptor inBufferDesc;

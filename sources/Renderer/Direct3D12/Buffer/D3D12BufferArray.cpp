@@ -9,23 +9,30 @@
 #include "D3D12Buffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-D3D12BufferArray::D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+D3D12BufferArray::D3D12BufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) }
 {
     /* Store the strides and offsets of each D3D12VertexBuffer inside the arrays */
-    vertexBufferViews_.reserve(numBuffers);
-    resourceRefs_.reserve(numBuffers);
-    while (D3D12Buffer* next = NextArrayResource<D3D12Buffer>(numBuffers, bufferArray))
+    vertexBufferViews_.resize(bufferViews.size());
+    resourceRefs_.resize(bufferViews.size());
+
+    for_range(i, bufferViews.size())
     {
-        vertexBufferViews_.push_back(next->GetVertexBufferView());
-        resourceRefs_.push_back(&(next->GetResource()));
+        const VertexBufferView& view = bufferViews[i];
+        auto* bufferD3D = LLGL_CAST(D3D12Buffer*, view.buffer);
+        vertexBufferViews_[i] = bufferD3D->GetVertexBufferView();
+        vertexBufferViews_[i].BufferLocation += view.offset;
+        vertexBufferViews_[i].SizeInBytes -= static_cast<UINT>(view.offset);
+        if (view.stride > 0)
+            vertexBufferViews_[i].StrideInBytes = view.stride;
+        resourceRefs_[i] = &(bufferD3D->GetResource());
     }
 }
 

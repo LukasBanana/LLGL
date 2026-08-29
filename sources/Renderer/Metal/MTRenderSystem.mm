@@ -92,10 +92,9 @@ Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
-BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* MTRenderSystem::CreateBufferArray(ArrayView<BufferLocation> bufferLocations)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<MTBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<MTBufferArray>(bufferLocations);
 }
 
 void MTRenderSystem::Release(Buffer& buffer)
@@ -210,7 +209,7 @@ void MTRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<MTResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -220,7 +219,7 @@ void MTRenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
     return resourceHeapMT.WriteResourceViews(firstDescriptor, resourceViews);

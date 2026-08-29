@@ -11,6 +11,7 @@
 
 #include <LLGL/BufferArray.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/ArrayView.h>
 #include <d3d12.h>
 
 
@@ -26,7 +27,7 @@ class D3D12BufferArray final : public BufferArray
 
     public:
 
-        D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        D3D12BufferArray(ArrayView<VertexBufferView> bufferViews);
 
         // Returns the array of vertex buffer views.
         inline ArrayView<D3D12_VERTEX_BUFFER_VIEW> GetVertexBufferViews() const

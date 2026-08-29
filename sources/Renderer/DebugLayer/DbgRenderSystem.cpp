@@ -130,23 +130,22 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
     return bufferDbg;
 }
 
-BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-
     /* Create temporary buffer array with buffer instances */
-    std::vector<Buffer*>    bufferInstanceArray(numBuffers);
-    std::vector<DbgBuffer*> bufferDbgArray(numBuffers);
+    std::vector<VertexBufferView> bufferInstanceLocations(bufferViews.size());
+    std::vector<DbgBuffer*> bufferDbgArray(bufferViews.size());
 
-    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    for_range(i, bufferViews.size())
     {
-        auto* bufferDbg         = LLGL_CAST(DbgBuffer*, bufferArray[i]);
-        bufferInstanceArray[i]  = &(bufferDbg->instance);
-        bufferDbgArray[i]       = bufferDbg;
+        const VertexBufferView& view    = bufferViews[i];
+        auto* bufferDbg                 = LLGL_CAST(DbgBuffer*, view.buffer);
+        bufferInstanceLocations[i]      = VertexBufferView{ &(bufferDbg->instance), view.stride, view.offset };
+        bufferDbgArray[i]               = bufferDbg;
 
         if (LLGL_DBG_SOURCE())
         {
-            if (bufferDbg->desc.stride == 0)
+            if (view.stride == 0 && bufferDbg->desc.stride == 0)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
@@ -154,12 +153,20 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
                     i
                 );
             }
+            if (view.offset >= bufferDbg->desc.size)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "offset (%" PRIu64 ") cannot create buffer array with buffer [%u] exceeing upper bound of buffer size (%" PRIu64 ")",
+                    view.offset, i, bufferDbg->desc.size
+                );
+            }
         }
     }
 
     /* Create native buffer and debug buffer */
-    auto* bufferArrayInstance = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    return bufferArrays_.emplace<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(numBuffers, bufferArray), std::move(bufferDbgArray));
+    auto* bufferArrayInstance = instance_->CreateBufferArray(bufferInstanceLocations);
+    return bufferArrays_.emplace<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(bufferViews), std::move(bufferDbgArray));
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)
@@ -379,7 +386,7 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
     return instanceResourceViews;
 }
 
-ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     if (LLGL_DBG_SOURCE())
         ValidateResourceHeapDesc(resourceHeapDesc, initialResourceViews);
@@ -404,7 +411,7 @@ void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
     ReleaseDbg(resourceHeaps_, resourceHeap);
 }
 
-std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
 

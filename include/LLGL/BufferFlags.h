@@ -15,6 +15,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/ForwardDecls.h>
 #include <LLGL/Deprecated.h>
 #include <cstdint>
 
@@ -166,6 +167,52 @@ struct BufferViewDescriptor
     \see GetFormatAttribs
     */
     std::uint64_t   size    = LLGL_WHOLE_SIZE;
+};
+
+/**
+\brief Vertex buffer view structure for buffer array initialization.
+\see RenderSystem::CreateBufferArray
+\see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
+*/
+struct VertexBufferView
+{
+    VertexBufferView() = default;
+
+    /**
+    \brief Initializes all fields of this structure.
+    \param[in] buffer Pointer to the vertex buffer resource.
+    \param[in] stride Optional stride (in bytes) between vertices. If this is 0, the buffer resource must have been created with a default stride.
+    */
+    inline VertexBufferView(Buffer* buffer, std::uint32_t stride = 0, std::uint64_t offset = 0) :
+        buffer { buffer },
+        stride { stride },
+        offset { offset }
+    {
+    }
+
+    /**
+    \brief Specifies the buffer resource for this vertex buffer view.
+    \remarks This buffer must not be null and must have been created with the binding flag BindFlags::VertexBuffer.
+    */
+    Buffer*         buffer  = nullptr;
+
+    /**
+    \brief Specifies the stride (in bytes) between vertices.
+    \remarks If this is zero, the buffer resource must have been created with a default stride.
+    \remarks If this is non-zero, this value must match the stride of the vertex attribute referencing this buffer slot in the active graphics PSO.
+    \see BufferDescriptor::stride
+    */
+    std::uint32_t   stride  = 0;
+
+    /**
+    \brief Specifies the offset (in bytes) relative to the beginning of the buffer.
+    \remarks This can be used for offsets when creating a BufferArray, similar to binding a single vertex buffer with offset:
+    \code
+    myCmdBuffer->SetVertexBuffer(buffer, stride, offset).
+    \encode
+    \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
+    */
+    std::uint64_t   offset  = 0;
 };
 
 

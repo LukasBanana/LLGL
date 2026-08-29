@@ -216,11 +216,10 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
 
 LLGL_DEPRECATED_IGNORE_POP()
 
-BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* GLRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
     CreateGLContextOnce();
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<GLBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<GLBufferArray>(bufferViews);
 }
 
 void GLRenderSystem::Release(Buffer& buffer)
@@ -403,7 +402,7 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<GLResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -413,7 +412,7 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     return resourceHeapGL.WriteResourceViews(firstDescriptor, resourceViews);

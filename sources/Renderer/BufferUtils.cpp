@@ -32,11 +32,11 @@ LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc)
         return 1;
 }
 
-LLGL_EXPORT long GetCombinedBindFlags(std::uint32_t numBuffers, Buffer* const * bufferArray)
+LLGL_EXPORT long GetCombinedBindFlags(ArrayView<VertexBufferView> bufferViews)
 {
     long bindFlags = 0;
-    for (std::uint32_t i = 0; i < numBuffers; ++i)
-        bindFlags |= bufferArray[i]->GetBindFlags();
+    for (const VertexBufferView& view : bufferViews)
+        bindFlags |= view.buffer->GetBindFlags();
     return bindFlags;
 }
 

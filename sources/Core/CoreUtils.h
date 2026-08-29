@@ -143,25 +143,6 @@ typename Container::reference AppendElementNoRealloc(Container& cont)
     return *ResizeNoRealloc(cont, 1);
 }
 
-
-/*
-\brief Returns the next resource from the specified resource array.
-\param[in,out] numResources Specifies the remaining number of resources in the array.
-\param[in,out] resourceArray Pointer to the remaining array of resource pointers.
-\remarks If the last element in the array is reached,
-'resourceArray' is points to the location after the last entry, and 'numResources' is 0.
-*/
-template <typename TSub, typename TBase>
-TSub* NextArrayResource(std::uint32_t& numResources, TBase* const * & resourceArray)
-{
-    if (numResources > 0)
-    {
-        --numResources;
-        return LLGL_CAST(TSub*, (*(resourceArray++)));
-    }
-    return nullptr;
-}
-
 // Searches an entry in an array that is always sorted; complexity is O(log n).
 template <typename T>
 T* FindInSortedArray(

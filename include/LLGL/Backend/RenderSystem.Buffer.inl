@@ -8,51 +8,50 @@
 /* ----- Buffers ------ */
 
 virtual LLGL::Buffer* CreateBuffer(
-    const LLGL::BufferDescriptor&   bufferDesc,
-    const void*                     initialData = nullptr
+    const LLGL::BufferDescriptor&           bufferDesc,
+    const void*                             initialData = nullptr
 ) override final;
 
 virtual LLGL::BufferArray* CreateBufferArray(
-    std::uint32_t                   numBuffers,
-    LLGL::Buffer* const *           bufferArray
+    LLGL::ArrayView<LLGL::VertexBufferView> vertexBufferViews
 ) override final;
 
 virtual void Release(
-    LLGL::Buffer&                   buffer
+    LLGL::Buffer&                           buffer
 ) override final;
 
 virtual void Release(
-    LLGL::BufferArray&              bufferArray
+    LLGL::BufferArray&                      bufferArray
 ) override final;
 
 virtual void WriteBuffer(
-    LLGL::Buffer&                   buffer,
-    std::uint64_t                   offset,
-    const void*                     data,
-    std::uint64_t                   dataSize
+    LLGL::Buffer&                           buffer,
+    std::uint64_t                           offset,
+    const void*                             data,
+    std::uint64_t                           dataSize
 ) override final;
 
 virtual void ReadBuffer(
-    LLGL::Buffer&                   buffer,
-    std::uint64_t                   offset,
-    void*                           data,
-    std::uint64_t                   dataSize
+    LLGL::Buffer&                           buffer,
+    std::uint64_t                           offset,
+    void*                                   data,
+    std::uint64_t                           dataSize
 ) override final;
 
 virtual void* MapBuffer(
-    LLGL::Buffer&                   buffer,
-    const LLGL::CPUAccess           access
+    LLGL::Buffer&                           buffer,
+    const LLGL::CPUAccess                   access
 ) override final;
 
 virtual void* MapBuffer(
-    LLGL::Buffer&                   buffer,
-    const LLGL::CPUAccess           access,
-    std::uint64_t                   offset,
-    std::uint64_t                   length
+    LLGL::Buffer&                           buffer,
+    const LLGL::CPUAccess                   access,
+    std::uint64_t                           offset,
+    std::uint64_t                           length
 ) override final;
 
 virtual void UnmapBuffer(
-    LLGL::Buffer&                   buffer
+    LLGL::Buffer&                           buffer
 ) override final;
 
 

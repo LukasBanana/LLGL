@@ -196,10 +196,9 @@ Buffer* NullRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const
     return buffers_.emplace<NullBuffer>(bufferDesc, initialData);
 }
 
-BufferArray* NullRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* NullRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<NullBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<NullBufferArray>(bufferViews);
 }
 
 void NullRenderSystem::Release(Buffer& buffer)
@@ -280,7 +279,7 @@ void NullRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Views ----- */
 
-ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<NullResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -290,7 +289,7 @@ void NullRenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t NullRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t NullRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
     return resourceHeapNull.WriteResourceViews(firstDescriptor, resourceViews);

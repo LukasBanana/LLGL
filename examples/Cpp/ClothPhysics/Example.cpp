@@ -305,13 +305,13 @@ public:
         #else
 
         // Create vertex buffer array for rendering
-        LLGL::Buffer* const buffers[3] =
+        const LLGL::VertexBufferView bufferViews[3] =
         {
             particleBuffers[AttribPrevPos], // Read "pos" from last written position (i.e. "prevPos") from last compute shader invocation
             particleBuffers[AttribNormal],  // Read "normal"
             particleBuffers[AttribBase]     // Read "texCoord" from .xy
         };
-        vertexBufferArray = renderer->CreateBufferArray(3, buffers);
+        vertexBufferArray = renderer->CreateBufferArray(bufferViews);
         vertexBufferArray->SetDebugName("BufferArray.Vertices");
 
         #endif

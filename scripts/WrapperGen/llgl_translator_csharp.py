@@ -111,6 +111,7 @@ class CsharpTranslator(Translator):
             'TextureViewDescriptor': CsharpProperties(getter = True),
             'UniformDescriptor': CsharpProperties(getter = True, setter = True),
             'VertexAttribute': CsharpProperties(getter = True, setter = True, fullCtor = True),
+            'VertexBufferView': CsharpProperties(getter = True, fullCtor = True),
             'VertexShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
         }
 
