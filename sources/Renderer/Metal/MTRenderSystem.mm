@@ -92,9 +92,9 @@ Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
-BufferArray* MTRenderSystem::CreateBufferArray(ArrayView<BufferLocation> bufferLocations)
+BufferArray* MTRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    return bufferArrays_.emplace<MTBufferArray>(bufferLocations);
+    return bufferArrays_.emplace<MTBufferArray>(bufferViews);
 }
 
 void MTRenderSystem::Release(Buffer& buffer)

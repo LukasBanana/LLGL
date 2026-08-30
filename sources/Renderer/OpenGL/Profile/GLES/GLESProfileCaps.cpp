@@ -212,12 +212,12 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     #if GL_ES_VERSION_3_1
     if (version >= 310)
     {
-        limits.maxVertexAttribBindings      = GLGetUInt(GL_MAX_VERTEX_ATTRIB_BINDINGS);
+        limits.maxVertexBufferInputs        = GLGetUInt(GL_MAX_VERTEX_ATTRIB_BINDINGS);
     }
     else
     #endif
     {
-        limits.maxVertexAttribBindings      = GLGetUInt(GL_MAX_VERTEX_ATTRIBS);
+        limits.maxVertexBufferInputs        = GLGetUInt(GL_MAX_VERTEX_ATTRIBS);
     }
 
     /* Presume that at least one stream-output is supported */

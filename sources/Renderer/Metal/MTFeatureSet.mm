@@ -219,7 +219,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
 
     limits.maxBufferSize                    = GetMaxMTBufferSize(device);
     limits.maxConstantBufferSize            = 65536u;
-    limits.maxVertexBufferCount             = MTCommandContext::maxNumVertexBuffers;
+    limits.maxVertexBufferInputs            = MTCommandContext::maxNumVertexBuffers;
     limits.max1DTextureSize                 = 16384u;
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;

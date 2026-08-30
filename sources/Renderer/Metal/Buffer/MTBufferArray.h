@@ -29,7 +29,7 @@ class MTBufferArray final : public BufferArray
 
         using NativeType = id<MTLBuffer>;
 
-        MTBufferArray(ArrayView<BufferLocation> bufferLocations);
+        MTBufferArray(ArrayView<VertexBufferView> bufferViews);
 
         // Returns the array of buffer IDs.
         inline const std::vector<NativeType>& GetIDArray() const

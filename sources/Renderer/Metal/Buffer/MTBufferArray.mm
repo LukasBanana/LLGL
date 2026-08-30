@@ -16,19 +16,19 @@ namespace LLGL
 {
 
 
-MTBufferArray::MTBufferArray(ArrayView<BufferLocation> bufferLocations) :
-    BufferArray { GetCombinedBindFlags(bufferLocations) }
+MTBufferArray::MTBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) }
 {
     /* Store id<MTLBuffer> of each buffer object inside the array */
-    idArray_.resize(bufferLocations.size());
-    offsets_.resize(bufferLocations.size());
+    idArray_.resize(bufferViews.size());
+    offsets_.resize(bufferViews.size());
 
-    for_range(i, bufferLocations.size())
+    for_range(i, bufferViews.size())
     {
-        const BufferLocation& location = bufferLocations[i];
-        auto* bufferMT = LLGL_CAST(MTBuffer, location.buffer);
+        const VertexBufferView& view = bufferViews[i];
+        auto* bufferMT = LLGL_CAST(MTBuffer*, view.buffer);
         idArray_[i] = bufferMT->GetNative();
-        offsets_[i] = static_cast<NSUInteger>(location.offset);
+        offsets_[i] = static_cast<NSUInteger>(view.offset);
     }
 }
 
