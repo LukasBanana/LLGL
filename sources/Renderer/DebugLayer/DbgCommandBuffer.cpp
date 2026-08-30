@@ -617,7 +617,7 @@ void DbgCommandBuffer::BindVertexBuffer(DbgBuffer& bufferDbg, std::uint32_t stri
     AssertRecording();
     ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
 
-    bindings_.vertexBuffers = { VertexBufferSlot{ &bufferDbg, stride, offset } };
+    bindings_.vertexBuffers = { DbgVertexBufferSlot{ &bufferDbg, stride, offset } };
 }
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -639,7 +639,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std
 {
     auto& bufferDbg = LLGL_DBG_CAST(DbgBuffer&, buffer);
 
-    std::string annotation;
+    std::string paramAnnotation;
     if (LLGL_DBG_SOURCE())
     {
         BindVertexBuffer(bufferDbg, stride, offset);
@@ -663,19 +663,19 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std
 
         if (stride > 0)
         {
-            annotation.append(", stride=");
-            annotation.append(std::to_string(stride));
+            paramAnnotation.append(", stride=");
+            paramAnnotation.append(std::to_string(stride));
         }
         if (offset > 0)
         {
-            annotation.append(", offset=");
-            annotation.append(std::to_string(offset));
+            paramAnnotation.append(", offset=");
+            paramAnnotation.append(std::to_string(offset));
         }
     }
 
     LLGL_DBG_COMMAND_EXT(
         instance.SetVertexBuffer(bufferDbg.instance, stride, offset),
-        "SetVertexBuffer(%s%s)", GetResourceLabel(buffer), annotation.c_str()
+        "SetVertexBuffer(%s%s)", GetResourceLabel(buffer), paramAnnotation.c_str()
     );
 
     profile_.commandBufferRecord.vertexBufferBindings++;
@@ -717,6 +717,8 @@ void DbgCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const Vert
 
     if (bufferViews != nullptr)
     {
+        bindings_.vertexBuffers.resize(numBufferViews);
+
         for_range(i, numBufferViews)
         {
             auto* bufferDbg = LLGL_CAST(DbgBuffer*, bufferViews[i].buffer);
@@ -753,6 +755,8 @@ void DbgCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const Vert
             internalBufferViews[i].buffer = &(bufferDbg->instance);
             internalBufferViews[i].stride = bufferViews[i].stride;
             internalBufferViews[i].offset = bufferViews[i].offset;
+
+            bindings_.vertexBuffers[i] = DbgVertexBufferSlot{ bufferDbg, bufferViews[i].stride, bufferViews[i].offset };
         }
     }
 
@@ -770,18 +774,10 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         AssertRecording();
         ValidateBindFlags(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, BindFlags::VertexBuffer, "LLGL::BufferArray");
 
-        std::transform(
-            bufferArrayDbg.buffers.begin(),
-            bufferArrayDbg.buffers.end(),
-            std::back_inserter(bindings_.vertexBuffers),
-            [](DbgBuffer* buffer)
-            {
-                return VertexBufferSlot{ buffer };
-            }
-        );
+        bindings_.vertexBuffers = bufferArrayDbg.bufferSlots;
     }
 
-    LLGL_DBG_COMMAND_EXT( instance.SetVertexBufferArray(bufferArrayDbg.instance), "SetVertexBufferArray(count=%zu)", bufferArrayDbg.buffers.size() );
+    LLGL_DBG_COMMAND_EXT( instance.SetVertexBufferArray(bufferArrayDbg.instance), "SetVertexBufferArray(count=%zu)", bufferArrayDbg.bufferSlots.size() );
 
     profile_.commandBufferRecord.vertexBufferBindings++;
 }
@@ -2100,13 +2096,13 @@ void DbgCommandBuffer::ValidateVertexLayout()
                 const VertexAttribute& attrib = pso->graphicsDesc.inputVertexAttribs[i];
                 if (attrib.slot < bindings_.vertexBuffers.size())
                 {
-                    DbgBuffer* vertexBufferDbg = bindings_.vertexBuffers[attrib.slot].buffer;
-                    if (attrib.stride != vertexBufferDbg->desc.stride)
+                    const std::uint32_t boundBufferStride = bindings_.vertexBuffers[attrib.slot].stride;
+                    if (attrib.stride != boundBufferStride)
                     {
                         LLGL_DBG_ERROR(
                             ErrorType::InvalidState,
-                            "mismatch between vertex attribute '%s' (%u) stride=%u in current graphics PSO and bound vertex buffer stride=%u",
-                            attrib.name.c_str(), i, attrib.stride, vertexBufferDbg->desc.stride
+                            "mismatch between vertex attribute '%s' (%u) stride=%u in current graphics PSO and bound vertex buffer [%u] stride=%u",
+                            attrib.name.c_str(), i, attrib.stride, attrib.slot, boundBufferStride
                         );
                     }
                 }
@@ -3270,18 +3266,6 @@ void DbgCommandBuffer::SetAndValidateScissorRects(std::uint32_t numScissors, con
         bindings_.scissorRects[i] = {};
 
     bindings_.numScissorRects = numScissors;
-}
-
-
-/*
- * VertexBufferSlot struct
- */
-
-DbgCommandBuffer::VertexBufferSlot::VertexBufferSlot(DbgBuffer* buffer, std::uint32_t stride, std::uint64_t offset) :
-    buffer { buffer                                                             },
-    stride { stride != 0 ? stride : buffer != nullptr ? buffer->desc.stride : 0 },
-    offset { offset                                                             }
-{
 }
 
 

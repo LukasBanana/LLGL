@@ -56,6 +56,10 @@ class DbgRenderSystem final : public RenderSystem
 
     private:
 
+        struct VertexAttributeValidationContext;
+
+    private:
+
         void ValidateBindFlags(long flags, Format format = Format::Undefined, ResourceType resourceType = ResourceType::Undefined);
         void ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
@@ -94,6 +98,8 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment);
 
         void ValidateShaderDesc(const ShaderDescriptor& shaderDesc);
+        void ValidateVertexAttributeIdentifier(VertexAttributeValidationContext& context, const VertexAttribute& attrib, std::size_t index, const std::string& labelPrefix);
+        void ValidateVertexInputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName = nullptr, const char* debugName = nullptr);
         void ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName = nullptr, const char* debugName = nullptr);
 
         void ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor& pipelineLayoutDesc);

@@ -136,7 +136,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> buff
 
     /* Create temporary buffer array with buffer instances */
     std::vector<VertexBufferView> bufferInstanceLocations(bufferViews.size());
-    std::vector<DbgBuffer*> bufferDbgArray(bufferViews.size());
+    DbgVertexBufferSlotVector bufferDbgArray(bufferViews.size());
 
     if (isDebuggerEnabled)
     {
@@ -156,7 +156,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> buff
         const VertexBufferView& view    = bufferViews[i];
         auto* bufferDbg                 = LLGL_CAST(DbgBuffer*, view.buffer);
         bufferInstanceLocations[i]      = VertexBufferView{ &(bufferDbg->instance), view.stride, view.offset };
-        bufferDbgArray[i]               = bufferDbg;
+        bufferDbgArray[i]               = DbgVertexBufferSlot{ bufferDbg, view.stride, view.offset };
 
         if (isDebuggerEnabled)
         {
@@ -1729,6 +1729,114 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 
 LLGL_DEPRECATED_IGNORE_POP()
 
+struct DbgRenderSystem::VertexAttributeValidationContext
+{
+    using VertexSemantic = std::pair<std::string, std::uint32_t>;
+
+    std::unordered_map<VertexSemantic, std::size_t, PairHasher<VertexSemantic>> attribNameToIndexMap;
+    std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>>       attribSVToIndexMap;
+    std::string                                                                 attribLabel;
+};
+
+void DbgRenderSystem::ValidateVertexAttributeIdentifier(VertexAttributeValidationContext& context, const VertexAttribute& attrib, std::size_t index, const std::string& labelPrefix)
+{
+    /* Construct label for each attribute */;
+    context.attribLabel = labelPrefix + " attribute [" + std::to_string(index) + "]";
+    if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
+        context.attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+
+    /* Validate attribute name and system-value */
+    if (attrib.systemValue != SystemValue::Undefined)
+    {
+        if (const char* systemValueIdent = ToString(attrib.systemValue))
+        {
+            auto systemValueIt = context.attribSVToIndexMap.find(attrib.systemValue);
+            if (systemValueIt != context.attribSVToIndexMap.end())
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s uses duplicate system-value '%s' that is already defined for attribute [%zu]",
+                    context.attribLabel.c_str(), systemValueIdent, systemValueIt->second
+                );
+            }
+            else
+                context.attribSVToIndexMap[attrib.systemValue] = index;
+        }
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s uses unknown system-value (0x%08X)",
+                context.attribLabel.c_str(), static_cast<unsigned>(attrib.systemValue)
+            );
+        }
+    }
+    else if (!attrib.name.empty())
+    {
+        const VertexAttributeValidationContext::VertexSemantic attribIdent{ attrib.name.c_str(), attrib.semanticIndex };
+        auto nameIt = context.attribNameToIndexMap.find(attribIdent);
+        if (nameIt != context.attribNameToIndexMap.end())
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s uses duplicate name '%s' (semanticIndex=%u) that is already defined for attribute [%zu]",
+                context.attribLabel.c_str(), attrib.semanticIndex, attrib.name.c_str(), nameIt->second
+            );
+        }
+        else
+            context.attribNameToIndexMap.insert({ attribIdent, index });
+    }
+    else
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "%s defines neither name nor system-value",
+            context.attribLabel.c_str()
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateVertexInputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
+{
+    const std::string labelPrefix =
+    (
+        inputName != nullptr && *inputName != '\0' &&
+        debugName != nullptr && *debugName != '\0'
+            ? std::string(inputName) + " '" + std::string(debugName) + "': "
+            : ""
+    );
+
+    /* Validate shader output-stream attributes */
+    VertexAttributeValidationContext validationContext;
+    std::unordered_map<std::uint32_t, std::uint32_t> inputSlotToInstanceDivisorMap;
+
+    for_range(i, vertexAttribs.size())
+    {
+        const VertexAttribute& attrib = vertexAttribs[i];
+
+        ValidateVertexAttributeIdentifier(validationContext, attrib, i, labelPrefix + "vertex input");
+
+        auto it = inputSlotToInstanceDivisorMap.find(attrib.slot);
+        if (it == inputSlotToInstanceDivisorMap.end())
+        {
+            /* Make first entry for instance divisor at this input slot */
+            inputSlotToInstanceDivisorMap.insert({ attrib.slot, attrib.instanceDivisor });
+        }
+        else
+        {
+            /* Ensure vertex attribute uses the same instance divisor as the existing entry at this input slot */
+            if (it->second != attrib.instanceDivisor)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s instanceDivisor=%u does not match existing entry (%u) at input slot [%u]",
+                    validationContext.attribLabel.c_str(), attrib.instanceDivisor, it->second, attrib.slot
+                );
+            }
+        }
+    }
+}
+
 void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
 {
     const std::string labelPrefix =
@@ -1740,8 +1848,7 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
     );
 
     /* Validate shader output-stream attributes */
-    std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
-    std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>> attribSVToIndexMap;
+    VertexAttributeValidationContext validationContext;
 
     struct BufferStrideRef
     {
@@ -1750,16 +1857,11 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
     };
     BufferStrideRef bufferStridesRefs[LLGL_MAX_NUM_SO_BUFFERS];
 
-    std::string attribLabel;
-
     for_range(i, vertexAttribs.size())
     {
         const VertexAttribute& attrib = vertexAttribs[i];
 
-        /* Construct label for each attribute */;
-        attribLabel = labelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
-        if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
-            attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+        ValidateVertexAttributeIdentifier(validationContext, attrib, i, labelPrefix + "stream-output");
 
         /* Validate attribute format */
         if (const char* formatIdent = ToString(attrib.format))
@@ -1769,7 +1871,7 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "%s format 'LLGL::Format::%s' is not supported in this context",
-                    attribLabel.c_str(), formatIdent
+                    validationContext.attribLabel.c_str(), formatIdent
                 );
             }
         }
@@ -1778,7 +1880,7 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "%s format is invalid (%0x08X)",
-                attribLabel.c_str(), static_cast<int>(attrib.format)
+                validationContext.attribLabel.c_str(), static_cast<int>(attrib.format)
             );
         }
 
@@ -1797,7 +1899,7 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "%s stride mismatch for slot [%u]: %u specified but attribute [%zu] defined it as %u",
-                    attribLabel.c_str(), attrib.slot, attrib.stride, strideRef.firstAttribIndex, strideRef.stride
+                    validationContext.attribLabel.c_str(), attrib.slot, attrib.stride, strideRef.firstAttribIndex, strideRef.stride
                 );
             }
         }
@@ -1806,56 +1908,7 @@ void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> ver
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "%s slot index out of bounds: %u specified but upper bound is %u",
-                attribLabel.c_str(), attrib.slot, LLGL_MAX_NUM_SO_BUFFERS
-            );
-        }
-
-        /* Validate attribute name and system-value */
-        if (attrib.systemValue != SystemValue::Undefined)
-        {
-            if (const char* systemValueIdent = ToString(attrib.systemValue))
-            {
-                auto systemValueIt = attribSVToIndexMap.find(attrib.systemValue);
-                if (systemValueIt != attribSVToIndexMap.end())
-                {
-                    LLGL_DBG_ERROR(
-                        ErrorType::InvalidArgument,
-                        "%s uses duplicate system-value '%s' that is already defined for attribute [%zu]",
-                        attribLabel.c_str(), systemValueIdent, systemValueIt->second
-                    );
-                }
-                else
-                    attribSVToIndexMap[attrib.systemValue] = i;
-            }
-            else
-            {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "%s uses unknown system-value (0x%08X)",
-                    attribLabel.c_str(), static_cast<unsigned>(attrib.systemValue)
-                );
-            }
-        }
-        else if (!attrib.name.empty())
-        {
-            auto nameIt = attribNameToIndexMap.find(attrib.name.c_str());
-            if (nameIt != attribNameToIndexMap.end())
-            {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "%s uses duplicate name '%s' that is already defined for attribute [%zu]",
-                    attribLabel.c_str(), attrib.name.c_str(), nameIt->second
-                );
-            }
-            else
-                attribNameToIndexMap[attrib.name.c_str()] = i;
-        }
-        else
-        {
-            LLGL_DBG_ERROR(
-                ErrorType::InvalidArgument,
-                "%s defines neither name nor system-value",
-                attribLabel.c_str()
+                validationContext.attribLabel.c_str(), attrib.slot, LLGL_MAX_NUM_SO_BUFFERS
             );
         }
     }
@@ -2273,6 +2326,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
+    ValidateVertexInputAttribs(pipelineStateDesc.inputVertexAttribs, "PSO", pipelineStateDesc.debugName);
     ValidateVertexOutputAttribs(pipelineStateDesc.outputVertexAttribs, "PSO", pipelineStateDesc.debugName);
 
     if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))

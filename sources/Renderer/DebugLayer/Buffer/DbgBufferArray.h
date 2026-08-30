@@ -10,6 +10,7 @@
 
 
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/SmallVector.h>
 
 
 namespace LLGL
@@ -18,17 +19,29 @@ namespace LLGL
 
 class DbgBuffer;
 
+struct DbgVertexBufferSlot
+{
+    DbgVertexBufferSlot() = default;
+    DbgVertexBufferSlot(DbgBuffer* buffer, std::uint32_t stride = 0, std::uint64_t offset = 0);
+
+    DbgBuffer*      buffer = nullptr;
+    std::uint32_t   stride = 0;
+    std::uint64_t   offset = 0;
+};
+
+using DbgVertexBufferSlotVector = SmallVector<DbgVertexBufferSlot, 1>;
+
 class DbgBufferArray final : public BufferArray
 {
 
     public:
 
-        DbgBufferArray(BufferArray& instance, long bindFlags, std::vector<DbgBuffer*>&& buffers);
+        DbgBufferArray(BufferArray& instance, long bindFlags, DbgVertexBufferSlotVector&& bufferSlots);
 
     public:
 
         BufferArray&                    instance;
-        const std::vector<DbgBuffer*>   buffers;
+        const DbgVertexBufferSlotVector bufferSlots;
 
 };
 

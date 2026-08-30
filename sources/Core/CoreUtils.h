@@ -37,6 +37,12 @@ struct EnumHasher
     }
 };
 
+template <typename TPair>
+struct PairHasher
+{
+    std::size_t operator() (const TPair& pair) const;
+};
+
 
 /* ----- Template functions ----- */
 
@@ -240,6 +246,15 @@ void HashCombine(std::size_t& seed, const T& value)
 {
     constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
     seed ^= std::hash<T>{}(value) + approxGoldenRatio + (seed << 6) + (seed >> 2);
+}
+
+template <typename TPair>
+std::size_t PairHasher<TPair>::operator() (const TPair& pair) const
+{
+    std::size_t h = 0;
+    HashCombine(h, pair.first);
+    HashCombine(h, pair.second);
+    return h;
 }
 
 

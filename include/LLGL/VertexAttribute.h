@@ -158,11 +158,9 @@ struct LLGL_EXPORT VertexAttribute
 
     /**
     \brief Vertex buffer binding slot. By default 0.
-    \remarks This is used when multiple vertex buffers are used simultaneously.
+    \remarks This is used when multiple vertex buffers are bound simultaneously.
     This binding slot refers either to the input buffer indices (determined by \c SetVertexBufferArray),
     or stream-output buffer indices (determined by \c BeginStreamOutput).
-    \note Only supported with: Direct3D 11, Direct3D 12, Vulkan, Metal.
-    \note For OpenGL, the vertex binding slots are automatically generated in ascending order and beginning with zero.
     \see CommandBuffer::SetVertexBuffers
     \see CommandBuffer::SetVertexBufferArray
     \see CommandBuffer::BeginStreamOutput
@@ -183,6 +181,8 @@ struct LLGL_EXPORT VertexAttribute
     \brief Instance data divisor (or instance data step rate).
     \remarks If this is 0, this attribute is considered to be stored per vertex.
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
+    \remarks Vertex attributes that share the same input slot must have the same instance divisor.
+    For example, in order to stream vertex and instance data from the same buffer, this buffer must be bound at two separate binding slots.
     \note For Vulkan, this must only be 0 or 1.
     */
     std::uint32_t   instanceDivisor = 0;

@@ -13,6 +13,7 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
+#include "Buffer/DbgBufferArray.h"
 #include "RenderState/DbgQueryHeap.h"
 #include "DbgQueryTimerPool.h"
 #include <cstdint>
@@ -76,44 +77,32 @@ class DbgCommandBuffer final : public CommandBufferTier1
             std::vector<char>       uniforms;
         };
 
-        struct VertexBufferSlot
-        {
-            VertexBufferSlot() = default;
-            VertexBufferSlot(DbgBuffer* buffer, std::uint32_t stride = 0, std::uint64_t offset = 0);
-
-            DbgBuffer*      buffer = nullptr;
-            std::uint32_t   stride = 0;
-            std::uint64_t   offset = 0;
-        };
-
-        using VertexBufferSlotVector = SmallVector<VertexBufferSlot, 1>;
-
         struct Bindings
         {
             // Framebuffers
-            DbgSwapChain*           swapChain                                           = nullptr;
-            DbgRenderTarget*        renderTarget                                        = nullptr;
-            std::uint32_t           numViewports                                        = 0;
-            bool                    anyFragmentOutput                                   = false;
+            DbgSwapChain*               swapChain                                           = nullptr;
+            DbgRenderTarget*            renderTarget                                        = nullptr;
+            std::uint32_t               numViewports                                        = 0;
+            bool                        anyFragmentOutput                                   = false;
 
             // Stream inputs/outputs
-            VertexBufferSlotVector  vertexBuffers;
-            bool                    anyShaderAttributes                                 = false;
-            DbgBuffer*              indexBuffer                                         = nullptr;
-            std::uint64_t           indexBufferFormatSize                               = 0;
-            std::uint64_t           indexBufferOffset                                   = 0;
-            DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]              = {};
-            std::uint32_t           numStreamOutputs                                    = 0;
+            DbgVertexBufferSlotVector   vertexBuffers;
+            bool                        anyShaderAttributes                                 = false;
+            DbgBuffer*                  indexBuffer                                         = nullptr;
+            std::uint64_t               indexBufferFormatSize                               = 0;
+            std::uint64_t               indexBufferOffset                                   = 0;
+            DbgBuffer*                  streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]              = {};
+            std::uint32_t               numStreamOutputs                                    = 0;
 
             // PSO
-            DbgPipelineState*       pipelineState                                       = nullptr;
-            const DbgShader*        vertexShader                                        = nullptr;
-            bool                    blendFactorSet                                      = false;
-            bool                    stencilRefSet                                       = false;
-            bool                    shadingRateSet                                      = false;
-            Scissor                 scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-            std::uint32_t           numScissorRects                                     = 0;
-            BindingTable            bindingTable;
+            DbgPipelineState*           pipelineState                                       = nullptr;
+            const DbgShader*            vertexShader                                        = nullptr;
+            bool                        blendFactorSet                                      = false;
+            bool                        stencilRefSet                                       = false;
+            bool                        shadingRateSet                                      = false;
+            Scissor                     scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
+            std::uint32_t               numScissorRects                                     = 0;
+            BindingTable                bindingTable;
         };
 
         struct States
