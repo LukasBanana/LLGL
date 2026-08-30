@@ -1,0 +1,27 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VSky"
+        profile: "vs_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PSky"
+        profile: "ps_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "VMesh"
+        profile: "vs_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PMesh"
+        profile: "ps_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:

@@ -1,0 +1,33 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VScene"
+        profile: "vs_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PScene"
+        profile: "ps_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "VPP"
+        profile: "vs_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PBlur"
+        profile: "ps_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PFinal"
+        profile: "ps_5_0"
+        targets:
+          glsl450core:
+          spirv:
+          metal:

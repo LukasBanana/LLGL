@@ -1,0 +1,18 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VSMain"
+        profile: "vs_4_0"
+        targets:
+          glsl430core:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PSMain"
+        profile: "ps_4_0"
+        targets:
+          glsl430core:
+          glsl450core:
+          glsl300es:
+          spirv:
+          metal:

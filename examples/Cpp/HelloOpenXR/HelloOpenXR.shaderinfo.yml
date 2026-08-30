@@ -1,0 +1,20 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_6_1"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+      - entry: "PS"
+        profile: "ps_6_1"
+        targets:
+          glsl450core:
+          spirv:
+          metal:
+  - source: "Example.multiview.450core.vert"
+    entries:
+      - targets:
+          spirv:
+          metal:
