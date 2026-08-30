@@ -1,5 +1,8 @@
 // HLSL model shader
 
+#ifndef ENABLE_CUSTOM_MULTISAMPLING
+#define ENABLE_CUSTOM_MULTISAMPLING 0
+#endif
 
 // VERTEX SHADER
 
@@ -39,7 +42,7 @@ OutputVS VS(InputVS inp)
 
 Texture2D colorMap : register(t2);
 
-#ifdef ENABLE_CUSTOM_MULTISAMPLING
+#if ENABLE_CUSTOM_MULTISAMPLING
 Texture2DMS<float4, 8> colorMapMS : register(t3);
 #endif
 
@@ -47,7 +50,7 @@ SamplerState samplerState : register(s1);
 
 float4 SampleColorMap(float2 texCoord)
 {
-    #ifdef ENABLE_CUSTOM_MULTISAMPLING
+    #if ENABLE_CUSTOM_MULTISAMPLING
     if (useTexture2DMS)
     {
         // Load texel from multi-sample texture
@@ -70,7 +73,7 @@ float4 SampleColorMap(float2 texCoord)
         return c;
     }
     else
-    #endif
+    #endif // ENABLE_CUSTOM_MULTISAMPLING
     {
         // Sample texel from standard texture
         return colorMap.Sample(samplerState, texCoord);

@@ -255,11 +255,14 @@ def unquote_yaml_string(value: str) -> str:
     return value
 
 
+# Built-in YAML parser with more restricted syntax.
+# This serves as a fallback when PyYAML is not available.
 def parse_shader_info_without_yaml(filename: Path) -> dict:
     sources = []
     current_source = None
     current_entry = None
     in_targets = False
+    in_macros = False
 
     for line_number, raw_line in enumerate(filename.read_text(encoding="utf-8").splitlines(), 1):
         line = raw_line.split("#", 1)[0].strip()
@@ -268,17 +271,45 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
 
         source_match = re.fullmatch(r"-\s*source\s*:\s*(.+)", line)
         if source_match:
-            current_source = {"source": unquote_yaml_string(source_match.group(1)), "entries": []}
+            current_source = {
+                "source": unquote_yaml_string(source_match.group(1)),
+                "entries": [],
+            }
             sources.append(current_source)
             current_entry = None
             in_targets = False
+            in_macros = False
             continue
+
+        if line == "permutation:":
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: permutation must belong to a source")
+            current_source["permutation"] = {"macros": {}}
+            current_entry = None
+            in_targets = False
+            in_macros = False
+            continue
+
+        if current_source is not None and "permutation" in current_source:
+            override_match = re.fullmatch(r"override\s*:\s*(.+)", line)
+            if override_match:
+                current_source["permutation"]["override"] = unquote_yaml_string(override_match.group(1))
+                in_macros = False
+                continue
+            if line == "macros:":
+                in_macros = True
+                continue
+            macro_match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.+)", line)
+            if in_macros and macro_match:
+                current_source["permutation"]["macros"][macro_match.group(1)] = unquote_yaml_string(macro_match.group(2))
+                continue
 
         if line == "entries:":
             if current_source is None:
                 raise ShaderInfoError(f"{filename}:{line_number}: entries must belong to a source")
             current_entry = None
             in_targets = False
+            in_macros = False
             continue
 
         entry_match = re.fullmatch(r"-\s*entry\s*:\s*(.+)", line)
@@ -311,6 +342,24 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
             in_targets = True
             continue
 
+        inline_targets_match = re.fullmatch(r"targets\s*:\s*(.+)", line)
+        if inline_targets_match:
+            target_value = inline_targets_match.group(1).strip()
+            if target_value.startswith("[") and target_value.endswith("]"):
+                target_names = [
+                    unquote_yaml_string(target.strip())
+                    for target in target_value[1:-1].split(",")
+                    if target.strip()
+                ]
+            else:
+                target_names = target_value.split()
+            current_entry["targets"] = {
+                target: None
+                for target in target_names
+            }
+            in_targets = False
+            continue
+
         target_match = re.fullmatch(r"([A-Za-z0-9_]+)\s*:", line)
         if in_targets and target_match:
             current_entry["targets"][target_match.group(1)] = None
@@ -319,6 +368,28 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
         raise ShaderInfoError(f"{filename}:{line_number}: unsupported YAML syntax without PyYAML")
 
     return {"sources": sources}
+
+
+def normalize_targets(filename: Path, targets) -> list[str]:
+    if isinstance(targets, dict):
+        target_names = list(targets)
+    elif isinstance(targets, str):
+        target_value = targets.strip()
+        if target_value.startswith("[") and target_value.endswith("]"):
+            target_names = [
+                unquote_yaml_string(target.strip())
+                for target in target_value[1:-1].split(",")
+                if target.strip()
+            ]
+        else:
+            target_names = target_value.split()
+    elif isinstance(targets, list):
+        target_names = targets
+    else:
+        raise ShaderInfoError(f"{filename}: each entry needs a non-empty targets mapping, list, or string")
+    if not target_names or not all(isinstance(target, str) and target for target in target_names):
+        raise ShaderInfoError(f"{filename}: target names must be non-empty strings")
+    return target_names
 
 
 def parse_shader_info(filename: Path):
@@ -348,17 +419,32 @@ def parse_shader_info(filename: Path):
         if not isinstance(entries, list) or not entries:
             raise ShaderInfoError(f"{filename}: each source needs a non-empty entries list")
 
+        permutation = source_info.get("permutation")
+        if permutation is not None:
+            if not isinstance(permutation, dict):
+                raise ShaderInfoError(f"{filename}: permutation must be a mapping")
+            override = permutation.get("override")
+            macros = permutation.get("macros")
+            if not isinstance(override, str) or not override:
+                raise ShaderInfoError(f"{filename}: permutation needs a non-empty override field")
+            if not isinstance(macros, dict):
+                raise ShaderInfoError(f"{filename}: permutation macros must be a mapping")
+            if not all(isinstance(name, str) and name for name in macros):
+                raise ShaderInfoError(f"{filename}: permutation macro names must be non-empty strings")
+            if not all(isinstance(value, (str, int, float, bool)) for value in macros.values()):
+                raise ShaderInfoError(f"{filename}: permutation macro values must be scalar values")
+            permutation = {
+                "override": override,
+                "macros": {name: str(value) for name, value in macros.items()},
+            }
+
         parsed_entries = []
         is_hlsl = Path(source).suffix.lower() == ".hlsl"
         for entry in entries:
             if not isinstance(entry, dict):
                 raise ShaderInfoError(f"{filename}: each entry must be a mapping")
-            targets = entry.get("targets")
-            if not isinstance(targets, dict) or not targets:
-                raise ShaderInfoError(f"{filename}: each entry needs a non-empty targets mapping")
-            if not all(isinstance(target, str) for target in targets):
-                raise ShaderInfoError(f"{filename}: target names must be strings")
-            parsed_entry = {"targets": list(targets)}
+            targets = normalize_targets(filename, entry.get("targets"))
+            parsed_entry = {"targets": targets}
             if is_hlsl:
                 entry_point = entry.get("entry")
                 profile = entry.get("profile")
@@ -370,7 +456,10 @@ def parse_shader_info(filename: Path):
             elif not set(parsed_entry["targets"]).issubset({"spirv", "metal"}):
                 raise ShaderInfoError(f"{filename}: GLSL source entries may only target 'spirv' or 'metal'")
             parsed_entries.append(parsed_entry)
-        parsed_sources.append({"source": source, "entries": parsed_entries})
+        parsed_source = {"source": source, "entries": parsed_entries}
+        if permutation is not None:
+            parsed_source["permutation"] = permutation
+        parsed_sources.append(parsed_source)
 
     return parsed_sources
 
@@ -408,27 +497,31 @@ def get_stage_extension(profile):
     return extension
 
 
-def output_stem(source, entry, trimmed_entries, target = None, stage = None):
+def output_stem(source, entry, trimmed_entries, target = None, stage = None, override = None):
+    override_suffix = f".{override}" if override else ""
     if target and stage:
         entry_suffix = "" if entry in trimmed_entries else f".{entry}"
-        target_suffix = "" if target is None else f".{target}"
-        return f"{source.stem}{entry_suffix}{target_suffix}.{stage}"
+        return f"{source.stem}{override_suffix}{entry_suffix}.{target}.{stage}"
     else:
-        return f"{source.stem}.{entry}"
+        return f"{source.stem}{override_suffix}.{entry}"
 
 
-def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets, fxc_tool: Path | None):
+def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets, fxc_tool: Path | None, permutation):
     targets = filter_targets(entry["targets"], enabled_targets)
     if not targets:
         return
     stage_extension = get_stage_extension(entry["profile"])
     output_directory.mkdir(parents=True, exist_ok=True)
-    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension)}.spv"
+    override = permutation["override"] if permutation else None
+    macros = permutation["macros"] if permutation else {}
+    dxc_macro_args = [f"-D{name}={value}" for name, value in macros.items()]
+    fxc_macro_args = [f"/D{name}={value}" for name, value in macros.items()]
+    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension, override)}.spv"
 
     optimization_args = [] if debug else ["-O3"]
 
     run_command(
-        ["dxc", "-nologo", "-spirv", "-T", entry["profile"], "-E", entry["entry"], "-Fo", intermediate_spv, source_file] + optimization_args,
+        ["dxc", "-nologo", "-spirv", "-T", entry["profile"], "-E", entry["entry"], "-Fo", intermediate_spv, source_file] + optimization_args + dxc_macro_args,
         verbose,
         shader_info_directory,
     )
@@ -446,7 +539,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             continue
 
         if target == "metal":
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.metal"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.metal"
             run_command(
                 ["spirv-cross", intermediate_spv, "--msl", "--output", output_file],
                 verbose,
@@ -455,10 +548,10 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             continue
 
         if target == "dxil":
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.dxil"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.dxil"
             debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if debug else []
             run_command(
-                ["dxc", "-nologo", "-T", entry["profile"], "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args,
+                ["dxc", "-nologo", "-T", entry["profile"], "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args + dxc_macro_args,
                 verbose,
                 shader_info_directory,
             )
@@ -473,10 +566,10 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
                     file=sys.stderr,
                 )
                 continue
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.dxbc"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.dxbc"
             debug_args = ["/Zi", "/Fd", f"{output_file}.pdb"] if debug else []
             run_command(
-                [fxc_tool, "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args,
+                [fxc_tool, "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args + fxc_macro_args,
                 verbose,
                 shader_info_directory,
             )
@@ -485,7 +578,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
         target_match = GLSL_TARGET_PATTERN.fullmatch(target)
         if target_match is None:
             raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
-        output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension)}"
+        output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension, override)}"
         command = ["spirv-cross", intermediate_spv, "--version", target_match["version"]]
         if target_match["flavor"] == "es":
             command.append("--es")
@@ -618,6 +711,7 @@ def main():
                             arguments.trim_stem,
                             arguments.targets,
                             fxc_tool,
+                            source.get("permutation"),
                         )
                 else:
                     print_source_compile(source_file, "GLSL", arguments.verbose)
