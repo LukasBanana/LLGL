@@ -4,6 +4,8 @@
 
 import argparse
 import importlib
+import json
+import os
 import re
 import shutil
 import subprocess
@@ -41,12 +43,12 @@ def parse_arguments():
     parser.add_argument(
         "input_positional",
         nargs="?",
-        metavar="DIR",
+        metavar="INPUT",
         help="Search folder; equivalent to --input.",
     )
     parser.add_argument(
         "-i", "--input",
-        metavar="DIR",
+        metavar="INPUT",
         help="Search folder (default: examples/).",
     )
     parser.add_argument(
@@ -73,10 +75,10 @@ def parse_arguments():
     )
     parser.add_argument(
         "-o", "--output",
-        metavar="DIR",
+        metavar="OUTPUT",
         help=(
             "Output folder relative to each shader-info file. Use '.' to write beside "
-            "the input source (default: Autogen/)."
+            "the input source (default: .autogen/)."
         ),
     )
     parser.add_argument(
@@ -138,13 +140,86 @@ def require_glslang_tool() -> str:
     )
 
 
+def find_fxc_in_sdk_bin(sdk_bin: Path, architecture: str = "x64") -> Path | None:
+    if not sdk_bin.is_dir():
+        return None
+    version_directories = sorted(
+        (directory for directory in sdk_bin.iterdir() if directory.name.startswith("10.")),
+        key=lambda directory: tuple(int(part) for part in directory.name.split(".")),
+        reverse=True,
+    )
+    for version_directory in version_directories:
+        fxc_path = version_directory / architecture / "fxc.exe"
+        if fxc_path.is_file():
+            return fxc_path
+    return None
+
+
+def find_fxc_via_vswhere(architecture: str = "x64") -> Path | None:
+    program_files_x86 = Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)"))
+    vswhere_path = program_files_x86 / "Microsoft Visual Studio" / "Installer" / "vswhere.exe"
+    if not vswhere_path.is_file():
+        return None
+
+    result = subprocess.run(
+        [
+            vswhere_path,
+            "-latest",
+            "-requires", "Microsoft.VisualStudio.Component.Windows10SDK",
+            "-format", "json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    try:
+        if not json.loads(result.stdout):
+            return None
+    except json.JSONDecodeError:
+        return None
+
+    return find_fxc_in_sdk_bin(program_files_x86 / "Windows Kits" / "10" / "bin", architecture)
+
+
+def find_fxc_tool_path() -> Path | None:
+    fxc_path = shutil.which("fxc")
+    if fxc_path is not None:
+        return Path(fxc_path)
+
+    fxc_path = find_fxc_via_vswhere()
+    if fxc_path is not None:
+        return fxc_path
+
+    sdk_roots = [
+        Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Windows Kits" / "10" / "bin",
+        Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Windows Kits" / "10" / "bin",
+    ]
+    for sdk_root in sdk_roots:
+        fxc_path = find_fxc_in_sdk_bin(sdk_root)
+        if fxc_path is not None:
+            return fxc_path
+    return None
+
+
+def find_fxc_tool(verbose: bool) -> Path | None:
+    fxc_path = find_fxc_tool_path()
+    if verbose:
+        if fxc_path is None:
+            print("FXC was not found on PATH or in the Windows SDK")
+        else:
+            print(f"Found FXC: {fxc_path}")
+    return fxc_path
+
+
 def filter_targets(targets, enabled_targets):
     if enabled_targets is None:
         return targets
     return [target for target in targets if target in enabled_targets]
 
 
-def verify_tools(debug, sources, enabled_targets) -> str | None:
+def verify_tools(debug, sources, enabled_targets, verbose: bool) -> tuple[str | None, Path | None]:
     requested_targets = {
         target
         for source in sources
@@ -167,9 +242,10 @@ def verify_tools(debug, sources, enabled_targets) -> str | None:
     if requires_spirv_cross:
         require_tool("spirv-cross", "https://github.com/KhronosGroup/SPIRV-Cross")
     glslang_tool = require_glslang_tool() if has_glsl_sources else None
+    fxc_tool = find_fxc_tool(verbose) if "dxbc" in requested_targets else None
     if debug:
         require_tool("spirv-dis", "https://github.com/KhronosGroup/SPIRV-Tools")
-    return glslang_tool
+    return glslang_tool, fxc_tool
 
 
 def unquote_yaml_string(value: str) -> str:
@@ -332,19 +408,22 @@ def get_stage_extension(profile):
     return extension
 
 
-def output_stem(source, entry, trimmed_entries, target):
-    entry_suffix = "" if entry in trimmed_entries else f".{entry}"
-    target_suffix = "" if target is None else f".{target}"
-    return f"{source.stem}{entry_suffix}{target_suffix}"
+def output_stem(source, entry, trimmed_entries, target = None, stage = None):
+    if target and stage:
+        entry_suffix = "" if entry in trimmed_entries else f".{entry}"
+        target_suffix = "" if target is None else f".{target}"
+        return f"{source.stem}{entry_suffix}{target_suffix}.{stage}"
+    else:
+        return f"{source.stem}.{entry}"
 
 
-def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets):
+def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets, fxc_tool: Path | None):
     targets = filter_targets(entry["targets"], enabled_targets)
     if not targets:
         return
     stage_extension = get_stage_extension(entry["profile"])
     output_directory.mkdir(parents=True, exist_ok=True)
-    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core')}.{stage_extension}.spv"
+    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension)}.spv"
 
     optimization_args = [] if debug else ["-O3"]
 
@@ -367,7 +446,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             continue
 
         if target == "metal":
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None)}.{stage_extension}.metal"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.metal"
             run_command(
                 ["spirv-cross", intermediate_spv, "--msl", "--output", output_file],
                 verbose,
@@ -376,7 +455,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             continue
 
         if target == "dxil":
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None)}.{stage_extension}.dxil"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.dxil"
             debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if debug else []
             run_command(
                 ["dxc", "-nologo", "-T", entry["profile"], "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args,
@@ -386,18 +465,18 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             continue
 
         if target == "dxbc":
-            if shutil.which("fxc") is None:
+            if fxc_tool is None:
                 print(
                     f"warning: skipping DXBC output for {source_file.name} entry "
-                    f"'{entry['entry']}': 'fxc' was not found on PATH. Install it from "
+                    f"'{entry['entry']}': 'fxc' was not found on PATH or in the Windows SDK. Install it from "
                     "https://learn.microsoft.com/en-us/windows/win32/direct3dtools/fxc",
                     file=sys.stderr,
                 )
                 continue
-            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None)}.{stage_extension}.dxbc"
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension)}.dxbc"
             debug_args = ["/Zi", "/Fd", f"{output_file}.pdb"] if debug else []
             run_command(
-                ["fxc", "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args,
+                [fxc_tool, "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args,
                 verbose,
                 shader_info_directory,
             )
@@ -406,7 +485,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
         target_match = GLSL_TARGET_PATTERN.fullmatch(target)
         if target_match is None:
             raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
-        output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, target_match['version'] + target_match['flavor'])}.{stage_extension}"
+        output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension)}"
         command = ["spirv-cross", intermediate_spv, "--version", target_match["version"]]
         if target_match["flavor"] == "es":
             command.append("--es")
@@ -458,7 +537,7 @@ def translate_glsl_source(source_file, entries, output_directory, debug: bool, v
 
 
 def output_directory_for(shader_info: Path, output_path: Path | None) -> Path:
-    return shader_info.parent / (output_path or Path("Autogen"))
+    return shader_info.parent / (output_path or Path(".autogen"))
 
 
 def print_source_compile(source_file: Path, source_type: str, verbose: bool) -> None:
@@ -509,7 +588,12 @@ def main():
     all_sources = [source for _, sources in parsed_shader_infos for source in sources]
     if not all_sources:
         return
-    glslang_tool = verify_tools(arguments.debug, all_sources, arguments.targets)
+    glslang_tool, fxc_tool = verify_tools(
+        arguments.debug,
+        all_sources,
+        arguments.targets,
+        arguments.verbose,
+    )
 
     for shader_info, sources in parsed_shader_infos:
         try:
@@ -533,6 +617,7 @@ def main():
                             shader_info.parent,
                             arguments.trim_stem,
                             arguments.targets,
+                            fxc_tool,
                         )
                 else:
                     print_source_compile(source_file, "GLSL", arguments.verbose)

@@ -11,8 +11,6 @@ sources:
           glsl300es:
           spirv:
           metal:
-          dxil:
-          dxbc:
       - entry: "PS"
         profile: "ps_4_0"
         targets:
@@ -23,5 +21,3 @@ sources:
           glsl300es:
           spirv:
           metal:
-          dxil:
-          dxbc:
