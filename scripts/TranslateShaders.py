@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-"""Translate HLSL shaders described by *.shaderinfo.yml files."""
+"""
+TranslateShaders.py
+
+Part of the LLGL project
+Written by L. Hermanns 8/30/2026
+
+Translate HLSL shaders described by *.shaderinfo.yml files.
+"""
 
 import argparse
 import importlib
@@ -74,18 +81,23 @@ def parse_arguments():
         help="Highlight processed shader-info files with ANSI terminal colors.",
     )
     parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress output for processed shader-info files.",
+    )
+    parser.add_argument(
         "-o", "--output",
         metavar="OUTPUT",
         help=(
             "Output folder relative to each shader-info file. Use '.' to write beside "
-            "the input source (default: .autogen/)."
+            "the input source (default: .autogen/). Absolute path is also allowed."
         ),
     )
     parser.add_argument(
         "--trim-stem",
-        default="VS,PS",
+        default="VS,PS,GS,HS,DS",
         metavar="ENTRIES",
-        help="Entry names to omit from generated output stems (default: VS,PS).",
+        help="Entry names to omit from generated output stems (default: VS,PS,GS,HS,DS).",
     )
     parser.add_argument(
         "-t", "--targets",
@@ -101,8 +113,6 @@ def parse_arguments():
 
     arguments.input = Path(arguments.input or arguments.input_positional or "examples")
     arguments.output = Path(arguments.output) if arguments.output else None
-    if arguments.output and arguments.output.is_absolute():
-        parser.error("--output must be a path relative to each shader-info file")
     arguments.trim_stem = {
         entry_name.strip()
         for entry_name in arguments.trim_stem.split(",")
@@ -290,6 +300,14 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
             in_macros = False
             continue
 
+        if line == "entries:":
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: entries must belong to a source")
+            current_entry = None
+            in_targets = False
+            in_macros = False
+            continue
+
         if current_source is not None and "permutation" in current_source:
             override_match = re.fullmatch(r"override\s*:\s*(.+)", line)
             if override_match:
@@ -303,14 +321,6 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
             if in_macros and macro_match:
                 current_source["permutation"]["macros"][macro_match.group(1)] = unquote_yaml_string(macro_match.group(2))
                 continue
-
-        if line == "entries:":
-            if current_source is None:
-                raise ShaderInfoError(f"{filename}:{line_number}: entries must belong to a source")
-            current_entry = None
-            in_targets = False
-            in_macros = False
-            continue
 
         entry_match = re.fullmatch(r"-\s*entry\s*:\s*(.+)", line)
         if entry_match:
@@ -406,7 +416,7 @@ def parse_shader_info(filename: Path):
 
     sources = document.get("sources")
     if not isinstance(sources, list) or not sources:
-        raise ShaderInfoError(f"{filename}: sources must be a non-empty list")
+        return None
 
     parsed_sources = []
     for source_info in sources:
@@ -497,6 +507,16 @@ def get_stage_extension(profile):
     return extension
 
 
+def clamp_dxc_profile(profile: str) -> str:
+    match = re.fullmatch(r"([a-z]+)_(\d+)_(\d+)", profile)
+    if match is None:
+        raise ShaderInfoError(f"unsupported HLSL profile '{profile}'")
+    stage, major_version, minor_version = match.groups()
+    if (int(major_version), int(minor_version)) < (6, 0):
+        return f"{stage}_6_0"
+    return profile
+
+
 def output_stem(source, entry, trimmed_entries, target = None, stage = None, override = None):
     override_suffix = f".{override}" if override else ""
     if target and stage:
@@ -521,7 +541,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
     optimization_args = [] if debug else ["-O3"]
 
     run_command(
-        ["dxc", "-nologo", "-spirv", "-T", entry["profile"], "-E", entry["entry"], "-Fo", intermediate_spv, source_file] + optimization_args + dxc_macro_args,
+        ["dxc", "-nologo", "-no-warnings", "-spirv", "-T", clamp_dxc_profile(entry["profile"]), "-E", entry["entry"], "-Fo", intermediate_spv, source_file] + optimization_args + dxc_macro_args,
         verbose,
         shader_info_directory,
     )
@@ -551,7 +571,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.dxil"
             debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if debug else []
             run_command(
-                ["dxc", "-nologo", "-T", entry["profile"], "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args + dxc_macro_args,
+                ["dxc", "-nologo", "-no-warnings", "-T", clamp_dxc_profile(entry["profile"]), "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args + dxc_macro_args,
                 verbose,
                 shader_info_directory,
             )
@@ -630,7 +650,10 @@ def translate_glsl_source(source_file, entries, output_directory, debug: bool, v
 
 
 def output_directory_for(shader_info: Path, output_path: Path | None) -> Path:
-    return shader_info.parent / (output_path or Path(".autogen"))
+    if output_path and output_path.is_absolute():
+        return output_path
+    else:
+        return shader_info.parent / (output_path or Path(".autogen"))
 
 
 def print_source_compile(source_file: Path, source_type: str, verbose: bool) -> None:
@@ -641,9 +664,9 @@ def print_source_compile(source_file: Path, source_type: str, verbose: bool) -> 
 def print_shader_info_path(shader_info: Path, input_directory: Path, color: bool) -> None:
     relative_path = shader_info.relative_to(input_directory)
     if color:
-        print(f"{HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}")
+        print(f"Processing: {HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}")
     else:
-        print(relative_path)
+        print(f"Processing: {relative_path}")
 
 
 def print_error(message: str, color: bool, indent: int = 0) -> None:
@@ -674,7 +697,9 @@ def main():
     parsed_shader_infos = []
     for shader_info in shader_infos:
         try:
-            parsed_shader_infos.append((shader_info, parse_shader_info(shader_info)))
+            shader_info_source = parse_shader_info(shader_info)
+            if shader_info_source:
+                parsed_shader_infos.append((shader_info, shader_info_source))
         except ShaderInfoError as error:
             print_error(f"{error}", arguments.color, indent=2)
 
@@ -690,7 +715,8 @@ def main():
 
     for shader_info, sources in parsed_shader_infos:
         try:
-            print_shader_info_path(shader_info, input_directory, arguments.color)
+            if not arguments.quiet:
+                print_shader_info_path(shader_info, input_directory, arguments.color)
             output_directory = output_directory_for(shader_info, arguments.output)
             for source in sources:
                 source_file = shader_info.parent / source["source"]

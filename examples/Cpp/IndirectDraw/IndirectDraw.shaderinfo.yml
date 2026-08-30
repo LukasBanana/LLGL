@@ -1,14 +1,9 @@
-sources:
-  - source: "Example.hlsl"
-    entries:
-      - entry: "CS"
-        profile: "cs_5_0"
-        targets:
-          glsl450core:
-          spirv:
-      - entry: "PS"
-        profile: "ps_5_0"
-        targets:
-          glsl450core:
-          spirv:
-          metal:
+#sources:
+#  - source: "Example.hlsl"
+#    entries:
+#      - entry: "CS"
+#        profile: "cs_5_0"
+#        targets: [glsl450core, spirv]
+#      - entry: "PS"
+#        profile: "ps_5_0"
+#        targets: [glsl450core, spirv, metal]

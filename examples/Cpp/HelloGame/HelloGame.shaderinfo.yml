@@ -1,29 +1,15 @@
-sources:
-  - source: "HelloGame.hlsl"
-    entries:
-      - entry: "VSInstance"
-        profile: "vs_5_0"
-        targets:
-          glsl300es:
-          glsl450core:
-          spirv:
-          metal:
-      - entry: "PSInstance"
-        profile: "ps_5_0"
-        targets:
-          glsl300es:
-          glsl450core:
-          spirv:
-          metal:
-      - entry: "VSGround"
-        profile: "vs_5_0"
-        targets:
-          glsl300es:
-          glsl450core:
-          spirv:
-          metal:
-      - entry: "PSGround"
-        profile: "ps_5_0"
-        targets:
-          glsl450core:
-          spirv:
+#sources:
+#  - source: "HelloGame.hlsl"
+#    entries:
+#      - entry: "VSInstance"
+#        profile: "vs_5_0"
+#        targets: [glsl300es, glsl450core, spirv, metal]
+#      - entry: "PSInstance"
+#        profile: "ps_5_0"
+#        targets: [glsl300es, glsl450core, spirv, metal]
+#      - entry: "VSGround"
+#        profile: "vs_5_0"
+#        targets: [glsl300es, glsl450core, spirv, metal]
+#      - entry: "PSGround"
+#        profile: "ps_5_0"
+#        targets: [glsl450core, spirv]

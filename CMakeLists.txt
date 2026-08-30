@@ -215,6 +215,24 @@ if(NOT LLGL_BUILD_WRAPPER_C99)
     endif()
 endif()
 
+set(LLGL_TRANSLATE_SHADERS "Once" CACHE STRING "Runs the shader cross-compilation script for all examples; Set to 'Never', 'Once', or 'Always'.")
+set_property(CACHE LLGL_TRANSLATE_SHADERS PROPERTY STRINGS "Never" "Once" "Always")
+
+
+# === Optional Dependencies ===
+
+find_package(Python3 COMPONENTS Interpreter)
+
+set(TRANSLATE_SHADERS_ENABLED ON)
+if(NOT Python3_Interpreter_FOUND)
+    message(WARNING "Python3 was not found; Shader cross-compilation is disabled.")
+    set(TRANSLATE_SHADERS_ENABLED OFF)
+endif()
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py")
+    message(WARNING "scripts/TranslateShaders.py is missing; Shader cross-compilation is disabled.")
+    set(TRANSLATE_SHADERS_ENABLED OFF)
+endif()
+
 
 # === Functions ===
 
@@ -295,9 +313,9 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     else()
         # Find all source files for project
         if(APPLE)
-            find_source_files(ProjectFiles RES ${SRC_FILES})
+            find_source_files(ProjectFiles RES "${SRC_FILES}" "${SRC_FILES}/.autogen")
         else()
-            find_source_files(ProjectFiles CXX ${SRC_FILES})
+            find_source_files(ProjectFiles CXX "${SRC_FILES}")
         endif()
     endif()
 
@@ -511,6 +529,34 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     elseif(${PROJECT_NAME} MATCHES "Testbed")
         set_project_working_dir(${PROJECT_NAME} "${TEST_PROJECTS_DIR}/Testbed")
         set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
+    endif()
+endfunction()
+
+function(translate_shaders SHADER_ROOT_DIR)
+    # Check if shader translation can be skipped, as this can save some time
+    set(SKIP_SHADER_TRANSLATION OFF)
+    if("${LLGL_TRANSLATE_SHADERS}" STREQUAL "Never")
+        set(SKIP_SHADER_TRANSLATION ON)
+    elseif("${LLGL_TRANSLATE_SHADERS}" STREQUAL "Once")
+        # Check if shader translation has already been done once, by looking up some .autogen folders
+        set(SOME_EXAMPLE_FOLDER "${CMAKE_SOURCE_DIR}/examples/Cpp/HelloTriangle")
+        if (EXISTS "${SOME_EXAMPLE_FOLDER}/.autogen" AND IS_DIRECTORY "${SOME_EXAMPLE_FOLDER}/.autogen")
+            set(SKIP_SHADER_TRANSLATION ON)
+        endif()
+    endif()
+
+    if(TRANSLATE_SHADERS_ENABLED AND NOT SKIP_SHADER_TRANSLATION)
+        # Invokes scripts/TranslateShaders.py Python script to translate all shaders from a given root directory
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py" --input "."
+            WORKING_DIRECTORY "${SHADER_ROOT_DIR}"
+            RESULT_VARIABLE TRANSLATE_RESULT
+            ERROR_VARIABLE TRANSLATE_ERROR
+        )
+
+        if (NOT "${TRANSLATE_ERROR}" STREQUAL "")
+            message(WARNING "Errors durring shader translation:\n==================================\n${TRANSLATE_ERROR}")
+        endif()
     endif()
 endfunction()
 

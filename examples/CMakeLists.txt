@@ -16,9 +16,11 @@ project(LLGL_Examples)
 if(LLGL_BUILD_EXAMPLES)
 
     add_subdirectory(Cpp)
+    translate_shaders("${CMAKE_CURRENT_SOURCE_DIR}/Cpp")
     
     if(LLGL_BUILD_WRAPPER_C99)
         add_subdirectory(C99)
+        #translate_shaders("${CMAKE_CURRENT_SOURCE_DIR}/C99")
     endif(LLGL_BUILD_WRAPPER_C99)
     
     if(LLGL_BUILD_WRAPPER_CSHARP)

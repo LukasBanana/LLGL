@@ -1,18 +1,18 @@
-sources:
-  - source: "Example.hlsl"
-    entries:
-      - entry: "VS"
-        profile: "vs_5_0"
-        targets: [glsl450core, glsl320es, spirv, metal]
-      - entry: "PS"
-        profile: "ps_5_0"
-        targets: [glsl450core, glsl320es, spirv, metal]
-      - entry: "CSForces"
-        profile: "cs_5_0"
-        targets: [glsl450core, glsl320es, metal, spirv]
-      - entry: "CSStretchConstraints"
-        profile: "cs_5_0"
-        targets: [glsl450core, glsl320es, spirv]
-      - entry: "CSRelaxation"
-        profile: "cs_5_0"
-        targets: [glsl450core, glsl320es, spirv]
+#sources:
+#  - source: "Example.hlsl"
+#    entries:
+#      - entry: "VS"
+#        profile: "vs_5_0"
+#        targets: [glsl450core, glsl320es, spirv, metal]
+#      - entry: "PS"
+#        profile: "ps_5_0"
+#        targets: [glsl450core, glsl320es, spirv, metal]
+#      - entry: "CSForces"
+#        profile: "cs_5_0"
+#        targets: [glsl450core, glsl320es, metal, spirv]
+#      - entry: "CSStretchConstraints"
+#        profile: "cs_5_0"
+#        targets: [glsl450core, glsl320es, spirv]
+#      - entry: "CSRelaxation"
+#        profile: "cs_5_0"
+#        targets: [glsl450core, glsl320es, spirv]

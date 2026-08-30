@@ -1,27 +1,12 @@
-sources:
-  - source: "Example.hlsl"
-    entries:
-      - entry: "VShadowMap"
-        profile: "vs_5_0"
-        targets:
-          glsl140core:
-          glsl450core:
-          glsl300es:
-          spirv:
-          metal:
-      - entry: "VScene"
-        profile: "vs_5_0"
-        targets:
-          glsl140core:
-          glsl450core:
-          glsl300es:
-          spirv:
-          metal:
-      - entry: "PScene"
-        profile: "ps_5_0"
-        targets:
-          glsl140core:
-          glsl450core:
-          glsl300es:
-          spirv:
-          metal:
+#sources:
+#  - source: "Example.hlsl"
+#    entries:
+#      - entry: "VShadowMap"
+#        profile: "vs_5_0"
+#        targets: [glsl140core, glsl450core, glsl300es, spirv, metal]
+#      - entry: "VScene"
+#        profile: "vs_5_0"
+#        targets: [glsl140core, glsl450core, glsl300es, spirv, metal]
+#      - entry: "PScene"
+#        profile: "ps_5_0"
+#        targets: [glsl140core, glsl450core, glsl300es, spirv, metal]
