@@ -9,7 +9,17 @@
 #include "FileUtils.h"
 #include <LLGL/Log.h>
 #include <string.h>
+
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #include <stb/stb_image.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 bool ImageReader::LoadFromFile(const std::string& filename, LLGL::Format format)

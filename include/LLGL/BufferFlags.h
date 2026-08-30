@@ -205,11 +205,8 @@ struct VertexBufferView
     std::uint32_t   stride  = 0;
 
     /**
-    \brief Specifies the offset (in bytes) relative to the beginning of the buffer.
-    \remarks This can be used for offsets when creating a BufferArray, similar to binding a single vertex buffer with offset:
-    \code
-    myCmdBuffer->SetVertexBuffer(buffer, stride, offset).
-    \endcode
+    \brief Specifies the base offset (in bytes) relative to the beginning of the buffer.
+    \remarks This will be added to each vertex attribute offset.
     \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
     */
     std::uint64_t   offset  = 0;

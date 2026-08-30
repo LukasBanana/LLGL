@@ -154,6 +154,7 @@ class TestbedContext
         enum Shaders
         {
             VSSolid = 0,
+            VSSolidInstanced,
             PSSolid,
 
             VSTextured,

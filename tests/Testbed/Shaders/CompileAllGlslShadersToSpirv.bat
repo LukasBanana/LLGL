@@ -1,6 +1,7 @@
 @echo off
 
 glslangValidator -V -DENABLE_SPIRV=1 -o TriangleMesh\TriangleMesh.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -DIS_INSTANCED=1 -o TriangleMesh\TriangleMesh.Instanced.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o TriangleMesh\TriangleMesh.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=1 -o TriangleMesh\TriangleMesh.Textured.450core.vert.spv TriangleMesh\TriangleMesh.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -DNUM_TEXTURES=1 -o TriangleMesh\TriangleMesh.Textured.450core.frag.spv TriangleMesh\TriangleMesh.450core.frag

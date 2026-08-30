@@ -65,6 +65,7 @@ LLGL_UNIT_TEST( DepthBuffer );
 LLGL_UNIT_TEST( StencilBuffer );
 LLGL_UNIT_TEST( SceneUpdate );
 LLGL_UNIT_TEST( VertexBuffer );
+LLGL_UNIT_TEST( VertexArray );
 LLGL_UNIT_TEST( BlendStates );
 LLGL_UNIT_TEST( DualSourceBlending );
 LLGL_UNIT_TEST( AlphaOnlyTexture );

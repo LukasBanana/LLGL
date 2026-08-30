@@ -8,11 +8,20 @@
 #include <LLGL/Utils/Image.h>
 #include <stdio.h>
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 LLGL::Image LoadImage(const std::string& filename, const LLGL::ImageFormat format = LLGL::ImageFormat::RGB)

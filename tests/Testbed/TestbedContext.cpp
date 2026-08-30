@@ -12,11 +12,20 @@
 #include <string.h>
 #include <fstream>
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 static const char* k_defaultOutputDir       = "Output/";
@@ -1001,6 +1010,12 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
 
 bool TestbedContext::LoadShaders()
 {
+    const ShaderMacro definesInstanced[] =
+    {
+        ShaderMacro{ "IS_INSTANCED", "1" },
+        ShaderMacro{ nullptr, nullptr }
+    };
+
     const ShaderMacro definesNumTextures1[] =
     {
         ShaderMacro{ "NUM_TEXTURES", "1" },
@@ -1022,6 +1037,7 @@ bool TestbedContext::LoadShaders()
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesInstanced);
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesNumTextures1);
         shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", definesNumTextures1);
@@ -1077,6 +1093,7 @@ bool TestbedContext::LoadShaders()
             return false;
         }
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex);
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesInstanced);
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment);
         shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesNumTextures1);
         shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesNumTextures1);
@@ -1159,6 +1176,7 @@ bool TestbedContext::LoadShaders()
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.450core.vert.spv",           ShaderType::Vertex);
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.Instanced.450core.vert.spv", ShaderType::Vertex);
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.450core.frag.spv",           ShaderType::Fragment);
         shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.vert.spv",  ShaderType::Vertex);
         shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.frag.spv",  ShaderType::Fragment);

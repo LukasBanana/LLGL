@@ -1051,6 +1051,18 @@ static void AttachGLLegacyShaders(
     }
 }
 
+// Reserves the memorh necessary to hold all vertex input and output attribute names.
+static void ReserveAttribNames(
+    LinearStringContainer&      attribNames,
+    ArrayView<VertexAttribute>  inputVertexAttribs,
+    ArrayView<VertexAttribute>  outputVertexAttribs)
+{
+    for (const auto& attr : inputVertexAttribs)
+        attribNames.Reserve(attr.name.size());
+    for (const auto& attr : outputVertexAttribs)
+        attribNames.Reserve(attr.name.size());
+}
+
 void GLShaderProgram::BuildProgramBinary(
     ArrayView<const Shader*>    shaders,
     ArrayView<VertexAttribute>  inputVertexAttribs,
@@ -1089,6 +1101,7 @@ void GLShaderProgram::BuildProgramBinary(
 
     /* Build input layout for vertex shader */
     LinearStringContainer attribNames;
+    ReserveAttribNames(attribNames, inputVertexAttribs, outputVertexAttribs);
 
     if (!inputVertexAttribs.empty())
     {

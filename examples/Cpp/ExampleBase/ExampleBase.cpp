@@ -14,11 +14,20 @@
 #include <thread>
 #include <cmath>
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
 Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.

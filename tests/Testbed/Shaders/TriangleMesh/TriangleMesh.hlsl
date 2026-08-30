@@ -9,6 +9,10 @@
 #define NUM_TEXTURES 0
 #endif
 
+#ifndef IS_INSTANCED
+#define IS_INSTANCED 0
+#endif
+
 cbuffer Scene : register(b1)
 {
     float4x4 vpMatrix;
@@ -19,25 +23,37 @@ cbuffer Scene : register(b1)
 
 struct VertexIn
 {
-    float3 position : POSITION;
-    float3 normal   : NORMAL;
-    float2 texCoord : TEXCOORD;
+    float3      position        : POSITION;
+    float3      normal          : NORMAL;
+    float2      texCoord        : TEXCOORD;
+    #if IS_INSTANCED
+    float4x4    instanceMatrix  : INSTANCEMATRIX;
+    float4      instanceColor   : INSTANCECOLOR;
+    #endif
 };
 
 struct VertexOut
 {
     float4 position : SV_Position;
     float3 normal   : NORMAL;
-    #if NUM_TEXTURES != 0
+    #if NUM_TEXTURES > 0
     float2 texCoord : TEXCOORD;
     #endif
+    float4 baseColor : BASECOLOR;
 };
 
 void VSMain(VertexIn inp, out VertexOut outp)
 {
-    outp.position = mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
-    outp.normal   = normalize(mul(wMatrix, float4(inp.normal, 0)).xyz);
-    #if NUM_TEXTURES != 0
+    #if IS_INSTANCED
+    outp.position   = mul(vpMatrix, mul(inp.instanceMatrix, float4(inp.position, 1)));
+    outp.normal     = normalize(mul(inp.instanceMatrix, float4(inp.normal, 0)).xyz);
+    outp.baseColor  = solidColor * inp.instanceColor;
+    #else
+    outp.position   = mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
+    outp.normal     = normalize(mul(wMatrix, float4(inp.normal, 0)).xyz);
+    outp.baseColor  = solidColor;
+    #endif
+    #if NUM_TEXTURES > 0
     outp.texCoord = inp.texCoord;
     #endif
 }
@@ -95,5 +111,5 @@ float4 PSMain(VertexOut inp) : SV_Target
 
     #endif
 
-    return solidColor * albedo * float4((float3)shading, 1.0);
+    return inp.baseColor * albedo * float4((float3)shading, 1.0);
 }

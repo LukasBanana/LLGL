@@ -20,6 +20,7 @@ layout(std140) uniform Scene
 };
 
 in vec3 vNormal;
+in vec4 vBaseColor;
 
 #if NUM_TEXTURES != 0
 in vec2 vTexCoord;
@@ -76,5 +77,5 @@ void main()
 
     #endif
 
-    outColor = solidColor * albedo * vec4(vec3(shading), 1.0);
+    outColor = vBaseColor * albedo * vec4(vec3(shading), 1.0);
 }

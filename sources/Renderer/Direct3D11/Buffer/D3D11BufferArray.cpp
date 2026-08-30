@@ -29,7 +29,7 @@ D3D11BufferArray::D3D11BufferArray(ArrayView<VertexBufferView> bufferViews) :
     {
         const VertexBufferView& view = bufferViews[i];
         auto* bufferD3D = LLGL_CAST(D3D11Buffer*, view.buffer);
-        buffersAndBindingLocators_[i]                       = bufferD3D;
+        buffersAndBindingLocators_[i]                       = bufferD3D->GetNative();
         buffersAndBindingLocators_[i + secondBucketOffset]  = bufferD3D->GetBindingLocator();
         stridesAndOffsets_[i]                               = (view.stride > 0 ? view.stride : bufferD3D->GetStride());
         stridesAndOffsets_[i + secondBucketOffset]          = static_cast<UINT>(view.offset);
