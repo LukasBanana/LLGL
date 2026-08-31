@@ -366,6 +366,59 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     return S_OK;
 }
 
+struct D3D12ShaderTypeReflection
+{
+    ID3D12ShaderReflectionType* type;
+    D3D12_SHADER_TYPE_DESC      desc;
+};
+
+static HRESULT ReflectD3DCbufferField(
+    std::vector<D3D12ConstantReflection>&   outFieldsInfo,
+    const D3D12ShaderTypeReflection&        typeReflection,
+    UINT                                    baseOffset,
+    UINT                                    parentFieldSize,
+    const char*                             parentFieldName = nullptr)
+{
+    if (typeReflection.type == nullptr)
+        return E_POINTER;
+
+    /* For structs, append field names recursively */
+    if (typeReflection.desc.Class == D3D_SVC_STRUCT)
+    {
+        SmallVector<D3D12ShaderTypeReflection> memberTypes{ typeReflection.desc.Members, UninitializeTag{} };
+        for_range(i, typeReflection.desc.Members)
+        {
+            memberTypes[i].type = typeReflection.type->GetMemberTypeByIndex(i);
+            HRESULT hr = memberTypes[i].type->GetDesc(&(memberTypes[i].desc));
+            if (FAILED(hr))
+                return hr;
+        }
+
+        for_range(i, typeReflection.desc.Members)
+        {
+            /* Determine struct member sizes by difference between their offsets, since D3D12_SHADER_TYPE_DESC does not provide this information */
+            const UINT memberSize = (i + 1 < typeReflection.desc.Members ? memberTypes[i + 1].desc.Offset : parentFieldSize) - memberTypes[i].desc.Offset;
+
+            /* Construct sub field name by prefixing it with its parent's name */
+            const LPCSTR memberTypeName = typeReflection.type->GetMemberTypeName(i);
+            const std::string subFieldName = (parentFieldName == nullptr ? std::string(memberTypeName) : std::string(parentFieldName) + "." + memberTypeName);
+
+            HRESULT hr = ReflectD3DCbufferField(outFieldsInfo, memberTypes[i], baseOffset + typeReflection.desc.Offset, memberSize, subFieldName.c_str());
+            if (FAILED(hr))
+                return hr;
+        }
+    }
+    else
+    {
+        if (parentFieldName != nullptr && *parentFieldName != '\0')
+            outFieldsInfo.push_back(D3D12ConstantReflection{ parentFieldName, baseOffset + typeReflection.desc.Offset, parentFieldSize });
+        else
+            outFieldsInfo.push_back(D3D12ConstantReflection{ typeReflection.desc.Name, baseOffset + typeReflection.desc.Offset, parentFieldSize });
+    }
+
+    return S_OK;
+}
+
 HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
 {
     HRESULT hr = S_OK;
@@ -419,8 +472,19 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
                 if (FAILED(hr))
                     return hr;
 
-                if ((fieldDesc.uFlags & D3D_SVF_USED) != 0)
-                    fieldsInfo.push_back(D3D12ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
+                if ((fieldDesc.uFlags & D3D_SVF_USED) == 0)
+                    continue;
+
+                /* Get type reflection of current field */
+                D3D12ShaderTypeReflection fieldType;
+                fieldType.type = fieldReflection->GetType();
+                hr = fieldType.type->GetDesc(&(fieldType.desc));
+                if (FAILED(hr))
+                    return hr;
+
+                hr = ReflectD3DCbufferField(fieldsInfo, fieldType, fieldDesc.StartOffset, fieldDesc.Size, fieldDesc.Name);
+                if (FAILED(hr))
+                    return hr;
             }
 
             /* Write reflection output */

@@ -140,7 +140,8 @@ void D3D12PipelineLayout::ReleaseRootSignature()
 
 ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitConstants(
     const ArrayView<D3D12Shader*>&          shaders,
-    std::vector<D3D12RootConstantLocation>& outRootConstantMap) const
+    std::vector<D3D12RootConstantLocation>& outRootConstantMap,
+    Report&                                 outReport) const
 {
     if (!rootSignature_)
         return nullptr;
@@ -175,6 +176,19 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
             }
         }
         return {};
+    };
+
+    auto FindSimilarCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> const char*
+    {
+        for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
+        {
+            for (const D3D12ConstantReflection& field : cbuffer->fields)
+            {
+                if (field.name.find(name.data(), 0, name.size()) != std::string::npos)
+                    return field.name.c_str();
+            }
+        }
+        return nullptr;
     };
 
     for (D3D12Shader* shader : shaders)
@@ -213,8 +227,15 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     {
         /* Find constant buffer field for specified uniform name */
         const D3D12CbufferField field = FindCbufferField(uniforms_[i].name);
-        LLGL_ASSERT_PTR(field.constants);
-        LLGL_ASSERT_PTR(field.reflection);
+        const bool isUniformFound = (field.constants != nullptr && field.reflection != nullptr);
+        if (!isUniformFound)
+        {
+            if (const char* similarFieldName = FindSimilarCbufferField(uniforms_[i].name))
+                outReport.Errorf("failed to find cbuffer field for uniform '%s'; did you mean '%s'?\n", uniforms_[i].name.c_str(), similarFieldName);
+            else
+                outReport.Errorf("failed to find cbuffer field for uniform '%s'\n", uniforms_[i].name.c_str());
+            return nullptr;
+        }
 
         /* Find or append root parameter for root constants */
         UINT                rootParamIndex  = FindOrAppendRootParameter(*field.constants, field.visibility);

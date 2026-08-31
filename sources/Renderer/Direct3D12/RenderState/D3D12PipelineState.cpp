@@ -35,7 +35,7 @@ D3D12PipelineState::D3D12PipelineState(
         pipelineLayout_ = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
 
         if (pipelineLayout_->NeedsRootConstantPermutation())
-            rootSignature_ = pipelineLayout_->CreateRootSignatureWith32BitConstants(CastShaderArray<D3D12Shader>(shaders), rootConstantMap_);
+            rootSignature_ = pipelineLayout_->CreateRootSignatureWith32BitConstants(CastShaderArray<D3D12Shader>(shaders), rootConstantMap_, GetMutableReport());
         else
             rootSignature_ = pipelineLayout_->GetFinalizedRootSignature();
     }
