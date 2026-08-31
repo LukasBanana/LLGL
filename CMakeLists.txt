@@ -539,7 +539,7 @@ function(translate_shaders SHADER_ROOT_DIR)
         set(SKIP_SHADER_TRANSLATION ON)
     elseif("${LLGL_TRANSLATE_SHADERS}" STREQUAL "Once")
         # Check if shader translation has already been done once, by looking up some .autogen folders
-        set(SOME_EXAMPLE_FOLDER "${CMAKE_SOURCE_DIR}/examples/Cpp/HelloTriangle")
+        set(SOME_EXAMPLE_FOLDER "${CMAKE_SOURCE_DIR}/examples/Cpp/Animation")
         if (EXISTS "${SOME_EXAMPLE_FOLDER}/.autogen" AND IS_DIRECTORY "${SOME_EXAMPLE_FOLDER}/.autogen")
             set(SKIP_SHADER_TRANSLATION ON)
         endif()

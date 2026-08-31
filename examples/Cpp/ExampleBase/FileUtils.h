@@ -56,6 +56,9 @@ class AssetReader
 
 };
 
+// Returns true if the specified asset exists and resolves the output path.
+bool ResolveAssetFilename(const std::string& name, std::string& outFullPath);
+
 // Returns the content of the specified asset.
 // If the file could not be found, an empty container is returned and an error is reported to the log.
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath = nullptr);

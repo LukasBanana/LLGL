@@ -916,30 +916,104 @@ LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(const ShaderDescWrap
     return LoadShaderInternal(shaderDesc, defines, /*patchClippingOrigin:*/ true);
 }
 
+static std::string FindShader(const std::string& basename, const std::initializer_list<const char*>& suffixes)
+{
+    // Try to find the shaders
+    std::string shaderFilename;
+    for (const char* relativePath : { "", ".autogen" })
+    {
+        for (const char* suffix : suffixes)
+        {
+            // Construct current filename to test against
+            std::string inputFilename;
+            if (relativePath != nullptr && *relativePath != '\0')
+            {
+                inputFilename.append(relativePath);
+                inputFilename.append("/");
+            }
+
+            inputFilename.append(basename);
+            inputFilename.append(".");
+            inputFilename.append(suffix);
+
+            // Check if file exists. If so, return its resolved asset path
+            if (ResolveAssetFilename(inputFilename, shaderFilename))
+                return shaderFilename;
+        }
+    }
+
+    // Print error that no shader could be found
+    {
+        std::string suffixesPattern;
+        for (const char* suffix : suffixes)
+        {
+            if (!suffixesPattern.empty())
+                suffixesPattern.append("|");
+            suffixesPattern.append(suffix);
+        }
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Could not find shader '%s.(%s)'", basename, suffixesPattern.c_str());
+    }
+    return "";
+}
+
 LLGL::Shader* ExampleBase::LoadStandardVertexShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
 {
     // Load shader program
-    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, defines);
+    if (Supported(LLGL::ShadingLanguage::GLSL))
+    {
+        const std::string source = FindShader("Example", { "vert", "140core.vert", "400core.vert", "420core.vert", "450core.vert" });
+        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
+    }
+    if (Supported(LLGL::ShadingLanguage::ESSL))
+    {
+        const std::string source = FindShader("Example", { "300es.vert", "vert" });
+        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, defines);
+    {
+        const std::string source = FindShader("Example", { "450core.vert.spv" });
+        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, defines);
+    {
+        const std::string source = FindShader("Example", { "hlsl" });
+        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str(), entryPoint, "vs_5_0" }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, defines);
+    {
+        const std::string source = FindShader("Example", { "metal" });
+        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str(), entryPoint, "1.1" }, defines);
+    }
     return nullptr;
 }
 
 LLGL::Shader* ExampleBase::LoadStandardFragmentShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, defines);
+    if (Supported(LLGL::ShadingLanguage::GLSL))
+    {
+        const std::string source = FindShader("Example", { "frag", "140core.frag", "400core.frag", "420core.frag", "450core.frag" });
+        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
+    }
+    if (Supported(LLGL::ShadingLanguage::ESSL))
+    {
+        const std::string source = FindShader("Example", { "300es.frag", "frag" });
+        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, defines);
+    {
+        const std::string source = FindShader("Example", { "450core.frag.spv" });
+        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, defines);
+    {
+        const std::string source = FindShader("Example", { "hlsl" });
+        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str(), entryPoint, "ps_5_0" }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, defines);
+    {
+        const std::string source = FindShader("Example", { "metal" });
+        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str(), entryPoint, "1.1" }, defines);
+    }
     return nullptr;
 }
 
@@ -948,13 +1022,30 @@ LLGL::Shader* ExampleBase::LoadStandardComputeShader(
     const LLGL::ShaderMacro*    defines)
 {
     if (Supported(LLGL::ShadingLanguage::GLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, defines);
+    {
+        const std::string source = FindShader("Example", { "comp", "430core.comp", "450core.comp" });
+        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
+    }
+    if (Supported(LLGL::ShadingLanguage::ESSL))
+    {
+        const std::string source = FindShader("Example", { "320es.comp", "comp" });
+        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, defines);
+    {
+        const std::string source = FindShader("Example", { "450core.comp.spv" });
+        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, defines);
+    {
+        const std::string source = FindShader("Example", { "hlsl" });
+        return LoadShader({ LLGL::ShaderType::Compute, source.c_str(), entryPoint, "cs_5_0" }, defines);
+    }
     if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, defines);
+    {
+        const std::string source = FindShader("Example", { "metal" });
+        return LoadShader({ LLGL::ShaderType::Compute, source.c_str(), entryPoint, "1.1" }, defines);
+    }
     return nullptr;
 }
 

@@ -214,6 +214,12 @@ def find_fxc_tool_path() -> Path | None:
 
 
 def find_fxc_tool(verbose: bool) -> Path | None:
+    # Skip FXC outside of Windows environment
+    if sys.platform != "win32":
+        if verbose:
+            print("FXC is only available on Windows")
+        return None
+
     fxc_path = find_fxc_tool_path()
     if verbose:
         if fxc_path is None:
@@ -526,6 +532,41 @@ def output_stem(source, entry, trimmed_entries, target = None, stage = None, ove
         return f"{source.stem}{override_suffix}.{entry}"
 
 
+def sanitize_glsl_output(output_file: Path):
+    with open(output_file, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    is_vertex_shader = output_file.suffix == ".vert"
+    is_fragment_shader = output_file.suffix == ".frag"
+
+    # Remove all 'in_var_' prefixes from vertex shader inputs
+    if is_vertex_shader:
+        content = content.replace("in_var_", "")
+        content = content.replace("out_var_", "v_")
+    elif is_fragment_shader:
+        content = content.replace("in_var_", "v_")
+        content = content.replace("out_var_", "")
+
+    # Rename SPIRV-Cross UBO types and remove their instance aliases.
+    for uniform_match in re.finditer(
+        r"uniform\s+type_(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{.*?\}\s*(?P=name)\s*;",
+        content,
+        re.DOTALL,
+    ):
+        uniform_name = uniform_match.group("name")
+        sanitized_uniform = re.sub(
+            rf"\s*\}}\s*{re.escape(uniform_name)}\s*;$",
+            "\n};",
+            uniform_match.group(0),
+        ).replace(f"type_{uniform_name}", uniform_name, 1)
+        content = content.replace(uniform_match.group(0), sanitized_uniform)
+        content = content.replace(f"{uniform_name}.", "")
+
+    # Write back into the same output file
+    with open(output_file, "w", encoding="utf-8") as file:
+        file.write(content)
+
+
 def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets, fxc_tool: Path | None, permutation):
     targets = filter_targets(entry["targets"], enabled_targets)
     if not targets:
@@ -540,44 +581,76 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
 
     optimization_args = [] if debug else ["-O3"]
 
+    # Compile HLSL to SPIR-V using DXC
     run_command(
-        ["dxc", "-nologo", "-no-warnings", "-spirv", "-T", clamp_dxc_profile(entry["profile"]), "-E", entry["entry"], "-Fo", intermediate_spv, source_file] + optimization_args + dxc_macro_args,
+        [
+            "dxc",
+            "-nologo",
+            "-no-warnings",
+            "-spirv",
+            "-fspv-reflect",
+            "-T", clamp_dxc_profile(entry["profile"]),
+            "-E", entry["entry"],
+            "-Fo", intermediate_spv,
+            source_file
+        ] + optimization_args + dxc_macro_args,
         verbose,
         shader_info_directory,
     )
 
     for target in targets:
         if target == "spirv":
+            # Produce SPIR-V disassembly as debug output
             if verbose:
                 print(f"    wrote {format_command_argument(intermediate_spv, shader_info_directory)}")
             if debug:
                 run_command(
-                    ["spirv-dis", intermediate_spv, "-o", intermediate_spv.with_suffix(".spvasm")],
+                    [
+                        "spirv-dis",
+                        intermediate_spv,
+                        "-o", intermediate_spv.with_suffix(".spvasm")
+                    ],
                     verbose,
                     shader_info_directory,
                 )
             continue
 
         if target == "metal":
+            # Compile to Metal using SPIRV-Cross
             output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.metal"
             run_command(
-                ["spirv-cross", intermediate_spv, "--msl", "--output", output_file],
+                [
+                    "spirv-cross",
+                    intermediate_spv,
+                    "--msl",
+                    "--output", output_file
+                ],
                 verbose,
                 shader_info_directory,
             )
             continue
 
         if target == "dxil":
+            # Compile to DXIL bytecode using DXC
             output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, None, stage_extension, override)}.dxil"
             debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if debug else []
             run_command(
-                ["dxc", "-nologo", "-no-warnings", "-T", clamp_dxc_profile(entry["profile"]), "-E", entry["entry"], "-Fo", output_file, source_file] + optimization_args + debug_args + dxc_macro_args,
+                [
+                    "dxc",
+                    "-nologo",
+                    "-no-warnings",
+                    "-T", clamp_dxc_profile(entry["profile"]),
+                    "-E", entry["entry"],
+                    "-Fo", output_file,
+                    source_file
+                ] + optimization_args + debug_args + dxc_macro_args,
                 verbose,
                 shader_info_directory,
             )
             continue
 
         if target == "dxbc":
+            # Compile to DXBC bytecode using FXC
             if fxc_tool is None:
                 print(
                     f"warning: skipping DXBC output for {source_file.name} entry "
@@ -595,24 +668,32 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
             )
             continue
 
+        # Compile to GLSL using SPIRV-Cross
         target_match = GLSL_TARGET_PATTERN.fullmatch(target)
         if target_match is None:
             raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
         output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension, override)}"
-        command = ["spirv-cross", intermediate_spv, "--version", target_match["version"]]
+
+        command = [
+            "spirv-cross",
+            "--no-420pack-extension",
+            "--combined-samplers-inherit-bindings",
+            intermediate_spv,
+            "--version", target_match["version"]
+        ]
         if target_match["flavor"] == "es":
             command.append("--es")
         command.extend(["--output", output_file])
         run_command(command, verbose, shader_info_directory)
 
+        # Patch GLSL output to make it work with the LLGL example projects
+        sanitize_glsl_output(output_file)
+
     # Clean up intermediate files that are not needed in the final outut
     if "spirv" not in targets:
         intermediate_spv.unlink()
         if verbose:
-            print(
-                "    removed intermediate "
-                f"{format_command_argument(intermediate_spv, shader_info_directory)}"
-            )
+            print(f"    removed intermediate {format_command_argument(intermediate_spv, shader_info_directory)}")
 
 
 def translate_glsl_source(source_file, entries, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, glslang_tool: str, enabled_targets):

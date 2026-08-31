@@ -102,6 +102,19 @@ static std::string FindAssetFilename(const std::string& name)
     return name;
 }
 
+bool ResolveAssetFilename(const std::string& name, std::string& outFullPath)
+{
+    // Get full filename for asset
+    const std::string filename = FindAssetFilename(name);
+    std::ifstream file{ filename };
+    if (file.good())
+    {
+        outFullPath = filename;
+        return true;
+    }
+    return false;
+}
+
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
 {
     // Get full filename for asset
