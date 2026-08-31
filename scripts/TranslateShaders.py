@@ -567,6 +567,26 @@ def sanitize_glsl_output(output_file: Path):
         file.write(content)
 
 
+def compile_spirv(source, output, profile, extra_args, shader_info_directory: Path, verbose: bool, in_entry: str, out_entry: str = None):
+    dxc_args = [
+        "dxc",
+        "-nologo",
+        "-no-warnings",
+        "-spirv",
+        "-fspv-reflect",
+        "-fvk-auto-shift-bindings",
+        "-T", clamp_dxc_profile(profile),
+        "-E", in_entry,
+        "-Fo", output,
+        source
+    ] + extra_args
+
+    if out_entry:
+        dxc_args.append(f"-fspv-entrypoint-name={out_entry}")
+
+    run_command(dxc_args, verbose, shader_info_directory)
+
+
 def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, trimmed_entries, enabled_targets, fxc_tool: Path | None, permutation):
     targets = filter_targets(entry["targets"], enabled_targets)
     if not targets:
@@ -577,38 +597,43 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
     macros = permutation["macros"] if permutation else {}
     dxc_macro_args = [f"-D{name}={value}" for name, value in macros.items()]
     fxc_macro_args = [f"/D{name}={value}" for name, value in macros.items()]
-    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension, override)}.spv"
+    intermediate_spv = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension, override)}.temp.spv"
 
     optimization_args = [] if debug else ["-O3"]
 
     # Compile HLSL to SPIR-V using DXC
-    run_command(
-        [
-            "dxc",
-            "-nologo",
-            "-no-warnings",
-            "-spirv",
-            "-fspv-reflect",
-            "-T", clamp_dxc_profile(entry["profile"]),
-            "-E", entry["entry"],
-            "-Fo", intermediate_spv,
-            source_file
-        ] + optimization_args + dxc_macro_args,
-        verbose,
-        shader_info_directory,
+    compile_spirv(
+        source = source_file,
+        output = intermediate_spv,
+        profile = entry["profile"],
+        extra_args = optimization_args + dxc_macro_args,
+        shader_info_directory = shader_info_directory,
+        verbose = verbose,
+        in_entry = entry["entry"]
     )
 
     for target in targets:
         if target == "spirv":
+            # Compile to SPIR-V and set entry point to "main()" as LLGL's examples don't use custom entry points
+            output_file = output_directory / f"{output_stem(source_file, entry['entry'], trimmed_entries, '450core', stage_extension, override)}.spv"
+            compile_spirv(
+                source = source_file,
+                output = output_file,
+                profile = entry["profile"],
+                extra_args = optimization_args + dxc_macro_args,
+                shader_info_directory = shader_info_directory,
+                verbose = verbose,
+                in_entry = entry["entry"],
+                out_entry = "main"
+            )
+
             # Produce SPIR-V disassembly as debug output
-            if verbose:
-                print(f"    wrote {format_command_argument(intermediate_spv, shader_info_directory)}")
             if debug:
                 run_command(
                     [
                         "spirv-dis",
-                        intermediate_spv,
-                        "-o", intermediate_spv.with_suffix(".spvasm")
+                        output_file,
+                        "-o", output_file.with_suffix(".spvasm")
                     ],
                     verbose,
                     shader_info_directory,
@@ -623,6 +648,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
                     "spirv-cross",
                     intermediate_spv,
                     "--msl",
+                    "--msl-decoration-binding", # LLGL examples maintain the same binding locations for all languages
                     "--output", output_file
                 ],
                 verbose,
@@ -690,10 +716,9 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
         sanitize_glsl_output(output_file)
 
     # Clean up intermediate files that are not needed in the final outut
-    if "spirv" not in targets:
-        intermediate_spv.unlink()
-        if verbose:
-            print(f"    removed intermediate {format_command_argument(intermediate_spv, shader_info_directory)}")
+    intermediate_spv.unlink()
+    if verbose:
+        print(f"    removed intermediate {format_command_argument(intermediate_spv, shader_info_directory)}")
 
 
 def translate_glsl_source(source_file, entries, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, glslang_tool: str, enabled_targets):
