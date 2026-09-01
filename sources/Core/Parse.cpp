@@ -836,6 +836,36 @@ static bool ParseLayoutSignatureBarrierFlag(Parser& parser, PipelineLayoutDescri
     return ReturnWithParseError(parser, "unknown barrier flag: %s", parser.Token());
 }
 
+// Parse an identifier or period separated chain of identifiers, e.g. 'parent.child'.
+static bool ParseIdentChain(Parser& parser, StringLiteral& outIdent)
+{
+    if (!parser.MatchIdent())
+        return ReturnWithParseError(parser, "expected identifier");
+
+    outIdent = parser.Accept();
+
+    if (parser.Match("."))
+    {
+        UTF8String identChain = outIdent.c_str();
+
+        do
+        {
+            parser.Accept();
+            identChain += '.';
+
+            if (!parser.MatchIdent())
+                return ReturnWithParseError(parser, "expected another identifier after '.' token");
+
+            identChain += parser.Accept();
+        }
+        while (parser.Match("."));
+
+        outIdent = StringLiteral{ identChain.c_str(), CopyTag{} };
+    }
+
+    return true;
+}
+
 static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor& outDesc, bool isHeap)
 {
     /* Check if resource type denotes a uniform binding */
@@ -854,10 +884,8 @@ static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor
         while (parser.Feed() && !parser.Match(")"))
         {
             /* Parse uniform name */
-            if (!parser.MatchIdent())
-                return ReturnWithParseError(parser, "expected uniform name");
-
-            uniformDesc.name = parser.Accept();
+            if (!ParseIdentChain(parser, uniformDesc.name))
+                return false;
 
             /* Parse optional array size */
             if (parser.Accept("["))

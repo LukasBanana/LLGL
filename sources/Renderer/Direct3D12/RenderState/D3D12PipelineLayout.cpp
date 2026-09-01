@@ -152,16 +152,16 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
 
     struct D3D12CbufferField
     {
-        const D3D12_ROOT_CONSTANTS*     constants;
-        const D3D12ConstantReflection*  reflection;
-        D3D12_SHADER_VISIBILITY         visibility;
+        const D3D12_ROOT_CONSTANTS* constants;
+        const DXConstantReflection* reflection;
+        D3D12_SHADER_VISIBILITY     visibility;
     };
 
     auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const LLGL::StringView& name) -> D3D12CbufferField
     {
         for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
         {
-            for (const D3D12ConstantReflection& field : cbuffer->fields)
+            for (const DXConstantReflection& field : cbuffer->fields)
             {
                 if (field.name == name)
                 {
@@ -182,7 +182,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     {
         for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
         {
-            for (const D3D12ConstantReflection& field : cbuffer->fields)
+            for (const DXConstantReflection& field : cbuffer->fields)
             {
                 if (field.name.find(name.data(), 0, name.size()) != std::string::npos)
                     return field.name.c_str();

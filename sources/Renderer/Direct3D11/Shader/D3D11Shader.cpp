@@ -415,7 +415,7 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
             if (FAILED(hr))
                 return hr;
 
-            std::vector<D3D11ConstantReflection> fieldsInfo;
+            std::vector<DXConstantReflection> fieldsInfo;
 
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {
@@ -429,7 +429,23 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
                 if (FAILED(hr))
                     return hr;
 
-                fieldsInfo.push_back(D3D11ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
+                if ((fieldDesc.uFlags & D3D_SVF_USED) == 0)
+                    continue;
+
+                /* Get type reflection of current field */
+                DXShaderTypeReflection<ID3D11ShaderReflectionType, D3D11_SHADER_TYPE_DESC> fieldType;
+                fieldType.type = fieldReflection->GetType();
+                hr = fieldType.type->GetDesc(&(fieldType.desc));
+                if (FAILED(hr))
+                    return hr;
+
+                hr = DXReflectCbufferField<ID3D11ShaderReflectionType, D3D11_SHADER_TYPE_DESC>(
+                    fieldsInfo, fieldType, fieldDesc.StartOffset, fieldDesc.Size, fieldDesc.Name
+                );
+                if (FAILED(hr))
+                    return hr;
+
+                fieldsInfo.push_back(DXConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
             }
 
             /* Write reflection output */

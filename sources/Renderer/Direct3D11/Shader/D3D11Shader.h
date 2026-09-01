@@ -15,6 +15,7 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Report.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../DXCommon/DXShaderReflection.h"
 #include <vector>
 #include <string>
 #include <d3d11.h>
@@ -24,18 +25,11 @@ namespace LLGL
 {
 
 
-struct D3D11ConstantReflection
-{
-    std::string name;   // Name of the constant buffer field.
-    UINT        offset; // Offset (in bytes) within the constant buffer.
-    UINT        size;   // Size (in bytes) of this uniform.
-};
-
 struct D3D11ConstantBufferReflection
 {
-    UINT                                    slot;
-    UINT                                    size;
-    std::vector<D3D11ConstantReflection>    fields;
+    UINT                                slot;
+    UINT                                size;
+    std::vector<DXConstantReflection>   fields;
 };
 
 class D3D11Shader : public Shader

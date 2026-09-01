@@ -278,14 +278,14 @@ class D3D12CommandContext
                 std::uint32_t   descriptorHeaps         : 1;
                 std::uint32_t   shadingRate1x1          : 1;
             }
-            dirtyBits;
+            dirtyBits = {};
 
             struct
             {
                 std::uint32_t   isDeferredPSO           : 1;
                 std::uint32_t   is16BitIndexFormat      : 1;
             }
-            stateBits;
+            stateBits = {};
 
             ID3D12RootSignature*    graphicsRootSignature                   = nullptr;
             ID3D12RootSignature*    computeRootSignature                    = nullptr;

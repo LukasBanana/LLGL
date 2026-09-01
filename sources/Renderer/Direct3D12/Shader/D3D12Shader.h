@@ -15,6 +15,7 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Report.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <vector>
 #include <d3d12.h>
@@ -24,18 +25,11 @@ namespace LLGL
 {
 
 
-struct D3D12ConstantReflection
-{
-    std::string name;   // Name of the constant buffer field.
-    UINT        offset; // Offset (in bytes) within the constant buffer the uniform's root parameter occupies.
-    UINT        size;   // Size (in bytes) of this uniform.
-};
-
 struct D3D12ConstantBufferReflection
 {
-    long                                    stageFlags;
-    D3D12_ROOT_CONSTANTS                    rootConstants;
-    std::vector<D3D12ConstantReflection>    fields;
+    long                                stageFlags;
+    D3D12_ROOT_CONSTANTS                rootConstants;
+    std::vector<DXConstantReflection>   fields;
 };
 
 class D3D12RenderSystem;
