@@ -97,7 +97,7 @@ public:
     virtual ~ExampleBase() = default;
 
     // Runs the main loop.
-    void Run();
+    int Run();
 
     // Draws a frame and presents the result on the screen.
     void DrawFrame();
@@ -184,6 +184,7 @@ private:
     bool                        showTimeRecords_    = false;
     bool                        fullscreen_         = false;
     bool                        useRightHandedProj_ = false;
+    int                         returnCode_         = 0;
     std::uint64_t               lastFrameTick_      = 0;
 
     TrackballRotationModel      trackballRotation_;
@@ -316,7 +317,7 @@ protected:
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
 
     // Quits the application by closing the window. This is used to quit prematurely when loading a PSO has failed.
-    void Quit();
+    void Quit(int returnCode = 0);
 
     // Returns the number of samples that was used when the swap-chain was created.
     inline std::uint32_t GetSampleCount() const
@@ -379,16 +380,20 @@ protected:
 template <typename T>
 void RunExample(android_app* state)
 {
+    #if LLGL_EXCEPTIONS_SUPPORTED
     try
+    #endif
     {
         ExampleBase::SetAndroidApp(state);
         T tutorial;
         tutorial.Run();
     }
+    #if LLGL_EXCEPTIONS_SUPPORTED
     catch (const std::exception& e)
     {
         LLGL_ANDROID_STDERR("%s\n", e.what());
     }
+    #endif
 }
 
 #define LLGL_IMPLEMENT_EXAMPLE(CLASS)       \
@@ -412,20 +417,29 @@ extern std::unique_ptr<ExampleBase> InstantiateExample();
 template <typename T>
 int RunExample(int argc, char* argv[])
 {
+    int returnCode = 0;
+
+    #if LLGL_EXCEPTIONS_SUPPORTED
     try
+    #endif
     {
         ExampleBase::ParseProgramArgs(argc, argv);
         T example;
-        example.Run();
+        returnCode = example.Run();
     }
+    #if LLGL_EXCEPTIONS_SUPPORTED
     catch (const std::exception& e)
     {
         LLGL::Log::Errorf("%s\n", e.what());
-        #if _WIN32
-        system("pause");
-        #endif
+        returnCode = 1;
     }
-    return 0;
+    #endif
+
+    #if _WIN32
+    if (returnCode != 0) { system("pause"); }
+    #endif
+
+    return returnCode;
 }
 
 #define LLGL_IMPLEMENT_EXAMPLE(CLASS)           \

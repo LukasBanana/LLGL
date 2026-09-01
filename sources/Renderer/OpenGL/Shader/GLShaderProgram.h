@@ -66,7 +66,7 @@ class GLShaderProgram final : public GLShaderPipeline
         static std::string GetGLProgramLog(GLuint program);
 
         // Invokes glBindAttribLocation on the specified program for all vertex attributes.
-        static void BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs);
+        static void BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs, bool isCaseInsensitive);
 
         // Invokes glBindFragDataLocation on the specified program for all fragment attributes.
         static void BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs);

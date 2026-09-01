@@ -84,6 +84,12 @@ class GLShader : public Shader
             return isSeparable_;
         }
 
+        // Returns true if this shader was created with the ShaderCompileFlags::CaseInsensitiveAttribs.
+        inline bool HasCaseInsensitiveAttribs() const
+        {
+            return hasCaseInvensitiveAttribs_;
+        }
+
         // For backwards compatibility only.
         inline const std::vector<GLVertexAttribute>& GetGLVertexAttributes() const
         {
@@ -154,6 +160,8 @@ class GLShader : public Shader
     private:
 
         const bool                      isSeparable_;
+        const bool                      hasCaseInvensitiveAttribs_;
+
         GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
         Report                          report_;
 

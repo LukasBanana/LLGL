@@ -26,8 +26,9 @@ namespace LLGL
 LLGL_DEPRECATED_IGNORE_PUSH()
 
 GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
-    Shader       { desc.type   },
-    isSeparable_ { isSeparable }
+    Shader                     { desc.type                                                        },
+    isSeparable_               { isSeparable                                                      },
+    hasCaseInvensitiveAttribs_ { ((desc.flags & ShaderCompileFlags::CaseInsensitiveAttribs) != 0) }
 {
     ReserveAttribs(desc);
     GLShader::BuildVertexInputLayout(desc.vertex.inputAttribs, shaderAttribs_, shaderAttribNames_);

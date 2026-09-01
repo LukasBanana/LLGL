@@ -99,7 +99,7 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     {
         case ShaderType::Vertex:
             /* Build input layout for vertex shader */
-            GLShaderProgram::BindAttribLocations(program, GetVertexAttribs());
+            GLShaderProgram::BindAttribLocations(program, GetVertexAttribs(), HasCaseInsensitiveAttribs());
             break;
 
         case ShaderType::Fragment:

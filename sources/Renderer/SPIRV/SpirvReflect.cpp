@@ -126,10 +126,11 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
     return SpirvResult::NoError;
 }
 
-static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
+static SpirvModuleView::const_iterator FindGlobalPushConstantVariable(const SpirvModuleView& module)
 {
-    for (const SpirvInstruction& instr : module)
+    for (auto it = module.begin(); it != module.end(); ++it)
     {
+        const SpirvInstruction& instr = *it;
         if (instr.opcode == spv::OpVariable)
         {
             /* OpVariable ResultType ResultId StorageClass[0] (Initializer[1]) */
@@ -137,7 +138,7 @@ static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
             if (storage == spv::StorageClassPushConstant)
             {
                 /* Return variable type; Must be OpTypePointer for push constants */
-                return instr.type;
+                return it;
             }
         }
         else if (instr.opcode == spv::OpFunction)
@@ -146,7 +147,7 @@ static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
             break;
         }
     }
-    return 0;
+    return module.end();
 }
 
 static spv::Id FindPointerTypeSubtype(const SpirvModuleView& module, spv::Id pointerTypeId)
@@ -179,12 +180,13 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
         return result;
 
     /* Find global variable declaration with PushConstant storage class */
-    const spv::Id pushConstantVarId = FindGlobalPushConstantVariableType(module);
-    if (pushConstantVarId == 0)
+    SpirvModuleView::const_iterator pushConstantVarIt = FindGlobalPushConstantVariable(module);
+    if (pushConstantVarIt == module.end())
         return SpirvResult::NoError;
+    const SpirvInstruction pushConstantVar = pushConstantVarIt.Get();
 
     /* Find pointer subtype for push constant variable */
-    const spv::Id pushConstantTypeId = FindPointerTypeSubtype(module, pushConstantVarId);
+    const spv::Id pushConstantTypeId = FindPointerTypeSubtype(module, pushConstantVar.type);
     if (pushConstantTypeId == 0)
         return SpirvResult::IdTypeMismatch;
 
@@ -210,7 +212,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
                 /* OpName Target[0] Name[1] */
                 if (instr.numOperands < 2)
                     return SpirvResult::OperandOutOfBounds;
-                if (instr.GetUInt32(0) == pushConstantTypeId)
+                if (instr.GetUInt32(0) == pushConstantVar.result)
                     outBlock.name = instr.GetString(1);
                 break;
 

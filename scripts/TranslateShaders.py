@@ -502,7 +502,9 @@ def run_command(command, verbose, shader_info_directory: Path):
             format_command_argument(argument, shader_info_directory)
             for argument in command
         ))
-    subprocess.run(command, check=True)
+    result: subprocess.CompletedProcess = subprocess.run(command, check=True)
+    if result.returncode != 0:
+        raise ShaderInfoError(f"command failed with exit code {result.returncode}: {' '.join(command)}")
 
 
 def get_stage_extension(profile):
@@ -591,6 +593,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
     targets = filter_targets(entry["targets"], enabled_targets)
     if not targets:
         return
+
     stage_extension = get_stage_extension(entry["profile"])
     output_directory.mkdir(parents=True, exist_ok=True)
     override = permutation["override"] if permutation else None
@@ -606,7 +609,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
         source = source_file,
         output = intermediate_spv,
         profile = entry["profile"],
-        extra_args = optimization_args + dxc_macro_args,
+        extra_args = dxc_macro_args,
         shader_info_directory = shader_info_directory,
         verbose = verbose,
         in_entry = entry["entry"]
@@ -620,7 +623,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
                 source = source_file,
                 output = output_file,
                 profile = entry["profile"],
-                extra_args = optimization_args + dxc_macro_args,
+                extra_args = optimization_args + dxc_macro_args, #TODO: likely needs to move optimization to a separate spirv-tools command
                 shader_info_directory = shader_info_directory,
                 verbose = verbose,
                 in_entry = entry["entry"],
@@ -718,7 +721,7 @@ def translate_hlsl_entry(source_file, entry, output_directory, debug: bool, verb
     # Clean up intermediate files that are not needed in the final outut
     intermediate_spv.unlink()
     if verbose:
-        print(f"    removed intermediate {format_command_argument(intermediate_spv, shader_info_directory)}")
+        print(f"    Removed intermediate {format_command_argument(intermediate_spv, shader_info_directory)}")
 
 
 def translate_glsl_source(source_file, entries, output_directory, debug: bool, verbose: bool, shader_info_directory: Path, glslang_tool: str, enabled_targets):
@@ -752,7 +755,7 @@ def translate_glsl_source(source_file, entries, output_directory, debug: bool, v
     if "spirv" not in targets:
         output_file.unlink()
         if verbose:
-            print(f"    removed intermediate {format_command_argument(output_file, shader_info_directory)}")
+            print(f"    Removed intermediate {format_command_argument(output_file, shader_info_directory)}")
 
 
 def output_directory_for(shader_info: Path, output_path: Path | None) -> Path:
@@ -819,6 +822,7 @@ def main():
         arguments.verbose,
     )
 
+    return_code = 0
     for shader_info, sources in parsed_shader_infos:
         try:
             if not arguments.quiet:
@@ -859,11 +863,15 @@ def main():
                     )
         except (ShaderInfoError, OSError, subprocess.CalledProcessError) as error:
             print_error(f"{error}", arguments.color, indent=2)
+            return_code = 1
+
+    return return_code
 
 
 if __name__ == "__main__":
     try:
-        main()
+        return_code = main()
+        sys.exit(return_code)
     except (OSError, RuntimeError, ShaderInfoError, subprocess.CalledProcessError) as error:
         print_error(f"{error}", False)
         sys.exit(1)

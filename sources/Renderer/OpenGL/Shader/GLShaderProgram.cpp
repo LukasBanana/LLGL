@@ -16,6 +16,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Exception.h"
+#include "../../../Core/CiStringView.h"
 #include <LLGL/Report.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>
@@ -193,11 +194,116 @@ std::string GLShaderProgram::GetGLProgramLog(GLuint program)
     return "";
 }
 
-void GLShaderProgram::BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs)
+static bool GLQueryActiveAttribs(
+    GLuint              program,
+    GLenum              attribCountType,
+    GLenum              attribNameLengthType,
+    GLint&              outNumAttribs,
+    GLint&              outMaxNameLength,
+    std::vector<char>&  nameBuffer)
 {
-    /* Bind all vertex attribute locations */
-    for (const auto& attr : vertexAttribs)
-        glBindAttribLocation(program, attr.index, attr.name);
+    /* Query number of active attributes */
+    glGetProgramiv(program, attribCountType, &outNumAttribs);
+    if (outNumAttribs <= 0)
+        return false;
+
+    /* Query maximal name length of all attributes */
+    glGetProgramiv(program, attribNameLengthType, &outMaxNameLength);
+    if (outMaxNameLength <= 0)
+        return false;
+
+    nameBuffer.resize(outMaxNameLength, '\0');
+
+    return true;
+}
+
+// Helper struct to build a map of active GL shader attributes.
+struct GLShaderAttributeMap
+{
+    std::vector<std::string> activeAttribNames;
+
+    const char* FindCaseInsensitiveAttrib(const GLShaderAttribute& inAttrib) const
+    {
+        /* Try to find attribute at the same location */
+        if (inAttrib.index < activeAttribNames.size())
+        {
+            if (CiStringView{ activeAttribNames[inAttrib.index].c_str() } == CiStringView{ inAttrib.name })
+                return activeAttribNames[inAttrib.index].c_str();
+        }
+
+        /* Try to find name in remainder of all attributes */
+        for_range(i, activeAttribNames.size())
+        {
+            /* Skip the one we already checked */
+            if (inAttrib.index == i)
+                continue;
+
+            if (CiStringView{ activeAttribNames[i].c_str() } == CiStringView{ inAttrib.name })
+                return activeAttribNames[i].c_str();
+        }
+
+        /* No matching attribute found */
+        return nullptr;
+    };
+
+    void BuildFromProgram(GLuint program)
+    {
+        /*
+        Link shader program prematurely. Otherwise, there won't be any active attributes.
+        Linking can happen mutliple times, so this is only for reflecting vertex attributes.
+        The final linking happens at the end of GLShaderProgram::BuildProgramBinary().
+        */
+        GLShaderProgram::LinkProgram(program);
+
+        /* Query active uniforms */
+        std::vector<char> attribName;
+        GLint numAttribs = 0, maxNameLength = 0;
+        if (!GLQueryActiveAttribs(program, GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
+            return;
+
+        /* Gather active attribute names to bind their locations in the shader program and correct case insensitive input arguments */
+        activeAttribNames.resize(numAttribs);
+
+        GLsizei nameLength  = 0;
+        GLint   size        = 0;
+        GLenum  type        = 0;
+
+        for_range(i, numAttribs)
+        {
+            glGetActiveAttrib(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
+            activeAttribNames[i] = std::string(attribName.data(), static_cast<std::size_t>(nameLength));
+        }
+    }
+};
+
+void GLShaderProgram::BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs, bool isCaseInsensitive)
+{
+    if (isCaseInsensitive)
+    {
+        GLShaderAttributeMap attribMap;
+        attribMap.BuildFromProgram(program);
+
+        /* Bind all vertex attribute locations */
+        for (const auto& attr : vertexAttribs)
+        {
+            if (const char* activeAttribName = attribMap.FindCaseInsensitiveAttrib(attr))
+            {
+                /* Bind attribute with case sensitive name to specified location */
+                glBindAttribLocation(program, attr.index, activeAttribName);
+            }
+            else
+            {
+                /* Error: Could not find vertex attribute */
+                //TODO
+            }
+        }
+    }
+    else
+    {
+        /* Bind all vertex attribute locations blindly - GL doesn't provide a return value for this function */
+        for (const auto& attr : vertexAttribs)
+            glBindAttribLocation(program, attr.index, attr.name);
+    }
 }
 
 void GLShaderProgram::BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs)
@@ -261,7 +367,7 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, ArrayView<const cha
     );
 }
 
-#endif
+#endif // /GL_NV_transform_feedback
 
 void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings)
 {
@@ -296,29 +402,6 @@ void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, A
 void GLShaderProgram::LinkProgram(GLuint program)
 {
     glLinkProgram(program);
-}
-
-static bool GLQueryActiveAttribs(
-    GLuint              program,
-    GLenum              attribCountType,
-    GLenum              attribNameLengthType,
-    GLint&              outNumAttribs,
-    GLint&              outMaxNameLength,
-    std::vector<char>&  nameBuffer)
-{
-    /* Query number of active attributes */
-    glGetProgramiv(program, attribCountType, &outNumAttribs);
-    if (outNumAttribs <= 0)
-        return false;
-
-    /* Query maximal name length of all attributes */
-    glGetProgramiv(program, attribNameLengthType, &outMaxNameLength);
-    if (outMaxNameLength <= 0)
-        return false;
-
-    nameBuffer.resize(outMaxNameLength, '\0');
-
-    return true;
 }
 
 static bool GLQueryActiveResources(
@@ -1103,17 +1186,20 @@ void GLShaderProgram::BuildProgramBinary(
     LinearStringContainer attribNames;
     ReserveAttribNames(attribNames, inputVertexAttribs, outputVertexAttribs);
 
-    if (!inputVertexAttribs.empty())
+    if (const GLShader* vs = orderedShaders.vertexShader)
     {
-        std::vector<GLShaderAttribute> inputGLVertexAttribs;
-        GLShader::BuildVertexInputLayout(inputVertexAttribs, inputGLVertexAttribs, attribNames);
-        GLShaderProgram::BindAttribLocations(GetID(), inputGLVertexAttribs);
-    }
-    else
-    {
-        // Deprecated
-        if (const GLShader* vs = orderedShaders.vertexShader)
-            GLShaderProgram::BindAttribLocations(GetID(), vs->GetVertexAttribs());
+
+        if (!inputVertexAttribs.empty())
+        {
+            std::vector<GLShaderAttribute> inputGLVertexAttribs;
+            GLShader::BuildVertexInputLayout(inputVertexAttribs, inputGLVertexAttribs, attribNames);
+            GLShaderProgram::BindAttribLocations(GetID(), inputGLVertexAttribs, vs->HasCaseInsensitiveAttribs());
+        }
+        else
+        {
+            // Deprecated
+            GLShaderProgram::BindAttribLocations(GetID(), vs->GetVertexAttribs(), vs->HasCaseInsensitiveAttribs());
+        }
     }
 
     /* Build output layout for fragment shader */

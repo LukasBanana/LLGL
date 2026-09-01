@@ -167,6 +167,35 @@ struct ShaderCompileFlags
         \note Only supported with: Metal.
         */
         DefaultLibrary          = (1 << 8),
+
+        /**
+        \brief Specifies whether input/output attributes should be treated case insensitive.
+        \remarks This can be used to simplify compatibility with GLSL shaders of older versions that were cross-compiled from HLSL.
+        Some compiler toolchains use the HLSL \e semantic name for the GLSL counterpart, but HLSL attributes are already case-insensitive.
+        \remarks
+        Consider the following HLSL code snippet of a vertex shader:
+        \code{hlsl}
+        struct VertexInput {
+            float3 position : POSITION;
+            float2 texCoord : TEXCOORD;
+        };
+        \endcode
+        A hand-written translated GLSL shader for these attributes might look like this:
+        \code{glsl}
+        in vec3 position;
+        in vec2 texCoord;
+        \endcode
+        An auto-generated GLSL shader for these attributes on the other hand might look like this:
+        \code{glsl}
+        in vec3 POSITION;
+        in vec2 TEXCOORD;
+        \endcode
+        This flag relaxes this condition by making the lookup case-insensitive.
+        GLSL shaders with <code>#version 420</code> or higher can ignore this,
+        since attributes are already bound within the shader themselves via their <code>layout(location=N)</code> qualifier.
+        \note Only supported with: OpenGL.
+        */
+        CaseInsensitiveAttribs  = (1 << 9),
     };
 };
 

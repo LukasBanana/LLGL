@@ -1009,15 +1009,16 @@ LLGLMiscFlags;
 
 typedef enum LLGLShaderCompileFlags
 {
-    LLGLShaderCompileDebug               = (1 << 0),
-    LLGLShaderCompileNoOptimization      = (1 << 1),
-    LLGLShaderCompileOptimizationLevel1  = (1 << 2),
-    LLGLShaderCompileOptimizationLevel2  = (1 << 3),
-    LLGLShaderCompileOptimizationLevel3  = (1 << 4),
-    LLGLShaderCompileWarningsAreErrors   = (1 << 5),
-    LLGLShaderCompilePatchClippingOrigin = (1 << 6),
-    LLGLShaderCompileSeparateShader      = (1 << 7),
-    LLGLShaderCompileDefaultLibrary      = (1 << 8),
+    LLGLShaderCompileDebug                  = (1 << 0),
+    LLGLShaderCompileNoOptimization         = (1 << 1),
+    LLGLShaderCompileOptimizationLevel1     = (1 << 2),
+    LLGLShaderCompileOptimizationLevel2     = (1 << 3),
+    LLGLShaderCompileOptimizationLevel3     = (1 << 4),
+    LLGLShaderCompileWarningsAreErrors      = (1 << 5),
+    LLGLShaderCompilePatchClippingOrigin    = (1 << 6),
+    LLGLShaderCompileSeparateShader         = (1 << 7),
+    LLGLShaderCompileDefaultLibrary         = (1 << 8),
+    LLGLShaderCompileCaseInsensitiveAttribs = (1 << 9),
 }
 LLGLShaderCompileFlags;
 

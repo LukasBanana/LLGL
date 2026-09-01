@@ -471,6 +471,17 @@ bool VKShader::ReflectLocalSize(Extent3D& outLocalSize) const
     return true;
 }
 
+static bool MatchChainedUniformIdent(StringView uniformName, StringView blockName, StringView fieldName)
+{
+    return
+    (
+        uniformName.size() == (blockName.size() + 1 + fieldName.size()) &&
+        uniformName.substr(0, blockName.size()) == blockName &&
+        uniformName[blockName.size()] == '.' &&
+        uniformName.substr(blockName.size() + 1, fieldName.size()) == fieldName
+    );
+}
+
 bool VKShader::ReflectPushConstants(
     const ArrayView<UniformDescriptor>& inUniformDescs,
     std::vector<VKUniformRange>&        outUniformRanges) const
@@ -485,13 +496,24 @@ bool VKShader::ReflectPushConstants(
         return false;
 
     /* Build push constant ranges */
+    const StringView blockName{ block.name };
+
     for_range(i, inUniformDescs.size())
     {
         /* Find name of uniform descriptor in push-constant block fields */
         const UniformDescriptor& uniformDesc = inUniformDescs[i];
+        const StringView uniformName{ uniformDesc.name };
+        const bool hasChainedIdent = (uniformName.find('.') != StringLiteral::npos);
+
         for (const SpirvReflect::SpvBlockField& field : block.fields)
         {
-            if (field.name != nullptr && ::strcmp(field.name, uniformDesc.name.c_str()) == 0)
+            /*
+            Accept both simple and chained uniform identifiers,
+            since SPIR-V can only have a single push constant struct, so there can't be any overlap of member names.
+            */
+            const StringView fieldName{ field.name };
+            if ((!hasChainedIdent && fieldName == uniformDesc.name) ||
+                ( hasChainedIdent && MatchChainedUniformIdent(uniformName, blockName, fieldName)))
             {
                 VKUniformRange& range = outUniformRanges[i];
                 {

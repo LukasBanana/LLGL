@@ -955,15 +955,16 @@ const (
 
 type ShaderCompileFlags int
 const (
-    ShaderCompileDebug               = (1 << 0)
-    ShaderCompileNoOptimization      = (1 << 1)
-    ShaderCompileOptimizationLevel1  = (1 << 2)
-    ShaderCompileOptimizationLevel2  = (1 << 3)
-    ShaderCompileOptimizationLevel3  = (1 << 4)
-    ShaderCompileWarningsAreErrors   = (1 << 5)
-    ShaderCompilePatchClippingOrigin = (1 << 6)
-    ShaderCompileSeparateShader      = (1 << 7)
-    ShaderCompileDefaultLibrary      = (1 << 8)
+    ShaderCompileDebug                  = (1 << 0)
+    ShaderCompileNoOptimization         = (1 << 1)
+    ShaderCompileOptimizationLevel1     = (1 << 2)
+    ShaderCompileOptimizationLevel2     = (1 << 3)
+    ShaderCompileOptimizationLevel3     = (1 << 4)
+    ShaderCompileWarningsAreErrors      = (1 << 5)
+    ShaderCompilePatchClippingOrigin    = (1 << 6)
+    ShaderCompileSeparateShader         = (1 << 7)
+    ShaderCompileDefaultLibrary         = (1 << 8)
+    ShaderCompileCaseInsensitiveAttribs = (1 << 9)
 )
 
 type StageFlags int

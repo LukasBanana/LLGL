@@ -520,7 +520,7 @@ void ExampleBase::MainLoopWrapper(void* args)
     exampleBase->MainLoop();
 }
 
-void ExampleBase::Run()
+int ExampleBase::Run()
 {
     initialResolution_ = swapChain->GetResolution();
 
@@ -559,6 +559,8 @@ void ExampleBase::Run()
     }
 
     #endif // /LLGL_OS_WASM
+
+    return returnCode_;
 }
 
 void ExampleBase::DrawFrame()
@@ -873,6 +875,9 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif
 
+        // Always make shader attributes case insensitive, to simplify vertex declaration within the cross-compilation toolchain used for the examples
+        deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::CaseInsensitiveAttribs;
+
         // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
         if (patchClippingOrigin && IsScreenOriginLowerLeft())
         {
@@ -1068,7 +1073,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
             if (report->HasErrors())
             {
                 LLGL::Log::Errorf("%s", report->GetText());
-                Quit();
+                Quit(1);
                 return true;
             }
         }
@@ -1076,7 +1081,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
     else
     {
         LLGL::Log::Errorf("null pointer passed to ReportPSOErrors()");
-        Quit();
+        Quit(1);
         return true;
     }
     return false;
@@ -1312,10 +1317,11 @@ bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
     return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
 }
 
-void ExampleBase::Quit()
+void ExampleBase::Quit(int returnCode)
 {
     if (LLGL::Window* window = LLGL::CastTo<LLGL::Window>(&(swapChain->GetSurface())))
         window->PostQuit();
+    returnCode_ = returnCode;
 }
 
 const std::string& ExampleBase::GetModuleName()

@@ -966,15 +966,16 @@ namespace LLGL
     [Flags]
     public enum ShaderCompileFlags : int
     {
-        Debug               = (1 << 0),
-        NoOptimization      = (1 << 1),
-        OptimizationLevel1  = (1 << 2),
-        OptimizationLevel2  = (1 << 3),
-        OptimizationLevel3  = (1 << 4),
-        WarningsAreErrors   = (1 << 5),
-        PatchClippingOrigin = (1 << 6),
-        SeparateShader      = (1 << 7),
-        DefaultLibrary      = (1 << 8),
+        Debug                  = (1 << 0),
+        NoOptimization         = (1 << 1),
+        OptimizationLevel1     = (1 << 2),
+        OptimizationLevel2     = (1 << 3),
+        OptimizationLevel3     = (1 << 4),
+        WarningsAreErrors      = (1 << 5),
+        PatchClippingOrigin    = (1 << 6),
+        SeparateShader         = (1 << 7),
+        DefaultLibrary         = (1 << 8),
+        CaseInsensitiveAttribs = (1 << 9),
     }
 
     [Flags]
