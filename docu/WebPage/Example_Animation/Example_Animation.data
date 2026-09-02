@@ -1,165 +1,64 @@
-// GLSL fragment shader
-
-#version 450 core
-
-layout(std140, binding = 1) uniform Settings
-{
-    mat4    wMatrix;
-    mat4    vpMatrix;
-    vec3    lightDir;
-    float   shininess;
-    vec4    viewPos;
-    vec4    albedo;
-};
-
-layout(location = 0) in vec4 vWorldPos;
-layout(location = 1) in vec4 vNormal;
-layout(location = 2) in vec2 vTexCoord;
-
-layout(location = 0) out vec4 fColor;
-
-layout(binding = 2) uniform texture2D colorMap;
-layout(binding = 3) uniform sampler linearSampler;
-
-void main()
-{
-    // Diffuse lighting
-    vec3    lightVec    = -lightDir.xyz;
-    vec3    normal      = normalize(vNormal.xyz);
-    float   NdotL       = mix(0.2, 1.0, max(0.0, dot(normal, lightVec)));
-    vec3    diffuse     = albedo.rgb * NdotL;
-
-    // Specular lighting
-    vec3    viewDir     = normalize(viewPos.xyz - vWorldPos.xyz);
-    vec3    halfVec     = normalize(viewDir + lightVec);
-    float   NdotH       = dot(normal, halfVec);
-    vec3    specular    = vec3(pow(max(0.0, NdotH), shininess));
-
-    // Sample texture
-    vec4 color = texture(sampler2D(colorMap, linearSampler), vTexCoord);
-
-    // Set final output color
-    fColor = mix(vec4(1), color, albedo.a) * vec4(diffuse + specular, 1.0);
-}
-
-
-
-// GLSL vertex shader
-
-#version 450 core
-
-layout(std140, binding = 1) uniform Settings
-{
-    mat4    wMatrix;
-    mat4    vpMatrix;
-    vec3    lightDir;
-    float   shininess;
-    vec4    viewPos;
-    vec4    albedo;
-};
-
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texCoord;
-
-layout(location = 0) out vec4 vWorldPos;
-layout(location = 1) out vec4 vNormal;
-layout(location = 2) out vec2 vTexCoord;
-
-out gl_PerVertex
-{
-    vec4 gl_Position;
-};
-
-void main()
-{
-    vWorldPos   = wMatrix * vec4(position, 1);
-    gl_Position = vpMatrix * vWorldPos;
-    vNormal     = wMatrix * vec4(normal, 0);
-    vTexCoord   = texCoord;
-}
-// GLSL fragment shader
-
-#version 140
-
-#ifdef GL_ES
+#version 300 es
 precision mediump float;
-#endif
+precision highp int;
 
 layout(std140) uniform Settings
 {
-    mat4    wMatrix;
-    mat4    vpMatrix;
-    vec3    lightDir;
-    float   shininess;
-    vec4    viewPos;
-    vec4    albedo;
+    layout(row_major) highp mat4 wMatrix;
+    layout(row_major) highp mat4 vpMatrix;
+    highp vec3 lightDir;
+    highp float shininess;
+    highp vec4 viewPos;
+    highp vec4 albedo;
 };
 
-in vec4 vWorldPos;
-in vec4 vNormal;
-in vec2 vTexCoord;
+uniform highp sampler2D s_colorMaplinearSampler;
 
-out vec4 fColor;
-
-uniform sampler2D colorMap;
+in highp vec4 v_WORLDPOS;
+in highp vec4 v_NORMAL;
+in highp vec2 v_TEXCOORD;
+layout(location = 0) out highp vec4 SV_Target;
 
 void main()
 {
-    // Diffuse lighting
-    vec3    lightVec    = -lightDir.xyz;
-    vec3    normal      = normalize(vNormal.xyz);
-    float   NdotL       = mix(0.2, 1.0, max(0.0, dot(normal, lightVec)));
-    vec3    diffuse     = albedo.rgb * NdotL;
-
-    // Specular lighting
-    vec3    viewDir     = normalize(viewPos.xyz - vWorldPos.xyz);
-    vec3    halfVec     = normalize(viewDir + lightVec);
-    float   NdotH       = dot(normal, halfVec);
-    vec3    specular    = vec3(pow(max(0.0, NdotH), shininess));
-
-    // Sample texture
-    vec4 color = texture(colorMap, vTexCoord);
-
-    // Set final output color
-    fColor = mix(vec4(1), color, albedo.a) * vec4(diffuse + specular, 1.0);
+    highp vec3 _45 = -lightDir;
+    highp vec3 _47 = normalize(v_NORMAL.xyz);
+    highp float _48 = dot(_47, _45);
+    highp float _63 = dot(_47, normalize(normalize(viewPos.xyz - v_WORLDPOS.xyz) + _45));
+    SV_Target = mix(vec4(1.0), texture(s_colorMaplinearSampler, v_TEXCOORD), vec4(albedo.w)) * vec4((albedo.xyz * mix(0.20000000298023223876953125, 1.0, isnan(_48) ? 0.0 : (isnan(0.0) ? _48 : max(0.0, _48)))) + vec3(pow(isnan(_63) ? 0.0 : (isnan(0.0) ? _63 : max(0.0, _63)), shininess)), 1.0);
 }
 
-
-
-// GLSL vertex shader
-
-#version 140
-
-#ifdef GL_ES
-precision mediump float;
-#endif
+#version 300 es
 
 layout(std140) uniform Settings
 {
-    mat4    wMatrix;
-    mat4    vpMatrix;
-    vec3    lightDir;
-    float   shininess;
-    vec4    viewPos;
-    vec4    albedo;
+    layout(row_major) mat4 wMatrix;
+    layout(row_major) mat4 vpMatrix;
+    vec3 lightDir;
+    float shininess;
+    vec4 viewPos;
+    vec4 albedo;
 };
 
-in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
+layout(location = 0) in vec3 POSITION;
+layout(location = 1) in vec3 NORMAL;
+layout(location = 2) in vec2 TEXCOORD;
+out vec4 v_WORLDPOS;
+out vec4 v_NORMAL;
+out vec2 v_TEXCOORD;
 
-out vec4 vWorldPos;
-out vec4 vNormal;
-out vec2 vTexCoord;
+highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
+mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
 
 void main()
 {
-    vWorldPos   = wMatrix * vec4(position, 1);
-    gl_Position = vpMatrix * vWorldPos;
-    vNormal     = wMatrix * vec4(normal, 0);
-    vTexCoord   = texCoord;
+    vec4 _39 = vec4(POSITION, 1.0) * spvWorkaroundRowMajor(wMatrix);
+    gl_Position = _39 * spvWorkaroundRowMajor(vpMatrix);
+    v_WORLDPOS = _39;
+    v_NORMAL = vec4(NORMAL, 0.0) * spvWorkaroundRowMajor(wMatrix);
+    v_TEXCOORD = TEXCOORD;
 }
+
 # Blender v2.77 (sub 0) OBJ File: 'IcoSphere.blend'
 # www.blender.org
 o Icosphere_Icosphere.001
