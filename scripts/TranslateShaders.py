@@ -101,7 +101,7 @@ class ShaderInfo:
         self.info_filename: Path = input_filename
         self.input_directory: Path = input_filename.parent
         self.output_directory: Path = output if output and output.is_absolute() else self.input_directory / (output or Path(".autogen"))
-        self.is_permutation: bool = False
+        self.permutation = None
 
     def print_processing_info(self, input_directory: Path, color: bool) -> None:
         relative_path = self.info_filename.relative_to(input_directory)
@@ -164,9 +164,9 @@ def parse_arguments():
     )
     parser.add_argument(
         "--trim-stem",
-        default="VS,PS,GS,HS,DS",
+        default="",
         metavar="ENTRIES",
-        help="Entry names to omit from generated output stems (default: VS,PS,GS,HS,DS).",
+        help="Entry names to omit from generated output stems if possible (default: none).",
     )
     parser.add_argument(
         "-t", "--targets",
@@ -699,8 +699,8 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
 
     stage_extension = get_stage_extension(entry["profile"])
     shaderinfo.output_directory.mkdir(parents=True, exist_ok=True)
-    override = context.opt.permutation["override"] if shaderinfo.is_permutation else None
-    macros = context.opt.permutation["macros"] if shaderinfo.is_permutation else {}
+    override = shaderinfo.permutation["override"] if shaderinfo.permutation is not None else None
+    macros = shaderinfo.permutation["macros"] if shaderinfo.permutation is not None else {}
     dxc_macro_args = [f"-D{name}={value}" for name, value in macros.items()]
     fxc_macro_args = [f"/D{name}={value}" for name, value in macros.items()]
     intermediate_spv = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, '450core', stage_extension, override)}.temp.spv"
@@ -939,7 +939,7 @@ def main():
                 if not any(filter_targets(entry["targets"], context.opt.enabled_targets) for entry in source["entries"]):
                     continue
 
-                shaderinfo.is_permutation = source.get("permutation") is not None
+                shaderinfo.permutation = source.get("permutation")
 
                 if source_file.suffix.lower() == ".hlsl":
                     print_source_compile(source_file, "HLSL", context.opt.verbose)
