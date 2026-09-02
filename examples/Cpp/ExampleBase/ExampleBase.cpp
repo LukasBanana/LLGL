@@ -359,21 +359,13 @@ void TrackballRotationModel::Rotate(
  * ShaderDescWrapper struct
  */
 
-ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
-    LLGL::ShaderType    type,
-    const std::string&  filename)
-:
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(LLGL::ShaderType type, const char* filename) :
     type     { type     },
     filename { filename }
 {
 }
 
-ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
-    LLGL::ShaderType    type,
-    const std::string&  filename,
-    const std::string&  entryPoint,
-    const std::string&  profile)
-:
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(LLGL::ShaderType type, const char* filename, const char* entryPoint, const char* profile) :
     type       { type       },
     filename   { filename   },
     entryPoint { entryPoint },
@@ -850,9 +842,9 @@ void ExampleBase::MainLoop()
 LLGL::Shader* ExampleBase::LoadShaderInternal(
     const ShaderDescWrapper&    shaderDesc,
     const LLGL::ShaderMacro*    defines,
-    bool                        patchClippingOrigin)
+    long                        compileFlags)
 {
-    LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
+    LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename);
 
     #ifdef LLGL_OS_WASM
     const std::string filename = "assets/" + shaderDesc.filename;
@@ -862,10 +854,13 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
 
     std::vector<LLGL::Shader*> shaders;
 
+    const bool isPatchClippingOrigin = ((compileFlags & LLGL::ShaderCompileFlags::PatchClippingOrigin) != 0);
+    const long filteredCompileFlags = (compileFlags & (~LLGL::ShaderCompileFlags::PatchClippingOrigin));
+
     // Create shader
-    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
+    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint, shaderDesc.profile);
     {
-        deviceShaderDesc.debugName = shaderDesc.entryPoint.c_str();
+        deviceShaderDesc.debugName = shaderDesc.entryPoint;
 
         // Forward macro definitions
         deviceShaderDesc.defines = defines;
@@ -878,8 +873,11 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         // Always make shader attributes case insensitive, to simplify vertex declaration within the cross-compilation toolchain used for the examples
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::CaseInsensitiveAttribs;
 
+        // Append extra compile flags
+        deviceShaderDesc.flags |= filteredCompileFlags;
+
         // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
-        if (patchClippingOrigin && IsScreenOriginLowerLeft())
+        if (isPatchClippingOrigin && IsScreenOriginLowerLeft())
         {
             // Determine what shader stages needs to patch the clipping origin
             if (shaderDesc.type == LLGL::ShaderType::Vertex           ||
@@ -911,39 +909,154 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     return shader;
 }
 
+static LLGL::ShadingLanguage MajorMinorShaderModelToEnum(LLGL::ShadingLanguage language, const char* shaderModel)
+{
+    if (shaderModel != nullptr && *shaderModel != '\0')
+    {
+        std::string ver = shaderModel;
+        if (ver.size() == 3 && ver[1] == '.')
+        {
+            unsigned verNo = static_cast<unsigned>(ver[0] - '0')*100 + static_cast<unsigned>(ver[2] - '0')*10;
+            return static_cast<LLGL::ShadingLanguage>(
+                static_cast<unsigned>(language) |
+                (verNo & static_cast<unsigned>(LLGL::ShadingLanguage::VersionBitmask))
+            );
+        }
+    }
+    return LLGL::ShadingLanguage::VersionBitmask;
+}
+
+static LLGL::ShadingLanguage ShaderVersionNoToEnum(LLGL::ShadingLanguage language, const char* shaderModel)
+{
+    if (shaderModel != nullptr && *shaderModel != '\0')
+    {
+        std::string ver = shaderModel;
+        unsigned verNo = 0;
+        for (const char* s = shaderModel; *s != '\0'; ++s)
+        {
+            verNo *= 10;
+            if (!(*s >= '0' && *s <= '9'))
+                return LLGL::ShadingLanguage::VersionBitmask;
+            verNo += static_cast<unsigned>(*s - '0');
+        }
+        return static_cast<LLGL::ShadingLanguage>(
+            static_cast<unsigned>(language) |
+            (verNo & static_cast<unsigned>(LLGL::ShadingLanguage::VersionBitmask))
+        );
+    }
+    return LLGL::ShadingLanguage::VersionBitmask;
+}
+
+bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVersion, const char* esslVersion, const char* metalVersion)
+{
+    if (Supported(LLGL::ShadingLanguage::HLSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage hlslLanguage = MajorMinorShaderModelToEnum(LLGL::ShadingLanguage::HLSL, hlslVersion);
+        LLGL_VERIFY(hlslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(hlslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required HLSL shader model %s is not supported\n", hlslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Store minimum required HLSL shader model and convert from '5.1' format to '5_0' format to be used with shader profiles, e.g. 'vs_5_1' */
+        shaderModelInfo_.minHLSLShaderModel = hlslVersion;
+        if (shaderModelInfo_.minHLSLShaderModel.size() == 3)
+            shaderModelInfo_.minHLSLShaderModel[1] = '_';
+    }
+    else if (Supported(LLGL::ShadingLanguage::GLSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage glslLanguage = ShaderVersionNoToEnum(LLGL::ShadingLanguage::GLSL, glslVersion);
+        LLGL_VERIFY(glslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(glslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required GLSL version %s is not supported\n", glslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Nothing to store for GLSL */
+    }
+    else if (Supported(LLGL::ShadingLanguage::ESSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage esslLanguage = ShaderVersionNoToEnum(LLGL::ShadingLanguage::ESSL, esslVersion);
+        LLGL_VERIFY(esslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(esslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required ESSL version %s is not supported\n", esslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Nothing to store for ESSL */
+    }
+    else if (Supported(LLGL::ShadingLanguage::Metal))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage metalLanguage = MajorMinorShaderModelToEnum(LLGL::ShadingLanguage::Metal, metalVersion);
+        LLGL_VERIFY(metalLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(metalLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required Metal shader model %s is not supported\n", metalVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Store minimum required Metal shader model as-is, e.g. '1.1' */
+        shaderModelInfo_.minMetalShaderModel = metalVersion;
+    }
+    return true;
+}
+
 LLGL::Shader* ExampleBase::LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
 {
-    return LoadShaderInternal(shaderDesc, defines, /*patchClippingOrigin:*/ false);
+    return LoadShaderInternal(shaderDesc, defines, 0);
 }
 
 LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
 {
-    return LoadShaderInternal(shaderDesc, defines, /*patchClippingOrigin:*/ true);
+    return LoadShaderInternal(shaderDesc, defines, LLGL::ShaderCompileFlags::PatchClippingOrigin);
 }
 
-static std::string FindShader(const std::string& basename, const std::initializer_list<const char*>& suffixes)
+static std::string FindShader(const char* basename, const char* entryPoint, const std::initializer_list<const char*>& suffixes)
 {
-    // Try to find the shaders
-    std::string shaderFilename;
+    // Try to find the shader in the current project directory and in an optional .autogen/ directory for auto-generated shaders
+    std::string shaderBaseFilename, shaderFileanme;
+
     for (const char* relativePath : { "", ".autogen" })
     {
         for (const char* suffix : suffixes)
         {
             // Construct current filename to test against
-            std::string inputFilename;
+            shaderBaseFilename.clear();
             if (relativePath != nullptr && *relativePath != '\0')
             {
-                inputFilename.append(relativePath);
-                inputFilename.append("/");
+                shaderBaseFilename.append(relativePath);
+                shaderBaseFilename.append("/");
             }
 
-            inputFilename.append(basename);
-            inputFilename.append(".");
-            inputFilename.append(suffix);
+            shaderBaseFilename.append(basename);
 
-            // Check if file exists. If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShader().
-            if (FindAsset(inputFilename))
-                return inputFilename;
+            // Check if file exists with and without '.ENRTYPOINT' appendix.
+            // If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShader().
+            for (const char* appendix : { "", entryPoint })
+            {
+                shaderFileanme = shaderBaseFilename;
+                if (appendix != nullptr && *appendix != '\0')
+                {
+                    shaderFileanme.append(".");
+                    shaderFileanme.append(appendix);
+                }
+                shaderFileanme.append(".");
+                shaderFileanme.append(suffix);
+
+                if (FindAsset(shaderFileanme))
+                    return shaderFileanme;
+            }
         }
     }
 
@@ -959,104 +1072,131 @@ static std::string FindShader(const std::string& basename, const std::initialize
         LLGL::Log::Errorf(
             LLGL::Log::ColorFlags::StdError,
             "Could not find shader '%s.(%s)'",
-            basename.c_str(), suffixesPattern.c_str()
+            basename, suffixesPattern.c_str()
         );
     }
     return "";
 }
 
-LLGL::Shader* ExampleBase::LoadStandardVertexShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
+LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
+    LLGL::ShaderType                                type,
+    const char*                                     basename,
+    const char*                                     entryPoint,
+    const LLGL::ShaderMacro*                        defines,
+    long                                            compileFlags,
+    const std::initializer_list<ShaderTargetInfo>&  targetInfos)
 {
-    // Load shader program
-    if (Supported(LLGL::ShadingLanguage::GLSL))
+    for (const ShaderTargetInfo& info : targetInfos)
     {
-        const std::string source = FindShader("Example", { "vert", "140core.vert", "400core.vert", "420core.vert", "450core.vert" });
-        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
+        if (Supported(info.targetLanguage))
+        {
+            const std::string source = FindShader(basename, entryPoint, info.suffixes);
+            return LoadShaderInternal({ type, source.c_str(), entryPoint, info.profile }, defines, compileFlags);
+        }
     }
-    if (Supported(LLGL::ShadingLanguage::ESSL))
-    {
-        const std::string source = FindShader("Example", { "300es.vert", "vert" });
-        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-    {
-        const std::string source = FindShader("Example", { "450core.vert.spv" });
-        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-    {
-        const std::string source = FindShader("Example", { "hlsl" });
-        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str(), entryPoint, "vs_5_0" }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::Metal))
-    {
-        const std::string source = FindShader("Example", { "metal" });
-        return LoadShader({ LLGL::ShaderType::Vertex, source.c_str(), entryPoint, "1.1" }, defines);
-    }
+    LLGL_THROW_RUNTIME_ERROR(
+        "%s shader '%s' (%s) not available for selected renderer",
+        LLGL::ToString(type), basename, entryPoint != nullptr ? entryPoint : "<default>"
+    );
     return nullptr;
 }
 
-LLGL::Shader* ExampleBase::LoadStandardFragmentShader(const char* entryPoint, const LLGL::ShaderMacro* defines)
+// @param shaderModel Must be the suffix for the profile describing the shader model version, e.g. SM 5.1 must be "5_0".
+static const char* GetHLSLShaderProfile(const char* profileBase, const std::string& shaderModel, std::string& outProfile)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL))
-    {
-        const std::string source = FindShader("Example", { "frag", "140core.frag", "400core.frag", "420core.frag", "450core.frag" });
-        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::ESSL))
-    {
-        const std::string source = FindShader("Example", { "300es.frag", "frag" });
-        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-    {
-        const std::string source = FindShader("Example", { "450core.frag.spv" });
-        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-    {
-        const std::string source = FindShader("Example", { "hlsl" });
-        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str(), entryPoint, "ps_5_0" }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::Metal))
-    {
-        const std::string source = FindShader("Example", { "metal" });
-        return LoadShader({ LLGL::ShaderType::Fragment, source.c_str(), entryPoint, "1.1" }, defines);
-    }
-    return nullptr;
+    outProfile = (profileBase + std::string("_") + shaderModel);
+    return outProfile.c_str();
 }
 
-LLGL::Shader* ExampleBase::LoadStandardComputeShader(
-    const char*                 entryPoint,
-    const LLGL::ShaderMacro*    defines)
+#define HLSL_PROFILE(PROFILE) \
+    GetHLSLShaderProfile(PROFILE, shaderModelInfo_.minHLSLShaderModel, shaderModelInfo_.intermediateHLSLProfile)
+
+#define METAL_PROFILE() \
+    shaderModelInfo_.minMetalShaderModel.c_str()
+
+LLGL::Shader* ExampleBase::LoadVertexShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL))
-    {
-        const std::string source = FindShader("Example", { "comp", "430core.comp", "450core.comp" });
-        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::ESSL))
-    {
-        const std::string source = FindShader("Example", { "320es.comp", "comp" });
-        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-    {
-        const std::string source = FindShader("Example", { "450core.comp.spv" });
-        return LoadShader({ LLGL::ShaderType::Compute, source.c_str() }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-    {
-        const std::string source = FindShader("Example", { "hlsl" });
-        return LoadShader({ LLGL::ShaderType::Compute, source.c_str(), entryPoint, "cs_5_0" }, defines);
-    }
-    if (Supported(LLGL::ShadingLanguage::Metal))
-    {
-        const std::string source = FindShader("Example", { "metal" });
-        return LoadShader({ LLGL::ShaderType::Compute, source.c_str(), entryPoint, "1.1" }, defines);
-    }
-    return nullptr;
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Vertex, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "vert", "140core.vert", "400core.vert", "420core.vert", "450core.vert" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.vert", "vert" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.vert.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("vs"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
 }
+
+LLGL::Shader* ExampleBase::LoadTessControlShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Tessellation shaders in GLSL require at least `#version 400 core`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::TessControl, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tesc", "400core.tesc", "420core.tesc", "450core.tesc" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tesc.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("hs"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadTessEvaluationShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Tessellation shaders in GLSL require at least `#version 400 core`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::TessEvaluation, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tese", "400core.tese", "420core.tese", "450core.tese" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tese.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ds"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadGeometryShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Geometry shaders in GLSL require at least `#version 150`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Geometry, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "geom", "150core.geom", "400core.geom", "420core.geom", "450core.geom" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.geom.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("gs"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadFragmentShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Fragment, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "frag", "140core.frag", "400core.frag", "420core.frag", "450core.frag" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.frag", "frag" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.frag.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ps"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadComputeShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Compute, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "comp", "430core.comp", "450core.comp" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "320es.comp", "comp" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.comp.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("cs"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
+}
+
+#undef HLSL_PROFILE
+#undef METAL_PROFILE
 
 ShaderPipeline ExampleBase::LoadStandardShaderPipeline()
 {

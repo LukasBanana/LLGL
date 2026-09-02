@@ -112,22 +112,13 @@ protected:
 
     struct ShaderDescWrapper
     {
-        ShaderDescWrapper(
-            LLGL::ShaderType    type,
-            const std::string&  filename
-        );
+        ShaderDescWrapper(LLGL::ShaderType type, const char* filename);
+        ShaderDescWrapper(LLGL::ShaderType type, const char* filename, const char* entryPoint, const char* profile);
 
-        ShaderDescWrapper(
-            LLGL::ShaderType    type,
-            const std::string&  filename,
-            const std::string&  entryPoint,
-            const std::string&  profile
-        );
-
-        LLGL::ShaderType    type;
-        std::string         filename;
-        std::string         entryPoint;
-        std::string         profile;
+        LLGL::ShaderType    type        = LLGL::ShaderType::Undefined;
+        const char*         filename    = nullptr;
+        const char*         entryPoint  = nullptr;
+        const char*         profile     = nullptr;
     };
 
 private:
@@ -189,6 +180,14 @@ private:
 
     TrackballRotationModel      trackballRotation_;
 
+    struct ShaderModelInfo
+    {
+        std::string minHLSLShaderModel  = "5_0";
+        std::string minMetalShaderModel = "1.1";
+        std::string intermediateHLSLProfile;
+    }
+    shaderModelInfo_;
+
 protected:
 
     friend class ResizeEventHandler;
@@ -235,9 +234,29 @@ private:
     void MainLoop();
 
     // Internal function to load a shader.
-    LLGL::Shader* LoadShaderInternal(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines, bool patchClippingOrigin);
+    LLGL::Shader* LoadShaderInternal(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines, long compileFlags);
+
+    struct ShaderTargetInfo
+    {
+        LLGL::ShadingLanguage               targetLanguage;
+        const char*                         profile;
+        std::initializer_list<const char*>  suffixes;
+    };
+
+    LLGL::Shader* LoadShaderForTargetLanguage(
+        LLGL::ShaderType                                type,
+        const char*                                     basename,
+        const char*                                     entryPoint,
+        const LLGL::ShaderMacro*                        defines,
+        long                                            compileFlags,
+        const std::initializer_list<ShaderTargetInfo>&  targetInfos
+    );
 
 protected:
+
+    // Sets the minimum required shader model for the target platform.
+    // If unsupported, the function initiates to exit the application and returns false.
+    bool MinimumShaderModel(const char* hlslVersion = "5.0", const char* glslVersion = "150", const char* esslVersion = "300", const char* metalVersion = "1.1");
 
     // Loads a shader from file with optional vertex formats and stream-output format.
     LLGL::Shader* LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
@@ -246,9 +265,27 @@ protected:
     LLGL::Shader* LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
 
     // Loads a vertex/fragment/compute shader with standard filename convention.
-    LLGL::Shader* LoadStandardVertexShader(const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr);
-    LLGL::Shader* LoadStandardFragmentShader(const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr);
-    LLGL::Shader* LoadStandardComputeShader(const char* entryPoint  = "CS", const LLGL::ShaderMacro* defines = nullptr);
+    LLGL::Shader* LoadVertexShader(const char* basename, const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadTessControlShader(const char* basename, const char* entryPoint = "HS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadTessEvaluationShader(const char* basename, const char* entryPoint = "DS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadGeometryShader(const char* basename, const char* entryPoint = "GS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadFragmentShader(const char* basename, const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadComputeShader(const char* basename, const char* entryPoint = "CS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+
+    inline LLGL::Shader* LoadStandardVertexShader(const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadVertexShader("Example", entryPoint, defines);
+    }
+
+    inline LLGL::Shader* LoadStandardFragmentShader(const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadFragmentShader("Example", entryPoint, defines);
+    }
+
+    inline LLGL::Shader* LoadStandardComputeShader(const char* entryPoint = "CS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadComputeShader("Example", entryPoint, defines);
+    }
 
     // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
     ShaderPipeline LoadStandardShaderPipeline();
