@@ -47,9 +47,9 @@ class Example_Fonts : public ExampleBase
     // Font dataset and glyph texture map
     struct Font
     {
-        const char*     fontName;
+        const char*     fontName            = nullptr;
         int             fontHeight          = 16;
-        Glyph           glyphs[128];
+        Glyph           glyphs[128]         = {};
         LLGL::Texture*  atlasTexture        = nullptr;
         LLGL::Extent3D  atlasSize;
     };
@@ -131,12 +131,13 @@ private:
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "sampler(linearSampler@%d):frag,"
-                "texture(glyphTexture@%d):frag,"
-                "float4x4(projection),"
-                "float2(glyphAtlasInvSize),",
-                IsVulkan() ? 3 : 0,
-                IsVulkan() ? 2 : 0
+                "sampler(linearSampler@2):frag,"
+                "texture(glyphTexture@0):frag,"
+
+                "float4x4( scene.projection        ),"
+                "float2  ( scene.glyphAtlasInvSize ),"
+
+                "sampler<glyphTexture,linearSampler>(s_glyphTexturelinearSampler@0)"
             )
         );
 
@@ -145,7 +146,7 @@ private:
         {
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.inputVertexAttribs             = LLGL::Parse("rg16i(position),rg16i(texCoord),rgba8unorm(color)");
-            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS");
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader();
             pipelineDesc.fragmentShader                 = LoadStandardFragmentShader();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
@@ -153,13 +154,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
-
-        // Check for PSO compilation errors
-        if (const LLGL::Report* report = pipeline->GetReport())
-        {
-            if (report->HasErrors())
-                LLGL::Log::Errorf("%s", report->GetText());
-        }
+        ReportPSOErrors(pipeline);
     }
 
     void CreateFontAtlas(const char* fontName, int fontSize)

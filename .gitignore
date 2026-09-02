@@ -8,7 +8,7 @@ build*/
 *.aps
 *.cache
 *.spvasm
-.autogen/
+*.pdb
 
 # Runtime output files for testing
 Screenshot.*
