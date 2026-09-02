@@ -66,6 +66,8 @@ if(LLGL_BUILD_XR_OPENXR)
     find_project_source_files( FilesExample_HelloOpenXR     "${EXAMPLE_CPP_PROJECTS_DIR}/HelloOpenXR"      )
 endif()
 
+add_shader_compile_target("${EXAMPLE_CPP_PROJECTS_DIR}")
+
 
 # === Source group folders ===
 

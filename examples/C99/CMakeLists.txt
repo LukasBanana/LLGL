@@ -30,6 +30,8 @@ find_project_source_files( FilesExampleC99_HelloTriangle    "${EXAMPLE_C99_PROJE
 find_project_source_files( FilesExampleC99_Offscreen        "${EXAMPLE_C99_PROJECTS_DIR}/Offscreen"     )
 find_project_source_files( FilesExampleC99_Texturing        "${EXAMPLE_C99_PROJECTS_DIR}/Texturing"     )
 
+#add_shader_compile_target("${EXAMPLE_C99_PROJECTS_DIR}")
+
 
 # === Source group folders ===
 

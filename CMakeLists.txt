@@ -215,23 +215,12 @@ if(NOT LLGL_BUILD_WRAPPER_C99)
     endif()
 endif()
 
-set(LLGL_TRANSLATE_SHADERS "Once" CACHE STRING "Runs the shader cross-compilation script for all examples; Set to 'Never', 'Once', or 'Always'.")
-set_property(CACHE LLGL_TRANSLATE_SHADERS PROPERTY STRINGS "Never" "Once" "Always")
-
-
 # === Optional Dependencies ===
 
 find_package(Python3 COMPONENTS Interpreter)
 
-set(TRANSLATE_SHADERS_ENABLED ON)
-if(NOT Python3_Interpreter_FOUND)
-    message(WARNING "Python3 was not found; Shader cross-compilation is disabled.")
-    set(TRANSLATE_SHADERS_ENABLED OFF)
-endif()
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py")
-    message(WARNING "scripts/TranslateShaders.py is missing; Shader cross-compilation is disabled.")
-    set(TRANSLATE_SHADERS_ENABLED OFF)
-endif()
+# Check if DXC is available; Don't cache it here, the Python scripts have their own handling of finding this executable.
+find_program(TOOL_DXC_EXECUTABLE dxc DOC "Optional path to the DirectX Shader Compiler (dxc) executable")
 
 
 # === Functions ===
@@ -532,32 +521,39 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     endif()
 endfunction()
 
-function(translate_shaders SHADER_ROOT_DIR)
-    # Check if shader translation can be skipped, as this can save some time
-    set(SKIP_SHADER_TRANSLATION OFF)
-    if("${LLGL_TRANSLATE_SHADERS}" STREQUAL "Never")
-        set(SKIP_SHADER_TRANSLATION ON)
-    elseif("${LLGL_TRANSLATE_SHADERS}" STREQUAL "Once")
-        # Check if shader translation has already been done once, by looking up some .autogen folders
-        set(SOME_EXAMPLE_FOLDER "${CMAKE_SOURCE_DIR}/examples/Cpp/Animation")
-        if (EXISTS "${SOME_EXAMPLE_FOLDER}/.autogen" AND IS_DIRECTORY "${SOME_EXAMPLE_FOLDER}/.autogen")
-            set(SKIP_SHADER_TRANSLATION ON)
-        endif()
-    endif()
+set_property(GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS "")
 
-    if(TRANSLATE_SHADERS_ENABLED AND NOT SKIP_SHADER_TRANSLATION)
-        # Invokes scripts/TranslateShaders.py Python script to translate all shaders from a given root directory
-        execute_process(
-            COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py" --input "."
-            WORKING_DIRECTORY "${SHADER_ROOT_DIR}"
-            RESULT_VARIABLE TRANSLATE_RESULT
-            ERROR_VARIABLE TRANSLATE_ERROR
-        )
+# Registers a root directory for the unified COMPILE_SHADERS target.
+function(add_shader_compile_target SHADER_ROOT_DIR)
+    get_property(ShaderCompileRoots GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS)
+    list(APPEND ShaderCompileRoots "${SHADER_ROOT_DIR}")
+    set_property(GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS "${ShaderCompileRoots}")
+endfunction()
 
-        if (NOT "${TRANSLATE_ERROR}" STREQUAL "")
-            message(WARNING "Errors durring shader translation:\n==================================\n${TRANSLATE_ERROR}")
+# Creates one IDE-visible target with one translation command per registered root.
+function(create_compile_shaders_target)
+    if(Python3_FOUND AND TOOL_DXC_EXECUTABLE)
+        get_property(ShaderCompileRoots GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS)
+
+        set(ShaderCompileCommands)
+        foreach(ShaderRootDir ${ShaderCompileRoots})
+            list(APPEND ShaderCompileCommands
+                COMMAND "${CMAKE_COMMAND}" -E chdir "${ShaderRootDir}"
+                    "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py"
+                    --input "."
+                    --dxc-path "${TOOL_DXC_EXECUTABLE}"
+            )
+        endforeach()
+
+        if(ShaderCompileCommands)
+            add_custom_target(COMPILE_SHADERS
+                ${ShaderCompileCommands}
+                COMMENT "Translating example shaders ..."
+                VERBATIM
+            )
+            set_target_properties(COMPILE_SHADERS PROPERTIES FOLDER "Build")
         endif()
-    endif()
+    endif() # Python3_FOUND
 endfunction()
 
 
@@ -1012,6 +1008,9 @@ get_property(LLGL_ALL_TARGETS GLOBAL PROPERTY LLGL_GLOBAL_MODULE_LIST)
 if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
     list(APPEND LLGL_ALL_TARGETS LLGL_DXCommon)
 endif()
+
+# Add build target for compiling shaders to project solution
+create_compile_shaders_target()
 
 # Use explicit destinations for RUNTIME, LIBRARY, and ARCHIVE to support older CMake versions (such as 3.13)
 install(
