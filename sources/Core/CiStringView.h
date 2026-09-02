@@ -11,6 +11,7 @@
 
 #include <LLGL/Container/StringView.h>
 #include <string>
+#include <cctype>
 
 
 namespace LLGL

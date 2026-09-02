@@ -847,7 +847,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename);
 
     #ifdef LLGL_OS_WASM
-    const std::string filename = "assets/" + shaderDesc.filename;
+    const std::string filename = std::string("assets/") + shaderDesc.filename;
     #else
     const std::string filename = shaderDesc.filename;
     #endif
