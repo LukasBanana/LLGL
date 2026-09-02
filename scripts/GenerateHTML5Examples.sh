@@ -122,11 +122,14 @@ generate_html5_page()
     fi
 
     # Find all shaders and copy them into app folder
-    for FILE in $PROJECT_SOURCE_DIR/*.vert \
-                $PROJECT_SOURCE_DIR/*.frag; do
-        if [ -f "$FILE" ]; then
-            copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
-        fi
+    for SHADER_DIR in "$PROJECT_SOURCE_DIR" \
+                      "$PROJECT_SOURCE_DIR/.autogen"; do
+        for FILE in "$SHADER_DIR"/*.300es.vert \
+                    "$SHADER_DIR"/*.300es.frag; do
+            if [ -f "$FILE" ]; then
+                copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
+            fi
+        done
     done
 
     # Package assets into .data.js file with Emscripten packager tool

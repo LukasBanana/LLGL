@@ -941,9 +941,9 @@ static std::string FindShader(const std::string& basename, const std::initialize
             inputFilename.append(".");
             inputFilename.append(suffix);
 
-            // Check if file exists. If so, return its resolved asset path
-            if (ResolveAssetFilename(inputFilename, shaderFilename))
-                return shaderFilename;
+            // Check if file exists. If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShader().
+            if (FindAsset(inputFilename))
+                return inputFilename;
         }
     }
 
@@ -956,7 +956,11 @@ static std::string FindShader(const std::string& basename, const std::initialize
                 suffixesPattern.append("|");
             suffixesPattern.append(suffix);
         }
-        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Could not find shader '%s.(%s)'", basename, suffixesPattern.c_str());
+        LLGL::Log::Errorf(
+            LLGL::Log::ColorFlags::StdError,
+            "Could not find shader '%s.(%s)'",
+            basename.c_str(), suffixesPattern.c_str()
+        );
     }
     return "";
 }

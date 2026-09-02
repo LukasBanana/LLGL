@@ -102,17 +102,31 @@ static std::string FindAssetFilename(const std::string& name)
     return name;
 }
 
-bool ResolveAssetFilename(const std::string& name, std::string& outFullPath)
+bool FindAsset(const std::string& name, std::string* outFullPath)
 {
     // Get full filename for asset
     const std::string filename = FindAssetFilename(name);
+
+    #if defined LLGL_OS_ANDROID
+
+    // Load asset from compressed APK package via AAssetManager
+    FILE* file = fopen(filename.c_str(), "rb");
+    if (file == nullptr)
+        return false;
+    fclose(file);
+
+    #else
+
     std::ifstream file{ filename };
-    if (file.good())
-    {
-        outFullPath = filename;
-        return true;
-    }
-    return false;
+    if (!file.good())
+        return false;
+
+    #endif
+
+    if (outFullPath != nullptr)
+        *outFullPath = filename;
+
+    return true;
 }
 
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
@@ -125,10 +139,10 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     #if defined LLGL_OS_ANDROID
 
     // Load asset from compressed APK package via AAssetManager
-    FILE* file = fopen(name.c_str(), "rb");
+    FILE* file = fopen(filename.c_str(), "rb");
     if (file == nullptr)
     {
-        LLGL::Log::Errorf("failed to load asset: %s\n", name.c_str());
+        LLGL::Log::Errorf("failed to load asset: %s\n", filename.c_str());
         return {};
     }
 

@@ -41,9 +41,9 @@ pushd $SRC
 
 # If this is run in WSL2 on Windows, remove carriage return characters (Windows EOL) from the script before executing it
 if grep -q $'\r$' BuildWasm.sh; then
-    tr -d '\r' < BuildWasm.sh | bash -s -- "$DST"
+    tr -d '\r' < BuildWasm.sh | bash -s -- -u "$DST"
 else
-    BuildWasm.sh "$DST"
+    BuildWasm.sh -u "$DST"
 fi
 
 # Copy HTML5 examples to the target web page directory

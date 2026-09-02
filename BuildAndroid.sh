@@ -364,19 +364,22 @@ generate_app_project()
     fi
 
     # Find all shaders and copy them into app folder
-    for FILE in $PROJECT_SOURCE_DIR/*.vert \
-                $PROJECT_SOURCE_DIR/*.geom \
-                $PROJECT_SOURCE_DIR/*.tesc \
-                $PROJECT_SOURCE_DIR/*.tese \
-                $PROJECT_SOURCE_DIR/*.frag \
-                $PROJECT_SOURCE_DIR/*.comp \
-                $PROJECT_SOURCE_DIR/*.spv; do
-        if [ -f "$FILE" ]; then
-            if [ $VERBOSE -ne 0 ]; then
-                echo "Copy shader: $(basename $FILE)"
+    for SHADER_DIR in "$PROJECT_SOURCE_DIR" \
+                      "$PROJECT_SOURCE_DIR/.autogen"; do
+        for FILE in "$SHADER_DIR"/*.vert \
+                    "$SHADER_DIR"/*.geom \
+                    "$SHADER_DIR"/*.tesc \
+                    "$SHADER_DIR"/*.tese \
+                    "$SHADER_DIR"/*.frag \
+                    "$SHADER_DIR"/*.comp \
+                    "$SHADER_DIR"/*.spv; do
+            if [ -f "$FILE" ]; then
+                if [ $VERBOSE -ne 0 ]; then
+                    echo "Copy shader: $(basename $FILE)"
+                fi
+                cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
             fi
-            cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
-        fi
+        done
     done
 }
 
