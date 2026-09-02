@@ -126,7 +126,7 @@ namespace Memory
 \param[out] dst Specifies the memory location where the input value will be copied to.
 \param[in] value Specifies the input value that is meant to be copied into all entries.
 \param[in] count Specifies how many entries will be set to the input value.
-\remarks If the template typename \c <T> specifies a trivially constructible type, such as \c int or \c char,
+\remarks If the template typename \c T specifies a trivially constructible type, such as \c int or \c char,
 and all bytes in the input value are equal, the standard library function \c ::memset will be used.
 Otherwise, a standard for-loop will be used to initialize all entries.
 */

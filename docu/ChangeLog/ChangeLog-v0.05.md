@@ -8,6 +8,7 @@ Version 0.05 removed all features that were deprecatd in 0.04 and refactored a f
 - [Vertex attributes](#vertex-attributes)
 - [Vertex buffers](#vertex-buffers)
 - [Vertex arrays](#vertex-arrays)
+- [Relaxed uniform identifiers](#relaxed-uniform-identifiers)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -116,6 +117,67 @@ LLGL::BufferArray* LLGL::RenderSystem::CreateBufferArray(ArrayView<BufferLocatio
 
 // Usage
 LLGL::BufferArray myBufferArray = myRenderer->CreateBufferArray({ bufA, bufB });
+```
+
+
+## Relaxed uniform identifiers
+
+This section does not describe a breaking change nor a deprecation. Instead, it outlines a relaxation of constraints
+that are worth discussing in conjunction with the new scripts for automatic translation of all example shaders from a single source of HLSL.
+The constraint that uniform descriptors were only allowed to contain a single identifier weren't even clearly stated previously.
+This has been relaxed to also allow chains of identifiers, e.g. `"scene.projection"` can now describe a valid uniform in the pipeline layout.
+This is meant to simplify the pipeline layout description with multiple shader backends in mind.
+Take a look at the following HLSL shader for instance:
+```hlsl
+cbuffer Scene : register(b1) {
+    float4x4 projection;
+}
+float4 VSMain(float4 position : POSITION) : SV_Position {
+    return mul(projection, position);
+}
+```
+For such a simple shader, `projection` could be updated via uniforms, which are lightweight data that can be updated fast (via `SetUniforms()`)
+without involving buffer copy operations (via `UpdateBuffer()`).
+Translating this by hand would allow to have the same uniform in GLSL, e.g. `uniform mat4 projection;`,
+but a cross-compiler toolchain might translate it to something like this:
+```glsl
+#version 140
+layout(std140) uniform Scene {
+    mat4 projection;
+};
+in float4 POSITION;
+void main() {
+    gl_Position = projection * POSITION;
+}
+```
+Now the input parameter is no longer a loose uniform but has become a UBO, which does not work with `SetUniforms()`.
+This can be changed by marking the cbuffer in HLSL with the SPIR-V specific `[[vk::push_constant]]` attribute:
+```hlsl
+struct Scene_t {
+    float4x4 projection;
+};
+#if __spirv__
+[[vk::push_constant]] Scene_t scene;
+#else
+cbuffer Scene : register(b1) {
+    Scene_t scene;
+}
+#endif
+float4 VSMain(float4 position : POSITION) : SV_Position {
+    return mul(scene.projection, position);
+}
+```
+Since SPIR-V does not support more than one push constant block, we'd have to put our cbuffer fields into a struct.
+For D3D output (DXIL or DXBC), we can share the same declaration to avoid duplication and use that struct as-is.
+The attentive reader might already know where this leads us since we now have to address the uniforms by the identifier chain `scene.projection`.
+Eventhough SPIR-V only supports a single push constant block, the HLSL input could technically still have other cbuffers
+and structs that use the identifier `projection`, so distinguishing them is critical.
+With the new relaxed rules, LLGL supports specifying this uniform field with `scene.projection`.
+This has also been updated in the `Parse()`/`ParseContext` API:
+```cpp
+myRenderer->CreatePipelineLayout(
+    LLGL::Parse("float4x4( scene.projection )")
+);
 ```
 
 

@@ -89,8 +89,9 @@ class LLGL_EXPORT ParseContext
             - \c sampler for sampler states (i.e. ResourceType::Sampler).
         - Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
         - The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
-        - The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
-        - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
+        - The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets
+          (e.g. <code>"texture(1[2])"</code> or <code>"texture(tex@1[2])"</code>) or after the resource name (e.g. <code>texture(tex[2]@1)</code>), but not both.
+        - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3,arr1[2]@4,arr2@6[3])"</code>).
         - Each binding point is separated by a comma, the last comma being optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
         - The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after each binding point with a preceding colon using the following identifiers:
             - \c vert for the vertex shader stage (i.e. StageFlags::VertexStage).
@@ -103,7 +104,8 @@ class LLGL_EXPORT ParseContext
         - The following syntax can be used for uniform descriptors (see LLGL::UniformType for accepted type names):
             \code
             arraySize   := '[' INT ']'
-            uniform     := NAME | NAME arraySize
+            uniform     := uniformName | uniformName arraySize
+            uniformName := IDENT | IDENT '.' uniformName
             uniformList := uniform | uniform ',' uniformList
             uniformDesc := TYPE '(' uniformList ')'
             \endcode

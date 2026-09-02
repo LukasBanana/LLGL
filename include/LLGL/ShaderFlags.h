@@ -68,6 +68,7 @@ enum class ShaderSourceType
 
 /**
 \brief Shader compilation flags enumeration.
+\remarks The shader compile flags are heavily backend dependent and are therefore silently ignored if they are not supported by the backend.
 \see ShaderDescriptor::flags
 \todo Rename to CompileFlags.
 */
@@ -170,8 +171,10 @@ struct ShaderCompileFlags
 
         /**
         \brief Specifies whether input/output attributes should be treated case insensitive.
+
         \remarks This can be used to simplify compatibility with GLSL shaders of older versions that were cross-compiled from HLSL.
         Some compiler toolchains use the HLSL \e semantic name for the GLSL counterpart, but HLSL attributes are already case-insensitive.
+
         \remarks
         Consider the following HLSL code snippet of a vertex shader:
         \code{hlsl}
@@ -193,6 +196,7 @@ struct ShaderCompileFlags
         This flag relaxes this condition by making the lookup case-insensitive.
         GLSL shaders with <code>#version 420</code> or higher can ignore this,
         since attributes are already bound within the shader themselves via their <code>layout(location=N)</code> qualifier.
+
         \note Only supported with: OpenGL.
         */
         CaseInsensitiveAttribs  = (1 << 9),

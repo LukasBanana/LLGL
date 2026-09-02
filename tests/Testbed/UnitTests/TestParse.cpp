@@ -259,23 +259,23 @@ DEF_RITEST( ParseUtil )
         psoLayoutA.bindings =
         {
             BindingDescriptor{ "texA",  ResourceType::Texture, BindFlags::Sampled, StageFlags::VertexStage | StageFlags::FragmentStage, 1, 2 },
-            BindingDescriptor{ "texB",  ResourceType::Texture, BindFlags::Sampled, StageFlags::VertexStage | StageFlags::FragmentStage, 3 },
-            BindingDescriptor{ "smplA", ResourceType::Sampler, 0,                  StageFlags::FragmentStage,                           4 },
+            BindingDescriptor{ "texB",  ResourceType::Texture, BindFlags::Sampled, StageFlags::VertexStage | StageFlags::FragmentStage, 3, 2 },
+            BindingDescriptor{ "smplA", ResourceType::Sampler, 0,                  StageFlags::FragmentStage,                           5 },
         };
         psoLayoutA.staticSamplers =
         {
-            StaticSamplerDescriptor{ "smplB", StageFlags::FragmentStage, 5, smplB },
+            StaticSamplerDescriptor{ "smplB", StageFlags::FragmentStage, 6, smplB },
         };
         psoLayoutA.uniforms =
         {
-            UniformDescriptor{ "wvpMatrix", UniformType::Float4x4 },
+            UniformDescriptor{ "scene.wvpMatrix", UniformType::Float4x4 },
             UniformDescriptor{ "offsets", UniformType::Int4, 3 },
             UniformDescriptor{ "origin", UniformType::Int4 },
         };
         psoLayoutA.combinedTextureSamplers =
         {
-            CombinedTextureSamplerDescriptor{ "texB_smplA", "texB", "smplA", 4 },
-            CombinedTextureSamplerDescriptor{ "texB_smplB", "texB", "smplB", 5 },
+            CombinedTextureSamplerDescriptor{ "texB_smplA", "texB", "smplA", 7 },
+            CombinedTextureSamplerDescriptor{ "texB_smplB", "texB", "smplB", 8 },
         };
         psoLayoutA.barrierFlags = BarrierFlags::StorageBuffer;
     }
@@ -285,12 +285,12 @@ DEF_RITEST( ParseUtil )
         "cbuffer(Scene@0):vert,"
         "rwbuffer(outVertices@0):vert,"
         "},"
-        "texture(texA@1[2],texB@3):vert:frag,"
-        "sampler(smplA@4):frag,"
-        "sampler(smplB@5){filter=nearest}:frag,"
-        "sampler<texB,smplA>(texB_smplA@4),"
-        "sampler<texB,smplB>(texB_smplB@5),"
-        "float4x4(wvpMatrix),"
+        "texture(texA@1[2],texB[2]@3):vert:frag,"
+        "sampler(smplA@5):frag,"
+        "sampler(smplB@6){filter=nearest}:frag,"
+        "sampler<texB,smplA>(texB_smplA@7),"
+        "sampler<texB,smplB>(texB_smplB@8),"
+        "float4x4(scene.wvpMatrix),"
         "int4(offsets[3],origin),"
         "barriers{rwbuffer},"
     );
@@ -301,15 +301,15 @@ DEF_RITEST( ParseUtil )
         "\t\tcbuffer ( Scene @ 0 ) : vert ,\n"
         "\t\trwbuffer ( outVertices @ 0 ) : vert\n"
         "\t},\n"
-        "\ttexture ( texA @ 1 [ %d ] , texB @ %d ) : vert : frag , \n"
-        "\tsampler ( smplA @ 4 ) : frag,\n"
-        "\tsampler ( smplB @ 5 ) { filter = nearest } : frag , \n"
-        "\tsampler < texB , smplA > ( texB_smplA@4 ) , \n"
-        "\tsampler < texB , smplB > ( texB_smplB@5 ) , \n"
-        "\tfloat4x4 ( wvpMatrix ) , \n"
+        "\ttexture ( texA @ 1 [ %d ] , texB @ %d [\t%d\t] ) : vert : frag , \n"
+        "\tsampler ( smplA @ 5 ) : frag,\n"
+        "\tsampler ( smplB @ 6 ) { filter = nearest } : frag , \n"
+        "\tsampler < texB , smplA > ( texB_smplA@7 ) , \n"
+        "\tsampler < texB , smplB > ( texB_smplB@8 ) , \n"
+        "\tfloat4x4 ( scene . wvpMatrix ) , \n"
         "\tint4 ( offsets [ %d ] , origin ) , \n"
         "\tbarriers { rwbuffer }\n",
-        2, 3, 3
+        2, 3, 2, 3
     );
 
     return TestResult::Passed;

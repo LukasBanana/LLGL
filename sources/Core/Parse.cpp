@@ -622,6 +622,18 @@ static bool ParseCombinedTextureSamplerDesc(Parser& parser, PipelineLayoutDescri
     return true;
 }
 
+static bool ParseArraySize(Parser& parser, std::uint32_t& outArraySize)
+{
+    if (parser.Accept("["))
+    {
+        if (ParseUInt32(parser, outArraySize) == 0)
+            return false;
+        if (!parser.Accept("]"))
+            return ReturnWithParseError(parser, "expected closing ']' after array size");
+    }
+    return true;
+}
+
 static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDescriptor& outDesc, bool isHeap)
 {
     BindingDescriptor bindingDesc;
@@ -648,11 +660,24 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
 
     while (parser.Feed() && !parser.Match(")"))
     {
+        /* Reset array size to ensure parser is not picking up the value from a previous entry */
+        bindingDesc.arraySize = 0;
+        bool isArraySizePostIdentDeclared = false;
+
         /* Parse optional name */
         if (parser.MatchIdent())
         {
             StringView tok = parser.Accept();
             bindingDesc.name = tok;
+
+            /* Parse optional array size (pre binding slot) */
+            if (parser.Match("["))
+            {
+                if (!ParseArraySize(parser, bindingDesc.arraySize))
+                    return false;
+                isArraySizePostIdentDeclared = true;
+            }
+
             if (!parser.Accept("@"))
                 return ReturnWithParseError(parser, "expected '@' token after resource identifier: %s", bindingDesc.name);
         }
@@ -663,18 +688,13 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
         if (ParseUInt32(parser, bindingDesc.slot.index) == 0)
             return false;
 
-        /* Parse optional array size */
-        if (parser.Accept("["))
+        /* Parse optional array size (post binding slot) */
+        if (parser.Match("["))
         {
-            if (ParseUInt32(parser, bindingDesc.arraySize) == 0)
+            if (isArraySizePostIdentDeclared)
+                return ReturnWithParseError(parser, "duplicate array specifier for resource: %s", bindingDesc.name);
+            if (!ParseArraySize(parser, bindingDesc.arraySize))
                 return false;
-            if (!parser.Accept("]"))
-                return ReturnWithParseError(parser, "expected closing ']' after array size");
-        }
-        else
-        {
-            /* Reset array size to ensure parser is not picking up the value from a previous entry */
-            bindingDesc.arraySize = 0;
         }
 
         /* Add new binding point to output descriptor */
