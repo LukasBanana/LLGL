@@ -541,7 +541,7 @@ function(create_compile_shaders_target)
                 COMMAND "${CMAKE_COMMAND}" -E chdir "${ShaderRootDir}"
                     "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py"
                     --input "."
-                    --dxc-path "${TOOL_DXC_EXECUTABLE}"
+                    --dxc-path "${TOOL_DXC_EXECUTABLE}" # Explicit path to DXC, to ensure SPIR-V output is supported
             )
         endforeach()
 

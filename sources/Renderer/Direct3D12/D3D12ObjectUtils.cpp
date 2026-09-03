@@ -57,7 +57,7 @@ void D3D12SetObjectNameIndexed(ID3D12Object* obj, const char* name, std::uint32_
         D3D12SetObjectName(obj, nullptr);
 }
 
-std::string D3D12GetObjectName(ID3D12Object* obj)
+std::string D3D12GetObjectName(ID3D12Object* obj, const char* defaultName)
 {
     if (obj != nullptr)
     {
@@ -68,7 +68,7 @@ std::string D3D12GetObjectName(ID3D12Object* obj)
         obj->GetPrivateData(DXGetD3DDebugObjectNameGUID(), &nameLen, &name[0]);
         return name;
     }
-    return "";
+    return defaultName;
 }
 
 

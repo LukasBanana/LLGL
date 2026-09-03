@@ -654,7 +654,7 @@ def output_stem(source, entry, trimmed_entries, target = None, stage = None, ove
         return f"{source.stem}{override_suffix}.{entry}"
 
 
-def sanitize_glsl_output(output_file: Path):
+def patch_glsl_output(output_file: Path):
     with open(output_file, "r", encoding="utf-8") as file:
         content = file.read()
 
@@ -669,7 +669,17 @@ def sanitize_glsl_output(output_file: Path):
         content = content.replace("in_var_", "v_")
         content = content.replace("out_var_", "")
 
-    # Rename SPIRV-Cross combined texture-sampler prefix
+    # Strip wrappers from combined dummy-sampler identifiers.
+    # This happens for textures that are accessed through load intrinsics rather than sampler intrinsics.
+    # They should keep their original texture name and not include any of the proxy prefix and suffix from SPIRV-Cross.
+    content = re.sub(
+        r"(?<![A-Za-z0-9_])SPIRV_Cross_Combined([A-Za-z_][A-Za-z0-9_]*?)SPIRV_Cross_DummySampler(?![A-Za-z0-9_])",
+        r"\1",
+        content,
+    )
+
+    # Rename the prefix of all combined texture-samplers.
+    # These must be distinguishable from the original texture and sampler identifiers.
     content = content.replace("SPIRV_Cross_Combined", "s_")
 
     # Rename SPIRV-Cross UBO types and remove their instance aliases.
@@ -727,7 +737,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
                 profile = entry["profile"],
                 extra_args = optimization_args + dxc_macro_args, #TODO: likely needs to move optimization to a separate spirv-tools command
                 in_entry = entry["entry"],
-                out_entry = "main",
+                out_entry = "main", #TODO: this should retain the original entry point, but during the examples' transitionioning phase, use "main" for compatibility
                 input_directory = shaderinfo.input_directory,
             )
 
@@ -817,7 +827,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
         run_command(command, shaderinfo.input_directory, context.opt)
 
         # Patch GLSL output to make it work with the LLGL example projects
-        sanitize_glsl_output(output_file)
+        patch_glsl_output(output_file)
 
     # Clean up intermediate files that are not needed in the final outut
     intermediate_spv.unlink()

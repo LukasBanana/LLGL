@@ -90,6 +90,9 @@ static const char* g_VKOptionalExtensions[] =
     // Adds support for reflection in HLSL shaders cross-compiled to SPIR-V
     VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME,
     #endif
+    #if VK_GOOGLE_user_type
+    VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
+    #endif
     #if VK_EXT_shader_viewport_index_layer
     // For enhanced shader control over viewport and layer selection in multiview and array rendering
     VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME,

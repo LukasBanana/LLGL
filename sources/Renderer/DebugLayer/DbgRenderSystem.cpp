@@ -635,6 +635,8 @@ bool DbgRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
  * ======= Private: =======
  */
 
+static constexpr long k_bufferBindFlagsToIgnore = LLGL::BindFlags::TexelBuffer;
+
 bool DbgRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
     if (outInfo != nullptr)
@@ -652,7 +654,8 @@ void DbgRenderSystem::ValidateBindFlags(long flags, Format format, ResourceType 
         BindFlags::IndexBuffer          |
         BindFlags::ConstantBuffer       |
         BindFlags::StreamOutputBuffer   |
-        BindFlags::IndirectBuffer
+        BindFlags::IndirectBuffer       |
+        k_bufferBindFlagsToIgnore
     );
 
     constexpr long textureOnlyFlags =
@@ -695,6 +698,14 @@ void DbgRenderSystem::ValidateBindFlags(long flags, Format format, ResourceType 
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "cannot use buffer-only bind flags for %s source type",
+                    ToString(resourceType)
+                );
+            }
+            else if ((flags & LLGL::BindFlags::TexelBuffer) != 0)
+            {
+                LLGL_DBG_WARN(
+                    WarningType::ImproperArgument,
+                    "LLGL::BindFlags::TexelBuffer is only relevant for pipeline layouts in conjunction with resource heaps",
                     ToString(resourceType)
                 );
             }
@@ -2030,7 +2041,7 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stages are specified for binding descriptor");
 
     /* Validate resource binding flags */
-    if (auto resource = rvDesc.resource)
+    if (auto* resource = rvDesc.resource)
     {
         switch (resource->GetResourceType())
         {
@@ -2062,7 +2073,7 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
 
 void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc)
 {
-    if ((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
+    if (((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) | k_bufferBindFlagsToIgnore) != (bindingDesc.bindFlags | k_bufferBindFlagsToIgnore))
     {
         const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(

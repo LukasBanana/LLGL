@@ -281,18 +281,18 @@ DEF_RITEST( ParseUtil )
     }
     TEST_PARSE_PSO_LAYOUT(
         psoLayoutA,
-        "heap{"
-        "cbuffer(Scene@0):vert,"
-        "rwbuffer(outVertices@0):vert,"
-        "},"
-        "texture(texA@1[2],texB[2]@3):vert:frag,"
-        "sampler(smplA@5):frag,"
-        "sampler(smplB@6){filter=nearest}:frag,"
-        "sampler<texB,smplA>(texB_smplA@7),"
-        "sampler<texB,smplB>(texB_smplB@8),"
-        "float4x4(scene.wvpMatrix),"
-        "int4(offsets[3],origin),"
-        "barriers{rwbuffer},"
+        "heap{"                                     // Heap bindings
+        "cbuffer(Scene@0):vert,"                    // Constant buffer 'Scene' at slot 0 in vertex stage
+        "rwbuffer(outVertices@0):vert,"             // Read-write buffer 'outVertices' at slot 0 in vertex stage
+        "},"                                        // End of heap binding
+        "texture(texA@1[2],texB[2]@3):vert:frag,"   // Textures with two ways of declaring arrays 'texA@1[2]' and 'texB[2]@3'
+        "sampler(smplA@5):frag,"                    // Dynamic sampler in fragment stage
+        "sampler(smplB@6){filter=nearest}:frag,"    // Static sampler with filter set to 'nearest'
+        "sampler<texB,smplA>(texB_smplA@7),"        // Combined texture-sampler
+        "sampler<texB,smplB>(texB_smplB@8),"        // Combined texture-sampler
+        "float4x4(scene.wvpMatrix),"                // Uniform with chained identifier 'scene.wvpMatrix'
+        "int4(offsets[3],origin),"                  // Uniforms, 'offsets[3]' as 'int4[3]' array and 'origin' and 'int4' vector
+        "barriers{rwbuffer},"                       // Read-write barriers
     );
 
     TEST_PARSE_PSO_LAYOUT(

@@ -49,8 +49,10 @@ class VKDescriptorSetLayout
 
         void Initialize(VkDevice device, std::vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings, VKSanitizeBindingSlotContext& sanitizeContext);
 
+        #if 0//UNUSED
         void UpdateLayoutBindingType(std::uint32_t descriptorIndex, VkDescriptorType descriptorType);
         void FinalizeUpdateLayoutBindingTypes(VkDevice device);
+        #endif
 
         void GetLayoutBindings(std::vector<VKLayoutBinding>& outBindings) const;
 
@@ -84,7 +86,7 @@ class VKDescriptorSetLayout
 
         VKPtr<VkDescriptorSetLayout>                setLayout_;
         std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings_;
-        bool                                        isAnyDescriptorTypeDirty_   = false;
+      //bool                                        isAnyDescriptorTypeDirty_   = false; //UNUSED
 
 };
 

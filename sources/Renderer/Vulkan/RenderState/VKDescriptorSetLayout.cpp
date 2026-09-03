@@ -40,6 +40,10 @@ static VkPipelineStageFlags ShaderStageToPipelineStage(VkShaderStageFlags flags)
     if ((flags & VK_SHADER_STAGE_GEOMETRY_BIT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;                }
     if ((flags & VK_SHADER_STAGE_FRAGMENT_BIT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;                }
     if ((flags & VK_SHADER_STAGE_COMPUTE_BIT                ) != 0) { bitmask |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;                 }
+    #if VK_EXT_mesh_shader
+    if ((flags & VK_SHADER_STAGE_TASK_BIT_EXT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT;                }
+    if ((flags & VK_SHADER_STAGE_MESH_BIT_EXT               ) != 0) { bitmask |= VK_PIPELINE_STAGE_MESH_SHADER_BIT_EXT;                }
+    #endif
 
     return bitmask;
 }
@@ -74,6 +78,7 @@ void VKDescriptorSetLayout::Initialize(VkDevice device, std::vector<VkDescriptor
     CreateVkDescriptorSetLayout(device);
 }
 
+#if 0 //UNUSED
 void VKDescriptorSetLayout::UpdateLayoutBindingType(std::uint32_t descriptorIndex, VkDescriptorType descriptorType)
 {
     LLGL_ASSERT(descriptorIndex < setLayoutBindings_.size());
@@ -92,6 +97,7 @@ void VKDescriptorSetLayout::FinalizeUpdateLayoutBindingTypes(VkDevice device)
         isAnyDescriptorTypeDirty_ = false;
     }
 }
+#endif
 
 void VKDescriptorSetLayout::CreateVkDescriptorSetLayout(
     VkDevice                                        device,

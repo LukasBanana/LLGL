@@ -1091,6 +1091,13 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
         if (Supported(info.targetLanguage))
         {
             const std::string source = FindShader(basename, entryPoint, info.suffixes);
+
+            //TODO:
+            // once all examples have transitioned to the auto-generated shaders, change this to retain the original entry point.
+            // Right now, the TranslateShaders.py script emits SPIR-V with the "main" entry point for the same reason.
+            if (info.targetLanguage == LLGL::ShadingLanguage::SPIRV)
+                entryPoint = "main";
+
             return LoadShaderInternal({ type, source.c_str(), entryPoint, info.profile }, defines, compileFlags);
         }
     }

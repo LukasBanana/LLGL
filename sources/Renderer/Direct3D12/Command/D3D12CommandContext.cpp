@@ -9,6 +9,7 @@
 #include "D3D12CommandQueue.h"
 #include "../D3D12Device.h"
 #include "../D3D12Resource.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Texture.h"
 #include "../RenderState/D3D12Fence.h"
@@ -661,6 +662,11 @@ void D3D12CommandContext::ResetUAVBarriers(UINT numUAVBarriers)
 
 void D3D12CommandContext::SetResourceUAVBarrier(ID3D12Resource* resource, UINT uavBarrierSlot)
 {
+    LLGL_ASSERT(
+        uavBarrierSlot < uavBarriers_.size(),
+        "UAV barrier slot (%u) for resource '%s' is out of bounds",
+        uavBarrierSlot, D3D12GetObjectName(resource, "<unnamed>").c_str()
+    );
     uavBarriers_[uavBarrierSlot].UAV.pResource = resource;
 }
 

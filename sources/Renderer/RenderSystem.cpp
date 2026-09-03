@@ -301,7 +301,8 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
         BindFlags::StreamOutputBuffer   |
         BindFlags::IndirectBuffer       |
         BindFlags::CopySrc              |
-        BindFlags::CopyDst
+        BindFlags::CopyDst              |
+        BindFlags::TexelBuffer // Valid but not necessary for CreateBuffer()
     );
 
     LLGL_ASSERT(
