@@ -26,13 +26,25 @@ column_major float4x3 UnpackRowMajor3x4Matrix(float4 row0, float4 row1, float4 r
 #define MAT3x4_MUL(MAT, VEC) \
     mul(VEC, UnpackRowMajor3x4Matrix(MAT##Row0, MAT##Row1, MAT##Row2))
 
-#else
+#else // __spirv__
 
 #define DECLARE_MAT3x4(MAT) \
     float3x4 MAT
 
 #define MAT3x4_MUL(MAT, VEC) \
     mul(MAT, VEC)
+
+#endif // /__spirv__
+
+#if NDC_SPACE_UNIT_CUBE
+
+#define NDC_TO_CLIP_SPACE(VEC) \
+    VEC.xyz = (VEC.xyz * float3(0.5, -0.5, 0.5) + 0.5)
+
+#else
+
+#define NDC_TO_CLIP_SPACE(VEC) \
+    VEC.xy = (VEC.xy * float2(0.5, -0.5) + 0.5)
 
 #endif
 

@@ -1002,56 +1002,16 @@ private:
 
     void CreateShaders()
     {
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "vs_5_0" });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "ps_5_0" });
+        sceneShaders.vs  = LoadVertexShader  ("HelloGame", "VSInstance", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        sceneShaders.ps  = LoadFragmentShader("HelloGame", "PSInstance");
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
-        {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" });
-            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.300es.vert" });
-            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.300es.frag" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.300es.vert" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.300es.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert.spv" });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag.spv" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSInstance", "1.1" });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSInstance", "1.1" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.metal", "VSGround",   "1.1" });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.metal", "PSGround",   "1.1" });
-        }
-        else
-        {
-            LLGL_THROW_RUNTIME_ERROR("No shaders provided for this backend");
-        }
+        groundShaders.vs = LoadVertexShader  ("HelloGame", "VSGround");
+        groundShaders.ps = LoadFragmentShader("HelloGame", "PSGround");
     }
 
     void CreatePipelines()
     {
         const bool needsExplicitMultiSample = (GetSampleCount() > 1 && !IsDirect3D());
-        const bool needsUniqueBindingSlots  = (IsVulkan());
 
         // Create PSO for instanced meshes
         scenePSOLayout[0] = renderer->CreatePipelineLayout(
@@ -1059,12 +1019,15 @@ private:
                 "cbuffer(Scene@1):vert:frag,"
                 "%s(instances@2):vert,"
                 "texture(shadowMap@4):frag,"
-                "sampler(shadowMapSampler@%d):frag,"
-                "float3(worldOffset),"  // Uniform_worldOffset   (0)
-                "float(bendIntensity)," // Uniform_bendIntensity (1)
-                "uint(firstInstance),", // Uniform_firstInstance (2)
-                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
-                (needsUniqueBindingSlots ? 5 : 4)
+                "sampler(shadowMapSampler@5):frag,"
+
+                "float3( globals.worldOffset   )," // Uniform_worldOffset   (0)
+                "float ( globals.bendIntensity )," // Uniform_bendIntensity (1)
+                "uint  ( globals.firstInstance )," // Uniform_firstInstance (2)
+
+                "sampler<shadowMap, shadowMapSampler>(s_shadowMapshadowMapSampler@4),"
+                ,
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
             )
         );
 
@@ -1093,9 +1056,11 @@ private:
             LLGL::Parse(
                 "cbuffer(Scene@1):vert,"
                 "%s(instances@2):vert,"
-                "float3(worldOffset),"
-                "float(bendIntensity),"
-                "uint(firstInstance),",
+
+                "float3( globals.worldOffset   )," // Uniform_worldOffset   (0)
+                "float ( globals.bendIntensity )," // Uniform_bendIntensity (1)
+                "uint  ( globals.firstInstance )," // Uniform_firstInstance (2)
+                ,
                 (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
             )
         );
@@ -1120,11 +1085,12 @@ private:
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
                 "texture(colorMap@2):frag,"
-                "sampler(colorMapSampler@%d):frag,"
+                "sampler(colorMapSampler@3):frag,"
                 "texture(shadowMap@4):frag,"
-                "sampler(shadowMapSampler@%d):frag,",
-                (needsUniqueBindingSlots ? 3 : 2),
-                (needsUniqueBindingSlots ? 5 : 4)
+                "sampler(shadowMapSampler@5):frag,"
+
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@2),"
+                "sampler<shadowMap, shadowMapSampler>(s_shadowMapshadowMapSampler@4),"
             )
         );
 

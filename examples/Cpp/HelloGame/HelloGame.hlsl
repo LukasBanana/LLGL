@@ -1,6 +1,13 @@
 // HLSL shader for HelloGame example
 // This file is part of the LLGL project
 
+#include <HlslToSpirvInterop.hlsli>
+
+// Maximum number of instances for UBO instanced rendering (ESSL -> 64)
+#ifndef MAX_NUM_INSTANCES
+#define MAX_NUM_INSTANCES 0
+#endif
+
 cbuffer Scene : register(b1)
 {
     float4x4    vpMatrix;
@@ -21,18 +28,36 @@ cbuffer Scene : register(b1)
 
 struct Instance
 {
-    float3x4    wMatrix;
-    float4      color;
+    DECLARE_MAT3x4( wMatrix );
+    float4          color;
 };
 
 
 // VERTEX SHADER INSTANCE
 
+#if MAX_NUM_INSTANCES > 0
+cbuffer instances : register(b2)
+{
+    // Rename instances to instancesElements for UBO compatibility in ESSL.
+    // The UBO name is referenced in the PSO layout, not their fields.
+    #define instances instancesElements
+    Instance instances[MAX_NUM_INSTANCES];
+}
+#else
 StructuredBuffer<Instance> instances : register(t2);
+#endif
 
-float3  worldOffset;
-float   bendIntensity;
-uint    firstInstance;
+struct Globals
+{
+    float3  worldOffset;
+    float   bendIntensity;
+    uint    firstInstance;
+};
+
+#if __spirv__
+[[vk::push_constant]]
+#endif
+Globals globals;
 
 struct VertexIn
 {
@@ -57,7 +82,7 @@ float WarpIntensityCurve(float d)
 
 float3 MeshAnimation(float3 pos)
 {
-    return pos + bendDir * pos.y * bendIntensity;
+    return pos + bendDir * pos.y * globals.bendIntensity;
 }
 
 float3 WarpPosition(float3 pos)
@@ -70,11 +95,11 @@ float3 WarpPosition(float3 pos)
 
 void VSInstance(VertexIn inp, uint instID : SV_InstanceID, out VertexOut outp)
 {
-    Instance inst = instances[instID + firstInstance];
+    Instance inst = instances[instID + globals.firstInstance];
     float4 modelPos = float4(MeshAnimation(inp.position), 1);
-    outp.worldPos   = WarpPosition(mul(inst.wMatrix, modelPos) + worldOffset);
+    outp.worldPos   = WarpPosition(MAT3x4_MUL(inst.wMatrix, modelPos) + globals.worldOffset);
     outp.position   = mul(vpMatrix, float4(outp.worldPos, 1));
-    outp.normal     = mul(inst.wMatrix, float4(inp.normal, 0));
+    outp.normal     = MAT3x4_MUL(inst.wMatrix, float4(inp.normal, 0));
     outp.texCoord   = inp.texCoord;
     outp.color      = inst.color;
 }
@@ -83,14 +108,14 @@ void VSInstance(VertexIn inp, uint instID : SV_InstanceID, out VertexOut outp)
 // PIXEL SHADER INSTANCE
 
 Texture2D shadowMap : register(t4);
-SamplerComparisonState shadowMapSampler : register(s4);
+SamplerComparisonState shadowMapSampler : register(s5);
 
 float SampleShadowMapOffset(float3 worldPos, float2 offset)
 {
     // Project world position into shadow-map space
     float4 shadowPos = mul(vpShadowMatrix, float4(worldPos, 1));
     shadowPos /= shadowPos.w;
-    shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
+    NDC_TO_CLIP_SPACE(shadowPos);
     
     // Sample shadow map
     return shadowMap.SampleCmp(shadowMapSampler, shadowPos.xy + offset * shadowSizeInv, shadowPos.z);
@@ -159,7 +184,7 @@ void VSGround(VertexIn inp, out GroundVertexOut outp)
 // PIXEL SHADER GROUND
 
 Texture2D colorMap : register(t2);
-SamplerState colorMapSampler : register(s2);
+SamplerState colorMapSampler : register(s3);
 
 float4 PSGround(GroundVertexOut inp) : SV_Target
 {

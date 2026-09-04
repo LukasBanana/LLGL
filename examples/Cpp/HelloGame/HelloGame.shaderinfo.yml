@@ -1,15 +1,54 @@
-#sources:
-#  - source: "HelloGame.hlsl"
-#    entries:
-#      - entry: "VSInstance"
-#        profile: "vs_5_0"
-#        targets: [glsl300es, glsl450core, spirv, metal]
-#      - entry: "PSInstance"
-#        profile: "ps_5_0"
-#        targets: [glsl300es, glsl450core, spirv, metal]
-#      - entry: "VSGround"
-#        profile: "vs_5_0"
-#        targets: [glsl300es, glsl450core, spirv, metal]
-#      - entry: "PSGround"
-#        profile: "ps_5_0"
-#        targets: [glsl450core, spirv]
+sources:
+  - source: "HelloGame.hlsl"
+    entries:
+      - entry: "VSInstance"
+        profile: "vs_5_0"
+        targets: [spirv, metal]
+      - entry: "PSInstance"
+        profile: "ps_5_0"
+        targets: [spirv, metal]
+      - entry: "VSGround"
+        profile: "vs_5_0"
+        targets: [spirv, metal]
+      - entry: "PSGround"
+        profile: "ps_5_0"
+        targets: [spirv, metal]
+
+    # Compile GLSL shaders with unit cube clipping space
+  - source: "HelloGame.hlsl"
+    permutation:
+      macros:
+        NDC_SPACE_UNIT_CUBE: 1
+    entries:
+      - entry: "VSInstance"
+        profile: "vs_5_0"
+        targets: [glsl450core]
+      - entry: "PSInstance"
+        profile: "ps_5_0"
+        targets: [glsl450core]
+      - entry: "VSGround"
+        profile: "vs_5_0"
+        targets: [glsl450core]
+      - entry: "PSGround"
+        profile: "ps_5_0"
+        targets: [glsl450core]
+
+    # Use UBO for instanced rendering in ESSL (VSInstance shader only)
+  - source: "HelloGame.hlsl"
+    permutation:
+      macros:
+        NDC_SPACE_UNIT_CUBE: 1
+        MAX_NUM_INSTANCES: 64
+    entries:
+      - entry: "VSInstance"
+        profile: "vs_5_0"
+        targets: [glsl300es]
+      - entry: "PSInstance"
+        profile: "ps_5_0"
+        targets: [glsl300es]
+      - entry: "VSGround"
+        profile: "vs_5_0"
+        targets: [glsl300es]
+      - entry: "PSGround"
+        profile: "ps_5_0"
+        targets: [glsl300es]
