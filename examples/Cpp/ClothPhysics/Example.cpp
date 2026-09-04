@@ -8,6 +8,8 @@
 #include <ExampleBase.h>
 
 // Enables storage textures instead of typed buffers for physics particles (i.e. RWTexture2D instead of RWBuffer in HLSL for instance).
+// This requires to run the COMPILE_SHADERS build target locally (or run scripts/TranslateShaders.py manually),
+// as shader permutations for the examples are intentionally stripped from the repository to reduce commit noise.
 #define ENABLE_STORAGE_TEXTURES 0
 
 // Enable wireframe polygon mode
