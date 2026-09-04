@@ -1518,6 +1518,7 @@ typedef struct LLGLRasterizerDescriptor
     LLGLPolygonMode         polygonMode;               /* = LLGLPolygonModeFill */
     LLGLCullMode            cullMode;                  /* = LLGLCullModeDisabled */
     LLGLDepthBiasDescriptor depthBias;
+    float                   lineWidth;                 /* = 1.0f */
     bool                    frontCCW;                  /* = false */
     bool                    discardEnabled;            /* = false */
     bool                    depthClampEnabled;         /* = false */
@@ -1525,7 +1526,6 @@ typedef struct LLGLRasterizerDescriptor
     bool                    multiSampleEnabled;        /* = false */
     bool                    antiAliasedLineEnabled;    /* = false */
     bool                    conservativeRasterization; /* = false */
-    float                   lineWidth;                 /* = 1.0f */
     bool                    shadingRateEnabled;        /* = false */
 }
 LLGLRasterizerDescriptor;
@@ -1533,13 +1533,13 @@ LLGLRasterizerDescriptor;
 typedef struct LLGLBlendTargetDescriptor
 {
     bool                blendEnabled;    /* = false */
+    uint8_t             colorMask;       /* = LLGLColorMaskAll */
     LLGLBlendOp         srcColor;        /* = LLGLBlendOpSrcAlpha */
     LLGLBlendOp         dstColor;        /* = LLGLBlendOpInvSrcAlpha */
     LLGLBlendArithmetic colorArithmetic; /* = LLGLBlendArithmeticAdd */
     LLGLBlendOp         srcAlpha;        /* = LLGLBlendOpSrcAlpha */
     LLGLBlendOp         dstAlpha;        /* = LLGLBlendOpInvSrcAlpha */
     LLGLBlendArithmetic alphaArithmetic; /* = LLGLBlendArithmeticAdd */
-    uint8_t             colorMask;       /* = LLGLColorMaskAll */
 }
 LLGLBlendTargetDescriptor;
 
@@ -1767,10 +1767,10 @@ typedef struct LLGLBlendDescriptor
 {
     bool                      alphaToCoverageEnabled;  /* = false */
     bool                      independentBlendEnabled; /* = false */
+    bool                      blendFactorDynamic;      /* = false */
     uint32_t                  sampleMask;              /* = ~0u */
     LLGLLogicOp               logicOp;                 /* = LLGLLogicOpDisabled */
     float                     blendFactor[4];          /* = {0.0f,0.0f,0.0f,0.0f} */
-    bool                      blendFactorDynamic;      /* = false */
     LLGLBlendTargetDescriptor targets[8];
 }
 LLGLBlendDescriptor;

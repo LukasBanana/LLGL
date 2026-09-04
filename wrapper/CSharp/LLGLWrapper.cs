@@ -2047,6 +2047,7 @@ namespace LLGL
         public PolygonMode         PolygonMode { get; set; }               = PolygonMode.Fill;
         public CullMode            CullMode { get; set; }                  = CullMode.Disabled;
         public DepthBiasDescriptor DepthBias { get; set; }                 = new DepthBiasDescriptor();
+        public float               LineWidth { get; set; }                 = 1.0f;
         public bool                FrontCCW { get; set; }                  = false;
         public bool                DiscardEnabled { get; set; }            = false;
         public bool                DepthClampEnabled { get; set; }         = false;
@@ -2054,7 +2055,6 @@ namespace LLGL
         public bool                MultiSampleEnabled { get; set; }        = false;
         public bool                AntiAliasedLineEnabled { get; set; }    = false;
         public bool                ConservativeRasterization { get; set; } = false;
-        public float               LineWidth { get; set; }                 = 1.0f;
         public bool                ShadingRateEnabled { get; set; }        = false;
 
         internal NativeLLGL.RasterizerDescriptor Native
@@ -2068,6 +2068,7 @@ namespace LLGL
                 {
                     native.depthBias = DepthBias.Native;
                 }
+                native.lineWidth                 = LineWidth;
                 native.frontCCW                  = FrontCCW;
                 native.discardEnabled            = DiscardEnabled;
                 native.depthClampEnabled         = DepthClampEnabled;
@@ -2075,7 +2076,6 @@ namespace LLGL
                 native.multiSampleEnabled        = MultiSampleEnabled;
                 native.antiAliasedLineEnabled    = AntiAliasedLineEnabled;
                 native.conservativeRasterization = ConservativeRasterization;
-                native.lineWidth                 = LineWidth;
                 native.shadingRateEnabled        = ShadingRateEnabled;
                 return native;
             }
@@ -2085,13 +2085,13 @@ namespace LLGL
     public class BlendTargetDescriptor
     {
         public bool            BlendEnabled { get; set; }    = false;
+        public ColorMaskFlags  ColorMask { get; set; }       = ColorMaskFlags.All;
         public BlendOp         SrcColor { get; set; }        = BlendOp.SrcAlpha;
         public BlendOp         DstColor { get; set; }        = BlendOp.InvSrcAlpha;
         public BlendArithmetic ColorArithmetic { get; set; } = BlendArithmetic.Add;
         public BlendOp         SrcAlpha { get; set; }        = BlendOp.SrcAlpha;
         public BlendOp         DstAlpha { get; set; }        = BlendOp.InvSrcAlpha;
         public BlendArithmetic AlphaArithmetic { get; set; } = BlendArithmetic.Add;
-        public ColorMaskFlags  ColorMask { get; set; }       = ColorMaskFlags.All;
 
         internal NativeLLGL.BlendTargetDescriptor Native
         {
@@ -2099,13 +2099,13 @@ namespace LLGL
             {
                 var native = new NativeLLGL.BlendTargetDescriptor();
                 native.blendEnabled    = BlendEnabled;
+                native.colorMask       = (byte)ColorMask;
                 native.srcColor        = SrcColor;
                 native.dstColor        = DstColor;
                 native.colorArithmetic = ColorArithmetic;
                 native.srcAlpha        = SrcAlpha;
                 native.dstAlpha        = DstAlpha;
                 native.alphaArithmetic = AlphaArithmetic;
-                native.colorMask       = (byte)ColorMask;
                 return native;
             }
         }
@@ -4257,6 +4257,7 @@ namespace LLGL
             public PolygonMode         polygonMode;               /* = PolygonMode.Fill */
             public CullMode            cullMode;                  /* = CullMode.Disabled */
             public DepthBiasDescriptor depthBias;
+            public float               lineWidth;                 /* = 1.0f */
             [MarshalAs(UnmanagedType.I1)]
             public bool                frontCCW;                  /* = false */
             [MarshalAs(UnmanagedType.I1)]
@@ -4271,7 +4272,6 @@ namespace LLGL
             public bool                antiAliasedLineEnabled;    /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool                conservativeRasterization; /* = false */
-            public float               lineWidth;                 /* = 1.0f */
             [MarshalAs(UnmanagedType.I1)]
             public bool                shadingRateEnabled;        /* = false */
         }
@@ -4280,13 +4280,13 @@ namespace LLGL
         {
             [MarshalAs(UnmanagedType.I1)]
             public bool            blendEnabled;    /* = false */
+            public byte            colorMask;       /* = ColorMaskFlags.All */
             public BlendOp         srcColor;        /* = BlendOp.SrcAlpha */
             public BlendOp         dstColor;        /* = BlendOp.InvSrcAlpha */
             public BlendArithmetic colorArithmetic; /* = BlendArithmetic.Add */
             public BlendOp         srcAlpha;        /* = BlendOp.SrcAlpha */
             public BlendOp         dstAlpha;        /* = BlendOp.InvSrcAlpha */
             public BlendArithmetic alphaArithmetic; /* = BlendArithmetic.Add */
-            public byte            colorMask;       /* = ColorMaskFlags.All */
         }
 
         public unsafe struct TessellationDescriptor
@@ -4480,11 +4480,11 @@ namespace LLGL
             public bool                  alphaToCoverageEnabled;  /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool                  independentBlendEnabled; /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool                  blendFactorDynamic;      /* = false */
             public int                   sampleMask;              /* = -1 */
             public LogicOp               logicOp;                 /* = LogicOp.Disabled */
             public fixed float           blendFactor[4];          /* = { 0.0f, 0.0f, 0.0f, 0.0f } */
-            [MarshalAs(UnmanagedType.I1)]
-            public bool                  blendFactorDynamic;      /* = false */
             public BlendTargetDescriptor targets0;
             public BlendTargetDescriptor targets1;
             public BlendTargetDescriptor targets2;

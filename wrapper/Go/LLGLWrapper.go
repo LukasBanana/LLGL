@@ -1373,6 +1373,7 @@ type RasterizerDescriptor struct {
     PolygonMode               PolygonMode         /* = PolygonModeFill */
     CullMode                  CullMode            /* = CullModeDisabled */
     DepthBias                 DepthBiasDescriptor
+    LineWidth                 float32             /* = 1.0 */
     FrontCCW                  bool                /* = false */
     DiscardEnabled            bool                /* = false */
     DepthClampEnabled         bool                /* = false */
@@ -1380,19 +1381,18 @@ type RasterizerDescriptor struct {
     MultiSampleEnabled        bool                /* = false */
     AntiAliasedLineEnabled    bool                /* = false */
     ConservativeRasterization bool                /* = false */
-    LineWidth                 float32             /* = 1.0 */
     ShadingRateEnabled        bool                /* = false */
 }
 
 type BlendTargetDescriptor struct {
     BlendEnabled    bool            /* = false */
+    ColorMask       uint8           /* = ColorMaskAll */
     SrcColor        BlendOp         /* = BlendOpSrcAlpha */
     DstColor        BlendOp         /* = BlendOpInvSrcAlpha */
     ColorArithmetic BlendArithmetic /* = BlendArithmeticAdd */
     SrcAlpha        BlendOp         /* = BlendOpSrcAlpha */
     DstAlpha        BlendOp         /* = BlendOpInvSrcAlpha */
     AlphaArithmetic BlendArithmetic /* = BlendArithmeticAdd */
-    ColorMask       uint8           /* = ColorMaskAll */
 }
 
 type TessellationDescriptor struct {
@@ -1570,10 +1570,10 @@ type StencilDescriptor struct {
 type BlendDescriptor struct {
     AlphaToCoverageEnabled  bool                     /* = false */
     IndependentBlendEnabled bool                     /* = false */
+    BlendFactorDynamic      bool                     /* = false */
     SampleMask              uint32                   /* = ~0u */
     LogicOp                 LogicOp                  /* = LogicOpDisabled */
     BlendFactor             [4]float32               /* = {0.0,0.0,0.0,0.0} */
-    BlendFactorDynamic      bool                     /* = false */
     Targets                 [8]BlendTargetDescriptor
 }
 
