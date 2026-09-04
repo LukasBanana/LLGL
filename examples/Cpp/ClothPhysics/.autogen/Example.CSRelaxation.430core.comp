@@ -1,0 +1,30 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0, std140) uniform SceneState
+{
+    layout(row_major) mat4 wvpMatrix;
+    layout(row_major) mat4 wMatrix;
+    vec4 gravity;
+    uvec2 gridSize;
+    uvec2 _pad0;
+    float damping;
+    float dTime;
+    float dStiffness;
+    float _pad1;
+    vec4 lightVec;
+};
+
+layout(binding = 2, rgba32f) uniform imageBuffer parCurrPos;
+layout(binding = 3, rgba32f) uniform readonly imageBuffer parNextPos;
+layout(binding = 4, rgba32f) uniform imageBuffer parPrevPos;
+layout(binding = 5, rgba32f) uniform writeonly imageBuffer parVelocity;
+
+void main()
+{
+    uint _34 = (gl_GlobalInvocationID.y * gridSize.x) + gl_GlobalInvocationID.x;
+    imageStore(parCurrPos, int(_34), imageLoad(parNextPos, int(_34)));
+    imageStore(parVelocity, int(_34), (imageLoad(parCurrPos, int(_34)) - imageLoad(parPrevPos, int(_34))) / vec4(dTime));
+    imageStore(parPrevPos, int(_34), imageLoad(parCurrPos, int(_34)));
+}
+

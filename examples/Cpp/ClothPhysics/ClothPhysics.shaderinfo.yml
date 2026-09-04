@@ -1,18 +1,39 @@
-#sources:
-#  - source: "Example.hlsl"
-#    entries:
-#      - entry: "VS"
-#        profile: "vs_5_0"
-#        targets: [glsl140core, glsl300es, spirv, metal]
-#      - entry: "PS"
-#        profile: "ps_5_0"
-#        targets: [glsl140core, glsl300es, spirv, metal]
-#      - entry: "CSForces"
-#        profile: "cs_5_0"
-#        targets: [glsl430core, glsl320es, metal, spirv]
-#      - entry: "CSStretchConstraints"
-#        profile: "cs_5_0"
-#        targets: [glsl430core, glsl320es, spirv]
-#      - entry: "CSRelaxation"
-#        profile: "cs_5_0"
-#        targets: [glsl430core, glsl320es, spirv]
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_5_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PS"
+        profile: "ps_5_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+
+      - entry: "CSForces"
+        profile: "cs_5_0"
+        targets: [glsl430core, glsl310es, metal, spirv]
+      - entry: "CSStretchConstraints"
+        profile: "cs_5_0"
+        targets: [glsl430core, glsl310es, metal, spirv]
+      - entry: "CSRelaxation"
+        profile: "cs_5_0"
+        targets: [glsl430core, glsl310es, metal, spirv]
+
+  - source: "Example.hlsl"
+    permutation:
+      override: "RWTextures"
+      macros:
+        ENABLE_STORAGE_TEXTURES: 1
+    entries:
+      - entry: "VS"
+        profile: "vs_5_0"
+        targets: [glsl140core, spirv, metal]
+
+      - entry: "CSForces"
+        profile: "cs_5_0"
+        targets: [glsl430core, metal, spirv]
+      - entry: "CSStretchConstraints"
+        profile: "cs_5_0"
+        targets: [glsl430core, metal, spirv]
+      - entry: "CSRelaxation"
+        profile: "cs_5_0"
+        targets: [glsl430core, metal, spirv]

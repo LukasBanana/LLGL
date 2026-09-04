@@ -8,7 +8,6 @@
 #include <ExampleBase.h>
 
 // Enables storage textures instead of typed buffers for physics particles (i.e. RWTexture2D instead of RWBuffer in HLSL for instance).
-// Currently only supported for D3D11 and D3D12
 #define ENABLE_STORAGE_TEXTURES 0
 
 // Enable wireframe polygon mode
@@ -16,7 +15,7 @@
 
 
 #if ENABLE_STORAGE_TEXTURES
-const LLGL::ShaderMacro g_shaderMacros[] = { { "ENABLE_STORAGE_TEXTURES" }, {} };
+const LLGL::ShaderMacro g_shaderMacros[] = { { "ENABLE_STORAGE_TEXTURES", "1" }, {} };
 #else
 const LLGL::ShaderMacro g_shaderMacros[] = { {} };
 #endif
@@ -90,12 +89,12 @@ class Example_ClothPhysics : public ExampleBase
         Gs::Matrix4f    wvpMatrix;
         Gs::Matrix4f    wMatrix;
         Gs::Vector4f    gravity;
-        std::uint32_t   gridSize[2];
-        std::uint32_t   pad0[2];
-        float           damping;
-        float           dTime;
-        float           dStiffness; // Reciprocal of number of solver iterations: 1/n
-        float           pad1;
+        std::uint32_t   gridSize[2] = {};
+        std::uint32_t   pad0[2]     = {};
+        float           damping     = {};
+        float           dTime       = {};
+        float           dStiffness  = {}; // Reciprocal of number of solver iterations: 1/n
+        float           pad1        = {};
         Gs::Vector4f    lightVec    = { 0.0f, 0.0f, 1.0f, 0.0f };
     }
     sceneState;
@@ -114,8 +113,10 @@ public:
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
-
         LLGL_VERIFY(renderCaps.features.hasComputeShaders);
+
+        if (!MinimumShaderModel(/*hlsl:*/ "5.0", /*glsl:*/ "430", /*essl:*/ "310", /*metal:*/ "2.0"))
+            return;
 
         // Create all graphics objects
         CreateBuffers();
@@ -256,7 +257,7 @@ public:
         LLGL::BufferDescriptor bufferDesc;
         {
             bufferDesc.size         = sizeof(Gs::Vector4f) * numClothVertices;
-            bufferDesc.stride       = vertexStride;
+            bufferDesc.stride       = vertexStride;//(storageType == LLGL::StorageBufferType::TypedBuffer || storageType == LLGL::StorageBufferType::RWTypedBuffer ? vertexStride : 0);
             bufferDesc.bindFlags    = bindFlags;
             bufferDesc.format       = LLGL::Format::RGBA32Float;
         }
@@ -347,38 +348,20 @@ public:
     void CreateComputePipeline()
     {
         // Create compute shader
-        if (Supported(LLGL::ShadingLanguage::HLSL))
+        #if ENABLE_STORAGE_TEXTURES
+        if (!Supported(LLGL::ShadingLanguage::HLSL))
         {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSForces",             "cs_5_0" }, g_shaderMacros);
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSStretchConstraints", "cs_5_0" }, g_shaderMacros);
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation",         "cs_5_0" }, g_shaderMacros);
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
-        {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSForces.comp"             });
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSStretchConstraints.comp" });
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSRelaxation.comp"         });
-        }
-        else if (Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSForces.comp",             "", "310 es" });
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSStretchConstraints.comp", "", "310 es" });
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSRelaxation.comp",         "", "310 es" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSForces.450core.comp.spv"             });
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSStretchConstraints.450core.comp.spv" });
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSRelaxation.450core.comp.spv"         });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CSForces",             "2.0" });
-            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CSStretchConstraints", "2.0" });
-            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CSRelaxation",         "2.0" });
+            computeShaders[0] = LoadComputeShader("Example.RWTextures", "CSForces",             g_shaderMacros);
+            computeShaders[1] = LoadComputeShader("Example.RWTextures", "CSStretchConstraints", g_shaderMacros);
+            computeShaders[2] = LoadComputeShader("Example.RWTextures", "CSRelaxation",         g_shaderMacros);
         }
         else
-            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
+        #endif
+        {
+            computeShaders[0] = LoadStandardComputeShader("CSForces",             g_shaderMacros);
+            computeShaders[1] = LoadStandardComputeShader("CSStretchConstraints", g_shaderMacros);
+            computeShaders[2] = LoadStandardComputeShader("CSRelaxation",         g_shaderMacros);
+        }
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
@@ -388,12 +371,14 @@ public:
                 #if ENABLE_STORAGE_TEXTURES
                 "texture(parBase@1):comp,"
                 "rwtexture(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
-                #else
-                "buffer(parBase@1):comp,"
-                "rwbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
                 "},"
-                #endif // /ENABLE_STORAGE_TEXTURES
+                "barriers{rwtexture},"
+                #else
+                "tbuffer(parBase@1):comp,"
+                "rwtbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
+                "},"
                 "barriers{rwbuffer},"
+                #endif // /ENABLE_STORAGE_TEXTURES
             )
         );
 
@@ -441,47 +426,36 @@ public:
     void CreateGraphicsPipeline()
     {
         // Create graphics shader
-        if (Supported(LLGL::ShadingLanguage::HLSL))
+        #if ENABLE_STORAGE_TEXTURES
+        if (!Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, g_shaderMacros);
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.vert" }, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.frag" }, g_shaderMacros);
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.450core.vert.spv" }, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.450core.frag.spv" }, g_shaderMacros);
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" }, g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" }, g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadVertexShader          ("Example.RWTextures", "VS", g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadStandardFragmentShader(                      "PS", g_shaderMacros);
         }
         else
-            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
+        #endif
+        {
+            graphicsShaderPipeline.vs = LoadStandardVertexShader  ("VS", g_shaderMacros);
+            graphicsShaderPipeline.ps = LoadStandardFragmentShader("PS", g_shaderMacros);
+        }
 
         // Create graphics pipeline layout
         #if ENABLE_STORAGE_TEXTURES
 
         graphicsLayout = renderer->CreatePipelineLayout(
-            IsMetal() || IsVulkan()
-                ? LLGL::Parse("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag, texture(1,2,6):vert}, barriers{rwtexture}")
-                : LLGL::Parse("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag, texture(1,2,3):vert}, barriers{rwtexture}")
+            LLGL::Parse(
+                "heap{"
+                "cbuffer(SceneState@0):vert:frag,"
+                "texture(colorMap@4):frag,"
+                "sampler(linearSampler@5):frag,"
+                "texture(vertexBase@1,vertexPos@2,vertexNormal@6):vert"
+                "},"
+                "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
+                "barriers{rwtexture},"
+            )
         );
 
         #else
-
-        graphicsLayout = renderer->CreatePipelineLayout(
-            IsMetal() || IsVulkan()
-                ? LLGL::Parse("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag},")
-                : LLGL::Parse("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag},")
-        );
-
-        #endif // /ENABLE_STORAGE_TEXTURES
 
         // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
         const LLGL::VertexAttribute vertexAttribs[] =
@@ -491,12 +465,27 @@ public:
             LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   /*location:*/ 2, /*offset:*/ 0, /*stride:*/ sizeof(ParticleBase), /*slot:*/ 2 },
         };
 
+        graphicsLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "cbuffer(SceneState@0):vert:frag,"
+                "texture(colorMap@4):frag,"
+                "sampler(linearSampler@5):frag"
+                "},"
+                "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
+            )
+        );
+
+        #endif // /ENABLE_STORAGE_TEXTURES
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "Scene.PSO";
             pipelineDesc.pipelineLayout                 = graphicsLayout;
+            #if !ENABLE_STORAGE_TEXTURES
             pipelineDesc.inputVertexAttribs             = vertexAttribs;
+            #endif
             pipelineDesc.vertexShader                   = graphicsShaderPipeline.vs;
             pipelineDesc.fragmentShader                 = graphicsShaderPipeline.ps;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;

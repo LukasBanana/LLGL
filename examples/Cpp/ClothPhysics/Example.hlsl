@@ -228,7 +228,7 @@ struct VOut
 
 Texture2D<float4> vertexBase    : register(t1); // UV (.xy) and inverse mass (.z)
 Texture2D<float4> vertexPos     : register(t2);
-Texture2D<float4> vertexNormal  : register(t3);
+Texture2D<float4> vertexNormal  : register(t6);
 
 void VS(uint id : SV_VertexID, out VOut outp)
 {
@@ -261,8 +261,8 @@ void VS(in VIn inp, out VOut outp)
  * HLSL pixel shader
  */
 
-Texture2D colorMap : register(t0);
-SamplerState linearSampler : register(s0);
+Texture2D colorMap : register(t4);
+SamplerState linearSampler : register(s5);
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {
