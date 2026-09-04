@@ -1,6 +1,15 @@
 #version 430
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
+struct ParticleView
+{
+    vec4 currPos;
+    vec4 nextPos;
+    vec4 origPos;
+    vec4 normal;
+    float invMass;
+};
+
 layout(binding = 0, std140) uniform SceneState
 {
     layout(row_major) mat4 wvpMatrix;
@@ -18,681 +27,183 @@ layout(binding = 0, std140) uniform SceneState
 layout(binding = 1) uniform samplerBuffer parBase;
 layout(binding = 2, rgba32f) uniform readonly imageBuffer parCurrPos;
 layout(binding = 3, rgba32f) uniform writeonly imageBuffer parNextPos;
+layout(binding = 4, rgba32f) uniform readonly writeonly imageBuffer parPrevPos;
+layout(binding = 5, rgba32f) uniform readonly writeonly imageBuffer parVelocity;
 layout(binding = 6, rgba32f) uniform imageBuffer parNormal;
+
+uint GridPosToIndex(uvec2 gridPos)
+{
+    return (gridPos.y * gridSize.x) + gridPos.x;
+}
+
+vec4 UVToOrigPos(vec2 uv)
+{
+    return vec4((uv.x * 2.0) - 1.0, 0.0, uv.y * (-2.0), 1.0);
+}
+
+void AccumulateStretchConstraints(ParticleView par, ivec2 neighborGridPos, inout vec3 dCorrection)
+{
+    bool temp_var_logical = true;
+    if (!(neighborGridPos.x < 0))
+    {
+        temp_var_logical = uint(neighborGridPos.x) >= gridSize.x;
+    }
+    bool temp_var_logical_1 = true;
+    if (!temp_var_logical)
+    {
+        temp_var_logical_1 = neighborGridPos.y < 0;
+    }
+    bool temp_var_logical_2 = true;
+    if (!temp_var_logical_1)
+    {
+        temp_var_logical_2 = uint(neighborGridPos.y) >= gridSize.y;
+    }
+    if (temp_var_logical_2)
+    {
+        return;
+    }
+    uvec2 param_var_gridPos = uvec2(neighborGridPos);
+    uint idx = GridPosToIndex(param_var_gridPos);
+    vec4 otherCurrPos = imageLoad(parCurrPos, int(idx));
+    vec2 param_var_uv = texelFetch(parBase, int(idx)).xy;
+    vec4 otherOrigPos = UVToOrigPos(param_var_uv);
+    float otherInvMass = texelFetch(parBase, int(idx)).z;
+    vec3 dPos = (par.nextPos - otherCurrPos).xyz;
+    float currDist = length(dPos);
+    float edgeDist = distance(par.origPos, otherOrigPos);
+    dPos = normalize(dPos) * ((currDist - edgeDist) / (par.invMass + otherInvMass));
+    dCorrection += (dPos * (-par.invMass));
+}
+
+vec3 ReadParticlePos(uvec2 gridPos)
+{
+    uvec2 param_var_gridPos = gridPos;
+    return imageLoad(parCurrPos, int(GridPosToIndex(param_var_gridPos))).xyz;
+}
+
+void AccumulateSurfaceNormal(vec4 pos, ivec2 gridPos0, ivec2 gridPos1, inout vec4 normal)
+{
+    bool temp_var_logical = true;
+    if (!(gridPos0.x < 0))
+    {
+        temp_var_logical = uint(gridPos0.x) >= gridSize.x;
+    }
+    bool temp_var_logical_1 = true;
+    if (!temp_var_logical)
+    {
+        temp_var_logical_1 = gridPos0.y < 0;
+    }
+    bool temp_var_logical_2 = true;
+    if (!temp_var_logical_1)
+    {
+        temp_var_logical_2 = uint(gridPos0.y) >= gridSize.y;
+    }
+    bool temp_var_logical_3 = true;
+    if (!temp_var_logical_2)
+    {
+        temp_var_logical_3 = gridPos1.x < 0;
+    }
+    bool temp_var_logical_4 = true;
+    if (!temp_var_logical_3)
+    {
+        temp_var_logical_4 = uint(gridPos1.x) >= gridSize.x;
+    }
+    bool temp_var_logical_5 = true;
+    if (!temp_var_logical_4)
+    {
+        temp_var_logical_5 = gridPos1.y < 0;
+    }
+    bool temp_var_logical_6 = true;
+    if (!temp_var_logical_5)
+    {
+        temp_var_logical_6 = uint(gridPos1.y) >= gridSize.y;
+    }
+    if (temp_var_logical_6)
+    {
+        return;
+    }
+    uvec2 param_var_gridPos = uvec2(gridPos0);
+    vec3 v0 = ReadParticlePos(param_var_gridPos) - pos.xyz;
+    uvec2 param_var_gridPos_1 = uvec2(gridPos1);
+    vec3 v1 = ReadParticlePos(param_var_gridPos_1) - pos.xyz;
+    vec3 _471 = normal.xyz + cross(v0, v1);
+    normal = vec4(_471.x, _471.y, _471.z, normal.w);
+}
+
+void ApplyStretchConstraints(inout ParticleView par, ivec2 gridPos)
+{
+    if (par.invMass == 0.0)
+    {
+        return;
+    }
+    vec3 dPos = vec3(0.0);
+    ParticleView param_var_par = par;
+    ivec2 param_var_neighborGridPos = gridPos + ivec2(0, -1);
+    AccumulateStretchConstraints(param_var_par, param_var_neighborGridPos, dPos);
+    ParticleView param_var_par_1 = par;
+    ivec2 param_var_neighborGridPos_1 = gridPos + ivec2(0, 1);
+    AccumulateStretchConstraints(param_var_par_1, param_var_neighborGridPos_1, dPos);
+    ParticleView param_var_par_2 = par;
+    ivec2 param_var_neighborGridPos_2 = gridPos + ivec2(-1, 0);
+    AccumulateStretchConstraints(param_var_par_2, param_var_neighborGridPos_2, dPos);
+    ParticleView param_var_par_3 = par;
+    ivec2 param_var_neighborGridPos_3 = gridPos + ivec2(1, 0);
+    AccumulateStretchConstraints(param_var_par_3, param_var_neighborGridPos_3, dPos);
+    ParticleView param_var_par_4 = par;
+    ivec2 param_var_neighborGridPos_4 = gridPos + ivec2(-1);
+    AccumulateStretchConstraints(param_var_par_4, param_var_neighborGridPos_4, dPos);
+    ParticleView param_var_par_5 = par;
+    ivec2 param_var_neighborGridPos_5 = gridPos + ivec2(1, -1);
+    AccumulateStretchConstraints(param_var_par_5, param_var_neighborGridPos_5, dPos);
+    ParticleView param_var_par_6 = par;
+    ivec2 param_var_neighborGridPos_6 = gridPos + ivec2(-1, 1);
+    AccumulateStretchConstraints(param_var_par_6, param_var_neighborGridPos_6, dPos);
+    ParticleView param_var_par_7 = par;
+    ivec2 param_var_neighborGridPos_7 = gridPos + ivec2(1);
+    AccumulateStretchConstraints(param_var_par_7, param_var_neighborGridPos_7, dPos);
+    dPos /= vec3(8.0);
+    vec4 normal = vec4(0.0);
+    vec4 param_var_pos = par.currPos;
+    ivec2 param_var_gridPos0 = gridPos + ivec2(0, 1);
+    ivec2 param_var_gridPos1 = gridPos + ivec2(1, 0);
+    AccumulateSurfaceNormal(param_var_pos, param_var_gridPos0, param_var_gridPos1, normal);
+    vec4 param_var_pos_1 = par.currPos;
+    ivec2 param_var_gridPos0_1 = gridPos + ivec2(1, 0);
+    ivec2 param_var_gridPos1_1 = gridPos + ivec2(0, -1);
+    AccumulateSurfaceNormal(param_var_pos_1, param_var_gridPos0_1, param_var_gridPos1_1, normal);
+    vec4 param_var_pos_2 = par.currPos;
+    ivec2 param_var_gridPos0_2 = gridPos + ivec2(0, -1);
+    ivec2 param_var_gridPos1_2 = gridPos + ivec2(-1, 0);
+    AccumulateSurfaceNormal(param_var_pos_2, param_var_gridPos0_2, param_var_gridPos1_2, normal);
+    vec4 param_var_pos_3 = par.currPos;
+    ivec2 param_var_gridPos0_3 = gridPos + ivec2(-1, 0);
+    ivec2 param_var_gridPos1_3 = gridPos + ivec2(0, 1);
+    AccumulateSurfaceNormal(param_var_pos_3, param_var_gridPos0_3, param_var_gridPos1_3, normal);
+    par.normal = normal / vec4(4.0);
+    vec3 _265 = par.nextPos.xyz + (dPos * dStiffness);
+    par.nextPos = vec4(_265.x, _265.y, _265.z, par.nextPos.w);
+}
+
+void src_CSStretchConstraints(uvec2 threadID)
+{
+    uvec2 param_var_gridPos = threadID;
+    uint idx = GridPosToIndex(param_var_gridPos);
+    ParticleView par;
+    par.currPos = imageLoad(parCurrPos, int(idx));
+    par.nextPos = par.currPos;
+    vec2 param_var_uv = texelFetch(parBase, int(idx)).xy;
+    par.origPos = UVToOrigPos(param_var_uv);
+    par.normal = imageLoad(parNormal, int(idx));
+    par.invMass = texelFetch(parBase, int(idx)).z;
+    ivec2 param_var_gridPos_1 = ivec2(threadID);
+    ApplyStretchConstraints(par, param_var_gridPos_1);
+    imageStore(parNextPos, int(idx), par.nextPos);
+    imageStore(parNormal, int(idx), par.normal);
+}
 
 void main()
 {
-    uint _63 = (gl_GlobalInvocationID.y * gridSize.x) + gl_GlobalInvocationID.x;
-    vec4 _65 = imageLoad(parCurrPos, int(_63));
-    vec4 _67 = texelFetch(parBase, int(_63));
-    vec4 _73 = vec4((_67.x * 2.0) - 1.0, 0.0, _67.y * (-2.0), 1.0);
-    vec4 _76 = texelFetch(parBase, int(_63));
-    float _77 = _76.z;
-    ivec2 _78 = ivec2(gl_GlobalInvocationID.xy);
-    vec4 _829;
-    vec4 _830;
-    do
-    {
-        if (_77 == 0.0)
-        {
-            _829 = imageLoad(parNormal, int(_63));
-            _830 = _65;
-            break;
-        }
-        int _87;
-        bool _88;
-        bool _89;
-        ivec2 _84 = _78 + ivec2(0, -1);
-        vec3 _139;
-        do
-        {
-            _87 = _84.x;
-            _88 = _87 < 0;
-            _89 = !_88;
-            bool _94;
-            if (_89)
-            {
-                _94 = uint(_87) >= gridSize.x;
-            }
-            else
-            {
-                _94 = true;
-            }
-            bool _100;
-            if (!_94)
-            {
-                _100 = _84.y < 0;
-            }
-            else
-            {
-                _100 = true;
-            }
-            bool _109;
-            if (!_100)
-            {
-                _109 = uint(_84.y) >= gridSize.y;
-            }
-            else
-            {
-                _109 = true;
-            }
-            if (_109)
-            {
-                _139 = vec3(0.0);
-                break;
-            }
-            uvec2 _112 = uvec2(_84);
-            uint _116 = (_112.y * gridSize.x) + _112.x;
-            vec4 _119 = texelFetch(parBase, int(_116));
-            vec3 _129 = (_65 - imageLoad(parCurrPos, int(_116))).xyz;
-            _139 = (normalize(_129) * ((length(_129) - distance(_73, vec4((_119.x * 2.0) - 1.0, 0.0, _119.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_116)).z))) * (-_77);
-            break;
-        } while(false);
-        int _143;
-        bool _144;
-        bool _145;
-        ivec2 _140 = _78 + ivec2(0, 1);
-        vec3 _196;
-        do
-        {
-            _143 = _140.x;
-            _144 = _143 < 0;
-            _145 = !_144;
-            bool _150;
-            if (_145)
-            {
-                _150 = uint(_143) >= gridSize.x;
-            }
-            else
-            {
-                _150 = true;
-            }
-            bool _156;
-            if (!_150)
-            {
-                _156 = _140.y < 0;
-            }
-            else
-            {
-                _156 = true;
-            }
-            bool _165;
-            if (!_156)
-            {
-                _165 = uint(_140.y) >= gridSize.y;
-            }
-            else
-            {
-                _165 = true;
-            }
-            if (_165)
-            {
-                _196 = _139;
-                break;
-            }
-            uvec2 _168 = uvec2(_140);
-            uint _172 = (_168.y * gridSize.x) + _168.x;
-            vec4 _175 = texelFetch(parBase, int(_172));
-            vec3 _185 = (_65 - imageLoad(parCurrPos, int(_172))).xyz;
-            _196 = _139 + ((normalize(_185) * ((length(_185) - distance(_73, vec4((_175.x * 2.0) - 1.0, 0.0, _175.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_172)).z))) * (-_77));
-            break;
-        } while(false);
-        int _200;
-        bool _201;
-        bool _202;
-        ivec2 _197 = _78 + ivec2(-1, 0);
-        vec3 _253;
-        do
-        {
-            _200 = _197.x;
-            _201 = _200 < 0;
-            _202 = !_201;
-            bool _207;
-            if (_202)
-            {
-                _207 = uint(_200) >= gridSize.x;
-            }
-            else
-            {
-                _207 = true;
-            }
-            bool _213;
-            if (!_207)
-            {
-                _213 = _197.y < 0;
-            }
-            else
-            {
-                _213 = true;
-            }
-            bool _222;
-            if (!_213)
-            {
-                _222 = uint(_197.y) >= gridSize.y;
-            }
-            else
-            {
-                _222 = true;
-            }
-            if (_222)
-            {
-                _253 = _196;
-                break;
-            }
-            uvec2 _225 = uvec2(_197);
-            uint _229 = (_225.y * gridSize.x) + _225.x;
-            vec4 _232 = texelFetch(parBase, int(_229));
-            vec3 _242 = (_65 - imageLoad(parCurrPos, int(_229))).xyz;
-            _253 = _196 + ((normalize(_242) * ((length(_242) - distance(_73, vec4((_232.x * 2.0) - 1.0, 0.0, _232.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_229)).z))) * (-_77));
-            break;
-        } while(false);
-        int _257;
-        bool _258;
-        bool _259;
-        ivec2 _254 = _78 + ivec2(1, 0);
-        vec3 _310;
-        do
-        {
-            _257 = _254.x;
-            _258 = _257 < 0;
-            _259 = !_258;
-            bool _264;
-            if (_259)
-            {
-                _264 = uint(_257) >= gridSize.x;
-            }
-            else
-            {
-                _264 = true;
-            }
-            bool _270;
-            if (!_264)
-            {
-                _270 = _254.y < 0;
-            }
-            else
-            {
-                _270 = true;
-            }
-            bool _279;
-            if (!_270)
-            {
-                _279 = uint(_254.y) >= gridSize.y;
-            }
-            else
-            {
-                _279 = true;
-            }
-            if (_279)
-            {
-                _310 = _253;
-                break;
-            }
-            uvec2 _282 = uvec2(_254);
-            uint _286 = (_282.y * gridSize.x) + _282.x;
-            vec4 _289 = texelFetch(parBase, int(_286));
-            vec3 _299 = (_65 - imageLoad(parCurrPos, int(_286))).xyz;
-            _310 = _253 + ((normalize(_299) * ((length(_299) - distance(_73, vec4((_289.x * 2.0) - 1.0, 0.0, _289.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_286)).z))) * (-_77));
-            break;
-        } while(false);
-        ivec2 _311 = _78 + ivec2(-1);
-        vec3 _367;
-        do
-        {
-            int _314 = _311.x;
-            bool _321;
-            if (!(_314 < 0))
-            {
-                _321 = uint(_314) >= gridSize.x;
-            }
-            else
-            {
-                _321 = true;
-            }
-            bool _327;
-            if (!_321)
-            {
-                _327 = _311.y < 0;
-            }
-            else
-            {
-                _327 = true;
-            }
-            bool _336;
-            if (!_327)
-            {
-                _336 = uint(_311.y) >= gridSize.y;
-            }
-            else
-            {
-                _336 = true;
-            }
-            if (_336)
-            {
-                _367 = _310;
-                break;
-            }
-            uvec2 _339 = uvec2(_311);
-            uint _343 = (_339.y * gridSize.x) + _339.x;
-            vec4 _346 = texelFetch(parBase, int(_343));
-            vec3 _356 = (_65 - imageLoad(parCurrPos, int(_343))).xyz;
-            _367 = _310 + ((normalize(_356) * ((length(_356) - distance(_73, vec4((_346.x * 2.0) - 1.0, 0.0, _346.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_343)).z))) * (-_77));
-            break;
-        } while(false);
-        ivec2 _368 = _78 + ivec2(1, -1);
-        vec3 _424;
-        do
-        {
-            int _371 = _368.x;
-            bool _378;
-            if (!(_371 < 0))
-            {
-                _378 = uint(_371) >= gridSize.x;
-            }
-            else
-            {
-                _378 = true;
-            }
-            bool _384;
-            if (!_378)
-            {
-                _384 = _368.y < 0;
-            }
-            else
-            {
-                _384 = true;
-            }
-            bool _393;
-            if (!_384)
-            {
-                _393 = uint(_368.y) >= gridSize.y;
-            }
-            else
-            {
-                _393 = true;
-            }
-            if (_393)
-            {
-                _424 = _367;
-                break;
-            }
-            uvec2 _396 = uvec2(_368);
-            uint _400 = (_396.y * gridSize.x) + _396.x;
-            vec4 _403 = texelFetch(parBase, int(_400));
-            vec3 _413 = (_65 - imageLoad(parCurrPos, int(_400))).xyz;
-            _424 = _367 + ((normalize(_413) * ((length(_413) - distance(_73, vec4((_403.x * 2.0) - 1.0, 0.0, _403.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_400)).z))) * (-_77));
-            break;
-        } while(false);
-        ivec2 _425 = _78 + ivec2(-1, 1);
-        vec3 _481;
-        do
-        {
-            int _428 = _425.x;
-            bool _435;
-            if (!(_428 < 0))
-            {
-                _435 = uint(_428) >= gridSize.x;
-            }
-            else
-            {
-                _435 = true;
-            }
-            bool _441;
-            if (!_435)
-            {
-                _441 = _425.y < 0;
-            }
-            else
-            {
-                _441 = true;
-            }
-            bool _450;
-            if (!_441)
-            {
-                _450 = uint(_425.y) >= gridSize.y;
-            }
-            else
-            {
-                _450 = true;
-            }
-            if (_450)
-            {
-                _481 = _424;
-                break;
-            }
-            uvec2 _453 = uvec2(_425);
-            uint _457 = (_453.y * gridSize.x) + _453.x;
-            vec4 _460 = texelFetch(parBase, int(_457));
-            vec3 _470 = (_65 - imageLoad(parCurrPos, int(_457))).xyz;
-            _481 = _424 + ((normalize(_470) * ((length(_470) - distance(_73, vec4((_460.x * 2.0) - 1.0, 0.0, _460.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_457)).z))) * (-_77));
-            break;
-        } while(false);
-        ivec2 _482 = _78 + ivec2(1);
-        vec3 _538;
-        do
-        {
-            int _485 = _482.x;
-            bool _492;
-            if (!(_485 < 0))
-            {
-                _492 = uint(_485) >= gridSize.x;
-            }
-            else
-            {
-                _492 = true;
-            }
-            bool _498;
-            if (!_492)
-            {
-                _498 = _482.y < 0;
-            }
-            else
-            {
-                _498 = true;
-            }
-            bool _507;
-            if (!_498)
-            {
-                _507 = uint(_482.y) >= gridSize.y;
-            }
-            else
-            {
-                _507 = true;
-            }
-            if (_507)
-            {
-                _538 = _481;
-                break;
-            }
-            uvec2 _510 = uvec2(_482);
-            uint _514 = (_510.y * gridSize.x) + _510.x;
-            vec4 _517 = texelFetch(parBase, int(_514));
-            vec3 _527 = (_65 - imageLoad(parCurrPos, int(_514))).xyz;
-            _538 = _481 + ((normalize(_527) * ((length(_527) - distance(_73, vec4((_517.x * 2.0) - 1.0, 0.0, _517.y * (-2.0), 1.0))) / (_77 + texelFetch(parBase, int(_514)).z))) * (-_77));
-            break;
-        } while(false);
-        vec4 _608;
-        do
-        {
-            bool _546;
-            if (_145)
-            {
-                _546 = uint(_143) >= gridSize.x;
-            }
-            else
-            {
-                _546 = true;
-            }
-            bool _552;
-            if (!_546)
-            {
-                _552 = _140.y < 0;
-            }
-            else
-            {
-                _552 = true;
-            }
-            bool _561;
-            if (!_552)
-            {
-                _561 = uint(_140.y) >= gridSize.y;
-            }
-            else
-            {
-                _561 = true;
-            }
-            bool _569;
-            if (!((!_561) ? _258 : true))
-            {
-                _569 = uint(_257) >= gridSize.x;
-            }
-            else
-            {
-                _569 = true;
-            }
-            bool _575;
-            if (!_569)
-            {
-                _575 = _254.y < 0;
-            }
-            else
-            {
-                _575 = true;
-            }
-            bool _584;
-            if (!_575)
-            {
-                _584 = uint(_254.y) >= gridSize.y;
-            }
-            else
-            {
-                _584 = true;
-            }
-            if (_584)
-            {
-                _608 = vec4(0.0);
-                break;
-            }
-            uvec2 _587 = uvec2(_140);
-            vec3 _595 = _65.xyz;
-            uvec2 _597 = uvec2(_254);
-            vec3 _606 = cross(imageLoad(parCurrPos, int((_587.y * gridSize.x) + _587.x)).xyz - _595, imageLoad(parCurrPos, int((_597.y * gridSize.x) + _597.x)).xyz - _595);
-            _608 = vec4(_606.x, _606.y, _606.z, vec4(0.0).w);
-            break;
-        } while(false);
-        vec4 _679;
-        do
-        {
-            bool _615;
-            if (_259)
-            {
-                _615 = uint(_257) >= gridSize.x;
-            }
-            else
-            {
-                _615 = true;
-            }
-            bool _621;
-            if (!_615)
-            {
-                _621 = _254.y < 0;
-            }
-            else
-            {
-                _621 = true;
-            }
-            bool _630;
-            if (!_621)
-            {
-                _630 = uint(_254.y) >= gridSize.y;
-            }
-            else
-            {
-                _630 = true;
-            }
-            bool _638;
-            if (!((!_630) ? _88 : true))
-            {
-                _638 = uint(_87) >= gridSize.x;
-            }
-            else
-            {
-                _638 = true;
-            }
-            bool _644;
-            if (!_638)
-            {
-                _644 = _84.y < 0;
-            }
-            else
-            {
-                _644 = true;
-            }
-            bool _653;
-            if (!_644)
-            {
-                _653 = uint(_84.y) >= gridSize.y;
-            }
-            else
-            {
-                _653 = true;
-            }
-            if (_653)
-            {
-                _679 = _608;
-                break;
-            }
-            uvec2 _656 = uvec2(_254);
-            vec3 _664 = _65.xyz;
-            uvec2 _666 = uvec2(_84);
-            vec3 _677 = _608.xyz + cross(imageLoad(parCurrPos, int((_656.y * gridSize.x) + _656.x)).xyz - _664, imageLoad(parCurrPos, int((_666.y * gridSize.x) + _666.x)).xyz - _664);
-            _679 = vec4(_677.x, _677.y, _677.z, _608.w);
-            break;
-        } while(false);
-        vec4 _750;
-        do
-        {
-            bool _686;
-            if (_89)
-            {
-                _686 = uint(_87) >= gridSize.x;
-            }
-            else
-            {
-                _686 = true;
-            }
-            bool _692;
-            if (!_686)
-            {
-                _692 = _84.y < 0;
-            }
-            else
-            {
-                _692 = true;
-            }
-            bool _701;
-            if (!_692)
-            {
-                _701 = uint(_84.y) >= gridSize.y;
-            }
-            else
-            {
-                _701 = true;
-            }
-            bool _709;
-            if (!((!_701) ? _201 : true))
-            {
-                _709 = uint(_200) >= gridSize.x;
-            }
-            else
-            {
-                _709 = true;
-            }
-            bool _715;
-            if (!_709)
-            {
-                _715 = _197.y < 0;
-            }
-            else
-            {
-                _715 = true;
-            }
-            bool _724;
-            if (!_715)
-            {
-                _724 = uint(_197.y) >= gridSize.y;
-            }
-            else
-            {
-                _724 = true;
-            }
-            if (_724)
-            {
-                _750 = _679;
-                break;
-            }
-            uvec2 _727 = uvec2(_84);
-            vec3 _735 = _65.xyz;
-            uvec2 _737 = uvec2(_197);
-            vec3 _748 = _679.xyz + cross(imageLoad(parCurrPos, int((_727.y * gridSize.x) + _727.x)).xyz - _735, imageLoad(parCurrPos, int((_737.y * gridSize.x) + _737.x)).xyz - _735);
-            _750 = vec4(_748.x, _748.y, _748.z, _679.w);
-            break;
-        } while(false);
-        vec4 _821;
-        do
-        {
-            bool _757;
-            if (_202)
-            {
-                _757 = uint(_200) >= gridSize.x;
-            }
-            else
-            {
-                _757 = true;
-            }
-            bool _763;
-            if (!_757)
-            {
-                _763 = _197.y < 0;
-            }
-            else
-            {
-                _763 = true;
-            }
-            bool _772;
-            if (!_763)
-            {
-                _772 = uint(_197.y) >= gridSize.y;
-            }
-            else
-            {
-                _772 = true;
-            }
-            bool _780;
-            if (!((!_772) ? _144 : true))
-            {
-                _780 = uint(_143) >= gridSize.x;
-            }
-            else
-            {
-                _780 = true;
-            }
-            bool _786;
-            if (!_780)
-            {
-                _786 = _140.y < 0;
-            }
-            else
-            {
-                _786 = true;
-            }
-            bool _795;
-            if (!_786)
-            {
-                _795 = uint(_140.y) >= gridSize.y;
-            }
-            else
-            {
-                _795 = true;
-            }
-            if (_795)
-            {
-                _821 = _750;
-                break;
-            }
-            uvec2 _798 = uvec2(_197);
-            vec3 _806 = _65.xyz;
-            uvec2 _808 = uvec2(_140);
-            vec3 _819 = _750.xyz + cross(imageLoad(parCurrPos, int((_798.y * gridSize.x) + _798.x)).xyz - _806, imageLoad(parCurrPos, int((_808.y * gridSize.x) + _808.x)).xyz - _806);
-            _821 = vec4(_819.x, _819.y, _819.z, _750.w);
-            break;
-        } while(false);
-        vec3 _827 = _65.xyz + ((_538 * vec3(0.125)) * dStiffness);
-        _829 = _821 * vec4(0.25);
-        _830 = vec4(_827.x, _827.y, _827.z, _65.w);
-        break;
-    } while(false);
-    imageStore(parNextPos, int(_63), _830);
-    imageStore(parNormal, int(_63), _829);
+    uvec2 param_var_threadID = gl_GlobalInvocationID.xy;
+    src_CSStretchConstraints(param_var_threadID);
 }
 

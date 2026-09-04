@@ -75,7 +75,7 @@ class CompileContext:
         self.opt: Options = Options()
         self.tools: Toolchain = Toolchain()
 
-    def compile_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None):
+    def compile_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None, opt_level: int = 3):
         dxc_args = [
             self.tools.dxc,
             "-nologo",
@@ -83,6 +83,7 @@ class CompileContext:
             "-spirv",
             "-fspv-reflect",
             "-fvk-auto-shift-bindings",
+            f"-O{opt_level}",
             "-T", clamp_dxc_profile(profile),
             "-E", in_entry,
             "-Fo", output,
@@ -453,6 +454,17 @@ def parse_shader_info_without_yaml(filename: Path) -> dict:
             in_targets = False
             continue
 
+        if current_entry is not None:
+            optimize_match = re.fullmatch(r"optimize\s*:\s*(.+)", line)
+            if optimize_match:
+                optimize_value = unquote_yaml_string(optimize_match.group(1))
+                try:
+                    current_entry["optimize"] = int(optimize_value)
+                except ValueError as error:
+                    raise ShaderInfoError(f"{filename}:{line_number}: optimize must be an integer") from error
+                in_targets = False
+                continue
+
         if re.fullmatch(r"-\s*targets\s*:", line):
             if current_source is None:
                 raise ShaderInfoError(f"{filename}:{line_number}: entry must belong to a source")
@@ -576,7 +588,10 @@ def parse_shader_info(filename: Path):
             if not isinstance(entry, dict):
                 raise ShaderInfoError(f"{filename}: each entry must be a mapping")
             targets = normalize_targets(filename, entry.get("targets"))
-            parsed_entry = {"targets": targets}
+            optimize = entry.get("optimize", 3)
+            if isinstance(optimize, bool) or not isinstance(optimize, int):
+                raise ShaderInfoError(f"{filename}: optimize must be an integer")
+            parsed_entry = {"targets": targets, "optimize": optimize}
             if is_hlsl:
                 entry_point = entry.get("entry")
                 profile = entry.get("profile")
@@ -717,7 +732,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
 
     optimization_args = [] if context.opt.debug else ["-O3"]
 
-    # Compile HLSL to SPIR-V using DXC
+    # Compile HLSL to SPIR-V using DXC to be used for cross-compiling to high-level language (GLSL, Metal etc.)
     context.compile_spirv(
         source = source_file,
         output = intermediate_spv,
@@ -725,6 +740,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
         extra_args = dxc_macro_args,
         in_entry = entry["entry"],
         input_directory = shaderinfo.input_directory,
+        opt_level = entry["optimize"],
     )
 
     for target in targets:

@@ -12,6 +12,7 @@ sources:
         profile: "cs_5_0"
         targets: [glsl430core, glsl310es, metal, spirv]
       - entry: "CSStretchConstraints"
+        optimize: 0 # Disable optimization for CSStretchConstraints to improve readability
         profile: "cs_5_0"
         targets: [glsl430core, glsl310es, metal, spirv]
       - entry: "CSRelaxation"
@@ -32,6 +33,7 @@ sources:
         profile: "cs_5_0"
         targets: [glsl430core, metal, spirv]
       - entry: "CSStretchConstraints"
+        optimize: 0 # Disable optimization for CSStretchConstraints to improve readability
         profile: "cs_5_0"
         targets: [glsl430core, metal, spirv]
       - entry: "CSRelaxation"
