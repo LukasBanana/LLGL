@@ -42,9 +42,11 @@ class VKPipelineBarrier
 
     private:
 
+        void MarkStageFlags(VkPipelineStageFlags stageFlags);
+
         //void InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
-        void InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkBuffer buffer);
-        void InsertImageMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkImage image);
+        void InitializeBufferMemoryBarrier(VkBufferMemoryBarrier& outBarrier, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
+        void InitializeImageMemoryBarrier(VkImageMemoryBarrier& outBarrier, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
 
     private:
 
