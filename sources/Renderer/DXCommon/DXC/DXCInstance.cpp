@@ -6,8 +6,11 @@
  */
 
 #include "DXCInstance.h"
-#include <LLGL/ShaderFlags.h>
+#include "../DXCore.h"
+#include "../ComPtr.h"
 #include "../../../Platform/Module.h"
+#include "../../../Core/Assertion.h"
+#include <LLGL/ShaderFlags.h>
 #include <dxcapi.h>
 
 
@@ -67,13 +70,77 @@ std::vector<LPCWSTR> DXGetDxcCompilerArgs(int flags)
     return dxArgs;
 }
 
+// DXC include handler wrapper to forward `#include`-directives from D3D's COM interface to LLGL's IncludeHandler interface.
+class DXCIncludeHandler final : public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, IDxcIncludeHandler>
+{
+
+    public:
+
+        DXCIncludeHandler(IDxcUtils* utils, IncludeHandler* forwardIncludeHandler, Report& outReport) :
+            utils_                 { utils                 },
+            outReport_             { outReport             },
+            forwardIncludeHandler_ { forwardIncludeHandler }
+        {
+        }
+
+        HRESULT LoadSource(LPCWSTR filename, IDxcBlob** outIncludeSource) override
+        {
+            LLGL_ASSERT_PTR(forwardIncludeHandler_);
+
+            Blob fileContent;
+            if (forwardIncludeHandler_->Include(filename, fileContent, outReport_))
+            {
+                if (outIncludeSource != nullptr)
+                {
+                    /* Create blob from file content */
+                    ComPtr<IDxcBlobEncoding> blobEncoding;
+                    HRESULT hr = utils_->CreateBlob(fileContent.GetData(), static_cast<UINT32>(fileContent.GetSize()), DXC_CP_ACP, &blobEncoding);
+                    if (FAILED(hr))
+                        return hr;
+
+                    /* Pass on to output blob */
+                    hr = utils_->CreateBlobFromBlob(blobEncoding.Get(), 0, static_cast<UINT32>(blobEncoding->GetBufferSize()), outIncludeSource);
+                    if (FAILED(hr))
+                        return hr;
+                }
+                return S_OK;
+            }
+
+            return E_FAIL;
+        }
+
+    private:
+
+        IDxcUtils*      utils_                  = nullptr;
+        Report&         outReport_;
+        IncludeHandler* forwardIncludeHandler_  = nullptr;
+
+};
+
+static HRESULT MakeDXCIncludeHandler(
+    IDxcUtils*                  utils,
+    IncludeHandler*             inIncludeHandler,
+    Report&                     inIncludeHandlerReport,
+    ComPtr<IDxcIncludeHandler>& outIncludeHandler)
+{
+    if (inIncludeHandler != nullptr)
+    {
+        outIncludeHandler = Microsoft::WRL::Make<DXCIncludeHandler>(utils, inIncludeHandler, inIncludeHandlerReport);
+        return (outIncludeHandler ? S_OK : E_FAIL);
+    }
+    else
+        return utils->CreateDefaultIncludeHandler(&outIncludeHandler);
+}
+
 HRESULT DXCompileShaderToDxil(
-    const char* source,
-    std::size_t sourceLength,
-    LPCWSTR*    args,
-    std::size_t numArgs,
-    ID3DBlob**  outByteCode,
-    ID3DBlob**  outErrors)
+    const char*     source,
+    std::size_t     sourceLength,
+    LPCWSTR*        args,
+    std::size_t     numArgs,
+    ID3DBlob**      outByteCode,
+    ID3DBlob**      outErrors,
+    IncludeHandler* includeHandler,
+    Report*         includeHandlerReport)
 {
     if (g_DXCInstance.dxcCreateInstance == nullptr)
         return E_FAIL;
@@ -93,8 +160,14 @@ HRESULT DXCompileShaderToDxil(
     if (FAILED(hr))
         return hr;
 
-    ComPtr<IDxcIncludeHandler> includeHandler;
-    hr = utils->CreateDefaultIncludeHandler(&includeHandler);
+    Report includeHandlerNullReport;
+    ComPtr<IDxcIncludeHandler> includeHandlerWrapper;
+    hr = MakeDXCIncludeHandler(
+        utils.Get(),
+        includeHandler,
+        (includeHandlerReport != nullptr ? *includeHandlerReport : includeHandlerNullReport),
+        includeHandlerWrapper
+    );
     if (FAILED(hr))
         return hr;
 
@@ -103,7 +176,7 @@ HRESULT DXCompileShaderToDxil(
         &sourceBuffer,
         args,
         static_cast<UINT32>(numArgs),
-        includeHandler.Get(),
+        includeHandlerWrapper.Get(),
         IID_PPV_ARGS(&result)
     );
     if (FAILED(hr))

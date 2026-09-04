@@ -1909,16 +1909,17 @@ LLGLResourceViewDescriptor;
 
 typedef struct LLGLShaderDescriptor
 {
-    const char*                  debugName;  /* = NULL */
-    LLGLShaderType               type;       /* = LLGLShaderTypeUndefined */
-    const char*                  source;     /* = NULL */
-    size_t                       sourceSize; /* = 0 */
-    LLGLShaderSourceType         sourceType; /* = LLGLShaderSourceTypeCodeFile */
-    const char*                  entryPoint; /* = NULL */
-    const char*                  profile;    /* = NULL */
-    const LLGLShaderMacro*       defines;    /* = NULL */
-    long                         flags;      /* = 0 */
-    LLGLVertexShaderAttributes   vertex;     /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
+    const char*                  debugName;      /* = NULL */
+    LLGLShaderType               type;           /* = LLGLShaderTypeUndefined */
+    const char*                  source;         /* = NULL */
+    size_t                       sourceSize;     /* = 0 */
+    LLGLShaderSourceType         sourceType;     /* = LLGLShaderSourceTypeCodeFile */
+    const char*                  entryPoint;     /* = NULL */
+    const char*                  profile;        /* = NULL */
+    const LLGLShaderMacro*       defines;        /* = NULL */
+    long                         flags;          /* = 0 */
+    LLGLIncludeHandler           includeHandler; /* = LLGL_NULL_OBJECT */
+    LLGLVertexShaderAttributes   vertex;         /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;
 }

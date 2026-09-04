@@ -10,6 +10,7 @@
 #include "../D3D11ObjectUtils.h"
 #include "../RenderState/D3D11GraphicsPSOBase.h"
 #include "../../DXCommon/DXShaderReflection.h"
+#include "../../DXCommon/DXIncludeHandler.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
@@ -150,12 +151,13 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
 
     /* Compile shader code */
     ComPtr<ID3DBlob> errors;
+    DXIncludeHandler includeHandler{ shaderDesc.includeHandler, report_ };
     HRESULT hr = D3DCompile(
         sourceCode,
         sourceLength,
         sourceName,                         // LPCSTR               pSourceName
         defines,                            // D3D_SHADER_MACRO*    pDefines
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
+        includeHandler.GetSelfOrDefault(),  // ID3DInclude*         pInclude
         entry,                              // LPCSTR               pEntrypoint
         target,                             // LPCSTR               pTarget
         DXGetFxcCompilerFlags(flags),       // UINT                 Flags1

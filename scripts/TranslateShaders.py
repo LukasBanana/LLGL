@@ -59,6 +59,7 @@ class Options:
         self.spirv_cross_path: Path | None = None
         self.spirv_dis_path: Path | None = None
 
+
 class Toolchain:
     """Holds paths to the shader compilation tools."""
     def __init__(self):
@@ -74,6 +75,10 @@ class CompileContext:
     def __init__(self):
         self.opt: Options = Options()
         self.tools: Toolchain = Toolchain()
+        self.include_dir_args: list[str] = []
+
+    def set_shader_include_dirs(self, include_dirs: list[Path]):
+        self.include_dir_args = [f"-I{str(dir)}" for dir in include_dirs]
 
     def compile_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None, opt_level: int = 3):
         dxc_args = [
@@ -88,7 +93,7 @@ class CompileContext:
             "-E", in_entry,
             "-Fo", output,
             source
-        ] + extra_args
+        ] + extra_args + self.include_dir_args
 
         if out_entry:
             dxc_args.append(f"-fspv-entrypoint-name={out_entry}")
@@ -198,6 +203,15 @@ def parse_arguments():
         "--spirv-dis-path",
         metavar="PATH",
         help="Path to the external spirv-dis executable.",
+    )
+    parser.add_argument(
+        "-I",
+        dest="shader_include_dirs",
+        action="append",
+        type=Path,
+        default=[],
+        metavar="PATH",
+        help="Add a shader include directory; may be specified multiple times.",
     )
     arguments = parser.parse_args()
 
@@ -569,8 +583,8 @@ def parse_shader_info(filename: Path):
                 raise ShaderInfoError(f"{filename}: permutation must be a mapping")
             override = permutation.get("override")
             macros = permutation.get("macros")
-            if not isinstance(override, str) or not override:
-                raise ShaderInfoError(f"{filename}: permutation needs a non-empty override field")
+            if override and not isinstance(override, str):
+                raise ShaderInfoError(f"{filename}: permutation override must be a string")
             if not isinstance(macros, dict):
                 raise ShaderInfoError(f"{filename}: permutation macros must be a mapping")
             if not all(isinstance(name, str) and name for name in macros):
@@ -834,6 +848,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
             context.tools.spirv_cross,
             "--no-420pack-extension",
             "--combined-samplers-inherit-bindings",
+            "--no-support-nonzero-baseinstance",
             "--version", target_match["version"],
             intermediate_spv
         ]
@@ -947,6 +962,7 @@ def main():
     context.opt.glslang_path = Path(arguments.glslang_path) if arguments.glslang_path else None
     context.opt.spirv_cross_path = Path(arguments.spirv_cross_path) if arguments.spirv_cross_path else None
     context.opt.spirv_dis_path = Path(arguments.spirv_dis_path) if arguments.spirv_dis_path else None
+    context.set_shader_include_dirs(arguments.shader_include_dirs)
 
     context.tools = find_tools(context.opt, all_sources)
 

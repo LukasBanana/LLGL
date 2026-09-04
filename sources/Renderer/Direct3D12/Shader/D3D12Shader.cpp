@@ -10,6 +10,7 @@
 #include "../RenderState/D3D12GraphicsPSO.h"
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXShaderReflection.h"
+#include "../../DXCommon/DXIncludeHandler.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Exception.h"
@@ -18,7 +19,7 @@
 #include <d3dcompiler.h>
 #include <comdef.h>
 
-#ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+#if LLGL_D3D12_ENABLE_DXCOMPILER
 #   include "../../DXCommon/DXC/DXCInstance.h"
 #endif
 
@@ -201,7 +202,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     ComPtr<ID3DBlob> errors;
     HRESULT hr = S_OK;
 
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_DXCOMPILER
     if (IsProfileDxcAppropriate(target))
     {
         /* Load DXC compiler */
@@ -249,19 +250,22 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
             compilerArgs.data(),
             compilerArgs.size(),
             byteCode_.ReleaseAndGetAddressOf(),
-            errors.ReleaseAndGetAddressOf()
+            errors.ReleaseAndGetAddressOf(),
+            shaderDesc.includeHandler,
+            &report_
         );
     }
     else
     #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
     {
         /* Compile shader to DXBC with FXC */
+        DXIncludeHandler includeHandler{ shaderDesc.includeHandler, report_ };
         hr = D3DCompile(
             sourceCode,
             sourceLength,
             sourceName,                         // LPCSTR               pSourceName
             defines,                            // D3D_SHADER_MACRO*    pDefines
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
+            includeHandler.GetSelfOrDefault(),  // ID3DInclude*         pInclude
             entry,                              // LPCSTR               pEntrypoint
             target,                             // LPCSTR               pTarget
             DXGetFxcCompilerFlags(flags),       // UINT                 Flags1
@@ -297,7 +301,7 @@ static HRESULT ReflectD3D12ShaderBytecode(ID3DBlob* byteCode, ComPtr<ID3D12Shade
 {
     HRESULT hr = D3DReflect(byteCode->GetBufferPointer(), byteCode->GetBufferSize(), IID_PPV_ARGS(outReflection.ReleaseAndGetAddressOf()));
 
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_DXCOMPILER
     if (FAILED(hr))
     {
         // Check if DXC can reflect this shader. This case occurs for SM6 shaders.

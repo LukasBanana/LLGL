@@ -5,7 +5,12 @@
 # Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
 #
 
+import sys
 from enum import Enum
+
+def fatal(msg):
+    print(sys.argv[0] + ': ' + msg)
+    sys.exit(1)
 
 class StdType(Enum):
     UNDEFINED = 0
@@ -99,6 +104,7 @@ class LLGLMeta:
         'Display',
         'Fence',
         'Image',
+        'IncludeHandler',
         'PipelineCache',
         'PipelineLayout',
         'PipelineState',
@@ -119,7 +125,7 @@ class LLGLMeta:
         'Window'
     ]
     handles = [
-        'LLGLLogHandle'
+        'LLGLLogHandle',
     ]
     structFlags = {
         'AttachmentClear': 'ClearFlags',
@@ -386,7 +392,7 @@ class LLGLModule:
                             print(f" ==> Missing '{dep}'")
 
                 printCyclicDependencies(pendingStructs[0], declaredTypenames)
-                fatal('error: failed to resolve dependencies')
+                fatal(f'error: failed to resolve dependencies for "{pendingStructs[0].name}"')
 
         return sortedStructs
 

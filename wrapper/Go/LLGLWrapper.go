@@ -1676,18 +1676,19 @@ type ResourceViewDescriptor struct {
 }
 
 type ShaderDescriptor struct {
-    DebugName  string                   /* = "" */
-    Type       ShaderType               /* = ShaderTypeUndefined */
-    Source     string                   /* = "" */
-    SourceSize uintptr                  /* = 0 */
-    SourceType ShaderSourceType         /* = ShaderSourceTypeCodeFile */
-    EntryPoint string                   /* = "" */
-    Profile    string                   /* = "" */
-    Defines    *ShaderMacro             /* = nil */
-    Flags      uint                     /* = 0 */
-    Vertex     VertexShaderAttributes   /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
-    Fragment   FragmentShaderAttributes
-    Compute    ComputeShaderAttributes
+    DebugName      string                   /* = "" */
+    Type           ShaderType               /* = ShaderTypeUndefined */
+    Source         string                   /* = "" */
+    SourceSize     uintptr                  /* = 0 */
+    SourceType     ShaderSourceType         /* = ShaderSourceTypeCodeFile */
+    EntryPoint     string                   /* = "" */
+    Profile        string                   /* = "" */
+    Defines        *ShaderMacro             /* = nil */
+    Flags          uint                     /* = 0 */
+    IncludeHandler *IncludeHandler          /* = nil */
+    Vertex         VertexShaderAttributes   /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
+    Fragment       FragmentShaderAttributes
+    Compute        ComputeShaderAttributes
 }
 
 type ShaderReflection struct {

@@ -15,6 +15,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <string>
 #include <algorithm>
 
@@ -198,7 +199,11 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         /* Get cached cbuffer reflection from shader */
         const std::vector<D3D12ConstantBufferReflection>* currentCbufferReflections = nullptr;
         HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
-        DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D12 shader");
+        if (FAILED(hr))
+        {
+            outReport.Errorf("Failed to reflect constant buffers for %s shader (error=%s)\n", ToString(shader->GetType()), DXErrorToStrOrHex(hr));
+            return nullptr;
+        }
         LLGL_ASSERT_PTR(currentCbufferReflections);
 
         cbufferReflections.reserve(cbufferReflections.size() + currentCbufferReflections->size());
@@ -231,9 +236,9 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         if (!isUniformFound)
         {
             if (const char* similarFieldName = FindSimilarCbufferField(uniforms_[i].name))
-                outReport.Errorf("failed to find cbuffer field for uniform '%s'; did you mean '%s'?\n", uniforms_[i].name.c_str(), similarFieldName);
+                outReport.Errorf("Failed to find cbuffer field for uniform '%s'; did you mean '%s'?\n", uniforms_[i].name.c_str(), similarFieldName);
             else
-                outReport.Errorf("failed to find cbuffer field for uniform '%s'\n", uniforms_[i].name.c_str());
+                outReport.Errorf("Failed to find cbuffer field for uniform '%s'\n", uniforms_[i].name.c_str());
             return nullptr;
         }
 

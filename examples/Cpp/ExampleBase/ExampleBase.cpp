@@ -433,6 +433,46 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
 
 
 /*
+ * ShaderIncludeHandler class
+ */
+
+static std::string GetFilePath(const std::string& filename)
+{
+    std::size_t lastSeparatorPos = filename.find_last_of("/\\");
+    return (lastSeparatorPos != std::string::npos ? filename.substr(0, lastSeparatorPos + 1) : "");
+}
+
+void ExampleBase::ShaderIncludeHandler::Source(const char* sourceFilename)
+{
+    sourceFileDir_ = (sourceFilename != nullptr && *sourceFilename != '\0' ? GetFilePath(sourceFilename) : "");
+}
+
+bool ExampleBase::ShaderIncludeHandler::Include(const LLGL::UTF8String& inFilename, LLGL::Blob& outFileContent, LLGL::Report& outReport)
+{
+    // Search in same directory as input file first
+    if (LLGL::Blob content = LLGL::Blob::CreateFromFile(sourceFileDir_ + inFilename.c_str()))
+    {
+        outFileContent = std::move(content);
+        return true;
+    }
+
+    // Now search in specified search paths
+    for (const std::string& path : searchPaths)
+    {
+        if (LLGL::Blob content = LLGL::Blob::CreateFromFile(path + '/' + inFilename.c_str()))
+        {
+            outFileContent = std::move(content);
+            return true;
+        }
+    }
+
+    // File not found
+    outReport.Errorf("Could not find include file '%s' in search paths\n", inFilename.c_str());
+    return false;
+}
+
+
+/*
  * ExampleBase class
  */
 
@@ -779,6 +819,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     // Listen for window/canvas events
     input.Listen(swapChain->GetSurface());
+
+    // Initialize shader include search paths
+    shaderIncludeHandler_.searchPaths.push_back("../../Shared/Assets/Shaders");
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
@@ -857,7 +900,9 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const bool isPatchClippingOrigin = ((compileFlags & LLGL::ShaderCompileFlags::PatchClippingOrigin) != 0);
     const long filteredCompileFlags = (compileFlags & (~LLGL::ShaderCompileFlags::PatchClippingOrigin));
 
-    // Create shader
+    // Set up shader descriptor and update include handler
+    shaderIncludeHandler_.Source(filename.c_str());
+
     LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint, shaderDesc.profile);
     {
         deviceShaderDesc.debugName = shaderDesc.entryPoint;
@@ -891,6 +936,9 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         // Override version number for ESSL
         if (Supported(LLGL::ShadingLanguage::ESSL) && (deviceShaderDesc.profile == nullptr || *deviceShaderDesc.profile == '\0'))
             deviceShaderDesc.profile = "300 es";
+
+        // Use custom include handler to support search paths
+        deviceShaderDesc.includeHandler = &shaderIncludeHandler_;
     }
     LLGL::Shader* shader = renderer->CreateShader(deviceShaderDesc);
 

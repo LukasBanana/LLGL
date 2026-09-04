@@ -3728,6 +3728,11 @@ namespace LLGL
             internal unsafe void* ptr;
         }
 
+        public unsafe struct IncludeHandler
+        {
+            internal unsafe void* ptr;
+        }
+
         public unsafe struct PipelineCache
         {
             internal unsafe void* ptr;
@@ -4641,15 +4646,16 @@ namespace LLGL
 
         public unsafe struct ShaderDescriptor
         {
-            public byte*                    debugName;  /* = null */
-            public ShaderType               type;       /* = ShaderType.Undefined */
-            public byte*                    source;     /* = null */
-            public IntPtr                   sourceSize; /* = 0 */
-            public ShaderSourceType         sourceType; /* = ShaderSourceType.CodeFile */
-            public byte*                    entryPoint; /* = null */
-            public byte*                    profile;    /* = null */
-            public ShaderMacro*             defines;    /* = null */
-            public int                      flags;      /* = 0 */
+            public byte*                    debugName;      /* = null */
+            public ShaderType               type;           /* = ShaderType.Undefined */
+            public byte*                    source;         /* = null */
+            public IntPtr                   sourceSize;     /* = 0 */
+            public ShaderSourceType         sourceType;     /* = ShaderSourceType.CodeFile */
+            public byte*                    entryPoint;     /* = null */
+            public byte*                    profile;        /* = null */
+            public ShaderMacro*             defines;        /* = null */
+            public int                      flags;          /* = 0 */
+            public IncludeHandler           includeHandler; /* = null */
             [Obsolete("LLGL.ShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGL.GraphicsPipelineDescriptor instead")]
             public VertexShaderAttributes   vertex;
             public FragmentShaderAttributes fragment;

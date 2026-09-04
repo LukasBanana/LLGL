@@ -45,7 +45,7 @@ class CsharpTranslator(Translator):
         }
         nativeBaseTypes = [
             'Resource',
-            'Surface'
+            'Surface',
         ]
         saveStructs = {
             'BindingSlot': CsharpProperties(fullCtor = True),

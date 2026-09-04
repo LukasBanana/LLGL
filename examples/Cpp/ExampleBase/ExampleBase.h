@@ -123,7 +123,7 @@ protected:
 
 private:
 
-    class WindowEventHandler : public LLGL::Window::EventListener
+    class WindowEventHandler final : public LLGL::Window::EventListener
     {
 
         public:
@@ -141,7 +141,7 @@ private:
 
     };
 
-    class CanvasEventHandler : public LLGL::Canvas::EventListener
+    class CanvasEventHandler final : public LLGL::Canvas::EventListener
     {
 
         public:
@@ -156,6 +156,25 @@ private:
             ExampleBase&        app_;
             LLGL::SwapChain*    swapChain_;
             Gs::Matrix4f&       projection_;
+
+    };
+
+    class ShaderIncludeHandler final : public LLGL::IncludeHandler
+    {
+
+        public:
+
+            void Source(const char* sourceFilename);
+
+            bool Include(const LLGL::UTF8String& inFilename, LLGL::Blob& outFileContent, LLGL::Report& outReport) override;
+
+        public:
+
+            std::vector<std::string>    searchPaths;
+
+        private:
+
+            std::string                 sourceFileDir_;
 
     };
 
@@ -179,6 +198,7 @@ private:
     std::uint64_t               lastFrameTick_      = 0;
 
     TrackballRotationModel      trackballRotation_;
+    ShaderIncludeHandler        shaderIncludeHandler_;
 
     struct ShaderModelInfo
     {

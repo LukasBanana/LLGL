@@ -10,10 +10,6 @@ import sys
 import re
 from llgl_module import *
 
-def fatal(msg):
-    print(sys.argv[0] + ': ' + msg)
-    sys.exit(1)
-
 class DebugContext:
     record = ''
     func = ''

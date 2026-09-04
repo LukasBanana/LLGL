@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
+#include <LLGL/IncludeHandler.h>
 #include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
@@ -460,6 +461,14 @@ struct ShaderDescriptor
     \see ShaderCompileFlags
     */
     long                        flags           = 0;
+
+    /**
+    \brief Optional include handler. By default, the backend specific default include handler will be used.
+    \remarks This can be used to handle customized search paths for include directories.
+    This is only relevant when compiling from source as binary files generally do not contain <code>#include</code>-directives.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    IncludeHandler*             includeHandler  = nullptr;
 
     //! \deprecated Since 0.05b; Use GraphicsPipelineDescriptor::inputVertexAttribs instead!
     LLGL_DEPRECATED("LLGL::ShaderDescriptor::vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGL::GraphicsPipelineDescriptor instead")

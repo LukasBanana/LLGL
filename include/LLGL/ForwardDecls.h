@@ -21,6 +21,7 @@ class CommandBufferTier1;
 class CommandQueue;
 class Fence;
 class Image;
+class IncludeHandler;
 class PipelineLayout;
 class PipelineState;
 class QueryHeap;
