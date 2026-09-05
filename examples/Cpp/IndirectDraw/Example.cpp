@@ -137,23 +137,14 @@ public:
     void CreateComputePipeline()
     {
         // Create compute shader
-        if (Supported(LLGL::ShadingLanguage::GLSL))
-            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.comp" });
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.comp.spv" });
-        else if (Supported(LLGL::ShadingLanguage::HLSL))
-            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CS", "cs_5_0" });
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CS", "1.1" });
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
+        computeShader = LoadStandardComputeShader();
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneState@2):comp,"
-                "rwbuffer(sceneObjects@3):comp,"
-                "rwbuffer(drawArgs@4):comp,"
+                "rwtbuffer(sceneObjects@3):comp,"
+                "rwtbuffer(drawArgs@4):comp,"
             )
         );
 
@@ -177,28 +168,8 @@ public:
     void CreateGraphicsPipeline()
     {
         // Create graphics shader
-        if (Supported(LLGL::ShadingLanguage::GLSL))
-        {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
-            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert.spv" });
-            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" });
-            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" });
-            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
+        graphicsVertexShader    = LoadStandardVertexShader();
+        graphicsFragmentShader  = LoadStandardFragmentShader();
 
         // Create compute pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
