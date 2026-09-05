@@ -26,7 +26,7 @@ class DXIncludeHandler final : public ID3DInclude
 
         DXIncludeHandler(IncludeHandler* forwardIncludeHandler, Report& outReport);
 
-        HRESULT Open(
+        STDMETHOD(Open)(
             D3D_INCLUDE_TYPE    includeType,
             LPCSTR              filename,
             LPCVOID             parentData,
@@ -34,7 +34,7 @@ class DXIncludeHandler final : public ID3DInclude
             UINT*               outDataSize
         ) override;
 
-        HRESULT Close(LPCVOID data) override;
+        STDMETHOD(Close)(LPCVOID data) override;
 
         ID3DInclude* GetSelfOrDefault();
 

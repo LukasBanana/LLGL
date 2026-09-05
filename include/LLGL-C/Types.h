@@ -10,6 +10,7 @@
 
 
 #include <stdbool.h>
+#include <stddef.h>
 
 
 /* Annotation macros used for wrapper generator */

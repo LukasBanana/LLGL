@@ -83,7 +83,7 @@ class DXCIncludeHandler final : public Microsoft::WRL::RuntimeClass<Microsoft::W
         {
         }
 
-        HRESULT LoadSource(LPCWSTR filename, IDxcBlob** outIncludeSource) override
+        STDMETHOD(LoadSource)(LPCWSTR filename, IDxcBlob** outIncludeSource) override
         {
             LLGL_ASSERT_PTR(forwardIncludeHandler_);
 
