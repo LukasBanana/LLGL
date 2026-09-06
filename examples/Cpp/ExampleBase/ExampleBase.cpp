@@ -1090,7 +1090,7 @@ static std::string FindShader(const char* basename, const char* entryPoint, cons
             shaderBaseFilename.append(basename);
 
             // Check if file exists with and without '.ENRTYPOINT' appendix.
-            // If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShader().
+            // If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShaderInternal().
             for (const char* appendix : { "", entryPoint })
             {
                 shaderFileanme = shaderBaseFilename;

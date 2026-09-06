@@ -99,7 +99,7 @@ public:
             };
             layoutDesc.combinedTextureSamplers =
             {
-                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "samplerState", 2 }
+                LLGL::CombinedTextureSamplerDescriptor{ "s_colorMapsamplerState", "colorMap", "samplerState", 2 }
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

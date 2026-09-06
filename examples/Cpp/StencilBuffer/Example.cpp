@@ -77,36 +77,9 @@ private:
     void LoadShaders()
     {
         // Load shader program
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VStencil", "vs_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Stencil.vert" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Stencil.450core.vert.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VStencil", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
+        vsScene = LoadVertexShader("Example", "VScene");
+        fsScene = LoadFragmentShader("Example", "PScene");
+        vsStencil = LoadVertexShader("Example", "VStencil");
     }
 
     void CreatePipelines()

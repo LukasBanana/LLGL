@@ -65,15 +65,6 @@ public:
 
         // Update vectors for projection
         settings.lightDir.z *= GetProjectionZAxis();
-
-        #if 0
-        // Show some information
-        LLGL::Log::Printf(
-            "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube\n"
-            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube\n"
-            "press RETURN KEY to save the render target texture to a PNG file\n"
-        );
-        #endif
     }
 
 private:
@@ -95,36 +86,9 @@ private:
     void LoadShaders()
     {
         // Load shader program
-        if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            vsShadowMap = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex, "ShadowMap.vert" });
-
-            vsScene     = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" });
-            fsScene     = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" });
-
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" });
-
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" });
-
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
+        vsShadowMap = LoadVertexShader  ("Example", "VShadowMap", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        vsScene     = LoadVertexShader  ("Example", "VScene");
+        fsScene     = LoadFragmentShader("Example", "PScene");
     }
 
     void CreateShadowMap()
@@ -204,7 +168,7 @@ private:
             };
             sceneLayoutDesc.combinedTextureSamplers =
             {
-                LLGL::CombinedTextureSamplerDescriptor{ "shadowMap", "shadowMap", "shadowMapSampler", 2 }
+                LLGL::CombinedTextureSamplerDescriptor{ "s_shadowMapshadowMapSampler", "shadowMap", "shadowMapSampler", 2 }
             };
         }
         pipelineLayoutScene = renderer->CreatePipelineLayout(sceneLayoutDesc);

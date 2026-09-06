@@ -47,7 +47,7 @@ class Example_Instancing : public ExampleBase
         float           fogColor[3] = { 0.3f, 0.3f, 0.3f };
         float           fogDensity  = 0.04f;
         float           animVec[2]  = { 0.0f, 0.0f };       // Animation vector to make the plants wave in the wind
-        float           _pad0[2];
+        float           _pad0[2]    = {};
     }
     settings;
 
@@ -59,9 +59,9 @@ class Example_Instancing : public ExampleBase
 
     struct Instance
     {
-        LLGL::ColorRGBf color;      // Instance color
-        float           arrayLayer; // Array texture layer
-        Gs::Matrix4f    wMatrix;    // World matrix
+        LLGL::ColorRGBf color;              // Instance color
+        float           arrayLayer  = 0.0f; // Array texture layer
+        Gs::Matrix4f    wMatrix;            // World matrix
     };
 
 public:
@@ -268,8 +268,8 @@ private:
     void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VS");
-        fragmentShader  = LoadStandardFragmentShader("PS");
+        vertexShader    = LoadStandardVertexShader();
+        fragmentShader  = LoadStandardFragmentShader();
 
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(

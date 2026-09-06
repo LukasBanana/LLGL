@@ -1,5 +1,7 @@
 // HLSL model shader
 
+#include <HlslToSpirvInterop.hlsli>
+
 cbuffer Settings : register(b1)
 {
     float4x4 wMatrix;
@@ -53,7 +55,7 @@ float4 PScene(OutputVScene inp) : SV_Target
     // Project world position into shadow-map space
     float4 shadowPos = mul(vpShadowMatrix, inp.worldPos);
     shadowPos /= shadowPos.w;
-    shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
+    NDC_TO_CLIP_SPACE(shadowPos);
     
     // Sample shadow map
     float shadow = shadowMap.SampleCmp(shadowMapSampler, shadowPos.xy, shadowPos.z);

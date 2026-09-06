@@ -7,6 +7,7 @@
 
 #if __spirv__
 
+
 // Unpacks three float4 matrix rows to mimic D3D's compact matrix memory layout
 column_major float4x3 UnpackRowMajor3x4Matrix(float4 row0, float4 row1, float4 row2)
 {
@@ -30,7 +31,12 @@ column_major float4x3 UnpackRowMajor3x4Matrix(float4 row0, float4 row1, float4 r
 #define VERTEX_ATTRIB_MUL(A, B) \
     mul((B), (A))
 
+#define LOCATION(N) \
+    [[vk::location(N)]]
+
+
 #else // __spirv__
+
 
 #define DECLARE_MAT3x4(MAT) \
     float3x4 MAT
@@ -42,17 +48,25 @@ column_major float4x3 UnpackRowMajor3x4Matrix(float4 row0, float4 row1, float4 r
 #define VERTEX_ATTRIB_MUL(A, B) \
     mul((A), (B))
 
+#define LOCATION(N) /*Dummy*/
+
+
 #endif // /__spirv__
 
+
 #if NDC_SPACE_UNIT_CUBE
+
 
 #define NDC_TO_CLIP_SPACE(VEC) \
     VEC.xyz = (VEC.xyz * float3(0.5, -0.5, 0.5) + 0.5)
 
-#else
+
+#else // NDC_SPACE_UNIT_CUBE
+
 
 #define NDC_TO_CLIP_SPACE(VEC) \
     VEC.xy = (VEC.xy * float2(0.5, -0.5) + 0.5)
 
-#endif
+
+#endif // /NDC_SPACE_UNIT_CUBE
 
