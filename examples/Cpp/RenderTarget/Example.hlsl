@@ -43,7 +43,7 @@ OutputVS VS(InputVS inp)
 Texture2D colorMap : register(t2);
 
 #if ENABLE_CUSTOM_MULTISAMPLING
-Texture2DMS<float4, 8> colorMapMS : register(t3);
+Texture2DMS<float4, 8> colorMapMS : register(t4);
 #endif
 
 SamplerState samplerState : register(s1);

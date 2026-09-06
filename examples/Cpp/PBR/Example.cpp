@@ -103,40 +103,11 @@ private:
 
     void LoadShaders()
     {
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VSky", "vs_5_0" });
-            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PSky", "ps_5_0" });
+        shaderPipelineSky.vs    = LoadVertexShader  ("Example", "VSky");
+        shaderPipelineSky.ps    = LoadFragmentShader("Example", "PSky");
 
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" });
-            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PMesh", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.vert" });
-            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.frag" });
-
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.vert" });
-            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.450core.vert.spv" });
-            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.450core.frag.spv" });
-
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.450core.vert.spv" });
-            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" });
-            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PSky", "1.1" });
-
-            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" });
-            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PMesh", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
+        shaderPipelineMeshes.vs = LoadVertexShader  ("Example", "VMesh");
+        shaderPipelineMeshes.ps = LoadFragmentShader("Example", "PMesh");
     }
 
     void CreatePipelines()
@@ -176,6 +147,7 @@ private:
             pipelineDescSky.rasterizer.frontCCW             = HasRightHandedProjection();
         }
         pipelineSky = renderer->CreatePipelineState(pipelineDescSky);
+        ReportPSOErrors(pipelineSky);
 
         // Create pipeline layout for meshes
         layoutMeshes = renderer->CreatePipelineLayout(
@@ -207,6 +179,7 @@ private:
             pipelineDescMeshes.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         }
         pipelineMeshes = renderer->CreatePipelineState(pipelineDescMeshes);
+        ReportPSOErrors(pipelineMeshes);
     }
 
     bool LoadImageSlice(const std::string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)

@@ -1070,12 +1070,16 @@ LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(const ShaderDescWrap
     return LoadShaderInternal(shaderDesc, defines, LLGL::ShaderCompileFlags::PatchClippingOrigin);
 }
 
-static std::string FindShader(const char* basename, const char* entryPoint, const std::initializer_list<const char*>& suffixes)
+static std::string FindShader(
+    const char*                                 basename,
+    const char*                                 entryPoint,
+    const std::initializer_list<const char*>&   searchPaths,
+    const std::initializer_list<const char*>&   suffixes)
 {
     // Try to find the shader in the current project directory and in an optional .autogen/ directory for auto-generated shaders
     std::string shaderBaseFilename, shaderFileanme;
 
-    for (const char* relativePath : { "", ".autogen" })
+    for (const char* relativePath : searchPaths)
     {
         for (const char* suffix : suffixes)
         {
@@ -1108,21 +1112,6 @@ static std::string FindShader(const char* basename, const char* entryPoint, cons
         }
     }
 
-    // Print error that no shader could be found
-    {
-        std::string suffixesPattern;
-        for (const char* suffix : suffixes)
-        {
-            if (!suffixesPattern.empty())
-                suffixesPattern.append("|");
-            suffixesPattern.append(suffix);
-        }
-        LLGL::Log::Errorf(
-            LLGL::Log::ColorFlags::StdError,
-            "Could not find shader '%s.(%s)'",
-            basename, suffixesPattern.c_str()
-        );
-    }
     return "";
 }
 
@@ -1138,7 +1127,38 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
     {
         if (Supported(info.targetLanguage))
         {
-            const std::string source = FindShader(basename, entryPoint, info.suffixes);
+            // Try to find shader file for current target language
+            std::string source = FindShader(basename, entryPoint, { "", ".autogen" }, info.suffixes);
+            if (source.empty())
+            {
+                // If the source was not found and the basename contains a permutation suffix (e.g. "Example.RWTextures"),
+                // Search again in current directory without the suffix, i.e. only for the input shader,
+                // not for the auto-generatd ones as they need to contain the suffix.
+                if (const char* basenameSuffix = std::strchr(basename, '.'))
+                {
+                    const std::string basenameNoSuffix = std::string(basename).substr(0, basenameSuffix - basename);
+                    source = FindShader(basenameNoSuffix.c_str(), entryPoint, { "" }, info.suffixes);
+                }
+            }
+
+            if (source.empty())
+            {
+                // Print error that no shader could be found
+                std::string suffixesPattern;
+                for (const char* suffix : info.suffixes)
+                {
+                    if (!suffixesPattern.empty())
+                        suffixesPattern.append("|");
+                    suffixesPattern.append(suffix);
+                }
+                LLGL::Log::Errorf(
+                    LLGL::Log::ColorFlags::StdError,
+                    "Could not find shader '%s.(%s)'\n",
+                    basename, suffixesPattern.c_str()
+                );
+                Quit(1);
+                return nullptr;
+            }
 
             //TODO:
             // once all examples have transitioned to the auto-generated shaders, change this to retain the original entry point.
@@ -1149,10 +1169,15 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
             return LoadShaderInternal({ type, source.c_str(), entryPoint, info.profile }, defines, compileFlags);
         }
     }
-    LLGL_THROW_RUNTIME_ERROR(
-        "%s shader '%s' (%s) not available for selected renderer",
+
+    // Error: shader not found
+    LLGL::Log::Errorf(
+        LLGL::Log::ColorFlags::StdError,
+        "%s shader '%s' (%s) not available for selected renderer\n",
         LLGL::ToString(type), basename, entryPoint != nullptr ? entryPoint : "<default>"
     );
+    Quit(1);
+
     return nullptr;
 }
 
@@ -1174,7 +1199,7 @@ LLGL::Shader* ExampleBase::LoadVertexShader(const char* basename, const char* en
     return LoadShaderForTargetLanguage(
         LLGL::ShaderType::Vertex, basename, entryPoint, defines, compileFlags,
         {
-            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "vert", "140core.vert", "400core.vert", "420core.vert", "450core.vert" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "vert", "140core.vert", "150core.vert", "330core.vert", "400core.vert", "420core.vert", "430core.vert", "450core.vert" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.vert", "vert" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.vert.spv" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("vs"), { "hlsl" } },
@@ -1189,7 +1214,7 @@ LLGL::Shader* ExampleBase::LoadTessControlShader(const char* basename, const cha
     return LoadShaderForTargetLanguage(
         LLGL::ShaderType::TessControl, basename, entryPoint, defines, compileFlags,
         {
-            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tesc", "400core.tesc", "420core.tesc", "450core.tesc" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tesc", "400core.tesc", "420core.tesc", "430core.tesc", "450core.tesc" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tesc.spv" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("hs"), { "hlsl" } },
         }
@@ -1202,7 +1227,7 @@ LLGL::Shader* ExampleBase::LoadTessEvaluationShader(const char* basename, const 
     return LoadShaderForTargetLanguage(
         LLGL::ShaderType::TessEvaluation, basename, entryPoint, defines, compileFlags,
         {
-            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tese", "400core.tese", "420core.tese", "450core.tese" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tese", "400core.tese", "420core.tese", "430core.tese", "450core.tese" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tese.spv" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ds"), { "hlsl" } },
         }
@@ -1215,7 +1240,7 @@ LLGL::Shader* ExampleBase::LoadGeometryShader(const char* basename, const char* 
     return LoadShaderForTargetLanguage(
         LLGL::ShaderType::Geometry, basename, entryPoint, defines, compileFlags,
         {
-            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "geom", "150core.geom", "400core.geom", "420core.geom", "450core.geom" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "geom", "150core.geom", "330core.geom", "400core.geom", "420core.geom", "430core.geom", "450core.geom" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.geom.spv" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("gs"), { "hlsl" } },
         }
@@ -1227,7 +1252,7 @@ LLGL::Shader* ExampleBase::LoadFragmentShader(const char* basename, const char* 
     return LoadShaderForTargetLanguage(
         LLGL::ShaderType::Fragment, basename, entryPoint, defines, compileFlags,
         {
-            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "frag", "140core.frag", "400core.frag", "420core.frag", "450core.frag" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "frag", "140core.frag", "150core.frag", "330core.frag", "400core.frag", "420core.frag", "430core.frag", "450core.frag" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.frag", "frag" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.frag.spv" } },
             ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ps"), { "hlsl" } },
@@ -1257,8 +1282,8 @@ ShaderPipeline ExampleBase::LoadStandardShaderPipeline()
 {
     ShaderPipeline shaderPipeline;
     {
-        shaderPipeline.vs = LoadStandardVertexShader("VS");
-        shaderPipeline.ps = LoadStandardFragmentShader("PS");
+        shaderPipeline.vs = LoadStandardVertexShader();
+        shaderPipeline.ps = LoadStandardFragmentShader();
     }
     return shaderPipeline;
 }

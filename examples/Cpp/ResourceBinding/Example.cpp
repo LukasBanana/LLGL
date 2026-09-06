@@ -62,9 +62,6 @@ public:
 
         // Update vectors for projection
         lightVec.z *= GetProjectionZAxis();
-
-        // Show info
-        //LLGL::Log::Printf("press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n");
     }
 
 private:
@@ -133,8 +130,8 @@ private:
     void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VSMain");
-        fragmentShader  = LoadStandardFragmentShader("PSMain");
+        vertexShader    = LoadStandardVertexShader();
+        fragmentShader  = LoadStandardFragmentShader();
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -150,10 +147,10 @@ private:
                 "texture(colorMap@4):frag,"                         // Dynamic resource binding for a texture
                 "sampler(colorMapSampler@5){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
 
-                "sampler<colorMap, colorMapSampler>(colorMap@3),"
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@3),"
 
-                "uint(instance),"                                   // Uniform for a uint type
-                "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
+                "uint(model.instance),"                             // Uniform for a uint type
+                "float3(model.lightVec),"                           // Uniform for a float3/ vec3 type
             );
 
             #else
@@ -183,12 +180,12 @@ private:
             };
             layoutDesc.combinedTextureSamplers =
             {
-                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "colorMapSampler", 4 }
+                LLGL::CombinedTextureSamplerDescriptor{ "s_colorMapcolorMapSampler", "colorMap", "colorMapSampler", 4 }
             };
             layoutDesc.uniforms =
             {
-                LLGL::UniformDescriptor{ "instance", LLGL::UniformType::UInt1  }, // instanceUniform = 0
-                LLGL::UniformDescriptor{ "lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
+                LLGL::UniformDescriptor{ "model.instance", LLGL::UniformType::UInt1  }, // instanceUniform = 0
+                LLGL::UniformDescriptor{ "model.lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
             };
 
             #endif // /PSO_LAYOUT_FROM_STRING
@@ -217,6 +214,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
+        ReportPSOErrors(pipeline);
     }
 
     void DrawModel(const Model& mdl)
