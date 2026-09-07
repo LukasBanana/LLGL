@@ -73,6 +73,7 @@ Small example with a compute shader and a storage buffer for the indirect draw c
 
 
 ### [Instancing](Instancing)
+##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Instancing/index.html)
 
 Practical example of hardware instancing by rendering tens of thousands of different textured plants instances.
 
@@ -119,6 +120,7 @@ Small animation example with orthogonal projection.
 
 
 ### [Volume Rendering](VolumeRendering)
+##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_VolumeRendering/index.html)
 
 Example of generating perlin noise into 3D texture with a glitter effect and volume rendering.
 

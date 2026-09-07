@@ -18,8 +18,8 @@
         // web worker
         PACKAGE_PATH = encodeURIComponent(location.pathname.toString().substring(0, location.pathname.toString().lastIndexOf('/')) + '/');
       }
-      var PACKAGE_NAME = 'Example_PostProcessing.data';
-      var REMOTE_PACKAGE_BASE = 'Example_PostProcessing.data';
+      var PACKAGE_NAME = 'Example_Instancing.data';
+      var REMOTE_PACKAGE_BASE = 'Example_Instancing.data';
       if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
         Module['locateFile'] = Module['locateFilePackage'];
         err('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
@@ -150,10 +150,10 @@ Module['FS_createPath']("/", "assets", true, true);
           var files = metadata['files'];
           for (var i = 0; i < files.length; ++i) {
             DataRequest.prototype.requests[files[i].filename].onload();
-          }          Module['removeRunDependency']('datafile_Example_PostProcessing.data');
+          }          Module['removeRunDependency']('datafile_Example_Instancing.data');
 
       };
-      Module['addRunDependency']('datafile_Example_PostProcessing.data');
+      Module['addRunDependency']('datafile_Example_Instancing.data');
 
       if (!Module.preloadResults) Module.preloadResults = {};
 
@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Blur.450core.frag", "start": 0, "end": 1842}, {"filename": "/assets/Blur.frag", "start": 1842, "end": 3340}, {"filename": "/assets/Example.PBlur.300es.frag", "start": 3340, "end": 4784}, {"filename": "/assets/Example.PFinal.300es.frag", "start": 4784, "end": 5400}, {"filename": "/assets/Example.PScene.300es.frag", "start": 5400, "end": 6122}, {"filename": "/assets/Example.VPP.300es.vert", "start": 6122, "end": 6373}, {"filename": "/assets/Example.VScene.300es.vert", "start": 6373, "end": 6987}, {"filename": "/assets/Final.450core.frag", "start": 6987, "end": 7686}, {"filename": "/assets/Final.frag", "start": 7686, "end": 8220}, {"filename": "/assets/PostProcess.450core.vert", "start": 8220, "end": 9102}, {"filename": "/assets/PostProcess.vert", "start": 9102, "end": 9914}, {"filename": "/assets/Scene.450core.frag", "start": 9914, "end": 10506}, {"filename": "/assets/Scene.450core.vert", "start": 10506, "end": 10977}, {"filename": "/assets/Scene.frag", "start": 10977, "end": 11617}, {"filename": "/assets/Scene.vert", "start": 11617, "end": 12046}, {"filename": "/assets/WiredBox.obj", "start": 12046, "end": 29968}], "remote_package_size": 29968});
+    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 1004}, {"filename": "/assets/Example.450core.vert", "start": 1004, "end": 1942}, {"filename": "/assets/Example.PS.300es.frag", "start": 1942, "end": 2741}, {"filename": "/assets/Example.VS.300es.vert", "start": 2741, "end": 3593}, {"filename": "/assets/Example.frag", "start": 3593, "end": 4479}, {"filename": "/assets/Example.vert", "start": 4479, "end": 5185}, {"filename": "/assets/Grass.jpg", "start": 5185, "end": 157939}, {"filename": "/assets/Plants_0.png", "start": 157939, "end": 500693}, {"filename": "/assets/Plants_1.png", "start": 500693, "end": 748090}, {"filename": "/assets/Plants_2.png", "start": 748090, "end": 1074473}, {"filename": "/assets/Plants_3.png", "start": 1074473, "end": 1212661}, {"filename": "/assets/Plants_4.png", "start": 1212661, "end": 1614830}, {"filename": "/assets/Plants_5.png", "start": 1614830, "end": 1820587}, {"filename": "/assets/Plants_6.png", "start": 1820587, "end": 1936158}, {"filename": "/assets/Plants_7.png", "start": 1936158, "end": 2077388}, {"filename": "/assets/Plants_8.png", "start": 2077388, "end": 2269737}, {"filename": "/assets/Plants_9.png", "start": 2269737, "end": 2481747}], "remote_package_size": 2481747});
 
   })();

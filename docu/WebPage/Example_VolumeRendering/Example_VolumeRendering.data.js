@@ -18,8 +18,8 @@
         // web worker
         PACKAGE_PATH = encodeURIComponent(location.pathname.toString().substring(0, location.pathname.toString().lastIndexOf('/')) + '/');
       }
-      var PACKAGE_NAME = 'Example_PostProcessing.data';
-      var REMOTE_PACKAGE_BASE = 'Example_PostProcessing.data';
+      var PACKAGE_NAME = 'Example_VolumeRendering.data';
+      var REMOTE_PACKAGE_BASE = 'Example_VolumeRendering.data';
       if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
         Module['locateFile'] = Module['locateFilePackage'];
         err('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
@@ -150,10 +150,10 @@ Module['FS_createPath']("/", "assets", true, true);
           var files = metadata['files'];
           for (var i = 0; i < files.length; ++i) {
             DataRequest.prototype.requests[files[i].filename].onload();
-          }          Module['removeRunDependency']('datafile_Example_PostProcessing.data');
+          }          Module['removeRunDependency']('datafile_Example_VolumeRendering.data');
 
       };
-      Module['addRunDependency']('datafile_Example_PostProcessing.data');
+      Module['addRunDependency']('datafile_Example_VolumeRendering.data');
 
       if (!Module.preloadResults) Module.preloadResults = {};
 
@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Blur.450core.frag", "start": 0, "end": 1842}, {"filename": "/assets/Blur.frag", "start": 1842, "end": 3340}, {"filename": "/assets/Example.PBlur.300es.frag", "start": 3340, "end": 4784}, {"filename": "/assets/Example.PFinal.300es.frag", "start": 4784, "end": 5400}, {"filename": "/assets/Example.PScene.300es.frag", "start": 5400, "end": 6122}, {"filename": "/assets/Example.VPP.300es.vert", "start": 6122, "end": 6373}, {"filename": "/assets/Example.VScene.300es.vert", "start": 6373, "end": 6987}, {"filename": "/assets/Final.450core.frag", "start": 6987, "end": 7686}, {"filename": "/assets/Final.frag", "start": 7686, "end": 8220}, {"filename": "/assets/PostProcess.450core.vert", "start": 8220, "end": 9102}, {"filename": "/assets/PostProcess.vert", "start": 9102, "end": 9914}, {"filename": "/assets/Scene.450core.frag", "start": 9914, "end": 10506}, {"filename": "/assets/Scene.450core.vert", "start": 10506, "end": 10977}, {"filename": "/assets/Scene.frag", "start": 10977, "end": 11617}, {"filename": "/assets/Scene.vert", "start": 11617, "end": 12046}, {"filename": "/assets/WiredBox.obj", "start": 12046, "end": 29968}], "remote_package_size": 29968});
+    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 3638}, {"filename": "/assets/Example.450core.vert", "start": 3638, "end": 4503}, {"filename": "/assets/Example.PScene.300es.frag", "start": 4503, "end": 7091}, {"filename": "/assets/Example.VScene.300es.vert", "start": 7091, "end": 8063}, {"filename": "/assets/Example.frag", "start": 8063, "end": 11444}, {"filename": "/assets/Example.vert", "start": 11444, "end": 12165}, {"filename": "/assets/Suzanne.obj", "start": 12165, "end": 248578}], "remote_package_size": 248578});
 
   })();

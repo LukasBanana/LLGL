@@ -1,3 +1,81 @@
+#version 300 es
+precision mediump float;
+precision highp int;
+
+layout(std140) uniform Settings
+{
+    layout(row_major) highp mat4 wMatrix;
+    layout(row_major) highp mat4 vpMatrix;
+    layout(row_major) highp mat4 vpShadowMatrix;
+    highp vec4 lightDir;
+    highp vec4 diffuse;
+};
+
+uniform highp sampler2DShadow s_shadowMapshadowMapSampler;
+
+in highp vec4 v_WORLDPOS;
+in highp vec4 v_NORMAL;
+layout(location = 0) out highp vec4 SV_Target;
+
+highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
+mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
+
+void main()
+{
+    highp vec4 _43 = v_WORLDPOS * spvWorkaroundRowMajor(vpShadowMatrix);
+    highp vec3 _49 = ((_43 / vec4(_43.w)).xyz * vec3(0.5, -0.5, 0.5)) + vec3(0.5);
+    highp float _62 = dot(normalize(v_NORMAL.xyz), -lightDir.xyz);
+    SV_Target = vec4(diffuse.xyz * ((isnan(_62) ? 0.20000000298023223876953125 : (isnan(0.20000000298023223876953125) ? _62 : max(0.20000000298023223876953125, _62))) * mix(0.20000000298023223876953125, 1.0, texture(s_shadowMapshadowMapSampler, vec3(_49.xy, _49.z)))), 1.0);
+}
+
+#version 300 es
+
+layout(std140) uniform Settings
+{
+    layout(row_major) mat4 wMatrix;
+    layout(row_major) mat4 vpMatrix;
+    layout(row_major) mat4 vpShadowMatrix;
+    vec4 lightDir;
+    vec4 diffuse;
+};
+
+layout(location = 0) in vec3 POSITION;
+layout(location = 1) in vec3 NORMAL;
+out vec4 v_WORLDPOS;
+out vec4 v_NORMAL;
+
+highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
+mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
+
+void main()
+{
+    vec4 _33 = vec4(POSITION, 1.0) * spvWorkaroundRowMajor(wMatrix);
+    gl_Position = _33 * spvWorkaroundRowMajor(vpMatrix);
+    v_WORLDPOS = _33;
+    v_NORMAL = vec4(NORMAL, 0.0) * spvWorkaroundRowMajor(wMatrix);
+}
+
+#version 300 es
+
+layout(std140) uniform Settings
+{
+    layout(row_major) mat4 wMatrix;
+    layout(row_major) mat4 vpMatrix;
+    layout(row_major) mat4 vpShadowMatrix;
+    vec4 lightDir;
+    vec4 diffuse;
+};
+
+layout(location = 0) in vec3 POSITION;
+
+highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
+mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
+
+void main()
+{
+    gl_Position = (vec4(POSITION, 1.0) * spvWorkaroundRowMajor(wMatrix)) * spvWorkaroundRowMajor(vpShadowMatrix);
+}
+
 // GLSL scene fragment shader
 
 #version 450 core

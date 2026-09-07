@@ -90,6 +90,116 @@ void main()
 	
 	fragColor = c;
 }
+#version 300 es
+precision mediump float;
+precision highp int;
+
+layout(std140) uniform BlurSettings
+{
+    highp vec2 blurShift;
+};
+
+uniform highp sampler2D s_glossMapglossMapSampler;
+
+in highp vec2 v_TEXCOORD;
+layout(location = 0) out highp vec4 SV_Target;
+
+void main()
+{
+    highp vec2 _40 = blurShift * 5.0;
+    highp vec2 _45 = blurShift * 4.0;
+    highp vec2 _51 = blurShift * 3.0;
+    highp vec2 _57 = blurShift * 2.0;
+    SV_Target = ((((((((((texture(s_glossMapglossMapSampler, v_TEXCOORD - _40) * 0.014374000020325183868408203125) + (texture(s_glossMapglossMapSampler, v_TEXCOORD - _45) * 0.0358549989759922027587890625)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD - _51) * 0.072994001209735870361328125)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD - _57) * 0.1212809979915618896484375)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD - blurShift) * 0.16447199881076812744140625)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD) * 0.1820490062236785888671875)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD + blurShift) * 0.16447199881076812744140625)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD + _57) * 0.1212809979915618896484375)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD + _51) * 0.072994001209735870361328125)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD + _45) * 0.0358549989759922027587890625)) + (texture(s_glossMapglossMapSampler, v_TEXCOORD + _40) * 0.014374000020325183868408203125);
+}
+
+#version 300 es
+precision mediump float;
+precision highp int;
+
+layout(std140) uniform SceneSettings
+{
+    layout(row_major) highp mat4 wvpMatrix;
+    layout(row_major) highp mat4 wMatrix;
+    highp vec4 diffuse;
+    highp vec4 glossiness;
+    highp vec3 lightDir;
+    highp float intensity;
+};
+
+uniform highp sampler2D s_colorMapcolorMapSampler;
+uniform highp sampler2D s_glossMapglossMapSampler;
+
+in highp vec2 v_TEXCOORD;
+layout(location = 0) out highp vec4 SV_Target;
+
+void main()
+{
+    SV_Target = texture(s_colorMapcolorMapSampler, v_TEXCOORD) + (texture(s_glossMapglossMapSampler, v_TEXCOORD) * intensity);
+}
+
+#version 300 es
+precision mediump float;
+precision highp int;
+
+layout(std140) uniform SceneSettings
+{
+    layout(row_major) highp mat4 wvpMatrix;
+    layout(row_major) highp mat4 wMatrix;
+    highp vec4 diffuse;
+    highp vec4 glossiness;
+    highp vec3 lightDir;
+    highp float intensity;
+};
+
+in highp vec3 v_NORMAL;
+layout(location = 0) out highp vec4 SV_Target0;
+layout(location = 1) out highp vec4 SV_Target1;
+
+void main()
+{
+    highp float _30 = dot(lightDir, normalize(v_NORMAL));
+    highp float _31 = isnan(_30) ? 0.4000000059604644775390625 : (isnan(0.4000000059604644775390625) ? _30 : max(0.4000000059604644775390625, _30));
+    SV_Target0 = diffuse * vec4(_31, _31, _31, 1.0);
+    SV_Target1 = glossiness;
+}
+
+#version 300 es
+
+out vec2 v_TEXCOORD;
+
+void main()
+{
+    vec4 _30 = vec4((uint(gl_VertexID) == 2u) ? 3.0 : (-1.0), (uint(gl_VertexID) == 0u) ? 3.0 : (-1.0), 1.0, 1.0);
+    gl_Position = _30;
+    v_TEXCOORD = (_30.xy * vec2(0.5, -0.5)) + vec2(0.5);
+}
+
+#version 300 es
+
+layout(std140) uniform SceneSettings
+{
+    layout(row_major) mat4 wvpMatrix;
+    layout(row_major) mat4 wMatrix;
+    vec4 diffuse;
+    vec4 glossiness;
+    vec3 lightDir;
+    float intensity;
+};
+
+layout(location = 0) in vec3 POSITION;
+layout(location = 1) in vec3 NORMAL;
+out vec3 v_NORMAL;
+
+highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
+mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
+
+void main()
+{
+    gl_Position = vec4(POSITION, 1.0) * spvWorkaroundRowMajor(wvpMatrix);
+    v_NORMAL = (vec4(NORMAL, 0.0) * spvWorkaroundRowMajor(wMatrix)).xyz;
+}
+
 // GLSL final fragment shader
 
 #version 450 core

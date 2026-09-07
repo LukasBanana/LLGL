@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Example.300es.frag", "start": 0, "end": 975}, {"filename": "/assets/Example.300es.vert", "start": 975, "end": 1755}, {"filename": "/assets/IcoSphere.obj", "start": 1755, "end": 18921}, {"filename": "/assets/PenroseStairs-Bottom.obj", "start": 18921, "end": 28266}, {"filename": "/assets/PenroseStairs-Top.obj", "start": 28266, "end": 37373}, {"filename": "/assets/TilesGray512.jpg", "start": 37373, "end": 251731}], "remote_package_size": 251731});
+    loadPackage({"files": [{"filename": "/assets/Example.300es.frag", "start": 0, "end": 975}, {"filename": "/assets/Example.300es.vert", "start": 975, "end": 1755}, {"filename": "/assets/Example.PS.300es.frag", "start": 1755, "end": 2730}, {"filename": "/assets/Example.VS.300es.vert", "start": 2730, "end": 3510}, {"filename": "/assets/IcoSphere.obj", "start": 3510, "end": 20676}, {"filename": "/assets/PenroseStairs-Bottom.obj", "start": 20676, "end": 30021}, {"filename": "/assets/PenroseStairs-Top.obj", "start": 30021, "end": 39128}, {"filename": "/assets/TilesGray512.jpg", "start": 39128, "end": 253486}], "remote_package_size": 253486});
 
   })();
