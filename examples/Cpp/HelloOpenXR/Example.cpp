@@ -439,12 +439,12 @@ void MyXRRenderer::LoadShaders()
         LLGL::ShaderDescriptor vsDesc;
         vsDesc.type                 = LLGL::ShaderType::Vertex;
         vsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
-        vertShader = LoadShader(vsDesc, useMultiview ? "Example.multiview.450core.vert.spv" : "Example.450core.vert.spv");
+        vertShader = LoadShader(vsDesc, useMultiview ? ".autogen/Example.VSMultiview.450core.vert.spv" : ".autogen/Example.VS.450core.vert.spv");
 
         LLGL::ShaderDescriptor fsDesc;
         fsDesc.type                 = LLGL::ShaderType::Fragment;
         fsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
-        fragShader = LoadShader(fsDesc, "Example.450core.frag.spv");
+        fragShader = LoadShader(fsDesc, ".autogen/Example.PS.450core.frag.spv");
     }
     else if (HasLanguage(LLGL::ShadingLanguage::HLSL))
     {

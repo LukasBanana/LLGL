@@ -1,11 +1,5 @@
 @echo off
 
-echo ####### HelloOpenXR #######
-call :CompileGlslToSpirv HelloOpenXR/Example.450core.vert
-call :CompileGlslToSpirv HelloOpenXR/Example.450core.frag
-call :CompileGlslToSpirv HelloOpenXR/Example.multiview.450core.vert
-echo DONE
-
 echo ####### Tessellation #######
 call :CompileGlslToSpirv Tessellation/Example.450core.vert
 call :CompileGlslToSpirv Tessellation/Example.450core.tesc
