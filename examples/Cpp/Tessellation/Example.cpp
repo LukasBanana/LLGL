@@ -103,7 +103,7 @@ public:
 
     void LoadShaders()
     {
-        // Load shader program
+        // Load shader programs. OpenGL and Metal backends still use hand written shaders because cross-compiling tessellation shaders is tricky.
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.vert" });
@@ -111,25 +111,18 @@ public:
             shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.tese" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.frag" });
         }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.450core.vert.spv" });
-            shaderPipeline.hs = LoadShader({ LLGL::ShaderType::TessControl,    "Example.450core.tesc.spv" });
-            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.450core.tese.spv" });
-            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,         "Example.hlsl", "VS", "vs_5_0" });
-            shaderPipeline.hs = LoadShader({ LLGL::ShaderType::TessControl,    "Example.hlsl", "HS", "hs_5_0" });
-            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::TessEvaluation, "Example.hlsl", "DS", "ds_5_0" });
-            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.hlsl", "PS", "ps_5_0" });
-        }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderPipeline.hs = LoadShader({ LLGL::ShaderType::Compute,        "Example.metal", "HS", "2.0" });
             shaderPipeline.ds = LoadShader({ LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.metal", "PS", "2.0" });
+        }
+        else
+        {
+            shaderPipeline.vs = LoadVertexShader        ("Example", "VS");
+            shaderPipeline.hs = LoadTessControlShader   ("Example", "HS");
+            shaderPipeline.ds = LoadTessEvaluationShader("Example", "DS");
+            shaderPipeline.ps = LoadFragmentShader      ("Example", "PS");
         }
     }
 

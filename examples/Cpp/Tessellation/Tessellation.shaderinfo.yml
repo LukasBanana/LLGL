@@ -1,15 +1,16 @@
-#sources:
-#  - source: "Example.hlsl"
-#    entries:
-#      - entry: "VS"
-#        profile: "vs_5_0"
-#        targets: [glsl400core, glsl450core, spirv, metal]
-#      - entry: "HS"
-#        profile: "hs_5_0"
-#        targets: [glsl400core, glsl450core, spirv]
-#      - entry: "DS"
-#        profile: "ds_5_0"
-#        targets: [glsl400core, glsl450core, spirv]
-#      - entry: "PS"
-#        profile: "ps_5_0"
-#        targets: [glsl400core, glsl450core, spirv, metal]
+# OpenGL and Metal backends not supported until the generic cross-compiler toolchain has proper tessellation shader support
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_5_0"
+        targets: [spirv]
+      - entry: "HS"
+        profile: "hs_5_0"
+        targets: [spirv]
+      - entry: "DS"
+        profile: "ds_5_0"
+        targets: [spirv]
+      - entry: "PS"
+        profile: "ps_5_0"
+        targets: [spirv]

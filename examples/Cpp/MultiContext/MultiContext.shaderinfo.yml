@@ -1,4 +1,4 @@
-# Only compile to SPIR-V until the generic cross-compiler toolchain has proper geometry shader support
+# Metal not supported until the generic cross-compiler toolchain has proper geometry shader support
 sources:
   - source: "Example.hlsl"
     entries:
