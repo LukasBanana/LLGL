@@ -1,15 +1,16 @@
+# Cube array samplers require GLSL ES 3.20
 sources:
   - source: "Example.hlsl"
     entries:
       - entry: "VSky"
         profile: "vs_5_0"
-        targets: [glsl420core, glsl300es, spirv, metal]
+        targets: [glsl420core, glsl320es, spirv, metal]
       - entry: "PSky"
         profile: "ps_5_0"
-        targets: [glsl420core, glsl300es, spirv, metal]
+        targets: [glsl420core, glsl320es, spirv, metal]
       - entry: "VMesh"
         profile: "vs_5_0"
-        targets: [glsl420core, glsl300es, spirv, metal]
+        targets: [glsl420core, glsl320es, spirv, metal]
       - entry: "PMesh"
         profile: "ps_5_0"
-        targets: [glsl420core, glsl300es, spirv, metal]
+        targets: [glsl420core, glsl320es, spirv, metal]

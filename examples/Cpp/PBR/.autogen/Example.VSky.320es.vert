@@ -1,6 +1,6 @@
-#version 300 es
+#version 320 es
 
-layout(std140) uniform Settings
+layout(binding = 1, std140) uniform Settings
 {
     layout(row_major) mat4 cMatrix;
     layout(row_major) mat4 vpMatrix;
@@ -14,7 +14,7 @@ layout(std140) uniform Settings
     uvec2 _pad1;
 };
 
-out vec4 v_VIEWRAY;
+layout(location = 0) out vec4 v_VIEWRAY;
 
 void main()
 {

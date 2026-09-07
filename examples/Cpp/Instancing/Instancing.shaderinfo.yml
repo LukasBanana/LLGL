@@ -3,7 +3,19 @@ sources:
     entries:
       - entry: "VS"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [glsl140core, spirv, metal]
       - entry: "PS"
         profile: "ps_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [glsl140core, spirv, metal]
+
+  - source: "Example.hlsl"
+    permutation:
+      macros:
+        DISABLE_ALPHA_BLENDING: 1
+    entries:
+      - entry: "VS"
+        profile: "vs_4_0"
+        targets: [glsl300es]
+      - entry: "PS"
+        profile: "ps_4_0"
+        targets: [glsl300es]

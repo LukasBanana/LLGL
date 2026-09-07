@@ -69,7 +69,7 @@ float4 PS(OutputVS inp) : SV_Target
     
     // Apply alpha clipping
     clip(color.a - 0.5);
-	
+
     // Compute fog density
     float viewDist = distance(viewPos, inp.worldPos);
     float fog = viewDist*fogDensity;
@@ -78,6 +78,11 @@ float4 PS(OutputVS inp) : SV_Target
     // Interpolate between albedo and fog color
     color.rgb = lerp(color.rgb * inp.color, fogColor, fog);
     
+    // Disable writing out alpha channle for WebGL
+    #if DISABLE_ALPHA_BLENDING
+    color.a = 1.0;
+    #endif
+
     return color;
 };
 

@@ -27,6 +27,8 @@ void main()
     }
     highp float _56 = distance(viewPos, v_WORLDPOS) * fogDensity;
     highp vec3 _66 = mix(_45.xyz * v_COLOR, fogColor, vec3(1.0 - (1.0 / exp(_56 * _56))));
-    SV_Target = vec4(_66.x, _66.y, _66.z, _45.w);
+    highp vec4 _67 = vec4(_66.x, _66.y, _66.z, _45.w);
+    _67.w = 1.0;
+    SV_Target = _67;
 }
 

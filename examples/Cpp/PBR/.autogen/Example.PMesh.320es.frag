@@ -1,8 +1,8 @@
-#version 300 es
+#version 320 es
 precision mediump float;
 precision highp int;
 
-layout(std140) uniform Settings
+layout(binding = 1, std140) uniform Settings
 {
     layout(row_major) highp mat4 cMatrix;
     layout(row_major) highp mat4 vpMatrix;
@@ -16,17 +16,17 @@ layout(std140) uniform Settings
     uvec2 _pad1;
 };
 
-uniform highp sampler2DArray s_colorMapssmpl;
-uniform highp sampler2DArray s_normalMapssmpl;
-uniform highp sampler2DArray s_roughnessMapssmpl;
-uniform highp sampler2DArray s_metallicMapssmpl;
-uniform highp samplerCubeArray s_skyBoxsmpl;
+layout(binding = 4) uniform highp sampler2DArray s_colorMapssmpl;
+layout(binding = 5) uniform highp sampler2DArray s_normalMapssmpl;
+layout(binding = 6) uniform highp sampler2DArray s_roughnessMapssmpl;
+layout(binding = 7) uniform highp sampler2DArray s_metallicMapssmpl;
+layout(binding = 3) uniform highp samplerCubeArray s_skyBoxsmpl;
 
-in highp vec3 v_TANGENT;
-in highp vec3 v_BITANGENT;
-in highp vec3 v_NORMAL;
-in highp vec2 v_TEXCOORD;
-in highp vec4 v_WORLDPOS;
+layout(location = 0) in highp vec3 v_TANGENT;
+layout(location = 1) in highp vec3 v_BITANGENT;
+layout(location = 2) in highp vec3 v_NORMAL;
+layout(location = 3) in highp vec2 v_TEXCOORD;
+layout(location = 4) in highp vec4 v_WORLDPOS;
 layout(location = 0) out highp vec4 SV_Target;
 
 highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }

@@ -1,8 +1,8 @@
-#version 300 es
+#version 320 es
 precision mediump float;
 precision highp int;
 
-layout(std140) uniform Settings
+layout(binding = 1, std140) uniform Settings
 {
     layout(row_major) highp mat4 cMatrix;
     layout(row_major) highp mat4 vpMatrix;
@@ -16,9 +16,9 @@ layout(std140) uniform Settings
     uvec2 _pad1;
 };
 
-uniform highp samplerCubeArray s_skyBoxsmpl;
+layout(binding = 3) uniform highp samplerCubeArray s_skyBoxsmpl;
 
-in highp vec4 v_VIEWRAY;
+layout(location = 0) in highp vec4 v_VIEWRAY;
 layout(location = 0) out highp vec4 SV_Target;
 
 highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }

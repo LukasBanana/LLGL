@@ -389,11 +389,13 @@ private:
     void ProcessInput(float dt)
     {
         // Check on user input
+        #ifndef LLGL_OS_WASM
         if (input.KeyDown(LLGL::Key::Space))
         {
             config.vsync = !config.vsync;
             swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
         }
+        #endif
         if (input.KeyDown(LLGL::Key::S))
             config.shadow = !config.shadow;
 
@@ -434,6 +436,7 @@ private:
         const auto& res = swapChain->GetResolution();
 
         const LLGL::ColorRGBAub colorWhite  { 255, 255, 255, 255 };
+        const LLGL::ColorRGBAub colorGray   { 180, 180, 180, 255 };
         const LLGL::ColorRGBAub colorYellow { 240, 192,  32, 255 };
         const LLGL::ColorRGBAub colorRed    { 240,  32,  32, 255 };
 
@@ -442,7 +445,8 @@ private:
         if (config.shadow)
             fontFlags |= DrawShadow;
 
-        const Font& fntA = fonts[selectedFontProfile];
+        const Font& fntASmall = fonts[0];
+        const Font& fntA = fonts[1];
         const Font& fntB = fonts[2 + selectedFontProfile];
 
         // Draw headline
@@ -461,7 +465,13 @@ private:
 
         // Draw swap-chain configuration
         DrawFont(
-            fntA, std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
+            fntA,
+            std::string("Vsync (Space bar): ") +
+            #ifdef LLGL_OS_WASM
+            "N/A",
+            #else
+            (config.vsync ? "Enabled" : "Disabled"),
+            #endif
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
         paragraphPosY += fntA.fontHeight + textMargin;
@@ -486,6 +496,18 @@ private:
             fntA, "FPS = " + std::to_string(displayNumbers.averageFPS),
             screenWidth - paragraphMargin, paragraphPosY, colorRed,
             fontFlags | DrawRightAligned
+        );
+
+        // Draw mouse position
+        const LLGL::Offset2D mousePosToWindow = input.GetMousePosition();
+        const LLGL::Offset2D mousePosToDisplay = LLGL::Display::GetCursorPosition();
+
+        DrawFont(
+            fntASmall,
+            "Mouse to window (" + std::to_string(mousePosToWindow.x) + ", " + std::to_string(mousePosToWindow.y) + "), "
+            "mouse to display (" + std::to_string(mousePosToDisplay.x) + ", " + std::to_string(mousePosToDisplay.y) + "), "
+            "viewport dimension " + std::to_string(res.width) + " x " + std::to_string(res.height),
+            15, 15, colorGray
         );
 
         // Draw paragraph word by word

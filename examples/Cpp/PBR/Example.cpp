@@ -157,11 +157,11 @@ private:
                 "  sampler(smpl@2):frag,"
                 "  texture(skyBox@3, colorMaps@4, normalMaps@5, roughnessMaps@6, metallicMaps@7):frag,"
                 "},"
-                "sampler<skyBox, smpl>(skyBox@3),"
-                "sampler<colorMaps, smpl>(colorMaps@4),"
-                "sampler<normalMaps, smpl>(normalMaps@5),"
-                "sampler<roughnessMaps, smpl>(roughnessMaps@6),"
-                "sampler<metallicMaps, smpl>(metallicMaps@7),"
+                "sampler<skyBox, smpl>(s_skyBoxsmpl@3),"
+                "sampler<colorMaps, smpl>(s_colorMapssmpl@4),"
+                "sampler<normalMaps, smpl>(s_normalMapssmpl@5),"
+                "sampler<roughnessMaps, smpl>(s_roughnessMapssmpl@6),"
+                "sampler<metallicMaps, smpl>(s_metallicMapssmpl@7),"
             )
         );
 

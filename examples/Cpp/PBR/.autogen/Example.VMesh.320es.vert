@@ -1,6 +1,6 @@
-#version 300 es
+#version 320 es
 
-layout(std140) uniform Settings
+layout(binding = 1, std140) uniform Settings
 {
     layout(row_major) mat4 cMatrix;
     layout(row_major) mat4 vpMatrix;
@@ -19,11 +19,11 @@ layout(location = 1) in vec3 NORMAL;
 layout(location = 2) in vec3 TANGENT;
 layout(location = 3) in vec3 BITANGENT;
 layout(location = 4) in vec2 TEXCOORD;
-out vec3 v_TANGENT;
-out vec3 v_BITANGENT;
-out vec3 v_NORMAL;
-out vec2 v_TEXCOORD;
-out vec4 v_WORLDPOS;
+layout(location = 0) out vec3 v_TANGENT;
+layout(location = 1) out vec3 v_BITANGENT;
+layout(location = 2) out vec3 v_NORMAL;
+layout(location = 3) out vec2 v_TEXCOORD;
+layout(location = 4) out vec4 v_WORLDPOS;
 
 highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
 mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }

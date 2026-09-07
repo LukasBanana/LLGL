@@ -14,40 +14,42 @@ class Example_Instancing : public ExampleBase
 {
 
     // Static configuration for this demo
-    static const std::uint32_t  numPlantInstances   = 20000;
-    static const std::uint32_t  numPlantImages      = 10;
-    const float                 positionRange       = 40.0f;
+    static const std::uint32_t  numPlantInstances               = 20000;
+    static const std::uint32_t  numPlantImages                  = 10;
+    const float                 positionRange                   = 40.0f;
 
-    LLGL::Shader*               vertexShader        = nullptr;
-    LLGL::Shader*               fragmentShader      = nullptr;
+    LLGL::Shader*               vertexShader                    = nullptr;
+    LLGL::Shader*               fragmentShader                  = nullptr;
 
-    LLGL::PipelineState*        pipeline[2]         = {};
+    LLGL::PipelineState*        pipeline[2]                     = {};
 
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::ResourceHeap*         resourceHeap        = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout                  = nullptr;
+    LLGL::ResourceHeap*         resourceHeap                    = nullptr;
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
-    LLGL::Buffer*               perVertexDataBuf    = nullptr;
-    LLGL::Buffer*               perInstanceDataBuf  = nullptr;
-    LLGL::BufferArray*          vertexBufferArray   = nullptr;
+    LLGL::Buffer*               perVertexDataBuf                = nullptr;
+    LLGL::Buffer*               perInstanceDataBuf              = nullptr;
+    LLGL::BufferArray*          vertexBufferArray               = nullptr;
 
-    LLGL::Buffer*               constantBuffer      = nullptr;
+    // Vertex buffer array with offset to teh last instance if offset instancing is not supported (hasOffsetInstancing).
+    LLGL::BufferArray*          vertexBufferArrayLastInstance   = nullptr;
+
+    LLGL::Buffer*               constantBuffer                  = nullptr;
 
     // 2D-array texture for all plant images
-    LLGL::Texture*              arrayTexture        = nullptr;
+    LLGL::Texture*              arrayTexture                    = nullptr;
 
-    LLGL::Sampler*              samplers[2]         = {};
+    LLGL::Sampler*              samplers[2]                     = {};
 
-    float                       viewRotation        = 0.0f;
+    float                       viewRotation                    = 0.0f;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f    vpMatrix;                           // View-projection matrix
         Gs::Vector4f    viewPos;                            // Camera view position (in world space)
         float           fogColor[3] = { 0.3f, 0.3f, 0.3f };
         float           fogDensity  = 0.04f;
         float           animVec[2]  = { 0.0f, 0.0f };       // Animation vector to make the plants wave in the wind
-        float           _pad0[2]    = {};
     }
     settings;
 
@@ -87,7 +89,6 @@ public:
         // Show info
         LLGL::Log::Printf(
             "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n"
-            "press R KEY to reload the shader program\n"
             "press SPACE KEY to switch between pipeline states with and without alpha-to-coverage\n"
         );
     }
@@ -183,6 +184,18 @@ private:
         // Create vertex buffer array
         vertexBufferArray = renderer->CreateBufferArray({ perVertexDataBuf, perInstanceDataBuf });
 
+        if (!renderer->GetRenderingCaps().features.hasOffsetInstancing)
+        {
+            // Create secondary vertex buffer array with offset to the last instance.
+            // This is used for WebGL 2.0, where offset instancing is not supported.
+            LLGL::VertexBufferView vbufViews[] =
+            {
+                LLGL::VertexBufferView{ perVertexDataBuf },
+                LLGL::VertexBufferView{ perInstanceDataBuf, 0, sizeof(Instance)*numPlantInstances },
+            };
+            vertexBufferArrayLastInstance = renderer->CreateBufferArray(vbufViews);
+        }
+
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(settings);
     }
@@ -191,12 +204,10 @@ private:
     {
         std::string filename;
 
-        std::vector<char> arrayImageBuffer;
+        std::vector<ImageReader> images;
 
         // Load all array images
         std::uint32_t width = 0, height = 0;
-
-        std::uint32_t numImages = 0;
 
         for (std::uint32_t i = 0; i <= numPlantImages; ++i)
         {
@@ -222,27 +233,34 @@ private:
             width   = imageExtent.width;
             height  = imageExtent.height;
 
-            reader.AppendImageDataTo(arrayImageBuffer);
+            images.push_back(std::move(reader));
 
             // Show info
             LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
-
-            ++numImages;
         }
 
         // Create array texture object with 'numImages' layers
-        LLGL::ImageView imageView;
-        {
-            imageView.format    = LLGL::ImageFormat::RGBA;
-            imageView.dataType  = LLGL::DataType::UInt8;
-            imageView.data      = arrayImageBuffer.data();
-            imageView.dataSize  = arrayImageBuffer.size();
-        };
+        const std::uint32_t numImages = numPlantImages + 1;
 
-        arrayTexture = renderer->CreateTexture(
-            LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages),
-            &imageView
-        );
+        arrayTexture = renderer->CreateTexture(LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages));
+
+        // Write image layers one by one. This is necessary for WebGL as the size of contiguous buffers is limited.
+        for (std::uint32_t arrayLayer = 0; arrayLayer < numImages; ++arrayLayer)
+        {
+            const LLGL::TextureRegion texRegion
+            {
+                LLGL::TextureSubresource{ arrayLayer, 1, 0, 1 },
+                LLGL::Offset3D{ 0, 0, 0 },
+                LLGL::Extent3D{ width, height, 1 }
+            };
+            renderer->WriteTexture(*arrayTexture, texRegion, images[arrayLayer].GetImageView());
+        }
+
+        // Generate MIP-maps after writing all image layers
+        commands->Begin();
+        commands->GenerateMips(*arrayTexture);
+        commands->End();
+        commandQueue->Submit(*commands);
     }
 
     void CreateSamplers()
@@ -279,7 +297,7 @@ private:
                 "  texture(tex@3):frag,"
                 "  sampler(texSampler@4):frag,"
                 "},"
-                "sampler<tex, texSampler>(tex@3)"
+                "sampler<tex, texSampler>(s_textexSampler@3)"
             )
         );
 
@@ -376,9 +394,6 @@ private:
 
         commands->Begin();
         {
-            // Set buffer array, texture, and sampler
-            commands->SetVertexBufferArray(*vertexBufferArray);
-
             // Upload new data to the constant buffer on the GPU
             commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
@@ -394,14 +409,24 @@ private:
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
+                // Set vertex buffer array (vertices and instances)
+                commands->SetVertexBufferArray(*vertexBufferArray);
+
                 // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
                 commands->SetResourceHeap(*resourceHeap, 0);
                 commands->DrawInstanced(4, 0, numPlantInstances);
 
                 // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-                if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                commands->SetResourceHeap(*resourceHeap, 1);
+                if (vertexBufferArrayLastInstance != nullptr)
                 {
-                    commands->SetResourceHeap(*resourceHeap, 1);
+                    // Draw last instance with vertex buffer array that contains offsets to the last instance
+                    commands->SetVertexBufferArray(*vertexBufferArrayLastInstance);
+                    commands->Draw(4, 4);
+                }
+                else
+                {
+                    // Draw last instance with offset
                     commands->DrawInstanced(4, 4, 1, numPlantInstances);
                 }
             }
