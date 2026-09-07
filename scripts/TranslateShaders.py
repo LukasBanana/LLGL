@@ -53,6 +53,7 @@ class Options:
         self.verbose: bool = False
         self.trimmed_entries = set()
         self.enabled_targets = set()
+        self.disabled_targets = set()
 
         # Optional paths to external tools
         self.dxc_path: Path | None = None
@@ -263,6 +264,11 @@ def parse_arguments():
         help="Comma-separated output targets to enable (default: all configured targets).",
     )
     parser.add_argument(
+        "-not", "--not-targets",
+        metavar="TARGETS",
+        help="Comma-separated output targets to disable (default: no targets are disabled).",
+    )
+    parser.add_argument(
         "--dxc-path",
         metavar="PATH",
         help="Path to the external DXC compiler executable.",
@@ -322,6 +328,15 @@ def parse_arguments():
             if target.strip()
         }
         if arguments.targets is not None
+        else None
+    )
+    arguments.disabled_targets = (
+        {
+            target.strip()
+            for target in arguments.not_targets.split(",")
+            if target.strip()
+        }
+        if arguments.not_targets is not None
         else None
     )
     return arguments
@@ -435,10 +450,12 @@ def find_fxc_tool(verbose: bool, external_path: Path = None) -> Path | None:
     return fxc_path
 
 
-def filter_targets(targets, enabled_targets):
-    if enabled_targets is None:
-        return targets
-    return [target for target in targets if target in enabled_targets]
+def filter_targets(targets, opt: Options):
+    if opt.enabled_targets is not None:
+        return [target for target in targets if target in opt.enabled_targets]
+    if opt.disabled_targets is not None:
+        return [target for target in targets if target not in opt.disabled_targets]
+    return targets
 
 
 def find_tools(opt: Options, sources) -> Toolchain:
@@ -448,16 +465,16 @@ def find_tools(opt: Options, sources) -> Toolchain:
         target
         for source in sources
         for entry in source["entries"]
-        for target in filter_targets(entry["targets"], opt.enabled_targets)
+        for target in filter_targets(entry["targets"], opt)
     }
     has_hlsl_targets = any(
         Path(source["source"]).suffix.lower() == ".hlsl"
-        and any(filter_targets(entry["targets"], opt.enabled_targets) for entry in source["entries"])
+        and any(filter_targets(entry["targets"], opt) for entry in source["entries"])
         for source in sources
     )
     has_glsl_sources = any(
         Path(source["source"]).suffix.lower() != ".hlsl"
-        and any(filter_targets(entry["targets"], opt.enabled_targets) for entry in source["entries"])
+        and any(filter_targets(entry["targets"], opt) for entry in source["entries"])
         for source in sources
     )
 
@@ -847,7 +864,7 @@ def patch_glsl_output(output_file: Path, has_geometry_output: bool = False):
 
 
 def translate_hlsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
-    targets = filter_targets(entry["targets"], context.opt.enabled_targets)
+    targets = filter_targets(entry["targets"], context.opt)
     if not targets:
         return
 
@@ -914,7 +931,14 @@ def translate_hlsl_source(source_file, entry, shaderinfo: ShaderInfo, context: C
             output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.dxbc"
             debug_args = ["/Zi", "/Fd", f"{output_file}.pdb"] if context.opt.debug else []
             run_command(
-                [context.tools.fxc, "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args + fxc_macro_args,
+                [
+                    context.tools.fxc,
+                    "/nologo",
+                    "/T", entry["profile"],
+                    "/E", entry["entry"],
+                    "/Fo", output_file,
+                    source_file
+                ] + debug_args + fxc_macro_args,
                 shaderinfo.input_directory,
                 context.opt,
             )
@@ -934,7 +958,7 @@ def translate_hlsl_source(source_file, entry, shaderinfo: ShaderInfo, context: C
 
 
 def translate_glsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
-    targets = filter_targets(entry["targets"], context.opt.enabled_targets)
+    targets = filter_targets(entry["targets"], context.opt)
     if not targets:
         return
 
@@ -1037,6 +1061,22 @@ def main():
         print(f"No *.shaderinfo.yml files found in {input_directory}")
         return
 
+    # Initialize the compilation context with the specified options
+    context = CompileContext()
+    context.opt.debug = arguments.debug
+    context.opt.verbose = arguments.verbose
+    context.opt.trimmed_entries = arguments.trim_stem
+    context.opt.enabled_targets = arguments.targets
+    context.opt.disabled_targets = arguments.disabled_targets
+
+    context.opt.dxc_path = Path(arguments.dxc_path) if arguments.dxc_path else None
+    context.opt.fxc_path = Path(arguments.fxc_path) if arguments.fxc_path else None
+    context.opt.glslang_path = Path(arguments.glslang_path) if arguments.glslang_path else None
+    context.opt.spirv_cross_path = Path(arguments.spirv_cross_path) if arguments.spirv_cross_path else None
+    context.opt.spirv_dis_path = Path(arguments.spirv_dis_path) if arguments.spirv_dis_path else None
+    context.opt.spirv_opt_path = Path(arguments.spirv_opt_path) if arguments.spirv_opt_path else None
+    context.set_shader_include_dirs(arguments.shader_include_dirs)
+
     if arguments.verbose:
         if yaml:
             print("Parsing with PyYAML")
@@ -1047,7 +1087,9 @@ def main():
     for info_filename in shaderinfo_filenames:
         try:
             shader_info_source = parse_shader_info(info_filename)
-            if shader_info_source:
+
+            # Only append shaderinfo if there are any targets to compile to
+            if shader_info_source and any(filter_targets(entry["targets"], context.opt) for source in shader_info_source for entry in source["entries"]):
                 parsed_shaderinfos.append((ShaderInfo(info_filename, arguments.output), shader_info_source))
         except ShaderInfoError as error:
             print_error(f"{error}", arguments.color, indent=2)
@@ -1056,22 +1098,10 @@ def main():
     if not all_sources:
         return
 
-    # Initialize the compilation context with the specified options
-    context = CompileContext()
-    context.opt.debug = arguments.debug
-    context.opt.verbose = arguments.verbose
-    context.opt.trimmed_entries = arguments.trim_stem
-    context.opt.enabled_targets = arguments.targets
-
-    context.opt.dxc_path = Path(arguments.dxc_path) if arguments.dxc_path else None
-    context.opt.fxc_path = Path(arguments.fxc_path) if arguments.fxc_path else None
-    context.opt.glslang_path = Path(arguments.glslang_path) if arguments.glslang_path else None
-    context.opt.spirv_cross_path = Path(arguments.spirv_cross_path) if arguments.spirv_cross_path else None
-    context.opt.spirv_dis_path = Path(arguments.spirv_dis_path) if arguments.spirv_dis_path else None
-    context.opt.spirv_opt_path = Path(arguments.spirv_opt_path) if arguments.spirv_opt_path else None
-    context.set_shader_include_dirs(arguments.shader_include_dirs)
-
     context.tools = find_tools(context.opt, all_sources)
+
+    #if not any(filter_targets(entry["targets"], context.opt) for source in sources for entry in source["entries"]):
+    #    continue
 
     # Process all *.shaderinfo.yml files
     return_code = 0
@@ -1091,7 +1121,7 @@ def main():
                 source_file = shaderinfo.input_directory / source["source"]
                 if not source_file.is_file():
                     raise ShaderInfoError(f"{shaderinfo.info_filename}: source file does not exist: {source_file}")
-                if not any(filter_targets(entry["targets"], context.opt.enabled_targets) for entry in source["entries"]):
+                if not any(filter_targets(entry["targets"], context.opt) for entry in source["entries"]):
                     continue
 
                 shaderinfo.permutation = source.get("permutation")

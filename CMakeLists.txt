@@ -535,7 +535,13 @@ function(create_compile_shaders_target)
     if(Python3_FOUND AND TOOL_DXC_EXECUTABLE)
         get_property(ShaderCompileRoots GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS)
 
-        set(ShaderCompileCommands)
+        # Only compile to DXBC for UWP platform
+        if(LLGL_UWP_PLATFORM)
+            set(SHADER_COMPILE_TARGET_ARGS "--targets" "dxbc")
+        else()
+            set(SHADER_COMPILE_TARGET_ARGS "--not-targets" "dxbc")
+        endif()
+
         foreach(ShaderRootDir ${ShaderCompileRoots})
             # Run `Python -u` in unbuffered mode so that stdout is immediately flushed
             list(APPEND ShaderCompileCommands
@@ -544,6 +550,7 @@ function(create_compile_shaders_target)
                     --input "."
                     --dxc-path "${TOOL_DXC_EXECUTABLE}"                     # Explicit path to DXC, to ensure SPIR-V output is supported
                     -I "${CMAKE_SOURCE_DIR}/examples/Shared/Assets/Shaders" # Include directory for shared example shaders
+                    ${SHADER_COMPILE_TARGET_ARGS}
             )
         endforeach()
 

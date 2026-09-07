@@ -27,8 +27,8 @@ namespace LLGL
 
 struct D3D11ConstantBufferReflection
 {
-    UINT                                slot;
-    UINT                                size;
+    UINT                                slot    = 0;
+    UINT                                size    = 0;
     std::vector<DXConstantReflection>   fields;
 };
 
