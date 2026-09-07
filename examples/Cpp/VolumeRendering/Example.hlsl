@@ -1,5 +1,11 @@
 // HLSL model shader
 
+#ifndef NDC_SPACE_UNIT_CUBE
+#define NDC_SPACE_UNIT_CUBE 0
+#endif
+
+#define ENABLE_GLITTER_EFFECT 1
+
 cbuffer Settings : register(b1)
 {
     float4x4    wMatrix;
@@ -12,6 +18,7 @@ cbuffer Settings : register(b1)
     float       threshold;  // should be in open range (0, 0.5).
     float3      albedo;
     float       reflectance;
+    int2        viewportExtent;
 };
 
 
@@ -47,6 +54,7 @@ void VScene(VSceneIn inp, out VSceneOut outp)
 Texture3D<float>    noiseTexture        : register(t2);
 Texture2D<float>    depthRangeTexture   : register(t3);
 SamplerState        linearSampler       : register(s4);
+SamplerState        nearestSampler      : register(s5);
 
 float SampleNoise(float3 v)
 {
@@ -106,15 +114,19 @@ float4 PScene(VSceneOut inp) : SV_Target
     float   diffuse     = DiffuseShading(normal, lightVec);
     float   specular    = SpecularShading(normal, lightVec, viewVec) * reflectance;
 
-    #if 1
+    #if ENABLE_GLITTER_EFFECT
     // Sample noise texture and apply glitter
-    specular += Glitter(normal, lightVec, viewVec, inp.worldPos.xyz);
+    specular += Glitter(normal, lightVec, viewVec, inp.worldPos.xyz*0.05);
     #endif
 
     // Project depth back into scene
     float2  screenPos   = inp.ndc.xy;
-    float2  texCoord    = screenPos * float2(0.5, -0.5) + 0.5;
-    float   maxDepth    = depthRangeTexture.Sample(linearSampler, texCoord);
+    #if NDC_SPACE_UNIT_CUBE
+    float   maxDepth    = depthRangeTexture.Load(int3((int)inp.position.x, viewportExtent.y - (int)inp.position.y - 1, 0));
+    maxDepth = maxDepth * 2.0 - 1.0;
+    #else
+    float   maxDepth    = depthRangeTexture.Load(int3((int2)inp.position.xy, 0));
+    #endif
     float4  maxDepthPos = float4(screenPos.x, screenPos.y, maxDepth, 1.0);
     UnprojectDepth(maxDepthPos);
 

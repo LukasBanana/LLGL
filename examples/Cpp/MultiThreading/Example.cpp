@@ -146,7 +146,7 @@ private:
         vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         indexBuffer = CreateIndexBuffer(indices, LLGL::Format::R32UInt);
 
-        for (auto& bdl : bundle)
+        for (Bundle& bdl : bundle)
             bdl.constantBuffer = CreateConstantBuffer(bdl.scene);
     }
 
@@ -156,7 +156,7 @@ private:
         pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Scene@1):vert:frag}"));
 
         // Create resource view heap
-        for (auto& bdl : bundle)
+        for (Bundle& bdl : bundle)
             bdl.resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { bdl.constantBuffer });
 
         // Setup graphics pipeline descriptors

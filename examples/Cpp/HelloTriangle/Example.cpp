@@ -131,39 +131,39 @@ int main(int argc, char* argv[])
 
     LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
 
-    if (IsShadingLanguageSupported(LLGL::ShadingLanguage::GLSL))
-    {
-        if (IsShadingLanguageSupported(LLGL::ShadingLanguage::GLSL_140))
-        {
-            #ifdef __APPLE__
-            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.140core.vert" };
-            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.140core.frag" };
-            #else
-            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.vert" };
-            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.frag" };
-            #endif
-        }
-        else
-        {
-            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120.vert" };
-            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
-        }
-    }
-    else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::SPIRV))
-    {
-        // Load SPIR-V from binary files
-        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
-        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
-    }
-    else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::HLSL))
+    if (IsShadingLanguageSupported(LLGL::ShadingLanguage::HLSL))
     {
         vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" };
         fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" };
     }
+    else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::GLSL))
+    {
+        if (IsShadingLanguageSupported(LLGL::ShadingLanguage::GLSL_130))
+        {
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   ".autogen/Example.VS.130core.vert" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, ".autogen/Example.PS.130core.frag" };
+        }
+        else
+        {
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   ".autogen/Example.VS.120core.vert" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, ".autogen/Example.PS.120core.frag" };
+        }
+    }
+    else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::ESSL))
+    {
+        vertShaderDesc = { LLGL::ShaderType::Vertex,   ".autogen/Example.VS.300es.vert" };
+        fragShaderDesc = { LLGL::ShaderType::Fragment, ".autogen/Example.PS.300es.frag" };
+    }
+    else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::SPIRV))
+    {
+        // Load SPIR-V from binary files
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   ".autogen/Example.VS.450core.vert.spv");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, ".autogen/Example.PS.450core.frag.spv");
+    }
     else if (IsShadingLanguageSupported(LLGL::ShadingLanguage::Metal))
     {
-        vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" };
-        fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" };
+        vertShaderDesc = { LLGL::ShaderType::Vertex,   ".autogen/Example.VS.metal", "VS", "1.1" };
+        fragShaderDesc = { LLGL::ShaderType::Fragment, ".autogen/Example.PS.metal", "PS", "1.1" };
 
         // Load Metal shaders from 'default.metallib' file that is bundled with the App folder
         vertShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;

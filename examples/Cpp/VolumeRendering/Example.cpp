@@ -53,6 +53,7 @@ class Example_VolumeRendering : public ExampleBase
         float                   threshold               = 0.1f;                         // Density threshold in the range [0, 0.5].
         LLGL::ColorRGBf         albedo                  = { 0.5f, 0.6f, 1.0f };         // Albedo material color
         float                   reflectance             = 0.4f;                         // Specular reflectance intensity
+        std::int32_t            viewportExtent[2]       = {};
     }
     settings;
 
@@ -96,28 +97,8 @@ private:
     void LoadShaders()
     {
         // Load shader programs
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
+        vsScene = LoadVertexShader  ("Example", "VScene", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        fsScene = LoadFragmentShader("Example", "PScene");
     }
 
     void CreateDepthRangeTextureAndRenderTarget(const LLGL::Extent2D& resolution)
@@ -207,10 +188,10 @@ private:
             LLGL::Parse(
                 "heap{"
                 "  cbuffer(Settings@1):frag:vert,"
-                "  texture(noiseTexture@2, depthRangeTexture@3):frag, sampler(linearSampler@4):frag,"
+                "  texture(noiseTexture@2, depthRangeTexture@3):frag,"
+                "  sampler(linearSampler@4):frag,"
                 "},"
-                "sampler<noiseTexture, linearSampler>(noiseTexture@2),"
-                "sampler<depthRangeTexture, linearSampler>(depthRangeTexture@3),"
+                "sampler<noiseTexture, linearSampler>(s_noiseTexturelinearSampler@2),"
             )
         );
     }
@@ -348,6 +329,11 @@ private:
         // Update view-projection matrix
         settings.vpMatrix       = projection;
         settings.vpMatrixInv    = projection.Inverse();
+
+        // Update viewport extent for GL backend
+        const LLGL::Extent2D res = swapChain->GetResolution();
+        settings.viewportExtent[0] = static_cast<std::int32_t>(res.width);
+        settings.viewportExtent[1] = static_cast<std::int32_t>(res.height);
     }
 
     void OnResize(const LLGL::Extent2D& resolution) override
@@ -355,7 +341,7 @@ private:
         // Re-create depth-range texture and its render target.
         CreateDepthRangeTextureAndRenderTarget(resolution);
 
-        // Also re-create resource haps that refer to the re-created depth-texture
+        // Also re-create resource heaps that refer to the re-created depth-texture
         CreateResourceHeaps();
     }
 
