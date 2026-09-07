@@ -129,15 +129,15 @@ int main(int argc, char* argv[])
 
     if (HasLanguage(LLGL::ShadingLanguage::GLSL))
     {
-        vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.vert" };
-        geomShaderDesc = { LLGL::ShaderType::Geometry, "Example.geom" };
-        fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.frag" };
+        vertShaderDesc = { LLGL::ShaderType::Vertex,   ".autogen/Example.VS.150core.vert" };
+        geomShaderDesc = { LLGL::ShaderType::Geometry, ".autogen/Example.GS.150core.geom" };
+        fragShaderDesc = { LLGL::ShaderType::Fragment, ".autogen/Example.PS.150core.frag" };
     }
     else if (HasLanguage(LLGL::ShadingLanguage::SPIRV))
     {
-        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
-        geomShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Geometry, "Example.450core.geom.spv");
-        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   ".autogen/Example.VS.450core.vert.spv");
+        geomShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Geometry, ".autogen/Example.GS.450core.geom.spv");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, ".autogen/Example.PS.450core.frag.spv");
     }
     else if (HasLanguage(LLGL::ShadingLanguage::HLSL))
     {

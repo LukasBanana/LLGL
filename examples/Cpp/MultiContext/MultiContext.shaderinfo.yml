@@ -1,12 +1,13 @@
-#sources:
-#  - source: "Example.hlsl"
-#    entries:
-#      - entry: "VS"
-#        profile: "vs_4_0"
-#        targets: [glsl150core, glsl450core, spirv, metal]
-#      - entry: "GS"
-#        profile: "gs_4_0"
-#        targets: [glsl150core, glsl450core, spirv]
-#      - entry: "PS"
-#        profile: "ps_4_0"
-#        targets: [glsl150core, glsl450core, spirv, metal]
+# Only compile to SPIR-V until the generic cross-compiler toolchain has proper geometry shader support
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_4_0"
+        targets: [glsl150core, spirv]
+      - entry: "GS"
+        profile: "gs_4_0"
+        targets: [glsl150core, spirv]
+      - entry: "PS"
+        profile: "ps_4_0"
+        targets: [glsl150core, spirv]

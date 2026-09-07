@@ -74,6 +74,21 @@ class Toolchain:
         self.spirv_opt: Path | None = None
 
 
+class ShaderInfo:
+    """Information per *.shaderinfo.yml file"""
+    def __init__(self, input_filename, output: Path | None = None):
+        self.info_filename: Path = input_filename
+        self.input_directory: Path = input_filename.parent
+        self.output_directory: Path = output if output and output.is_absolute() else self.input_directory / (output or Path(".autogen"))
+        self.permutation = None
+        self.has_geometry_output: bool = False
+
+    def print_processing_info(self, root_dir: Path, color: bool, source_index: int, source_count: int) -> None:
+        source_no = source_index + 1
+        relative_path = self.info_filename.relative_to(root_dir)
+        print(f"   {source_no:2d}/{source_count} [{source_no * 100 // source_count:3d}%]: {f'{HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}' if color else relative_path}")
+
+
 class CompileContext:
     """Holds the compilation context, including user options and toolchain paths."""
     def __init__(self):
@@ -104,7 +119,7 @@ class CompileContext:
 
         run_command(dxc_args, input_directory, self.opt)
 
-    def compile_spirv_to_glsl(self, input_spirv, output_file, target, shaderinfo):
+    def compile_spirv_to_glsl(self, input_spirv, output_file, target, shaderinfo: ShaderInfo):
         # Compile to GLSL using SPIRV-Cross
         command = [
             self.tools.spirv_cross,
@@ -126,9 +141,9 @@ class CompileContext:
         run_command(command, shaderinfo.input_directory, self.opt)
 
         # Patch GLSL output to make it work with the LLGL example projects
-        patch_glsl_output(output_file)
+        patch_glsl_output(output_file, has_geometry_output=shaderinfo.has_geometry_output)
 
-    def compile_spirv_to_metal(self, input_spirv, output_file, shaderinfo):
+    def compile_spirv_to_metal(self, input_spirv, output_file, shaderinfo: ShaderInfo):
         run_command(
             [
                 self.tools.spirv_cross,
@@ -141,7 +156,7 @@ class CompileContext:
             self.opt,
         )
 
-    def compile_spirv_to_hlsl(self, input_spirv, output_file, shaderinfo, shader_model: int = 50):
+    def compile_spirv_to_hlsl(self, input_spirv, output_file, shaderinfo: ShaderInfo, shader_model: int = 50):
         run_command(
             [
                 self.tools.spirv_cross,
@@ -155,7 +170,7 @@ class CompileContext:
             self.opt,
         )
     
-    def compile_hlsl_to_dxil(self, source_file, output_file, shaderinfo, entry, dxc_macro_args = []):
+    def compile_hlsl_to_dxil(self, source_file, output_file, shaderinfo: ShaderInfo, entry, dxc_macro_args = []):
         debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if self.opt.debug else []
         optimization_args = [] if self.opt.debug else ["-O3"]
         run_command(
@@ -172,7 +187,7 @@ class CompileContext:
             self.opt,
         )
 
-    def disassemble_spirv(self, input_spirv, shaderinfo):
+    def disassemble_spirv(self, input_spirv, shaderinfo: ShaderInfo):
         if self.opt.debug:
             run_command(
                 [
@@ -183,21 +198,6 @@ class CompileContext:
                 shaderinfo.input_directory,
                 self.opt,
             )
-
-
-
-class ShaderInfo:
-    """Information per *.shaderinfo.yml file"""
-    def __init__(self, input_filename, output: Path | None = None):
-        self.info_filename: Path = input_filename
-        self.input_directory: Path = input_filename.parent
-        self.output_directory: Path = output if output and output.is_absolute() else self.input_directory / (output or Path(".autogen"))
-        self.permutation = None
-
-    def print_processing_info(self, root_dir: Path, color: bool, source_index: int, source_count: int) -> None:
-        source_no = source_index + 1
-        relative_path = self.info_filename.relative_to(root_dir)
-        print(f"   {source_no:2d}/{source_count} [{source_no * 100 // source_count:3d}%]: {f'{HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}' if color else relative_path}")
 
 
 
@@ -779,20 +779,30 @@ def output_stem(source, entry = None, trimmed_entries = None, target = None, sta
     return stem
 
 
-def patch_glsl_output(output_file: Path):
+def patch_glsl_output(output_file: Path, has_geometry_output: bool = False):
     with open(output_file, "r", encoding="utf-8") as file:
         content = file.read()
 
     is_vertex_shader = output_file.suffix == ".vert"
+    is_geometry_shader = output_file.suffix == ".geom"
     is_fragment_shader = output_file.suffix == ".frag"
 
     # Remove all 'in_var_' prefixes from vertex shader inputs
     if is_vertex_shader:
         content = content.replace("in_var_", "")
         content = content.replace("out_var_", "v_")
-    elif is_fragment_shader:
-        content = content.replace("in_var_", "v_")
-        content = content.replace("out_var_", "")
+
+    if has_geometry_output:
+        if is_geometry_shader:
+            content = content.replace("in_var_", "v_")
+            content = content.replace("out_var_", "g_")
+        elif is_fragment_shader:
+            content = content.replace("in_var_", "g_")
+            content = content.replace("out_var_", "")
+    else:
+        if is_fragment_shader:
+            content = content.replace("in_var_", "v_")
+            content = content.replace("out_var_", "")
 
     # Strip wrappers from combined dummy-sampler identifiers.
     # This happens for textures that are accessed through load intrinsics rather than sampler intrinsics.
@@ -802,6 +812,15 @@ def patch_glsl_output(output_file: Path):
         r"\1",
         content,
     )
+
+    # Insert '#extension GL_ARB_viewport_array : enable' statement after `#version`-directive.
+    if is_geometry_shader and "gl_ViewportIndex" in content:
+        content = re.sub(
+            r"(#version\s+\d+\s*\n)",
+            r"\1#extension GL_ARB_viewport_array : enable\n",
+            content,
+            count=1,
+        )
 
     # Rename the prefix of all combined texture-samplers.
     # These must be distinguishable from the original texture and sampler identifiers.
@@ -1076,6 +1095,7 @@ def main():
                     continue
 
                 shaderinfo.permutation = source.get("permutation")
+                shaderinfo.has_geometry_output = any(entry["profile"].startswith("gs_") for entry in source["entries"])
 
                 if source_file.suffix.lower() == ".hlsl":
                     print_source_compile(source_file, "HLSL", context.opt.verbose)
