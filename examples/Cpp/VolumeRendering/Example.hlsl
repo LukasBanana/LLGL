@@ -54,7 +54,6 @@ void VScene(VSceneIn inp, out VSceneOut outp)
 Texture3D<float>    noiseTexture        : register(t2);
 Texture2D<float>    depthRangeTexture   : register(t3);
 SamplerState        linearSampler       : register(s4);
-SamplerState        nearestSampler      : register(s5);
 
 float SampleNoise(float3 v)
 {

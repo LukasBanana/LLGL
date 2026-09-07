@@ -1210,19 +1210,27 @@ void GLTexture::BindTexParameters(const GLEmulatedSampler& sampler)
  * ======= Private: =======
  */
 
+static bool IsTextureFormatFilterable(Format format)
+{
+    return !(IsIntegerFormat(format) || IsDepthOrStencilFormat(format));
+}
+
 static GLint GetInitialGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
     /* Integral texture formats cannot use linear samplers */
-    if (IsIntegerFormat(textureDesc.format))
-        return (IsMipMappedTexture(textureDesc) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-    else
+    if (IsTextureFormatFilterable(textureDesc.format))
         return (IsMipMappedTexture(textureDesc) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    else
+        return (IsMipMappedTexture(textureDesc) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
 }
 
 static GLint GetInitialGlTextureMagFilter(const TextureDescriptor& textureDesc)
 {
     /* Integral texture formats cannot use linear samplers */
-    return (IsIntegerFormat(textureDesc.format) ? GL_NEAREST : GL_LINEAR);
+    if (IsTextureFormatFilterable(textureDesc.format))
+        return GL_LINEAR;
+    else
+        return GL_NEAREST;
 }
 
 // Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.

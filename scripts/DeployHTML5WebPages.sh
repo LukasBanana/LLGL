@@ -56,5 +56,6 @@ copy_example_to_target "Example_RenderTarget"
 copy_example_to_target "Example_ShadowMapping"
 copy_example_to_target "Example_StencilBuffer"
 copy_example_to_target "Example_Texturing"
+copy_example_to_target "Example_VolumeRendering"
 
 popd

@@ -3,7 +3,7 @@ sources:
     entries:
       - entry: "VScene"
         profile: "vs_4_0"
-        targets: [spirv, metal, glsl140core]
+        targets: [spirv, metal, glsl140core, glsl300es]
       - entry: "PScene"
         profile: "ps_4_0"
         targets: [spirv, metal]
@@ -16,4 +16,4 @@ sources:
     entries:
       - entry: "PScene"
         profile: "ps_4_0"
-        targets: [glsl140core]
+        targets: [glsl140core, glsl300es]
