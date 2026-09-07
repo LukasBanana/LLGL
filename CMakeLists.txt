@@ -537,9 +537,10 @@ function(create_compile_shaders_target)
 
         set(ShaderCompileCommands)
         foreach(ShaderRootDir ${ShaderCompileRoots})
+            # Run `Python -u` in unbuffered mode so that stdout is immediately flushed
             list(APPEND ShaderCompileCommands
                 COMMAND "${CMAKE_COMMAND}" -E chdir "${ShaderRootDir}"
-                    "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py"
+                    "${Python3_EXECUTABLE}" -u "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py"
                     --input "."
                     --dxc-path "${TOOL_DXC_EXECUTABLE}"                     # Explicit path to DXC, to ensure SPIR-V output is supported
                     -I "${CMAKE_SOURCE_DIR}/examples/Shared/Assets/Shaders" # Include directory for shared example shaders
@@ -549,7 +550,6 @@ function(create_compile_shaders_target)
         if(ShaderCompileCommands)
             add_custom_target(COMPILE_SHADERS
                 ${ShaderCompileCommands}
-                COMMENT "Translating example shaders ..."
                 VERBATIM
             )
             set_target_properties(COMPILE_SHADERS PROPERTIES FOLDER "Build")

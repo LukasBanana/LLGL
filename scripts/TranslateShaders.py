@@ -32,6 +32,8 @@ STAGE_EXTENSIONS = {
     "hs": "tesc",
     "ds": "tese",
     "cs": "comp",
+    "as": "task",
+    "ms": "mesh",
 }
 GLSL_TARGET_PATTERN = re.compile(r"^glsl(?P<version>\d+)(?P<flavor>core|es)$")
 HIGHLIGHT_COLOR = "\033[1;33m"
@@ -58,6 +60,7 @@ class Options:
         self.glslang_path: Path | None = None
         self.spirv_cross_path: Path | None = None
         self.spirv_dis_path: Path | None = None
+        self.spirv_opt_path: Path | None = None
 
 
 class Toolchain:
@@ -68,6 +71,7 @@ class Toolchain:
         self.glslang: Path | None = None
         self.spirv_cross: Path | None = None
         self.spirv_dis: Path | None = None
+        self.spirv_opt: Path | None = None
 
 
 class CompileContext:
@@ -80,7 +84,7 @@ class CompileContext:
     def set_shader_include_dirs(self, include_dirs: list[Path]):
         self.include_dir_args = [f"-I{str(dir)}" for dir in include_dirs]
 
-    def compile_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None, opt_level: int = 3):
+    def compile_hlsl_to_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None, opt_level: int = 3):
         dxc_args = [
             self.tools.dxc,
             "-nologo",
@@ -100,6 +104,87 @@ class CompileContext:
 
         run_command(dxc_args, input_directory, self.opt)
 
+    def compile_spirv_to_glsl(self, input_spirv, output_file, target, shaderinfo):
+        # Compile to GLSL using SPIRV-Cross
+        command = [
+            self.tools.spirv_cross,
+            "--no-420pack-extension",
+            "--combined-samplers-inherit-bindings",
+            "--no-support-nonzero-baseinstance",
+            input_spirv
+        ]
+
+        target_match = GLSL_TARGET_PATTERN.fullmatch(target)
+        if target_match:
+            command.append("--version")
+            command.append(target_match["version"])
+            if target_match["flavor"] == "es":
+                command.append("--es")
+
+        command.extend(["--output", output_file])
+
+        run_command(command, shaderinfo.input_directory, self.opt)
+
+        # Patch GLSL output to make it work with the LLGL example projects
+        patch_glsl_output(output_file)
+
+    def compile_spirv_to_metal(self, input_spirv, output_file, shaderinfo):
+        run_command(
+            [
+                self.tools.spirv_cross,
+                input_spirv,
+                "--msl",
+                "--msl-decoration-binding", # LLGL examples maintain the same binding locations for all languages
+                "--output", output_file
+            ],
+            shaderinfo.input_directory,
+            self.opt,
+        )
+
+    def compile_spirv_to_hlsl(self, input_spirv, output_file, shaderinfo, shader_model: int = 50):
+        run_command(
+            [
+                self.tools.spirv_cross,
+                input_spirv,
+                "--hlsl",
+                "--hlsl-user-semantic",
+                "--shader-model", str(shader_model),
+                "--output", output_file
+            ],
+            shaderinfo.input_directory,
+            self.opt,
+        )
+    
+    def compile_hlsl_to_dxil(self, source_file, output_file, shaderinfo, entry, dxc_macro_args = []):
+        debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if self.opt.debug else []
+        optimization_args = [] if self.opt.debug else ["-O3"]
+        run_command(
+            [
+                self.tools.dxc,
+                "-nologo",
+                "-no-warnings",
+                "-T", clamp_dxc_profile(entry["profile"]),
+                "-E", entry["entry"],
+                "-Fo", output_file,
+                source_file
+            ] + optimization_args + debug_args + dxc_macro_args,
+            shaderinfo.input_directory,
+            self.opt,
+        )
+
+    def disassemble_spirv(self, input_spirv, shaderinfo):
+        if self.opt.debug:
+            run_command(
+                [
+                    self.tools.spirv_dis,
+                    input_spirv,
+                    "-o", input_spirv.with_suffix(".spvasm")
+                ],
+                shaderinfo.input_directory,
+                self.opt,
+            )
+
+
 
 class ShaderInfo:
     """Information per *.shaderinfo.yml file"""
@@ -109,12 +194,10 @@ class ShaderInfo:
         self.output_directory: Path = output if output and output.is_absolute() else self.input_directory / (output or Path(".autogen"))
         self.permutation = None
 
-    def print_processing_info(self, input_directory: Path, color: bool) -> None:
-        relative_path = self.info_filename.relative_to(input_directory)
-        if color:
-            print(f"Processing: {HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}")
-        else:
-            print(f"Processing: {relative_path}")
+    def print_processing_info(self, root_dir: Path, color: bool, source_index: int, source_count: int) -> None:
+        source_no = source_index + 1
+        relative_path = self.info_filename.relative_to(root_dir)
+        print(f"   {source_no:2d}/{source_count} [{source_no * 100 // source_count:3d}%]: {f'{HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}' if color else relative_path}")
 
 
 
@@ -205,6 +288,11 @@ def parse_arguments():
         help="Path to the external spirv-dis executable.",
     )
     parser.add_argument(
+        "--spirv-opt-path",
+        metavar="PATH",
+        help="Path to the external spirv-opt executable.",
+    )
+    parser.add_argument(
         "-I",
         dest="shader_include_dirs",
         action="append",
@@ -239,13 +327,15 @@ def parse_arguments():
     return arguments
 
 
-def require_tool(tool: str, install_url: str, external_path: Path = None) -> Path:
+def require_tool(tool: str, install_url: str, external_path: Path = None, is_optional: bool = False) -> Path:
     if external_path is not None:
         if external_path.is_file():
             return external_path
         else:
             print(f"External tool path does not exist: '{external_path}'; Falling back to default")
     if shutil.which(tool) is None:
+        if is_optional:
+            return None
         raise RuntimeError(
             f"Required tool '{tool}' was not found on PATH. Install it from {install_url} "
             "and add its executable directory to PATH."
@@ -383,6 +473,7 @@ def find_tools(opt: Options, sources) -> Toolchain:
     # glslang / glslangValidator
     if has_glsl_sources:
         tools.glslang = require_glslang_tool(external_path=opt.glslang_path)
+        tools.spirv_opt = require_tool("spirv-opt", "https://github.com/KhronosGroup/SPIRV-Tools", external_path=opt.spirv_opt_path, is_optional=True)
 
     # fxc
     if "dxbc" in requested_targets:
@@ -614,8 +705,9 @@ def parse_shader_info(filename: Path):
                 if not isinstance(profile, str) or not profile:
                     raise ShaderInfoError(f"{filename}: each HLSL entry needs a non-empty profile field")
                 parsed_entry.update({"entry": entry_point, "profile": profile})
-            elif not set(parsed_entry["targets"]).issubset({"spirv", "metal"}):
-                raise ShaderInfoError(f"{filename}: GLSL source entries may only target 'spirv' or 'metal'")
+            else:
+                entry_point = entry.get("entry")
+                parsed_entry.update({"entry": entry_point})
             parsed_entries.append(parsed_entry)
         parsed_source = {"source": source, "entries": parsed_entries}
         if permutation is not None:
@@ -674,13 +766,17 @@ def clamp_dxc_profile(profile: str) -> str:
     return profile
 
 
-def output_stem(source, entry, trimmed_entries, target = None, stage = None, override = None):
-    override_suffix = f".{override}" if override else ""
-    if target and stage:
-        entry_suffix = "" if entry in trimmed_entries else f".{entry}"
-        return f"{source.stem}{override_suffix}{entry_suffix}.{target}.{stage}"
-    else:
-        return f"{source.stem}{override_suffix}.{entry}"
+def output_stem(source, entry = None, trimmed_entries = None, target = None, stage = None, override = None):
+    stem = source.stem
+    if override:
+        stem += f".{override}"
+    if entry and (trimmed_entries is None or entry not in trimmed_entries):
+        stem += f".{entry}"
+    if target:
+        stem += f".{target}"
+    if stage:
+        stem += f".{stage}"
+    return stem
 
 
 def patch_glsl_output(output_file: Path):
@@ -731,7 +827,7 @@ def patch_glsl_output(output_file: Path):
         file.write(content)
 
 
-def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
+def translate_hlsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
     targets = filter_targets(entry["targets"], context.opt.enabled_targets)
     if not targets:
         return
@@ -744,10 +840,8 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
     fxc_macro_args = [f"/D{name}={value}" for name, value in macros.items()]
     intermediate_spv = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, '450core', stage_extension, override)}.temp.spv"
 
-    optimization_args = [] if context.opt.debug else ["-O3"]
-
     # Compile HLSL to SPIR-V using DXC to be used for cross-compiling to high-level language (GLSL, Metal etc.)
-    context.compile_spirv(
+    context.compile_hlsl_to_spirv(
         source = source_file,
         output = intermediate_spv,
         profile = entry["profile"],
@@ -761,62 +855,31 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
         if target == "spirv":
             # Compile to SPIR-V and set entry point to "main()" as LLGL's examples don't use custom entry points
             output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, '450core', stage_extension, override)}.spv"
-            context.compile_spirv(
+            optimization_args = [] if context.opt.debug else ["-O3"]
+            context.compile_hlsl_to_spirv(
                 source = source_file,
                 output = output_file,
                 profile = entry["profile"],
-                extra_args = optimization_args + dxc_macro_args, #TODO: likely needs to move optimization to a separate spirv-tools command
+                extra_args = optimization_args + dxc_macro_args,
                 in_entry = entry["entry"],
                 out_entry = "main", #TODO: this should retain the original entry point, but during the examples' transitionioning phase, use "main" for compatibility
                 input_directory = shaderinfo.input_directory,
             )
 
             # Produce SPIR-V disassembly as debug output
-            if context.opt.debug:
-                run_command(
-                    [
-                        context.tools.spirv_dis,
-                        output_file,
-                        "-o", output_file.with_suffix(".spvasm")
-                    ],
-                    shaderinfo.input_directory,
-                    context.opt,
-                )
+            context.disassemble_spirv(output_file, shaderinfo)
             continue
 
         if target == "metal":
             # Compile to Metal using SPIRV-Cross
-            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, None, stage_extension, override)}.metal"
-            run_command(
-                [
-                    context.tools.spirv_cross,
-                    intermediate_spv,
-                    "--msl",
-                    "--msl-decoration-binding", # LLGL examples maintain the same binding locations for all languages
-                    "--output", output_file
-                ],
-                shaderinfo.input_directory,
-                context.opt,
-            )
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.metal"
+            context.compile_spirv_to_metal(intermediate_spv, output_file, shaderinfo)
             continue
 
         if target == "dxil":
             # Compile to DXIL bytecode using DXC
-            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, None, stage_extension, override)}.dxil"
-            debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if context.opt.debug else []
-            run_command(
-                [
-                    context.tools.dxc,
-                    "-nologo",
-                    "-no-warnings",
-                    "-T", clamp_dxc_profile(entry["profile"]),
-                    "-E", entry["entry"],
-                    "-Fo", output_file,
-                    source_file
-                ] + optimization_args + debug_args + dxc_macro_args,
-                shaderinfo.input_directory,
-                context.opt,
-            )
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.dxil"
+            context.compile_hlsl_to_dxil(source_file, output_file, shaderinfo, entry, dxc_macro_args)
             continue
 
         if target == "dxbc":
@@ -829,7 +892,7 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
                     file=sys.stderr,
                 )
                 continue
-            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, None, stage_extension, override)}.dxbc"
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.dxbc"
             debug_args = ["/Zi", "/Fd", f"{output_file}.pdb"] if context.opt.debug else []
             run_command(
                 [context.tools.fxc, "/nologo", "/T", entry["profile"], "/E", entry["entry"], "/Fo", output_file, source_file] + debug_args + fxc_macro_args,
@@ -842,23 +905,8 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
         target_match = GLSL_TARGET_PATTERN.fullmatch(target)
         if target_match is None:
             raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
-        output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension, override)}"
-
-        command = [
-            context.tools.spirv_cross,
-            "--no-420pack-extension",
-            "--combined-samplers-inherit-bindings",
-            "--no-support-nonzero-baseinstance",
-            "--version", target_match["version"],
-            intermediate_spv
-        ]
-        if target_match["flavor"] == "es":
-            command.append("--es")
-        command.extend(["--output", output_file])
-        run_command(command, shaderinfo.input_directory, context.opt)
-
-        # Patch GLSL output to make it work with the LLGL example projects
-        patch_glsl_output(output_file)
+        output_file = shaderinfo.output_directory / output_stem(source_file, entry['entry'], context.opt.trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension, override)
+        context.compile_spirv_to_glsl(intermediate_spv, output_file, target, shaderinfo)
 
     # Clean up intermediate files that are not needed in the final outut
     intermediate_spv.unlink()
@@ -867,44 +915,80 @@ def translate_hlsl_entry(source_file, entry, shaderinfo: ShaderInfo, context: Co
 
 
 def translate_glsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
-    targets = {
-        target
-        for target in filter_targets(entry["targets"], context.opt.enabled_targets)
-    }
+    targets = filter_targets(entry["targets"], context.opt.enabled_targets)
     if not targets:
         return
 
+    stage_extension = Path(source_file.name).suffix[1:]
+    override = shaderinfo.permutation["override"] if shaderinfo.permutation is not None else None
     shaderinfo.output_directory.mkdir(parents=True, exist_ok=True)
-    output_file = shaderinfo.output_directory / f"{source_file.name}.spv"
 
     # Compile GLSL source to SPIR-V
+    optimize_spirv = context.tools.spirv_opt is not None
+    spirv_basename = shaderinfo.output_directory / output_stem(source_file, stage=stage_extension, override=override)
+    spirv_file = Path(f"{spirv_basename}.temp.spv" if optimize_spirv else f"{spirv_basename}.spv")
     run_command(
-        [context.tools.glslang, "-V", "-o", output_file, source_file],
+        [
+            context.tools.glslang,
+            "-V",
+            "-o", spirv_file,
+            source_file
+        ],
         shaderinfo.input_directory,
         context.opt,
     )
 
-    # Metal output
-    if "metal" in targets:
-        metal_file = shaderinfo.output_directory / f"{source_file.name}.metal"
+    # Optimize SPIR-V with spirv-opt if available
+    if optimize_spirv:
+        optimized_spirv_file = f"{spirv_basename}.spv"
         run_command(
-            [context.tools.spirv_cross, output_file, "--msl", "--output", metal_file],
+            [
+                context.tools.spirv_opt,
+                spirv_file,
+                "-o", optimized_spirv_file,
+                "-O"
+            ],
             shaderinfo.input_directory,
             context.opt,
         )
 
-    # SPIR-V debug output
-    if context.opt.debug:
-        run_command(
-            [context.tools.spirv_dis, output_file, "-o", output_file.with_suffix(".spvasm")],
-            shaderinfo.input_directory,
-            context.opt,
-        )
-
-    if "spirv" not in targets:
-        output_file.unlink()
+        # Remove intermediate SPIR-V file
+        spirv_file.unlink()
         if context.opt.verbose:
-            print(f"    Removed intermediate {format_command_argument(output_file, shaderinfo.input_directory)}")
+            print(f"    Removed intermediate {format_command_argument(spirv_file, shaderinfo.input_directory)}")
+        spirv_file = Path(optimized_spirv_file)
+
+    for target in targets:
+        # Vulkan SPIR-V output
+        if target == "spirv":
+            # SPIR-V debug output
+            context.disassemble_spirv(spirv_file, shaderinfo)
+            continue
+
+        # Metal output
+        if target == "metal":
+            metal_file = shaderinfo.output_directory / f"{output_stem(source_file, stage=stage_extension, override=override)}.metal"
+            context.compile_spirv_to_metal(spirv_file, metal_file, shaderinfo)
+            continue
+
+        # HLSL output
+        if target == "hlsl":
+            hlsl_file = shaderinfo.output_directory / f"{output_stem(source_file, stage=stage_extension, override=override)}.hlsl"
+            context.compile_spirv_to_hlsl(spirv_file, hlsl_file, shaderinfo)
+            continue
+
+        # Compile to GLSL using SPIRV-Cross
+        target_match = GLSL_TARGET_PATTERN.fullmatch(target)
+        if target_match is None:
+            raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
+        output_file = shaderinfo.output_directory / output_stem(source_file, target=target_match['version'] + target_match['flavor'], stage=stage_extension, override=override)
+        context.compile_spirv_to_glsl(spirv_file, output_file, target, shaderinfo)
+    
+    # Clean up intermediate files that are not needed in the final outut
+    if "spirv" not in targets:
+        spirv_file.unlink()
+        if context.opt.verbose:
+            print(f"    Removed intermediate {format_command_argument(spirv_file, shaderinfo.input_directory)}")
 
 
 def print_source_compile(source_file: Path, source_type: str, verbose: bool) -> None:
@@ -921,6 +1005,9 @@ def print_error(message: str, color: bool = False, indent: int = 0) -> None:
 
 
 def main():
+    script_dir = Path(__file__).resolve().parent
+    root_dir = script_dir.parent
+
     arguments = parse_arguments()
     input_directory = arguments.input.resolve()
     if not input_directory.is_dir():
@@ -962,16 +1049,23 @@ def main():
     context.opt.glslang_path = Path(arguments.glslang_path) if arguments.glslang_path else None
     context.opt.spirv_cross_path = Path(arguments.spirv_cross_path) if arguments.spirv_cross_path else None
     context.opt.spirv_dis_path = Path(arguments.spirv_dis_path) if arguments.spirv_dis_path else None
+    context.opt.spirv_opt_path = Path(arguments.spirv_opt_path) if arguments.spirv_opt_path else None
     context.set_shader_include_dirs(arguments.shader_include_dirs)
 
     context.tools = find_tools(context.opt, all_sources)
 
     # Process all *.shaderinfo.yml files
     return_code = 0
+    source_index = 0
+    source_count = len(parsed_shaderinfos)
+
+    if not arguments.quiet:
+        print(f"Translating {source_count} shader info {'file' if source_count == 1 else 'files'} in {input_directory.relative_to(root_dir)} ...")
+
     for shaderinfo, sources in parsed_shaderinfos:
         try:
             if not arguments.quiet:
-                shaderinfo.print_processing_info(input_directory, arguments.color)
+                shaderinfo.print_processing_info(root_dir, arguments.color, source_index, source_count)
 
             for source in sources:
                 # Extract source file path
@@ -986,17 +1080,19 @@ def main():
                 if source_file.suffix.lower() == ".hlsl":
                     print_source_compile(source_file, "HLSL", context.opt.verbose)
                     for entry in source["entries"]:
-                        translate_hlsl_entry(source_file, entry, shaderinfo, context)
+                        translate_hlsl_source(source_file, entry, shaderinfo, context)
                 else:
-                    print_source_compile(source_file, "GLSL", context.opt.verbose)
                     entries = source["entries"]
-                    if len(entries) == 1 and entries[0] == "main":
-                        translate_glsl_source(source_file, source["entries"], shaderinfo, context)
+                    if len(entries) != 1:
+                        raise ShaderInfoError(f"unsupported list of entry points for '{source_file}'; GLSL source can only have 'main'!")
+                    entry = source["entries"][0]
+                    translate_glsl_source(source_file, entry, shaderinfo, context)
 
         except (ShaderInfoError, OSError, subprocess.CalledProcessError) as error:
             print_error(f"{error}", arguments.color, indent=2)
             return_code = 1
 
+        source_index += 1
     return return_code
 
 
