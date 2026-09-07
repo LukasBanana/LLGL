@@ -351,7 +351,7 @@ bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-id<MTLDevice> MTRenderSystem::CreateMetalDevice(long renderSystemFlags)
+id<MTLDevice> MTRenderSystem::CreateMetalDevice(long /*renderSystemFlags*/)
 {
     id<MTLDevice> outDevice = nil;
 

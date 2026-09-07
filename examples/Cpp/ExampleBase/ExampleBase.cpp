@@ -1077,7 +1077,7 @@ static std::string FindShader(
     const std::initializer_list<const char*>&   suffixes)
 {
     // Try to find the shader in the current project directory and in an optional .autogen/ directory for auto-generated shaders
-    std::string shaderBaseFilename, shaderFileanme;
+    std::string shaderBaseFilename, shaderFilename;
 
     for (const char* relativePath : searchPaths)
     {
@@ -1097,17 +1097,17 @@ static std::string FindShader(
             // If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShaderInternal().
             for (const char* appendix : { "", entryPoint })
             {
-                shaderFileanme = shaderBaseFilename;
+                shaderFilename = shaderBaseFilename;
                 if (appendix != nullptr && *appendix != '\0')
                 {
-                    shaderFileanme.append(".");
-                    shaderFileanme.append(appendix);
+                    shaderFilename.append(".");
+                    shaderFilename.append(appendix);
                 }
-                shaderFileanme.append(".");
-                shaderFileanme.append(suffix);
+                shaderFilename.append(".");
+                shaderFilename.append(suffix);
 
-                if (FindAsset(shaderFileanme))
-                    return shaderFileanme;
+                if (FindAsset(shaderFilename))
+                    return shaderFilename;
             }
         }
     }
@@ -1127,6 +1127,10 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
     {
         if (Supported(info.targetLanguage))
         {
+            // Metal shaders are loaded from default.metallib
+            if (info.targetLanguage == LLGL::ShadingLanguage::Metal)
+                return LoadShaderInternal({ type, "default.metallib", entryPoint, info.profile }, defines, compileFlags);
+
             // Try to find shader file for current target language
             std::string source = FindShader(basename, entryPoint, { "", ".autogen" }, info.suffixes);
             if (source.empty())
@@ -1161,7 +1165,7 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
             }
 
             //TODO:
-            // once all examples have transitioned to the auto-generated shaders, change this to retain the original entry point.
+            // Once all examples have transitioned to the auto-generated shaders, change this to retain the original entry point.
             // Right now, the TranslateShaders.py script emits SPIR-V with the "main" entry point for the same reason.
             if (info.targetLanguage == LLGL::ShadingLanguage::SPIRV)
                 entryPoint = "main";
@@ -1529,7 +1533,14 @@ Gs::Quaternionf ExampleBase::Rotation(float pitch, float yaw) const
 
 void ExampleBase::TrackballRotation(Gs::Quaternionf& rotation, bool isStartPosition, const LLGL::Offset2D* cursorPosition)
 {
-    const LLGL::Viewport fullViewport{ swapChain->GetResolution() };
+    const float displayScaling = LLGL::Display::GetPrimary()->GetScale();
+
+    LLGL::Viewport fullViewport{ swapChain->GetResolution() };
+    fullViewport.x      /= displayScaling;
+    fullViewport.y      /= displayScaling;
+    fullViewport.width  /= displayScaling;
+    fullViewport.height /= displayScaling;
+
     const LLGL::Offset2D targetCursorPosition = (cursorPosition != nullptr ? *cursorPosition : input.GetMousePosition());
 
     trackballRotation_.Rotate(rotation, fullViewport, targetCursorPosition, isStartPosition, GetProjectionZAxis());

@@ -131,13 +131,13 @@ private:
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "sampler(linearSampler@2):frag,"
-                "texture(glyphTexture@0):frag,"
+                "sampler(linearSampler@3):frag,"
+                "texture(glyphTexture@2):frag,"
 
                 "float4x4( scene.projection        ),"
                 "float2  ( scene.glyphAtlasInvSize ),"
 
-                "sampler<glyphTexture,linearSampler>(s_glyphTexturelinearSampler@0)"
+                "sampler<glyphTexture,linearSampler>(s_glyphTexturelinearSampler@2)"
             )
         );
 

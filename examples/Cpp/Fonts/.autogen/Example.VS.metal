@@ -23,7 +23,7 @@ struct VS_in
     float4 in_var_COLOR [[attribute(2)]];
 };
 
-vertex VS_out VS(VS_in in [[stage_in]], constant type_PushConstant_Scene_t& scene [[buffer(0)]])
+vertex VS_out VS(VS_in in [[stage_in]], constant type_PushConstant_Scene_t& scene [[buffer(1)]])
 {
     VS_out out = {};
     out.gl_Position = scene.projection * float4(float(in.in_var_POSITION.x), float(in.in_var_POSITION.y), 0.0, 1.0);

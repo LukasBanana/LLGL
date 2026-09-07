@@ -41,7 +41,7 @@ class Example_VolumeRendering : public ExampleBase
 
     PerlinNoise                 perlinNoise;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f            wMatrix;
         Gs::Matrix4f            wMatrixInv;

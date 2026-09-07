@@ -176,14 +176,26 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
 
     caps.shadingLanguages = { ShadingLanguage::Metal, ShadingLanguage::Metal_1_0 };
 
-    if (version >= 101)
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_1);
-    if (version >= 102)
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_2);
-    if (version >= 201)
+    struct MetalVersion
     {
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_0);
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_1);
+        int             versionNo;
+        ShadingLanguage language;
+    };
+
+    for (const MetalVersion& versionMapping :
+        {
+            MetalVersion{ 101, ShadingLanguage::Metal_1_1 },
+            MetalVersion{ 102, ShadingLanguage::Metal_1_2 },
+            MetalVersion{ 200, ShadingLanguage::Metal_2_0 },
+            MetalVersion{ 201, ShadingLanguage::Metal_2_1 },
+            MetalVersion{ 202, ShadingLanguage::Metal_2_2 },
+            MetalVersion{ 203, ShadingLanguage::Metal_2_3 },
+            MetalVersion{ 204, ShadingLanguage::Metal_2_4 },
+            MetalVersion{ 300, ShadingLanguage::Metal_3_0 },
+        })
+    {
+        if (version >= versionMapping.versionNo)
+            caps.shadingLanguages.push_back(versionMapping.language);
     }
 
     /* Specify features */
