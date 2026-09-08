@@ -64,12 +64,20 @@ static std::string FindAssetFilename(const std::string& name)
 {
     #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
 
-    // Returns filename for resource from main NSBundle
+    // Returns filename for resource from main NSBundle.
+    // First, try to find resource with input name
+    std::string resourcePath = FindNSResourcePath(name);
+    if (!resourcePath.empty())
+        return resourcePath;
+
+    // Next, try to find resource without relative path.
+    // Shared resources are simply packaged into the Contents/Resoures/ folder of the bundle.
     const std::size_t subPathStart = name.find_last_of('/');
     if (subPathStart != std::string::npos)
         return FindNSResourcePath(name.substr(subPathStart + 1));
-    else
-        return FindNSResourcePath(name);
+
+    // Resource not found
+    return "";
 
     #elif defined LLGL_OS_ANDROID
 

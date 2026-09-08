@@ -237,7 +237,7 @@ function(find_source_files OUTPUT_LIST FILTERS)
     elseif("${FILTERS}" STREQUAL "OBJC")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
     elseif("${FILTERS}" STREQUAL "RES")
-        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag;*.tesc;*.tese")
+        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag;*.tesc;*.tese;*.spv")
     elseif("${FILTERS}" STREQUAL "INC")
         set(FILTERS "*.h;*.hpp;*.inl")
     endif()
@@ -437,11 +437,36 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
 
         # Filter shader files into "Shaders" folder
         set(SHADER_FILES "${SRC_FILES}")
-        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag|tesc|tese)")
+        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag|tesc|tese|spv)")
         source_group("Shaders" FILES ${SHADER_FILES})
 
-        # Set app icon for macOS and iOS
+        # Put resoure and shader files into MacOS bundle.
+        # Exclude Metal shaders to let Xcode generate the default.metallib library.
         set(BundleResourceFiles "${RES_FILES};${SHADER_FILES}")
+        set(ProjectDir "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_BUNDLE_NAME}")
+        foreach(ResourceFile ${BundleResourceFiles})
+            get_filename_component(ResourceFileExt "${ResourceFile}" LAST_EXT)
+            get_filename_component(ResourceDir "${ResourceFile}" DIRECTORY)
+            if("${ResourceDir}" MATCHES "^${ProjectDir}" AND NOT "${ResourceFileExt}" STREQUAL ".metal")
+                # Preserve folder structure in MacOS bundle for resource files that are located in subfolders of the project directory
+                file(RELATIVE_PATH ResourceRelativeFilename "${ProjectDir}" "${ResourceFile}")
+                get_filename_component(ResourceRelativeDir "${ResourceRelativeFilename}" DIRECTORY)
+                if("${ResourceRelativeDir}" STREQUAL "")
+                    set(ResourceOutputDir "Resources")
+                else()
+                    set(ResourceOutputDir "Resources/${ResourceRelativeDir}")
+                endif()
+            else()
+                set(ResourceOutputDir "Resources")
+            endif()
+
+            set_source_files_properties(
+                "${ResourceFile}" PROPERTIES
+                MACOSX_PACKAGE_LOCATION "${ResourceOutputDir}"
+            )
+        endforeach()
+
+        # Set app icon for macOS and iOS
         if(LLGL_IOS_PLATFORM)
             set(BundleInfoPlistFile "${SHARED_PLATFORM_DIR}/iOS/IOSBundleInfo.plist.in")
             set(BundleIconFile "AppIcon.png")
@@ -462,7 +487,6 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
             MACOSX_BUNDLE_ICON_FILE             "${BundleIconFile}"
             MACOSX_BUNDLE                       ON
             MACOSX_BUNDLE_INFO_PLIST            "${BundleInfoPlistFile}"
-            RESOURCE                            "${BundleResourceFiles}"
         )
     elseif(LLGL_ANDROID_PLATFORM)
         # Android project configurations
