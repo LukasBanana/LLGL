@@ -19,6 +19,14 @@
  * Global helper structures
  */
 
+enum MeshFlags
+{
+    MeshFlags_KeepRightHandedCoordinates    = (1 << 0),
+    MeshFlags_Triangulate                   = (1 << 1),
+    MeshFlags_FlipTexCoordU                 = (1 << 2),
+    MeshFlags_FlipTexCoordV                 = (1 << 3),
+};
+
 struct ColoredVertex
 {
     Gs::Vector3f position;
@@ -55,12 +63,12 @@ struct TriangleMesh
  */
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false, bool flipTexCoordU = false);
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
 // This format is defined to have right-handed coordinates, but the default coordinate system in the LLGL examples is left-handed,
 // so unless 'keepRightHandedCoordinates' is true, the coordinates are transformed into left-handed coordinates (i.e. negate Z-axis).
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false, bool flipTexCoordU = false);
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
 
 // Generates eight vertices for a unit cube.
 std::vector<Gs::Vector3f> GenerateCubeVertices(bool isRightHanded = false);

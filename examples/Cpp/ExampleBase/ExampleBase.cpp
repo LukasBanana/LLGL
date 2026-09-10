@@ -1424,11 +1424,13 @@ static bool HasObjFileExtension(const std::string& filename)
     return (filename.size() > 4 && filename.compare(filename.size() - 4, 4, ".obj") == 0);
 }
 
-TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool flipTexCoordU)
+TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, long flags)
 {
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(vertices, filename, verticesPerFace, HasRightHandedProjection(), flipTexCoordU);
+        if (HasRightHandedProjection())
+            flags |= MeshFlags_KeepRightHandedCoordinates;
+        return LoadObjModel(vertices, filename, verticesPerFace, flags);
     }
     else
     {
@@ -1437,11 +1439,13 @@ TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, con
     }
 }
 
-std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace, bool flipTexCoordU)
+std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace, long flags)
 {
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(filename, verticesPerFace, HasRightHandedProjection(), flipTexCoordU);
+        if (HasRightHandedProjection())
+            flags |= MeshFlags_KeepRightHandedCoordinates;
+        return LoadObjModel(filename, verticesPerFace, flags);
     }
     else
     {

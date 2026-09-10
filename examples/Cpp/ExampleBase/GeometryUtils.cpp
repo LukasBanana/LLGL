@@ -19,10 +19,10 @@
  * Global helper functions
  */
 
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates, bool flipTexCoordU)
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace, long flags)
 {
     std::vector<TexturedVertex> vertices;
-    LoadObjModel(vertices, filename, verticesPerFace, keepRightHandedCoordinates, flipTexCoordU);
+    LoadObjModel(vertices, filename, verticesPerFace, flags);
     return vertices;
 }
 
@@ -31,9 +31,14 @@ static Gs::Vector3f ToLeftHanded(const Gs::Vector3f& v)
     return { v.x, v.y, -v.z };
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates, bool flipTexCoordU)
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, long flags)
 {
     LLGL_VERIFY(verticesPerFace <= 4);
+
+    const bool keepRightHandedCoordinates   = ((flags & MeshFlags_KeepRightHandedCoordinates) != 0);
+    const bool triangulate                  = ((flags & MeshFlags_Triangulate) != 0);
+    const bool flipTexCoordU                = ((flags & MeshFlags_FlipTexCoordU) != 0);
+    const bool flipTexCoordV                = ((flags & MeshFlags_FlipTexCoordV) != 0);
 
     // Read obj file
     std::vector<char> fileContent = ReadAsset(filename);
@@ -76,6 +81,8 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             s >> t.x;
             s >> t.y;
             if (flipTexCoordU)
+                t.x = 1.0f - t.x;
+            if (flipTexCoordV)
                 t.y = 1.0f - t.y;
             texCoords.push_back(t);
         }
@@ -110,12 +117,8 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
                 s >> vn[i];
             }
 
-            // Add vertices to mesh.
-            // Wavefront Object format stores triangle indices in counter-clockwise (CCW) order.
-            // Since LLGL::RasterizerDescriptor::frontCCW is disabled by default, we convert it to clockwise (CW) order here.
-            for (unsigned i = 0; i < verticesPerFace; ++i)
+            auto AddFaceVertex = [&vertices, &v, &vn, &vt, &coords, &normals, &texCoords](unsigned iface)
             {
-                unsigned iface = verticesPerFace - i - 1;
                 unsigned iv = v[iface] - 1;
                 unsigned in = vn[iface] - 1;
                 unsigned it = vt[iface] - 1;
@@ -127,8 +130,27 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
                         (it < texCoords.size() ? texCoords[it] : Gs::Vector2f{})
                     }
                 );
+            };
+
+            // Add vertices to mesh.
+            // Wavefront Object format stores triangle indices in counter-clockwise (CCW) order.
+            // Since LLGL::RasterizerDescriptor::frontCCW is disabled by default, we convert it to clockwise (CW) order here.
+            if (verticesPerFace == 4 && triangulate)
+            {
+                AddFaceVertex(2);
+                AddFaceVertex(1);
+                AddFaceVertex(0);
+
+                AddFaceVertex(3);
+                AddFaceVertex(2);
+                AddFaceVertex(0);
             }
-            mesh.numVertices += verticesPerFace;
+            else
+            {
+                for (unsigned i = 0; i < verticesPerFace; ++i)
+                    AddFaceVertex(verticesPerFace - i - 1);
+                mesh.numVertices += verticesPerFace;
+            }
         }
     }
 

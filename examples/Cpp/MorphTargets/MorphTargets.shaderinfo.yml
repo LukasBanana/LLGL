@@ -1,0 +1,12 @@
+sources:
+  - source: "MorphTargets.hlsl"
+    entries:
+      - entry: "VStaticMesh"
+        profile: "vs_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "VMorphTargetMesh"
+        profile: "vs_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PBlinnPhong"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]

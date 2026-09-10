@@ -1,0 +1,11 @@
+Models/BookShell.obj
+Models/BookLeftPage.obj
+Models/BookRightPage.obj
+Models/BookPageKeyframe_*.obj
+Textures/Book.png
+Textures/Logo_LLGL.png
+Textures/Logo_Direct3D12.png
+Textures/Logo_Direct3D11.png
+Textures/Logo_Vulkan.png
+Textures/Logo_OpenGL.png
+Textures/Logo_Metal.png

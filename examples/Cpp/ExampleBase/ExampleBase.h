@@ -327,8 +327,8 @@ protected:
     LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
 
     // Loads a 3D model from file and determines the coordinates depending on the current projection matrix.
-    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool flipTexCoordU = false);
-    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3, bool flipTexCoordU = false);
+    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
+    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
 
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
