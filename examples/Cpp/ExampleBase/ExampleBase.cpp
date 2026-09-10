@@ -73,7 +73,7 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
     while (rendererModule.empty())
     {
         /* Print list of available modules */
-        LLGL::Log::Printf("select renderer:\n");
+        LLGL::Log::Printf("Select renderer:\n");
 
         int i = 0;
         for (const std::string& mod : modules)
@@ -93,10 +93,10 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
             if (selectionIndex < modules.size())
                 rendererModule = modules[selectionIndex];
             else
-                LLGL::Log::Errorf("invalid input: %d is out of range\n", selection);
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Invalid input: %d is out of range\n", selection);
         }
         else
-            LLGL::Log::Errorf("invalid input: %s is not a number\n", selectionBuffer);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Invalid input: %s is not a number\n", selectionBuffer);
     }
 
     return rendererModule;
@@ -151,7 +151,7 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
             }
         }
     }
-    LLGL::Log::Printf("selected renderer: %s\n", rendererModule.c_str());
+    LLGL::Log::Printf("Selected renderer: %s\n", rendererModule.c_str());
 }
 
 /*static bool IsModuleAvailable(const char* name)
@@ -493,6 +493,7 @@ struct ExampleConfig
     long            flags           = 0;
     bool            immediateSubmit = false;
     bool            rightHandedProj = false;
+    bool            verbose         = false;
 };
 
 static ExampleConfig g_Config;
@@ -517,6 +518,8 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.rightHandedProj = true;
     if (HasArgument("-b", argc, argv) || HasArgument("--break", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::DebugBreakOnError;
+    if (HasArgument("-v", argc, argv) || HasArgument("--verbose", argc, argv))
+        g_Config.verbose = true;
     if (HasArgument("--nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
     if (HasArgument("--amd", argc, argv))
@@ -700,12 +703,12 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     // Fallback to null device if selected renderer cannot be loaded
     if (!renderer)
     {
-        LLGL::Log::Errorf("failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
-        LLGL::Log::Errorf("reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdAnnotation, "Reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
         renderer = LLGL::RenderSystem::Load("Null");
         if (!renderer)
         {
-            LLGL::Log::Errorf("failed to load \"Null\" module. Exiting.\n");
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load \"Null\" module. Exiting.\n");
             exit(1);
         }
     }
@@ -749,23 +752,26 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     const LLGL::Extent2D swapChainRes = swapChain->GetResolution();
 
     LLGL::Log::Printf(
-        "render system:\n"
-        "  renderer:           %s\n"
-        "  device:             %s\n"
-        "  vendor:             %s\n"
-        "  shading language:   %s\n"
+        "LLGL Version %s\n"
         "\n"
-        "swap-chain:\n"
-        "  resolution:         %u x %u\n"
-        "  samples:            %u\n"
-        "  swapBuffers:        %u\n"
-        "  colorFormat:        %s\n"
-        "  depthStencilFormat: %s\n"
+        "Render system:\n"
+        "  Renderer:             %s\n"
+        "  Device:               %s\n"
+        "  Vendor:               %s\n"
+        "  Shading language:     %s\n"
         "\n"
-        "options:\n"
-        "  command buffer:     %s\n"
-        "  coordinate system:  %s\n"
+        "Swap-chain:\n"
+        "  Resolution:           %u x %u\n"
+        "  Samples:              %u\n"
+        "  Swap-buffers:         %u\n"
+        "  Color format:         %s\n"
+        "  Depth-stencil format: %s\n"
+        "\n"
+        "Options:\n"
+        "  Command buffer:       %s\n"
+        "  Coordinate system:    %s\n"
         "\n",
+        ToString(LLGL::GetLLGLVersion()),
         info.rendererName.c_str(),
         info.deviceName.c_str(),
         info.vendorName.c_str(),
@@ -780,9 +786,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         g_Config.rightHandedProj ? "right-handed" : "left-handed"
     );
 
-    if (!info.extensionNames.empty())
+    if (g_Config.verbose && !info.extensionNames.empty())
     {
-        LLGL::Log::Printf("extensions:\n");
+        LLGL::Log::Printf("Extensions:\n");
         for (const LLGL::UTF8String& name : info.extensionNames)
             LLGL::Log::Printf("  %s\n", name.c_str());
         LLGL::Log::Printf("\n");
@@ -887,7 +893,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const LLGL::ShaderMacro*    defines,
     long                        compileFlags)
 {
-    LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename);
+    LLGL::Log::Printf("Load shader: %s\n", shaderDesc.filename);
 
     #ifdef LLGL_OS_WASM
     const std::string filename = std::string("assets/") + shaderDesc.filename;
@@ -948,7 +954,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         if (*report->GetText() != '\0')
         {
             if (report->HasErrors())
-                LLGL::Log::Errorf("%s", report->GetText());
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "%s", report->GetText());
             else
                 LLGL::Log::Printf("%s", report->GetText());
         }
@@ -1004,7 +1010,7 @@ bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVe
         LLGL_VERIFY(hlslLanguage != LLGL::ShadingLanguage::VersionBitmask);
         if (!Supported(hlslLanguage))
         {
-            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required HLSL shader model %s is not supported\n", hlslVersion);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required HLSL shader model %s is not supported\n", hlslVersion);
             Quit(1);
             return false;
         }
@@ -1021,7 +1027,7 @@ bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVe
         LLGL_VERIFY(glslLanguage != LLGL::ShadingLanguage::VersionBitmask);
         if (!Supported(glslLanguage))
         {
-            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required GLSL version %s is not supported\n", glslVersion);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required GLSL version %s is not supported\n", glslVersion);
             Quit(1);
             return false;
         }
@@ -1035,7 +1041,7 @@ bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVe
         LLGL_VERIFY(esslLanguage != LLGL::ShadingLanguage::VersionBitmask);
         if (!Supported(esslLanguage))
         {
-            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required ESSL version %s is not supported\n", esslVersion);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required ESSL version %s is not supported\n", esslVersion);
             Quit(1);
             return false;
         }
@@ -1049,7 +1055,7 @@ bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVe
         LLGL_VERIFY(metalLanguage != LLGL::ShadingLanguage::VersionBitmask);
         if (!Supported(metalLanguage))
         {
-            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "minimum required Metal shader model %s is not supported\n", metalVersion);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required Metal shader model %s is not supported\n", metalVersion);
             Quit(1);
             return false;
         }
@@ -1300,7 +1306,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
         {
             if (report->HasErrors())
             {
-                LLGL::Log::Errorf("%s", report->GetText());
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "%s", report->GetText());
                 Quit(1);
                 return true;
             }
@@ -1308,7 +1314,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
     }
     else
     {
-        LLGL::Log::Errorf("null pointer passed to ReportPSOErrors()");
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Null pointer passed to ReportPSOErrors()");
         Quit(1);
         return true;
     }
@@ -1317,7 +1323,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
 {
-    LLGL::Log::Printf("load texture: %s\n", filename.c_str());
+    LLGL::Log::Printf("Load texture: %s\n", filename.c_str());
 
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     ImageReader reader;
@@ -1336,7 +1342,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
-    LLGL::Log::Printf("save texture: %s\n", filename.c_str());
+    LLGL::Log::Printf("Save texture: %s\n", filename.c_str());
 
     // Get texture dimension
     const LLGL::Extent3D texSize = texture.GetMipExtent(mipLevel);
@@ -1372,7 +1378,7 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
 
     if (!result)
     {
-        LLGL::Log::Errorf("failed to write texture to file: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to write texture to file: \"%s\"\n", filename.c_str());
         return false;
     }
 
@@ -1418,28 +1424,28 @@ static bool HasObjFileExtension(const std::string& filename)
     return (filename.size() > 4 && filename.compare(filename.size() - 4, 4, ".obj") == 0);
 }
 
-TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
+TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool flipTexCoordU)
 {
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(vertices, filename, verticesPerFace, HasRightHandedProjection());
+        return LoadObjModel(vertices, filename, verticesPerFace, HasRightHandedProjection(), flipTexCoordU);
     }
     else
     {
-        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Unknown file format for 3D model: \"%s\"\n", filename.c_str());
         return {};
     }
 }
 
-std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace)
+std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace, bool flipTexCoordU)
 {
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(filename, verticesPerFace, HasRightHandedProjection());
+        return LoadObjModel(filename, verticesPerFace, HasRightHandedProjection(), flipTexCoordU);
     }
     else
     {
-        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Unknown file format for 3D model: \"%s\"\n", filename.c_str());
         return {};
     }
 }

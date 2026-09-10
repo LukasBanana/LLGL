@@ -55,12 +55,12 @@ struct TriangleMesh
  */
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false);
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false, bool flipTexCoordU = false);
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
 // This format is defined to have right-handed coordinates, but the default coordinate system in the LLGL examples is left-handed,
 // so unless 'keepRightHandedCoordinates' is true, the coordinates are transformed into left-handed coordinates (i.e. negate Z-axis).
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false);
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool keepRightHandedCoordinates = false, bool flipTexCoordU = false);
 
 // Generates eight vertices for a unit cube.
 std::vector<Gs::Vector3f> GenerateCubeVertices(bool isRightHanded = false);

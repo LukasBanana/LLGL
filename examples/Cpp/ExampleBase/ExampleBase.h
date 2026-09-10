@@ -327,8 +327,8 @@ protected:
     LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
 
     // Loads a 3D model from file and determines the coordinates depending on the current projection matrix.
-    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3);
-    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3);
+    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, bool flipTexCoordU = false);
+    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3, bool flipTexCoordU = false);
 
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
@@ -402,27 +402,27 @@ protected:
     }
 
     template <typename Container>
-    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, std::uint32_t stride)
+    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, std::uint32_t stride, const char* debugName = "VertexBuffer")
     {
         LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), stride);
-        bufferDesc.debugName = "VertexBuffer";
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &vertices[0]);
     }
 
     template <typename Container>
-    LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format)
+    LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format, const char* debugName = "IndexBuffer")
     {
         LLGL::BufferDescriptor bufferDesc = LLGL::IndexBufferDesc(GetArraySize(indices), format);
-        bufferDesc.debugName = "IndexBuffer";
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &indices[0]);
     }
 
     template <typename T>
-    LLGL::Buffer* CreateConstantBuffer(const T& initialData)
+    LLGL::Buffer* CreateConstantBuffer(const T& initialData, const char* debugName = "ConstantBuffer")
     {
         static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
         LLGL::BufferDescriptor bufferDesc = LLGL::ConstantBufferDesc(sizeof(T));
-        bufferDesc.debugName = "ConstantBuffer";
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &initialData);
     }
 

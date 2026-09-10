@@ -19,10 +19,10 @@
  * Global helper functions
  */
 
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates)
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates, bool flipTexCoordU)
 {
     std::vector<TexturedVertex> vertices;
-    LoadObjModel(vertices, filename, verticesPerFace, keepRightHandedCoordinates);
+    LoadObjModel(vertices, filename, verticesPerFace, keepRightHandedCoordinates, flipTexCoordU);
     return vertices;
 }
 
@@ -31,14 +31,14 @@ static Gs::Vector3f ToLeftHanded(const Gs::Vector3f& v)
     return { v.x, v.y, -v.z };
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates)
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, bool keepRightHandedCoordinates, bool flipTexCoordU)
 {
     LLGL_VERIFY(verticesPerFace <= 4);
 
     // Read obj file
     std::vector<char> fileContent = ReadAsset(filename);
     if (fileContent.empty())
-        LLGL_THROW_RUNTIME_ERROR("failed to load model from file: \"%s\"", filename.c_str());
+        LLGL_THROW_RUNTIME_ERROR("Failed to load model from file: \"%s\"", filename.c_str());
 
     // Initialize triangle mesh
     TriangleMesh mesh;
@@ -75,6 +75,8 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
             Gs::Vector2f t;
             s >> t.x;
             s >> t.y;
+            if (flipTexCoordU)
+                t.y = 1.0f - t.y;
             texCoords.push_back(t);
         }
         else if (mode == "vn")
