@@ -9,6 +9,7 @@ Version 0.05 removed all features that were deprecatd in 0.04 and refactored a f
 - [Vertex buffers](#vertex-buffers)
 - [Vertex arrays](#vertex-arrays)
 - [Relaxed uniform identifiers](#relaxed-uniform-identifiers)
+- [Version information](#version-information)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -179,6 +180,12 @@ myRenderer->CreatePipelineLayout(
     LLGL::Parse("float4x4( scene.projection )")
 );
 ```
+
+
+## Version information
+
+The namespace `LLGL::Version` has been deprecated and superseded by `LLGL::VersionInfo` and `LLGL::GetLLGLVersion()`.
+The struct can be used as general purpose structure with overloaded comparison operators.
 
 
 ## Renamed identifiers

@@ -815,6 +815,14 @@ const (
     TextureSwizzleAlpha
 )
 
+type VersionStatus int
+const (
+    VersionStatusUndefined VersionStatus = iota
+    VersionStatusAlpha
+    VersionStatusBeta
+    VersionStatusStable
+)
+
 
 /* ----- Flags ----- */
 
@@ -1519,6 +1527,13 @@ type TextureDescriptor struct {
     MipLevels      uint32      /* = 0 */
     Samples        uint32      /* = 1 */
     ClearValue     ClearValue
+}
+
+type VersionInfo struct {
+    Major    uint16        /* = 0 */
+    Minor    uint8         /* = 0 */
+    Status   VersionStatus /* = VersionStatusUndefined */
+    Revision uint32        /* = 0 */
 }
 
 type VertexAttribute struct {

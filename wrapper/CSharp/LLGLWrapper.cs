@@ -813,6 +813,14 @@ namespace LLGL
         Alpha,
     }
 
+    public enum VersionStatus
+    {
+        Undefined,
+        Alpha,
+        Beta,
+        Stable,
+    }
+
     /* ----- Flags ----- */
 
     [Flags]
@@ -4422,6 +4430,14 @@ namespace LLGL
             public int         mipLevels;      /* = 0 */
             public int         samples;        /* = 1 */
             public ClearValue  clearValue;
+        }
+
+        public unsafe struct VersionInfo
+        {
+            public short         major;    /* = 0 */
+            public byte          minor;    /* = 0 */
+            public VersionStatus status;   /* = VersionStatus.Undefined */
+            public int           revision; /* = 0 */
         }
 
         public unsafe struct VertexAttribute

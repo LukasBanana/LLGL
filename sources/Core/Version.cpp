@@ -7,75 +7,94 @@
 
 #include <LLGL/Version.h>
 #include "VersionMacros.h"
+#include "MacroUtils.h"
+#include <stdio.h>
 #include <string>
 
 
 namespace LLGL
 {
 
-namespace Version
-{
 
-
-LLGL_EXPORT unsigned GetMajor()
+int Compare(VersionInfo lhs, VersionInfo rhs)
 {
-    return LLGL_VERSION_MAJOR;
+    LLGL_COMPARE_MEMBER_SWO(major);
+    LLGL_COMPARE_MEMBER_SWO(minor);
+    LLGL_COMPARE_MEMBER_SWO(revision);
+    LLGL_COMPARE_MEMBER_SWO(status);
+    return 0;
 }
 
-LLGL_EXPORT unsigned GetMinor()
+LLGL_EXPORT const char* ToString(VersionStatus status)
 {
-    return LLGL_VERSION_MINOR;
-}
-
-LLGL_EXPORT unsigned GetRevision()
-{
-    return LLGL_VERSION_REVISION;
-}
-
-LLGL_EXPORT const char* GetStatus()
-{
-    return LLGL_VERSION_STATUS;
-}
-
-LLGL_EXPORT unsigned GetID()
-{
-    return LLGL_VERSION_ID;
-}
-
-static std::string BuildVersionString()
-{
-    std::string s;
-
-    s += std::to_string(GetMajor());
-    s += '.';
-    if (GetMinor() < 10)
-        s += '0';
-    s += std::to_string(GetMinor());
-
-    if (GetStatus() && *GetStatus() != '\0')
+    switch (status)
     {
-        s += ' ';
-        s += GetStatus();
+        case VersionStatus::Undefined:  break;
+        case VersionStatus::Alpha:      return "Alpha";
+        case VersionStatus::Beta:       return "Beta";
+        case VersionStatus::Stable:     return "Stable";
+    }
+    return nullptr;
+}
+
+const char* ToString(VersionInfo info)
+{
+    static thread_local char versionInfoString[64];
+    return ToString(info, sizeof(versionInfoString), versionInfoString);
+}
+
+const char* ToString(VersionInfo info, std::size_t bufferSize, char* buffer, std::size_t* outMinBufferSize)
+{
+    /* Format the version string and write it to the output buffer */
+    int written = 0;
+    if (info.status != VersionStatus::Undefined && info.revision > 0)
+    {
+        written = ::snprintf(
+            buffer, bufferSize, "%d.%02d %s (Rev. %d)",
+            static_cast<int>(info.major), static_cast<int>(info.minor), ToString(info.status), static_cast<int>(info.revision)
+        );
+    }
+    else if (info.status != VersionStatus::Undefined)
+    {
+        written = ::snprintf(
+            buffer, bufferSize, "%d.%02d %s",
+            static_cast<int>(info.major), static_cast<int>(info.minor), ToString(info.status)
+        );
+    }
+    else if (info.revision > 0)
+    {
+        written = ::snprintf(
+            buffer, bufferSize, "%d.%02d (Rev. %d)",
+            static_cast<int>(info.major), static_cast<int>(info.minor), static_cast<int>(info.revision)
+        );
+    }
+    else
+    {
+        written = ::snprintf(
+            buffer, bufferSize, "%d.%02d",
+            static_cast<int>(info.major), static_cast<int>(info.minor)
+        );
     }
 
-    if (GetRevision())
-    {
-        s += " (Rev. ";
-        s += std::to_string(GetRevision());
-        s += ')';
-    }
+    /* Write out the required buffer size */
+    if (outMinBufferSize != nullptr && written >= 0)
+        *outMinBufferSize = static_cast<std::size_t>(written);
 
-    return s;
+    return buffer;
 }
 
-LLGL_EXPORT const char* GetString()
+VersionInfo GetLLGLVersion()
 {
-    static std::string s = BuildVersionString();
-    return s.c_str();
+    VersionInfo info;
+    {
+        info.major      = LLGL_VERSION_MAJOR;
+        info.minor      = LLGL_VERSION_MINOR;
+        info.revision   = LLGL_VERSION_REVISION;
+        info.status     = VersionStatus::Beta;
+    }
+    return info;
 }
 
-
-} // /namespace Version
 
 } // /namespace LLGL
 

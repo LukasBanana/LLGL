@@ -857,6 +857,15 @@ typedef enum LLGLTextureSwizzle
 }
 LLGLTextureSwizzle;
 
+typedef enum LLGLVersionStatus
+{
+    LLGLVersionStatusUndefined,
+    LLGLVersionStatusAlpha,
+    LLGLVersionStatusBeta,
+    LLGLVersionStatusStable,
+}
+LLGLVersionStatus;
+
 
 /* ----- Flags ----- */
 
@@ -1705,6 +1714,15 @@ typedef struct LLGLTextureDescriptor
     LLGLClearValue  clearValue;
 }
 LLGLTextureDescriptor;
+
+typedef struct LLGLVersionInfo
+{
+    uint16_t          major;      /* = 0 */
+    uint8_t           minor;      /* = 0 */
+    LLGLVersionStatus status : 8; /* = LLGLVersionStatusUndefined */
+    uint32_t          revision;   /* = 0 */
+}
+LLGLVersionInfo;
 
 typedef struct LLGLVertexAttribute
 {

@@ -35,6 +35,7 @@ set INPUT=^
     %INCLUDE%\SystemValue.h ^
     %INCLUDE%\TextureFlags.h ^
     %INCLUDE%\Types.h ^
+    %INCLUDE%\Version.h ^
     %INCLUDE%\VertexAttribute.h ^
     %INCLUDE%\WindowFlags.h
 
