@@ -3,10 +3,13 @@ sources:
     entries:
       - entry: "VStaticMesh"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal, glsl140core, glsl300es]
+      - entry: "PStaticMesh"
+        profile: "ps_4_0"
+        targets: [spirv, metal, glsl140core, glsl300es]
       - entry: "VMorphTargetMesh"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
-      - entry: "PBlinnPhong"
+        targets: [spirv, metal, glsl140core, glsl300es]
+      - entry: "PMorphTargetMesh"
         profile: "ps_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal, glsl140core, glsl300es]

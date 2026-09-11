@@ -36,6 +36,7 @@ void VStaticMesh(StaticMeshVertexIn inp, out VertexOut outp)
     outp.flipFace   = 1.0; // Default value for static mesh
 }
 
+
 // VERTEX SHADER MORPH-TARGET MESH
 
 struct MorphTargetVertexIn
@@ -76,33 +77,67 @@ void VMorphTargetMesh(MorphTargetVertexIn inp, out VertexOut outp)
 }
 
 
-// PIXEL SHADER SCENE
+// STATIC MESH PIXEL SHADER
 
-Texture2D colorMap : register(t4);
-//Texture2D<float> alphaMask : register(t5);
+SamplerState colorMapSampler : register(s4);
+Texture2D colorMap : register(t5);
+Texture2D<float3> paperDetailMap : register(t7);
 
-SamplerState colorMapSampler : register(s6);
-//SamplerState alphaMaskSampler : register(s7);
-
-float4 PBlinnPhong(VertexOut inp, bool isFrontFace : SV_IsFrontFace) : SV_Target
+float3 SampleDetailMap(float2 texCoord)
 {
-    // Sample base color map and apply alpha mask
-    float2 texCoord = lerp(float2(1.0f - inp.texCoord.x, inp.texCoord.y), inp.texCoord, isFrontFace);
-    float4 color = colorMap.Sample(colorMapSampler, texCoord);
-    float alpha = 1.0;//alphaMask.Sample(alphaMaskSampler, texCoord);
-
-    // Apply lambert factor for simple shading
-    float flipFace = inp.flipFace * lerp(+1.0, -1.0, isFrontFace);
-    float NdotL = dot(lightVec.xyz, normalize(inp.normal * flipFace));
-    float lighting = lerp(0.2, 1.0, NdotL);
-
-    float3 texColor = lerp(baseColor.rgb, color.rgb, color.a);
-    float4 finalColor = baseColor * float4(texColor, alpha);
-
-    finalColor.rgb *= lighting;
-
-    return finalColor;
+    // Sample detail map to simulate paper surface
+    return paperDetailMap.Sample(colorMapSampler, texCoord) - (float3)0.5;
 }
 
+float4 FinalShading(float4 color, float3 normal, float alpha, float3 paperDetail)
+{
+    float NdotL = dot(lightVec.xyz, normalize(normal));
+    float lighting = lerp(0.2, 1.0, NdotL);
+
+    float3 opaqueColor = lerp(baseColor.rgb, color.rgb, color.a);
+    float4 finalColor = (baseColor + float4(paperDetail, 0)) * float4(opaqueColor, alpha);
+
+    return float4(finalColor.rgb * lighting, finalColor.a);
+}
+
+float4 PStaticMesh(VertexOut inp) : SV_Target
+{
+    // Sample base color map and apply alpha mask
+    float4 color = colorMap.Sample(colorMapSampler, inp.texCoord);
+
+    // Sample detail map to simulate paper surface
+    float3 paperDetail = SampleDetailMap(inp.texCoord);
+
+    // Apply lambert factor for simple shading
+    return FinalShading(color, inp.normal, 1.0, paperDetail);
+}
+
+
+// MORPH-TARGET MESH PIXEL SHADER
+
+Texture2D colorMapFrontPage : register(t5);
+Texture2D colorMapBackPage : register(t6);
+
+float4 PMorphTargetMesh(VertexOut inp, bool isFrontFace : SV_IsFrontFace) : SV_Target
+{
+    float2 texCoord = lerp(float2(1.0f - inp.texCoord.x, inp.texCoord.y), inp.texCoord, isFrontFace);
+
+    // Sample base color map and apply alpha mask
+    float4 color =
+    (
+        isFrontFace
+            ? colorMapFrontPage.Sample(colorMapSampler, texCoord)
+            : colorMapBackPage.Sample(colorMapSampler, texCoord)
+    );
+    float alpha = 1.0;//alphaMask.Sample(alphaMaskSampler, texCoord);
+
+    // Sample detail map to simulate paper surface
+    float3 paperDetail = SampleDetailMap(texCoord);
+
+    // Apply lambert factor for simple shading
+    float flipFace = inp.flipFace * lerp(-1.0, +1.0, isFrontFace);
+
+    return FinalShading(color, inp.normal * flipFace, 1.0, paperDetail);
+}
 
 

@@ -15,6 +15,13 @@ static int ModuloSignInt(int a, int b)
     return (((a % b + b)) % b);
 }
 
+static float ModuloSignFloat(float value, int& intPart)
+{
+    float floorValue = std::floor(value);
+    intPart = static_cast<int>(floorValue);
+    return value - floorValue;
+}
+
 // Helper function to calculate modulo operator with signed values to wrap around start and end keyframes.
 static std::uint32_t ModuloSubtract(std::uint32_t lhs, std::uint32_t rhs, std::uint32_t wrap)
 {
@@ -28,11 +35,10 @@ static std::uint32_t ModuloSubtract(std::uint32_t lhs, std::uint32_t rhs, std::u
 class Example_MorphTargets : public ExampleBase
 {
 
-    static constexpr float      pageTurningTime         = 2.0f;     // Time to turn a page in seconds
-    static constexpr int        numBookPageKeyframes    = 16;       // Number of keyframe meshes to load from 'BookPageKeyframe_<N>.obj' pattern
-
-    // Function signature when a page is finished animating.
-    using AnimFinishCallback = std::function<void(bool forwards)>;
+    static constexpr float      pageTurningTime             = 2.0f;     // Time to turn a page in seconds
+    static constexpr int        pageTurningMouseThreshold   = 10;       // How many pixels has the mouse to move before starting to turn a page?
+    static constexpr float      pageTurningMouseSpeed       = 0.01f;
+    static constexpr int        numBookPageKeyframes        = 16;       // Number of keyframe meshes to load from 'BookPageKeyframe_<N>.obj' pattern
 
     enum MorphTargetVertexBuffer
     {
@@ -43,19 +49,22 @@ class Example_MorphTargets : public ExampleBase
         MTVB_Count,
     };
 
-    enum PageFace
+    enum PageTurnDirection
     {
-        PageFace_Front = 0,
-        PageFace_Back,
-
-        PageFace_Count,
+        PageTurn_Left   = -1,
+        PageTurn_None   = 0,
+        PageTurn_Right  = +1,
     };
 
     enum BindingTable
     {
         // Resources:
-        BindingTable_SceneView = 0,
+        BindingTable_SceneView          = 0,
+        BindingTable_PaperDetailMap,
         BindingTable_ColorMap,
+
+        BindingTable_PageTextureFront   = BindingTable_ColorMap,
+        BindingTable_PageTextureBack,
 
         // Uniforms:
         BindingTable_AnimationState = 0,
@@ -84,6 +93,9 @@ class Example_MorphTargets : public ExampleBase
         std::vector<std::uint64_t>  keyframeVbufferOffset;
     };
 
+    // Function signature when a page is finished animating.
+    using AnimFinishCallback = std::function<void(PageTurnDirection direction)>;
+
     // Tracks animation state and the page to render in the 3D book model.
     struct MorphTargetAnimation
     {
@@ -92,11 +104,24 @@ class Example_MorphTargets : public ExampleBase
         std::uint32_t       nextKeyframe        = 0;
         float               interpolationFactor = 0.0f;
         float               animationSpeed      = 0.0f;
-        bool                isReverse           = false;
+        bool                isReverse           = false; // Animate with reversed X-axis transformation
+        bool                isGrappledByMouse   = false; // Turn page manually by mouse movement
+        PageTurnDirection   direction           = PageTurn_None;
         LLGL::Texture*      faceTextures[2]     = {};
         AnimFinishCallback  finishCallback;
 
-        void Play(std::uint32_t keyframes, float speed = 1.0f, bool reverse = false, LLGL::Texture* frontTex = nullptr, LLGL::Texture* backTex = nullptr, const AnimFinishCallback& callback = nullptr)
+        PageTurnDirection GetDirectionForMotion(float motion) const
+        {
+            if (motion > 0.0f)
+                return isReverse ? PageTurn_Right : PageTurn_Left;
+            if (motion < 0.0f)
+                return isReverse ? PageTurn_Left : PageTurn_Right;
+            return PageTurn_None;
+        }
+
+        void Play(
+            std::uint32_t keyframes, float speed = 1.0f, bool reverse = false, bool grappled = false,
+            LLGL::Texture* frontTex = nullptr, LLGL::Texture* backTex = nullptr, const AnimFinishCallback& callback = nullptr)
         {
             if (keyframes >= 2)
             {
@@ -104,24 +129,20 @@ class Example_MorphTargets : public ExampleBase
                 interpolationFactor = 0.0f;
                 animationSpeed      = speed;
                 isReverse           = reverse;
-                if (speed > 0.0f)
-                {
-                    currentKeyframe = 0;
-                    nextKeyframe    = 1;
-                }
-                else
-                {
-                    currentKeyframe = numKeyframes - 1;
-                    nextKeyframe    = currentKeyframe - 1;
-                }
+                isGrappledByMouse   = grappled;
+                currentKeyframe     = 0;
+                nextKeyframe        = 1;
                 faceTextures[1]     = frontTex;
                 faceTextures[0]     = backTex;
                 finishCallback      = callback;
+                direction           = GetDirectionForMotion(speed);
             }
         }
 
         void Stop()
         {
+            OnFinished();
+            direction       = PageTurn_None;
             animationSpeed  = 0.0f;
             nextKeyframe    = currentKeyframe;
         }
@@ -131,80 +152,55 @@ class Example_MorphTargets : public ExampleBase
             return (nextKeyframe != currentKeyframe);
         }
 
-        bool IsMovingForward() const
-        {
-            return (animationSpeed > 0.0f) != isReverse;
-        }
-
-        void Swap()
-        {
-            if (IsPlaying())
-            {
-                animationSpeed = -animationSpeed;
-                isReverse = !isReverse;
-                std::swap(currentKeyframe, nextKeyframe);
-            }
-        }
-
         void OnFinished()
         {
             if (finishCallback)
-                finishCallback(IsMovingForward());
+                finishCallback(direction);
         }
 
         void Animate(float dt)
         {
+            // Update direction the page is moving to, in case the direction has changed
+            // half way throgh the animation cycle when the user is flicking through pages with the mouse.
+            direction = GetDirectionForMotion(dt * animationSpeed);
+
             if (IsPlaying())
             {
-                float jumpFrames = 0.0f;
-                dt *= animationSpeed;
-                if (dt > 0.0f)
+                int advanceFrames = 0;
+                interpolationFactor = ModuloSignFloat(interpolationFactor + dt * animationSpeed, advanceFrames);
+
+                if (advanceFrames > 0)
                 {
-                    interpolationFactor = std::modf(interpolationFactor + dt, &jumpFrames);
-                    const std::uint32_t jumpFramesCount = static_cast<std::uint32_t>(jumpFrames);
-                    if (jumpFramesCount > 0)
+                    const std::uint32_t advanceFramesAbs = static_cast<std::uint32_t>(advanceFrames);
+                    if (currentKeyframe + advanceFramesAbs + 1 < numKeyframes)
                     {
-                        if (currentKeyframe + jumpFramesCount + 1 < numKeyframes)
-                        {
-                            currentKeyframe += jumpFramesCount;
-                            nextKeyframe    = currentKeyframe + 1;
-                        }
-                        else
-                        {
-                            OnFinished();
-                            Stop();
-                        }
+                        currentKeyframe += advanceFramesAbs;
+                        nextKeyframe    = currentKeyframe + 1;
                     }
+                    else
+                        Stop();
                 }
-                else if (dt < 0.0f)
+                else if (advanceFrames < 0)
                 {
-                    interpolationFactor = std::modf(interpolationFactor - dt, &jumpFrames);
-                    const std::uint32_t jumpFramesCount = static_cast<std::uint32_t>(jumpFrames);
-                    if (jumpFramesCount > 0)
+                    const std::uint32_t advanceFramesAbs = static_cast<std::uint32_t>(-advanceFrames);
+                    if (currentKeyframe >= advanceFramesAbs)
                     {
-                        if (currentKeyframe > jumpFramesCount)
-                        {
-                            currentKeyframe -= jumpFramesCount;
-                            nextKeyframe    = currentKeyframe - 1;
-                        }
-                        else
-                        {
-                            OnFinished();
-                            Stop();
-                        }
+                        currentKeyframe -= advanceFramesAbs;
+                        nextKeyframe    = currentKeyframe + 1;
                     }
+                    else
+                        Stop();
                 }
             }
         }
     };
 
-    std::vector<MorphTargetAnimation> animations; // List of all active animations
-
     struct alignas(16) SceneView
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
-        Gs::Vector3f        lightVec    = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        Gs::Vector3f        lightVec    = -Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        float               pad0;
         LLGL::ColorRGBAf    baseColor   = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
     sceneView;
@@ -215,25 +211,37 @@ class Example_MorphTargets : public ExampleBase
         StaticMesh      meshLRestingPage;
         StaticMesh      meshRRestingPage;
         MorphTargetMesh meshMovingPage;
-        int             leftPageNo          = 0;
     }
     scene;
 
-    LLGL::Shader*               vsStaticMesh                        = nullptr;
-    LLGL::Shader*               vsMorphTargetMesh                   = nullptr;
-    LLGL::Shader*               fsBlinnPhong                        = nullptr;
+    struct PageTurning
+    {
+        std::int32_t    mouseStartPosX  = 0;
+        int             leftPageNo      = 0;
+        bool            startGrappling  = false;
+    }
+    pageTurning;
 
-    LLGL::PipelineLayout*       psoLayoutStatic                     = nullptr;
-    LLGL::PipelineLayout*       psoLayoutMorphTarget                = nullptr;
+    LLGL::Shader*                       vsStaticMesh            = nullptr;
+    LLGL::Shader*                       fsStaticMesh            = nullptr;
 
-    LLGL::PipelineState*        psoStaticMesh                       = nullptr;
-    LLGL::PipelineState*        psoMorphTargetMesh[PageFace_Count]  = {};
+    LLGL::Shader*                       vsMorphTargetMesh       = nullptr;
+    LLGL::Shader*                       fsMorphTargetMesh       = nullptr;
 
-    LLGL::Buffer*               meshBuffer                          = nullptr;  // Single mesh buffer containing vertex data for the entire scene
-    LLGL::Buffer*               sceneViewCbuffer                    = nullptr;  // Scene view constant buffer
+    LLGL::PipelineLayout*               psoLayoutStatic         = nullptr;
+    LLGL::PipelineLayout*               psoLayoutMorphTarget    = nullptr;
 
-    LLGL::Texture*              bookShellTexture                    = nullptr;
-    std::vector<LLGL::Texture*> pageTextures;                       // List of textures for all book pages to render
+    LLGL::PipelineState*                psoStaticMesh           = nullptr;
+    LLGL::PipelineState*                psoMorphTargetMesh      = nullptr;
+
+    LLGL::Buffer*                       meshBuffer              = nullptr;  // Single mesh buffer containing vertex data for the entire scene
+    LLGL::Buffer*                       sceneViewCbuffer        = nullptr;  // Scene view constant buffer
+
+    LLGL::Texture*                      bookShellTexture        = nullptr;
+    LLGL::Texture*                      bookPaperDetailMap      = nullptr;
+    std::vector<LLGL::Texture*>         pageTextures;                       // List of textures for all book pages to render
+
+    std::vector<MorphTargetAnimation>   animations;                         // List of all active animations
 
 public:
 
@@ -243,7 +251,6 @@ public:
         // Create all graphics objects
         LoadTextures();
         LoadMeshes();
-        LoadShaders();
         CreateStaticMeshPSO();
         CreateMorphTargetMeshPSO();
 
@@ -262,15 +269,25 @@ private:
     void LoadTextures()
     {
         bookShellTexture = LoadTexture("Book.png");
+        bookPaperDetailMap = LoadTexture("Book_PaperDetailMap.png");
 
         LoadPageTextures(
             {
+                "Book_Page0.png",
+
                 "Logo_LLGL.png",
                 "Logo_Direct3D12.png",
                 "Logo_Direct3D11.png",
                 "Logo_Vulkan.png",
                 "Logo_OpenGL.png",
                 "Logo_Metal.png",
+
+                /*"D1.png",
+                "D2.png",
+                "D3.png",
+                "D4.png",
+                "D5.png",
+                "D6.png",*/
             }
         );
     }
@@ -405,27 +422,19 @@ private:
         sceneViewCbuffer = CreateConstantBuffer(sceneView, "SceneView.Cbuffer");
     }
 
-    void LoadShaders()
-    {
-        // Load shader programs
-        vsStaticMesh        = LoadVertexShader  ("MorphTargets", "VStaticMesh");
-        vsMorphTargetMesh   = LoadVertexShader  ("MorphTargets", "VMorphTargetMesh");
-        fsBlinnPhong        = LoadFragmentShader("MorphTargets", "PBlinnPhong");
-    }
-
     void CreateStaticMeshPSO()
     {
         // Create PSO layout
         psoLayoutStatic = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@3):vert:frag,"
-                "texture(colorMap@4):frag,"
-              //"texture(alphaMask@5):frag,"
-                "sampler(colorMapSampler@6){}:frag," // Static sampler
-              //"sampler(alphaMaskSampler@7):frag,"
+                "texture(paperDetailMap@7):frag,"
+                "texture(colorMap@5):frag,"
 
-                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@4),"
-              //"sampler<alphaMask, alphaMaskSampler>(s_alphaMaskalphaMaskSampler@6),"
+                "sampler(colorMapSampler@4){}:frag," // Static sampler
+
+                "sampler<paperDetailMap, colorMapSampler>(s_paperDetailMapcolorMapSampler@7),"
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@5),"
             )
         );
 
@@ -441,8 +450,8 @@ private:
         LLGL::GraphicsPipelineDescriptor psoStaticMeshDesc;
         {
             psoStaticMeshDesc.inputVertexAttribs                = staticMeshVertexAttribs;
-            psoStaticMeshDesc.vertexShader                      = vsStaticMesh;
-            psoStaticMeshDesc.fragmentShader                    = fsBlinnPhong;
+            psoStaticMeshDesc.vertexShader                      = LoadVertexShader  ("MorphTargets", "VStaticMesh");
+            psoStaticMeshDesc.fragmentShader                    = LoadFragmentShader("MorphTargets", "PStaticMesh");
             psoStaticMeshDesc.renderPass                        = swapChain->GetRenderPass();
             psoStaticMeshDesc.pipelineLayout                    = psoLayoutStatic;
             psoStaticMeshDesc.depth.testEnabled                 = true;
@@ -460,16 +469,18 @@ private:
         psoLayoutMorphTarget = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@3):vert:frag,"
-                "texture(colorMap@4):frag,"
-                //"texture(alphaMask@5):frag,"
-                "sampler(colorMapSampler@6){}:frag," // Static sampler
-                //"sampler(alphaMaskSampler@7):frag,"
+                "texture(paperDetailMap@7):frag,"
+                "texture(colorMapFrontPage@5):frag,"
+                "texture(colorMapBackPage@6):frag,"
+
+                "sampler(colorMapSampler@4){}:frag," // Static sampler
 
                 "float(animationState.interpolationFactor)," // Interpolation factor as uniform to efficiently animate many morph targets
                 "float(animationState.invertXAxis),"
 
-                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@4),"
-                //"sampler<alphaMask, alphaMaskSampler>(s_alphaMaskalphaMaskSampler@6),"
+                "sampler<paperDetailMap, colorMapSampler>(s_paperDetailMapcolorMapSampler@7),"
+                "sampler<colorMapFrontPage, colorMapSampler>(s_colorMapFrontPagecolorMapSampler@5),"
+                "sampler<colorMapBackPage, colorMapSampler>(s_colorMapBackPagecolorMapSampler@6),"
             )
         );
 
@@ -491,28 +502,21 @@ private:
             LLGL::VertexAttribute{ "texCoord",  LLGL::Format::RG32Float,  4, 0,                                             sizeof(Gs::Vector2f),              MTVB_TexCoords     },
         };
 
-        // Create graphics pipeline for front facing animated pages
+        // Create graphics pipeline for morph-target animation
         LLGL::GraphicsPipelineDescriptor psoMorphTargetDesc;
         {
             psoMorphTargetDesc.inputVertexAttribs               = morphTargetMeshVertexAttribs;
-            psoMorphTargetDesc.vertexShader                     = vsMorphTargetMesh;
-            psoMorphTargetDesc.fragmentShader                   = fsBlinnPhong;
+            psoMorphTargetDesc.vertexShader                     = LoadVertexShader  ("MorphTargets", "VMorphTargetMesh");
+            psoMorphTargetDesc.fragmentShader                   = LoadFragmentShader("MorphTargets", "PMorphTargetMesh");
             psoMorphTargetDesc.renderPass                       = swapChain->GetRenderPass();
             psoMorphTargetDesc.pipelineLayout                   = psoLayoutMorphTarget;
             psoMorphTargetDesc.depth.testEnabled                = true;
             psoMorphTargetDesc.depth.writeEnabled               = true;
-            psoMorphTargetDesc.rasterizer.cullMode              = LLGL::CullMode::Back;
+            psoMorphTargetDesc.rasterizer.cullMode              = LLGL::CullMode::Disabled;
             psoMorphTargetDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         }
-        psoMorphTargetMesh[PageFace_Front] = renderer->CreatePipelineState(psoMorphTargetDesc);
-        ReportPSOErrors(psoMorphTargetMesh[PageFace_Front]);
-
-        // Create graphics pipeline for back facing animated pages
-        {
-            psoMorphTargetDesc.rasterizer.cullMode              = LLGL::CullMode::Front;
-        }
-        psoMorphTargetMesh[PageFace_Back] = renderer->CreatePipelineState(psoMorphTargetDesc);
-        ReportPSOErrors(psoMorphTargetMesh[PageFace_Back]);
+        psoMorphTargetMesh = renderer->CreatePipelineState(psoMorphTargetDesc);
+        ReportPSOErrors(psoMorphTargetMesh);
     }
 
     LLGL::Texture* GetPageTexture(int pageNo)
@@ -522,77 +526,121 @@ private:
         return pageTextures[pageTextureIndex];
     }
 
-    void AnimatePage(int oldPage, int newPage0, int newPage1, float animSpeed = 1.0f, bool reverse = false)
+    void AnimatePage(int frontPage, int backPage, int revealedPage, float animSpeed = 1.0f, bool reverse = false, bool grappled = false)
     {
         MorphTargetAnimation anim;
         const std::uint32_t numKeyframes = static_cast<std::uint32_t>(scene.meshMovingPage.keyframeVbufferOffset.size());
         const float invTimePerKeyframe = static_cast<float>(numKeyframes) / pageTurningTime;
 
-        LLGL::Texture* oldPageTex = GetPageTexture(oldPage);
-        LLGL::Texture* newPage0Tex = GetPageTexture(newPage0);
-        LLGL::Texture* newPage1Tex = GetPageTexture(newPage1);
+        LLGL::Texture* frontPageTex     = GetPageTexture(frontPage);
+        LLGL::Texture* backPageTex      = GetPageTexture(backPage);
+        LLGL::Texture* revealedPageTex  = GetPageTexture(revealedPage);
 
         anim.Play(
             numKeyframes,
             animSpeed * invTimePerKeyframe,
             reverse,
-            oldPageTex,
-            newPage0Tex,
-            [this, newPage0Tex, oldPageTex](bool forwards)
+            grappled,
+            frontPageTex,
+            backPageTex,
+            [this, backPageTex, frontPageTex](PageTurnDirection direction)
             {
-                if (forwards)
-                    this->scene.meshLRestingPage.colorMap = newPage0Tex;
-                else
-                    this->scene.meshRRestingPage.colorMap = oldPageTex;
+                // Replace the page texture in the book with this moving page that has now finished animating
+                if (direction == PageTurn_Left)
+                    this->scene.meshLRestingPage.colorMap = backPageTex;
+                else if (direction == PageTurn_Right)
+                    this->scene.meshRRestingPage.colorMap = frontPageTex;
+                this->ResetMosueGrappling();
             }
         );
 
-        if (anim.IsMovingForward())
-            this->scene.meshRRestingPage.colorMap = newPage1Tex;
-        else
-            this->scene.meshLRestingPage.colorMap = newPage1Tex;
+        // Set the newly revealed page texture
+        if (anim.direction == PageTurn_Left)
+            this->scene.meshRRestingPage.colorMap = revealedPageTex;
+        else if (anim.direction == PageTurn_Right)
+            this->scene.meshLRestingPage.colorMap = revealedPageTex;
 
         animations.push_back(anim);
     }
 
-    bool ReverseLastPage(bool forwards)
+    bool ReverseLastPage(PageTurnDirection direction, bool isGrappledByMouse = false)
     {
         for (auto it = animations.rbegin(); it != animations.rend(); ++it)
         {
             MorphTargetAnimation& anim = *it;
-            if (anim.isReverse == forwards)
+            if (anim.direction != direction && anim.isGrappledByMouse == isGrappledByMouse)
             {
-                anim.Swap();
+                anim.animationSpeed = -anim.animationSpeed;
                 return true;
             }
         }
         return false;
     }
 
-    void UpdateUserInput()
+    void TurnPageLeft(bool isGrappledByMouse = false)
     {
         const int numPages = static_cast<int>(pageTextures.size());
 
-        if (input.KeyDown(LLGL::Key::Left) && !ReverseLastPage(true))
+        int frontPage       = pageTurning.leftPageNo + 1;
+        int backPage        = ModuloSignInt(pageTurning.leftPageNo + 2, numPages);
+        int revealedPage    = ModuloSignInt(pageTurning.leftPageNo + 3, numPages);
+
+        if (!ReverseLastPage(PageTurn_Left, isGrappledByMouse))
+            AnimatePage(frontPage, backPage, revealedPage, 1.0f, false, isGrappledByMouse);
+
+        pageTurning.leftPageNo = backPage;
+    }
+
+    void TurnPageRight(bool isGrappledByMouse = false)
+    {
+        const int numPages = static_cast<int>(pageTextures.size());
+
+        // Front and back pages are flipped here, because the animation plays in reverse,
+        // but front and back are always the same in the geometry.
+        int backPage        = pageTurning.leftPageNo;
+        int frontPage       = ModuloSignInt(pageTurning.leftPageNo - 1, numPages);
+        int revealedPage    = ModuloSignInt(pageTurning.leftPageNo - 2, numPages);
+
+        if (!ReverseLastPage(PageTurn_Right, isGrappledByMouse))
+            AnimatePage(frontPage, backPage, revealedPage, 1.0f, true, isGrappledByMouse);
+
+        pageTurning.leftPageNo = revealedPage;
+    }
+
+    void ResetMosueGrappling()
+    {
+        if (pageTurning.startGrappling)
+            pageTurning.mouseStartPosX = input.GetMousePosition().x;
+    }
+
+    void UpdateUserInput()
+    {
+        if (input.KeyDown(LLGL::Key::Left))
+            TurnPageLeft();
+        if (input.KeyDown(LLGL::Key::Right))
+            TurnPageRight();
+
+        if (input.KeyDown(LLGL::Key::LButton))
         {
-            int oldPage     = scene.leftPageNo + 1;
-            int newPage0    = ModuloSignInt(scene.leftPageNo + 2, numPages);
-            int newPage1    = ModuloSignInt(scene.leftPageNo + 3, numPages);
-
-            AnimatePage(oldPage, newPage0, newPage1, 1.0f, false);
-
-            scene.leftPageNo = newPage0;
+            pageTurning.startGrappling = true;
+            ResetMosueGrappling();
+        }
+        else if (input.KeyUp(LLGL::Key::LButton))
+        {
+            // Continue animation for all active animations without grappling
+            for (MorphTargetAnimation& anim : animations)
+                anim.isGrappledByMouse = false;
+            pageTurning.startGrappling = false;
         }
 
-        if (input.KeyDown(LLGL::Key::Right) && !ReverseLastPage(false))
+        if (pageTurning.startGrappling && animations.empty())
         {
-            int oldPage     = scene.leftPageNo;
-            int newPage0    = ModuloSignInt(scene.leftPageNo - 1, numPages);
-            int newPage1    = ModuloSignInt(scene.leftPageNo - 2, numPages);
+            const std::int32_t mouseDiffX = input.GetMousePosition().x - pageTurning.mouseStartPosX;
 
-            AnimatePage(newPage0, oldPage, newPage1, 1.0f, true);
-
-            scene.leftPageNo = newPage1;
+            if (mouseDiffX > pageTurningMouseThreshold)
+                TurnPageRight(true);
+            else if (mouseDiffX < -pageTurningMouseThreshold)
+                TurnPageLeft(true);
         }
     }
 
@@ -614,14 +662,19 @@ private:
         sceneView.wMatrix.LoadIdentity();
 
         // Advance all animations and remove those that have finished
+        const float mouseGrappleMovement = static_cast<float>(-input.GetMouseMotion().x) * pageTurningMouseSpeed;
+
         animations.erase(
             std::remove_if(
                 animations.begin(),
                 animations.end(),
-                [dt](MorphTargetAnimation& anim) -> bool
+                [dt, mouseGrappleMovement](MorphTargetAnimation& anim) -> bool
                 {
                     // Advance animation state and remove element once stopped
-                    anim.Animate(dt);
+                    if (anim.isGrappledByMouse)
+                        anim.Animate(anim.isReverse ? -mouseGrappleMovement : mouseGrappleMovement);
+                    else
+                        anim.Animate(dt);
                     return !anim.IsPlaying();
                 }
             ),
@@ -639,7 +692,9 @@ private:
     {
         // Bind PSO for static meshes and scene view buffer
         commands->SetPipelineState(*psoStaticMesh);
+
         commands->SetResource(BindingTable_SceneView, *sceneViewCbuffer);
+        commands->SetResource(BindingTable_PaperDetailMap, *bookPaperDetailMap);
 
         // All static meshes are stored in the first section of the mesh buffer.
         // So use the default stride and the begining (offset 0) as vertex buffer.
@@ -655,7 +710,7 @@ private:
         DrawStaticMesh(scene.meshRRestingPage);
     }
 
-    void DrawMorphTargetMesh(const MorphTargetMesh& mesh, const MorphTargetAnimation& anim, PageFace pageFace)
+    void DrawMorphTargetMesh(const MorphTargetMesh& mesh, const MorphTargetAnimation& anim)
     {
         if (mesh.numVertices == 0 || anim.numKeyframes == 0 || anim.nextKeyframe >= mesh.keyframeVbufferOffset.size())
             return;
@@ -680,36 +735,28 @@ private:
         // Update animation state to interpolate between the two keyframes
         commands->SetUniforms(BindingTable_AnimationState, &(anim.interpolationFactor), sizeof(anim.interpolationFactor));
 
-        float invertXAxis = (anim.IsMovingForward() ? 1.0f : -1.0f);
+        float invertXAxis = (anim.isReverse ? -1.0f : +1.0f);
         commands->SetUniforms(BindingTable_InvertXAxis, &invertXAxis, sizeof(invertXAxis));
 
         // Bind page texture
-        commands->SetResource(BindingTable_ColorMap, *(anim.faceTextures[pageFace]));
+        commands->SetResource(BindingTable_PageTextureFront, *(anim.faceTextures[0]));
+        commands->SetResource(BindingTable_PageTextureBack,  *(anim.faceTextures[1]));
 
         // Draw mesh
         commands->Draw(mesh.numVertices, 0);
     }
 
-    void RenderMorphTargetMeshesFace(PageFace pageFace)
+    void RenderMorphTargetMeshes()
     {
         // Bind PSO for morph-targets and scene view buffer
-        commands->SetPipelineState(*psoMorphTargetMesh[pageFace]);
+        commands->SetPipelineState(*psoMorphTargetMesh);
+
         commands->SetResource(BindingTable_SceneView, *sceneViewCbuffer);
+        commands->SetResource(BindingTable_PaperDetailMap, *bookPaperDetailMap);
 
         // Draw all animated moving pages
         for (MorphTargetAnimation& anim : animations)
-            DrawMorphTargetMesh(scene.meshMovingPage, anim, pageFace);
-    }
-
-    void RenderMorphTargetMeshes()
-    {
-        commands->PushDebugGroup("Front Faces");
-        RenderMorphTargetMeshesFace(PageFace_Front);
-        commands->PopDebugGroup();
-
-        commands->PushDebugGroup("Back Faces");
-        RenderMorphTargetMeshesFace(PageFace_Back);
-        commands->PopDebugGroup();
+            DrawMorphTargetMesh(scene.meshMovingPage, anim);
     }
 
     void OnDrawFrame(float dt) override
