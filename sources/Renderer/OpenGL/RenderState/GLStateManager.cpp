@@ -1187,11 +1187,28 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
     #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
-    /* Only bind framebuffer if the framebuffer has changed */
-    auto targetIdx = static_cast<std::size_t>(target);
-    if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
+    const auto targetIdx = static_cast<std::size_t>(target);
+    if (target == GLFramebufferTarget::Framebuffer)
+    {
+        /* GL_FRAMEBUFFER updates both read and draw framebuffer bindings */
+        contextState_.boundFramebuffers[targetIdx] = framebuffer;
+
+        const auto drawTargetIdx = static_cast<std::size_t>(GLFramebufferTarget::DrawFramebuffer);
+        const auto readTargetIdx = static_cast<std::size_t>(GLFramebufferTarget::ReadFramebuffer);
+        if (
+            contextState_.boundFramebuffers[drawTargetIdx] != framebuffer ||
+            contextState_.boundFramebuffers[readTargetIdx] != framebuffer)
+        {
+            contextState_.boundFramebuffers[drawTargetIdx] = framebuffer;
+            contextState_.boundFramebuffers[readTargetIdx] = framebuffer;
+            glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
+        }
+    }
+    else if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
     {
         contextState_.boundFramebuffers[targetIdx] = framebuffer;
+        if (target == GLFramebufferTarget::DrawFramebuffer)
+            contextState_.boundFramebuffers[static_cast<std::size_t>(GLFramebufferTarget::Framebuffer)] = framebuffer;
         glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
     }
     #endif
