@@ -70,6 +70,7 @@ Ideally, an LLGL program has one resource heap for each pipeline layout. Having 
 Once we use resource heaps, we also need to specify our pipeline layout for the graphics pipeline where the resources are accessed:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
+myPipelineDesc.inputVertexAttribs   = myVertexAttributes;                // Vertex input attributes (position, normal, tangents, texture-coordinates)
 myPipelineDesc.vertexShader         = myVertexShader;                    // Vertex shader
 myPipelineDesc.tessControlShader    = myTessControlShader;               // Tessellation-control shader, aka. "Hull" shader
 myPipelineDesc.tessEvaluationShader = myTessEvaluationShader;            // Tessellation-evaluation shader, aka. "Domain" shader

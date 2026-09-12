@@ -160,7 +160,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
 
     // Create textures
     const std::string rendererName = GetRendererModuleName(renderer->GetName());
-    texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererName + ".png");
+    texture = LoadTextureWithRenderer(*renderer, "Logos/Logo_" + rendererName + ".png");
 
     // Create samplers
     LLGL::SamplerDescriptor samplerDesc;

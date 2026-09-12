@@ -782,8 +782,8 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         swapChain->GetNumSwapBuffers(),
         LLGL::ToString(swapChain->GetColorFormat()),
         LLGL::ToString(swapChain->GetDepthStencilFormat()),
-        g_Config.immediateSubmit ? "immediate" : "deferred",
-        g_Config.rightHandedProj ? "right-handed" : "left-handed"
+        g_Config.immediateSubmit ? "Immediate" : "Deferred",
+        g_Config.rightHandedProj ? "Right-handed" : "Left-handed"
     );
 
     if (g_Config.verbose && !info.extensionNames.empty())
@@ -1426,6 +1426,8 @@ static bool HasObjFileExtension(const std::string& filename)
 
 TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, long flags)
 {
+    LLGL::Log::Printf("Load mesh: %s\n", filename.c_str());
+
     if (HasObjFileExtension(filename))
     {
         if (HasRightHandedProjection())
