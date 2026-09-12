@@ -32,7 +32,7 @@ static std::uint32_t ModuloSubtract(std::uint32_t lhs, std::uint32_t rhs, std::u
     return static_cast<std::uint32_t>(ModuloSignInt(a, b));
 }
 
-// This example renders an open book an animates the pages via morph-target animation,
+// This example renders an open book and animates the pages via morph-target animation,
 // a set of keyframe meshes that are interpolated in the vertex shader.
 class Example_MorphTargets : public ExampleBase
 {
@@ -45,6 +45,9 @@ class Example_MorphTargets : public ExampleBase
     static constexpr long long  nudgePageWaitTime           = 3000;     // Time to nudge a page when there's no animation, to grab user's attention (in milliseconds)
     static constexpr float      nudgePageSpeed              = 2.0f;
 
+    // Zero-based binding slots for vertex input buffers.
+    // This example uses three vertex buffers simultaneously for the morph-target animations:
+    // (1) current frame vertices, (2) next frame vertices, (3) shared texture coordiantes.
     enum MorphTargetVertexBuffer
     {
         MTVB_CurrentTarget = 0,
@@ -54,6 +57,7 @@ class Example_MorphTargets : public ExampleBase
         MTVB_Count,
     };
 
+    // Enumeration with zero-based indices for resources in the pipeline layouts. These are used to bind resources via `SetResource()`.
     enum BindingTable
     {
         // Resources:
@@ -73,6 +77,7 @@ class Example_MorphTargets : public ExampleBase
         BindingTable_BorderSamplerFront,
     };
 
+    // Array index for all sampler states used to render pages in different presentations.
     enum SamplerId
     {
         SamplerId_Default = 0,
@@ -93,6 +98,7 @@ class Example_MorphTargets : public ExampleBase
         BorderSampler_Black,
     };
 
+    // Direction a page can be turned.
     enum class PageTurnDirection
     {
         Left    = -1,
@@ -100,6 +106,7 @@ class Example_MorphTargets : public ExampleBase
         Right   = +1,
     };
 
+    // Specifies the modes the mouse grappling mechanism can be in.
     enum class MouseGrappling
     {
         Inactive,
@@ -107,6 +114,7 @@ class Example_MorphTargets : public ExampleBase
         Active,
     };
 
+    // Type of animation actors, whether the page is turned by keyboard input, mouse input, or nudged to grab the user's attention.
     enum class AnimationActor
     {
         Kinetic,    // Animation triggered by keyboard input
@@ -114,7 +122,7 @@ class Example_MorphTargets : public ExampleBase
         Nudged,     // Animation triggered by nudging the page and letting it fall back to grab user's attention
     };
 
-    // Minimalistic material struct with just a texture and sampler
+    // Minimalistic material struct with just a texture, sampler, and some metadata for shader uniforms.
     struct Material
     {
         LLGL::Texture*  colorMap        = nullptr;
@@ -123,6 +131,7 @@ class Example_MorphTargets : public ExampleBase
         BorderSampler   borderSampler   = BorderSampler_None;
     };
 
+    // Vertex buffer range and material information for a static mesh. Used for the book shell and the resting left and right pages.
     struct StaticMesh
     {
         std::uint32_t   numVertices     = 0;
@@ -130,14 +139,16 @@ class Example_MorphTargets : public ExampleBase
         Material        material;
     };
 
-    // Morph-target meshes are composed of three vertex buffers:
-    // (1) texture-coordinates, (2) position & normal target[0], (3) position & normal target[1]
+    // Vertex for morph-target keyframes.
+    // A morph-target animated mesh is rendered with the current and next keyframe,
+    // interpolates between them, and the shared texture-coordiantes.
     struct MorphTargetKeyframeVertex
     {
         Gs::Vector3f position;
         Gs::Vector3f normal;
     };
 
+    // Keyframe and shared texture-coordinate buffer range for morph-target animated meshes.
     struct MorphTargetMesh
     {
         std::uint32_t               numVertices             = 0;
@@ -196,6 +207,7 @@ class Example_MorphTargets : public ExampleBase
             }
         }
 
+        // Invokes the OnFinished() callback and resets animation state.
         void Stop()
         {
             OnFinished();
@@ -204,17 +216,23 @@ class Example_MorphTargets : public ExampleBase
             nextKeyframe    = currentKeyframe;
         }
 
+        // Returns true if the animation is actively playing.
         bool IsPlaying() const
         {
             return (nextKeyframe != currentKeyframe);
         }
 
+        // Invokes the callback to signal the end of the animation. This callback can be specified when staring to play the animation.
+        // This is used to signal when the resting left or right page of the book have to change their texture.
         void OnFinished()
         {
             if (finishCallback)
                 finishCallback(direction);
         }
 
+        // Advances the animation by the specified delta-time (dt) value.
+        // This parameter should be the time for a single frame (e.g. 16ms for a 60 FPS game) for kentic animation
+        // or the mouse motion when the mouse grappling mechanism is active.
         void Animate(float dt)
         {
             // Update direction the page is moving to, in case the direction has changed
@@ -271,6 +289,7 @@ class Example_MorphTargets : public ExampleBase
         }
     };
 
+    // Constant buffer data for the scene view. Constant buffer data should always be 16 byte aligned to ensure each backend uploads its data correctly.
     struct alignas(16) SceneView
     {
         Gs::Matrix4f        wvpMatrix;
@@ -281,6 +300,7 @@ class Example_MorphTargets : public ExampleBase
     }
     sceneView;
 
+    // Scene model data for this example. Contains all mesh information to render the scene.
     struct Scene
     {
         StaticMesh      meshBookShell;
@@ -290,6 +310,7 @@ class Example_MorphTargets : public ExampleBase
     }
     scene;
 
+    // Tracks the state of turning pages.
     struct PageTurning
     {
         std::int32_t                            mouseStartPosX      = 0;
@@ -303,6 +324,9 @@ class Example_MorphTargets : public ExampleBase
         std::chrono::system_clock::time_point   timeSinceNoAnims    = {};
     }
     pageTurning;
+
+    std::vector<Material>               pages;                                          // List of materials for all book pages to render
+    std::vector<MorphTargetAnimation>   animations;                                     // List of all active animations
 
     LLGL::Shader*                       vsStaticMesh                        = nullptr;
     LLGL::Shader*                       fsStaticMesh                        = nullptr;
@@ -321,11 +345,8 @@ class Example_MorphTargets : public ExampleBase
 
     LLGL::Texture*                      bookShellTexture                    = nullptr;
     LLGL::Texture*                      bookPaperDetailMap                  = nullptr;
-    std::vector<Material>               pages;                                              // List of materials for all book pages to render
 
     LLGL::Sampler*                      textureSamplers[SamplerId_Count]    = {};
-
-    std::vector<MorphTargetAnimation>   animations;                                         // List of all active animations
 
 public:
 
@@ -354,7 +375,7 @@ private:
         {
             textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp"));
             textureSamplers[SamplerId_BorderBlack]      = textureSamplers[SamplerId_Default];
-            textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("lod.bias=3"));
+            textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("lod.min=4"));
             textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("lod.min=4,lod.max=4,filter=nearest"));
         }
         else
@@ -414,6 +435,7 @@ private:
         };
     }
 
+    // Loads a static mesh from the specified file and stores its vertices in the specified output container.
     StaticMesh LoadStaticMesh(std::vector<TexturedVertex>& outVertices, const std::string& filename, const Material& material)
     {
         TriangleMesh intermediateMesh = Load3DModel(outVertices, filename, 3, MeshFlags_FlipTexCoordV);
@@ -427,12 +449,14 @@ private:
         return outMesh;
     }
 
+    // Helper function that returns the size (in bytes) of the specified STL container.
     template <typename TContainer>
     static std::size_t ByteSize(const TContainer& cont)
     {
         return sizeof(typename TContainer::value_type) * cont.size();
     }
 
+    // Helper function to retrieve the 3D model filename of the specified keyframe.
     static std::string KeyframeMeshFilename(int keyframe)
     {
         return ("Book/BookPageKeyframe_" + std::to_string(keyframe) + ".obj");
@@ -667,18 +691,21 @@ private:
         return pages[pageTextureIndex];
     }
 
+    // Sets the texture and tracking number of the resting left page.
     void SetLeftPage(int page)
     {
         scene.meshLRestingPage.material = GetPageMaterial(page);
         pageTurning.leftPageNo = page;
     }
 
+    // Sets the texture and tracking number of the resting right page.
     void SetRightPage(int page)
     {
         scene.meshRRestingPage.material = GetPageMaterial(page);
         pageTurning.rightPageNo = page;
     }
 
+    // Starts the animation of turning a page.
     void AnimatePage(int frontPage, int backPage, int revealedPage, float animTime = 1.0f, bool reverse = false, AnimationActor actor = AnimationActor::Kinetic)
     {
         MorphTargetAnimation anim;
@@ -711,7 +738,8 @@ private:
         animations.push_back(anim);
     }
 
-    bool FlickBackLastPage(PageTurnDirection direction, AnimationActor actor)
+    // Tries to flick back the last turned page if its still actively being animated and the direction matches the new input direction (for kinetic actors).
+    bool TryFlickBackLastPage(PageTurnDirection direction, AnimationActor actor)
     {
         for (auto it = animations.rbegin(); it != animations.rend(); ++it)
         {
@@ -719,7 +747,7 @@ private:
             if (actor == AnimationActor::Grappled || (anim.actor != AnimationActor::Grappled && anim.direction != direction))
             {
                 // Grapple the page by the mouse or otherwise reverse its direction by inverting the animation speed.
-                // Don't use the `reverse` property as this would mirror the animation, but this should only reverse the motion.
+                // Don't use the `anim.isReverse` property as this would mirror the animation, but this should only reverse the motion.
                 if (actor == AnimationActor::Grappled)
                 {
                     anim.actor = AnimationActor::Grappled;
@@ -733,6 +761,7 @@ private:
         return false;
     }
 
+    // Kicks off the state tracking and animation to turn a page into the specified direction.
     void TurnPage(PageTurnDirection direction, AnimationActor actor = AnimationActor::Kinetic, float animTime = pageTurningTime)
     {
         struct PageSet
@@ -742,7 +771,7 @@ private:
             int revealedPage    = 0;
         };
 
-        if (!FlickBackLastPage(direction, actor))
+        if (!TryFlickBackLastPage(direction, actor))
         {
             const int numPages = static_cast<int>(pages.size());
 
@@ -775,12 +804,15 @@ private:
             pageTurning.mouseGrappling = MouseGrappling::Active;
     }
 
+    // Restes state tracking for the mouse grappling mechanism.
+    // Call this at the beginning of pressing the mouse button and at the end of a page animation that was controlled by the mouse.
     void ResetMouseGrappling()
     {
         if (pageTurning.mouseGrappling != MouseGrappling::Inactive)
             pageTurning.mouseStartPosX = input.GetMousePosition().x;
     }
 
+    // Helper function to retrieve the motion for the mouse grappling mechanism.
     float GetMouseGrappleMovement() const
     {
         return static_cast<float>(-input.GetMouseMotion().x) * pageTurningMouseSpeed;
@@ -1028,6 +1060,15 @@ private:
     }
 
 };
+
+// Clang/GCC need these declared here as well prior to C++17
+constexpr float     Example_MorphTargets::pageTurningTime          ;
+constexpr int       Example_MorphTargets::pageTurningMouseThreshold;
+constexpr float     Example_MorphTargets::pageTurningMouseSpeed    ;
+constexpr float     Example_MorphTargets::mouseGrappleMomentum     ;
+constexpr int       Example_MorphTargets::numBookPageKeyframes     ;
+constexpr long long Example_MorphTargets::nudgePageWaitTime        ;
+constexpr float     Example_MorphTargets::nudgePageSpeed           ;
 
 LLGL_IMPLEMENT_EXAMPLE(Example_MorphTargets);
 

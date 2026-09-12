@@ -42,10 +42,6 @@ On Windows, MSYS2 can be used to run *BuildAndroid.sh*.
     <img src="Showcase/Showcase_Build_AndroidStudio.png" alt="Screenshot missing: AndroidStudio Build Showcase" style="max-width:600px;width:70%;height:auto;">
 </p>
 
-#### Known issues
-
-Currently only the GLES backend is supported for Android. Vulkan backend compiles but is not stable (synchronization issues are visible).
-
 
 ## GNU/Linux
 
