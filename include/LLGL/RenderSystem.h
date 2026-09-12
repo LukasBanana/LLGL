@@ -633,8 +633,9 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new fence (used for CPU/GPU synchronization).
-        \see CommandBuffer::SubmitFence
-        \see CommandBuffer::WaitFence
+        \note There is currently not much use for fences in the LLGL interface. This will become more important once async compute is supported.
+        \see CommandQueue::Submit(Fence&)
+        \see CommandQueue::WaitFence
         */
         virtual Fence* CreateFence() = 0;
 

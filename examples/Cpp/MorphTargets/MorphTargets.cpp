@@ -402,6 +402,8 @@ private:
             LoadTexture("Logos/Logo_Direct3D11.png"),
             LoadTexture("Logos/Logo_Vulkan.png"),
             LoadTexture("Logos/Logo_OpenGL.png"),
+            LoadTexture("Logos/Logo_OpenGLES.png"),
+            LoadTexture("Logos/Logo_WebGL.png"),
             LoadTexture("Logos/Logo_Metal.png"),
             LoadTexture("Logos/Logo_LLGL.png"),
         };
@@ -431,7 +433,9 @@ private:
             MakeMaterial(5, 1.25f, SamplerId_Default),
             MakeMaterial(6, 1.25f, SamplerId_Default),
             MakeMaterial(7, 1.25f, SamplerId_Default),
-            MakeMaterial(8),
+            MakeMaterial(8, 1.25f, SamplerId_Default),
+            MakeMaterial(9, 1.25f, SamplerId_Default),
+            MakeMaterial(10),
         };
     }
 
@@ -885,8 +889,8 @@ private:
         // Update view-projection matrix
         Gs::Matrix4f vMatrix;
         vMatrix.LoadIdentity();
-        Gs::Translate(vMatrix, Gs::Vector3f{ 0, 3.0f, -3.0f });
-        Gs::RotateX(vMatrix, Gs::Deg2Rad(45.0f));
+        Gs::Translate(vMatrix, Gs::Vector3f{ 0, 3.0f, -3.0f * projZAxis });
+        Gs::RotateX(vMatrix, Gs::Deg2Rad(45.0f) * projZAxis);
         vMatrix.MakeInverse();
 
         sceneView.wvpMatrix = projection * vMatrix;

@@ -954,7 +954,7 @@ struct MeshPipelineDescriptor
     /**
     \brief Specifies an optional pipeline layout for the graphics pipeline. By default null.
     \remarks This layout determines at which slots buffer resources will be bound.
-    If this is null, a default layout will be used that is only compatible with graphics pipelines that have no binding points, i.e. no input/output buffers or textures.
+    If this is null, a default layout will be used that is only compatible with mesh pipelines that have no binding points, i.e. no input/output buffers or textures.
     \see RenderSystem::CreatePipelineLayout
     */
     const PipelineLayout*   pipelineLayout          = nullptr;

@@ -60,6 +60,7 @@ enum class OpenGLContextProfile
 \brief Application descriptor structure.
 \note Only supported with: Vulkan.
 \see RendererConfigurationVulkan::application
+\todo Rename this to ApplicationInfo. "Descriptor" is intended to describe GPU objects like buffer, textures, PSOs etc.
 */
 struct ApplicationDescriptor
 {
