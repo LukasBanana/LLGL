@@ -1,6 +1,15 @@
 // MorphTargets HLSL shader
 // Written by L. Hermanns 9/9/2026
 
+// GLES and WebGL don't support GL_CLAMP_TO_BORDER, so we emulate it in the shader
+#ifndef EMULATE_BORDER_SAMPLER
+#define EMULATE_BORDER_SAMPLER 0
+#endif
+
+#define BORDER_SAMPLER_MODE_NONE                0
+#define BORDER_SAMPLER_MODE_BLACK_TRANSPARENT   1
+#define BORDER_SAMPLER_MODE_BLACK               2
+
 // Start with cbuffer slot 3, as Metal will reserve the first three slots for the vertex buffers in VMorphTargetMesh() entry point
 cbuffer SceneView : register(b3)
 {
@@ -12,10 +21,16 @@ cbuffer SceneView : register(b3)
 
 struct DynamicState_t
 {
-    float texCoordScaleFront;
-    float texCoordScaleBack;
-    float interpolationFactor; // Interpolation factor for morph targets in range [0.0, 1.0]
-    float invertXAxis;
+    float   texCoordScaleFront;
+    float   texCoordScaleBack;
+
+    // Interpolation factor for morph targets in range [0.0, 1.0]
+    float   interpolationFactor;
+    float   invertXAxis;
+
+    // Only used for GLES and WebGL, but always include it to simplify uniform uploads
+    int     borderSamplerFront;
+    int     borderSamplerBack;
 };
 
 #if __spirv__
@@ -30,6 +45,23 @@ cbuffer DynamicState : register(b0)
 float2 TransformTexCoord(float2 texCoord, float scale)
 {
     return (texCoord - (float2)0.5)*scale + (float2)0.5;
+}
+
+float4 SampleColorMap(Texture2D colorMap, SamplerState colorMapSampler, float2 texCoord, int borderSampler)
+{
+    #if EMULATE_BORDER_SAMPLER
+    if (borderSampler != BORDER_SAMPLER_MODE_NONE)
+    {
+        // Use step functions to determine whether the texture-coordinates are inside or outside the [0, 1] range, to avoid dynamic branching
+        float2 inside = step((float2)0.0, texCoord) * step(texCoord, (float2)1.0);
+        float insideFactor = inside.x * inside.y;
+        float4 sampledColor = colorMap.Sample(colorMapSampler, texCoord);
+        float4 borderColor = (borderSampler == BORDER_SAMPLER_MODE_BLACK_TRANSPARENT ? float4(0, 0, 0, 0) : float4(0, 0, 0, 1));
+        return lerp(borderColor, sampledColor, insideFactor);
+    }
+    #endif
+
+    return colorMap.Sample(colorMapSampler, texCoord);
 }
 
 
@@ -87,7 +119,7 @@ float4 FinalShading(float4 color, float3 normal, float alpha, float3 paperDetail
 float4 PStaticMesh(VertexOut inp) : SV_Target
 {
     // Sample base color map and apply alpha mask
-    float4 color = colorMap.Sample(colorMapSampler, inp.texCoord);
+    float4 color = SampleColorMap(colorMap, colorMapSampler, inp.texCoord, dynamicState.borderSamplerFront);
 
     // Sample detail map to simulate paper surface
     float3 paperDetail = SampleDetailMap(inp.texCoord);
@@ -144,8 +176,8 @@ float4 PMorphTargetMesh(VertexOut inp, bool isFrontFace : SV_IsFrontFace) : SV_T
     float4 color =
     (
         isFrontFace
-            ? frontPageColorMap.Sample(frontPageSampler, texCoord)
-            : backPageColorMap.Sample(backPageSampler, texCoord)
+            ? SampleColorMap(frontPageColorMap, frontPageSampler, texCoord, dynamicState.borderSamplerFront)
+            : SampleColorMap(backPageColorMap, backPageSampler, texCoord, dynamicState.borderSamplerBack)
     );
     float alpha = 1.0;//alphaMask.Sample(alphaMaskSampler, texCoord);
 

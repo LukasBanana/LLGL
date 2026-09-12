@@ -17,6 +17,8 @@ struct type_PushConstant_DynamicState_t
     float texCoordScaleBack;
     float interpolationFactor;
     float invertXAxis;
+    int borderSamplerFront;
+    int borderSamplerBack;
 };
 
 struct VMorphTargetMesh_out

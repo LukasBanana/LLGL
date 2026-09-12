@@ -70,9 +70,7 @@ class Example_MorphTargets : public ExampleBase
 
         // Uniforms:
         BindingTable_TexCoordScaleFront = 0,
-        BindingTable_TexCoordScaleBack,
-        BindingTable_InterpolationFactor,
-        BindingTable_InvertXAxis,
+        BindingTable_BorderSamplerFront,
     };
 
     enum SamplerId
@@ -80,12 +78,19 @@ class Example_MorphTargets : public ExampleBase
         SamplerId_Default = 0,
         SamplerId_Wrap,
         SamplerId_Mirror,
-        SamplerId_BorderBlack, // Not supported on WebGL
-        SamplerId_ClampedLod, // Alternative for WebGL
+        SamplerId_BorderBlack,
         SamplerId_LodBias,
         SamplerId_LodBiasNearest,
 
         SamplerId_Count,
+    };
+
+    // GLES and WebGL don't support GL_CLAMP_TO_BORDER, so we emulate it in the shader
+    enum BorderSampler
+    {
+        BorderSampler_None = 0,
+        BorderSampler_BlackTransparent,
+        BorderSampler_Black,
     };
 
     enum class PageTurnDirection
@@ -115,6 +120,7 @@ class Example_MorphTargets : public ExampleBase
         LLGL::Texture*  colorMap        = nullptr;
         LLGL::Sampler*  colorMapSampler = nullptr;
         float           texScale        = 1.0f;
+        BorderSampler   borderSampler   = BorderSampler_None;
     };
 
     struct StaticMesh
@@ -343,21 +349,24 @@ private:
 
     void LoadMaterials()
     {
-        // Create texture samplers. WebGL does not support clamp-to-border, so we use clamp-to-edge instead
-        #if LLGL_OS_WASM
-        textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp")); // Linear sampler with clamp-to-edge address mode
-        textureSamplers[SamplerId_ClampedLod]       = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp,lod.max=1")); // Alternative sampler for WebGL to fix clamp-to-edge
-        textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("lod.bias=3"));
-        textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("lod.min=4,lod.max=4,filter=nearest"));
-        #else
-        textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border")); // Linear sampler with border address mode
-        textureSamplers[SamplerId_BorderBlack]      = renderer->CreateSampler(LLGL::Parse("address.uvw=border,border=black"));
-        textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.bias=3"));
-        textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.min=4,lod.max=4,filter=nearest"));
-        #endif
+        // Create texture samplers. GLES and WebGL don't support clamp-to-border, so we use clamp-to-edge instead
+        if (renderer->GetRendererID() == LLGL::RendererID::OpenGLES || renderer->GetRendererID() == LLGL::RendererID::WebGL)
+        {
+            textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp"));
+            textureSamplers[SamplerId_BorderBlack]      = textureSamplers[SamplerId_Default];
+            textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("lod.bias=3"));
+            textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("lod.min=4,lod.max=4,filter=nearest"));
+        }
+        else
+        {
+            textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border"));
+            textureSamplers[SamplerId_BorderBlack]      = renderer->CreateSampler(LLGL::Parse("address.uvw=border,border=black"));
+            textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.bias=3"));
+            textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.min=4,lod.max=4,filter=nearest"));
+        }
 
-        textureSamplers[SamplerId_Wrap]             = renderer->CreateSampler({}); // Linear sampler with default address mode
-        textureSamplers[SamplerId_Mirror]           = renderer->CreateSampler(LLGL::Parse("address.uvw=mirror"));
+        textureSamplers[SamplerId_Wrap]     = renderer->CreateSampler({}); // Linear sampler with default address mode
+        textureSamplers[SamplerId_Mirror]   = renderer->CreateSampler(LLGL::Parse("address.uvw=mirror"));
 
         // Load textures
         bookShellTexture = LoadTexture("Book/Book.png");
@@ -376,12 +385,13 @@ private:
             LoadTexture("Logos/Logo_LLGL.png"),
         };
 
-        auto MakeMaterial = [this, &textures](int texId, float texScale = 1.0f, SamplerId texSamplerId = SamplerId_Default) -> Material
+        auto MakeMaterial = [this, &textures](int texId, float texScale = 1.0f, SamplerId texSamplerId = SamplerId_Default, BorderSampler borderSampler = BorderSampler_BlackTransparent) -> Material
         {
             Material outMaterial;
             outMaterial.colorMap        = textures[texId];
             outMaterial.colorMapSampler = this->textureSamplers[texSamplerId];
             outMaterial.texScale        = texScale;
+            outMaterial.borderSampler   = borderSampler;
             return outMaterial;
         };
 
@@ -389,26 +399,15 @@ private:
         {
             MakeMaterial(0),
             MakeMaterial(1),
-            #if LLGL_OS_WASM
-            MakeMaterial(2, 1.00f, SamplerId_LodBias),
-            MakeMaterial(2, 1.00f, SamplerId_LodBiasNearest),
-            MakeMaterial(2, 5.00f, SamplerId_Wrap),
-            MakeMaterial(2, 5.00f, SamplerId_Mirror),
-            #else
-            MakeMaterial(2, 1.50f, SamplerId_BorderBlack),
+            MakeMaterial(2, 1.50f, SamplerId_BorderBlack, BorderSampler_Black),
             MakeMaterial(2, 1.50f, SamplerId_Default),
             MakeMaterial(2, 1.50f, SamplerId_LodBias),
             MakeMaterial(2, 1.50f, SamplerId_LodBiasNearest),
-            MakeMaterial(2, 5.00f, SamplerId_Wrap),
-            MakeMaterial(2, 5.00f, SamplerId_Mirror),
-            #endif
+            MakeMaterial(2, 5.00f, SamplerId_Wrap, BorderSampler_None),
+            MakeMaterial(2, 5.00f, SamplerId_Mirror, BorderSampler_None),
             MakeMaterial(3, 1.25f, SamplerId_Default),
             MakeMaterial(4, 1.25f, SamplerId_Default),
-            #if LLGL_OS_WASM
-            MakeMaterial(5, 1.25f, SamplerId_ClampedLod),
-            #else
             MakeMaterial(5, 1.25f, SamplerId_Default),
-            #endif
             MakeMaterial(6, 1.25f, SamplerId_Default),
             MakeMaterial(7, 1.25f, SamplerId_Default),
             MakeMaterial(8),
@@ -563,6 +562,7 @@ private:
                 "sampler(colorMapSampler@7):frag," // Dynamic sampler
 
                 "float(dynamicState.texCoordScaleFront),"
+                "int(dynamicState.borderSamplerFront),"
 
                 "sampler<paperDetailMap, paperDetailMapSampler>(s_paperDetailMappaperDetailMapSampler@4),"
                 "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@6),"
@@ -613,6 +613,8 @@ private:
                 "float(dynamicState.texCoordScaleBack),"
                 "float(dynamicState.interpolationFactor)," // Interpolation factor as uniform to efficiently animate many morph targets
                 "float(dynamicState.invertXAxis),"
+                "int(dynamicState.borderSamplerFront),"
+                "int(dynamicState.borderSamplerBack),"
 
                 "sampler<paperDetailMap, paperDetailMapSampler>(s_paperDetailMappaperDetailMapSampler@4),"
                 "sampler<frontPageColorMap, frontPageSampler>(s_frontPageColorMapfrontPageSampler@6),"
@@ -899,7 +901,17 @@ private:
     {
         BindMaterial(BindingTable_ColorMap, mesh.material);
 
-        commands->SetUniforms(0, &(mesh.material.texScale), sizeof(mesh.material.texScale));
+        struct StaticMeshDynamicState
+        {
+            float           texCoordScale;
+            std::int32_t    borderSampler;
+        }
+        dynamicState =
+        {
+            mesh.material.texScale,
+            mesh.material.borderSampler
+        };
+        commands->SetUniforms(0, &dynamicState, sizeof(dynamicState));
 
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
@@ -951,16 +963,17 @@ private:
         // Update animation state to interpolate between the two keyframes
         struct MorphTargetDynamicState
         {
-            float texCoordScale[2];
-            float interpolationFactor;
-            float invertXAxis;
+            float           texCoordScales[2];
+            float           interpolationFactor;
+            float           invertXAxis;
+            std::int32_t    borderSamplers[2];
         }
         dynamicState =
         {
-            anim.faceMaterials[0].texScale,
-            anim.faceMaterials[1].texScale,
+            { anim.faceMaterials[0].texScale, anim.faceMaterials[1].texScale },
             anim.interpolationFactor,
             (anim.isReverse ? -1.0f : +1.0f),
+            { anim.faceMaterials[0].borderSampler, anim.faceMaterials[1].borderSampler },
         };
         commands->SetUniforms(0, &dynamicState, sizeof(dynamicState));
 

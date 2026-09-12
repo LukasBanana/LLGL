@@ -6,10 +6,24 @@ sources:
         targets: [spirv, metal, glsl140core, glsl300es]
       - entry: "PStaticMesh"
         profile: "ps_4_0"
-        targets: [spirv, metal, glsl140core, glsl300es]
+        targets: [spirv, metal, glsl140core]
       - entry: "VMorphTargetMesh"
         profile: "vs_4_0"
         targets: [spirv, metal, glsl140core, glsl300es]
       - entry: "PMorphTargetMesh"
         profile: "ps_4_0"
-        targets: [spirv, metal, glsl140core, glsl300es]
+        targets: [spirv, metal, glsl140core]
+
+# GLES and WebGL don't support GL_CLAMP_TO_BORDER, so we emulate it in the shader
+sources:
+  - source: "MorphTargets.hlsl"
+    permutation:
+      macros:
+        EMULATE_BORDER_SAMPLER: 1
+    entries:
+      - entry: "PStaticMesh"
+        profile: "ps_4_0"
+        targets: [glsl300es]
+      - entry: "PMorphTargetMesh"
+        profile: "ps_4_0"
+        targets: [glsl300es]
