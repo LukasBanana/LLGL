@@ -641,15 +641,18 @@ private:
         // Create graphics pipeline for morph-target animation
         LLGL::GraphicsPipelineDescriptor psoMorphTargetDesc;
         {
-            psoMorphTargetDesc.inputVertexAttribs               = morphTargetMeshVertexAttribs;
-            psoMorphTargetDesc.vertexShader                     = LoadVertexShader  ("MorphTargets", "VMorphTargetMesh");
-            psoMorphTargetDesc.fragmentShader                   = LoadFragmentShader("MorphTargets", "PMorphTargetMesh");
-            psoMorphTargetDesc.renderPass                       = swapChain->GetRenderPass();
-            psoMorphTargetDesc.pipelineLayout                   = psoLayoutMorphTarget;
-            psoMorphTargetDesc.depth.testEnabled                = true;
-            psoMorphTargetDesc.depth.writeEnabled               = true;
-            psoMorphTargetDesc.rasterizer.cullMode              = LLGL::CullMode::Disabled;
-            psoMorphTargetDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
+            psoMorphTargetDesc.inputVertexAttribs                   = morphTargetMeshVertexAttribs;
+            psoMorphTargetDesc.vertexShader                         = LoadVertexShader  ("MorphTargets", "VMorphTargetMesh");
+            psoMorphTargetDesc.fragmentShader                       = LoadFragmentShader("MorphTargets", "PMorphTargetMesh");
+            psoMorphTargetDesc.renderPass                           = swapChain->GetRenderPass();
+            psoMorphTargetDesc.pipelineLayout                       = psoLayoutMorphTarget;
+            psoMorphTargetDesc.depth.testEnabled                    = true;
+            psoMorphTargetDesc.depth.writeEnabled                   = true;
+            psoMorphTargetDesc.rasterizer.cullMode                  = LLGL::CullMode::Disabled;
+            psoMorphTargetDesc.rasterizer.multiSampleEnabled        = (GetSampleCount() > 1);
+
+            // Render animated pages with a depth offset as they will be placed very close to the static mesh
+            psoMorphTargetDesc.rasterizer.depthBias.constantFactor  = -100.0f;
         }
         psoMorphTargetMesh = renderer->CreatePipelineState(psoMorphTargetDesc);
         ReportPSOErrors(psoMorphTargetMesh);
