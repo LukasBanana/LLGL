@@ -80,6 +80,14 @@ Practical example of hardware instancing by rendering tens of thousands of diffe
 <p align="center"><img src="Instancing/Example.png" style="width:400px;height:auto;"/></p>
 
 
+### [Morph-Targets](MorphTargets)
+##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_MorphTargets/index.html)
+
+Practical example of morph-target animation by rendering a book that lets the user flick through its pages.
+
+<p align="center"><img src="MorphTargets/MorphTargets.png" style="width:400px;height:auto;"/></p>
+
+
 ### [Post-Processing](PostProcessing)
 ##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_PostProcessing/index.html)
 

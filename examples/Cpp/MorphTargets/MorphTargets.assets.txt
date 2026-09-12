@@ -1,3 +1,4 @@
 Models/Book/Book*.obj
 Textures/Book/Book*.png
 Textures/Logos/Logo_*.png
+Textures/Crate.jpg

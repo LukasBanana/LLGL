@@ -6,7 +6,9 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Platform/Platform.h>
 #include <functional>
+#include <chrono>
 
 
 
@@ -38,7 +40,10 @@ class Example_MorphTargets : public ExampleBase
     static constexpr float      pageTurningTime             = 2.0f;     // Time to turn a page in seconds
     static constexpr int        pageTurningMouseThreshold   = 10;       // How many pixels has the mouse to move before starting to turn a page?
     static constexpr float      pageTurningMouseSpeed       = 0.01f;
+    static constexpr float      mouseGrappleMomentum        = 0.01f;    // Mouse motion required to keep a flicked page going
     static constexpr int        numBookPageKeyframes        = 16;       // Number of keyframe meshes to load from 'BookPageKeyframe_<N>.obj' pattern
+    static constexpr long long  nudgePageWaitTime           = 3000;     // Time to nudge a page when there's no animation, to grab user's attention (in milliseconds)
+    static constexpr float      nudgePageSpeed              = 2.0f;
 
     enum MorphTargetVertexBuffer
     {
@@ -49,33 +54,74 @@ class Example_MorphTargets : public ExampleBase
         MTVB_Count,
     };
 
-    enum PageTurnDirection
-    {
-        PageTurn_Left   = -1,
-        PageTurn_None   = 0,
-        PageTurn_Right  = +1,
-    };
-
     enum BindingTable
     {
         // Resources:
         BindingTable_SceneView          = 0,
+
         BindingTable_PaperDetailMap,
         BindingTable_ColorMap,
+        BindingTable_ColorMapSampler,
 
-        BindingTable_PageTextureFront   = BindingTable_ColorMap,
-        BindingTable_PageTextureBack,
+        BindingTable_FrontPageTexture   = BindingTable_ColorMap,
+        BindingTable_FrontPageSampler,
+        BindingTable_BackPageTexture,
+        BindingTable_BackPageSampler,
 
         // Uniforms:
-        BindingTable_AnimationState = 0,
+        BindingTable_TexCoordScaleFront = 0,
+        BindingTable_TexCoordScaleBack,
+        BindingTable_InterpolationFactor,
         BindingTable_InvertXAxis,
+    };
+
+    enum SamplerId
+    {
+        SamplerId_Default = 0,
+        SamplerId_Wrap,
+        SamplerId_Mirror,
+        SamplerId_BorderBlack, // Not supported on WebGL
+        SamplerId_ClampedLod, // Alternative for WebGL
+        SamplerId_LodBias,
+        SamplerId_LodBiasNearest,
+
+        SamplerId_Count,
+    };
+
+    enum class PageTurnDirection
+    {
+        Left    = -1,
+        None    = 0,
+        Right   = +1,
+    };
+
+    enum class MouseGrappling
+    {
+        Inactive,
+        Starting,
+        Active,
+    };
+
+    enum class AnimationActor
+    {
+        Kinetic,    // Animation triggered by keyboard input
+        Grappled,   // Animation triggered by mouse grappling
+        Nudged,     // Animation triggered by nudging the page and letting it fall back to grab user's attention
+    };
+
+    // Minimalistic material struct with just a texture and sampler
+    struct Material
+    {
+        LLGL::Texture*  colorMap        = nullptr;
+        LLGL::Sampler*  colorMapSampler = nullptr;
+        float           texScale        = 1.0f;
     };
 
     struct StaticMesh
     {
-        std::uint32_t   numVertices = 0;
-        std::uint32_t   firstVertex = 0;
-        LLGL::Texture*  colorMap    = nullptr;
+        std::uint32_t   numVertices     = 0;
+        std::uint32_t   firstVertex     = 0;
+        Material        material;
     };
 
     // Morph-target meshes are composed of three vertex buffers:
@@ -103,47 +149,52 @@ class Example_MorphTargets : public ExampleBase
         std::uint32_t       currentKeyframe     = 0;
         std::uint32_t       nextKeyframe        = 0;
         float               interpolationFactor = 0.0f;
-        float               animationSpeed      = 0.0f;
-        bool                isReverse           = false; // Animate with reversed X-axis transformation
-        bool                isGrappledByMouse   = false; // Turn page manually by mouse movement
-        PageTurnDirection   direction           = PageTurn_None;
-        LLGL::Texture*      faceTextures[2]     = {};
+        float               frameSpeed          = 0.0f;
+        AnimationActor      actor               = AnimationActor::Kinetic;  // What caused the animation: Keyboard, Mouse, or Nudged to grab user's attention?
+        bool                isReverse           = false;                    // Animate with reversed X-axis transformation
+        PageTurnDirection   direction           = PageTurnDirection::None;
+        Material            faceMaterials[2];
         AnimFinishCallback  finishCallback;
 
         PageTurnDirection GetDirectionForMotion(float motion) const
         {
             if (motion > 0.0f)
-                return isReverse ? PageTurn_Right : PageTurn_Left;
+                return isReverse ? PageTurnDirection::Right : PageTurnDirection::Left;
             if (motion < 0.0f)
-                return isReverse ? PageTurn_Left : PageTurn_Right;
-            return PageTurn_None;
+                return isReverse ? PageTurnDirection::Left : PageTurnDirection::Right;
+            return PageTurnDirection::None;
+        }
+
+        void SetFrameSpeed(float animTime)
+        {
+            frameSpeed = static_cast<float>(numKeyframes) / animTime;
         }
 
         void Play(
-            std::uint32_t keyframes, float speed = 1.0f, bool reverse = false, bool grappled = false,
-            LLGL::Texture* frontTex = nullptr, LLGL::Texture* backTex = nullptr, const AnimFinishCallback& callback = nullptr)
+            Material frontMaterial, Material backMaterial, std::uint32_t keyframes,
+            float animTime = 1.0f, bool reverse = false, AnimationActor actor = AnimationActor::Kinetic, const AnimFinishCallback& callback = nullptr)
         {
             if (keyframes >= 2)
             {
-                numKeyframes        = keyframes;
-                interpolationFactor = 0.0f;
-                animationSpeed      = speed;
-                isReverse           = reverse;
-                isGrappledByMouse   = grappled;
-                currentKeyframe     = 0;
-                nextKeyframe        = 1;
-                faceTextures[1]     = frontTex;
-                faceTextures[0]     = backTex;
-                finishCallback      = callback;
-                direction           = GetDirectionForMotion(speed);
+                this->numKeyframes          = keyframes;
+                this->interpolationFactor   = 0.0f;
+                this->SetFrameSpeed(animTime);
+                this->actor                 = actor;
+                this->isReverse             = reverse;
+                this->currentKeyframe       = 0;
+                this->nextKeyframe          = 1;
+                this->faceMaterials[1]      = frontMaterial;
+                this->faceMaterials[0]      = backMaterial;
+                this->finishCallback        = callback;
+                this->direction             = GetDirectionForMotion(frameSpeed);
             }
         }
 
         void Stop()
         {
             OnFinished();
-            direction       = PageTurn_None;
-            animationSpeed  = 0.0f;
+            direction       = PageTurnDirection::None;
+            frameSpeed      = 0.0f;
             nextKeyframe    = currentKeyframe;
         }
 
@@ -162,12 +213,12 @@ class Example_MorphTargets : public ExampleBase
         {
             // Update direction the page is moving to, in case the direction has changed
             // half way throgh the animation cycle when the user is flicking through pages with the mouse.
-            direction = GetDirectionForMotion(dt * animationSpeed);
+            direction = GetDirectionForMotion(dt * frameSpeed);
 
             if (IsPlaying())
             {
                 int advanceFrames = 0;
-                interpolationFactor = ModuloSignFloat(interpolationFactor + dt * animationSpeed, advanceFrames);
+                interpolationFactor = ModuloSignFloat(interpolationFactor + dt * frameSpeed, advanceFrames);
 
                 if (advanceFrames > 0)
                 {
@@ -193,6 +244,25 @@ class Example_MorphTargets : public ExampleBase
                 }
             }
         }
+
+        // Tries to flick a page with enough mouse grappling movement by turning it into a kinetic actor.
+        void TryToFlickPage(float mouseGrappleMovement)
+        {
+            if (actor == AnimationActor::Grappled)
+            {
+                // If the animation was previously grappled by the mouse, check if the animation passed the 'point of no return' to let it finish.
+                // Otherwise, roll back animation to let the page fall back into its original place.
+                if ((currentKeyframe < numKeyframes/2) &&
+                    !((direction == PageTurnDirection::Left  && mouseGrappleMovement > +mouseGrappleMomentum) ||
+                      (direction == PageTurnDirection::Right && mouseGrappleMovement < -mouseGrappleMomentum)))
+                {
+                    frameSpeed = -frameSpeed;
+                }
+
+                // Turn the animatiom back to kinetic actor as the mouse lets go of the page
+                actor = AnimationActor::Kinetic;
+            }
+        }
     };
 
     struct alignas(16) SceneView
@@ -216,32 +286,40 @@ class Example_MorphTargets : public ExampleBase
 
     struct PageTurning
     {
-        std::int32_t    mouseStartPosX  = 0;
-        int             leftPageNo      = 0;
-        bool            startGrappling  = false;
+        std::int32_t                            mouseStartPosX      = 0;
+
+        // Store separately what page numbers are currently visible on the left and the right of the book
+        // as the user can flick through multiple pages at once.
+        int                                     leftPageNo          = 0;
+        int                                     rightPageNo         = 1;
+
+        MouseGrappling                          mouseGrappling      = MouseGrappling::Inactive;
+        std::chrono::system_clock::time_point   timeSinceNoAnims    = {};
     }
     pageTurning;
 
-    LLGL::Shader*                       vsStaticMesh            = nullptr;
-    LLGL::Shader*                       fsStaticMesh            = nullptr;
+    LLGL::Shader*                       vsStaticMesh                        = nullptr;
+    LLGL::Shader*                       fsStaticMesh                        = nullptr;
 
-    LLGL::Shader*                       vsMorphTargetMesh       = nullptr;
-    LLGL::Shader*                       fsMorphTargetMesh       = nullptr;
+    LLGL::Shader*                       vsMorphTargetMesh                   = nullptr;
+    LLGL::Shader*                       fsMorphTargetMesh                   = nullptr;
 
-    LLGL::PipelineLayout*               psoLayoutStatic         = nullptr;
-    LLGL::PipelineLayout*               psoLayoutMorphTarget    = nullptr;
+    LLGL::PipelineLayout*               psoLayoutStatic                     = nullptr;
+    LLGL::PipelineLayout*               psoLayoutMorphTarget                = nullptr;
 
-    LLGL::PipelineState*                psoStaticMesh           = nullptr;
-    LLGL::PipelineState*                psoMorphTargetMesh      = nullptr;
+    LLGL::PipelineState*                psoStaticMesh                       = nullptr;
+    LLGL::PipelineState*                psoMorphTargetMesh                  = nullptr;
 
-    LLGL::Buffer*                       meshBuffer              = nullptr;  // Single mesh buffer containing vertex data for the entire scene
-    LLGL::Buffer*                       sceneViewCbuffer        = nullptr;  // Scene view constant buffer
+    LLGL::Buffer*                       meshBuffer                          = nullptr;  // Single mesh buffer containing vertex data for the entire scene
+    LLGL::Buffer*                       sceneViewCbuffer                    = nullptr;  // Scene view constant buffer
 
-    LLGL::Texture*                      bookShellTexture        = nullptr;
-    LLGL::Texture*                      bookPaperDetailMap      = nullptr;
-    std::vector<LLGL::Texture*>         pageTextures;                       // List of textures for all book pages to render
+    LLGL::Texture*                      bookShellTexture                    = nullptr;
+    LLGL::Texture*                      bookPaperDetailMap                  = nullptr;
+    std::vector<Material>               pages;                                              // List of materials for all book pages to render
 
-    std::vector<MorphTargetAnimation>   animations;                         // List of all active animations
+    LLGL::Sampler*                      textureSamplers[SamplerId_Count]    = {};
+
+    std::vector<MorphTargetAnimation>   animations;                                         // List of all active animations
 
 public:
 
@@ -249,50 +327,95 @@ public:
         ExampleBase { "LLGL Example: MorphTargets" }
     {
         // Create all graphics objects
-        LoadTextures();
+        LoadMaterials();
         LoadMeshes();
         CreateStaticMeshPSO();
         CreateMorphTargetMeshPSO();
 
         // Update vectors for projection
         sceneView.lightVec.z *= GetProjectionZAxis();
+
+        // Initialize timers
+        pageTurning.timeSinceNoAnims = std::chrono::system_clock::now();
     }
 
 private:
 
-    void LoadPageTextures(const std::initializer_list<const char*>& filenames)
+    void LoadMaterials()
     {
-        for (const char* filename : filenames)
-            pageTextures.push_back(LoadTexture(filename));
+        // Create texture samplers. WebGL does not support clamp-to-border, so we use clamp-to-edge instead
+        #if LLGL_OS_WASM
+        textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp")); // Linear sampler with clamp-to-edge address mode
+        textureSamplers[SamplerId_ClampedLod]       = renderer->CreateSampler(LLGL::Parse("address.uvw=clamp,lod.max=1")); // Alternative sampler for WebGL to fix clamp-to-edge
+        textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("lod.bias=3"));
+        textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("lod.min=4,lod.max=4,filter=nearest"));
+        #else
+        textureSamplers[SamplerId_Default]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border")); // Linear sampler with border address mode
+        textureSamplers[SamplerId_BorderBlack]      = renderer->CreateSampler(LLGL::Parse("address.uvw=border,border=black"));
+        textureSamplers[SamplerId_LodBias]          = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.bias=3"));
+        textureSamplers[SamplerId_LodBiasNearest]   = renderer->CreateSampler(LLGL::Parse("address.uvw=border,lod.min=4,lod.max=4,filter=nearest"));
+        #endif
+
+        textureSamplers[SamplerId_Wrap]             = renderer->CreateSampler({}); // Linear sampler with default address mode
+        textureSamplers[SamplerId_Mirror]           = renderer->CreateSampler(LLGL::Parse("address.uvw=mirror"));
+
+        // Load textures
+        bookShellTexture = LoadTexture("Book/Book.png");
+        bookPaperDetailMap = LoadTexture("Book/Book_PaperDetailMap.png");
+
+        LLGL::Texture* textures[] =
+        {
+            LoadTexture("Book/Book_Page0.png"),
+            LoadTexture("Logos/Logo_LLGL.png"),
+            LoadTexture("Crate.jpg"),
+            LoadTexture("Logos/Logo_Direct3D12.png"),
+            LoadTexture("Logos/Logo_Direct3D11.png"),
+            LoadTexture("Logos/Logo_Vulkan.png"),
+            LoadTexture("Logos/Logo_OpenGL.png"),
+            LoadTexture("Logos/Logo_Metal.png"),
+            LoadTexture("Logos/Logo_LLGL.png"),
+        };
+
+        auto MakeMaterial = [this, &textures](int texId, float texScale = 1.0f, SamplerId texSamplerId = SamplerId_Default) -> Material
+        {
+            Material outMaterial;
+            outMaterial.colorMap        = textures[texId];
+            outMaterial.colorMapSampler = this->textureSamplers[texSamplerId];
+            outMaterial.texScale        = texScale;
+            return outMaterial;
+        };
+
+        pages =
+        {
+            MakeMaterial(0),
+            MakeMaterial(1),
+            #if LLGL_OS_WASM
+            MakeMaterial(2, 1.00f, SamplerId_LodBias),
+            MakeMaterial(2, 1.00f, SamplerId_LodBiasNearest),
+            MakeMaterial(2, 5.00f, SamplerId_Wrap),
+            MakeMaterial(2, 5.00f, SamplerId_Mirror),
+            #else
+            MakeMaterial(2, 1.50f, SamplerId_BorderBlack),
+            MakeMaterial(2, 1.50f, SamplerId_Default),
+            MakeMaterial(2, 1.50f, SamplerId_LodBias),
+            MakeMaterial(2, 1.50f, SamplerId_LodBiasNearest),
+            MakeMaterial(2, 5.00f, SamplerId_Wrap),
+            MakeMaterial(2, 5.00f, SamplerId_Mirror),
+            #endif
+            MakeMaterial(3, 1.25f, SamplerId_Default),
+            MakeMaterial(4, 1.25f, SamplerId_Default),
+            #if LLGL_OS_WASM
+            MakeMaterial(5, 1.25f, SamplerId_ClampedLod),
+            #else
+            MakeMaterial(5, 1.25f, SamplerId_Default),
+            #endif
+            MakeMaterial(6, 1.25f, SamplerId_Default),
+            MakeMaterial(7, 1.25f, SamplerId_Default),
+            MakeMaterial(8),
+        };
     }
 
-    void LoadTextures()
-    {
-        bookShellTexture = LoadTexture("Book.png");
-        bookPaperDetailMap = LoadTexture("Book_PaperDetailMap.png");
-
-        LoadPageTextures(
-            {
-                "Book_Page0.png",
-
-                "Logo_LLGL.png",
-                "Logo_Direct3D12.png",
-                "Logo_Direct3D11.png",
-                "Logo_Vulkan.png",
-                "Logo_OpenGL.png",
-                "Logo_Metal.png",
-
-                /*"D1.png",
-                "D2.png",
-                "D3.png",
-                "D4.png",
-                "D5.png",
-                "D6.png",*/
-            }
-        );
-    }
-
-    StaticMesh LoadStaticMesh(std::vector<TexturedVertex>& outVertices, const std::string& filename, LLGL::Texture* colorMap)
+    StaticMesh LoadStaticMesh(std::vector<TexturedVertex>& outVertices, const std::string& filename, const Material& material)
     {
         TriangleMesh intermediateMesh = Load3DModel(outVertices, filename, 3, MeshFlags_FlipTexCoordV);
 
@@ -300,7 +423,7 @@ private:
         {
             outMesh.numVertices = intermediateMesh.numVertices;
             outMesh.firstVertex = intermediateMesh.firstVertex;
-            outMesh.colorMap    = colorMap;
+            outMesh.material    = material;
         }
         return outMesh;
     }
@@ -313,22 +436,26 @@ private:
 
     static std::string KeyframeMeshFilename(int keyframe)
     {
-        return ("BookPageKeyframe_" + std::to_string(keyframe) + ".obj");
+        return ("Book/BookPageKeyframe_" + std::to_string(keyframe) + ".obj");
     }
 
     void LoadMeshes()
     {
         LLGL_VERIFY(numBookPageKeyframes >= 2 && "Need at least 2 keyframes to load");
         LLGL_VERIFY(bookShellTexture != nullptr);
-        LLGL_VERIFY(pageTextures.size() >= 2);
-        LLGL_VERIFY(pageTextures[0] != nullptr);
-        LLGL_VERIFY(pageTextures[1] != nullptr);
+        LLGL_VERIFY(pages.size() >= pageTurning.leftPageNo && pages.size() >= pageTurning.rightPageNo);
+        LLGL_VERIFY(pages[pageTurning.leftPageNo].colorMap != nullptr);
+        LLGL_VERIFY(pages[pageTurning.rightPageNo].colorMap != nullptr);
+
+        Material bookShellMaterial;
+        bookShellMaterial.colorMap          = bookShellTexture;
+        bookShellMaterial.colorMapSampler   = textureSamplers[SamplerId_Default];
 
         // Load static meshes
         std::vector<TexturedVertex> staticVertices;
-        scene.meshBookShell     = LoadStaticMesh(staticVertices, "BookShell.obj", bookShellTexture);
-        scene.meshLRestingPage  = LoadStaticMesh(staticVertices, "BookLeftPage.obj", pageTextures[0]);
-        scene.meshRRestingPage  = LoadStaticMesh(staticVertices, "BookRightPage.obj", pageTextures[1]);
+        scene.meshBookShell     = LoadStaticMesh(staticVertices, "Book/BookShell.obj", bookShellMaterial);
+        scene.meshLRestingPage  = LoadStaticMesh(staticVertices, "Book/BookLeftPage.obj", pages[pageTurning.leftPageNo]);
+        scene.meshRRestingPage  = LoadStaticMesh(staticVertices, "Book/BookRightPage.obj", pages[pageTurning.rightPageNo]);
 
         // Load morph-target keyframes
         std::uint64_t numTotalKeyframeVertices = 0;
@@ -428,13 +555,17 @@ private:
         psoLayoutStatic = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@3):vert:frag,"
-                "texture(paperDetailMap@7):frag,"
-                "texture(colorMap@5):frag,"
 
-                "sampler(colorMapSampler@4){}:frag," // Static sampler
+                "texture(paperDetailMap@4):frag,"
+                "sampler(paperDetailMapSampler@5){}:frag," // Static sampler
 
-                "sampler<paperDetailMap, colorMapSampler>(s_paperDetailMapcolorMapSampler@7),"
-                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@5),"
+                "texture(colorMap@6):frag,"
+                "sampler(colorMapSampler@7):frag," // Dynamic sampler
+
+                "float(dynamicState.texCoordScaleFront),"
+
+                "sampler<paperDetailMap, paperDetailMapSampler>(s_paperDetailMappaperDetailMapSampler@4),"
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@6),"
             )
         );
 
@@ -469,18 +600,23 @@ private:
         psoLayoutMorphTarget = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@3):vert:frag,"
-                "texture(paperDetailMap@7):frag,"
-                "texture(colorMapFrontPage@5):frag,"
-                "texture(colorMapBackPage@6):frag,"
 
-                "sampler(colorMapSampler@4){}:frag," // Static sampler
+                "texture(paperDetailMap@4):frag,"
+                "sampler(paperDetailMapSampler@5){}:frag," // Static sampler
 
-                "float(animationState.interpolationFactor)," // Interpolation factor as uniform to efficiently animate many morph targets
-                "float(animationState.invertXAxis),"
+                "texture(frontPageColorMap@6):frag,"
+                "sampler(frontPageSampler@7):frag," // Dynamic sampler
+                "texture(backPageColorMap@8):frag,"
+                "sampler(backPageSampler@9):frag," // Dynamic sampler
 
-                "sampler<paperDetailMap, colorMapSampler>(s_paperDetailMapcolorMapSampler@7),"
-                "sampler<colorMapFrontPage, colorMapSampler>(s_colorMapFrontPagecolorMapSampler@5),"
-                "sampler<colorMapBackPage, colorMapSampler>(s_colorMapBackPagecolorMapSampler@6),"
+                "float(dynamicState.texCoordScaleFront),"
+                "float(dynamicState.texCoordScaleBack),"
+                "float(dynamicState.interpolationFactor)," // Interpolation factor as uniform to efficiently animate many morph targets
+                "float(dynamicState.invertXAxis),"
+
+                "sampler<paperDetailMap, paperDetailMapSampler>(s_paperDetailMappaperDetailMapSampler@4),"
+                "sampler<frontPageColorMap, frontPageSampler>(s_frontPageColorMapfrontPageSampler@6),"
+                "sampler<backPageColorMap, backPageSampler>(s_backPageColorMapbackPageSampler@8),"
             )
         );
 
@@ -519,128 +655,173 @@ private:
         ReportPSOErrors(psoMorphTargetMesh);
     }
 
-    LLGL::Texture* GetPageTexture(int pageNo)
+    const Material& GetPageMaterial(int pageNo) const
     {
-        const int numPages = static_cast<int>(pageTextures.size());
+        const int numPages = static_cast<int>(pages.size());
         const int pageTextureIndex = ModuloSignInt(pageNo, numPages);
-        return pageTextures[pageTextureIndex];
+        return pages[pageTextureIndex];
     }
 
-    void AnimatePage(int frontPage, int backPage, int revealedPage, float animSpeed = 1.0f, bool reverse = false, bool grappled = false)
+    void SetLeftPage(int page)
+    {
+        scene.meshLRestingPage.material = GetPageMaterial(page);
+        pageTurning.leftPageNo = page;
+    }
+
+    void SetRightPage(int page)
+    {
+        scene.meshRRestingPage.material = GetPageMaterial(page);
+        pageTurning.rightPageNo = page;
+    }
+
+    void AnimatePage(int frontPage, int backPage, int revealedPage, float animTime = 1.0f, bool reverse = false, AnimationActor actor = AnimationActor::Kinetic)
     {
         MorphTargetAnimation anim;
         const std::uint32_t numKeyframes = static_cast<std::uint32_t>(scene.meshMovingPage.keyframeVbufferOffset.size());
-        const float invTimePerKeyframe = static_cast<float>(numKeyframes) / pageTurningTime;
-
-        LLGL::Texture* frontPageTex     = GetPageTexture(frontPage);
-        LLGL::Texture* backPageTex      = GetPageTexture(backPage);
-        LLGL::Texture* revealedPageTex  = GetPageTexture(revealedPage);
 
         anim.Play(
+            GetPageMaterial(frontPage),
+            GetPageMaterial(backPage),
             numKeyframes,
-            animSpeed * invTimePerKeyframe,
+            animTime,
             reverse,
-            grappled,
-            frontPageTex,
-            backPageTex,
-            [this, backPageTex, frontPageTex](PageTurnDirection direction)
+            actor,
+            [this, backPage, frontPage](PageTurnDirection direction)
             {
-                // Replace the page texture in the book with this moving page that has now finished animating
-                if (direction == PageTurn_Left)
-                    this->scene.meshLRestingPage.colorMap = backPageTex;
-                else if (direction == PageTurn_Right)
-                    this->scene.meshRRestingPage.colorMap = frontPageTex;
-                this->ResetMosueGrappling();
+                // Replace the page texture (and number) in the book with this moving page having finished animating.
+                if (direction == PageTurnDirection::Left)
+                    this->SetLeftPage(backPage);
+                else if (direction == PageTurnDirection::Right)
+                    this->SetRightPage(frontPage);
+                this->ResetMouseGrappling();
             }
         );
 
         // Set the newly revealed page texture
-        if (anim.direction == PageTurn_Left)
-            this->scene.meshRRestingPage.colorMap = revealedPageTex;
-        else if (anim.direction == PageTurn_Right)
-            this->scene.meshLRestingPage.colorMap = revealedPageTex;
+        if (anim.direction == PageTurnDirection::Left)
+            SetRightPage(revealedPage);
+        else if (anim.direction == PageTurnDirection::Right)
+            SetLeftPage(revealedPage);
 
         animations.push_back(anim);
     }
 
-    bool ReverseLastPage(PageTurnDirection direction, bool isGrappledByMouse = false)
+    bool FlickBackLastPage(PageTurnDirection direction, AnimationActor actor)
     {
         for (auto it = animations.rbegin(); it != animations.rend(); ++it)
         {
             MorphTargetAnimation& anim = *it;
-            if (anim.direction != direction && anim.isGrappledByMouse == isGrappledByMouse)
+            if (actor == AnimationActor::Grappled || (anim.actor != AnimationActor::Grappled && anim.direction != direction))
             {
-                anim.animationSpeed = -anim.animationSpeed;
+                // Grapple the page by the mouse or otherwise reverse its direction by inverting the animation speed.
+                // Don't use the `reverse` property as this would mirror the animation, but this should only reverse the motion.
+                if (actor == AnimationActor::Grappled)
+                {
+                    anim.actor = AnimationActor::Grappled;
+                    anim.SetFrameSpeed(pageTurningTime);
+                }
+                else
+                    anim.frameSpeed = -anim.frameSpeed;
                 return true;
             }
         }
         return false;
     }
 
-    void TurnPageLeft(bool isGrappledByMouse = false)
+    void TurnPage(PageTurnDirection direction, AnimationActor actor = AnimationActor::Kinetic, float animTime = pageTurningTime)
     {
-        const int numPages = static_cast<int>(pageTextures.size());
+        struct PageSet
+        {
+            int frontPage       = 0;
+            int backPage        = 0;
+            int revealedPage    = 0;
+        };
 
-        int frontPage       = pageTurning.leftPageNo + 1;
-        int backPage        = ModuloSignInt(pageTurning.leftPageNo + 2, numPages);
-        int revealedPage    = ModuloSignInt(pageTurning.leftPageNo + 3, numPages);
+        if (!FlickBackLastPage(direction, actor))
+        {
+            const int numPages = static_cast<int>(pages.size());
 
-        if (!ReverseLastPage(PageTurn_Left, isGrappledByMouse))
-            AnimatePage(frontPage, backPage, revealedPage, 1.0f, false, isGrappledByMouse);
+            PageSet pageSet;
+            if (direction == PageTurnDirection::Left)
+            {
+                pageSet.frontPage       = pageTurning.rightPageNo;
+                pageSet.backPage        = ModuloSignInt(pageTurning.rightPageNo + 1, numPages);
+                pageSet.revealedPage    = ModuloSignInt(pageTurning.rightPageNo + 2, numPages);
+            }
+            else if (direction == PageTurnDirection::Right)
+            {
+                // Front and back pages are flipped here, because the animation plays in reverse,
+                // but front and back are always the same in the geometry.
+                pageSet.backPage        = pageTurning.leftPageNo;
+                pageSet.frontPage       = ModuloSignInt(pageTurning.leftPageNo - 1, numPages);
+                pageSet.revealedPage    = ModuloSignInt(pageTurning.leftPageNo - 2, numPages);
+            }
+            else
+            {
+                return;
+            }
 
-        pageTurning.leftPageNo = backPage;
+            const bool animateInReverse = (direction == PageTurnDirection::Right);
+            AnimatePage(pageSet.frontPage, pageSet.backPage, pageSet.revealedPage, animTime, animateInReverse, actor);
+        }
+
+        // If mouse grappling started, it's now active
+        if (actor == AnimationActor::Grappled)
+            pageTurning.mouseGrappling = MouseGrappling::Active;
     }
 
-    void TurnPageRight(bool isGrappledByMouse = false)
+    void ResetMouseGrappling()
     {
-        const int numPages = static_cast<int>(pageTextures.size());
-
-        // Front and back pages are flipped here, because the animation plays in reverse,
-        // but front and back are always the same in the geometry.
-        int backPage        = pageTurning.leftPageNo;
-        int frontPage       = ModuloSignInt(pageTurning.leftPageNo - 1, numPages);
-        int revealedPage    = ModuloSignInt(pageTurning.leftPageNo - 2, numPages);
-
-        if (!ReverseLastPage(PageTurn_Right, isGrappledByMouse))
-            AnimatePage(frontPage, backPage, revealedPage, 1.0f, true, isGrappledByMouse);
-
-        pageTurning.leftPageNo = revealedPage;
-    }
-
-    void ResetMosueGrappling()
-    {
-        if (pageTurning.startGrappling)
+        if (pageTurning.mouseGrappling != MouseGrappling::Inactive)
             pageTurning.mouseStartPosX = input.GetMousePosition().x;
+    }
+
+    float GetMouseGrappleMovement() const
+    {
+        return static_cast<float>(-input.GetMouseMotion().x) * pageTurningMouseSpeed;
     }
 
     void UpdateUserInput()
     {
-        if (input.KeyDown(LLGL::Key::Left))
-            TurnPageLeft();
-        if (input.KeyDown(LLGL::Key::Right))
-            TurnPageRight();
+        // When no page is being grappled by the mouse, the keyboard can trigger kinetic page movement
+        if (pageTurning.mouseGrappling == MouseGrappling::Inactive)
+        {
+            if (input.KeyDown(LLGL::Key::Left))
+                TurnPage(PageTurnDirection::Left);
+            if (input.KeyDown(LLGL::Key::Right))
+                TurnPage(PageTurnDirection::Right);
+        }
 
         if (input.KeyDown(LLGL::Key::LButton))
         {
-            pageTurning.startGrappling = true;
-            ResetMosueGrappling();
+            pageTurning.mouseGrappling = MouseGrappling::Starting;
+            ResetMouseGrappling();
         }
         else if (input.KeyUp(LLGL::Key::LButton))
         {
-            // Continue animation for all active animations without grappling
+            const float mouseGrappleMovement = GetMouseGrappleMovement();
+
+            // Continue animation for all active animations without grappling, allowing the user to 'flick through pages'.
             for (MorphTargetAnimation& anim : animations)
-                anim.isGrappledByMouse = false;
-            pageTurning.startGrappling = false;
+                anim.TryToFlickPage(mouseGrappleMovement);
+
+            pageTurning.mouseGrappling = MouseGrappling::Inactive;
         }
 
-        if (pageTurning.startGrappling && animations.empty())
+        if (pageTurning.mouseGrappling == MouseGrappling::Active)
+        {
+            if (animations.empty())
+                pageTurning.mouseGrappling = MouseGrappling::Starting;
+        }
+
+        if (pageTurning.mouseGrappling == MouseGrappling::Starting)
         {
             const std::int32_t mouseDiffX = input.GetMousePosition().x - pageTurning.mouseStartPosX;
 
             if (mouseDiffX > pageTurningMouseThreshold)
-                TurnPageRight(true);
+                TurnPage(PageTurnDirection::Right, AnimationActor::Grappled);
             else if (mouseDiffX < -pageTurningMouseThreshold)
-                TurnPageLeft(true);
+                TurnPage(PageTurnDirection::Left, AnimationActor::Grappled);
         }
     }
 
@@ -649,6 +830,20 @@ private:
         UpdateUserInput();
 
         const float projZAxis = GetProjectionZAxis();
+
+        // Nudge a page if there have been no animations for some time
+        auto currentTime = std::chrono::system_clock::now();
+        if (animations.empty())
+        {
+            auto elapsedTimeSinceNoAnims = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - pageTurning.timeSinceNoAnims).count();
+            if (elapsedTimeSinceNoAnims > nudgePageWaitTime)
+            {
+                TurnPage(PageTurnDirection::Left, AnimationActor::Nudged, pageTurningTime / nudgePageSpeed);
+                pageTurning.timeSinceNoAnims = currentTime;
+            }
+        }
+        else
+            pageTurning.timeSinceNoAnims = currentTime;
 
         // Update view-projection matrix
         Gs::Matrix4f vMatrix;
@@ -662,7 +857,7 @@ private:
         sceneView.wMatrix.LoadIdentity();
 
         // Advance all animations and remove those that have finished
-        const float mouseGrappleMovement = static_cast<float>(-input.GetMouseMotion().x) * pageTurningMouseSpeed;
+        const float mouseGrappleMovement = GetMouseGrappleMovement();
 
         animations.erase(
             std::remove_if(
@@ -671,10 +866,19 @@ private:
                 [dt, mouseGrappleMovement](MorphTargetAnimation& anim) -> bool
                 {
                     // Advance animation state and remove element once stopped
-                    if (anim.isGrappledByMouse)
-                        anim.Animate(anim.isReverse ? -mouseGrappleMovement : mouseGrappleMovement);
-                    else
+                    if (anim.actor == AnimationActor::Nudged)
+                    {
+                        anim.frameSpeed -= dt * nudgePageSpeed * static_cast<float>(anim.numKeyframes);
                         anim.Animate(dt);
+                    }
+                    else if (anim.actor == AnimationActor::Grappled)
+                    {
+                        anim.Animate(anim.isReverse ? -mouseGrappleMovement : mouseGrappleMovement);
+                    }
+                    else
+                    {
+                        anim.Animate(dt);
+                    }
                     return !anim.IsPlaying();
                 }
             ),
@@ -682,9 +886,18 @@ private:
         );
     }
 
+    void BindMaterial(std::uint32_t firstDescriptor, const Material& material)
+    {
+        commands->SetResource(firstDescriptor, *(material.colorMap));
+        commands->SetResource(firstDescriptor + 1, *(material.colorMapSampler));
+    }
+
     void DrawStaticMesh(const StaticMesh& mesh)
     {
-        commands->SetResource(BindingTable_ColorMap, *(mesh.colorMap));
+        BindMaterial(BindingTable_ColorMap, mesh.material);
+
+        commands->SetUniforms(0, &(mesh.material.texScale), sizeof(mesh.material.texScale));
+
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
@@ -733,14 +946,24 @@ private:
         commands->SetVertexBuffers(MTVB_Count, morphTargetVbufferViews);
 
         // Update animation state to interpolate between the two keyframes
-        commands->SetUniforms(BindingTable_AnimationState, &(anim.interpolationFactor), sizeof(anim.interpolationFactor));
+        struct MorphTargetDynamicState
+        {
+            float texCoordScale[2];
+            float interpolationFactor;
+            float invertXAxis;
+        }
+        dynamicState =
+        {
+            anim.faceMaterials[0].texScale,
+            anim.faceMaterials[1].texScale,
+            anim.interpolationFactor,
+            (anim.isReverse ? -1.0f : +1.0f),
+        };
+        commands->SetUniforms(0, &dynamicState, sizeof(dynamicState));
 
-        float invertXAxis = (anim.isReverse ? -1.0f : +1.0f);
-        commands->SetUniforms(BindingTable_InvertXAxis, &invertXAxis, sizeof(invertXAxis));
-
-        // Bind page texture
-        commands->SetResource(BindingTable_PageTextureFront, *(anim.faceTextures[0]));
-        commands->SetResource(BindingTable_PageTextureBack,  *(anim.faceTextures[1]));
+        // Bind materials (texture+sampler) for front and back faces of the page
+        BindMaterial(BindingTable_FrontPageTexture, anim.faceMaterials[0]);
+        BindMaterial(BindingTable_BackPageTexture, anim.faceMaterials[1]);
 
         // Draw mesh
         commands->Draw(mesh.numVertices, 0);

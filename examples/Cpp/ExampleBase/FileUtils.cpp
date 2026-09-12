@@ -86,8 +86,12 @@ static std::string FindAssetFilename(const std::string& name)
 
     #elif defined LLGL_OS_WASM
 
-    // Read asset files for examples from asset folder
-    return "assets/" + name;
+    // Read asset files for examples from asset folder without any subfolders
+    const std::size_t subPathStart = name.find_last_of('/');
+    if (subPathStart != std::string::npos)
+        return "assets/" + name.substr(subPathStart + 1);
+    else
+        return "assets/" + name;
 
     #else
 
