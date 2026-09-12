@@ -2,7 +2,8 @@
 
 <p align="center">
     <a href="https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt"><img alt="License" src="https://img.shields.io/badge/license-BSD--3%20clause-blue.svg" /></a>
-    <a href="https://discord.gg/JT4dZ3CgJZ"><img alt="Discord" src="https://img.shields.io/discord/1257440130021457941?logo=discord&logoColor=white"></a?>
+    <a href="https://discord.gg/JT4dZ3CgJZ"><img alt="Discord" src="https://img.shields.io/discord/1257440130021457941?logo=discord&logoColor=white"></a>
+    <a href="https://llgl.sourceforge.io/docu/html/"><img alt="Doxygen Docs" src="https://img.shields.io/badge/doxygen-%232C4AA8.svg"></a>
 </p>
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
