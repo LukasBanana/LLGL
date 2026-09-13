@@ -18,13 +18,12 @@ The library is written mostly in C++11 with the addition of a C99, C# 6.0, and G
 
 ## Documentation
 
-- **Version**: 0.05 Beta (see [ChangeLog](docu/ChangeLog))
-- [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
-with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
-- [LLGL Reference Manual](docu/refman.pdf) (PDF)
-- [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
-- [C++ Examples and Tutorials](examples/Cpp)
-- [C99 Examples](examples/C99)
+- **Version**: 0.05 Beta (see [ChangeLog](docu/ChangeLog/README.md))
+- [Getting Started with LLGL](docu/GettingStarted/README.md)
+- [LLGL Reference Manual](https://llgl.sourceforge.io/docu/html/) (Doxygen)
+- [LLGL Coding Conventions](docu/CodingConventions/README.md)
+- [C++ Examples and Tutorials](examples/Cpp/README.md)
+- [C99 Examples](examples/C99/README.md)
 - [C# Examples](examples/CSharp)
 - [Go Examples](examples/Go)
 - [WebGL Examples](https://lukasbanana.github.io/LLGL/docu/WebPage)
@@ -85,17 +84,16 @@ The LLGL port in vcpkg is kept up to date by Microsoft team members and communit
 ## Showcase
 
 <p align="center">
-    <img src="examples/Cpp/PostProcessing/Example.png" alt="Screenshot missing: Post processing example" style="width:300px;height:auto;">
-    <img src="examples/Cpp/ShadowMapping/Example.png" alt="Screenshot missing: Shadow mapping example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/PostProcessing/Example.png" alt="Post processing example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/ShadowMapping/Example.png" alt="Shadow mapping example" style="width:300px;height:auto;">
 </p>
 
 <p align="center">
-    <img src="examples/Cpp/PBR/Example.png" alt="Screenshot missing: PBR example" style="width:300px;height:auto;">
-    <img src="examples/Cpp/ClothPhysics/Example.gif" alt="Screenshot missing: Cloth physics example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/PBR/Example.png" alt="PBR example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/ClothPhysics/Example.gif" alt="Cloth physics example" style="width:300px;height:auto;">
 </p>
 
 <p align="center">
-    <img src="examples/Cpp/Fonts/Example.iOS.png" alt="Screenshot missing: Fonts example (iOS)" style="height:400px;width:auto;">
-    <img src="examples/Cpp/ClothPhysics/Example.iOS.png" alt="Screenshot missing: Cloth physics example (iOS)" style="height:400px;width:auto;">
+    <img src="docu/Showcase/Showcase_HelloGame_Android.jpg" alt="HelloGame example (Android)" style="width:600px;height:auto;">
 </p>
 

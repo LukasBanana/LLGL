@@ -205,7 +205,9 @@ Then your project files should be located in the build directory you just set up
 
 <a id="fig-cmake-mask1"></a>
 
-![CMake GUI mask to set up the project files for VisualStudio 2015 (MSVC14).](cmake_mask1.png)
+<p align="center">
+  <img src="cmake_mask1.png" alt="CMake GUI mask to set up the project files for VisualStudio 2015 (MSVC14)">
+</p>
 
 There are several options you can enable or disable to build the project:
 - `LLGL_BUILD_(TESTS/EXAMPLES/RENDERER_...)`
