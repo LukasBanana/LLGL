@@ -33,7 +33,7 @@ class Example_Animation : public ExampleBase
     Gs::Vector2f                viewRotation            = viewRotationOrigin;
     Gs::Vector2f                viewRotationPrev;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f            wMatrix;
         Gs::Matrix4f            vpMatrix;

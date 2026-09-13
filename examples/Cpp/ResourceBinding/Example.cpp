@@ -28,7 +28,7 @@ class Example_ResourceBinding : public ExampleBase
 
     LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
-    struct Scene
+    struct alignas(16) Scene
     {
         Gs::Matrix4f            vpMatrix;
     }

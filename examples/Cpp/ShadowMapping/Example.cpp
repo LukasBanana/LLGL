@@ -39,7 +39,7 @@ class Example_ShadowMapping : public ExampleBase
     float                       spotLightAngle          = 35.0f;
     Gs::Vector3f                lightOffset             = { 0, 1.5f, 0 };
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f            wMatrix;
         Gs::Matrix4f            vpMatrix;

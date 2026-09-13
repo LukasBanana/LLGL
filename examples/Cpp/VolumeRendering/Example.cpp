@@ -54,6 +54,7 @@ class Example_VolumeRendering : public ExampleBase
         LLGL::ColorRGBf         albedo                  = { 0.5f, 0.6f, 1.0f };         // Albedo material color
         float                   reflectance             = 0.4f;                         // Specular reflectance intensity
         std::int32_t            viewportExtent[2]       = {};
+        std::int32_t            pad0[2];
     }
     settings;
 

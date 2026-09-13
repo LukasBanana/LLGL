@@ -56,7 +56,7 @@ class Example_PostProcessing : public ExampleBase
     LLGL::RenderPass*       renderPassScene     = nullptr;
     #endif
 
-    struct SceneSettings
+    struct alignas(16) SceneSettings
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
@@ -67,14 +67,14 @@ class Example_PostProcessing : public ExampleBase
     }
     sceneSettings;
 
-    struct BlurSettings
+    struct alignas(16) BlurSettings
     {
         Gs::Vector2f        blurShift;
         float               _pad0[2];
     }
     blurSettings;
 
-    struct Animation
+    struct alignas(16) Animation
     {
         Gs::Matrix4f        rotation;
         float               innerModelRotation  = 0.0f;

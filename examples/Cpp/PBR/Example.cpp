@@ -36,7 +36,7 @@ class Example_PBR : public ExampleBase
 
     std::vector<TriangleMesh>   meshes;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f    cMatrix;
         Gs::Matrix4f    vpMatrix;
@@ -84,7 +84,7 @@ public:
         settings.lightDir.z *= settings.projZAxis;
 
         // Print some information on the standard output
-        LLGL::Log::Printf("press TAB KEY to switch between five different texture samplers\n");
+        LLGL::Log::Printf("Press TAB KEY to switch between five different texture samplers\n");
     }
 
 private:
@@ -185,7 +185,7 @@ private:
     bool LoadImageSlice(const std::string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
     {
         // Print information about current texture
-        LLGL::Log::Printf("load image: \"%s\"\n", filename.c_str());
+        LLGL::Log::Printf("Load image: \"%s\"\n", filename.c_str());
 
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         ImageReader imageReader;

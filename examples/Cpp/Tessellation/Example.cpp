@@ -41,7 +41,7 @@ class Example_Tessellation : public ExampleBase
 
     TriangleMesh            model;
 
-    struct Scene
+    struct alignas(16) Scene
     {
         Gs::Matrix4f    vpMatrix;       // View-projection matrix to transform coordinates from world-space into clipping-space
         Gs::Matrix4f    vMatrix;        // View matrix to transform coordinates from world-space into view-space
