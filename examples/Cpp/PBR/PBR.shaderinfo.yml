@@ -4,13 +4,13 @@ sources:
     entries:
       - entry: "VSky"
         profile: "vs_5_0"
-        targets: [glsl420core, glsl320es, spirv, metal]
+        targets: [glsl140core, glsl300es, spirv, metal]
       - entry: "PSky"
         profile: "ps_5_0"
-        targets: [glsl420core, glsl320es, spirv, metal]
+        targets: [glsl140core, glsl300es, spirv, metal]
       - entry: "VMesh"
         profile: "vs_5_0"
-        targets: [glsl420core, glsl320es, spirv, metal]
+        targets: [glsl140core, glsl300es, spirv, metal]
       - entry: "PMesh"
         profile: "ps_5_0"
-        targets: [glsl420core, glsl320es, spirv, metal]
+        targets: [glsl140core, glsl300es, spirv, metal]

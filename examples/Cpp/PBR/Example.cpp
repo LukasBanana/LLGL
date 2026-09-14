@@ -6,37 +6,52 @@
  */
 
 #include <ExampleBase.h>
+#include <FileUtils.h>
 #include <ImageReader.h>
+#include <LLGL/Utils/Image.h>
 
 
 class Example_PBR : public ExampleBase
 {
 
-    LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               constantBuffer      = nullptr;
+    LLGL::Buffer*               vertexBuffer            = nullptr;
+    LLGL::Buffer*               sceneViewCbuffer        = nullptr;
 
     ShaderPipeline              shaderPipelineMeshes;
-    LLGL::PipelineLayout*       layoutMeshes        = nullptr;
-    LLGL::PipelineState*        pipelineMeshes      = nullptr;
+    LLGL::PipelineLayout*       layoutMeshes            = nullptr;
+    LLGL::PipelineState*        pipelineMeshes          = nullptr;
 
     ShaderPipeline              shaderPipelineSky;
-    LLGL::PipelineLayout*       layoutSky           = nullptr;
-    LLGL::PipelineState*        pipelineSky         = nullptr;
+    LLGL::PipelineLayout*       layoutSky               = nullptr;
+    LLGL::PipelineState*        pipelineSky             = nullptr;
 
-    LLGL::Texture*              skyboxArray         = nullptr;
-    LLGL::Texture*              colorMapArray       = nullptr;
-    LLGL::Texture*              normalMapArray      = nullptr;
-    LLGL::Texture*              roughnessMapArray   = nullptr;
-    LLGL::Texture*              metallicMapArray    = nullptr;
+    LLGL::Texture*              skyboxCubemap           = nullptr;
+    LLGL::Texture*              defaultWhiteTex         = nullptr; // Default 1x1 texture with (1.0, 1.0, 1.0, 1.0) color value.
+    LLGL::Texture*              defaultBlackTex         = nullptr; // Default 1x1 texture with (0.0, 0.0, 0.0, 1.0) color value.
+    LLGL::Texture*              defaultNormalTex        = nullptr; // Default 1x1 texture with (0.5, 0.5, 1.0, 1.0) color value for a normal pointing away from the surface.
 
-    LLGL::Sampler*              linearSampler       = nullptr;
+    LLGL::Sampler*              linearSampler           = nullptr;
 
-    LLGL::ResourceHeap*         resourceHeapMeshes  = nullptr;
-    LLGL::ResourceHeap*         resourceHeapSkybox  = nullptr;
+    LLGL::ResourceHeap*         materialsResourceHeap   = nullptr;
 
-    std::vector<TriangleMesh>   meshes;
+    struct PBRMaterial
+    {
+        LLGL::Texture* colorMap     = nullptr;
+        LLGL::Texture* normalMap    = nullptr;
+        LLGL::Texture* roughnessMap = nullptr;
+        LLGL::Texture* metallicMap  = nullptr;
+    };
 
-    struct alignas(16) Settings
+    struct Model
+    {
+        TriangleMesh    mesh;
+        float           scale;
+    };
+
+    std::vector<PBRMaterial>    materials;
+    std::vector<Model>          models;
+
+    struct alignas(16) SceneView
     {
         Gs::Matrix4f    cMatrix;
         Gs::Matrix4f    vpMatrix;
@@ -45,19 +60,17 @@ class Example_PBR : public ExampleBase
         float           mipCount        = 0.0f;
         float           projZAxis       = 0.0f;
         Gs::Vector4f    lightDir        = { 0, 0, -1, 0 };
-        std::uint32_t   skyboxLayer     = 0;
-        std::uint32_t   materialLayer   = 0;//1;
-        std::uint32_t   _pad1[2];
     }
-    settings;
+    sceneView;
 
-    const int                   defaultImageSize    = 1024;
-    int                         currentMesh         = 0;
-    float                       viewPitch           = 0.0f;
-    float                       viewYaw             = 0.0f;
-
-    std::uint32_t               numSkyboxes         = 0;
-    std::uint32_t               numMaterials        = 0;
+    struct Presentation
+    {
+        std::uint32_t   currentModel    = 0;
+        std::uint32_t   currentMaterial = 0;
+        float           viewPitch       = 0.0f;
+        float           viewYaw         = 0.0f;
+    }
+    presentation;
 
 public:
 
@@ -76,15 +89,20 @@ public:
         CreateBuffers();
         LoadShaders();
         CreatePipelines();
-        CreateTextures();
-        CreateResourceHeaps();
+        LoadTextures();
+        CreateResourceHeap();
 
         // Update vectors for projection
-        settings.projZAxis = GetProjectionZAxis();
-        settings.lightDir.z *= settings.projZAxis;
+        sceneView.projZAxis = GetProjectionZAxis();
+        sceneView.lightDir.z *= sceneView.projZAxis;
 
         // Print some information on the standard output
-        LLGL::Log::Printf("Press TAB KEY to switch between five different texture samplers\n");
+        LLGL::Log::Printf(
+            "=========================================================================\n"
+            "Press TAB KEY to switch through various materials\n"
+            "Press TAB KEY while holding SPACE KEY to switch through various 3D models\n"
+            "=========================================================================\n"
+        );
     }
 
 private:
@@ -93,12 +111,12 @@ private:
     {
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshes.push_back(Load3DModel(vertices, "UVSphere.obj"));
-        meshes.push_back(Load3DModel(vertices, "WiredBox.obj"));
+        models.push_back(Model{ Load3DModel(vertices, "UVSphere.obj"), 1.00f });
+        models.push_back(Model{ Load3DModel(vertices, "UVCube.obj"),   0.75f });
 
         // Create vertex and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), sizeof(TangentSpaceVertex));
-        constantBuffer = CreateConstantBuffer(settings);
+        sceneViewCbuffer = CreateConstantBuffer(sceneView);
     }
 
     void LoadShaders()
@@ -115,11 +133,10 @@ private:
         // Create pipeline layout for skybox
         layoutSky = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "heap{"
-                "  cbuffer(Settings@1):frag:vert,"
-                "  sampler(smpl@2):frag,"
-                "  texture(skyBox@3):frag,"
-                "},"
+                "cbuffer(SceneView@1):frag:vert,"
+                "sampler(smpl@2):frag,"
+                "texture(skyBox@3):frag,"
+
                 "sampler<skyBox, smpl>(skyBox@3),"
             )
         );
@@ -152,16 +169,16 @@ private:
         // Create pipeline layout for meshes
         layoutMeshes = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "heap{"
-                "  cbuffer(Settings@1):frag:vert,"
-                "  sampler(smpl@2):frag,"
-                "  texture(skyBox@3, colorMaps@4, normalMaps@5, roughnessMaps@6, metallicMaps@7):frag,"
-                "},"
+                "cbuffer(SceneView@1):frag:vert,"
+                "sampler(smpl@2):frag,"
+                "texture(skyBox@3):frag,"
+                "heap{ texture(colorMap@4, normalMap@5, roughnessMap@6, metallicMap@7):frag },"
+
                 "sampler<skyBox, smpl>(s_skyBoxsmpl@3),"
-                "sampler<colorMaps, smpl>(s_colorMapssmpl@4),"
-                "sampler<normalMaps, smpl>(s_normalMapssmpl@5),"
-                "sampler<roughnessMaps, smpl>(s_roughnessMapssmpl@6),"
-                "sampler<metallicMaps, smpl>(s_metallicMapssmpl@7),"
+                "sampler<colorMap, smpl>(s_colorMapsmpl@4),"
+                "sampler<normalMap, smpl>(s_normalMapsmpl@5),"
+                "sampler<roughnessMap, smpl>(s_roughnessMapsmpl@6),"
+                "sampler<metallicMap, smpl>(s_metallicMapsmpl@7),"
             )
         );
 
@@ -182,83 +199,44 @@ private:
         ReportPSOErrors(pipelineMeshes);
     }
 
-    bool LoadImageSlice(const std::string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
+    bool LoadTextureArrayLayer(const std::string& filename, LLGL::Extent3D& texLayerExtent, ImageReader& outImageReader)
     {
         // Print information about current texture
         LLGL::Log::Printf("Load image: \"%s\"\n", filename.c_str());
 
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
-        ImageReader imageReader;
-        imageReader.LoadFromFile(filename);
+        outImageReader.LoadFromFile(filename);
 
         // Check if image size is compatible
-        const LLGL::Extent3D& imageExtent = imageReader.GetTextureDesc().extent;
-        if (texWidth == 0)
+        const LLGL::Extent3D& imageExtent = outImageReader.GetTextureDesc().extent;
+        if (texLayerExtent.width == 0)
         {
-            texWidth    = imageExtent.width;
-            texHeight   = imageExtent.height;
+            texLayerExtent.width    = imageExtent.width;
+            texLayerExtent.height   = imageExtent.height;
+            texLayerExtent.depth    = 1;
         }
-        else if (imageExtent.width != texWidth || imageExtent.height != texHeight)
+        else if (imageExtent.width != texLayerExtent.width || imageExtent.height != texLayerExtent.height)
         {
             LLGL::Log::Errorf("size mismatch for texture array while loading image: \"%s\"", filename.c_str());
             return false;
         }
 
-        // Copy into array
-        std::size_t offset  = imageData.size();
-        std::size_t bufSize = imageReader.GetImageView().dataSize;
-
-        imageData.resize(offset + bufSize);
-        ::memcpy(&(imageData[offset]), imageReader.GetImageView().data, bufSize);
-
         return true;
     }
 
-    void FillImageSlice(std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
-    {
-        // Initialize texture size with default value if necessary
-        if (texWidth == 0)
-        {
-            texWidth    = defaultImageSize;
-            texHeight   = defaultImageSize;
-        }
-
-        // Fill image data
-        std::size_t offset = imageData.size();
-        std::size_t bufSize = static_cast<std::size_t>(texWidth*texHeight*4);
-
-        imageData.resize(offset + bufSize, 0);
-    }
-
     // Loads multiple images into one texture array or cube-map array
-    LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<std::string>& texFilenames)
+    LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<const char*>& texFilenames)
     {
         // Load image data
-        std::uint32_t texWidth = 0, texHeight = 0;
-        std::vector<std::uint8_t> imageData;
+        LLGL::Extent3D texLayerExtent;
+        std::vector<ImageReader> texLayerImages(texFilenames.size());
         std::uint32_t numImageSlices = 0;
 
-        for (const std::string& filename : texFilenames)
+        const std::string texBaseDir = "PBR/";
+        for (std::size_t i = 0; i < texFilenames.size(); ++i)
         {
-            if (filename.empty())
-            {
-                FillImageSlice(texWidth, texHeight, imageData);
+            if (LoadTextureArrayLayer(texBaseDir + *(texFilenames.begin() + i), texLayerExtent, texLayerImages[i]))
                 ++numImageSlices;
-            }
-            else
-            {
-                if (LoadImageSlice("PBR/" + filename, texWidth, texHeight, imageData))
-                    ++numImageSlices;
-            }
-        }
-
-        // Define initial texture data
-        LLGL::ImageView srcImageView;
-        {
-            srcImageView.format     = LLGL::ImageFormat::RGBA;
-            srcImageView.dataType   = LLGL::DataType::UInt8;
-            srcImageView.data       = imageData.data();
-            srcImageView.dataSize   = imageData.size();
         }
 
         // Create texture
@@ -266,21 +244,63 @@ private:
         {
             texDesc.type            = texType;
             texDesc.format          = LLGL::Format::RGBA8UNorm;
-            texDesc.extent.width    = static_cast<std::uint32_t>(texWidth);
-            texDesc.extent.height   = static_cast<std::uint32_t>(texHeight);
-            texDesc.extent.depth    = 1;
+            texDesc.extent          = texLayerExtent;
             texDesc.arrayLayers     = numImageSlices;
+            texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
         }
-        auto tex = renderer->CreateTexture(texDesc, &srcImageView);
+        LLGL::Texture* cubeOrArrayTexture = renderer->CreateTexture(texDesc);
 
-        return tex;
+        // Write texture layers one by one.
+        // This is to support WebGL, which is ristricted in consecutive memory blocks.
+        LLGL::TextureRegion texRegion;
+        texRegion.extent = texLayerExtent;
+
+        for (std::uint32_t layer = 0; layer < texDesc.arrayLayers; ++layer)
+        {
+            texRegion.subresource.baseArrayLayer = layer;
+            renderer->WriteTexture(*cubeOrArrayTexture, texRegion, texLayerImages[layer].GetImageView());
+        }
+
+        // Generate MIP-maps
+        commands->Begin();
+        commands->GenerateMips(*cubeOrArrayTexture);
+        commands->End();
+        commandQueue->Submit(*commands);
+
+        return cubeOrArrayTexture;
     }
 
-    void CreateTextures()
+    LLGL::Texture* LoadTextureOrDefault(const std::string& filename, LLGL::Texture* defaultTexture = nullptr)
     {
-        numSkyboxes = 1;
-        numMaterials = 4;
+        return (FindAsset(filename) ? LoadTexture(filename) : defaultTexture);
+    }
 
+    void LoadMaterial(const std::string& basename)
+    {
+        const std::string texBaseDir = "PBR/";
+        PBRMaterial newMaterial;
+        newMaterial.colorMap        = LoadTextureOrDefault(texBaseDir + basename + '/' + basename + "_col.jpg", defaultWhiteTex);
+        newMaterial.normalMap       = LoadTextureOrDefault(texBaseDir + basename + '/' + basename + "_nrm.jpg", defaultNormalTex);
+        newMaterial.roughnessMap    = LoadTextureOrDefault(texBaseDir + basename + '/' + basename + "_rgh.jpg", defaultBlackTex);
+        newMaterial.metallicMap     = LoadTextureOrDefault(texBaseDir + basename + '/' + basename + "_met.jpg", defaultBlackTex);
+        materials.push_back(newMaterial);
+    }
+
+    LLGL::Texture* CreateDefaultTexture(const LLGL::ColorRGBAf& colorValue)
+    {
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.debugName           = "DefaultTex2D";
+            texDesc.clearValue.color[0] = colorValue.r;
+            texDesc.clearValue.color[1] = colorValue.g;
+            texDesc.clearValue.color[2] = colorValue.b;
+            texDesc.clearValue.color[3] = colorValue.a;
+        }
+        return renderer->CreateTexture(texDesc);
+    }
+
+    void LoadTextures()
+    {
         // Load skybox textures
         if (HasRightHandedProjection())
         {
@@ -288,8 +308,8 @@ private:
             // This can be done by rotating and mirroring the images as well as swapping the cube faces left with right and back with front.
             // For this example, we simply use a different skybox to show a different environment depending on whether left- or right-handed projections are used.
             // This simply hides the fact that we did not provide a right-handed skybox nor did we care to convert it.
-            skyboxArray = LoadTextureArray(
-                LLGL::TextureType::TextureCubeArray,
+            skyboxCubemap = LoadTextureArray(
+                LLGL::TextureType::TextureCube,
                 {
                     // 1st skybox "mp_hanging"
                     "mp_hanging/hangingstone_ft.tga", // X+ = interpret 'ft' as right
@@ -303,8 +323,8 @@ private:
         }
         else
         {
-            skyboxArray = LoadTextureArray(
-                LLGL::TextureType::TextureCubeArray,
+            skyboxCubemap = LoadTextureArray(
+                LLGL::TextureType::TextureCube,
                 {
                     // 1st skybox "mp_alpha"
                     "mp_alpha/alpha-island_rt.tga", // X+ = right
@@ -318,48 +338,16 @@ private:
         }
 
         // Store number of MIP-maps for environment map
-        settings.mipCount = static_cast<float>(skyboxArray->GetDesc().mipLevels);
+        sceneView.mipCount = static_cast<float>(skyboxCubemap->GetDesc().mipLevels);
+
+        // Create default textures
+        defaultWhiteTex  = CreateDefaultTexture(LLGL::ColorRGBAf{ 1.0f, 1.0f, 1.0f, 1.0f });
+        defaultBlackTex  = CreateDefaultTexture(LLGL::ColorRGBAf{ 0.0f, 0.0f, 0.0f, 1.0f });
+        defaultNormalTex = CreateDefaultTexture(LLGL::ColorRGBAf{ 0.5f, 0.5f, 1.0f, 1.0f });
 
         // Load PBR textures
-        colorMapArray = LoadTextureArray(
-            LLGL::TextureType::Texture2DArray,
-            {
-                "Wood13/Wood13_col.jpg",
-                "Tiles26/Tiles26_col.jpg",
-                "Tiles22/Tiles22_col.jpg",
-                "Metal04/Metal04_col.jpg",
-            }
-        );
-
-        normalMapArray = LoadTextureArray(
-            LLGL::TextureType::Texture2DArray,
-            {
-                "Wood13/Wood13_nrm.jpg",
-                "Tiles26/Tiles26_nrm.jpg",
-                "Tiles22/Tiles22_nrm.jpg",
-                "Metal04/Metal04_nrm.jpg",
-            }
-        );
-
-        roughnessMapArray = LoadTextureArray(
-            LLGL::TextureType::Texture2DArray,
-            {
-                "Wood13/Wood13_rgh.jpg",
-                "Tiles26/Tiles26_rgh.jpg",
-                "Tiles22/Tiles22_rgh.jpg",
-                "Metal04/Metal04_rgh.jpg",
-            }
-        );
-
-        metallicMapArray = LoadTextureArray(
-            LLGL::TextureType::Texture2DArray,
-            {
-                "",                         // non-metallic
-                "",                         // non-metallic
-                "",                         // non-metallic
-                "Metal04/Metal04_met.jpg",  // metallic
-            }
-        );
+        for (const char* name : { "Tiles26", "Tiles22", "Wood13", "Metal04" })
+            LoadMaterial(name);
 
         // Create linear sampler
         LLGL::SamplerDescriptor samplerDesc;
@@ -369,29 +357,28 @@ private:
         linearSampler = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreateResourceHeaps()
+    void CreateResourceHeap()
     {
-        // Create resource heap for skybox
-        const LLGL::ResourceViewDescriptor resourceViewsSky[] =
-        {
-            constantBuffer, linearSampler, skyboxArray
-        };
-        resourceHeapSkybox = renderer->CreateResourceHeap(layoutSky, resourceViewsSky);
-        resourceHeapSkybox->SetDebugName("resourceHeapSkybox");
-
         // Create resource heap for meshes
-        std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes =
+        constexpr std::uint32_t numTexturesPerMaterial = 4;
+        LLGL::ResourceHeapDescriptor resHeapDesc;
         {
-            constantBuffer,
-            linearSampler,
-            skyboxArray,
-            colorMapArray,
-            normalMapArray,
-            roughnessMapArray,
-            metallicMapArray,
-        };
-        resourceHeapMeshes = renderer->CreateResourceHeap(layoutMeshes, resourceViewsMeshes);
-        resourceHeapMeshes->SetDebugName("resourceHeapMeshes");
+            resHeapDesc.debugName           = "Materials.ResourceHeap";
+            resHeapDesc.pipelineLayout      = layoutMeshes;
+            resHeapDesc.numResourceViews    = numTexturesPerMaterial * static_cast<std::uint32_t>(materials.size());
+        }
+        materialsResourceHeap = renderer->CreateResourceHeap(resHeapDesc);
+
+        // Write all mateiral textures into heap
+        for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(materials.size()); ++i)
+        {
+            const PBRMaterial& material = materials[i];
+            renderer->WriteResourceHeap(
+                *materialsResourceHeap,
+                i * numTexturesPerMaterial,
+                { material.colorMap, material.normalMap, material.roughnessMap, material.metallicMap }
+            );
+        }
     }
 
 private:
@@ -413,7 +400,7 @@ private:
             if (input.KeyPressed(LLGL::Key::Space))
             {
                 // Rotate mesh
-                auto& m = meshes[currentMesh].transform;
+                Gs::Matrix4f& m = models[presentation.currentModel].mesh.transform;
                 Gs::Matrix4f deltaRotation;
                 const float rotateSpeed = 0.01f * projZAxis;
                 Gs::RotateFree(deltaRotation, { 1, 0, 0 }, motionVec.y * rotateSpeed);
@@ -424,61 +411,65 @@ private:
             {
                 // Rotate camera
                 const float rotateSpeed = 0.25f;
-                viewPitch   += motionVec.y * rotateSpeed;
-                viewYaw     += motionVec.x * rotateSpeed;
-                viewPitch = Gs::Clamp(viewPitch, -90.0f, 90.0f);
+                presentation.viewPitch  += motionVec.y * rotateSpeed;
+                presentation.viewYaw    += motionVec.x * rotateSpeed;
+                presentation.viewPitch = Gs::Clamp(presentation.viewPitch, -90.0f, 90.0f);
             }
         }
 
         // Update material and skybox layer switches
         if (input.KeyDown(LLGL::Key::Tab))
         {
-            if (input.KeyPressed(LLGL::Key::Shift))
+            if (input.KeyPressed(LLGL::Key::Space))
             {
-                if (numSkyboxes > 0)
-                    settings.skyboxLayer = (settings.skyboxLayer + 1) % numSkyboxes;
-            }
-            else if (input.KeyPressed(LLGL::Key::Space))
-            {
-                if (!meshes.empty())
-                    currentMesh = (currentMesh + 1) % static_cast<int>(meshes.size());
+                if (!models.empty())
+                    presentation.currentModel = (presentation.currentModel + 1) % static_cast<std::uint32_t>(models.size());
             }
             else
             {
-                if (numMaterials > 0)
-                    settings.materialLayer = (settings.materialLayer + 1) % numMaterials;
+                if (!materials.empty())
+                    presentation.currentMaterial = (presentation.currentMaterial + 1) % static_cast<std::uint32_t>(materials.size());
             }
         }
 
         // Set camera, view-projection, and world matrix
-        settings.cMatrix.LoadIdentity();
-        Gs::RotateFree(settings.cMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(projZAxis * viewYaw));
-        Gs::RotateFree(settings.cMatrix, Gs::Vector3f{ 1, 0, 0 }, Gs::Deg2Rad(projZAxis * viewPitch));
-        Gs::Translate(settings.cMatrix, Gs::Vector3f{ 0, 0, -4 * projZAxis });
+        sceneView.cMatrix.LoadIdentity();
+        Gs::RotateFree(sceneView.cMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(projZAxis * presentation.viewYaw));
+        Gs::RotateFree(sceneView.cMatrix, Gs::Vector3f{ 1, 0, 0 }, Gs::Deg2Rad(projZAxis * presentation.viewPitch));
+        Gs::Translate(sceneView.cMatrix, Gs::Vector3f{ 0, 0, -4 * projZAxis });
 
-        settings.vpMatrix = projection * settings.cMatrix.Inverse();
-        settings.wMatrix = meshes[currentMesh].transform;
+        sceneView.vpMatrix = projection * sceneView.cMatrix.Inverse();
+        sceneView.wMatrix = models[presentation.currentModel].mesh.transform;
+        Gs::Scale(sceneView.wMatrix, Gs::Vector3f{ models[presentation.currentModel].scale });
 
-        settings.aspectRatio = { GetAspectRatio(), 1.0f };
+        sceneView.aspectRatio = { GetAspectRatio(), 1.0f };
+    }
+
+    void BindViewAndSkyboxResources()
+    {
+        commands->SetResource(0, *sceneViewCbuffer);
+        commands->SetResource(1, *linearSampler);
+        commands->SetResource(2, *skyboxCubemap);
     }
 
     void RenderSkybox()
     {
         commands->SetPipelineState(*pipelineSky);
-        commands->SetResourceHeap(*resourceHeapSkybox);
+        BindViewAndSkyboxResources();
         commands->Draw(3, 0);
     }
 
     void RenderMesh(const TriangleMesh& mesh)
     {
         commands->SetPipelineState(*pipelineMeshes);
-        commands->SetResourceHeap(*resourceHeapMeshes);
+        BindViewAndSkyboxResources();
+        commands->SetResourceHeap(*materialsResourceHeap, presentation.currentMaterial);
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
     void RenderScene()
     {
-        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+        commands->UpdateBuffer(*sceneViewCbuffer, 0, &sceneView, sizeof(sceneView));
         commands->BeginRenderPass(*swapChain);
         {
             commands->Clear(LLGL::ClearFlags::ColorDepth);
@@ -486,7 +477,7 @@ private:
             commands->SetVertexBuffer(*vertexBuffer);
 
             RenderSkybox();
-            RenderMesh(meshes[currentMesh]);
+            RenderMesh(models[presentation.currentModel].mesh);
         }
         commands->EndRenderPass();
     }

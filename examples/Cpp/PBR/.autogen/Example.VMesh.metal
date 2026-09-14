@@ -3,7 +3,7 @@
 
 using namespace metal;
 
-struct type_Settings
+struct type_SceneView
 {
     float4x4 cMatrix;
     float4x4 vpMatrix;
@@ -12,9 +12,6 @@ struct type_Settings
     float mipCount;
     float _pad0;
     float4 lightDir;
-    uint skyboxLayer;
-    uint materialLayer;
-    uint2 _pad1;
 };
 
 struct VMesh_out
@@ -36,16 +33,16 @@ struct VMesh_in
     float2 in_var_TEXCOORD [[attribute(4)]];
 };
 
-vertex VMesh_out VMesh(VMesh_in in [[stage_in]], constant type_Settings& Settings [[buffer(1)]])
+vertex VMesh_out VMesh(VMesh_in in [[stage_in]], constant type_SceneView& SceneView [[buffer(1)]])
 {
     VMesh_out out = {};
-    float4 _49 = Settings.wMatrix * float4(in.in_var_POSITION, 1.0);
-    out.gl_Position = Settings.vpMatrix * _49;
-    out.out_var_TANGENT = fast::normalize(Settings.wMatrix * float4(in.in_var_TANGENT, 0.0)).xyz;
-    out.out_var_BITANGENT = fast::normalize(Settings.wMatrix * float4(in.in_var_BITANGENT, 0.0)).xyz;
-    out.out_var_NORMAL = fast::normalize(Settings.wMatrix * float4(in.in_var_NORMAL, 0.0)).xyz;
+    float4 _47 = SceneView.wMatrix * float4(in.in_var_POSITION, 1.0);
+    out.gl_Position = SceneView.vpMatrix * _47;
+    out.out_var_TANGENT = fast::normalize(SceneView.wMatrix * float4(in.in_var_TANGENT, 0.0)).xyz;
+    out.out_var_BITANGENT = fast::normalize(SceneView.wMatrix * float4(in.in_var_BITANGENT, 0.0)).xyz;
+    out.out_var_NORMAL = fast::normalize(SceneView.wMatrix * float4(in.in_var_NORMAL, 0.0)).xyz;
     out.out_var_TEXCOORD = in.in_var_TEXCOORD;
-    out.out_var_WORLDPOS = _49;
+    out.out_var_WORLDPOS = _47;
     return out;
 }
 

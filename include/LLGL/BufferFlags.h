@@ -182,6 +182,7 @@ struct VertexBufferView
     \brief Initializes all fields of this structure.
     \param[in] buffer Pointer to the vertex buffer resource.
     \param[in] stride Optional stride (in bytes) between vertices. If this is 0, the buffer resource must have been created with a default stride.
+    \param[in] offset Optional offset (in bytes) to the first vertex in the buffer view.
     */
     inline VertexBufferView(Buffer* buffer, std::uint32_t stride = 0, std::uint64_t offset = 0) :
         buffer { buffer },

@@ -685,13 +685,14 @@ if(EMSCRIPTEN)
     endif()
 
     # TODO: Emscripten file system pulls in a large amount of code. Consider limiting file system support to examples and tests.
-    add_link_options("SHELL:-s FORCE_FILESYSTEM") # for examples
+    add_link_options("SHELL:-s FORCE_FILESYSTEM") # For examples
 
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
-    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # required for explicit swap control
+    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # Required for explicit swap control
     add_link_options("SHELL:-s ASSERTIONS")
+    add_link_options("SHELL:-s ALLOW_MEMORY_GROWTH") # Allow memory to grow as graphics apps can be quite demanding
 endif()
 
 
