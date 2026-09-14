@@ -8,21 +8,21 @@ This repository contains several tutorials and examples which show how to use LL
 
 Getting started tutorial where a single multi-colored triangle is rendered.
 
-<p align="center"><img src="HelloTriangle/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="HelloTriangle/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Tessellation](Tessellation)
 
 Hardware tessellation for rendering highly detailed geometry.
 
-<p align="center"><img src="Tessellation/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Tessellation/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [ImGui](../../docu/Tutorials/ImGui)
 
 Tutorial how to integrate ImGui into an LLGL project for UI rendering and event handling.
 
-<p align="center"><img src="../../docu/Tutorials/ImGui/LLGL_ImGui_Thumbnail.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="../../docu/Tutorials/ImGui/LLGL_ImGui_Thumbnail.png" style="width:auto;height:225px;"/></p>
 
 
 ## Examples
@@ -32,7 +32,7 @@ Tutorial how to integrate ImGui into an LLGL project for UI rendering and event 
 
 Simple texturing and sampler state example.
 
-<p align="center"><img src="Texturing/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Texturing/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Render Target](RenderTarget)
@@ -40,7 +40,7 @@ Simple texturing and sampler state example.
 
 Simple render target example with optional multi-sample texture (Texture2DMS/ sampler2DMS).
 
-<p align="center"><img src="RenderTarget/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="RenderTarget/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Post-Processing](PostProcessing)
@@ -48,7 +48,7 @@ Simple render target example with optional multi-sample texture (Texture2DMS/ sa
 
 Practical example of a glow effect with post-processing and the usage of several shaders, render targets and graphics pipelines.
 
-<p align="center"><img src="PostProcessing/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="PostProcessing/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Shadow Mapping](ShadowMapping)
@@ -56,7 +56,7 @@ Practical example of a glow effect with post-processing and the usage of several
 
 Practical example of standard shadow-mapping technique.
 
-<p align="center"><img src="ShadowMapping/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="ShadowMapping/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Stencil Buffer](StencilBuffer)
@@ -64,7 +64,7 @@ Practical example of standard shadow-mapping technique.
 
 Rendering a portal using the stencil buffer.
 
-<p align="center"><img src="StencilBuffer/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="StencilBuffer/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Physically Based Rendering (PBR)](PBR)
@@ -72,7 +72,7 @@ Rendering a portal using the stencil buffer.
 
 Rendering a skybox and a PBR material with multiple texture maps for albedo (base color), normals, roughness, and metallic properties.
 
-<p align="center"><img src="PBR/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="PBR/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Fonts](Fonts)
@@ -80,28 +80,28 @@ Rendering a skybox and a PBR material with multiple texture maps for albedo (bas
 
 Example how to render fonts efficiently in batched draw calls.
 
-<p align="center"><img src="Fonts/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Fonts/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Queries](Queries)
 
 Shows how to use Query objects and conditional rendering for occlusion culling.
 
-<p align="center"><img src="Queries/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Queries/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Multi Context](MultiContext)
 
 Shows the following rendering techniques: multiple render contexts (one window each), rendering simultaneously into multiple viewports, geometry shader.
 
-<p align="center"><img src="MultiContext/Example.png" style="width:752px;height:auto;"/></p>
+<p align="center"><img src="MultiContext/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Indirect Draw](IndirectDraw)
 
 Small example with a compute shader and a storage buffer for the indirect draw command.
 
-<p align="center"><img src="IndirectDraw/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="IndirectDraw/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Instancing](Instancing)
@@ -109,7 +109,7 @@ Small example with a compute shader and a storage buffer for the indirect draw c
 
 Practical example of hardware instancing by rendering tens of thousands of different textured plants instances.
 
-<p align="center"><img src="Instancing/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Instancing/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Morph-Targets](MorphTargets)
@@ -117,14 +117,14 @@ Practical example of hardware instancing by rendering tens of thousands of diffe
 
 Practical example of morph-target animation by rendering a book that lets the user flick through its pages.
 
-<p align="center"><img src="MorphTargets/MorphTargets.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="MorphTargets/MorphTargets.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Multi Renderer](MultiRenderer)
 
 Experimental example of using multiple renderers at once (only supported on Win32 platform).
 
-<p align="center"><img src="MultiRenderer/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="MultiRenderer/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Animation](Animation)
@@ -132,7 +132,7 @@ Experimental example of using multiple renderers at once (only supported on Win3
 
 Small animation example with orthogonal projection.
 
-<p align="center"><img src="Animation/Example.gif" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="Animation/Example.gif" style="width:auto;height:225px;"/></p>
 
 
 ### [Volume Rendering](VolumeRendering)
@@ -140,14 +140,14 @@ Small animation example with orthogonal projection.
 
 Example of generating perlin noise into 3D texture with a glitter effect and volume rendering.
 
-<p align="center"><img src="VolumeRendering/Example.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="VolumeRendering/Example.png" style="width:auto;height:225px;"/></p>
 
 
 ### [Cloth Physics](ClothPhysics)
 
 Practical example of multiple compute shaders for position based dynamics.
 
-<p align="center"><img src="ClothPhysics/Example.gif" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="ClothPhysics/Example.gif" style="width:auto;height:225px;"/></p>
 
 
 ### [HelloGame](HelloGame)
@@ -155,14 +155,14 @@ Practical example of multiple compute shaders for position based dynamics.
 
 Example of a small puzzle game. Easy to add new levels via text files.
 
-<p align="center"><img src="HelloGame/HelloGame.gif" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="HelloGame/HelloGame.gif" style="width:auto;height:225px;"/></p>
 
 
 ### [HelloOpenXR](HelloOpenXR)
 
 Example of a small VR app using OpenXR that renders a single cube. Screenshot was captured on PC with PSVR2.
 
-<p align="center"><img src="HelloOpenXR/HelloOpenXR.png" style="width:400px;height:auto;"/></p>
+<p align="center"><img src="HelloOpenXR/HelloOpenXR.png" style="width:auto;height:225px;"/></p>
 
 
 
