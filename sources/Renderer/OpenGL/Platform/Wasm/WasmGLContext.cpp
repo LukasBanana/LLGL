@@ -132,8 +132,8 @@ void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const Render
 
     GetWebGLVersionFromConfig(attrs, profile);
 	attrs.alpha                         = true;
-	attrs.depth                         = true;
-	attrs.stencil                       = true;
+	attrs.depth                         = (pixelFormat.depthBits > 0);
+	attrs.stencil                       = (pixelFormat.stencilBits > 0);
 	attrs.antialias                     = (samples_ > 1);
 	attrs.premultipliedAlpha            = false; // This must be disabled to prevent glitches in the browser canvas
 	attrs.enableExtensionsByDefault     = true;

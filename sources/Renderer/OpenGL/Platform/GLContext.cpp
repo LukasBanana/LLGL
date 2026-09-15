@@ -79,6 +79,7 @@ unsigned GLContext::GetCurrentGlobalIndex()
  */
 
 GLContext::GLContext() :
+    stateMngr_   { this                   },
     globalIndex_ { ++g_globalIndexCounter }
 {
 }

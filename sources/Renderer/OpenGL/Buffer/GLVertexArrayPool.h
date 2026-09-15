@@ -51,7 +51,7 @@ class GLVertexArrayPool
         // This function can be called on any GL context that is current, while Allocate() and Purge() must only be called when their parent GL context is current.
         void ReleaseOnAnyContext(GLuint vao);
 
-        // Destroys all released VAOs by invoking glDeleteVertexArrays() on them.
+        // Destroys all released VAOs by invoking glDeleteVertexArrays() on them. This is called "Purge" because it cleans up stale IDs.
         void Purge();
 
         #if LLGL_DEBUG

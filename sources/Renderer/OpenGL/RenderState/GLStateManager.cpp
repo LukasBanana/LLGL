@@ -261,7 +261,8 @@ struct GLStateManager::GLFramebufferClearState
  * GLStateManager class
  */
 
-GLStateManager::GLStateManager()
+GLStateManager::GLStateManager(GLContext* context) :
+    context_ { context }
 {
     /* Make this the active state manager if there is no previous one */
     if (GLStateManager::current_ == nullptr)
@@ -1736,6 +1737,15 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
 
 void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager)
 {
+    #if LLGL_GL_BUFFER_HAZARD_TRACKING
+    /*
+    Reset staging buffer pool every time a render-target is bound.
+    This should ensure that abstracted command encoders in WebGL for instance should be flushed.
+    The staging buffer pool should be kept small, to avoid large staging buffer chunks that can build up during a frame.
+    */
+    context_->GetStagingBufferPool().Reset();
+    #endif
+
     /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {

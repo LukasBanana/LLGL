@@ -15,6 +15,7 @@
 #include <memory>
 #include "../RenderState/GLStateManager.h"
 #include "../Buffer/GLVertexArrayPool.h"
+#include "../Buffer/GLStagingBufferPool.h"
 
 
 namespace LLGL
@@ -87,6 +88,14 @@ class GLContext
             return vertexArrayPool_;
         }
 
+        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        // Returns the staging buffer pool for environments that demand manual hazard tracking, like the Metal backend in ANGLE.
+        inline GLStagingBufferPool& GetStagingBufferPool()
+        {
+            return stagingBufferPool_;
+        }
+        #endif
+
         // Returns the global index of this GL context. This is assigned when the context is created. The first index starts with 1. The invalid index is 0.
         inline unsigned GetGlobalIndex() const
         {
@@ -142,6 +151,11 @@ class GLContext
 
         GLStateManager      stateMngr_;
         GLVertexArrayPool   vertexArrayPool_;
+
+        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        GLStagingBufferPool stagingBufferPool_;
+        #endif
+
         Format              colorFormat_        = Format::Undefined;
         Format              depthStencilFormat_ = Format::Undefined;
         unsigned            globalIndex_        = 0;

@@ -60,6 +60,11 @@ void GLContextManager::Clear()
     {
         GLContext::SetCurrent(pixelFormat.context.get());
         pixelFormat.context->GetVertexArrayPool().Purge();
+
+        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        pixelFormat.context->GetStagingBufferPool().Clear();
+        #endif
+
     }
 
     /* Reset all fields and clear containers */

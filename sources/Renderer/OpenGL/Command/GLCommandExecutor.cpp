@@ -52,7 +52,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBufferSubData:
         {
             auto cmd = static_cast<const GLCmdBufferSubData*>(pc);
-            cmd->buffer->BufferSubData(cmd->offset, cmd->size, cmd + 1);
+            cmd->buffer->BufferSubData(cmd->offset, cmd->size, cmd + 1, true);
             return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeCopyBufferSubData:

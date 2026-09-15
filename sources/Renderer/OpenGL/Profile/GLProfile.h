@@ -58,7 +58,7 @@ void DepthRange(GLclamp_t nearVal, GLclamp_t farVal);
 // Wrapper for glClearDepth/glClearDepthf.
 void ClearDepth(GLclamp_t depth);
 
-// Wrapper for glBufferSubData; uses glMapBufferRange for GLES.
+// Wrapper for glGetBufferSubData; uses glMapBufferRange for GLES.
 void GetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void* data);
 
 // Wrapper for glMapBuffer; uses glMapBufferRange for GLES.

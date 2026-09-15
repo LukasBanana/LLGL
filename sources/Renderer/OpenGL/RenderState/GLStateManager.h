@@ -14,6 +14,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
+#include "../Buffer/GLStagingBufferPool.h"
 #include "../../../Core/Assertion.h"
 #include <stack>
 #include <cstdint>
@@ -66,8 +67,11 @@ class GLStateManager
 
         /* ----- Common ----- */
 
-        GLStateManager();
+        GLStateManager(GLContext* context);
         ~GLStateManager();
+
+        GLStateManager(const GLStateManager&) = delete;
+        GLStateManager& operator = (const GLStateManager&) = delete;
 
         // Returns the active GL state manager.
         static inline GLStateManager& Get()
@@ -402,7 +406,9 @@ class GLStateManager
 
     private:
 
-        GLLimits                            limits_;                // Limitations of this GL context
+        GLContext*                          context_                    = nullptr;  // Context that owns this GLStateManager
+
+        GLLimits                            limits_;                                // Limitations of this GL context
 
         GLContextState                      contextState_;
 
@@ -414,7 +420,7 @@ class GLStateManager
         bool                                indexType16Bits_            = false;
         GLuint                              lastVertexAttribArray_      = 0;
 
-        GLenum                              frontFaceInternal_          = GL_CCW; // actual front face input (without possible inversion)
+        GLenum                              frontFaceInternal_          = GL_CCW;   // Actual front face input (without possible inversion)
 
         bool                                flipViewportYPos_           = false;
         bool                                flipFrontFacing_            = false;

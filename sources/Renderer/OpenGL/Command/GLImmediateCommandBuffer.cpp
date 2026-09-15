@@ -83,7 +83,7 @@ void GLImmediateCommandBuffer::UpdateBuffer(
     std::uint64_t   dataSize)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
-    dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
+    dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data, true);
 }
 
 void GLImmediateCommandBuffer::CopyBuffer(
