@@ -166,7 +166,7 @@ void D3D12StagingBufferPool::UnmapUploadBuffer(
 
 void D3D12StagingBufferPool::AllocChunk(UINT64 minChunkSize)
 {
-    chunks_.emplace_back(device_, std::max(chunkSize_, minChunkSize));
+    chunks_.emplace_back(device_, std::max(chunkSize_, minChunkSize), 256u, D3D12_HEAP_TYPE_UPLOAD, true);
     chunkIdx_ = chunks_.size() - 1;
 }
 

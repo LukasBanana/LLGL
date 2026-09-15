@@ -20,35 +20,50 @@ D3D12StagingBuffer::D3D12StagingBuffer(
     ID3D12Device*   device,
     UINT64          size,
     UINT            alignment,
-    D3D12_HEAP_TYPE heapType)
+    D3D12_HEAP_TYPE heapType,
+    bool            persistentMap)
 {
-    Create(device, size, alignment, heapType);
+    Create(device, size, alignment, heapType, persistentMap);
 }
 
 D3D12StagingBuffer::D3D12StagingBuffer(D3D12StagingBuffer&& rhs) noexcept :
-    native_ { std::move(rhs.native_) },
-    size_   { rhs.size_              },
-    offset_ { rhs.offset_            }
+    native_     { std::move(rhs.native_) },
+    mappedData_ { rhs.mappedData_         },
+    size_       { rhs.size_               },
+    offset_     { rhs.offset_             }
 {
+    rhs.mappedData_ = nullptr;
 }
 
 D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs) noexcept
 {
     if (this != &rhs)
     {
-        native_ = std::move(rhs.native_);
-        size_   = rhs.size_;
-        offset_ = rhs.offset_;
+        Unmap();
+        native_         = std::move(rhs.native_);
+        mappedData_     = rhs.mappedData_;
+        size_           = rhs.size_;
+        offset_         = rhs.offset_;
+        rhs.mappedData_ = nullptr;
     }
     return *this;
+}
+
+D3D12StagingBuffer::~D3D12StagingBuffer()
+{
+    Unmap();
 }
 
 void D3D12StagingBuffer::Create(
     ID3D12Device*   device,
     UINT64          size,
     UINT            alignment,
-    D3D12_HEAP_TYPE heapType)
+    D3D12_HEAP_TYPE heapType,
+    bool            persistentMap)
 {
+    Unmap();
+    native_.Reset();
+
     size = GetAlignedSize<UINT64>(size, alignment);
 
     /* Create GPU upload buffer */
@@ -66,6 +81,13 @@ void D3D12StagingBuffer::Create(
 
     /* Set name for debugging/diagnostics */
     native_->SetName(L"LLGL::D3D12StagingBuffer");
+
+    if (persistentMap)
+    {
+        const D3D12_RANGE readRange{ 0, 0 };
+        HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData_));
+        DXThrowIfFailed(hr, "failed to persistently map D3D12 staging buffer");
+    }
 
     /* Store new size and reset write offset */
     size_   = size;
@@ -89,24 +111,30 @@ HRESULT D3D12StagingBuffer::Write(
     const void*                 data,
     UINT64                      dataSize)
 {
-    /* Map GPU host memory to CPU memory space CPU-memory to upload buffer */
-    char* mappedData = nullptr;
-    const D3D12_RANGE readRange{ 0, 0 };
-
-    HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
-    if (FAILED(hr))
-        return hr;
+    char* mappedData = mappedData_;
+    HRESULT hr = S_OK;
+    if (mappedData == nullptr)
+    {
+        /* Map GPU host memory to CPU memory space CPU-memory to upload buffer */
+        const D3D12_RANGE readRange{ 0, 0 };
+        hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+        if (FAILED(hr))
+            return hr;
+    }
 
     /* Copy input data to staging buffer */
     ::memcpy(mappedData + offset_, data, static_cast<std::size_t>(dataSize));
 
-    /* Unmap buffer with range of written data */
-    const D3D12_RANGE writtenRange
+    if (mappedData_ == nullptr)
     {
-        static_cast<SIZE_T>(offset_),
-        static_cast<SIZE_T>(offset_ + dataSize)
-    };
-    native_->Unmap(0, &writtenRange);
+        /* Unmap buffer with range of written data */
+        const D3D12_RANGE writtenRange
+        {
+            static_cast<SIZE_T>(offset_),
+            static_cast<SIZE_T>(offset_ + dataSize)
+        };
+        native_->Unmap(0, &writtenRange);
+    }
 
     /* Encode copy buffer command */
     commandList->CopyBufferRegion(dstBuffer, dstOffset, native_.Get(), offset_, dataSize);
@@ -124,6 +152,15 @@ HRESULT D3D12StagingBuffer::WriteAndIncrementOffset(
     HRESULT hr = Write(commandList, dstBuffer, dstOffset, data, dataSize);
     offset_ += dataSize;
     return hr;
+}
+
+void D3D12StagingBuffer::Unmap()
+{
+    if (mappedData_ != nullptr && native_ != nullptr)
+    {
+        native_->Unmap(0, nullptr);
+        mappedData_ = nullptr;
+    }
 }
 
 
