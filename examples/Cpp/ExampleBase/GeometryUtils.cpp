@@ -416,3 +416,62 @@ Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs:
     return linePointA + lineDirection;
 }
 
+bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* outIntersection)
+{
+    float tmin = 0.0f;
+    float tmax = FLT_MAX;
+
+    // Axis (0/1/2) and sign (-1/+1) of the slab whose near plane last raised 'tmin', i.e. the hit face
+    int hitAxis = -1;
+    float hitSign = 0.0f;
+
+    // Loop for all three slabs
+    for (int i = 0; i < 3; ++i)
+    {
+        if (std::abs(ray.direction[i]) < Gs::Epsilon<float>())
+        {
+            // Ray is parallel to slab. No hit if origin not within slab
+            if (ray.origin[i] < aabb.bbMin[i] || ray.origin[i] > aabb.bbMax[i])
+                return false;
+        }
+        else
+        {
+            // Compute intersection t value of ray with near and far plane of slab
+            const float ood = 1.0f / ray.direction[i];
+            float t1 = (aabb.bbMin[i] - ray.origin[i]) * ood;
+            float t2 = (aabb.bbMax[i] - ray.origin[i]) * ood;
+
+            // Make t1 be intersection with near plane, t2 with far plane
+            const bool swapped = (t1 > t2);
+            if (swapped)
+                std::swap(t1, t2);
+
+            // Compute the intersection of slab intersection intervals
+            if (t1 > tmin)
+            {
+                tmin = t1;
+                hitAxis = i;
+                hitSign = (swapped ? +1.0f : -1.0f);
+            }
+            tmax = std::min(tmax, t2);
+
+            // Exit with no collision as soon as slab intersection becomes empty
+            if (tmin > tmax)
+                return false;
+        }
+    }
+
+    // Return intersection interpolation factor and face normal
+    if (outIntersection != nullptr)
+    {
+        outIntersection->interpolator = tmin;
+
+        Gs::Vector3f normal;
+        if (hitAxis >= 0)
+            normal[hitAxis] = hitSign;
+        outIntersection->normal = normal;
+    }
+
+    return true;
+}
+

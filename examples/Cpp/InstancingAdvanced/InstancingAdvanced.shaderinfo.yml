@@ -1,0 +1,9 @@
+sources:
+  - source: "InstancingAdvanced.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PS"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]

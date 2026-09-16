@@ -57,6 +57,22 @@ struct TriangleMesh
     LLGL::ColorRGBAf    color;
 };
 
+struct Ray3f
+{
+    Gs::Vector3f origin, direction;
+};
+
+struct AABB3f
+{
+    Gs::Vector3f bbMin, bbMax;
+};
+
+struct Intersection
+{
+    float           interpolator = 0.0f;
+    Gs::Vector3f    normal;
+};
+
 
 /*
  * Global helper functions
@@ -98,6 +114,9 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::Arr
 
 // Returns a point on the specified line segment that is the closest to the reference point.
 Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs::Vector3f& linePointB, const Gs::Vector3f& referencePoint);
+
+// Returns the interpolation factor for an intersection between a ray and an axis-aligned bounding box (AABB).
+bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* outIntersection = nullptr);
 
 
 #endif
