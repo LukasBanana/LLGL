@@ -14,26 +14,98 @@ Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
     <div class="page-wrapper">
         <main class="content">
             <h1>LLGL Sample Page</h1>
-            <p>This is a small sample page to showcase the WebGL support of LLGL.</p>
+            <p>This is a small sample page to showcase WebGL support in LLGL.</p>
             
-            <h2>WebGL Examples:</h2>
+            <h2>Introductory Examples:</h2>
             <nav class="sidebar">
-                <a href="Example_Animation/index.html">Animation</a>
-                <a href="Example_Fonts/index.html">Fonts</a>
-                <a href="Example_Instancing/index.html">Instancing</a>
-                <a href="Example_MorphTargets/index.html">MorphTargets</a>
-                <a href="Example_PBR/index.html">Physically Based Rendering (PBR)</a>
-                <a href="Example_PostProcessing/index.html">PostProcessing</a>
-                <a href="Example_RenderTarget/index.html">RenderTarget</a>
-                <a href="Example_ShadowMapping/index.html">ShadowMapping</a>
-                <a href="Example_StencilBuffer/index.html">StencilBuffer</a>
-                <a href="Example_Texturing/index.html">Texturing</a>
-                <a href="Example_VolumeRendering/index.html">VolumeRendering</a>
+                <a class="sidebar-item" href="Example_Texturing/index.html">
+                    <img src="../../examples/Cpp/Texturing/Example.png" alt="Textured 3D model displayed with a sample color texture">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">Texturing</span>
+                        <span class="sidebar-item-desc">Covers the basics of loading and applying 2D textures to a 3D model.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_RenderTarget/index.html">
+                    <img src="../../examples/Cpp/RenderTarget/Example.png" alt="Scene rendered into a texture and displayed on a surface within the same scene">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">RenderTarget</span>
+                        <span class="sidebar-item-desc">Renders a scene into an offscreen texture and reuses it as an input for another draw call.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_PostProcessing/index.html">
+                    <img src="../../examples/Cpp/PostProcessing/Example.png" alt="Rendered scene with a screen-space post-processing effect applied">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">PostProcessing</span>
+                        <span class="sidebar-item-desc">Applies a full-screen post-processing effect to a rendered scene using an offscreen render pass.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_ShadowMapping/index.html">
+                    <img src="../../examples/Cpp/ShadowMapping/Example.png" alt="Scene with dynamic shadows cast from a light source using shadow mapping">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">ShadowMapping</span>
+                        <span class="sidebar-item-desc">Generates real-time shadows by rendering the scene depth from the light's point of view.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_Fonts/index.html">
+                    <img src="../../examples/Cpp/Fonts/Example.png" alt="Sample text rendered on screen using a bitmap font atlas">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">Fonts</span>
+                        <span class="sidebar-item-desc">Demonstrates how to render text on screen using a generated font atlas texture.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_Instancing/index.html">
+                    <img src="../../examples/Cpp/Instancing/Example.png" alt="Large field of repeated meshes drawn with a single draw call">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">Instancing</span>
+                        <span class="sidebar-item-desc">Renders many copies of the same mesh efficiently in a single draw call using hardware instancing.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_StencilBuffer/index.html">
+                    <img src="../../examples/Cpp/StencilBuffer/Example.png" alt="Scene with a masked effect produced using the stencil buffer">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">StencilBuffer</span>
+                        <span class="sidebar-item-desc">Uses the stencil buffer to mask and combine multiple render passes, such as a portal.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_MorphTargets/index.html">
+                    <img src="../../examples/Cpp/MorphTargets/MorphTargets.png" alt="Face mesh blending between different morph target shapes">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">MorphTargets</span>
+                        <span class="sidebar-item-desc">Blends between multiple mesh shapes on the GPU to animate motion of book pages.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_VolumeRendering/index.html">
+                    <img src="../../examples/Cpp/VolumeRendering/Example.png" alt="Semi-transparent volumetric data rendered with ray marching">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">VolumeRendering</span>
+                        <span class="sidebar-item-desc">Ray marches through a 3D texture to visualize volumetric data such as clouds.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_PBR/index.html">
+                    <img src="../../examples/Cpp/PBR/Example.png" alt="Sphere rendered with a metallic, physically based material under image-based lighting">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">Physically Based Rendering (PBR)</span>
+                        <span class="sidebar-item-desc">Shows a physically based shading model with metallic/roughness materials and image-based lighting.</span>
+                    </span>
+                </a>
+                <a class="sidebar-item" href="Example_Animation/index.html">
+                    <img src="../../examples/Cpp/Animation/Example.gif" alt="Skinned character model performing a skeletal animation">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">Animation</span>
+                        <span class="sidebar-item-desc">Simple animation with orthogonal view projection.</span>
+                    </span>
+                </a>
             </nav>
 
-            <h2>Games:</h2>
+            <h2>Game Demos:</h2>
             <nav class="sidebar">
-                <a href="Example_HelloGame/index.html">HelloGame</a>
+                <a class="sidebar-item" href="Example_HelloGame/index.html">
+                    <img src="../../examples/Cpp/HelloGame/HelloGame.gif" alt="Screenshot of the small HelloGame demo in action">
+                    <span class="sidebar-item-body">
+                        <span class="sidebar-item-title">HelloGame</span>
+                        <span class="sidebar-item-desc">A small, complete sample game that ties together rendering, input, and game logic.</span>
+                    </span>
+                </a>
             </nav>
         </main>
         <footer>
