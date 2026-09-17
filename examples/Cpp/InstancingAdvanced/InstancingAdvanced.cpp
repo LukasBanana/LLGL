@@ -10,8 +10,17 @@
 #include <LLGL/Utils/ForRange.h>
 
 
+// Enable log output to debug kd-Tree construction
+#define DEBUG_KDTREE 1
+
+
 class Example_InstancingAdvanced : public ExampleBase
 {
+
+    #define foreach_dimension(X, Y, Z, VEC) \
+        for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
+
+    static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
 
     LLGL::Shader*               vertexShader        = nullptr;
     LLGL::Shader*               fragmentShader      = nullptr;
@@ -138,111 +147,239 @@ class Example_InstancingAdvanced : public ExampleBase
     }
     picker;
 
-    // Manages the grid of brick instances. Each entry in this grid references an allocated instance.
-    struct Grid
+    // Tree hierarchy for the grid of brick entires. A 4x2x3 brick for instances takes up 24 entries.
+    class KDTreeNode
     {
-        struct Row
+
+        enum Axis : std::uint32_t
         {
-            // Left (X-axis -1,-2,-3,...) and right (X-axis 0,1,2,...) brick entries
-            std::vector<Brick> bricksLeft, bricksRight;
-
-            void Set(std::int32_t col, Brick brick)
-            {
-                if (col >= 0)
-                {
-                    if (bricksRight.size() <= col)
-                        bricksRight.resize(col + 1);
-                    bricksRight[col] = brick;
-                }
-                else
-                {
-                    col = -(col + 1);
-                    if (bricksLeft.size() <= col)
-                        bricksLeft.resize(col + 1);
-                    bricksLeft[col] = brick;
-                }
-            }
-
-            Brick Get(std::int32_t col) const
-            {
-                if (col >= 0)
-                {
-                    if (col < bricksRight.size())
-                        return bricksRight[col];
-                }
-                else
-                {
-                    col = -(col + 1);
-                    if (col < bricksLeft.size())
-                        return bricksLeft[col];
-                }
-                return Brick{};
-            }
+            Axis_X = 0,
+            Axis_Y,
+            Axis_Z,
         };
 
-        struct Layer
+        std::unique_ptr<KDTreeNode> child[2];
+        Axis                        axis        : 2;
+        std::uint32_t               distance    : 30; // Local distance from node's logical bbMin
+        Brick                       brick;
+
+        AABB3i GetChild0AABB(Axis parentAxis, AABB3i aabbParent) const
         {
-            // Front (Z-axis 0,1,2,...) and back (Z-axis -1,-2,-3,...) rows
-            std::vector<Row> rowsFront, rowsBack;
+            aabbParent.bbMax[parentAxis] = aabbParent.bbMin[parentAxis] + static_cast<std::int32_t>(distance);
+            return aabbParent;
+        }
 
-            void Set(std::int32_t row, std::int32_t col, Brick brick)
-            {
-                if (row >= 0)
-                {
-                    if (rowsFront.size() <= row)
-                        rowsFront.resize(row + 1);
-                    rowsFront[row].Set(col, brick);
-                }
-                else
-                {
-                    row = -(row + 1);
-                    if (rowsBack.size() <= row)
-                        rowsBack.resize(row + 1);
-                    rowsBack[row].Set(col, brick);
-                }
-            }
-
-            Brick Get(std::int32_t row, std::int32_t col) const
-            {
-                if (row >= 0)
-                {
-                    if (row < rowsFront.size())
-                        return rowsFront[row].Get(col);
-                }
-                else
-                {
-                    row = -(row + 1);
-                    if (row < rowsBack.size())
-                        return rowsBack[row].Get(col);
-                }
-                return Brick{};
-            }
-        };
-
-        void Set(const Gs::Vector3i& gridPos, Brick brick)
+        AABB3i GetChild1AABB(Axis parentAxis, AABB3i aabbParent) const
         {
-            if (gridPos.y >= 0)
+            aabbParent.bbMin[parentAxis] += static_cast<std::int32_t>(distance);
+            return aabbParent;
+        }
+
+        void SubdivideAndSetLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
+        {
+            if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
             {
-                if (layers.size() <= gridPos.y)
-                    layers.resize(gridPos.y + 1);
-                layers[gridPos.y].Set(gridPos.z, gridPos.x, brick);
+                // If we found a leaf node with AABB of size 1x1x1, put the brick into the leaf
+                this->brick = brick;
+            }
+            else
+            {
+                // Make new child nodes and subdivide
+                child[0] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
+                child[1] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
+
+                const Gs::Vector3i aabbExtent = aabb.bbMax - aabb.bbMin;
+                LLGL_VERIFY(aabbExtent.x > 0 && aabbExtent.y > 0 && aabbExtent.z > 0);
+                if (aabbExtent.x >= aabbExtent.y && aabbExtent.x >= aabbExtent.z)
+                    axis = Axis_X;
+                else if (aabbExtent.y >= aabbExtent.x && aabbExtent.y >= aabbExtent.z)
+                    axis = Axis_Y;
+                else
+                    axis = Axis_Z;
+
+                // Set distance in the center of current AABB extent
+                distance = static_cast<std::uint32_t>(aabbExtent[axis]/2);
+                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
+                    child[0]->SubdivideAndSetLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
+                else
+                    child[1]->SubdivideAndSetLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
             }
         }
 
-        Brick Get(const Gs::Vector3i& gridPos) const
+        void FindAndInsertLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
         {
-            if (gridPos.y >= 0)
+            if (HasChildren())
             {
-                if (gridPos.y < layers.size())
-                    return layers[gridPos.y].Get(gridPos.z, gridPos.x);
+                // Shrink root AABB until we reach a leaf node
+                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
+                    child[0]->FindAndInsertLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
+                else
+                    child[1]->FindAndInsertLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
+            }
+            else
+            {
+                // Otherwise, keep adding sub nodes until we reach the destination grid position
+                SubdivideAndSetLeaf(gridPos, aabb, brick);
+            }
+        }
+
+        void TryDropChildren()
+        {
+            if (!child[0]->HasChildren() && !child[0]->brick &&
+                !child[1]->HasChildren() && !child[1]->brick)
+            {
+                child[0].reset();
+                child[1].reset();
+            }
+        }
+
+        bool FindAndRemoveLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb)
+        {
+            if (HasChildren())
+            {
+                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
+                {
+                    if (child[0]->FindAndRemoveLeaf(gridPos, GetChild0AABB(axis, aabb)))
+                    {
+                        TryDropChildren();
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (child[1]->FindAndRemoveLeaf(gridPos, GetChild1AABB(axis, aabb)))
+                    {
+                        TryDropChildren();
+                        return true;
+                    }
+                }
+            }
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            {
+                this->brick = {};
+                return true;
+            }
+            return false;
+        }
+
+        Brick FindLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb) const
+        {
+            if (HasChildren())
+            {
+                // Shrink root AABB until we reach a leaf node
+                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
+                    return child[0]->FindLeaf(gridPos, GetChild0AABB(axis, aabb));
+                else
+                    return child[1]->FindLeaf(gridPos, GetChild1AABB(axis, aabb));
+            }
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            {
+                // We found the leaf node
+                return this->brick;
+            }
+            else
+            {
+                // No leaf node found, return invalid brick data
+                return Brick{};
+            }
+        }
+
+        Brick FindIntersectionWithLeaf(const Ray3f& ray, const AABB3i& aabb, Intersection* outIntersection) const
+        {
+            if (HasChildren())
+            {
+                // Check intersection against both child nodes' AABBs and continue down the path of the closer intersection
+                Intersection childIntersect[2];
+
+                const AABB3i child0AABB = GetChild0AABB(axis, aabb);
+                const bool isChild0Intersect = IntersectRayWithAABB(ray, child0AABB, &(childIntersect[0]));
+
+                const AABB3i child1AABB = GetChild1AABB(axis, aabb);
+                const bool isChild1Intersect = IntersectRayWithAABB(ray, child1AABB, &(childIntersect[1]));
+
+                if (isChild0Intersect && isChild1Intersect)
+                {
+                    // Continue intersection down the path of the node with the closest intersection
+                    if (childIntersect[0].interpolator < childIntersect[1].interpolator)
+                        return child[0]->FindIntersectionWithLeaf(ray, child0AABB, outIntersection);
+                    else
+                        return child[1]->FindIntersectionWithLeaf(ray, child1AABB, outIntersection);
+                }
+                else if (isChild0Intersect)
+                    return child[0]->FindIntersectionWithLeaf(ray, child0AABB, outIntersection);
+                else if (isChild1Intersect)
+                    return child[1]->FindIntersectionWithLeaf(ray, child1AABB, outIntersection);
+            }
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            {
+                // Make final intersection test against AABB of current node
+                if (IntersectRayWithAABB(ray, aabb, outIntersection))
+                    return this->brick;
             }
             return Brick{};
         }
 
-        // Layers for Y-axis 0,1,2,...
-        std::vector<Layer> layers;
-    }
-    grid;
+        unsigned NumLeafsFromRoot(const AABB3i& aabb) const
+        {
+            if (HasChildren())
+                return child[0]->NumLeafsFromRoot(GetChild0AABB(axis, aabb)) + child[1]->NumLeafsFromRoot(GetChild1AABB(axis, aabb));
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+                return 1;
+            else
+                return 0;
+        }
+
+    public:
+
+        static const AABB3i rootAABB;
+
+        KDTreeNode() :
+            axis     { Axis_X },
+            distance { 0      }
+        {
+        }
+
+        bool HasChildren() const
+        {
+            return (child[0].get() != nullptr);
+        }
+
+        void InsertLeaf(Gs::Vector3i gridPos, Brick brick)
+        {
+            FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
+        }
+
+        void RemoveLeaf(Gs::Vector3i gridPos)
+        {
+            FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
+        }
+
+        Brick GetLeaf(const Gs::Vector3i& gridPos) const
+        {
+            return FindLeaf(gridPos, KDTreeNode::rootAABB);
+        }
+
+        Brick IntersectWithLeaf(const Ray3f& ray, Intersection* outIntersection = nullptr) const
+        {
+            return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
+        }
+
+        unsigned NumNodes() const
+        {
+            if (HasChildren())
+                return 1 + child[0]->NumNodes() + child[1]->NumNodes();
+            else
+                return 1;
+        }
+
+        unsigned NumLeafs() const
+        {
+            return NumLeafsFromRoot(KDTreeNode::rootAABB);
+        }
+
+    };
+
+    KDTreeNode grid;
 
 public:
 
@@ -355,21 +492,6 @@ private:
         }
     }
 
-    Brick NewBrick(BrickType type, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
-    {
-        LLGL_VERIFY(type < BrickType_WallsOnly_Offset);
-
-        Brick newBrick = {};
-
-        Instance* newInstance = AddInstancesToGroup(type, 1);
-
-        newInstance->gridPos        = gridPos;
-        newInstance->gridRotation   = gridRotation;
-        newInstance->color          = color;
-
-        return newBrick;
-    }
-
     std::size_t BrickToInstance(Brick brick)
     {
         return (brick ? instanceGroups[brick.groupId].firstInstance + brick.groupInstance : static_cast<std::size_t>(-1));
@@ -415,14 +537,6 @@ private:
         };
     }
 
-    bool IntersectRayWithGrid(const Ray3f& ray, Intersection& outIntersection, Brick& outPickedBrick)
-    {
-
-        //TODO
-
-        return false;
-    }
-
     Gs::Vector3i GetBrickTypeDimensions(BrickType type)
     {
         switch (type)
@@ -441,27 +555,86 @@ private:
         }
     }
 
-    bool SetBrickInGrid(const Gs::Vector3i& gridPos, Brick brick)
+    bool BrickFitsInGrid(const Gs::Vector3i& gridPos, BrickType type, GridRotation rotation)
     {
-        const Gs::Vector3i brickDim = GetBrickTypeDimensions(brick.groupId);
+        // Get brick dimension and apply rotation
+        Gs::Vector3i brickDim = GetBrickTypeDimensions(type);
+        if (rotation == GridRotation_90)
+            std::swap(brickDim.x, brickDim.z);
 
-        if (brick)
+        // Brick must fit inside the root AABB
+        if (gridPos.x              < KDTreeNode::rootAABB.bbMin.x ||
+            gridPos.y              < KDTreeNode::rootAABB.bbMin.y ||
+            gridPos.z              < KDTreeNode::rootAABB.bbMin.z ||
+            gridPos.x + brickDim.x > KDTreeNode::rootAABB.bbMax.x ||
+            gridPos.y + brickDim.y > KDTreeNode::rootAABB.bbMax.y ||
+            gridPos.z + brickDim.z > KDTreeNode::rootAABB.bbMax.z)
         {
-            // Check if there is any blocking brick
-            for_range(z, brickDim.z) for_range(y, brickDim.y) for_range(x, brickDim.x)
-            {
-                if (grid.Get(gridPos + Gs::Vector3i{ x, y, z }))
-                    return false;
-            }
+            return false;
         }
 
-        // Put brick entries into grid
-        for_range(z, brickDim.z) for_range(y, brickDim.y) for_range(x, brickDim.x)
+        // Check if there is any blocking brick
+        foreach_dimension(x, y, z, brickDim)
         {
-            grid.Set(gridPos + Gs::Vector3i{ x, y, z }, brick);
+            if (grid.GetLeaf(gridPos + Gs::Vector3i{ x, y, z }))
+                return false;
         }
 
         return true;
+    }
+
+    bool SetBrickInGrid(const Gs::Vector3i& gridPos, Brick brick)
+    {
+        // Get brick dimension and apply rotation
+        Gs::Vector3i brickDim = GetBrickTypeDimensions(brick.groupId);
+        if (const Instance* instance = GetBrickInstance(brick))
+        {
+            if (instance->gridRotation == GridRotation_90)
+                std::swap(brickDim.x, brickDim.z);
+        }
+
+        if (brick)
+        {
+            // Insert brick entries into grid
+            foreach_dimension(x, y, z, brickDim)
+                grid.InsertLeaf(gridPos + Gs::Vector3i{ x, y, z }, brick);
+        }
+        else
+        {
+            // Remove brick entries from grid
+            foreach_dimension(x, y, z, brickDim)
+                grid.RemoveLeaf(gridPos + Gs::Vector3i{ x, y, z });
+        }
+
+        #if DEBUG_KDTREE
+        LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
+        #endif
+
+        return true;
+    }
+
+    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
+    {
+        LLGL_VERIFY(type < BrickType_WallsOnly_Offset);
+
+        if (!BrickFitsInGrid(gridPos, type, gridRotation))
+            return Brick{};
+
+        Brick newBrick;
+        {
+            newBrick.groupId        = type;
+            newBrick.groupInstance  = instanceGroups[type].numInstances;
+        }
+        Instance* newInstance = AddInstancesToGroup(type, 1);
+        {
+            newInstance->gridPos        = gridPos;
+            newInstance->gridRotation   = gridRotation;
+            newInstance->color          = color;
+        }
+
+        SetBrickInGrid(gridPos, newBrick);
+
+        return newBrick;
     }
 
     void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, InstanceGroup& outInstanceGroup)
@@ -572,7 +745,9 @@ private:
                 NewBrick(BrickType_4x2x3, { 4*(i-2)+j*2, j*3,  0 }, GridRotation_0, colorPalette[i%5]);
             }
         }
-        NewBrick(BrickType_4x2x1, { 0, -1, -2 }, GridRotation_90, colorPalette[1]);
+
+        //NewBrick(BrickType_4x2x1, { 0, 0, -4 }, GridRotation_90, colorPalette[1]);
+        NewBrick(BrickType_2x2x3, { 0, 0, -2 }, GridRotation_0, colorPalette[1]);
 
     }
 
@@ -632,9 +807,8 @@ private:
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
         Intersection pickedIntersection;
-        Brick pickedBrick;
 
-        if (IntersectRayWithGrid(pickerRay, pickedIntersection, pickedBrick))
+        if (Brick pickedBrick = grid.IntersectWithLeaf(pickerRay, &pickedIntersection))
         {
             // Reset previously picked brick
             if (Instance* oldBrickInstance = GetMutableBrickInstance(picker.lastPickedBrick))
@@ -704,6 +878,12 @@ private:
         commandQueue->Submit(*commands);
     }
 
+};
+
+const AABB3i Example_InstancingAdvanced::KDTreeNode::rootAABB
+{
+    Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
+    Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
 };
 
 LLGL_IMPLEMENT_EXAMPLE(Example_InstancingAdvanced);
