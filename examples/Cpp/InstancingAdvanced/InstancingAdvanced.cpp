@@ -13,7 +13,8 @@
 // Enable log output to debug kd-Tree construction
 #define DEBUG_KDTREE 1
 
-#define DEBUG_SCENE 1
+// Subdivide kd-Tree uniformly. This is only used for performance testing.
+#define UNIFORM_TREE_SUBDIVIDE 0
 
 
 class Example_InstancingAdvanced : public ExampleBase
@@ -23,14 +24,26 @@ class Example_InstancingAdvanced : public ExampleBase
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
     static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
+    static constexpr float      cameraTurnSpeed     = 0.25f;
+    static constexpr float      cameraMoveSpeed     = 0.25f;
+
+    enum BrickPSO
+    {
+        BrickPSO_Default = 0,
+        BrickPSO_Wireframe,
+        BrickPSO_Preview, // With alpha-blending
+
+        BrickPSO_Num,
+    };
 
     LLGL::Shader*               vsBrick             = nullptr;
     LLGL::Shader*               fsBrick             = nullptr;
+    LLGL::Shader*               fsBrickPreview      = nullptr;
 
     LLGL::PipelineLayout*       psoLayout           = nullptr;
-    LLGL::PipelineState*        pso[2]              = {};
+    LLGL::PipelineState*        pso[BrickPSO_Num]   = {};
 
-    #if DEBUG_SCENE
+    #if DEBUG_KDTREE
     LLGL::PipelineState*        psoDebug            = nullptr;
     #endif
 
@@ -61,16 +74,12 @@ class Example_InstancingAdvanced : public ExampleBase
     }
     sceneView;
 
-    struct ViewOptions
-    {
-        bool showWireframe = false;
-    }
-    viewOptions;
-
     enum GridRotation : std::int32_t
     {
         GridRotation_0 = 0,
         GridRotation_90,
+
+        GridRotation_Num,
     };
 
     enum BrickType : std::uint32_t
@@ -88,6 +97,14 @@ class Example_InstancingAdvanced : public ExampleBase
 
         BrickType_Num,
     };
+
+    struct ViewOptions
+    {
+        bool        showWireframe           = false;
+        BrickType   previewBrickType        = BrickType_2x2x3; // Previews brick with instance index 0.
+        bool        isPreviewBrickBlocked   = false;
+    }
+    viewOptions;
 
     struct Vertex
     {
@@ -113,8 +130,8 @@ class Example_InstancingAdvanced : public ExampleBase
         // Number of instances to render for this group
         std::uint32_t numInstances      = 0;
 
-        // Zero-based index to the first instance into the global `instances` container for this group
-        std::uint32_t firstInstance     = 0;
+        // Zero-based index to the first instance into the global `instances` container for this group. Instance 0 is reserved for the preview instance.
+        std::uint32_t firstInstance     = 1;
 
         // Number of instances allocated for this group in the global `instances` container. This must always be greater than or equal to `numInstances`.
         std::uint32_t instanceCapacity  = 0;
@@ -132,6 +149,12 @@ class Example_InstancingAdvanced : public ExampleBase
         {
         }
 
+        Brick(BrickType type, std::uint32_t instance) :
+            groupId       { type     },
+            groupInstance { instance }
+        {
+        }
+
         BrickType       groupId         : 3;
 
         // Index into the group's instance. Use `group.firstInstance + groupInstance` to get index into global `instances` container.
@@ -141,6 +164,18 @@ class Example_InstancingAdvanced : public ExampleBase
         {
             return (groupId != BrickType_Num);
         }
+
+        inline bool operator == (const Brick& rhs) const
+        {
+            return (groupId == rhs.groupId && groupInstance == rhs.groupInstance);
+        }
+    };
+
+    struct PickerContact
+    {
+        Gs::Vector3f    point;
+        Gs::Vector3i    normal;
+        Brick           brick;
     };
 
     struct BrickDimensions
@@ -149,31 +184,67 @@ class Example_InstancingAdvanced : public ExampleBase
         Gs::Vector3i extent;
     };
 
-    // State tracking for picking scene objects with the mouse pointer.
-    struct Picker
+    enum class CameraMode
     {
-        Brick               lastPickedBrick;
-        LLGL::ColorRGBAub   lastPickedInstanceColor;
+        None,
+        TurnCamera,
+        MoveCamera,
+    };
 
-        Brick               pendingBrick;
+    enum class EditMode
+    {
+        None,
+        Add,
+        Remove,
+    };
 
-        #if DEBUG_SCENE
+    // State tracking for user controls such as picking scene objects with the mouse pointer.
+    struct Controller
+    {
+        CameraMode          cameraMode              = CameraMode::None;
+        EditMode            editMode                = EditMode::None;
+
+        LLGL::Offset2D      lastCursorPos;
+
+        Brick               pickedBrick;
+        LLGL::ColorRGBAub   pickedInstanceColor;
+
+        #if DEBUG_KDTREE
         Gs::Vector3f        pickedPosition;
         Gs::Vector3f        pickedNormal;
         #endif
     }
-    picker;
+    controller;
 
     struct Camera
     {
-        Gs::Matrix4f wMatrix;
-        Gs::Matrix4f vMatrix;
+        Gs::Vector3f    position;
+        float           pitch       = 0.0f;
+        float           yaw         = 0.0f;
+
+        Gs::Matrix4f    wMatrix;
+        Gs::Matrix4f    vMatrix;
+
+        void Turn(float pitch, float yaw)
+        {
+            this->pitch = Gs::Clamp(this->pitch + pitch, -90.0f, +90.0f);
+            this->yaw   = this->yaw + yaw;
+        }
+
+        void Move(const Gs::Vector3f& direction)
+        {
+            Gs::Matrix3f rotation;
+            Gs::RotateY(rotation, Gs::Deg2Rad(yaw));
+            Gs::RotateX(rotation, Gs::Deg2Rad(pitch));
+            position += rotation * direction;
+        }
 
         void UpdateTransform()
         {
             wMatrix.LoadIdentity();
-            Gs::Translate(wMatrix, Gs::Vector3f{ 0, 10, -15 });
-            Gs::RotateX(wMatrix, Gs::Deg2Rad(25.0f));
+            Gs::Translate(wMatrix, position);
+            Gs::RotateY(wMatrix, Gs::Deg2Rad(yaw));
+            Gs::RotateX(wMatrix, Gs::Deg2Rad(pitch));
 
             vMatrix = wMatrix.Inverse();
         }
@@ -231,7 +302,11 @@ class Example_InstancingAdvanced : public ExampleBase
                     axis = Axis_Z;
 
                 // Set distance in the center of current AABB extent
+                #if UNIFORM_TREE_SUBDIVIDE
                 distance = static_cast<std::uint32_t>(aabbExtent[axis]/2);
+                #else
+                distance = std::max(1, gridPos[axis] - aabb.bbMin[axis]);
+                #endif
                 if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
                     child[0]->SubdivideAndSetLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
                 else
@@ -317,8 +392,12 @@ class Example_InstancingAdvanced : public ExampleBase
             }
         }
 
-        bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, Intersection* outIntersection = nullptr) const
+        bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection = nullptr) const
         {
+            #if DEBUG_KDTREE
+            KDTreeNode::numAABBTests++;
+            #endif
+
             const AABB3f aabbF32
             {
                 aabb.bbMin.Cast<float>() * KDTreeNode::gridScale,
@@ -327,14 +406,14 @@ class Example_InstancingAdvanced : public ExampleBase
             return IntersectRayWithAABB(ray, aabbF32, outIntersection);
         }
 
-        Brick FindIntersectionWithLeaf(const Ray3f& ray, const AABB3i& aabb, Intersection* outIntersection) const
+        Brick FindIntersectionWithLeaf(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection) const
         {
             if (HasChildren())
             {
                 // Check intersection against both child nodes' AABBs and continue down the path of the closer intersection
                 if (IntersectRayWithScaledAABB(ray, aabb))
                 {
-                    Intersection childIntersect[2];
+                    AABBIntersection childIntersect[2];
                     Brick childBrick[2];
 
                     auto ReturnIntersection = [&childIntersect, &childBrick, outIntersection](int childIndex) -> Brick
@@ -385,6 +464,8 @@ class Example_InstancingAdvanced : public ExampleBase
         static const AABB3i         rootAABB;
         static const Gs::Vector3f   gridScale;
 
+        static int                  numAABBTests;
+
         KDTreeNode() :
             axis     { Axis_X },
             distance { 0      }
@@ -411,7 +492,7 @@ class Example_InstancingAdvanced : public ExampleBase
             return FindLeaf(gridPos, KDTreeNode::rootAABB);
         }
 
-        Brick IntersectWithLeaf(const Ray3f& ray, Intersection* outIntersection = nullptr) const
+        Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
         {
             return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
         }
@@ -445,6 +526,19 @@ public:
         CreateBuffers();
         CreatePipelines();
         CreateInitialScene();
+
+        // Print info
+        LLGL::Log::Printf(
+            "Keyboard controls:\n"
+            "  1 .............. Default mode\n"
+            "  2 .............. Preview brick mode\n"
+            "  3/Delete ....... Select brick mode\n"
+            "  Right mouse .... Turn camera\n"
+            "  Middle mouse ... Move camera left/right & up/down\n"
+            "  W/A/S/D ........ Move camera left/right & forwards/backwards\n"
+            "  PageUp/-Down ... Change brick type\n"
+            "  Space .......... Rotate brick\n"
+        );
     }
 
 private:
@@ -496,7 +590,7 @@ private:
     }
 
     // Adds the specified number of instances to the group.
-    Instance* AddInstancesToGroup(BrickType groupId, std::uint32_t count)
+    Instance* AddInstancesToGroup(BrickType groupId, std::uint32_t count = 1)
     {
         InstanceGroup& group = instanceGroups[groupId];
         if (group.numInstances + count > group.instanceCapacity)
@@ -515,9 +609,6 @@ private:
             // Update instance offsets in subsequent groups
             for (int nextGroupId = groupId + 1; nextGroupId < BrickType_Num; ++nextGroupId)
                 instanceGroups[nextGroupId].firstInstance += instanceGrowth;
-
-            // Update instances references in grid
-            //TODO
         }
 
         // Return pointer to first new instance
@@ -526,6 +617,33 @@ private:
         MarkInstanceDirty(group.firstInstance, count);
 
         return firstInstancePtr;
+    }
+
+    void RemoveInstanceFromGroup(BrickType groupId, std::uint32_t groupInstance)
+    {
+        InstanceGroup& group = instanceGroups[groupId];
+        if (groupInstance < group.numInstances)
+        {
+            Instance& retiredInstance = instances[group.firstInstance + groupInstance];
+
+            group.numInstances--;
+            if (groupInstance < group.numInstances)
+            {
+                // Remove instance from group by copying last instance in that group into the position of the old instance
+                const Instance& lastInstance = instances[group.firstInstance + group.numInstances];
+                RemoveBrickFromGrid(groupId, retiredInstance);
+                InsertBrickIntoGrid(lastInstance.gridPos, Brick{ groupId, groupInstance });
+                retiredInstance = lastInstance;
+            }
+            else
+            {
+                // If destroyed brick is the last instance in that group, just reset the entry in the grid
+                RemoveBrickFromGrid(groupId, retiredInstance);
+            }
+
+            // Mark all remaining instances of that group as dirty
+            MarkInstanceDirty(group.firstInstance + groupInstance);
+        }
     }
 
     void FlushInstanceDirtyRange()
@@ -661,31 +779,35 @@ private:
         return true;
     }
 
-    bool SetBrickInGrid(const Gs::Vector3i& gridPos, Brick brick)
+    void InsertBrickIntoGrid(const Gs::Vector3i& gridPos, Brick brick)
     {
         // Get brick dimension and apply rotation
         const Instance* instance = GetBrickInstance(brick);
         const BrickDimensions brickDim = GetBrickDimensions(brick.groupId, instance != nullptr ? instance->gridRotation : GridRotation_0);
 
+        // Insert brick entries into grid
         const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
-        if (brick)
-        {
-            // Insert brick entries into grid
-            foreach_dimension(x, y, z, brickDim.extent)
-                grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
-        }
-        else
-        {
-            // Remove brick entries from grid
-            foreach_dimension(x, y, z, brickDim.extent)
-                grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
-        }
+        foreach_dimension(x, y, z, brickDim.extent)
+            grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
 
         #if DEBUG_KDTREE
         LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
         #endif
+    }
 
-        return true;
+    void RemoveBrickFromGrid(BrickType groupId, const Instance& instance)
+    {
+        // Get brick dimension and apply rotation
+        const BrickDimensions brickDim = GetBrickDimensions(groupId, instance.gridRotation);
+
+        // Remove brick entries from grid
+        const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
+        foreach_dimension(x, y, z, brickDim.extent)
+            grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
+
+        #if DEBUG_KDTREE
+        LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
+        #endif
     }
 
     Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
@@ -700,16 +822,23 @@ private:
             newBrick.groupId        = type;
             newBrick.groupInstance  = instanceGroups[type].numInstances;
         }
-        Instance* newInstance = AddInstancesToGroup(type, 1);
+        Instance* newInstance = AddInstancesToGroup(type);
         {
             newInstance->gridPos        = gridPos;
             newInstance->gridRotation   = gridRotation;
             newInstance->color          = color;
         }
 
-        SetBrickInGrid(gridPos, newBrick);
+        InsertBrickIntoGrid(gridPos, newBrick);
 
         return newBrick;
+    }
+
+    void DestroyBrick(Brick brick)
+    {
+        if (controller.pickedBrick == brick)
+            ResetPreviouslySelectedBrick();
+        RemoveInstanceFromGroup(brick.groupId, brick.groupInstance);
     }
 
     void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, InstanceGroup& outInstanceGroup)
@@ -761,13 +890,18 @@ private:
 
         // Create scene view constant buffer
         sceneViewCbuffer = CreateConstantBuffer(sceneView);
+
+        // Allocate preview instance
+        instances.resize(1);
+        instances[0].color = LLGL::ColorRGBAub{ 255, 255, 255, 128 };
     }
 
     void CreatePipelines()
     {
         // Create shaders
-        vsBrick = LoadVertexShader  ("InstancingAdvanced", "VSBrick");
-        fsBrick = LoadFragmentShader("InstancingAdvanced", "PSBrick");
+        vsBrick         = LoadVertexShader  ("InstancingAdvanced", "VSBrick");
+        fsBrick         = LoadFragmentShader("InstancingAdvanced", "PSBrick");
+        fsBrickPreview  = LoadFragmentShader("InstancingAdvanced", "PSBrickPreview");
 
         // Create pipeline layout
         psoLayout = renderer->CreatePipelineLayout(
@@ -791,24 +925,32 @@ private:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor psoDesc;
         {
-            psoDesc.inputVertexAttribs             = vertexAttribs;
-            psoDesc.vertexShader                   = vsBrick;
-            psoDesc.fragmentShader                 = fsBrick;
-            psoDesc.pipelineLayout                 = psoLayout;
-            psoDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
-            psoDesc.depth.testEnabled              = true;
-            psoDesc.depth.writeEnabled             = true;
-            psoDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+            psoDesc.inputVertexAttribs              = vertexAttribs;
+            psoDesc.vertexShader                    = vsBrick;
+            psoDesc.fragmentShader                  = fsBrick;
+            psoDesc.pipelineLayout                  = psoLayout;
+            psoDesc.primitiveTopology               = LLGL::PrimitiveTopology::TriangleList;
+            psoDesc.depth.testEnabled               = true;
+            psoDesc.depth.writeEnabled              = true;
+            psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
+            psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
         }
-        pso[0] = renderer->CreatePipelineState(psoDesc);
-        ReportPSOErrors(pso[0]);
+        pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
+        ReportPSOErrors(pso[BrickPSO_Default]);
         {
             psoDesc.rasterizer.polygonMode          = LLGL::PolygonMode::Wireframe;
         }
-        pso[1] = renderer->CreatePipelineState(psoDesc);
-        ReportPSOErrors(pso[1]);
+        pso[BrickPSO_Wireframe] = renderer->CreatePipelineState(psoDesc);
+        ReportPSOErrors(pso[BrickPSO_Wireframe]);
+        {
+            psoDesc.fragmentShader                      = fsBrickPreview;
+            psoDesc.rasterizer.polygonMode              = LLGL::PolygonMode::Fill;
+            psoDesc.rasterizer.depthBias.constantFactor = -100.0f;
+        }
+        pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoDesc);
+        ReportPSOErrors(pso[BrickPSO_Preview]);
 
-        #if DEBUG_SCENE
+        #if DEBUG_KDTREE
         LLGL::GraphicsPipelineDescriptor psoDebugDesc;
         {
             psoDebugDesc.debugName          = "DebugPSO";
@@ -825,6 +967,9 @@ private:
 
     void CreateInitialScene()
     {
+        camera.position = { 0, 10.0f, -20.0f };
+        camera.pitch    = 20.0f;
+
         //TODO
 
         for (int i = 0; i <= 4; ++i)
@@ -835,18 +980,20 @@ private:
             }
         }
 
+        NewBrick(BrickType_4x2x1, { -9, 3, -4 }, GridRotation_90, colorPalette[1]);
         NewBrick(BrickType_4x2x1, { -9, 3, 0 }, GridRotation_90, colorPalette[1]);
+        NewBrick(BrickType_4x2x1, { -9, 3, +4 }, GridRotation_90, colorPalette[1]);
         //NewBrick(BrickType_2x2x3, { 0, 0, -2 }, GridRotation_0, colorPalette[1]);
 
     }
 
-    void MainRenderPass()
+    void RenderBrickInstances()
     {
         // Exit early if no instances have been allocated yet
         if (instanceBuffer == nullptr)
             return;
 
-        commands->SetPipelineState(*pso[viewOptions.showWireframe ? 1 : 0]);
+        commands->SetPipelineState(*pso[viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Default]);
 
         commands->SetResource(0, *sceneViewCbuffer);
 
@@ -888,14 +1035,33 @@ private:
         }
     }
 
-    #if DEBUG_SCENE
-    void DrawDebugInfo()
+    void RenderPreviewBrick()
+    {
+        commands->SetPipelineState(*pso[viewOptions.isPreviewBrickBlocked ? BrickPSO_Preview : BrickPSO_Default]);
+
+        commands->SetResource(0, *sceneViewCbuffer);
+
+        // Set vertex buffers (vertices and instances).
+        // We don't care about offset instancing here, because the preview instance is always the first one (index 0).
+        LLGL::VertexBufferView vertexBufferViews[] =
+        {
+            LLGL::VertexBufferView{ vertexBuffer },
+            LLGL::VertexBufferView{ instanceBuffer },
+        };
+        commands->SetVertexBuffers(2, vertexBufferViews);
+
+        const InstanceGroup& group = instanceGroups[viewOptions.previewBrickType];
+        commands->Draw(group.numVertices, group.firstVertex);
+    }
+
+    #if DEBUG_KDTREE
+    void RenderDebugInfo()
     {
         commands->SetPipelineState(*psoDebug);
         const Gs::Vector4f vertices[2] =
         {
-            Gs::Vector4f{ picker.pickedPosition, 1.0f },
-            Gs::Vector4f{ picker.pickedPosition + picker.pickedNormal, 1.0f }
+            Gs::Vector4f{ controller.pickedPosition, 1.0f },
+            Gs::Vector4f{ controller.pickedPosition + controller.pickedNormal, 1.0f }
         };
         commands->SetResource(0, *sceneViewCbuffer);
         commands->SetUniforms(0, vertices, sizeof(vertices));
@@ -903,47 +1069,234 @@ private:
     }
     #endif
 
+    void StartCameraMode(CameraMode newMode)
+    {
+        // Hide cursor and store its last position before starting camera movement mode
+        controller.lastCursorPos = LLGL::Display::GetCursorPosition();
+        LLGL::Display::ShowCursor(false);
+        controller.cameraMode = newMode;
+    }
+
+    void StopCameraMode()
+    {
+        // Show cursor and restore its last position when ending camera movement mode
+        controller.cameraMode = CameraMode::None;
+        LLGL::Display::SetCursorPosition(controller.lastCursorPos);
+        LLGL::Display::ShowCursor(true);
+    }
+
+    void ControlCameraByUserInput()
+    {
+        if (input.KeyDown(LLGL::Key::RButton) && controller.cameraMode == CameraMode::None)
+            StartCameraMode(CameraMode::TurnCamera);
+        else if (input.KeyUp(LLGL::Key::RButton) && controller.cameraMode == CameraMode::TurnCamera)
+            StopCameraMode();
+
+        if (input.KeyDown(LLGL::Key::MButton) && controller.cameraMode == CameraMode::None)
+            StartCameraMode(CameraMode::MoveCamera);
+        else if (input.KeyUp(LLGL::Key::MButton) && controller.cameraMode == CameraMode::MoveCamera)
+            StopCameraMode();
+
+        if (controller.cameraMode == CameraMode::TurnCamera)
+        {
+            const LLGL::Offset2D motion = input.GetMouseMotion();
+            const float pitch = static_cast<float>(+motion.y) * cameraTurnSpeed;
+            const float yaw   = static_cast<float>(-motion.x) * cameraTurnSpeed;
+            camera.Turn(pitch, yaw);
+        }
+        else if (controller.cameraMode == CameraMode::MoveCamera)
+        {
+            const LLGL::Offset2D motion = input.GetMouseMotion();
+            const float xAxis = static_cast<float>(+motion.x) * cameraMoveSpeed * 0.5f;
+            const float yAxis = static_cast<float>(-motion.y) * cameraMoveSpeed * 0.5f;
+            camera.Move({ xAxis, yAxis, 0 });
+        }
+
+        const float moveSpeed = (input.KeyPressed(LLGL::Key::Shift) ? cameraMoveSpeed*3.0f : cameraMoveSpeed);
+        if (input.KeyPressed(LLGL::Key::A) || input.KeyPressed(LLGL::Key::Left))
+            camera.Move({ -moveSpeed, 0, 0 });
+        if (input.KeyPressed(LLGL::Key::D) || input.KeyPressed(LLGL::Key::Right))
+            camera.Move({ +moveSpeed, 0, 0 });
+        if (input.KeyPressed(LLGL::Key::W) || input.KeyPressed(LLGL::Key::Up))
+            camera.Move({ 0, 0, +moveSpeed });
+        if (input.KeyPressed(LLGL::Key::S) || input.KeyPressed(LLGL::Key::Down))
+            camera.Move({ 0, 0, -moveSpeed });
+    }
+
+    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos)
+    {
+        return Gs::Vector3i
+        {
+            static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + 0.5f)),
+            static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + 0.01f)),
+            static_cast<std::int32_t>(std::floor(worldPos.z / KDTreeNode::gridScale.z + 0.5f))
+        };
+    }
+
+    // Resets the previously picked brick and returns its instance.
+    Instance* ResetPreviouslySelectedBrick()
+    {
+        // Reset previously picked brick
+        if (Instance* oldBrickInstance = GetMutableBrickInstance(controller.pickedBrick))
+        {
+            oldBrickInstance->color = controller.pickedInstanceColor;
+            controller.pickedBrick = {};
+            return oldBrickInstance;
+        }
+        return nullptr;
+    }
+
+    bool PickScene(const Ray3f& ray, PickerContact& outContact)
+    {
+        AABBIntersection aabbIntersection;
+        if (outContact.brick = grid.IntersectWithLeaf(ray, &aabbIntersection))
+        {
+            outContact.point = ray.Interpolate(aabbIntersection.interpolator);
+            outContact.normal = aabbIntersection.normal;
+            return true;
+        }
+        else
+        {
+            const Gs::Vector3i planeNormal{ 0, 1, 0 };
+            if (IntersectRayWithPlane(ray, planeNormal.Cast<float>(), 0.0f, &aabbIntersection.interpolator))
+            {
+                // Place pending brick at picked location on the floor plane
+                outContact.point = ray.Interpolate(aabbIntersection.interpolator);
+                outContact.normal = planeNormal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Brick SelectBrickFromScene()
+    {
+        // Pick scene objects with the mouse pointer
+        const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
+
+        PickerContact contact;
+        if (PickScene(pickerRay, contact))
+        {
+            // Highlight new picked brick
+            if (Instance* newBrickInstance = GetMutableBrickInstance(contact.brick))
+            {
+                controller.pickedInstanceColor = newBrickInstance->color;
+                controller.pickedBrick = contact.brick;
+
+                newBrickInstance->color = LLGL::ColorRGBAub{ 255, 0, 0, 255 };
+            }
+
+            #if DEBUG_KDTREE
+            controller.pickedPosition   = contact.point;
+            controller.pickedNormal     = contact.normal.Cast<float>();
+            #endif
+
+            return contact.brick;
+        }
+
+        return Brick{};
+    }
+
+    void PickGridPosForPreviewBrick(Instance& previewInstance)
+    {
+        // Allow user to turn and change type of preview brick while picking the scene
+        GridRotation newPreviewRotation = previewInstance.gridRotation;
+        if (input.KeyDown(LLGL::Key::Space))
+            newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
+
+        BrickType newBrickType = viewOptions.previewBrickType;
+        if (input.KeyDown(LLGL::Key::PageUp))
+            newBrickType = static_cast<BrickType>((newBrickType + 1) % BrickType_Num);
+
+        // Pick scene objects with the mouse pointer
+        const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
+        Gs::Vector3i newPreviewGridPos = previewInstance.gridPos;
+
+        PickerContact contact;
+        if (PickScene(pickerRay, contact))
+        {
+            // Find a potential grid position for the preview brick
+            newPreviewGridPos = WorldPosToGridPos(contact.point);
+
+            const BrickDimensions brickDim = GetBrickDimensions(newBrickType, newPreviewRotation);
+            if (contact.normal.x < 0)
+                newPreviewGridPos.x -= brickDim.offset.x + brickDim.extent.x;
+            else if (contact.normal.x > 0)
+                newPreviewGridPos.x -= brickDim.offset.x;
+            else if (contact.normal.y < 0)
+                newPreviewGridPos.y -= brickDim.offset.y + brickDim.extent.y;
+            else if (contact.normal.y > 0)
+                newPreviewGridPos.y -= brickDim.offset.y;
+            else if (contact.normal.z < 0)
+                newPreviewGridPos.z -= brickDim.offset.z + brickDim.extent.z;
+            else if (contact.normal.z > 0)
+                newPreviewGridPos.z -= brickDim.offset.z;
+        }
+
+        // If grid position changed, re-evaluate whether that position is blocked for the preview brick
+        if (previewInstance.gridPos      != newPreviewGridPos ||
+            previewInstance.gridRotation != newPreviewRotation ||
+            viewOptions.previewBrickType != newBrickType)
+        {
+            viewOptions.isPreviewBrickBlocked = !BrickFitsInGrid(newPreviewGridPos, newBrickType, newPreviewRotation);
+
+            // Update brick position and rotation
+            viewOptions.previewBrickType    = newBrickType;
+            previewInstance.gridPos         = newPreviewGridPos;
+            previewInstance.gridRotation    = newPreviewRotation;
+            MarkInstanceDirty(0);
+        }
+    }
+
     void ProcessUserInput()
     {
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
 
-        // Pick scene objects with the mouse pointer
-        const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
-        Intersection pickedIntersection;
+        ControlCameraByUserInput();
 
-        if (Brick pickedBrick = grid.IntersectWithLeaf(pickerRay, &pickedIntersection))
+        if (input.KeyDown(LLGL::Key::D1))
+            controller.editMode = EditMode::None;
+        else if (input.KeyDown(LLGL::Key::D2))
+            controller.editMode = EditMode::Add;
+        else if (input.KeyDown(LLGL::Key::D3) || input.KeyDown(LLGL::Key::Delete))
+            controller.editMode = EditMode::Remove;
+
+        Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
+
+        if (controller.editMode == EditMode::Add)
         {
-            // Reset previously picked brick
-            if (Instance* oldBrickInstance = GetMutableBrickInstance(picker.lastPickedBrick))
+            PickGridPosForPreviewBrick(instances[0]);
+
+            if (!viewOptions.isPreviewBrickBlocked && input.KeyDown(LLGL::Key::LButton))
             {
-                oldBrickInstance->color = picker.lastPickedInstanceColor;
-                picker.lastPickedBrick = {};
+                // Place new brick and update pick position for preview
+                NewBrick(viewOptions.previewBrickType, instances[0].gridPos, instances[0].gridRotation, instances[0].color);
+                PickGridPosForPreviewBrick(instances[0]);
             }
-
-            // Highlight new picked brick
-            if (Instance* newBrickInstance = GetMutableBrickInstance(pickedBrick))
-            {
-                picker.lastPickedInstanceColor = newBrickInstance->color;
-                picker.lastPickedBrick = pickedBrick;
-
-                newBrickInstance->color = LLGL::ColorRGBAub{ 255, 0, 0, 255 };
-            }
-
-            // Place pending brick at picked location
-            if (picker.pendingBrick)
-            {
-                const Gs::Vector3f pickedIntersectionPoint = pickerRay.origin + pickerRay.direction * pickedIntersection.interpolator;
-                const Gs::Vector3i pickedIntersectionGridPos = pickedIntersectionPoint.Cast<std::int32_t>();
-
-                (void)SetBrickInGrid(pickedIntersectionGridPos, picker.pendingBrick);
-            }
-
-            #if DEBUG_SCENE
-            picker.pickedPosition   = pickerRay.origin + pickerRay.direction * pickedIntersection.interpolator;
-            picker.pickedNormal     = pickedIntersection.normal;
-            #endif
         }
+
+        if (controller.editMode == EditMode::Remove)
+        {
+            if (Brick selectedBrick = SelectBrickFromScene())
+            {
+                if (input.KeyDown(LLGL::Key::LButton))
+                {
+                    // Remove selected brick
+                    DestroyBrick(selectedBrick);
+                }
+            }
+        }
+
+        #if DEBUG_KDTREE
+        if (GetBrickInstance(controller.pickedBrick) != oldBrickInstance)
+        {
+            LLGL::Log::Printf(
+                "Selected brick (type=%u, instance=%u): %u Ray/AABB tests\n",
+                controller.pickedBrick.groupId, controller.pickedBrick.groupInstance, KDTreeNode::numAABBTests
+            );
+        }
+        #endif
     }
 
     void UpdateSceneView()
@@ -958,6 +1311,10 @@ private:
 
     void OnDrawFrame(float /*dt*/) override
     {
+        #if DEBUG_KDTREE
+        KDTreeNode::numAABBTests = 0;
+        #endif
+
         camera.UpdateTransform();
 
         ProcessUserInput();
@@ -974,10 +1331,24 @@ private:
                 commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
-                MainRenderPass();
+                commands->PushDebugGroup("RenderBrickInstances");
+                {
+                    RenderBrickInstances();
+                }
+                commands->PopDebugGroup();
 
-                #if DEBUG_SCENE
-                DrawDebugInfo();
+                if (controller.editMode == EditMode::Add)
+                {
+                    commands->PushDebugGroup("RenderPreviewBrick");
+                    {
+                        RenderPreviewBrick();
+                    }
+                    commands->PopDebugGroup();
+                }
+
+                #if DEBUG_KDTREE
+                if (controller.editMode == EditMode::Remove)
+                    RenderDebugInfo();
                 #endif
             }
             commands->EndRenderPass();
@@ -995,6 +1366,9 @@ const AABB3i Example_InstancingAdvanced::KDTreeNode::rootAABB
 };
 
 const Gs::Vector3f Example_InstancingAdvanced::KDTreeNode::gridScale = { 1.0f, 0.5f, 1.0f };
+
+int Example_InstancingAdvanced::KDTreeNode::numAABBTests = 0;
+
 
 LLGL_IMPLEMENT_EXAMPLE(Example_InstancingAdvanced);
 

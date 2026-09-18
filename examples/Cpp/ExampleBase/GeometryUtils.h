@@ -60,17 +60,26 @@ struct TriangleMesh
 struct Ray3f
 {
     Gs::Vector3f origin, direction;
+
+    inline Gs::Vector3f Interpolate(float t) const
+    {
+        return origin + direction * t;
+    }
 };
 
-struct AABB3f
+template <typename T>
+struct AABB
 {
-    Gs::Vector3f bbMin, bbMax;
+    T bbMin, bbMax;
 };
 
-struct Intersection
+using AABB3f = AABB<Gs::Vector3f>;
+using AABB3i = AABB<Gs::Vector3i>;
+
+struct AABBIntersection
 {
     float           interpolator = 0.0f;
-    Gs::Vector3f    normal;
+    Gs::Vector3i    normal;
 };
 
 
@@ -116,7 +125,10 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::Arr
 Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs::Vector3f& linePointB, const Gs::Vector3f& referencePoint);
 
 // Returns the interpolation factor for an intersection between a ray and an axis-aligned bounding box (AABB).
-bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* outIntersection = nullptr);
+bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, AABBIntersection* outIntersection = nullptr);
+
+// Returns the ray interpolation for an intersection between the ray and the plane.
+bool IntersectRayWithPlane(const Ray3f& ray, const Gs::Vector3f& planeNormal, float planeDistance, float* outInterpolator = nullptr);
 
 
 #endif

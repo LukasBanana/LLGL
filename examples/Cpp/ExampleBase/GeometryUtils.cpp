@@ -416,14 +416,14 @@ Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs:
     return linePointA + lineDirection;
 }
 
-bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* outIntersection)
+bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, AABBIntersection* outIntersection)
 {
     float tmin = 0.0f;
     float tmax = FLT_MAX;
 
     // Axis (0/1/2) and sign (-1/+1) of the slab whose near plane last raised 'tmin', i.e. the hit face
     int hitAxis = -1;
-    float hitSign = 0.0f;
+    int hitSign = 0;
 
     // Loop for all three slabs
     for (int i = 0; i < 3; ++i)
@@ -451,7 +451,7 @@ bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* ou
             {
                 tmin = t1;
                 hitAxis = i;
-                hitSign = (swapped ? +1.0f : -1.0f);
+                hitSign = (swapped ? +1 : -1);
             }
             tmax = std::min(tmax, t2);
 
@@ -466,12 +466,27 @@ bool IntersectRayWithAABB(const Ray3f& ray, const AABB3f& aabb, Intersection* ou
     {
         outIntersection->interpolator = tmin;
 
-        Gs::Vector3f normal;
+        Gs::Vector3i normal;
         if (hitAxis >= 0)
             normal[hitAxis] = hitSign;
         outIntersection->normal = normal;
     }
 
     return true;
+}
+
+bool IntersectRayWithPlane(const Ray3f& ray, const Gs::Vector3f& planeNormal, float planeDistance, float* outInterpolator)
+{
+    const float sgnDistanceToPlane      = Gs::Dot(planeNormal, ray.origin) + planeDistance;
+    const float intersectInterpolator   = -sgnDistanceToPlane / Gs::Dot(planeNormal, ray.direction);
+
+    if (intersectInterpolator >= 0.0f)
+    {
+        if (outInterpolator != nullptr)
+            *outInterpolator = intersectInterpolator;
+        return true;
+    }
+
+    return false;
 }
 

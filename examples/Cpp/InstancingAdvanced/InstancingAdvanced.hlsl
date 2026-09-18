@@ -1,9 +1,13 @@
 // HLSL shader version 4.0 (for Direct3D 11/ 12)
 
-#include <HlslToSpirvInterop.hlsli>
+//#include <HlslToSpirvInterop.hlsli>
 
 #define ROTATION_0  0
 #define ROTATION_90 1
+
+#ifndef ENABLE_DITHERING
+#define ENABLE_DITHERING 1
+#endif
 
 cbuffer SceneView : register(b2)
 {
@@ -31,7 +35,7 @@ struct VertexOut
     float4                  position : SV_Position;
     float3                  worldPos : WORLDPOS;
     float3                  normal   : NORMAL;
-    nointerpolation float3  color    : COLOR;
+    nointerpolation float4  color    : COLOR;
 };
 
 
@@ -60,7 +64,7 @@ void VSBrick(VertexIn inp, out VertexOut outp)
     outp.worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale;
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
     outp.normal   = mul(rotation, inp.normal);
-    outp.color    = inp.color.rgb;
+    outp.color    = inp.color;
 }
 
 
@@ -69,7 +73,7 @@ void VSBrick(VertexIn inp, out VertexOut outp)
 float BlinnPhoneShading(float3 worldPos, float3 normal)
 {
     const float ambient = 0.2;
-    float3 lightVec = normalize(viewPos.xyz - lightDir.xyz);
+    float3 lightVec = normalize(lightDir.xyz);
     float3 viewDir = normalize(viewPos.xyz - worldPos);
     float3 halfVec = normalize(lightVec + viewDir);
     float NdotL = saturate(dot(normal, lightVec));
@@ -83,8 +87,19 @@ float4 PSBrick(VertexOut inp) : SV_Target
 {
     // Apply simple lighting 
     float lighting = BlinnPhoneShading(inp.worldPos, normalize(inp.normal));
-    float3 color = inp.color * lighting;
-    return float4(color, 1.0);
+    return float4(inp.color.rgb * lighting, inp.color.a);
+};
+
+float4 PSBrickPreview(VertexOut inp) : SV_Target
+{
+    #if ENABLE_DITHERING
+    uint2 screenPos = (uint2)inp.position.xy;
+    clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
+    #endif
+
+    // Apply simple lighting 
+    float lighting = BlinnPhoneShading(inp.worldPos, normalize(inp.normal));
+    return float4(inp.color.rgb * lighting, inp.color.a);
 };
 
 
