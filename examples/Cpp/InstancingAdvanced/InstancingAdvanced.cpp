@@ -13,6 +13,8 @@
 // Enable log output to debug kd-Tree construction
 #define DEBUG_KDTREE 1
 
+#define DEBUG_SCENE 1
+
 
 class Example_InstancingAdvanced : public ExampleBase
 {
@@ -22,11 +24,15 @@ class Example_InstancingAdvanced : public ExampleBase
 
     static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
 
-    LLGL::Shader*               vertexShader        = nullptr;
-    LLGL::Shader*               fragmentShader      = nullptr;
+    LLGL::Shader*               vsBrick             = nullptr;
+    LLGL::Shader*               fsBrick             = nullptr;
 
     LLGL::PipelineLayout*       psoLayout           = nullptr;
     LLGL::PipelineState*        pso[2]              = {};
+
+    #if DEBUG_SCENE
+    LLGL::PipelineState*        psoDebug            = nullptr;
+    #endif
 
     LLGL::Buffer*               sceneViewCbuffer    = nullptr;
     LLGL::Buffer*               vertexBuffer        = nullptr;
@@ -137,6 +143,12 @@ class Example_InstancingAdvanced : public ExampleBase
         }
     };
 
+    struct BrickDimensions
+    {
+        Gs::Vector3i offset;
+        Gs::Vector3i extent;
+    };
+
     // State tracking for picking scene objects with the mouse pointer.
     struct Picker
     {
@@ -144,8 +156,29 @@ class Example_InstancingAdvanced : public ExampleBase
         LLGL::ColorRGBAub   lastPickedInstanceColor;
 
         Brick               pendingBrick;
+
+        #if DEBUG_SCENE
+        Gs::Vector3f        pickedPosition;
+        Gs::Vector3f        pickedNormal;
+        #endif
     }
     picker;
+
+    struct Camera
+    {
+        Gs::Matrix4f wMatrix;
+        Gs::Matrix4f vMatrix;
+
+        void UpdateTransform()
+        {
+            wMatrix.LoadIdentity();
+            Gs::Translate(wMatrix, Gs::Vector3f{ 0, 10, -15 });
+            Gs::RotateX(wMatrix, Gs::Deg2Rad(25.0f));
+
+            vMatrix = wMatrix.Inverse();
+        }
+    }
+    camera;
 
     // Tree hierarchy for the grid of brick entires. A 4x2x3 brick for instances takes up 24 entries.
     class KDTreeNode
@@ -284,36 +317,54 @@ class Example_InstancingAdvanced : public ExampleBase
             }
         }
 
+        bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, Intersection* outIntersection = nullptr) const
+        {
+            const AABB3f aabbF32
+            {
+                aabb.bbMin.Cast<float>() * KDTreeNode::gridScale,
+                aabb.bbMax.Cast<float>() * KDTreeNode::gridScale
+            };
+            return IntersectRayWithAABB(ray, aabbF32, outIntersection);
+        }
+
         Brick FindIntersectionWithLeaf(const Ray3f& ray, const AABB3i& aabb, Intersection* outIntersection) const
         {
             if (HasChildren())
             {
                 // Check intersection against both child nodes' AABBs and continue down the path of the closer intersection
-                Intersection childIntersect[2];
-
-                const AABB3i child0AABB = GetChild0AABB(axis, aabb);
-                const bool isChild0Intersect = IntersectRayWithAABB(ray, child0AABB, &(childIntersect[0]));
-
-                const AABB3i child1AABB = GetChild1AABB(axis, aabb);
-                const bool isChild1Intersect = IntersectRayWithAABB(ray, child1AABB, &(childIntersect[1]));
-
-                if (isChild0Intersect && isChild1Intersect)
+                if (IntersectRayWithScaledAABB(ray, aabb))
                 {
-                    // Continue intersection down the path of the node with the closest intersection
-                    if (childIntersect[0].interpolator < childIntersect[1].interpolator)
-                        return child[0]->FindIntersectionWithLeaf(ray, child0AABB, outIntersection);
-                    else
-                        return child[1]->FindIntersectionWithLeaf(ray, child1AABB, outIntersection);
+                    Intersection childIntersect[2];
+                    Brick childBrick[2];
+
+                    auto ReturnIntersection = [&childIntersect, &childBrick, outIntersection](int childIndex) -> Brick
+                    {
+                        if (outIntersection != nullptr)
+                            *outIntersection = childIntersect[childIndex];
+                        return childBrick[childIndex];
+                    };
+
+                    childBrick[0] = child[0]->FindIntersectionWithLeaf(ray, GetChild0AABB(axis, aabb), &(childIntersect[0]));
+                    childBrick[1] = child[1]->FindIntersectionWithLeaf(ray, GetChild1AABB(axis, aabb), &(childIntersect[1]));
+
+                    if (childBrick[0] && childBrick[1])
+                    {
+                        // Continue intersection down the path of the node with the closest intersection
+                        if (childIntersect[0].interpolator < childIntersect[1].interpolator)
+                            return ReturnIntersection(0);
+                        else
+                            return ReturnIntersection(1);
+                    }
+                    else if (childBrick[0])
+                        return ReturnIntersection(0);
+                    else if (childBrick[1])
+                        return ReturnIntersection(1);
                 }
-                else if (isChild0Intersect)
-                    return child[0]->FindIntersectionWithLeaf(ray, child0AABB, outIntersection);
-                else if (isChild1Intersect)
-                    return child[1]->FindIntersectionWithLeaf(ray, child1AABB, outIntersection);
             }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
             {
                 // Make final intersection test against AABB of current node
-                if (IntersectRayWithAABB(ray, aabb, outIntersection))
+                if (IntersectRayWithScaledAABB(ray, aabb, outIntersection))
                     return this->brick;
             }
             return Brick{};
@@ -331,7 +382,8 @@ class Example_InstancingAdvanced : public ExampleBase
 
     public:
 
-        static const AABB3i rootAABB;
+        static const AABB3i         rootAABB;
+        static const Gs::Vector3f   gridScale;
 
         KDTreeNode() :
             axis     { Axis_X },
@@ -521,62 +573,88 @@ private:
 
         Gs::Vector4f ndc
         {
-            (static_cast<float>(screenPos.x) - viewport.x) / viewport.width,
-            (static_cast<float>(screenPos.y) - viewport.y) / viewport.height,
+              (static_cast<float>(screenPos.x) - viewport.x) / viewport.width  * 2.0f - 1.0f,
+            -((static_cast<float>(screenPos.y) - viewport.y) / viewport.height * 2.0f - 1.0f),
             1.0f,
-            0.0f,
+            1.0f,
         };
 
-        ndc = projection.Inverse() * ndc;
-        ndc /= ndc.w;
+        const Gs::Matrix4f vMatrixNoTranslation
+        {
+            camera.vMatrix(0, 0), camera.vMatrix(0, 1), camera.vMatrix(0, 2), 0.0f,
+            camera.vMatrix(1, 0), camera.vMatrix(1, 1), camera.vMatrix(1, 2), 0.0f,
+            camera.vMatrix(2, 0), camera.vMatrix(2, 1), camera.vMatrix(2, 2), 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+
+        Gs::Matrix4f vpMatrixInv = projection * vMatrixNoTranslation;
+        vpMatrixInv.MakeInverse();
+
+        ndc = vpMatrixInv * ndc;
 
         return Ray3f
         {
-            Gs::Vector3f{ sceneView.viewPos.x, sceneView.viewPos.y, sceneView.viewPos.z },
-            Gs::Vector3f{ ndc.x, ndc.y, ndc.z }.Normalized()
+            Gs::TransformVector(camera.wMatrix, Gs::Vector3f{}),
+            Gs::Vector3f{ ndc }.Normalized()
         };
     }
 
-    Gs::Vector3i GetBrickTypeDimensions(BrickType type)
+    BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation)
     {
+        BrickDimensions brickDim;
+
         switch (type)
         {
             case BrickType_2x2x3:
             case BrickType_2x2x3_WallsOnly:
-                return { 2, 3, 2 };
+                brickDim.extent = { 2, 3, 2 };
+                break;
             case BrickType_4x2x3:
             case BrickType_4x2x3_WallsOnly:
-                return { 4, 3, 2 };
+                brickDim.extent = { 4, 3, 2 };
+                break;
             case BrickType_4x2x1:
             case BrickType_4x2x1_WallsOnly:
-                return { 4, 1, 2 };
+                brickDim.extent = { 4, 1, 2 };
+                break;
             default:
-                return { 0, 0, 0 };
+                break;
         }
+
+        brickDim.offset.x = -brickDim.extent.x/2;
+        brickDim.offset.z = 0;
+        brickDim.offset.z = -brickDim.extent.z/2;
+
+        if (rotation == GridRotation_90)
+        {
+            std::swap(brickDim.extent.x, brickDim.extent.z);
+            std::swap(brickDim.offset.x, brickDim.offset.z);
+        }
+
+        return brickDim;
     }
 
     bool BrickFitsInGrid(const Gs::Vector3i& gridPos, BrickType type, GridRotation rotation)
     {
         // Get brick dimension and apply rotation
-        Gs::Vector3i brickDim = GetBrickTypeDimensions(type);
-        if (rotation == GridRotation_90)
-            std::swap(brickDim.x, brickDim.z);
+        const BrickDimensions brickDim = GetBrickDimensions(type, rotation);
 
         // Brick must fit inside the root AABB
-        if (gridPos.x              < KDTreeNode::rootAABB.bbMin.x ||
-            gridPos.y              < KDTreeNode::rootAABB.bbMin.y ||
-            gridPos.z              < KDTreeNode::rootAABB.bbMin.z ||
-            gridPos.x + brickDim.x > KDTreeNode::rootAABB.bbMax.x ||
-            gridPos.y + brickDim.y > KDTreeNode::rootAABB.bbMax.y ||
-            gridPos.z + brickDim.z > KDTreeNode::rootAABB.bbMax.z)
+        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        if (alignedGridPos.x                     < KDTreeNode::rootAABB.bbMin.x ||
+            alignedGridPos.y                     < KDTreeNode::rootAABB.bbMin.y ||
+            alignedGridPos.z                     < KDTreeNode::rootAABB.bbMin.z ||
+            alignedGridPos.x + brickDim.extent.x > KDTreeNode::rootAABB.bbMax.x ||
+            alignedGridPos.y + brickDim.extent.y > KDTreeNode::rootAABB.bbMax.y ||
+            alignedGridPos.z + brickDim.extent.z > KDTreeNode::rootAABB.bbMax.z)
         {
             return false;
         }
 
         // Check if there is any blocking brick
-        foreach_dimension(x, y, z, brickDim)
+        foreach_dimension(x, y, z, brickDim.extent)
         {
-            if (grid.GetLeaf(gridPos + Gs::Vector3i{ x, y, z }))
+            if (grid.GetLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }))
                 return false;
         }
 
@@ -586,24 +664,21 @@ private:
     bool SetBrickInGrid(const Gs::Vector3i& gridPos, Brick brick)
     {
         // Get brick dimension and apply rotation
-        Gs::Vector3i brickDim = GetBrickTypeDimensions(brick.groupId);
-        if (const Instance* instance = GetBrickInstance(brick))
-        {
-            if (instance->gridRotation == GridRotation_90)
-                std::swap(brickDim.x, brickDim.z);
-        }
+        const Instance* instance = GetBrickInstance(brick);
+        const BrickDimensions brickDim = GetBrickDimensions(brick.groupId, instance != nullptr ? instance->gridRotation : GridRotation_0);
 
+        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
         if (brick)
         {
             // Insert brick entries into grid
-            foreach_dimension(x, y, z, brickDim)
-                grid.InsertLeaf(gridPos + Gs::Vector3i{ x, y, z }, brick);
+            foreach_dimension(x, y, z, brickDim.extent)
+                grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
         }
         else
         {
             // Remove brick entries from grid
-            foreach_dimension(x, y, z, brickDim)
-                grid.RemoveLeaf(gridPos + Gs::Vector3i{ x, y, z });
+            foreach_dimension(x, y, z, brickDim.extent)
+                grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
         }
 
         #if DEBUG_KDTREE
@@ -691,8 +766,8 @@ private:
     void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadVertexShader("InstancingAdvanced", "VSMain");
-        fragmentShader  = LoadFragmentShader("InstancingAdvanced", "PSMain");
+        vsBrick = LoadVertexShader  ("InstancingAdvanced", "VSBrick");
+        fsBrick = LoadFragmentShader("InstancingAdvanced", "PSBrick");
 
         // Create pipeline layout
         psoLayout = renderer->CreatePipelineLayout(
@@ -717,8 +792,8 @@ private:
         LLGL::GraphicsPipelineDescriptor psoDesc;
         {
             psoDesc.inputVertexAttribs             = vertexAttribs;
-            psoDesc.vertexShader                   = vertexShader;
-            psoDesc.fragmentShader                 = fragmentShader;
+            psoDesc.vertexShader                   = vsBrick;
+            psoDesc.fragmentShader                 = fsBrick;
             psoDesc.pipelineLayout                 = psoLayout;
             psoDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
             psoDesc.depth.testEnabled              = true;
@@ -732,6 +807,20 @@ private:
         }
         pso[1] = renderer->CreatePipelineState(psoDesc);
         ReportPSOErrors(pso[1]);
+
+        #if DEBUG_SCENE
+        LLGL::GraphicsPipelineDescriptor psoDebugDesc;
+        {
+            psoDebugDesc.debugName          = "DebugPSO";
+            psoDebugDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(SceneView@2):vert,float4(vertexA,vertexB)"));
+            psoDebugDesc.vertexShader       = LoadVertexShader  ("InstancingAdvanced", "VSDebug");
+            psoDebugDesc.fragmentShader     = LoadFragmentShader("InstancingAdvanced", "PSDebug");
+            psoDebugDesc.primitiveTopology  = LLGL::PrimitiveTopology::LineList;
+            psoDebugDesc.depth.testEnabled  = true;
+        }
+        psoDebug = renderer->CreatePipelineState(psoDebugDesc);
+        ReportPSOErrors(psoDebug);
+        #endif
     }
 
     void CreateInitialScene()
@@ -746,8 +835,8 @@ private:
             }
         }
 
-        //NewBrick(BrickType_4x2x1, { 0, 0, -4 }, GridRotation_90, colorPalette[1]);
-        NewBrick(BrickType_2x2x3, { 0, 0, -2 }, GridRotation_0, colorPalette[1]);
+        NewBrick(BrickType_4x2x1, { -9, 3, 0 }, GridRotation_90, colorPalette[1]);
+        //NewBrick(BrickType_2x2x3, { 0, 0, -2 }, GridRotation_0, colorPalette[1]);
 
     }
 
@@ -799,6 +888,21 @@ private:
         }
     }
 
+    #if DEBUG_SCENE
+    void DrawDebugInfo()
+    {
+        commands->SetPipelineState(*psoDebug);
+        const Gs::Vector4f vertices[2] =
+        {
+            Gs::Vector4f{ picker.pickedPosition, 1.0f },
+            Gs::Vector4f{ picker.pickedPosition + picker.pickedNormal, 1.0f }
+        };
+        commands->SetResource(0, *sceneViewCbuffer);
+        commands->SetUniforms(0, vertices, sizeof(vertices));
+        commands->Draw(2, 0);
+    }
+    #endif
+
     void ProcessUserInput()
     {
         if (input.KeyDown(LLGL::Key::Tab))
@@ -834,28 +938,28 @@ private:
 
                 (void)SetBrickInGrid(pickedIntersectionGridPos, picker.pendingBrick);
             }
+
+            #if DEBUG_SCENE
+            picker.pickedPosition   = pickerRay.origin + pickerRay.direction * pickedIntersection.interpolator;
+            picker.pickedNormal     = pickedIntersection.normal;
+            #endif
         }
     }
 
     void UpdateSceneView()
     {
-        Gs::Matrix4f vMatrix;
-        vMatrix.LoadIdentity();
-        Gs::Translate(vMatrix, Gs::Vector3f{ 0, 10, -15 });
-        Gs::RotateX(vMatrix, Gs::Deg2Rad(25.0f));
+        sceneView.viewPos   = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
+        sceneView.vpMatrix  = projection * camera.vMatrix;
 
-        sceneView.viewPos = vMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
+        sceneView.gridScale = KDTreeNode::gridScale;
 
-        vMatrix.MakeInverse();
-        sceneView.vpMatrix = projection * vMatrix;
-
-        sceneView.gridScale = { 1.0f, 0.5f, 1.0f };
-
-        sceneView.lightDir = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
+        sceneView.lightDir  = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
     }
 
     void OnDrawFrame(float /*dt*/) override
     {
+        camera.UpdateTransform();
+
         ProcessUserInput();
         UpdateSceneView();
 
@@ -871,6 +975,10 @@ private:
                 commands->SetViewport(swapChain->GetResolution());
 
                 MainRenderPass();
+
+                #if DEBUG_SCENE
+                DrawDebugInfo();
+                #endif
             }
             commands->EndRenderPass();
         }
@@ -885,6 +993,8 @@ const AABB3i Example_InstancingAdvanced::KDTreeNode::rootAABB
     Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
     Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
 };
+
+const Gs::Vector3f Example_InstancingAdvanced::KDTreeNode::gridScale = { 1.0f, 0.5f, 1.0f };
 
 LLGL_IMPLEMENT_EXAMPLE(Example_InstancingAdvanced);
 

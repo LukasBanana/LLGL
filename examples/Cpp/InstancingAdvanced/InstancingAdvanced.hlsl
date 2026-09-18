@@ -37,7 +37,7 @@ struct VertexOut
 
 // VERTEX SHADER
 
-void VSMain(VertexIn inp, out VertexOut outp)
+void VSBrick(VertexIn inp, out VertexOut outp)
 {
     // Rotate model either 0 degrees (default) or 90 degrees based on the instance's gridPos.w value
     const float3x3 rotationMatrices[2] =
@@ -79,11 +79,29 @@ float BlinnPhoneShading(float3 worldPos, float3 normal)
     return diffuse + specular;
 }
 
-float4 PSMain(VertexOut inp) : SV_Target
+float4 PSBrick(VertexOut inp) : SV_Target
 {
     // Apply simple lighting 
     float lighting = BlinnPhoneShading(inp.worldPos, normalize(inp.normal));
     float3 color = inp.color * lighting;
     return float4(color, 1.0);
 };
+
+
+// DEBUG SHADER
+
+uniform float4 vertexA;
+uniform float4 vertexB;
+
+float4 VSDebug(uint id : SV_VertexID) : SV_Position
+{
+    float4 vertices[2] = { vertexA, vertexB };
+    return mul(vpMatrix, vertices[id]);
+}
+
+float4 PSDebug() : SV_Target
+{
+    return float4(1, 1, 1, 1);
+}
+
 
