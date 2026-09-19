@@ -8,10 +8,11 @@
 #include <ExampleBase.h>
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
+#include <set>
 
 
 // Enable log output to debug kd-Tree construction
-#define DEBUG_KDTREE 1
+#define DEBUG_KDTREE 0
 
 // Subdivide kd-Tree uniformly. This is only used for performance testing.
 #define UNIFORM_TREE_SUBDIVIDE 0
@@ -26,18 +27,21 @@ class Example_InstancingAdvanced : public ExampleBase
     static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
     static constexpr float      cameraTurnSpeed     = 0.25f;
     static constexpr float      cameraMoveSpeed     = 0.25f;
+    static constexpr float      previewBlockOffsetY = 0.1f;     // Y-axis world position offset for the preview block before putting it into place
 
     enum BrickPSO
     {
         BrickPSO_Default = 0,
+        BrickPSO_Transparent,
         BrickPSO_Wireframe,
-        BrickPSO_Preview, // With alpha-blending
+        BrickPSO_Preview, // With dithering to indicate blocked position
 
         BrickPSO_Num,
     };
 
     LLGL::Shader*               vsBrick             = nullptr;
     LLGL::Shader*               fsBrick             = nullptr;
+    LLGL::Shader*               vsBrickPreview      = nullptr;
     LLGL::Shader*               fsBrickPreview      = nullptr;
 
     LLGL::PipelineLayout*       psoLayout           = nullptr;
@@ -67,10 +71,15 @@ class Example_InstancingAdvanced : public ExampleBase
     {
         Gs::Matrix4f    vpMatrix;                                   // View-projection matrix
         Gs::Vector3f    gridScale       = Gs::Vector3f{ 1.0f };
-        float           pad0            = 0.0f;
+        float           pad0            = {};
         Gs::Vector4f    viewPos;                                    // Camera view position (in world space)
         Gs::Vector3f    lightDir        = { 0.0f, 0.0f, -1.0f };    // Light vector pointing from a pixel towards the light source
         float           specularPower   = 90.0f;                    // Specular exponent for blinn-phone shading model
+
+        // Preview shaders only
+        float           worldOffsetY    = 0.0f;
+        std::int32_t    isDithering     = 0;
+        float           pad1[2]         = {};
     }
     sceneView;
 
@@ -89,20 +98,45 @@ class Example_InstancingAdvanced : public ExampleBase
         BrickType_4x2x3,
         BrickType_4x2x1,
 
-        BrickType_WallsOnly_Offset,
-
-        BrickType_2x2x3_WallsOnly = BrickType_WallsOnly_Offset,
-        BrickType_4x2x3_WallsOnly,
-        BrickType_4x2x1_WallsOnly,
-
         BrickType_Num,
+    };
+
+    enum BrickGroup : std::uint32_t
+    {
+        BrickGroup_Default = 0,
+        BrickGroup_WallsOnly,
+        BrickGroup_Transparent,
+
+        BrickGroup_Num,
+    };
+
+    static std::uint32_t CombineToBrickId(int type, int group)
+    {
+        return static_cast<std::uint32_t>(type * BrickGroup_Num + group);
+    }
+
+    static BrickType IdToBrickType(std::uint32_t groupId)
+    {
+        return static_cast<BrickType>(groupId / BrickGroup_Num);
+    }
+
+    static BrickGroup IdToBrickGroup(std::uint32_t groupId)
+    {
+        return static_cast<BrickGroup>(groupId % BrickGroup_Num);
+    }
+
+    struct PreviewBrick
+    {
+        BrickType       type            = BrickType_2x2x3; // Previews brick with instance index 0.
+        bool            isTransparent   = false;
+        bool            isBlocked       = false;
+        std::int32_t    gridOffset      = 0;
     };
 
     struct ViewOptions
     {
-        bool        showWireframe           = false;
-        BrickType   previewBrickType        = BrickType_2x2x3; // Previews brick with instance index 0.
-        bool        isPreviewBrickBlocked   = false;
+        bool            showWireframe               = false;
+        PreviewBrick    previewBrick;
     }
     viewOptions;
 
@@ -139,35 +173,66 @@ class Example_InstancingAdvanced : public ExampleBase
 
     std::vector<Instance>   instances;
     std::size_t             instanceDirtyRange[2]           = { 0, 0 };
-    InstanceGroup           instanceGroups[BrickType_Num];
+    InstanceGroup           instanceGroups[BrickType_Num * BrickGroup_Num];
+
+    InstanceGroup& GetInstanceGroup(BrickType type, BrickGroup group = BrickGroup_Default)
+    {
+        return instanceGroups[CombineToBrickId(type, group)];
+    }
 
     struct Brick
     {
         Brick() :
-            groupId       { BrickType_Num },
-            groupInstance { 0             }
+            groupId       { 0xF },
+            groupInstance { 0   }
         {
         }
 
-        Brick(BrickType type, std::uint32_t instance) :
-            groupId       { type     },
-            groupInstance { instance }
+        Brick(std::uint32_t groupId, std::uint32_t groupInstance) :
+            groupId       { groupId       },
+            groupInstance { groupInstance }
         {
         }
 
-        BrickType       groupId         : 3;
+        // Combined brick type and group.
+        std::uint32_t   groupId         : 4;
 
         // Index into the group's instance. Use `group.firstInstance + groupInstance` to get index into global `instances` container.
-        std::uint32_t   groupInstance   : 29;
+        std::uint32_t   groupInstance   : 28;
 
-        inline operator bool() const
+        void SetType(BrickType type)
         {
-            return (groupId != BrickType_Num);
+            groupId = type * BrickGroup_Num + IdToBrickGroup(groupId);
         }
 
-        inline bool operator == (const Brick& rhs) const
+        void SetGroup(BrickGroup group)
+        {
+            groupId = IdToBrickType(groupId) * BrickGroup_Num + group;
+        }
+
+        // Returns true if this brick blocks the view from other bricks. False for invalid and transparent bricks.
+        bool IsBlocking() const
+        {
+            return (groupId != 0xF && IdToBrickGroup(groupId) != BrickGroup_Transparent);
+        }
+
+        operator bool() const
+        {
+            return (groupId != 0xF);
+        }
+
+        bool operator == (const Brick& rhs) const
         {
             return (groupId == rhs.groupId && groupInstance == rhs.groupInstance);
+        }
+
+        // Required for std::set. Without it, the implicit bool conversion would be used and treat all valid bricks as equal.
+        bool operator < (const Brick& rhs) const
+        {
+            if (groupId != rhs.groupId)
+                return (groupId < rhs.groupId);
+            else
+                return (groupInstance < rhs.groupInstance);
         }
     };
 
@@ -195,6 +260,7 @@ class Example_InstancingAdvanced : public ExampleBase
     {
         None,
         Add,
+        Move,
         Remove,
     };
 
@@ -328,6 +394,24 @@ class Example_InstancingAdvanced : public ExampleBase
             {
                 // Otherwise, keep adding sub nodes until we reach the destination grid position
                 SubdivideAndSetLeaf(gridPos, aabb, brick);
+            }
+        }
+
+        void FindAndUpdateLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, std::uint32_t newGroupInstance)
+        {
+            if (HasChildren())
+            {
+                // Shrink root AABB until we reach a leaf node
+                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
+                    child[0]->FindAndUpdateLeaf(gridPos, GetChild0AABB(axis, aabb), newGroupInstance);
+                else
+                    child[1]->FindAndUpdateLeaf(gridPos, GetChild1AABB(axis, aabb), newGroupInstance);
+            }
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            {
+                // Update leaf entry if not empty
+                if (this->brick)
+                    this->brick.groupInstance = newGroupInstance;
             }
         }
 
@@ -466,6 +550,19 @@ class Example_InstancingAdvanced : public ExampleBase
 
         static int                  numAABBTests;
 
+        static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
+        {
+            return
+            (
+                gridPos.x >=  KDTreeNode::rootAABB.bbMin.x &&
+                gridPos.y >=  KDTreeNode::rootAABB.bbMin.y &&
+                gridPos.z >=  KDTreeNode::rootAABB.bbMin.z &&
+                gridPos.x <   KDTreeNode::rootAABB.bbMax.x &&
+                gridPos.y <   KDTreeNode::rootAABB.bbMax.y &&
+                gridPos.z <   KDTreeNode::rootAABB.bbMax.z
+            );
+        }
+
         KDTreeNode() :
             axis     { Axis_X },
             distance { 0      }
@@ -477,19 +574,28 @@ class Example_InstancingAdvanced : public ExampleBase
             return (child[0].get() != nullptr);
         }
 
-        void InsertLeaf(Gs::Vector3i gridPos, Brick brick)
+        void InsertLeaf(const Gs::Vector3i& gridPos, Brick brick)
         {
             FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
         }
 
-        void RemoveLeaf(Gs::Vector3i gridPos)
+        void RemoveLeaf(const Gs::Vector3i& gridPos)
         {
             FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
         }
 
+        void UpdateLeaf(const Gs::Vector3i& gridPos, std::uint32_t groupInstance)
+        {
+            FindAndUpdateLeaf(gridPos, KDTreeNode::rootAABB, groupInstance);
+        }
+
         Brick GetLeaf(const Gs::Vector3i& gridPos) const
         {
-            return FindLeaf(gridPos, KDTreeNode::rootAABB);
+            // Positions outside the root AABB have no leaf. Without this check, the traversal would return an unrelated leaf.
+            if (KDTreeNode::IsInsideBoundingVolume(gridPos))
+                return FindLeaf(gridPos, KDTreeNode::rootAABB);
+            else
+                return Brick{};
         }
 
         Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
@@ -545,8 +651,8 @@ private:
 
     void MarkInstanceDirty(std::size_t first, std::size_t count = 1)
     {
-        instanceDirtyRange[0] = std::min(instanceDirtyRange[0], first);
-        instanceDirtyRange[1] = std::max(instanceDirtyRange[1], first + count);
+        instanceDirtyRange[0] = std::min(instances.size(), std::min(instanceDirtyRange[0], first));
+        instanceDirtyRange[1] = std::min(instances.size(), std::max(instanceDirtyRange[1], first + count));
     }
 
     void ResetInstanceDirtyRange()
@@ -590,7 +696,7 @@ private:
     }
 
     // Adds the specified number of instances to the group.
-    Instance* AddInstancesToGroup(BrickType groupId, std::uint32_t count = 1)
+    Instance* AllocateInstancesInGroup(std::uint32_t groupId, std::uint32_t count = 1)
     {
         InstanceGroup& group = instanceGroups[groupId];
         if (group.numInstances + count > group.instanceCapacity)
@@ -607,42 +713,79 @@ private:
                 MarkInstanceDirty(0, instances.size());
 
             // Update instance offsets in subsequent groups
-            for (int nextGroupId = groupId + 1; nextGroupId < BrickType_Num; ++nextGroupId)
+            for (int nextGroupId = groupId + 1; nextGroupId < BrickType_Num * BrickGroup_Num; ++nextGroupId)
                 instanceGroups[nextGroupId].firstInstance += instanceGrowth;
+
+            // Store new instance capacity for this group
+            group.instanceCapacity = numCapacity;
         }
 
         // Return pointer to first new instance
         Instance* firstInstancePtr = &(instances[group.firstInstance + group.numInstances]);
+        MarkInstanceDirty(group.firstInstance + group.numInstances, count);
         group.numInstances += count;
-        MarkInstanceDirty(group.firstInstance, count);
 
         return firstInstancePtr;
     }
 
-    void RemoveInstanceFromGroup(BrickType groupId, std::uint32_t groupInstance)
+    Brick AddInstanceToGroup(std::uint32_t groupId, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
     {
+        Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
+
+        if (Instance* newInstance = AllocateInstancesInGroup(groupId))
+        {
+            newInstance->gridPos        = gridPos;
+            newInstance->gridRotation   = gridRotation;
+            newInstance->color          = color;
+
+            InsertBrickIntoGrid(gridPos, newBrick, notifyNeighbors);
+        }
+
+        return newBrick;
+    }
+
+    bool RemoveInstanceFromGroup(std::uint32_t groupId, std::uint32_t groupInstance, Instance* outRemovedInstance = nullptr, bool notifyNeighbors = false)
+    {
+        // Early exit if instance is out of bounds
         InstanceGroup& group = instanceGroups[groupId];
+        if (groupInstance >= group.numInstances)
+            return false;
+
+        // Make copy of retired instance and override that entry with the last instance below.
+        // RemoveBrickFromGrid()/InsertBrickIntoGrid() might modify the instances container, so this has to happen first.
+        const Instance retiredInstance = instances[group.firstInstance + groupInstance];
+
+        if (outRemovedInstance != nullptr)
+            *outRemovedInstance = retiredInstance;
+
+        const BrickType brickType = IdToBrickType(groupId);
+
+        group.numInstances--;
         if (groupInstance < group.numInstances)
         {
-            Instance& retiredInstance = instances[group.firstInstance + groupInstance];
+            // Remove instance from group by writing last instance in that group into the position of the old instance and update its grid entry
+            const Instance& lastInstance = instances[group.firstInstance + group.numInstances];
+            instances[group.firstInstance + groupInstance] = lastInstance;
+            UpdateBrickInstanceInGrid(brickType, lastInstance, groupInstance);
+        }
 
-            group.numInstances--;
-            if (groupInstance < group.numInstances)
-            {
-                // Remove instance from group by copying last instance in that group into the position of the old instance
-                const Instance& lastInstance = instances[group.firstInstance + group.numInstances];
-                RemoveBrickFromGrid(groupId, retiredInstance);
-                InsertBrickIntoGrid(lastInstance.gridPos, Brick{ groupId, groupInstance });
-                retiredInstance = lastInstance;
-            }
-            else
-            {
-                // If destroyed brick is the last instance in that group, just reset the entry in the grid
-                RemoveBrickFromGrid(groupId, retiredInstance);
-            }
+        // Remove destroyed instance from grid
+        RemoveBrickFromGrid(brickType, retiredInstance, notifyNeighbors);
 
-            // Mark all remaining instances of that group as dirty
-            MarkInstanceDirty(group.firstInstance + groupInstance);
+        // Mark all remaining instances of that group as dirty
+        MarkInstanceDirty(group.firstInstance + groupInstance);
+
+        return true;
+    }
+
+    // Transfers the specified brick to a new group and returns the updated brick entry
+    void TransferBrickGroup(Brick brick, BrickGroup newGroup)
+    {
+        Instance oldInstance;
+        if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
+        {
+            const std::uint32_t newGroupId = CombineToBrickId(IdToBrickType(brick.groupId), newGroup);
+            (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.color);
         }
     }
 
@@ -717,37 +860,28 @@ private:
         };
     }
 
+    static Gs::Vector3i GetBrickExtent(BrickType type)
+    {
+        switch (type)
+        {
+            case BrickType_2x2x3:   return { 2, 3, 2 };
+            case BrickType_4x2x3:   return { 4, 3, 2 };
+            case BrickType_4x2x1:   return { 4, 1, 2 };
+            default:                return {};
+        }
+    }
+
     BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation)
     {
         BrickDimensions brickDim;
 
-        switch (type)
-        {
-            case BrickType_2x2x3:
-            case BrickType_2x2x3_WallsOnly:
-                brickDim.extent = { 2, 3, 2 };
-                break;
-            case BrickType_4x2x3:
-            case BrickType_4x2x3_WallsOnly:
-                brickDim.extent = { 4, 3, 2 };
-                break;
-            case BrickType_4x2x1:
-            case BrickType_4x2x1_WallsOnly:
-                brickDim.extent = { 4, 1, 2 };
-                break;
-            default:
-                break;
-        }
+        brickDim.extent = GetBrickExtent(type);
+        if (rotation == GridRotation_90)
+            std::swap(brickDim.extent.x, brickDim.extent.z);
 
         brickDim.offset.x = -brickDim.extent.x/2;
-        brickDim.offset.z = 0;
+        brickDim.offset.y = 0;
         brickDim.offset.z = -brickDim.extent.z/2;
-
-        if (rotation == GridRotation_90)
-        {
-            std::swap(brickDim.extent.x, brickDim.extent.z);
-            std::swap(brickDim.offset.x, brickDim.offset.z);
-        }
 
         return brickDim;
     }
@@ -779,66 +913,167 @@ private:
         return true;
     }
 
-    void InsertBrickIntoGrid(const Gs::Vector3i& gridPos, Brick brick)
+    bool IsBrickTypeBlockedTopAndBottom(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation)
+    {
+        const BrickDimensions brickDim = GetBrickDimensions(type, gridRotation);
+        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        for_range(yi, 2)
+        {
+            const std::int32_t y = (yi == 0 ? -1 : brickDim.extent.y);
+
+            // If current grid position is under the floor, it's also considered blocked
+            if (alignedGridPos.y + y < KDTreeNode::rootAABB.bbMin.y)
+                continue;
+
+            for_range(z, brickDim.extent.z)
+            {
+                for_range(x, brickDim.extent.x)
+                {
+                    Brick otherBrick = grid.GetLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
+                    if (!otherBrick.IsBlocking())
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool IsBrickBlockedTopAndBottom(Brick brick)
+    {
+        if (const Instance* instance = GetBrickInstance(brick))
+            return IsBrickTypeBlockedTopAndBottom(IdToBrickType(brick.groupId), instance->gridPos, instance->gridRotation);
+        else
+            return false;
+    }
+
+    // Notifies the specified brick that its surrounding has changed,
+    // allowing it to transfer to a different mesh group for better rendering performance.
+    void NotifyBrickChange(Brick brick, bool isBlocking)
+    {
+        const BrickGroup group = IdToBrickGroup(brick.groupId);
+        if (group == BrickGroup_Default && isBlocking)
+        {
+            // If brick is now blocked top and bottom, switch to walls-only mesh
+            if (IsBrickBlockedTopAndBottom(brick))
+                TransferBrickGroup(brick, BrickGroup_WallsOnly);
+        }
+        else if (group == BrickGroup_WallsOnly && !isBlocking)
+        {
+            // Brick is no longer fully blocked top and bottom, so switch back to default mesh
+            TransferBrickGroup(brick, BrickGroup_Default);
+        }
+    }
+
+    // Notifes all bricks surrounding the specified changed brick that their surrounding has changed.
+    void NotifyBrickChangeTopAndBottom(const Gs::Vector3i alignedGridPos, const Gs::Vector3i& brickExtent, Brick changedBrick)
+    {
+        // First gather all brick cells that need to be notified to avoid running the blocking test multiple times for the same brick.
+        // Use their cell coordinates instead of storing the brick references as they might be invalidated in the next phase.
+        std::set<Brick> visitedBricks;
+        std::vector<Gs::Vector3i> bricksToNotifyCells;
+
+        for_range(yi, 2)
+        {
+            const std::int32_t y = (yi == 0 ? -1 : brickExtent.y);
+            for_range(z, brickExtent.z)
+            {
+                for_range(x, brickExtent.x)
+                {
+                    const Gs::Vector3i gridPos = alignedGridPos + Gs::Vector3i{ x, y, z };
+                    if (Brick brick = grid.GetLeaf(gridPos))
+                    {
+                        if (visitedBricks.insert(brick).second)
+                            bricksToNotifyCells.push_back(gridPos);
+                    }
+                }
+            }
+        }
+
+        // Now notify the bricks that their surrounding has changed
+        const bool isBlocking = changedBrick.IsBlocking();
+        for (const Gs::Vector3i& gridPos : bricksToNotifyCells)
+        {
+            if (Brick brick = grid.GetLeaf(gridPos))
+                NotifyBrickChange(brick, isBlocking);
+        }
+    }
+
+    void InsertBrickIntoGrid(const Gs::Vector3i& gridPos, Brick brick, bool notifyNeighbors = false)
     {
         // Get brick dimension and apply rotation
         const Instance* instance = GetBrickInstance(brick);
-        const BrickDimensions brickDim = GetBrickDimensions(brick.groupId, instance != nullptr ? instance->gridRotation : GridRotation_0);
+        const BrickDimensions brickDim = GetBrickDimensions(IdToBrickType(brick.groupId), instance != nullptr ? instance->gridRotation : GridRotation_0);
 
         // Insert brick entries into grid
         const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
             grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
 
+        // Notify top and bottom grid entries that they are now blocked, so they can optimize their mesh if they are now fully blocked
+        if (notifyNeighbors)
+            NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, brick);
+
         #if DEBUG_KDTREE
         LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
         #endif
     }
 
-    void RemoveBrickFromGrid(BrickType groupId, const Instance& instance)
+    void RemoveBrickFromGrid(BrickType type, const Instance& instance, bool notifyNeighbors = false)
     {
         // Get brick dimension and apply rotation
-        const BrickDimensions brickDim = GetBrickDimensions(groupId, instance.gridRotation);
+        const BrickDimensions brickDim = GetBrickDimensions(type, instance.gridRotation);
 
         // Remove brick entries from grid
         const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
             grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
 
+        // Notify top and bottom grid entries that they are now unblocked, so they need to switch back to the full mesh
+        if (notifyNeighbors)
+            NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, Brick{});
+
         #if DEBUG_KDTREE
         LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
         #endif
     }
 
-    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
+    void UpdateBrickInstanceInGrid(BrickType type, const Instance& instance, std::uint32_t groupInstance)
     {
-        LLGL_VERIFY(type < BrickType_WallsOnly_Offset);
+        // Get brick dimension and apply rotation
+        const BrickDimensions brickDim = GetBrickDimensions(type, instance.gridRotation);
 
+        // Remove brick entries from grid
+        const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
+        foreach_dimension(x, y, z, brickDim.extent)
+            grid.UpdateLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, groupInstance);
+    }
+
+    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool isTransparent = false)
+    {
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
             return Brick{};
 
-        Brick newBrick;
-        {
-            newBrick.groupId        = type;
-            newBrick.groupInstance  = instanceGroups[type].numInstances;
-        }
-        Instance* newInstance = AddInstancesToGroup(type);
-        {
-            newInstance->gridPos        = gridPos;
-            newInstance->gridRotation   = gridRotation;
-            newInstance->color          = color;
-        }
+        const BrickGroup group =
+        (
+            isTransparent
+                ? BrickGroup_Transparent
+                : IsBrickTypeBlockedTopAndBottom(type, gridPos, gridRotation)
+                    ? BrickGroup_WallsOnly
+                    : BrickGroup_Default
+        );
+        const std::uint32_t groupId = CombineToBrickId(type, group);
 
-        InsertBrickIntoGrid(gridPos, newBrick);
-
-        return newBrick;
+        // Insert brick without notification first, so its instance is fully initialized before neighbors can rearrange the groups
+        constexpr bool notifyNeighbors = true;
+        return AddInstanceToGroup(groupId, gridPos, gridRotation, color, notifyNeighbors);
     }
 
     void DestroyBrick(Brick brick)
     {
         if (controller.pickedBrick == brick)
             ResetPreviouslySelectedBrick();
-        RemoveInstanceFromGroup(brick.groupId, brick.groupInstance);
+        constexpr bool notifyNeighbors = true;
+        RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, nullptr, notifyNeighbors);
     }
 
     void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, InstanceGroup& outInstanceGroup)
@@ -871,12 +1106,15 @@ private:
         const float projZAxis = GetProjectionZAxis();
 
         std::vector<Vertex> vertices;
-        LoadBrickModel("Brick2x2x3"          , vertices, instanceGroups[BrickType_2x2x3          ]);
-        LoadBrickModel("Brick4x2x3"          , vertices, instanceGroups[BrickType_4x2x3          ]);
-        LoadBrickModel("Brick4x2x1"          , vertices, instanceGroups[BrickType_4x2x1          ]);
-        LoadBrickModel("Brick2x2x3_WallsOnly", vertices, instanceGroups[BrickType_2x2x3_WallsOnly]);
-        LoadBrickModel("Brick4x2x3_WallsOnly", vertices, instanceGroups[BrickType_4x2x3_WallsOnly]);
-        LoadBrickModel("Brick4x2x1_WallsOnly", vertices, instanceGroups[BrickType_4x2x1_WallsOnly]);
+        LoadBrickModel("Brick2x2x3"          , vertices, GetInstanceGroup(BrickType_2x2x3                        ));
+        LoadBrickModel("Brick2x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_WallsOnly  ));
+        LoadBrickModel("Brick2x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_Transparent));
+        LoadBrickModel("Brick4x2x3"          , vertices, GetInstanceGroup(BrickType_4x2x3                        ));
+        LoadBrickModel("Brick4x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_WallsOnly  ));
+        LoadBrickModel("Brick4x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_Transparent));
+        LoadBrickModel("Brick4x2x1"          , vertices, GetInstanceGroup(BrickType_4x2x1                        ));
+        LoadBrickModel("Brick4x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_WallsOnly  ));
+        LoadBrickModel("Brick4x2x1_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_Transparent));
 
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
@@ -901,6 +1139,7 @@ private:
         // Create shaders
         vsBrick         = LoadVertexShader  ("InstancingAdvanced", "VSBrick");
         fsBrick         = LoadFragmentShader("InstancingAdvanced", "PSBrick");
+        vsBrickPreview  = LoadVertexShader  ("InstancingAdvanced", "VSBrickPreview");
         fsBrickPreview  = LoadFragmentShader("InstancingAdvanced", "PSBrickPreview");
 
         // Create pipeline layout
@@ -922,8 +1161,8 @@ private:
             LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, /*location:*/ 3, /*offset:*/ offsetof(Instance, color  ), /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
         };
 
-        // Create common graphics pipeline for scene rendering
-        LLGL::GraphicsPipelineDescriptor psoDesc;
+        // Create graphics PSO for default scene rendering
+        auto SetPSODefaults = [this, &vertexAttribs](LLGL::GraphicsPipelineDescriptor& psoDesc) -> void
         {
             psoDesc.inputVertexAttribs              = vertexAttribs;
             psoDesc.vertexShader                    = vsBrick;
@@ -934,20 +1173,42 @@ private:
             psoDesc.depth.writeEnabled              = true;
             psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
             psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+        };
+
+        LLGL::GraphicsPipelineDescriptor psoDesc;
+        {
+            SetPSODefaults(psoDesc);
         }
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         ReportPSOErrors(pso[BrickPSO_Default]);
+
+        // Create PSO for wrieframe view mode
         {
-            psoDesc.rasterizer.polygonMode          = LLGL::PolygonMode::Wireframe;
+            psoDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
         }
         pso[BrickPSO_Wireframe] = renderer->CreatePipelineState(psoDesc);
         ReportPSOErrors(pso[BrickPSO_Wireframe]);
+
+        // Create PSO for transparent bricks
+        LLGL::GraphicsPipelineDescriptor psoTransparentDesc;
         {
-            psoDesc.fragmentShader                      = fsBrickPreview;
-            psoDesc.rasterizer.polygonMode              = LLGL::PolygonMode::Fill;
-            psoDesc.rasterizer.depthBias.constantFactor = -100.0f;
+            SetPSODefaults(psoTransparentDesc);
+            psoTransparentDesc.depth.writeEnabled               = false;
+            psoTransparentDesc.blend.targets[0].blendEnabled    = true;
         }
-        pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoDesc);
+        pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
+        ReportPSOErrors(pso[BrickPSO_Transparent]);
+
+        // Create PSO for blocked preview object
+        LLGL::GraphicsPipelineDescriptor psoPreviewDesc;
+        {
+            SetPSODefaults(psoPreviewDesc);
+            psoPreviewDesc.vertexShader                         = vsBrickPreview;
+            psoPreviewDesc.fragmentShader                       = fsBrickPreview;
+            psoPreviewDesc.rasterizer.polygonMode               = LLGL::PolygonMode::Fill;
+            psoPreviewDesc.rasterizer.depthBias.constantFactor  = -100.0f;
+        }
+        pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoPreviewDesc);
         ReportPSOErrors(pso[BrickPSO_Preview]);
 
         #if DEBUG_KDTREE
@@ -987,15 +1248,33 @@ private:
 
     }
 
+    void BindInstancePSO(BrickPSO psoType)
+    {
+        commands->SetPipelineState(*pso[psoType]);
+        commands->SetResource(0, *sceneViewCbuffer);
+    }
+
+    void RenderBrickInstanceGroup(const InstanceGroup& group, LLGL::VertexBufferView (&vertexBufferViews)[2])
+    {
+        if (hasOffsetInstancing)
+        {
+            // Draw all group instances
+            commands->DrawInstanced(group.numVertices, group.firstVertex, group.numInstances, group.firstInstance);
+        }
+        else
+        {
+            // Bind vertex buffers with instance offset if not natively supported
+            vertexBufferViews[1].offset = group.firstInstance * sizeof(Instance);
+            commands->SetVertexBuffers(2, vertexBufferViews);
+            commands->DrawInstanced(group.numVertices, group.firstVertex, group.numInstances);
+        }
+    }
+
     void RenderBrickInstances()
     {
         // Exit early if no instances have been allocated yet
         if (instanceBuffer == nullptr)
             return;
-
-        commands->SetPipelineState(*pso[viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Default]);
-
-        commands->SetResource(0, *sceneViewCbuffer);
 
         // Set vertex buffers (vertices and instances)
         LLGL::VertexBufferView vertexBufferViews[] =
@@ -1008,36 +1287,35 @@ private:
         if (hasOffsetInstancing)
             commands->SetVertexBuffers(2, vertexBufferViews);
 
+        BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Default);
+
         // Draw instances of all groups
-        for (int groupId = 0; groupId < BrickType_Num; ++groupId)
+        for (int groupType = BrickGroup_Default; groupType < BrickGroup_Num; ++groupType)
         {
-            const InstanceGroup& group = instanceGroups[groupId];
-            if (group.numInstances > 0)
+            // Change PSO for transparent objects
+            if (groupType == BrickGroup_Transparent)
+                BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Transparent);
+
+            for (int brickType = 0; brickType < BrickType_Num; ++brickType)
             {
-                const std::string debugGroup = "InstanceGroup" + std::to_string(groupId);
-                commands->PushDebugGroup(debugGroup.c_str());
-
-                if (hasOffsetInstancing)
+                const std::uint32_t groupId = CombineToBrickId(brickType, groupType);
+                const InstanceGroup& group = instanceGroups[CombineToBrickId(brickType, groupType)];
+                if (group.numInstances > 0)
                 {
-                    // Draw all group instances
-                    commands->DrawInstanced(group.numVertices, group.firstVertex, group.numInstances, group.firstInstance);
+                    const std::string debugGroup = "InstanceGroup" + std::to_string(groupId);
+                    commands->PushDebugGroup(debugGroup.c_str());
+                    {
+                        RenderBrickInstanceGroup(group, vertexBufferViews);
+                    }
+                    commands->PopDebugGroup();
                 }
-                else
-                {
-                    // Bind vertex buffers with instance offset if not natively supported
-                    vertexBufferViews[1].offset = group.firstInstance * sizeof(Instance);
-                    commands->SetVertexBuffers(2, vertexBufferViews);
-                    commands->DrawInstanced(group.numVertices, group.firstVertex, group.numInstances);
-                }
-
-                commands->PopDebugGroup();
             }
         }
     }
 
-    void RenderPreviewBrick()
+    void RenderPreviewBrick(const PreviewBrick& previewBrick)
     {
-        commands->SetPipelineState(*pso[viewOptions.isPreviewBrickBlocked ? BrickPSO_Preview : BrickPSO_Default]);
+        commands->SetPipelineState(*pso[BrickPSO_Preview]);
 
         commands->SetResource(0, *sceneViewCbuffer);
 
@@ -1050,7 +1328,7 @@ private:
         };
         commands->SetVertexBuffers(2, vertexBufferViews);
 
-        const InstanceGroup& group = instanceGroups[viewOptions.previewBrickType];
+        const InstanceGroup& group = GetInstanceGroup(previewBrick.type, previewBrick.isTransparent ? BrickGroup_Transparent : BrickGroup_Default);
         commands->Draw(group.numVertices, group.firstVertex);
     }
 
@@ -1197,16 +1475,30 @@ private:
         return Brick{};
     }
 
-    void PickGridPosForPreviewBrick(Instance& previewInstance)
+    void ClampBrickGridOffset(BrickType type, std::int32_t& offset)
+    {
+        const Gs::Vector3i brickExtent = GetBrickExtent(type);
+        const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
+        const std::int32_t maxOffset = maxWidthOrDepth/2 - 1;
+        offset = Gs::Clamp(offset, -maxOffset, +maxOffset);
+    }
+
+    void PickGridPosForPreviewBrick(PreviewBrick& previewBrick, Instance& previewInstance)
     {
         // Allow user to turn and change type of preview brick while picking the scene
         GridRotation newPreviewRotation = previewInstance.gridRotation;
         if (input.KeyDown(LLGL::Key::Space))
             newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
 
-        BrickType newBrickType = viewOptions.previewBrickType;
+        BrickType newBrickType = previewBrick.type;
         if (input.KeyDown(LLGL::Key::PageUp))
             newBrickType = static_cast<BrickType>((newBrickType + 1) % BrickType_Num);
+        if (input.KeyDown(LLGL::Key::PageDown))
+            newBrickType = static_cast<BrickType>(ModuloSignInt(newBrickType - 1, BrickType_Num));
+
+        previewBrick.gridOffset += input.GetWheelMotion();
+
+        ClampBrickGridOffset(newBrickType, previewBrick.gridOffset);
 
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
@@ -1218,15 +1510,30 @@ private:
             // Find a potential grid position for the preview brick
             newPreviewGridPos = WorldPosToGridPos(contact.point);
 
+            auto ApplyGridOffset = [&newPreviewGridPos, &previewBrick, newPreviewRotation]() -> void
+            {
+                // Offset by user input to allow placing bricks on ledges
+                if (newPreviewRotation == GridRotation_90)
+                    newPreviewGridPos.z += previewBrick.gridOffset;
+                else
+                    newPreviewGridPos.x += previewBrick.gridOffset;
+            };
+
             const BrickDimensions brickDim = GetBrickDimensions(newBrickType, newPreviewRotation);
             if (contact.normal.x < 0)
                 newPreviewGridPos.x -= brickDim.offset.x + brickDim.extent.x;
             else if (contact.normal.x > 0)
                 newPreviewGridPos.x -= brickDim.offset.x;
             else if (contact.normal.y < 0)
+            {
                 newPreviewGridPos.y -= brickDim.offset.y + brickDim.extent.y;
+                ApplyGridOffset();
+            }
             else if (contact.normal.y > 0)
+            {
                 newPreviewGridPos.y -= brickDim.offset.y;
+                ApplyGridOffset();
+            }
             else if (contact.normal.z < 0)
                 newPreviewGridPos.z -= brickDim.offset.z + brickDim.extent.z;
             else if (contact.normal.z > 0)
@@ -1234,17 +1541,59 @@ private:
         }
 
         // If grid position changed, re-evaluate whether that position is blocked for the preview brick
-        if (previewInstance.gridPos      != newPreviewGridPos ||
-            previewInstance.gridRotation != newPreviewRotation ||
-            viewOptions.previewBrickType != newBrickType)
+        if (previewInstance.gridPos         != newPreviewGridPos    ||
+            previewInstance.gridRotation    != newPreviewRotation   ||
+            previewBrick.type               != newBrickType)
         {
-            viewOptions.isPreviewBrickBlocked = !BrickFitsInGrid(newPreviewGridPos, newBrickType, newPreviewRotation);
+            previewBrick.isBlocked = !BrickFitsInGrid(newPreviewGridPos, newBrickType, newPreviewRotation);
 
             // Update brick position and rotation
-            viewOptions.previewBrickType    = newBrickType;
+            previewBrick.type               = newBrickType;
             previewInstance.gridPos         = newPreviewGridPos;
             previewInstance.gridRotation    = newPreviewRotation;
             MarkInstanceDirty(0);
+        }
+    }
+
+    void ProcessEditModeAddOrMove()
+    {
+        PickGridPosForPreviewBrick(viewOptions.previewBrick, instances[0]);
+
+        const PreviewBrick& previewBrick = viewOptions.previewBrick;
+        if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
+        {
+            // Place new brick and update pick position for preview
+            NewBrick(previewBrick.type, instances[0].gridPos, instances[0].gridRotation, instances[0].color, previewBrick.isTransparent);
+            PickGridPosForPreviewBrick(viewOptions.previewBrick, instances[0]);
+
+            // Reset edit mode if it was only temporarily adding a new brick
+            if (controller.editMode == EditMode::Move)
+                controller.editMode = EditMode::Remove;
+        }
+    }
+
+    void ProcessEditModeRemove()
+    {
+        if (Brick selectedBrick = SelectBrickFromScene())
+        {
+            if (input.KeyDown(LLGL::Key::LButton))
+            {
+                // Pick up brick for editing so the user can place it somewhere else
+                if (const Instance* selectedInstance = GetBrickInstance(selectedBrick))
+                {
+                    ResetPreviouslySelectedBrick();
+                    Instance& previewInstance = instances[0];
+                    {
+                        viewOptions.previewBrick.type           = IdToBrickType(selectedBrick.groupId);
+                        viewOptions.previewBrick.isTransparent  = (IdToBrickGroup(selectedBrick.groupId) == BrickGroup_Transparent);
+                        previewInstance.color = selectedInstance->color;
+                    }
+                    controller.editMode = EditMode::Move;
+                }
+
+                // Remove selected brick
+                DestroyBrick(selectedBrick);
+            }
         }
     }
 
@@ -1264,28 +1613,12 @@ private:
 
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
-        if (controller.editMode == EditMode::Add)
+        if (controller.cameraMode == CameraMode::None)
         {
-            PickGridPosForPreviewBrick(instances[0]);
-
-            if (!viewOptions.isPreviewBrickBlocked && input.KeyDown(LLGL::Key::LButton))
-            {
-                // Place new brick and update pick position for preview
-                NewBrick(viewOptions.previewBrickType, instances[0].gridPos, instances[0].gridRotation, instances[0].color);
-                PickGridPosForPreviewBrick(instances[0]);
-            }
-        }
-
-        if (controller.editMode == EditMode::Remove)
-        {
-            if (Brick selectedBrick = SelectBrickFromScene())
-            {
-                if (input.KeyDown(LLGL::Key::LButton))
-                {
-                    // Remove selected brick
-                    DestroyBrick(selectedBrick);
-                }
-            }
+            if (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
+                ProcessEditModeAddOrMove();
+            else if (controller.editMode == EditMode::Remove)
+                ProcessEditModeRemove();
         }
 
         #if DEBUG_KDTREE
@@ -1301,12 +1634,17 @@ private:
 
     void UpdateSceneView()
     {
-        sceneView.viewPos   = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
-        sceneView.vpMatrix  = projection * camera.vMatrix;
+        // Update common scene view states
+        sceneView.viewPos       = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
+        sceneView.vpMatrix      = projection * camera.vMatrix;
 
-        sceneView.gridScale = KDTreeNode::gridScale;
+        sceneView.gridScale     = KDTreeNode::gridScale;
 
-        sceneView.lightDir  = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
+        sceneView.lightDir      = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
+
+        // Update preview shader states
+        //sceneView.worldOffsetY  = (previewBlockOffsetY;
+        sceneView.isDithering   = (viewOptions.previewBrick.isBlocked ? 1 : 0);
     }
 
     void OnDrawFrame(float /*dt*/) override
@@ -1337,11 +1675,11 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (controller.editMode == EditMode::Add)
+                if (controller.cameraMode == CameraMode::None && (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move))
                 {
                     commands->PushDebugGroup("RenderPreviewBrick");
                     {
-                        RenderPreviewBrick();
+                        RenderPreviewBrick(viewOptions.previewBrick);
                     }
                     commands->PopDebugGroup();
                 }

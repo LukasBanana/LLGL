@@ -5,10 +5,6 @@
 #define ROTATION_0  0
 #define ROTATION_90 1
 
-#ifndef ENABLE_DITHERING
-#define ENABLE_DITHERING 1
-#endif
-
 cbuffer SceneView : register(b2)
 {
     float4x4    vpMatrix;
@@ -16,7 +12,11 @@ cbuffer SceneView : register(b2)
     float       pad0;
     float4      viewPos;
     float3      lightDir;
-    float       specularPower; // Blinn-phong specular exponent (usual values between 16 and 90)
+    float       specularPower;  // Blinn-phong specular exponent (usual values between 16 and 90)
+
+    // Preview shaders only
+    float       worldOffsetY;   // Y-axis for preview world offset
+    int         isDithering;    // Use dithering in preview shaders
 };
 
 struct VertexIn
@@ -39,9 +39,9 @@ struct VertexOut
 };
 
 
-// VERTEX SHADER
+// PRIMARY INSTANCE SHADERS
 
-void VSBrick(VertexIn inp, out VertexOut outp)
+void VSBrickBase(VertexIn inp, out VertexOut outp, float3 worldOffset)
 {
     // Rotate model either 0 degrees (default) or 90 degrees based on the instance's gridPos.w value
     const float3x3 rotationMatrices[2] =
@@ -61,16 +61,18 @@ void VSBrick(VertexIn inp, out VertexOut outp)
     float3x3 rotation = rotationMatrices[inp.gridPos.w];
 
     // Transform vertex position from local space to world space based on instance's rotation and grid position
-    outp.worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale;
+    outp.worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale + worldOffset;
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
     outp.normal   = mul(rotation, inp.normal);
     outp.color    = inp.color;
 }
 
+void VSBrick(VertexIn inp, out VertexOut outp)
+{
+    VSBrickBase(inp, outp, (float3)0.0);
+}
 
-// PIXEL SHADER
-
-float BlinnPhoneShading(float3 worldPos, float3 normal)
+float BlinnPhongShading(float3 worldPos, float3 normal)
 {
     const float ambient = 0.2;
     float3 lightVec = normalize(lightDir.xyz);
@@ -86,19 +88,30 @@ float BlinnPhoneShading(float3 worldPos, float3 normal)
 float4 PSBrick(VertexOut inp) : SV_Target
 {
     // Apply simple lighting 
-    float lighting = BlinnPhoneShading(inp.worldPos, normalize(inp.normal));
+    float lighting = BlinnPhongShading(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
 
+
+// PREVIEW SHADERS
+
+void VSBrickPreview(VertexIn inp, out VertexOut outp)
+{
+    VSBrickBase(inp, outp, float3(0.0, worldOffsetY, 0.0));
+    outp.worldPos.y += worldOffsetY;
+    outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
+}
+
 float4 PSBrickPreview(VertexOut inp) : SV_Target
 {
-    #if ENABLE_DITHERING
-    uint2 screenPos = (uint2)inp.position.xy;
-    clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
-    #endif
+    if (isDithering != 0)
+    {
+        uint2 screenPos = (uint2)inp.position.xy;
+        clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
+    }
 
     // Apply simple lighting 
-    float lighting = BlinnPhoneShading(inp.worldPos, normalize(inp.normal));
+    float lighting = BlinnPhongShading(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
 

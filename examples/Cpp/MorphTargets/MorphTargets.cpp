@@ -11,12 +11,6 @@
 #include <chrono>
 
 
-
-static int ModuloSignInt(int a, int b)
-{
-    return (((a % b + b)) % b);
-}
-
 static float ModuloSignFloat(float value, int& intPart)
 {
     float floorValue = std::floor(value);

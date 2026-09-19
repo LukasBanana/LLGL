@@ -48,6 +48,12 @@ LLGL::Texture* LoadTextureWithRenderer(
 // Save texture image to a PNG file.
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
 
+// Helper function to compute signed modulo operator for integers.
+inline int ModuloSignInt(int a, int b)
+{
+    return (((a % b + b)) % b);
+}
+
 
 /*
  * Example base class

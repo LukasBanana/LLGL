@@ -7,3 +7,9 @@ sources:
       - entry: "PSBrick"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "VSBrickPreview"
+        profile: "vs_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
