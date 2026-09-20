@@ -10,6 +10,10 @@
 #include <LLGL/Utils/ForRange.h>
 #include <set>
 
+// File and string streams for simple scene file writer/reader
+#include <fstream>
+#include <sstream>
+
 
 // Enable log output to debug kd-Tree construction
 #define DEBUG_KDTREE 0
@@ -28,6 +32,8 @@ class Example_InstancingAdvanced : public ExampleBase
     static constexpr float      cameraTurnSpeed     = 0.25f;
     static constexpr float      cameraMoveSpeed     = 0.25f;
     static constexpr float      previewBlockOffsetY = 0.1f;     // Y-axis world position offset for the preview block before putting it into place
+
+    const char*                 sceneFilename       = "Bricks.txt";
 
     enum BrickPSO
     {
@@ -109,6 +115,27 @@ class Example_InstancingAdvanced : public ExampleBase
 
         BrickGroup_Num,
     };
+
+    // Returns the specified BrickType as a string representation. Used by the scene file writer.
+    static const char* BrickTypeToString(BrickType t)
+    {
+        switch (t)
+        {
+            case BrickType_2x2x3:   return "2x2x3";
+            case BrickType_4x2x3:   return "4x2x3";
+            case BrickType_4x2x1:   return "4x2x1";
+            default:                return "";
+        }
+    }
+
+    // Returns the BrickType that's mapped from the specified string. Used by the scene file reader.
+    static BrickType BrickTypeFromString(const char* s)
+    {
+        if (::strncmp(s, "2x2x3", 5) == 0) return BrickType_2x2x3;
+        if (::strncmp(s, "4x2x3", 5) == 0) return BrickType_4x2x3;
+        if (::strncmp(s, "4x2x1", 5) == 0) return BrickType_4x2x1;
+        return BrickType_Num;
+    }
 
     static std::uint32_t CombineToBrickId(int type, int group)
     {
@@ -616,6 +643,12 @@ class Example_InstancingAdvanced : public ExampleBase
             return NumLeafsFromRoot(KDTreeNode::rootAABB);
         }
 
+        // Deletes the entire tree.
+        void Reset()
+        {
+            child[0].reset();
+            child[1].reset();
+        }
     };
 
     KDTreeNode grid;
@@ -631,7 +664,14 @@ public:
         // Create all graphics objects
         CreateBuffers();
         CreatePipelines();
-        CreateInitialScene();
+
+        // Load previoulsy saved scene or create default initial scene on failure.
+        if (!LoadScene(sceneFilename))
+            CreateDefaultScene();
+
+        // Place initial camera position
+        camera.position = { 0, 10.0f, -20.0f };
+        camera.pitch    = 20.0f;
 
         // Print info
         LLGL::Log::Printf(
@@ -740,6 +780,10 @@ private:
 
             InsertBrickIntoGrid(gridPos, newBrick, notifyNeighbors);
         }
+
+#if 1 //TEST
+        ValidateInstances();
+#endif
 
         return newBrick;
     }
@@ -1076,6 +1120,25 @@ private:
         RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, nullptr, notifyNeighbors);
     }
 
+    void ResetScene()
+    {
+        // Allocate preview instance
+        instances.resize(1);
+        instances[0].color = LLGL::ColorRGBAub{ 255, 255, 255, 128 };
+
+        // Reset instance range of all instance groups (not the vertex range)
+        for (std::uint32_t groupId = 0; groupId < BrickType_Num * BrickGroup_Num; ++groupId)
+        {
+            InstanceGroup& group = instanceGroups[groupId];
+            group.numInstances      = 0;
+            group.firstInstance     = 1;
+            group.instanceCapacity  = 0;
+        }
+
+        // Destroy the entire kd-Tree
+        grid.Reset();
+    }
+
     void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, InstanceGroup& outInstanceGroup)
     {
         const std::vector<TexturedVertex> intermediateVertices = Load3DModel(std::string("Bricks/") + basename + ".obj");
@@ -1129,9 +1192,8 @@ private:
         // Create scene view constant buffer
         sceneViewCbuffer = CreateConstantBuffer(sceneView);
 
-        // Allocate preview instance
-        instances.resize(1);
-        instances[0].color = LLGL::ColorRGBAub{ 255, 255, 255, 128 };
+        // Initialize scene by restting it. This initializes the instance for the preview mesh.
+        ResetScene();
     }
 
     void CreatePipelines()
@@ -1226,11 +1288,236 @@ private:
         #endif
     }
 
-    void CreateInitialScene()
+    void ValidateInstances()
     {
-        camera.position = { 0, 10.0f, -20.0f };
-        camera.pitch    = 20.0f;
+#if _WIN32 && 1 //TEST
+        for_range(brickType, BrickType_Num)
+        {
+            for_range(groupType, BrickGroup_Num)
+            {
+                const InstanceGroup& group = GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                for_range(i, group.numInstances)
+                {
+                    const Instance& instance = instances[group.firstInstance + i];
+                    if (instance.gridPos.x < -10000 || instance.gridPos.y < -10000 || instance.gridPos.z < -10000 ||
+                        instance.gridPos.x > +10000 || instance.gridPos.y > +10000 || instance.gridPos.z > +10000)
+                    {
+                        __debugbreak();
+                    }
+                }
+            }
+        }
+#endif
+    }
 
+    bool SaveScene(const char* filename)
+    {
+        // Open file for writing
+        std::ofstream file{ filename };
+        if (!file.good())
+        {
+            LLGL::Log::Errorf("Failed to save scene to file: %s\n", filename);
+            return false;
+        }
+
+        // Write header
+        file << "# Scene file for LLGL's example 'InstancingAdvanced'" << std::endl;
+        file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
+        file << "# New instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
+
+        // Write all instances for each brick type
+        BrickType lastWrittenBrickType = BrickType_Num;
+
+        char colorStr[9] = {};
+
+        auto ColorToString = [&colorStr](LLGL::ColorRGBAub color) -> const char*
+        {
+            auto UbyteToHex = [](char* out, std::uint8_t val) -> void
+            {
+                const char* alphabet = "0123456789ABCDEF";
+                out[0] = alphabet[val / 0x10];
+                out[1] = alphabet[val % 0x10];
+            };
+
+            if (color.r == color.g && color.g == color.b && color.a == 0xFF)
+            {
+                // Write color out as gray-scaled value
+                UbyteToHex(colorStr, color.r);
+                colorStr[2] = '\0';
+            }
+            else
+            {
+                // Write out RGB channels
+                UbyteToHex(colorStr    , color.r);
+                UbyteToHex(colorStr + 2, color.g);
+                UbyteToHex(colorStr + 4, color.b);
+
+                // Skip alpha channel if its opaque (0xFF)
+                if (color.a == 0xFF)
+                    colorStr[6] = '\0';
+                else
+                    UbyteToHex(colorStr + 6, color.a);
+            }
+
+            return colorStr;
+        };
+
+        for_range(brickType, BrickType_Num)
+        {
+            for_range(groupType, BrickGroup_Num)
+            {
+                // Write new brick type
+                const InstanceGroup& group = GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                if (group.numInstances > 0)
+                {
+                    if (lastWrittenBrickType != brickType)
+                    {
+                        lastWrittenBrickType = static_cast<BrickType>(brickType);
+                        file << "b " << BrickTypeToString(static_cast<BrickType>(brickType)) << std::endl;
+                    }
+                }
+
+                // Write all instances
+                for_range(i, group.numInstances)
+                {
+                    const Instance& instance = instances[group.firstInstance + i];
+                    file
+                        << "i"
+                        << " " << instance.gridPos.x
+                        << " " << instance.gridPos.y
+                        << " " << instance.gridPos.z
+                        << " " << (instance.gridRotation == GridRotation_90 ? "90" : "0")
+                        << " " << ColorToString(instance.color)
+                        << std::endl;
+                }
+            }
+        }
+
+        LLGL::Log::Printf("Saved scene to file: %s\n", filename);
+        return true;
+    }
+
+    bool LoadScene(const char* filename)
+    {
+        std::ifstream file{ filename };
+        if (!file.good())
+        {
+            LLGL::Log::Errorf("Failed to load scene from file: %s\n", filename);
+            return false;
+        }
+
+        BrickType currentBrickType = BrickType_Num;
+
+        auto ColorFromString = [](const std::string& s) -> LLGL::ColorRGBAub
+        {
+            LLGL::ColorRGBAub color;
+
+            auto HexToUbyte = [](const char* s) -> std::uint8_t
+            {
+                std::uint8_t val = 0;
+                for (int i = 0; i < 2; ++i)
+                {
+                    val *= 0x10;
+                         if (s[i] >= '0' && s[i] <= '9') { val += s[i] - '0';       }
+                    else if (s[i] >= 'A' && s[i] <= 'F') { val += s[i] - 'A' + 0xA; }
+                    else if (s[i] >= 'a' && s[i] <= 'f') { val += s[i] - 'a' + 0xA; }
+                }
+                return val;
+            };
+
+            if (s.size() == 2)
+            {
+                // Parse string as gray-scaled color value
+                color.r = color.g = color.b = HexToUbyte(&s[0]);
+            }
+            else if (s.size() >= 6)
+            {
+                // Parse RGB values and optional Alpha channel
+                color.r = HexToUbyte(&s[0]);
+                color.g = HexToUbyte(&s[2]);
+                color.b = HexToUbyte(&s[4]);
+                if (s.size() == 8)
+                    color.a = HexToUbyte(&s[6]);
+            }
+
+            return color;
+        };
+
+        // Parse every line and interpret it
+        int lineNo = 0;
+        for (std::string line; std::getline(file, line);)
+        {
+            ++lineNo;
+
+            // Ignore empty line
+            if (line.empty())
+                continue;
+
+            // Ignore line only consisting of whitespace characters
+            std::size_t firstNoneWhitespace = line.find_first_not_of(" \t");
+            if (firstNoneWhitespace == std::string::npos)
+                continue;
+
+            // Ignore comment line
+            if (line[firstNoneWhitespace] == '#')
+                continue;
+
+            // Parse current line with stringstream
+            std::stringstream stream{ line };
+
+            char cmd = '\0';
+            stream >> cmd;
+
+            if (cmd == 'b')
+            {
+                // Parse brick type and make it current
+                std::string brickTypeStr;
+                stream >> brickTypeStr;
+                currentBrickType = BrickTypeFromString(brickTypeStr.c_str());
+
+                if (currentBrickType == BrickType_Num)
+                {
+                    LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
+                    ResetScene();
+                    return false;
+                }
+            }
+            else if (cmd == 'i')
+            {
+                if (currentBrickType == BrickType_Num)
+                {
+                    LLGL::Log::Errorf("Missing brick type 'b' before new instance 'i' in %s:%d\n", filename, lineNo);
+                    ResetScene();
+                    return false;
+                }
+
+                // Parse instance data
+                Gs::Vector3i gridPos;
+                int gridRotation = 0;
+                std::string colorStr;
+
+                stream >> gridPos.x >> gridPos.y >> gridPos.z >> gridRotation >> colorStr;
+
+                if (gridRotation != 0 && gridRotation != 90)
+                    LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be 0 or 90) in %s:%d\n", gridRotation, filename, lineNo);
+
+                // Create new brick instance
+                NewBrick(currentBrickType, gridPos, (gridRotation == 90 ? GridRotation_90 : GridRotation_0), ColorFromString(colorStr));
+            }
+            else
+            {
+                LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
+                ResetScene();
+                return false;
+            }
+        }
+
+        LLGL::Log::Printf("Loaded scene from file: %s\n", filename);
+        return true;
+    }
+
+    void CreateDefaultScene()
+    {
         //TODO
 
         for (int i = 0; i <= 4; ++i)
@@ -1586,7 +1873,8 @@ private:
                     {
                         viewOptions.previewBrick.type           = IdToBrickType(selectedBrick.groupId);
                         viewOptions.previewBrick.isTransparent  = (IdToBrickGroup(selectedBrick.groupId) == BrickGroup_Transparent);
-                        previewInstance.color = selectedInstance->color;
+                        previewInstance.color           = selectedInstance->color;
+                        previewInstance.gridRotation    = selectedInstance->gridRotation; 
                     }
                     controller.editMode = EditMode::Move;
                 }
@@ -1695,17 +1983,22 @@ private:
         commandQueue->Submit(*commands);
     }
 
+    void OnExit() override
+    {
+        // Ensure previoulsy selected brick retains its original color
+        ResetPreviouslySelectedBrick();
+        SaveScene(sceneFilename);
+    }
+
 };
 
-const AABB3i Example_InstancingAdvanced::KDTreeNode::rootAABB
+int                 Example_InstancingAdvanced::KDTreeNode::numAABBTests    = 0;
+const Gs::Vector3f  Example_InstancingAdvanced::KDTreeNode::gridScale       = { 1.0f, 0.5f, 1.0f };
+const AABB3i        Example_InstancingAdvanced::KDTreeNode::rootAABB
 {
     Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
     Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
 };
-
-const Gs::Vector3f Example_InstancingAdvanced::KDTreeNode::gridScale = { 1.0f, 0.5f, 1.0f };
-
-int Example_InstancingAdvanced::KDTreeNode::numAABBTests = 0;
 
 
 LLGL_IMPLEMENT_EXAMPLE(Example_InstancingAdvanced);
