@@ -1,10 +1,5 @@
 // HLSL shader version 4.0 (for Direct3D 11/ 12)
 
-//#include <HlslToSpirvInterop.hlsli>
-
-#define ROTATION_0  0
-#define ROTATION_90 1
-
 cbuffer SceneView : register(b2)
 {
     float4x4    vpMatrix;
@@ -52,9 +47,9 @@ void VSBrickBase(VertexIn inp, out VertexOut outp, float3 worldOffset)
              0.0,  0.0, +1.0
         ),
         float3x3(
-             0.0,  0.0, +1.0,
-             0.0, +1.0, 0.0,
-            -1.0,  0.0, 0.0
+             0.0,  0.0, -1.0,
+             0.0, +1.0,  0.0,
+            +1.0,  0.0,  0.0
         )
     };
 

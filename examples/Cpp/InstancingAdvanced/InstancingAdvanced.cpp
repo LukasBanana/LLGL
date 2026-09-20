@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
 #include <set>
+#include <map>
 
 // File and string streams for simple scene file writer/reader
 #include <fstream>
@@ -31,7 +32,7 @@ class Example_InstancingAdvanced : public ExampleBase
     static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
     static constexpr float      cameraTurnSpeed     = 0.25f;
     static constexpr float      cameraMoveSpeed     = 0.25f;
-    static constexpr float      previewBlockOffsetY = 0.1f;     // Y-axis world position offset for the preview block before putting it into place
+    static constexpr float      previewBlockOffsetY = 0.075f;     // Y-axis world position offset for the preview block before putting it into place
 
     const char*                 sceneFilename       = "Bricks.txt";
 
@@ -100,11 +101,32 @@ class Example_InstancingAdvanced : public ExampleBase
     enum BrickType : std::uint32_t
     {
         //        WxDxH
-        BrickType_2x2x3 = 0,
+        BrickType_1x1x3 = 0,
+        BrickType_1x2x3,
+        BrickType_2x2x3,
         BrickType_4x2x3,
+        BrickType_1x1x1,
+        BrickType_1x2x1,
+        BrickType_2x2x1,
         BrickType_4x2x1,
+        BrickType_1x1x1_Tile,
+        BrickType_2x2x1_Tile,
 
         BrickType_Num,
+    };
+
+    const std::map<BrickType, std::string> brickTypeDictionary
+    {
+        { BrickType_1x1x1,      "1x1x1"     },
+        { BrickType_1x1x1_Tile, "1x1_tile"  },
+        { BrickType_1x1x3,      "1x1x3"     },
+        { BrickType_1x2x1,      "1x2x1"     },
+        { BrickType_1x2x3,      "1x2x3"     },
+        { BrickType_2x2x1,      "2x2x1"     },
+        { BrickType_2x2x1_Tile, "2x2_tile"  },
+        { BrickType_2x2x3,      "2x2x3"     },
+        { BrickType_4x2x1,      "4x2x1"     },
+        { BrickType_4x2x3,      "4x2x3"     },
     };
 
     enum BrickGroup : std::uint32_t
@@ -117,23 +139,20 @@ class Example_InstancingAdvanced : public ExampleBase
     };
 
     // Returns the specified BrickType as a string representation. Used by the scene file writer.
-    static const char* BrickTypeToString(BrickType t)
+    const char* BrickTypeToString(BrickType t)
     {
-        switch (t)
-        {
-            case BrickType_2x2x3:   return "2x2x3";
-            case BrickType_4x2x3:   return "4x2x3";
-            case BrickType_4x2x1:   return "4x2x1";
-            default:                return "";
-        }
+        auto it = brickTypeDictionary.find(t);
+        return (it != brickTypeDictionary.end() ? it->second.c_str() : "");
     }
 
     // Returns the BrickType that's mapped from the specified string. Used by the scene file reader.
-    static BrickType BrickTypeFromString(const char* s)
+    BrickType BrickTypeFromString(const char* s)
     {
-        if (::strncmp(s, "2x2x3", 5) == 0) return BrickType_2x2x3;
-        if (::strncmp(s, "4x2x3", 5) == 0) return BrickType_4x2x3;
-        if (::strncmp(s, "4x2x1", 5) == 0) return BrickType_4x2x1;
+        for (const std::pair<BrickType, std::string>& it : brickTypeDictionary)
+        {
+            if (it.second == s)
+                return it.first;
+        }
         return BrickType_Num;
     }
 
@@ -154,7 +173,7 @@ class Example_InstancingAdvanced : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickType       type            = BrickType_2x2x3; // Previews brick with instance index 0.
+        BrickType       type            = static_cast<BrickType>(0); // Previews brick with instance index 0.
         bool            isTransparent   = false;
         bool            isBlocked       = false;
         std::int32_t    gridOffset      = 0;
@@ -209,9 +228,14 @@ class Example_InstancingAdvanced : public ExampleBase
 
     struct Brick
     {
+        static constexpr std::uint32_t groupIdBits      = 8;
+        static constexpr std::uint32_t groupIdInvalid   = (1u << groupIdBits) - 1;
+
+        static_assert((1u << groupIdBits) > BrickType_Num * BrickGroup_Num, "Not enough bits to encode `BrickType x BrickGroup` elements");
+
         Brick() :
-            groupId       { 0xF },
-            groupInstance { 0   }
+            groupId       { groupIdInvalid },
+            groupInstance { 0              }
         {
         }
 
@@ -222,10 +246,10 @@ class Example_InstancingAdvanced : public ExampleBase
         }
 
         // Combined brick type and group.
-        std::uint32_t   groupId         : 4;
+        std::uint32_t   groupId         : groupIdBits;
 
         // Index into the group's instance. Use `group.firstInstance + groupInstance` to get index into global `instances` container.
-        std::uint32_t   groupInstance   : 28;
+        std::uint32_t   groupInstance   : (32 - groupIdBits);
 
         void SetType(BrickType type)
         {
@@ -240,12 +264,12 @@ class Example_InstancingAdvanced : public ExampleBase
         // Returns true if this brick blocks the view from other bricks. False for invalid and transparent bricks.
         bool IsBlocking() const
         {
-            return (groupId != 0xF && IdToBrickGroup(groupId) != BrickGroup_Transparent);
+            return (groupId != groupIdInvalid && IdToBrickGroup(groupId) != BrickGroup_Transparent);
         }
 
         operator bool() const
         {
-            return (groupId != 0xF);
+            return (groupId != groupIdInvalid);
         }
 
         bool operator == (const Brick& rhs) const
@@ -669,10 +693,6 @@ public:
         if (!LoadScene(sceneFilename))
             CreateDefaultScene();
 
-        // Place initial camera position
-        camera.position = { 0, 10.0f, -20.0f };
-        camera.pitch    = 20.0f;
-
         // Print info
         LLGL::Log::Printf(
             "Keyboard controls:\n"
@@ -768,7 +788,9 @@ private:
         return firstInstancePtr;
     }
 
-    Brick AddInstanceToGroup(std::uint32_t groupId, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
+    // This function must not take `gridPos` as constant reference parameter.
+    // When it comes from an instance (like the preview model), it will invalidate that pointer in AllocateInstancesInGroup().
+    Brick AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
     {
         Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
 
@@ -778,7 +800,13 @@ private:
             newInstance->gridRotation   = gridRotation;
             newInstance->color          = color;
 
-            InsertBrickIntoGrid(gridPos, newBrick, notifyNeighbors);
+            if (!InsertBrickIntoGrid(newBrick, notifyNeighbors))
+            {
+                LLGL::Log::Errorf(
+                    "Failed to insert brick (groupId=%u, groupInstance=%u) into grid\n",
+                    newBrick.groupId, newBrick.groupInstance
+                );
+            }
         }
 
 #if 1 //TEST
@@ -908,10 +936,17 @@ private:
     {
         switch (type)
         {
-            case BrickType_2x2x3:   return { 2, 3, 2 };
-            case BrickType_4x2x3:   return { 4, 3, 2 };
-            case BrickType_4x2x1:   return { 4, 1, 2 };
-            default:                return {};
+            case BrickType_1x1x1:       return { 1, 1, 1 };
+            case BrickType_1x1x1_Tile:  return { 1, 1, 1 };
+            case BrickType_1x1x3:       return { 1, 3, 1 };
+            case BrickType_1x2x1:       return { 1, 1, 2 };
+            case BrickType_1x2x3:       return { 1, 3, 2 };
+            case BrickType_2x2x1:       return { 2, 1, 2 };
+            case BrickType_2x2x1_Tile:  return { 2, 1, 2 };
+            case BrickType_2x2x3:       return { 2, 3, 2 };
+            case BrickType_4x2x1:       return { 4, 1, 2 };
+            case BrickType_4x2x3:       return { 4, 3, 2 };
+            default:                    return {};
         }
     }
 
@@ -1042,24 +1077,29 @@ private:
         }
     }
 
-    void InsertBrickIntoGrid(const Gs::Vector3i& gridPos, Brick brick, bool notifyNeighbors = false)
+    bool InsertBrickIntoGrid(Brick brick, bool notifyNeighbors = false)
     {
         // Get brick dimension and apply rotation
-        const Instance* instance = GetBrickInstance(brick);
-        const BrickDimensions brickDim = GetBrickDimensions(IdToBrickType(brick.groupId), instance != nullptr ? instance->gridRotation : GridRotation_0);
+        if (const Instance* instance = GetBrickInstance(brick))
+        {
+            const BrickDimensions brickDim = GetBrickDimensions(IdToBrickType(brick.groupId), instance->gridRotation);
 
-        // Insert brick entries into grid
-        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
-        foreach_dimension(x, y, z, brickDim.extent)
-            grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
+            // Insert brick entries into grid
+            const Gs::Vector3i alignedGridPos = instance->gridPos + brickDim.offset;
+            foreach_dimension(x, y, z, brickDim.extent)
+                grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
 
-        // Notify top and bottom grid entries that they are now blocked, so they can optimize their mesh if they are now fully blocked
-        if (notifyNeighbors)
-            NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, brick);
+            // Notify top and bottom grid entries that they are now blocked, so they can optimize their mesh if they are now fully blocked
+            if (notifyNeighbors)
+                NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, brick);
 
-        #if DEBUG_KDTREE
-        LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
-        #endif
+            #if DEBUG_KDTREE
+            LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
+            #endif
+
+            return true;
+        }
+        return false;
     }
 
     void RemoveBrickFromGrid(BrickType type, const Instance& instance, bool notifyNeighbors = false)
@@ -1141,6 +1181,8 @@ private:
 
     void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, InstanceGroup& outInstanceGroup)
     {
+        LLGL::Log::Printf("Load brick model: %s\n", basename);
+
         const std::vector<TexturedVertex> intermediateVertices = Load3DModel(std::string("Bricks/") + basename + ".obj");
 
         outInstanceGroup.firstVertex = static_cast<std::uint32_t>(vertices.size());
@@ -1164,20 +1206,45 @@ private:
             ConvertVertex(vertices[outInstanceGroup.firstVertex + i], intermediateVertices[i]);
     }
 
+    void LoadAllBrickModels(std::vector<Vertex>& vertices)
+    {
+        LoadBrickModel("Brick1x1x1"          , vertices, GetInstanceGroup(BrickType_1x1x1));
+        LoadBrickModel("Brick1x1x1_WallsOnly", vertices, GetInstanceGroup(BrickType_1x1x1, BrickGroup_WallsOnly));
+
+        LoadBrickModel("Tile1x1"             , vertices, GetInstanceGroup(BrickType_1x1x1_Tile));
+
+        LoadBrickModel("Brick1x1x3"          , vertices, GetInstanceGroup(BrickType_1x1x3));
+        LoadBrickModel("Brick1x1x3_WallsOnly", vertices, GetInstanceGroup(BrickType_1x1x3, BrickGroup_WallsOnly));
+
+        LoadBrickModel("Brick1x2x1"          , vertices, GetInstanceGroup(BrickType_1x2x1));
+        LoadBrickModel("Brick1x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_1x2x1, BrickGroup_WallsOnly));
+
+        LoadBrickModel("Brick1x2x3"          , vertices, GetInstanceGroup(BrickType_1x2x3));
+        LoadBrickModel("Brick1x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_1x2x3, BrickGroup_WallsOnly));
+
+        LoadBrickModel("Brick2x2x1"          , vertices, GetInstanceGroup(BrickType_2x2x1));
+        LoadBrickModel("Brick2x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_2x2x1, BrickGroup_WallsOnly));
+
+        LoadBrickModel("Tile2x2"             , vertices, GetInstanceGroup(BrickType_2x2x1_Tile));
+
+        LoadBrickModel("Brick2x2x3"          , vertices, GetInstanceGroup(BrickType_2x2x3));
+        LoadBrickModel("Brick2x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_WallsOnly  ));
+        LoadBrickModel("Brick2x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_Transparent));
+
+        LoadBrickModel("Brick4x2x1"          , vertices, GetInstanceGroup(BrickType_4x2x1));
+        LoadBrickModel("Brick4x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_WallsOnly  ));
+
+        LoadBrickModel("Brick4x2x3"          , vertices, GetInstanceGroup(BrickType_4x2x3));
+        LoadBrickModel("Brick4x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_WallsOnly  ));
+        LoadBrickModel("Brick4x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_Transparent));
+    }
+
     void CreateBuffers()
     {
         const float projZAxis = GetProjectionZAxis();
 
         std::vector<Vertex> vertices;
-        LoadBrickModel("Brick2x2x3"          , vertices, GetInstanceGroup(BrickType_2x2x3                        ));
-        LoadBrickModel("Brick2x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_WallsOnly  ));
-        LoadBrickModel("Brick2x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_Transparent));
-        LoadBrickModel("Brick4x2x3"          , vertices, GetInstanceGroup(BrickType_4x2x3                        ));
-        LoadBrickModel("Brick4x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_WallsOnly  ));
-        LoadBrickModel("Brick4x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_Transparent));
-        LoadBrickModel("Brick4x2x1"          , vertices, GetInstanceGroup(BrickType_4x2x1                        ));
-        LoadBrickModel("Brick4x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_WallsOnly  ));
-        LoadBrickModel("Brick4x2x1_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_Transparent));
+        LoadAllBrickModels(vertices);
 
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
@@ -1323,7 +1390,18 @@ private:
         // Write header
         file << "# Scene file for LLGL's example 'InstancingAdvanced'" << std::endl;
         file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
-        file << "# New instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
+        file << "# New brick instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
+        file << "# Camera posiotion: 'c X Y Z PITCH YAW' e.g. 'i 10.2 5.7 -15.02 25.2 -15.1'" << std::endl;
+
+        // Write camera position
+        file
+            << 'c'
+            << ' ' << camera.position.x
+            << ' ' << camera.position.y
+            << ' ' << camera.position.z
+            << ' ' << camera.pitch
+            << ' ' << camera.yaw
+            << std::endl;
 
         // Write all instances for each brick type
         BrickType lastWrittenBrickType = BrickType_Num;
@@ -1382,12 +1460,12 @@ private:
                 {
                     const Instance& instance = instances[group.firstInstance + i];
                     file
-                        << "i"
-                        << " " << instance.gridPos.x
-                        << " " << instance.gridPos.y
-                        << " " << instance.gridPos.z
-                        << " " << (instance.gridRotation == GridRotation_90 ? "90" : "0")
-                        << " " << ColorToString(instance.color)
+                        << 'i'
+                        << ' ' << instance.gridPos.x
+                        << ' ' << instance.gridPos.y
+                        << ' ' << instance.gridPos.z
+                        << ' ' << (instance.gridRotation == GridRotation_90 ? "90" : "0")
+                        << ' ' << ColorToString(instance.color)
                         << std::endl;
                 }
             }
@@ -1468,21 +1546,7 @@ private:
             char cmd = '\0';
             stream >> cmd;
 
-            if (cmd == 'b')
-            {
-                // Parse brick type and make it current
-                std::string brickTypeStr;
-                stream >> brickTypeStr;
-                currentBrickType = BrickTypeFromString(brickTypeStr.c_str());
-
-                if (currentBrickType == BrickType_Num)
-                {
-                    LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
-                    ResetScene();
-                    return false;
-                }
-            }
-            else if (cmd == 'i')
+            if (cmd == 'i')
             {
                 if (currentBrickType == BrickType_Num)
                 {
@@ -1504,6 +1568,25 @@ private:
                 // Create new brick instance
                 NewBrick(currentBrickType, gridPos, (gridRotation == 90 ? GridRotation_90 : GridRotation_0), ColorFromString(colorStr));
             }
+            else if (cmd == 'b')
+            {
+                // Parse brick type and make it current
+                std::string brickTypeStr;
+                stream >> brickTypeStr;
+                currentBrickType = BrickTypeFromString(brickTypeStr.c_str());
+
+                if (currentBrickType == BrickType_Num)
+                {
+                    LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
+                    ResetScene();
+                    return false;
+                }
+            }
+            else if (cmd == 'c')
+            {
+                // Parse camera orientation
+                stream >> camera.position.x >> camera.position.y >> camera.position.z >> camera.pitch >> camera.yaw;
+            }
             else
             {
                 LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
@@ -1518,6 +1601,10 @@ private:
 
     void CreateDefaultScene()
     {
+        // Place initial camera position
+        camera.position = { 0, 10.0f, -20.0f };
+        camera.pitch    = 20.0f;
+
         //TODO
 
         for (int i = 0; i <= 4; ++i)
@@ -1602,6 +1689,11 @@ private:
 
     void RenderPreviewBrick(const PreviewBrick& previewBrick)
     {
+        // Not every combination of brick type and group is supported. If number of vertices is 0, exit early.
+        const InstanceGroup& group = GetInstanceGroup(previewBrick.type, previewBrick.isTransparent ? BrickGroup_Transparent : BrickGroup_Default);
+        if (group.numVertices == 0)
+            return;
+
         commands->SetPipelineState(*pso[BrickPSO_Preview]);
 
         commands->SetResource(0, *sceneViewCbuffer);
@@ -1615,7 +1707,6 @@ private:
         };
         commands->SetVertexBuffers(2, vertexBufferViews);
 
-        const InstanceGroup& group = GetInstanceGroup(previewBrick.type, previewBrick.isTransparent ? BrickGroup_Transparent : BrickGroup_Default);
         commands->Draw(group.numVertices, group.firstVertex);
     }
 
@@ -1688,13 +1779,17 @@ private:
             camera.Move({ 0, 0, -moveSpeed });
     }
 
-    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos)
+    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const Gs::Vector3i& contactNormal, int brickWidth, int brickDepth)
     {
+        const float minOffset = 0.01f;
+        const float xOffset = (brickWidth % 2 == 0 ? 0.5f : minOffset * static_cast<float>(std::abs(contactNormal.x)));
+        const float yOffset = minOffset;
+        const float zOffset = (brickDepth % 2 == 0 ? 0.5f : minOffset * static_cast<float>(std::abs(contactNormal.z)));
         return Gs::Vector3i
         {
-            static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + 0.5f)),
-            static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + 0.01f)),
-            static_cast<std::int32_t>(std::floor(worldPos.z / KDTreeNode::gridScale.z + 0.5f))
+            static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + xOffset)),
+            static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + yOffset)),
+            static_cast<std::int32_t>(std::floor(worldPos.z / KDTreeNode::gridScale.z + zOffset))
         };
     }
 
@@ -1766,12 +1861,20 @@ private:
     {
         const Gs::Vector3i brickExtent = GetBrickExtent(type);
         const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
-        const std::int32_t maxOffset = maxWidthOrDepth/2 - 1;
-        offset = Gs::Clamp(offset, -maxOffset, +maxOffset);
+        if (maxWidthOrDepth > 2)
+        {
+            const std::int32_t maxOffset = maxWidthOrDepth/2 - 1;
+            offset = Gs::Clamp(offset, -maxOffset, +maxOffset);
+        }
+        else
+            offset = 0;
     }
 
-    void PickGridPosForPreviewBrick(PreviewBrick& previewBrick, Instance& previewInstance)
+    void PickGridPosForPreviewBrick()
     {
+        PreviewBrick& previewBrick = viewOptions.previewBrick;
+        Instance& previewInstance = instances[0];
+
         // Allow user to turn and change type of preview brick while picking the scene
         GridRotation newPreviewRotation = previewInstance.gridRotation;
         if (input.KeyDown(LLGL::Key::Space))
@@ -1794,8 +1897,10 @@ private:
         PickerContact contact;
         if (PickScene(pickerRay, contact))
         {
+            const BrickDimensions brickDim = GetBrickDimensions(newBrickType, newPreviewRotation);
+
             // Find a potential grid position for the preview brick
-            newPreviewGridPos = WorldPosToGridPos(contact.point);
+            newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim.extent.x, brickDim.extent.z);
 
             auto ApplyGridOffset = [&newPreviewGridPos, &previewBrick, newPreviewRotation]() -> void
             {
@@ -1806,7 +1911,6 @@ private:
                     newPreviewGridPos.x += previewBrick.gridOffset;
             };
 
-            const BrickDimensions brickDim = GetBrickDimensions(newBrickType, newPreviewRotation);
             if (contact.normal.x < 0)
                 newPreviewGridPos.x -= brickDim.offset.x + brickDim.extent.x;
             else if (contact.normal.x > 0)
@@ -1844,14 +1948,14 @@ private:
 
     void ProcessEditModeAddOrMove()
     {
-        PickGridPosForPreviewBrick(viewOptions.previewBrick, instances[0]);
+        PickGridPosForPreviewBrick();
 
         const PreviewBrick& previewBrick = viewOptions.previewBrick;
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
             NewBrick(previewBrick.type, instances[0].gridPos, instances[0].gridRotation, instances[0].color, previewBrick.isTransparent);
-            PickGridPosForPreviewBrick(viewOptions.previewBrick, instances[0]);
+            PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick
             if (controller.editMode == EditMode::Move)
@@ -1873,10 +1977,14 @@ private:
                     {
                         viewOptions.previewBrick.type           = IdToBrickType(selectedBrick.groupId);
                         viewOptions.previewBrick.isTransparent  = (IdToBrickGroup(selectedBrick.groupId) == BrickGroup_Transparent);
-                        previewInstance.color           = selectedInstance->color;
-                        previewInstance.gridRotation    = selectedInstance->gridRotation; 
+                        previewInstance.color                   = selectedInstance->color;
+                        previewInstance.gridRotation            = selectedInstance->gridRotation; 
                     }
+
+                    // Change to edit mode that allows the user to move the selected brick around.
+                    // Immediately update picking position of the preview brick before it is rendered with a stale position.
                     controller.editMode = EditMode::Move;
+                    PickGridPosForPreviewBrick();
                 }
 
                 // Remove selected brick
@@ -1931,7 +2039,7 @@ private:
         sceneView.lightDir      = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
 
         // Update preview shader states
-        //sceneView.worldOffsetY  = (previewBlockOffsetY;
+      //sceneView.worldOffsetY  = previewBlockOffsetY;
         sceneView.isDithering   = (viewOptions.previewBrick.isBlocked ? 1 : 0);
     }
 
