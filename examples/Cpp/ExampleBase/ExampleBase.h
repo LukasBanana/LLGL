@@ -134,16 +134,14 @@ private:
 
         public:
 
-            WindowEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
+            WindowEventHandler(ExampleBase& app);
 
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override;
             void OnUpdate(LLGL::Window& sender) override;
 
         private:
 
-            ExampleBase&        app_;
-            LLGL::SwapChain*    swapChain_;
-            Gs::Matrix4f&       projection_;
+            ExampleBase& app_;
 
     };
 
@@ -152,16 +150,14 @@ private:
 
         public:
 
-            CanvasEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
+            CanvasEventHandler(ExampleBase& app);
 
             void OnDraw(LLGL::Canvas& sender) override;
             void OnResize(LLGL::Canvas& sender, const LLGL::Extent2D& clientAreaSize) override;
 
         private:
 
-            ExampleBase&        app_;
-            LLGL::SwapChain*    swapChain_;
-            Gs::Matrix4f&       projection_;
+            ExampleBase& app_;
 
     };
 
@@ -242,6 +238,16 @@ protected:
     // Primary camera projection
     Gs::Matrix4f                projection;
 
+    // Parameters to update the projection matrix.
+    struct ProjectionParameters
+    {
+        bool                    isOrtho             = false;
+        float                   zNear               = 0.1f;
+        float                   zFar                = 100.0f;
+        float                   fov                 = 45.0f;
+    }
+    projectionParams;
+
 protected:
 
     ExampleBase(const LLGL::UTF8String& title);
@@ -251,6 +257,9 @@ protected:
 
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
     virtual void OnResize(const LLGL::Extent2D& resolution);
+
+    // Callback when the app is about to exit.
+    virtual void OnExit();
 
 private:
 
@@ -369,6 +378,9 @@ protected:
 
     // Returns an orthogonal projection with the specified parameters for the respective renderer.
     Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far) const;
+
+    // Updates the app's projection matrix depending on project settings.
+    void UpdateProjection(const LLGL::Extent2D& resolution);
 
     // Returns a quoternion for the specified rotation
     Gs::Quaternionf Rotation(float pitch, float yaw) const;

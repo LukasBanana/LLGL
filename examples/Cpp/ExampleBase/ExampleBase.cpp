@@ -378,23 +378,15 @@ ExampleBase::ShaderDescWrapper::ShaderDescWrapper(LLGL::ShaderType type, const c
  * WindowEventHandler class
  */
 
-ExampleBase::WindowEventHandler::WindowEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
-    app_        { app        },
-    swapChain_  { swapChain  },
-    projection_ { projection }
+ExampleBase::WindowEventHandler::WindowEventHandler(ExampleBase& app) :
+    app_ { app }
 {
 }
 
 void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize)
 {
-    const auto& resolution = clientAreaSize;
-
-    // Update projection matrix
-    auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
-    projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
     // Notify application about resize event
-    app_.Resize(resolution);
+    app_.Resize(clientAreaSize);
 }
 
 void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
@@ -407,10 +399,8 @@ void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
  * CanvasEventHandler class
  */
 
-ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
-    app_        { app        },
-    swapChain_  { swapChain  },
-    projection_ { projection }
+ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app) :
+    app_ { app }
 {
 }
 
@@ -423,10 +413,6 @@ void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 
 void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
 {
-    // Update projection matrix
-    auto aspectRatio = static_cast<float>(clientAreaSize.width) / static_cast<float>(clientAreaSize.height);
-    projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
     // Notify application about resize event
     app_.Resize(clientAreaSize);
 }
@@ -593,6 +579,9 @@ int ExampleBase::Run()
         MainLoop();
     }
 
+    // Invoke callback before exiting, allowing app to save its state to file
+    OnExit();
+
     #endif // /LLGL_OS_WASM
 
     return returnCode_;
@@ -620,6 +609,9 @@ void ExampleBase::DrawFrame()
 
 void ExampleBase::Resize(const LLGL::Extent2D& clientAreaSize)
 {
+    // Update projection matrix with its current parameters (whether it's orthogonal or not, field-of-view etc.)
+    UpdateProjection(clientAreaSize);
+
     drawableSize_ = clientAreaSize;
 
     if (IsDrawable())
@@ -805,7 +797,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     auto rendererName = renderer->GetName();
     canvas.SetTitle(title + " ( " + rendererName + " )");
 
-    canvas.AddEventListener(std::make_shared<CanvasEventHandler>(*this, swapChain, projection));
+    canvas.AddEventListener(std::make_shared<CanvasEventHandler>(*this));
 
     #else // LLGL_MOBILE_PLATFORM
 
@@ -816,7 +808,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     window.SetTitle(title + " ( " + rendererName + " )");
 
     // Add window resize listener
-    window.AddEventListener(std::make_shared<WindowEventHandler>(*this, swapChain, projection));
+    window.AddEventListener(std::make_shared<WindowEventHandler>(*this));
 
     // Show window
     window.Show();
@@ -831,6 +823,11 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
+{
+    // dummy
+}
+
+void ExampleBase::OnExit()
 {
     // dummy
 }
@@ -1531,6 +1528,16 @@ Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float 
 {
     const int flags = GetProjectionMatrixFlags();
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
+}
+
+void ExampleBase::UpdateProjection(const LLGL::Extent2D& resolution)
+{
+    const float w = static_cast<float>(resolution.width);
+    const float h = static_cast<float>(resolution.height);
+    if (projectionParams.isOrtho)
+        projection = OrthogonalProjection(w, h, projectionParams.zNear, projectionParams.zFar);
+    else
+        projection = PerspectiveProjection(w/h, projectionParams.zNear, projectionParams.zFar, Gs::Deg2Rad(projectionParams.fov));
 }
 
 Gs::Quaternionf ExampleBase::Rotation(float pitch, float yaw) const

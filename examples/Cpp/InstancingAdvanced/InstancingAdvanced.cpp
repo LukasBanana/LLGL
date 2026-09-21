@@ -29,7 +29,7 @@ class Example_InstancingAdvanced : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr int        boundingVolume[3]   = { 60, 45, 60 };
+    static constexpr int        boundingVolume[3]   = { 100, 60, 100 };
     static constexpr float      cameraTurnSpeed     = 0.25f;
     static constexpr float      cameraMoveSpeed     = 0.25f;
     static constexpr float      previewBlockOffsetY = 0.075f;     // Y-axis world position offset for the preview block before putting it into place
@@ -94,6 +94,8 @@ class Example_InstancingAdvanced : public ExampleBase
     {
         GridRotation_0 = 0,
         GridRotation_90,
+        GridRotation_180,
+        GridRotation_270,
 
         GridRotation_Num,
     };
@@ -111,22 +113,33 @@ class Example_InstancingAdvanced : public ExampleBase
         BrickType_4x2x1,
         BrickType_1x1x1_Tile,
         BrickType_2x2x1_Tile,
+        BrickType_2x2x3_Roof,
+        BrickType_2x3x3_Roof,
 
         BrickType_Num,
     };
 
-    const std::map<BrickType, std::string> brickTypeDictionary
+    // Meta data for each brick.
+    struct BrickInfo
     {
-        { BrickType_1x1x1,      "1x1x1"     },
-        { BrickType_1x1x1_Tile, "1x1_tile"  },
-        { BrickType_1x1x3,      "1x1x3"     },
-        { BrickType_1x2x1,      "1x2x1"     },
-        { BrickType_1x2x3,      "1x2x3"     },
-        { BrickType_2x2x1,      "2x2x1"     },
-        { BrickType_2x2x1_Tile, "2x2_tile"  },
-        { BrickType_2x2x3,      "2x2x3"     },
-        { BrickType_4x2x1,      "4x2x1"     },
-        { BrickType_4x2x3,      "4x2x3"     },
+        std::string     label;
+        Gs::Vector3i    extent;
+    };
+
+    const std::map<BrickType, BrickInfo> brickTypeDictionary
+    {
+        { BrickType_1x1x1,      BrickInfo{ "1x1x1",    { 1, 1, 1 } } },
+        { BrickType_1x1x1_Tile, BrickInfo{ "1x1_tile", { 1, 1, 1 } } },
+        { BrickType_1x1x3,      BrickInfo{ "1x1x3",    { 1, 3, 1 } } },
+        { BrickType_1x2x1,      BrickInfo{ "1x2x1",    { 1, 1, 2 } } },
+        { BrickType_1x2x3,      BrickInfo{ "1x2x3",    { 1, 3, 2 } } },
+        { BrickType_2x2x1,      BrickInfo{ "2x2x1",    { 2, 1, 2 } } },
+        { BrickType_2x2x1_Tile, BrickInfo{ "2x2_tile", { 2, 1, 2 } } },
+        { BrickType_2x2x3,      BrickInfo{ "2x2x3",    { 2, 3, 2 } } },
+        { BrickType_2x2x3_Roof, BrickInfo{ "2x2_roof", { 2, 3, 2 } } },
+        { BrickType_2x3x3_Roof, BrickInfo{ "2x3_roof", { 2, 3, 3 } } },
+        { BrickType_4x2x1,      BrickInfo{ "4x2x1",    { 4, 1, 2 } } },
+        { BrickType_4x2x3,      BrickInfo{ "4x2x3",    { 4, 3, 2 } } },
     };
 
     enum BrickGroup : std::uint32_t
@@ -142,15 +155,15 @@ class Example_InstancingAdvanced : public ExampleBase
     const char* BrickTypeToString(BrickType t)
     {
         auto it = brickTypeDictionary.find(t);
-        return (it != brickTypeDictionary.end() ? it->second.c_str() : "");
+        return (it != brickTypeDictionary.end() ? it->second.label.c_str() : "");
     }
 
     // Returns the BrickType that's mapped from the specified string. Used by the scene file reader.
     BrickType BrickTypeFromString(const char* s)
     {
-        for (const std::pair<BrickType, std::string>& it : brickTypeDictionary)
+        for (const std::pair<BrickType, BrickInfo>& it : brickTypeDictionary)
         {
-            if (it.second == s)
+            if (it.second.label == s)
                 return it.first;
         }
         return BrickType_Num;
@@ -682,6 +695,9 @@ public:
     Example_InstancingAdvanced() :
         ExampleBase { "LLGL Example: Instancing Advanced" }
     {
+        projectionParams.zFar = 500.0f;
+        UpdateProjection(swapChain->GetResolution());
+
         hasOffsetInstancing = renderer->GetRenderingCaps().features.hasOffsetInstancing;
         ResetInstanceDirtyRange();
 
@@ -697,8 +713,8 @@ public:
         LLGL::Log::Printf(
             "Keyboard controls:\n"
             "  1 .............. Default mode\n"
-            "  2 .............. Preview brick mode\n"
-            "  3/Delete ....... Select brick mode\n"
+            "  2 .............. Add brick mode\n"
+            "  3/Delete ....... Move/Delete brick mode\n"
             "  Right mouse .... Turn camera\n"
             "  Middle mouse ... Move camera left/right & up/down\n"
             "  W/A/S/D ........ Move camera left/right & forwards/backwards\n"
@@ -932,22 +948,10 @@ private:
         };
     }
 
-    static Gs::Vector3i GetBrickExtent(BrickType type)
+    Gs::Vector3i GetBrickExtent(BrickType type)
     {
-        switch (type)
-        {
-            case BrickType_1x1x1:       return { 1, 1, 1 };
-            case BrickType_1x1x1_Tile:  return { 1, 1, 1 };
-            case BrickType_1x1x3:       return { 1, 3, 1 };
-            case BrickType_1x2x1:       return { 1, 1, 2 };
-            case BrickType_1x2x3:       return { 1, 3, 2 };
-            case BrickType_2x2x1:       return { 2, 1, 2 };
-            case BrickType_2x2x1_Tile:  return { 2, 1, 2 };
-            case BrickType_2x2x3:       return { 2, 3, 2 };
-            case BrickType_4x2x1:       return { 4, 1, 2 };
-            case BrickType_4x2x3:       return { 4, 3, 2 };
-            default:                    return {};
-        }
+        auto it = brickTypeDictionary.find(type);
+        return (it != brickTypeDictionary.end() ? it->second.extent : Gs::Vector3i{});
     }
 
     BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation)
@@ -955,12 +959,12 @@ private:
         BrickDimensions brickDim;
 
         brickDim.extent = GetBrickExtent(type);
-        if (rotation == GridRotation_90)
+        if (rotation == GridRotation_90 || rotation == GridRotation_270)
             std::swap(brickDim.extent.x, brickDim.extent.z);
 
-        brickDim.offset.x = -brickDim.extent.x/2;
+        brickDim.offset.x = ((rotation == GridRotation_90 || rotation == GridRotation_180) ? -(brickDim.extent.x + 1)/2 : -brickDim.extent.x/2);
         brickDim.offset.y = 0;
-        brickDim.offset.z = -brickDim.extent.z/2;
+        brickDim.offset.z = ((rotation == GridRotation_180 || rotation == GridRotation_270) ? -(brickDim.extent.z + 1)/2 : -brickDim.extent.z/2);
 
         return brickDim;
     }
@@ -1029,17 +1033,21 @@ private:
     // allowing it to transfer to a different mesh group for better rendering performance.
     void NotifyBrickChange(Brick brick, bool isBlocking)
     {
-        const BrickGroup group = IdToBrickGroup(brick.groupId);
-        if (group == BrickGroup_Default && isBlocking)
+        // Only bother to change groups for brick types that support the walls-only group
+        if (GetInstanceGroup(IdToBrickType(brick), BrickGroup_WallsOnly).numVertices > 0)
         {
-            // If brick is now blocked top and bottom, switch to walls-only mesh
-            if (IsBrickBlockedTopAndBottom(brick))
-                TransferBrickGroup(brick, BrickGroup_WallsOnly);
-        }
-        else if (group == BrickGroup_WallsOnly && !isBlocking)
-        {
-            // Brick is no longer fully blocked top and bottom, so switch back to default mesh
-            TransferBrickGroup(brick, BrickGroup_Default);
+            const BrickGroup group = IdToBrickGroup(brick.groupId);
+            if (group == BrickGroup_Default && isBlocking)
+            {
+                // If brick is now blocked top and bottom, switch to walls-only mesh
+                if (IsBrickBlockedTopAndBottom(brick))
+                    TransferBrickGroup(brick, BrickGroup_WallsOnly);
+            }
+            else if (group == BrickGroup_WallsOnly && !isBlocking)
+            {
+                // Brick is no longer fully blocked top and bottom, so switch back to default mesh
+                TransferBrickGroup(brick, BrickGroup_Default);
+            }
         }
     }
 
@@ -1077,17 +1085,44 @@ private:
         }
     }
 
+    // Returns true if the specified cell (position relative to brick, not to the grid) is excluded from the brick type.
+    // This is used for a few select bricks that don't cover a full bounding box, like the roof tile.
+    bool IsBrickCellExcluded(BrickType brickType, GridRotation brickRotation, const Gs::Vector3i& cellPos)
+    {
+        if (brickType == BrickType_2x3x3_Roof)
+        {
+            // This is hardcoded but if more bricks are added, this should be generalized.
+            // The 2x3x3 roof tile has two cells that can be excluded, but the coordinate depends on its rotation.
+            if (cellPos.y == 2)
+            {
+                if ((brickRotation == GridRotation_0   && cellPos.z == 2) ||
+                    (brickRotation == GridRotation_90  && cellPos.x == 0) ||
+                    (brickRotation == GridRotation_180 && cellPos.z == 0) ||
+                    (brickRotation == GridRotation_270 && cellPos.x == 2))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool InsertBrickIntoGrid(Brick brick, bool notifyNeighbors = false)
     {
         // Get brick dimension and apply rotation
         if (const Instance* instance = GetBrickInstance(brick))
         {
-            const BrickDimensions brickDim = GetBrickDimensions(IdToBrickType(brick.groupId), instance->gridRotation);
+            const BrickType brickType = IdToBrickType(brick.groupId);
+            const BrickDimensions brickDim = GetBrickDimensions(brickType, instance->gridRotation);
 
             // Insert brick entries into grid
             const Gs::Vector3i alignedGridPos = instance->gridPos + brickDim.offset;
             foreach_dimension(x, y, z, brickDim.extent)
-                grid.InsertLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, brick);
+            {
+                const Gs::Vector3i cellPos{ x, y, z };
+                if (!IsBrickCellExcluded(brickType, instance->gridRotation, cellPos))
+                    grid.InsertLeaf(alignedGridPos + cellPos, brick);
+            }
 
             // Notify top and bottom grid entries that they are now blocked, so they can optimize their mesh if they are now fully blocked
             if (notifyNeighbors)
@@ -1230,6 +1265,9 @@ private:
         LoadBrickModel("Brick2x2x3"          , vertices, GetInstanceGroup(BrickType_2x2x3));
         LoadBrickModel("Brick2x2x3_WallsOnly", vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_WallsOnly  ));
         LoadBrickModel("Brick2x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_2x2x3, BrickGroup_Transparent));
+
+        LoadBrickModel("Roof2x2x3"           , vertices, GetInstanceGroup(BrickType_2x2x3_Roof));
+        LoadBrickModel("Roof2x3x3"           , vertices, GetInstanceGroup(BrickType_2x3x3_Roof));
 
         LoadBrickModel("Brick4x2x1"          , vertices, GetInstanceGroup(BrickType_4x2x1));
         LoadBrickModel("Brick4x2x1_WallsOnly", vertices, GetInstanceGroup(BrickType_4x2x1, BrickGroup_WallsOnly  ));
@@ -1392,6 +1430,7 @@ private:
         file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
         file << "# New brick instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
         file << "# Camera posiotion: 'c X Y Z PITCH YAW' e.g. 'i 10.2 5.7 -15.02 25.2 -15.1'" << std::endl;
+        file << "# Current offset: 'o X Y Z' e.g. 'o 10 0 0' moves all subsequent bricks +10 on the X-axis" << std::endl;
 
         // Write camera position
         file
@@ -1464,7 +1503,7 @@ private:
                         << ' ' << instance.gridPos.x
                         << ' ' << instance.gridPos.y
                         << ' ' << instance.gridPos.z
-                        << ' ' << (instance.gridRotation == GridRotation_90 ? "90" : "0")
+                        << ' ' << static_cast<int>(instance.gridRotation * 90)
                         << ' ' << ColorToString(instance.color)
                         << std::endl;
                 }
@@ -1485,6 +1524,7 @@ private:
         }
 
         BrickType currentBrickType = BrickType_Num;
+        Gs::Vector3i currentOffset;
 
         auto ColorFromString = [](const std::string& s) -> LLGL::ColorRGBAub
         {
@@ -1562,11 +1602,11 @@ private:
 
                 stream >> gridPos.x >> gridPos.y >> gridPos.z >> gridRotation >> colorStr;
 
-                if (gridRotation != 0 && gridRotation != 90)
-                    LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be 0 or 90) in %s:%d\n", gridRotation, filename, lineNo);
+                if (gridRotation % 90 != 0)
+                    LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
 
                 // Create new brick instance
-                NewBrick(currentBrickType, gridPos, (gridRotation == 90 ? GridRotation_90 : GridRotation_0), ColorFromString(colorStr));
+                NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), ColorFromString(colorStr));
             }
             else if (cmd == 'b')
             {
@@ -1581,6 +1621,11 @@ private:
                     ResetScene();
                     return false;
                 }
+            }
+            else if (cmd == 'o')
+            {
+                // Parse grid offset
+                stream >> currentOffset.x >> currentOffset.y >> currentOffset.z;
             }
             else if (cmd == 'c')
             {
@@ -1779,17 +1824,26 @@ private:
             camera.Move({ 0, 0, -moveSpeed });
     }
 
-    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const Gs::Vector3i& contactNormal, int brickWidth, int brickDepth)
+    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const Gs::Vector3i& contactNormal, const BrickDimensions& brickDim)
     {
-        const float minOffset = 0.01f;
-        const float xOffset = (brickWidth % 2 == 0 ? 0.5f : minOffset * static_cast<float>(std::abs(contactNormal.x)));
-        const float yOffset = minOffset;
-        const float zOffset = (brickDepth % 2 == 0 ? 0.5f : minOffset * static_cast<float>(std::abs(contactNormal.z)));
+        constexpr float minOffset = 0.01f;
+
+        auto AxisToOffset = [minOffset](int brickOffset, int brickExtent, int normal) -> float
+        {
+            const float centerOffset = static_cast<float>(1 - brickExtent % 2)*0.5f + (-brickOffset > brickExtent/2 ? 1.0f : 0.0f);
+            const float baseOffset = minOffset * static_cast<float>(std::abs(normal));
+            return (normal == 0 ? centerOffset + baseOffset : baseOffset);
+        };
+
+        const float xOffsetReal = AxisToOffset(brickDim.offset.x, brickDim.extent.x, contactNormal.x);
+        const float yOffsetReal = minOffset;
+        const float zOffsetReal = AxisToOffset(brickDim.offset.z, brickDim.extent.z, contactNormal.z);
+
         return Gs::Vector3i
         {
-            static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + xOffset)),
-            static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + yOffset)),
-            static_cast<std::int32_t>(std::floor(worldPos.z / KDTreeNode::gridScale.z + zOffset))
+            static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + xOffsetReal)),
+            static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + yOffsetReal)),
+            static_cast<std::int32_t>(std::floor(worldPos.z / KDTreeNode::gridScale.z + zOffsetReal))
         };
     }
 
@@ -1863,7 +1917,7 @@ private:
         const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
         if (maxWidthOrDepth > 2)
         {
-            const std::int32_t maxOffset = maxWidthOrDepth/2 - 1;
+            const std::int32_t maxOffset = (maxWidthOrDepth + 1)/2 - 1;
             offset = Gs::Clamp(offset, -maxOffset, +maxOffset);
         }
         else
@@ -1900,35 +1954,41 @@ private:
             const BrickDimensions brickDim = GetBrickDimensions(newBrickType, newPreviewRotation);
 
             // Find a potential grid position for the preview brick
-            newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim.extent.x, brickDim.extent.z);
-
-            auto ApplyGridOffset = [&newPreviewGridPos, &previewBrick, newPreviewRotation]() -> void
+            auto ApplyNormalOffset = [](std::int32_t& gridPos, int normal, int brickOffset, int brickExtent) -> void
             {
-                // Offset by user input to allow placing bricks on ledges
-                if (newPreviewRotation == GridRotation_90)
-                    newPreviewGridPos.z += previewBrick.gridOffset;
-                else
-                    newPreviewGridPos.x += previewBrick.gridOffset;
+                if (normal < 0)
+                    gridPos -= (brickExtent + brickOffset);
+                else if (normal > 0)
+                    gridPos -= brickOffset;
             };
 
-            if (contact.normal.x < 0)
-                newPreviewGridPos.x -= brickDim.offset.x + brickDim.extent.x;
-            else if (contact.normal.x > 0)
-                newPreviewGridPos.x -= brickDim.offset.x;
-            else if (contact.normal.y < 0)
+            if (contact.normal.x != 0)
             {
-                newPreviewGridPos.y -= brickDim.offset.y + brickDim.extent.y;
-                ApplyGridOffset();
+                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
+                ApplyNormalOffset(newPreviewGridPos.x, contact.normal.x, brickDim.offset.x, brickDim.extent.x);
             }
-            else if (contact.normal.y > 0)
+            else if (contact.normal.y != 0)
             {
-                newPreviewGridPos.y -= brickDim.offset.y;
-                ApplyGridOffset();
+                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
+                ApplyNormalOffset(newPreviewGridPos.y, contact.normal.y, brickDim.offset.y, brickDim.extent.y);
             }
-            else if (contact.normal.z < 0)
-                newPreviewGridPos.z -= brickDim.offset.z + brickDim.extent.z;
-            else if (contact.normal.z > 0)
-                newPreviewGridPos.z -= brickDim.offset.z;
+            else if (contact.normal.z != 0)
+            {
+                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
+                ApplyNormalOffset(newPreviewGridPos.z, contact.normal.z, brickDim.offset.z, brickDim.extent.z);
+            }
+
+            // Offset by user input to allow placing bricks on ledges
+            if (brickDim.extent.z > brickDim.extent.x)
+            {
+                if (contact.normal.z == 0)
+                    newPreviewGridPos.z += previewBrick.gridOffset;
+            }
+            else
+            {
+                if (contact.normal.x == 0)
+                    newPreviewGridPos.x += previewBrick.gridOffset;
+            }
         }
 
         // If grid position changed, re-evaluate whether that position is blocked for the preview brick

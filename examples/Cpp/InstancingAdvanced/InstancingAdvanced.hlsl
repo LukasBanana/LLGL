@@ -39,7 +39,7 @@ struct VertexOut
 void VSBrickBase(VertexIn inp, out VertexOut outp, float3 worldOffset)
 {
     // Rotate model either 0 degrees (default) or 90 degrees based on the instance's gridPos.w value
-    const float3x3 rotationMatrices[2] =
+    const float3x3 rotationMatrices[4] =
     {
         float3x3(
             +1.0,  0.0,  0.0,
@@ -50,6 +50,16 @@ void VSBrickBase(VertexIn inp, out VertexOut outp, float3 worldOffset)
              0.0,  0.0, -1.0,
              0.0, +1.0,  0.0,
             +1.0,  0.0,  0.0
+        ),
+        float3x3(
+            -1.0,  0.0,  0.0,
+             0.0, +1.0,  0.0,
+             0.0,  0.0, -1.0
+        ),
+        float3x3(
+             0.0,  0.0, +1.0,
+             0.0, +1.0,  0.0,
+            -1.0,  0.0,  0.0
         )
     };
 
