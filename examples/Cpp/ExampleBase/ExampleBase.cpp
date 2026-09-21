@@ -890,7 +890,8 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const LLGL::ShaderMacro*    defines,
     long                        compileFlags)
 {
-    LLGL::Log::Printf("Load shader: %s\n", shaderDesc.filename);
+    const char* shaderEntryPointName = (shaderDesc.entryPoint != nullptr && *shaderDesc.entryPoint != '\0' ? shaderDesc.entryPoint : "main");
+    LLGL::Log::Printf("Load %s shader '%s': %s\n", ToString(shaderDesc.type), shaderEntryPointName, shaderDesc.filename);
 
     #ifdef LLGL_OS_WASM
     const std::string filename = std::string("assets/") + shaderDesc.filename;

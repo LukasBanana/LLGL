@@ -121,7 +121,7 @@ float4 PSBrickPreview(VertexOut inp) : SV_Target
 };
 
 
-// DEBUG SHADER
+// DEBUG SHADERS
 
 uniform float4 vertexA;
 uniform float4 vertexB;
@@ -137,4 +137,54 @@ float4 PSDebug() : SV_Target
     return float4(1, 1, 1, 1);
 }
 
+
+// UI SHADERS
+
+cbuffer UIView : register(b1)
+{
+    float4x4 pMatrix;
+}
+
+struct UIVertexIn
+{
+    int2    position    : POSITION;
+    int2    texCoord    : TEXCOORD;
+    float4  color       : COLOR;
+};
+
+struct UIVertexOut
+{
+    float4                  position    : SV_Position;
+    float2                  texCoord    : TEXCOORD;
+    float4                  color       : COLOR;
+    nointerpolation bool    isTextured  : IS_TEXTURED;
+};
+
+void VSOverlay(UIVertexIn inp, out UIVertexOut outp)
+{
+    outp.position   = mul(pMatrix, float4(inp.position.xy, 0.0, 1.0));
+    outp.color      = inp.color;
+
+    if (all(inp.texCoord >= (int2)0))
+    {
+        outp.texCoord   = (float2)inp.texCoord;
+        outp.isTextured = true;
+    }
+    else
+    {
+        outp.texCoord   = float2(0.0, 0.0);
+        outp.isTextured = false;
+    }
+}
+
+Texture2D uiTexture : register(t2);
+SamplerState uiTextureSampler : register(s3);
+
+float4 PSOverlay(UIVertexOut inp) : SV_Target
+{
+    if (inp.isTextured)
+        return uiTexture.Sample(uiTextureSampler, inp.texCoord) * inp.color;
+    else
+        return inp.color;
+}
 
