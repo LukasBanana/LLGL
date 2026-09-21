@@ -1,5 +1,5 @@
 /*
- * Example.cpp (Example_Animation)
+ * Orthogonal.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -8,7 +8,7 @@
 #include <ExampleBase.h>
 
 
-class Example_Animation : public ExampleBase
+class Example_Orthogonal : public ExampleBase
 {
 
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
@@ -77,8 +77,8 @@ class Example_Animation : public ExampleBase
 
 public:
 
-    Example_Animation() :
-        ExampleBase { "LLGL Example: Animation" }
+    Example_Orthogonal() :
+        ExampleBase { "LLGL Example: Orthogonal" }
     {
         // Create all graphics objects
         CreateBuffers();
@@ -151,8 +151,8 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
-            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS");
-            pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
+            pipelineDesc.vertexShader                   = LoadVertexShader("Orthogonal", "VS");
+            pipelineDesc.fragmentShader                 = LoadFragmentShader("Orthogonal", "PS");
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.depth.testEnabled              = true;
@@ -334,7 +334,7 @@ private:
 
 };
 
-LLGL_IMPLEMENT_EXAMPLE(Example_Animation);
+LLGL_IMPLEMENT_EXAMPLE(Example_Orthogonal);
 
 
 

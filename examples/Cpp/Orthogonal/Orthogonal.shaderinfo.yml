@@ -1,0 +1,9 @@
+sources:
+  - source: "Orthogonal.hlsl"
+    entries:
+      - entry: "VS"
+        profile: "vs_5_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PS"
+        profile: "ps_5_0"
+        targets: [glsl140core, glsl300es, spirv, metal]

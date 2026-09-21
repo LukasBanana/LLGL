@@ -47,11 +47,11 @@ else
 fi
 
 # Copy HTML5 examples to the target web page directory
-copy_example_to_target "Example_Animation"
 copy_example_to_target "Example_Fonts"
 copy_example_to_target "Example_HelloGame"
 copy_example_to_target "Example_Instancing"
 copy_example_to_target "Example_MorphTargets"
+copy_example_to_target "Example_Orthogonal"
 copy_example_to_target "Example_PBR"
 copy_example_to_target "Example_PostProcessing"
 copy_example_to_target "Example_RenderTarget"

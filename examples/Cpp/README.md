@@ -127,12 +127,12 @@ Experimental example of using multiple renderers at once (only supported on Win3
 <p align="center"><img src="MultiRenderer/Example.png" style="width:auto;height:225px;"/></p>
 
 
-### [Animation](Animation)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Animation/index.html)
+### [Orthogonal](Orthogonal)
+##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Orthogonal/index.html)
 
-Small animation example with orthogonal projection.
+Small example with orthogonal projection.
 
-<p align="center"><img src="Animation/Example.gif" style="width:auto;height:225px;"/></p>
+<p align="center"><img src="Orthogonal/Orthogonal.gif" style="width:auto;height:225px;"/></p>
 
 
 ### [Volume Rendering](VolumeRendering)

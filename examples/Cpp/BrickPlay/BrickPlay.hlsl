@@ -162,7 +162,7 @@ struct UIVertexOut
 
 void VSOverlay(UIVertexIn inp, out UIVertexOut outp)
 {
-    outp.position   = mul(pMatrix, float4(inp.position.xy, 0.0, 1.0));
+    outp.position   = mul(pMatrix, float4((float2)inp.position.xy, 0.0, 1.0));
     outp.color      = inp.color;
 
     if (all(inp.texCoord >= (int2)0))

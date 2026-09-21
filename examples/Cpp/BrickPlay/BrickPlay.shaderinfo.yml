@@ -1,5 +1,5 @@
 sources:
-  - source: "InstancingAdvanced.hlsl"
+  - source: "BrickPlay.hlsl"
     entries:
       - entry: "VSBrick"
         profile: "vs_4_0"
@@ -11,5 +11,11 @@ sources:
         profile: "vs_4_0"
         targets: [glsl140core, glsl300es, spirv, metal]
       - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "VSOverlay"
+        profile: "vs_4_0"
+        targets: [glsl140core, glsl300es, spirv, metal]
+      - entry: "PSOverlay"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es, spirv, metal]

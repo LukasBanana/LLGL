@@ -1,5 +1,5 @@
 /*
- * InstancingAdvanced.cpp
+ * BrickPlay.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -23,7 +23,7 @@
 #define UNIFORM_TREE_SUBDIVIDE 0
 
 
-class Example_InstancingAdvanced : public ExampleBase
+class Example_BrickPlay : public ExampleBase
 {
 
     #define foreach_dimension(X, Y, Z, VEC) \
@@ -754,7 +754,7 @@ class Example_InstancingAdvanced : public ExampleBase
 
 public:
 
-    Example_InstancingAdvanced() :
+    Example_BrickPlay() :
         ExampleBase { "LLGL Example: Instancing Advanced" }
     {
         projectionParams.zFar = 500.0f;
@@ -1394,12 +1394,12 @@ private:
     void CreatePipelines()
     {
         // Create shaders
-        vsBrick         = LoadVertexShader  ("InstancingAdvanced", "VSBrick");
-        fsBrick         = LoadFragmentShader("InstancingAdvanced", "PSBrick");
-        vsBrickPreview  = LoadVertexShader  ("InstancingAdvanced", "VSBrickPreview");
-        fsBrickPreview  = LoadFragmentShader("InstancingAdvanced", "PSBrickPreview");
-        vsOverlay       = LoadVertexShader  ("InstancingAdvanced", "VSOverlay");
-        fsOverlay       = LoadFragmentShader("InstancingAdvanced", "PSOverlay");
+        vsBrick         = LoadVertexShader  ("BrickPlay", "VSBrick");
+        fsBrick         = LoadFragmentShader("BrickPlay", "PSBrick");
+        vsBrickPreview  = LoadVertexShader  ("BrickPlay", "VSBrickPreview");
+        fsBrickPreview  = LoadFragmentShader("BrickPlay", "PSBrickPreview");
+        vsOverlay       = LoadVertexShader  ("BrickPlay", "VSOverlay");
+        fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
 
         // Create pipeline layout
         psoLayout = renderer->CreatePipelineLayout(
@@ -1476,8 +1476,8 @@ private:
         {
             psoDebugDesc.debugName          = "DebugPSO";
             psoDebugDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(SceneView@2):vert,float4(vertexA,vertexB)"));
-            psoDebugDesc.vertexShader       = LoadVertexShader  ("InstancingAdvanced", "VSDebug");
-            psoDebugDesc.fragmentShader     = LoadFragmentShader("InstancingAdvanced", "PSDebug");
+            psoDebugDesc.vertexShader       = LoadVertexShader  ("BrickPlay", "VSDebug");
+            psoDebugDesc.fragmentShader     = LoadFragmentShader("BrickPlay", "PSDebug");
             psoDebugDesc.primitiveTopology  = LLGL::PrimitiveTopology::LineList;
             psoDebugDesc.depth.testEnabled  = true;
         }
@@ -1552,7 +1552,7 @@ private:
         }
 
         // Write header
-        file << "# Scene file for LLGL's example 'InstancingAdvanced'" << std::endl;
+        file << "# Scene file for LLGL's example 'BrickPlay'" << std::endl;
         file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
         file << "# New brick instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
         file << "# Camera posiotion: 'c X Y Z PITCH YAW' e.g. 'i 10.2 5.7 -15.02 25.2 -15.1'" << std::endl;
@@ -2456,16 +2456,16 @@ private:
 
 };
 
-int                 Example_InstancingAdvanced::KDTreeNode::numAABBTests    = 0;
-const Gs::Vector3f  Example_InstancingAdvanced::KDTreeNode::gridScale       = { 1.0f, 0.5f, 1.0f };
-const AABB3i        Example_InstancingAdvanced::KDTreeNode::rootAABB
+int                 Example_BrickPlay::KDTreeNode::numAABBTests = 0;
+const Gs::Vector3f  Example_BrickPlay::KDTreeNode::gridScale    = { 1.0f, 0.5f, 1.0f };
+const AABB3i        Example_BrickPlay::KDTreeNode::rootAABB
 {
     Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
     Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
 };
 
 
-LLGL_IMPLEMENT_EXAMPLE(Example_InstancingAdvanced);
+LLGL_IMPLEMENT_EXAMPLE(Example_BrickPlay);
 
 
 
