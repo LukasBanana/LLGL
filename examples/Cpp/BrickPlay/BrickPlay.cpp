@@ -5,6 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include "BrickPlay.Brick.h"
+#include "BrickPlay.KDTree.h"
 #include <ExampleBase.h>
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
@@ -14,13 +16,6 @@
 // File and string streams for simple scene file writer/reader
 #include <fstream>
 #include <sstream>
-
-
-// Enable log output to debug kd-Tree construction
-#define DEBUG_KDTREE 0
-
-// Subdivide kd-Tree uniformly. This is only used for performance testing.
-#define UNIFORM_TREE_SUBDIVIDE 0
 
 
 class Example_BrickPlay : public ExampleBase
@@ -118,99 +113,7 @@ class Example_BrickPlay : public ExampleBase
     }
     uiView;
 
-    enum GridRotation : std::int32_t
-    {
-        GridRotation_0 = 0,
-        GridRotation_90,
-        GridRotation_180,
-        GridRotation_270,
-
-        GridRotation_Num,
-    };
-
-    enum BrickType : std::uint32_t
-    {
-        //        WxDxH
-        BrickType_1x1x3 = 0,
-        BrickType_1x2x3,
-        BrickType_2x2x3,
-        BrickType_4x2x3,
-        BrickType_1x1x1,
-        BrickType_1x2x1,
-        BrickType_2x2x1,
-        BrickType_4x2x1,
-        BrickType_1x1x1_Tile,
-        BrickType_2x2x1_Tile,
-        BrickType_2x2x3_Roof,
-        BrickType_2x3x3_Roof,
-
-        BrickType_Num,
-    };
-
-    // Meta data for each brick.
-    struct BrickInfo
-    {
-        std::string     label;
-        Gs::Vector3i    extent;
-    };
-
-    const std::map<BrickType, BrickInfo> brickTypeDictionary
-    {
-        { BrickType_1x1x1,      BrickInfo{ "1x1x1",    { 1, 1, 1 } } },
-        { BrickType_1x1x1_Tile, BrickInfo{ "1x1_tile", { 1, 1, 1 } } },
-        { BrickType_1x1x3,      BrickInfo{ "1x1x3",    { 1, 3, 1 } } },
-        { BrickType_1x2x1,      BrickInfo{ "1x2x1",    { 1, 1, 2 } } },
-        { BrickType_1x2x3,      BrickInfo{ "1x2x3",    { 1, 3, 2 } } },
-        { BrickType_2x2x1,      BrickInfo{ "2x2x1",    { 2, 1, 2 } } },
-        { BrickType_2x2x1_Tile, BrickInfo{ "2x2_tile", { 2, 1, 2 } } },
-        { BrickType_2x2x3,      BrickInfo{ "2x2x3",    { 2, 3, 2 } } },
-        { BrickType_2x2x3_Roof, BrickInfo{ "2x2_roof", { 2, 3, 2 } } },
-        { BrickType_2x3x3_Roof, BrickInfo{ "2x3_roof", { 2, 3, 3 } } },
-        { BrickType_4x2x1,      BrickInfo{ "4x2x1",    { 4, 1, 2 } } },
-        { BrickType_4x2x3,      BrickInfo{ "4x2x3",    { 4, 3, 2 } } },
-    };
-
-    enum BrickGroup : std::uint32_t
-    {
-        BrickGroup_Default = 0,
-        BrickGroup_WallsOnly,
-        BrickGroup_Transparent,
-
-        BrickGroup_Num,
-    };
-
-    // Returns the specified BrickType as a string representation. Used by the scene file writer.
-    const char* BrickTypeToString(BrickType t)
-    {
-        auto it = brickTypeDictionary.find(t);
-        return (it != brickTypeDictionary.end() ? it->second.label.c_str() : "");
-    }
-
-    // Returns the BrickType that's mapped from the specified string. Used by the scene file reader.
-    BrickType BrickTypeFromString(const char* s)
-    {
-        for (const std::pair<BrickType, BrickInfo>& it : brickTypeDictionary)
-        {
-            if (it.second.label == s)
-                return it.first;
-        }
-        return BrickType_Num;
-    }
-
-    static std::uint32_t CombineToBrickId(int type, int group)
-    {
-        return static_cast<std::uint32_t>(type * BrickGroup_Num + group);
-    }
-
-    static BrickType IdToBrickType(std::uint32_t groupId)
-    {
-        return static_cast<BrickType>(groupId / BrickGroup_Num);
-    }
-
-    static BrickGroup IdToBrickGroup(std::uint32_t groupId)
-    {
-        return static_cast<BrickGroup>(groupId % BrickGroup_Num);
-    }
+    const BrickDictionary brickDictionary;
 
     struct PreviewBrick
     {
@@ -294,83 +197,11 @@ class Example_BrickPlay : public ExampleBase
     std::size_t             instanceDirtyRange[2]           = { 0, 0 };
     InstanceGroup           instanceGroups[BrickType_Num * BrickGroup_Num];
 
-    InstanceGroup& GetInstanceGroup(BrickType type, BrickGroup group = BrickGroup_Default)
-    {
-        return instanceGroups[CombineToBrickId(type, group)];
-    }
-
-    struct Brick
-    {
-        static constexpr std::uint32_t groupIdBits      = 8;
-        static constexpr std::uint32_t groupIdInvalid   = (1u << groupIdBits) - 1;
-
-        static_assert((1u << groupIdBits) > BrickType_Num * BrickGroup_Num, "Not enough bits to encode `BrickType x BrickGroup` elements");
-
-        Brick() :
-            groupId       { groupIdInvalid },
-            groupInstance { 0              }
-        {
-        }
-
-        Brick(std::uint32_t groupId, std::uint32_t groupInstance) :
-            groupId       { groupId       },
-            groupInstance { groupInstance }
-        {
-        }
-
-        // Combined brick type and group.
-        std::uint32_t   groupId         : groupIdBits;
-
-        // Index into the group's instance. Use `group.firstInstance + groupInstance` to get index into global `instances` container.
-        std::uint32_t   groupInstance   : (32 - groupIdBits);
-
-        void SetType(BrickType type)
-        {
-            groupId = type * BrickGroup_Num + IdToBrickGroup(groupId);
-        }
-
-        void SetGroup(BrickGroup group)
-        {
-            groupId = IdToBrickType(groupId) * BrickGroup_Num + group;
-        }
-
-        // Returns true if this brick blocks the view from other bricks. False for invalid and transparent bricks.
-        bool IsBlocking() const
-        {
-            return (groupId != groupIdInvalid && IdToBrickGroup(groupId) != BrickGroup_Transparent);
-        }
-
-        operator bool() const
-        {
-            return (groupId != groupIdInvalid);
-        }
-
-        bool operator == (const Brick& rhs) const
-        {
-            return (groupId == rhs.groupId && groupInstance == rhs.groupInstance);
-        }
-
-        // Required for std::set. Without it, the implicit bool conversion would be used and treat all valid bricks as equal.
-        bool operator < (const Brick& rhs) const
-        {
-            if (groupId != rhs.groupId)
-                return (groupId < rhs.groupId);
-            else
-                return (groupInstance < rhs.groupInstance);
-        }
-    };
-
     struct PickerContact
     {
         Gs::Vector3f    point;
         Gs::Vector3i    normal;
         Brick           brick;
-    };
-
-    struct BrickDimensions
-    {
-        Gs::Vector3i offset;
-        Gs::Vector3i extent;
     };
 
     enum class CameraMode
@@ -387,6 +218,8 @@ class Example_BrickPlay : public ExampleBase
         Move,
         Remove,
     };
+
+    KDTreeNode grid;
 
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
@@ -443,325 +276,13 @@ class Example_BrickPlay : public ExampleBase
     }
     camera;
 
-    // Tree hierarchy for the grid of brick entires. A 4x2x3 brick for instances takes up 24 entries.
-    class KDTreeNode
-    {
-
-        enum Axis : std::uint32_t
-        {
-            Axis_X = 0,
-            Axis_Y,
-            Axis_Z,
-        };
-
-        std::unique_ptr<KDTreeNode> child[2];
-        Axis                        axis        : 2;
-        std::uint32_t               distance    : 30; // Local distance from node's logical bbMin
-        Brick                       brick;
-
-        AABB3i GetChild0AABB(Axis parentAxis, AABB3i aabbParent) const
-        {
-            aabbParent.bbMax[parentAxis] = aabbParent.bbMin[parentAxis] + static_cast<std::int32_t>(distance);
-            return aabbParent;
-        }
-
-        AABB3i GetChild1AABB(Axis parentAxis, AABB3i aabbParent) const
-        {
-            aabbParent.bbMin[parentAxis] += static_cast<std::int32_t>(distance);
-            return aabbParent;
-        }
-
-        void SubdivideAndSetLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
-        {
-            if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
-            {
-                // If we found a leaf node with AABB of size 1x1x1, put the brick into the leaf
-                this->brick = brick;
-            }
-            else
-            {
-                // Make new child nodes and subdivide
-                child[0] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
-                child[1] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
-
-                const Gs::Vector3i aabbExtent = aabb.bbMax - aabb.bbMin;
-                LLGL_VERIFY(aabbExtent.x > 0 && aabbExtent.y > 0 && aabbExtent.z > 0);
-                if (aabbExtent.x >= aabbExtent.y && aabbExtent.x >= aabbExtent.z)
-                    axis = Axis_X;
-                else if (aabbExtent.y >= aabbExtent.x && aabbExtent.y >= aabbExtent.z)
-                    axis = Axis_Y;
-                else
-                    axis = Axis_Z;
-
-                // Set distance in the center of current AABB extent
-                #if UNIFORM_TREE_SUBDIVIDE
-                distance = static_cast<std::uint32_t>(aabbExtent[axis]/2);
-                #else
-                distance = std::max(1, gridPos[axis] - aabb.bbMin[axis]);
-                #endif
-                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                    child[0]->SubdivideAndSetLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
-                else
-                    child[1]->SubdivideAndSetLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
-            }
-        }
-
-        void FindAndInsertLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
-        {
-            if (HasChildren())
-            {
-                // Shrink root AABB until we reach a leaf node
-                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                    child[0]->FindAndInsertLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
-                else
-                    child[1]->FindAndInsertLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
-            }
-            else
-            {
-                // Otherwise, keep adding sub nodes until we reach the destination grid position
-                SubdivideAndSetLeaf(gridPos, aabb, brick);
-            }
-        }
-
-        void FindAndUpdateLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, std::uint32_t newGroupInstance)
-        {
-            if (HasChildren())
-            {
-                // Shrink root AABB until we reach a leaf node
-                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                    child[0]->FindAndUpdateLeaf(gridPos, GetChild0AABB(axis, aabb), newGroupInstance);
-                else
-                    child[1]->FindAndUpdateLeaf(gridPos, GetChild1AABB(axis, aabb), newGroupInstance);
-            }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
-            {
-                // Update leaf entry if not empty
-                if (this->brick)
-                    this->brick.groupInstance = newGroupInstance;
-            }
-        }
-
-        void TryDropChildren()
-        {
-            if (!child[0]->HasChildren() && !child[0]->brick &&
-                !child[1]->HasChildren() && !child[1]->brick)
-            {
-                child[0].reset();
-                child[1].reset();
-            }
-        }
-
-        bool FindAndRemoveLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb)
-        {
-            if (HasChildren())
-            {
-                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                {
-                    if (child[0]->FindAndRemoveLeaf(gridPos, GetChild0AABB(axis, aabb)))
-                    {
-                        TryDropChildren();
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (child[1]->FindAndRemoveLeaf(gridPos, GetChild1AABB(axis, aabb)))
-                    {
-                        TryDropChildren();
-                        return true;
-                    }
-                }
-            }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
-            {
-                this->brick = {};
-                return true;
-            }
-            return false;
-        }
-
-        Brick FindLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb) const
-        {
-            if (HasChildren())
-            {
-                // Shrink root AABB until we reach a leaf node
-                if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                    return child[0]->FindLeaf(gridPos, GetChild0AABB(axis, aabb));
-                else
-                    return child[1]->FindLeaf(gridPos, GetChild1AABB(axis, aabb));
-            }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
-            {
-                // We found the leaf node
-                return this->brick;
-            }
-            else
-            {
-                // No leaf node found, return invalid brick data
-                return Brick{};
-            }
-        }
-
-        bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection = nullptr) const
-        {
-            #if DEBUG_KDTREE
-            KDTreeNode::numAABBTests++;
-            #endif
-
-            const AABB3f aabbF32
-            {
-                aabb.bbMin.Cast<float>() * KDTreeNode::gridScale,
-                aabb.bbMax.Cast<float>() * KDTreeNode::gridScale
-            };
-            return IntersectRayWithAABB(ray, aabbF32, outIntersection);
-        }
-
-        Brick FindIntersectionWithLeaf(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection) const
-        {
-            if (HasChildren())
-            {
-                // Check intersection against both child nodes' AABBs and continue down the path of the closer intersection
-                if (IntersectRayWithScaledAABB(ray, aabb))
-                {
-                    AABBIntersection childIntersect[2];
-                    Brick childBrick[2];
-
-                    auto ReturnIntersection = [&childIntersect, &childBrick, outIntersection](int childIndex) -> Brick
-                    {
-                        if (outIntersection != nullptr)
-                            *outIntersection = childIntersect[childIndex];
-                        return childBrick[childIndex];
-                    };
-
-                    childBrick[0] = child[0]->FindIntersectionWithLeaf(ray, GetChild0AABB(axis, aabb), &(childIntersect[0]));
-                    childBrick[1] = child[1]->FindIntersectionWithLeaf(ray, GetChild1AABB(axis, aabb), &(childIntersect[1]));
-
-                    if (childBrick[0] && childBrick[1])
-                    {
-                        // Continue intersection down the path of the node with the closest intersection
-                        if (childIntersect[0].interpolator < childIntersect[1].interpolator)
-                            return ReturnIntersection(0);
-                        else
-                            return ReturnIntersection(1);
-                    }
-                    else if (childBrick[0])
-                        return ReturnIntersection(0);
-                    else if (childBrick[1])
-                        return ReturnIntersection(1);
-                }
-            }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
-            {
-                // Make final intersection test against AABB of current node
-                if (IntersectRayWithScaledAABB(ray, aabb, outIntersection))
-                    return this->brick;
-            }
-            return Brick{};
-        }
-
-        unsigned NumLeafsFromRoot(const AABB3i& aabb) const
-        {
-            if (HasChildren())
-                return child[0]->NumLeafsFromRoot(GetChild0AABB(axis, aabb)) + child[1]->NumLeafsFromRoot(GetChild1AABB(axis, aabb));
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
-                return 1;
-            else
-                return 0;
-        }
-
-    public:
-
-        static const AABB3i         rootAABB;
-        static const Gs::Vector3f   gridScale;
-
-        static int                  numAABBTests;
-
-        static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
-        {
-            return
-            (
-                gridPos.x >=  KDTreeNode::rootAABB.bbMin.x &&
-                gridPos.y >=  KDTreeNode::rootAABB.bbMin.y &&
-                gridPos.z >=  KDTreeNode::rootAABB.bbMin.z &&
-                gridPos.x <   KDTreeNode::rootAABB.bbMax.x &&
-                gridPos.y <   KDTreeNode::rootAABB.bbMax.y &&
-                gridPos.z <   KDTreeNode::rootAABB.bbMax.z
-            );
-        }
-
-        KDTreeNode() :
-            axis     { Axis_X },
-            distance { 0      }
-        {
-        }
-
-        bool HasChildren() const
-        {
-            return (child[0].get() != nullptr);
-        }
-
-        void InsertLeaf(const Gs::Vector3i& gridPos, Brick brick)
-        {
-            FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
-        }
-
-        void RemoveLeaf(const Gs::Vector3i& gridPos)
-        {
-            FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
-        }
-
-        void UpdateLeaf(const Gs::Vector3i& gridPos, std::uint32_t groupInstance)
-        {
-            FindAndUpdateLeaf(gridPos, KDTreeNode::rootAABB, groupInstance);
-        }
-
-        Brick GetLeaf(const Gs::Vector3i& gridPos) const
-        {
-            // Positions outside the root AABB have no leaf. Without this check, the traversal would return an unrelated leaf.
-            if (KDTreeNode::IsInsideBoundingVolume(gridPos))
-                return FindLeaf(gridPos, KDTreeNode::rootAABB);
-            else
-                return Brick{};
-        }
-
-        Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
-        {
-            return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
-        }
-
-        unsigned NumNodes() const
-        {
-            if (HasChildren())
-                return 1 + child[0]->NumNodes() + child[1]->NumNodes();
-            else
-                return 1;
-        }
-
-        unsigned NumLeafs() const
-        {
-            return NumLeafsFromRoot(KDTreeNode::rootAABB);
-        }
-
-        // Deletes the entire tree.
-        void Reset()
-        {
-            child[0].reset();
-            child[1].reset();
-        }
-    };
-
-    KDTreeNode grid;
-
 public:
 
     Example_BrickPlay() :
         ExampleBase { "LLGL Example: Instancing Advanced" }
     {
-        projectionParams.zFar = 500.0f;
-        UpdateProjection(swapChain->GetResolution());
-
-        hasOffsetInstancing = renderer->GetRenderingCaps().features.hasOffsetInstancing;
-        ResetInstanceDirtyRange();
+        // Initialize kd-Tree vounding volume and camera projection parameters
+        InitAppConfig();
 
         // Create all graphics objects
         CreateBuffers();
@@ -788,6 +309,11 @@ public:
 private:
 
     //////////////////// SCENE CONSTRUCTION ////////////////////
+
+    InstanceGroup& GetInstanceGroup(BrickType type, BrickGroup group = BrickGroup_Default)
+    {
+        return instanceGroups[CombineToBrickId(type, group)];
+    }
 
     void MarkInstanceDirty(std::size_t first, std::size_t count = 1)
     {
@@ -1012,17 +538,11 @@ private:
         };
     }
 
-    Gs::Vector3i GetBrickExtent(BrickType type)
-    {
-        auto it = brickTypeDictionary.find(type);
-        return (it != brickTypeDictionary.end() ? it->second.extent : Gs::Vector3i{});
-    }
-
     BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation)
     {
         BrickDimensions brickDim;
 
-        brickDim.extent = GetBrickExtent(type);
+        brickDim.extent = brickDictionary.GetExtent(type);
         if (rotation == GridRotation_90 || rotation == GridRotation_270)
             std::swap(brickDim.extent.x, brickDim.extent.z);
 
@@ -1341,6 +861,24 @@ private:
         LoadBrickModel("Brick4x2x3_Glass"    , vertices, GetInstanceGroup(BrickType_4x2x3, BrickGroup_Transparent));
     }
 
+    void InitAppConfig()
+    {
+        // Store root AABB of kd-Tree
+        KDTreeNode::rootAABB = AABB3i
+        {
+            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
+            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
+        };
+
+        // Use a longer far plane for this example, since the user can pan the camera around
+        projectionParams.zFar = 500.0f;
+        UpdateProjection(swapChain->GetResolution());
+
+        // Cache feature support for offset instancing as this will be used every frame
+        hasOffsetInstancing = renderer->GetRenderingCaps().features.hasOffsetInstancing;
+        ResetInstanceDirtyRange();
+    }
+
     void CreateBuffers()
     {
         const float projZAxis = GetProjectionZAxis();
@@ -1616,7 +1154,7 @@ private:
                     if (lastWrittenBrickType != brickType)
                     {
                         lastWrittenBrickType = static_cast<BrickType>(brickType);
-                        file << "b " << BrickTypeToString(static_cast<BrickType>(brickType)) << std::endl;
+                        file << "b " << brickDictionary.TypeToString(static_cast<BrickType>(brickType)) << std::endl;
                     }
                 }
 
@@ -1739,7 +1277,7 @@ private:
                 // Parse brick type and make it current
                 std::string brickTypeStr;
                 stream >> brickTypeStr;
-                currentBrickType = BrickTypeFromString(brickTypeStr.c_str());
+                currentBrickType = brickDictionary.TypeFromString(brickTypeStr.c_str());
 
                 if (currentBrickType == BrickType_Num)
                 {
@@ -2196,7 +1734,7 @@ private:
 
     void ClampBrickGridOffset(BrickType type, std::int32_t& offset)
     {
-        const Gs::Vector3i brickExtent = GetBrickExtent(type);
+        const Gs::Vector3i brickExtent = brickDictionary.GetExtent(type);
         const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
         if (maxWidthOrDepth > 2)
         {
@@ -2456,13 +1994,9 @@ private:
 
 };
 
-int                 Example_BrickPlay::KDTreeNode::numAABBTests = 0;
-const Gs::Vector3f  Example_BrickPlay::KDTreeNode::gridScale    = { 1.0f, 0.5f, 1.0f };
-const AABB3i        Example_BrickPlay::KDTreeNode::rootAABB
-{
-    Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
-    Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
-};
+const Gs::Vector3f  KDTreeNode::gridScale    = { 1.0f, 0.5f, 1.0f };
+int                 KDTreeNode::numAABBTests = 0;
+AABB3i              KDTreeNode::rootAABB;
 
 
 LLGL_IMPLEMENT_EXAMPLE(Example_BrickPlay);
