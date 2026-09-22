@@ -24,6 +24,7 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
+    static constexpr std::uint32_t  numAllocInitialInstances    = 1;        // Number of initially allocated instances. Must be at least 1.
     static constexpr int            boundingVolume[3]           = { 100, 60, 100 };
     static constexpr float          cameraTurnSpeed             = 0.25f;
     static constexpr float          cameraMoveSpeed             = 0.25f;
@@ -35,6 +36,10 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            uiButtonFrameSize           = 3;
     static constexpr int            uiButtonMargin              = 5;
     const LLGL::ColorRGBAub         uiButtonFrameColor          = { 0, 0, 0, 255 };
+
+    static constexpr int            uiBrickThumbnailSize        = 64;
+    const LLGL::ColorRGBAub         uiBrickThumbnailBgColor     = { 180, 180, 180, 255 };
+    const LLGL::ColorRGBAub         uiMenuBgColor               = { 0, 0, 0, 180 };
 
     const char*                     sceneFilename               = "Bricks.txt";
 
@@ -49,35 +54,50 @@ class Example_BrickPlay : public ExampleBase
     };
 
     // Shaders to render brick instances, the brick preview model, and UI elements
-    LLGL::Shader*               vsBrick             = nullptr;
-    LLGL::Shader*               fsBrick             = nullptr;
-    LLGL::Shader*               vsBrickPreview      = nullptr;
-    LLGL::Shader*               fsBrickPreview      = nullptr;
-    LLGL::Shader*               vsOverlay           = nullptr;
-    LLGL::Shader*               fsOverlay           = nullptr;
+    LLGL::Shader*               vsBrick                     = nullptr;
+    LLGL::Shader*               fsBrick                     = nullptr;
+    LLGL::Shader*               vsBrickPreview              = nullptr;
+    LLGL::Shader*               fsBrickPreview              = nullptr;
+    LLGL::Shader*               vsOverlay                   = nullptr;
+    LLGL::Shader*               fsOverlay                   = nullptr;
 
-    LLGL::PipelineLayout*       psoLayout           = nullptr;
-    LLGL::PipelineState*        pso[BrickPSO_Num]   = {};
+    LLGL::PipelineLayout*       psoLayout                   = nullptr;
+    LLGL::PipelineState*        pso[BrickPSO_Num]           = {};
 
     #if DEBUG_KDTREE
-    LLGL::PipelineState*        psoDebug            = nullptr;
+    LLGL::PipelineState*        psoDebug                    = nullptr;
     #endif
 
-    LLGL::PipelineLayout*       psoUILayout         = nullptr;
-    LLGL::PipelineState*        psoUI               = nullptr;
+    LLGL::PipelineLayout*       psoUILayout                 = nullptr;
+    LLGL::PipelineState*        psoUI                       = nullptr;
 
-    LLGL::Buffer*               sceneViewCbuffer    = nullptr;
-    LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               instanceBuffer      = nullptr;
-    std::uint64_t               instanceBufferSize  = 0;
+    LLGL::Buffer*               sceneViewCbuffer            = nullptr;
+    LLGL::Buffer*               vertexBuffer                = nullptr;
+    LLGL::Buffer*               instanceBuffer              = nullptr;
+    std::uint64_t               instanceBufferSize          = 0;
 
-    LLGL::Buffer*               uiVertexBuffer      = nullptr;
-    LLGL::Buffer*               uiViewCbuffer       = nullptr;
-    LLGL::Texture*              uiBlankTexture      = nullptr;
+    LLGL::Buffer*               uiVertexBuffer              = nullptr;
+    LLGL::Buffer*               uiViewCbuffer               = nullptr;
+    LLGL::Texture*              uiBlankTexture              = nullptr;
+    LLGL::Texture*              uiBrickThumbnailTexture     = nullptr;
 
-    bool                        hasOffsetInstancing = false;
+    bool                        hasOffsetInstancing         = false;
 
-    const LLGL::ColorRGBAub     colorPalette[10]    =
+    // The scene grid stores cells with references to the brick instances.
+    // Used for scene picking, mesh optimization, and collision detection.
+    KDTreeNode                  grid;
+
+    struct UIState
+    {
+        // To avoid competing mouse interactions between scene picking and UI elements,
+        // declare a dead zone for the scene picker when the menu is active on the left and on the right.
+        // This adjusted according to screen resolution when UI elements have to shift.
+        int                     mouseDeadZoneLeft           = 0;
+        int                     mouseDeadZoneRight          = 0;
+    }
+    uiState;
+
+    const LLGL::ColorRGBAub     colorPalette[10]            =
     {
         LLGL::ColorRGBAub{ 0xFF, 0xFF, 0xFF }, // White
         LLGL::ColorRGBAub{ 0x85, 0x80, 0x85 }, // Mid gray
@@ -134,15 +154,28 @@ class Example_BrickPlay : public ExampleBase
     struct UIVertex
     {
         std::int16_t        position[2];
-        std::int16_t        texCoord[2];
+        std::uint8_t        texCoord[4];
         LLGL::ColorRGBAub   color;
 
-        void Set(int x, int y, int tx, int ty, LLGL::ColorRGBAub col)
+        void Set(int x, int y, LLGL::ColorRGBAub col)
         {
             position[0] = static_cast<std::int16_t>(x);
             position[1] = static_cast<std::int16_t>(y);
-            texCoord[0] = static_cast<std::int16_t>(tx);
-            texCoord[1] = static_cast<std::int16_t>(ty);
+            texCoord[0] = 0;
+            texCoord[1] = 0;
+            texCoord[2] = 0;
+            texCoord[3] = 0;
+            color       = col;
+        }
+
+        void Set(int x, int y, int tx, int ty, int tz, LLGL::ColorRGBAub col)
+        {
+            position[0] = static_cast<std::int16_t>(x);
+            position[1] = static_cast<std::int16_t>(y);
+            texCoord[0] = static_cast<std::uint8_t>(tx);
+            texCoord[1] = static_cast<std::uint8_t>(ty);
+            texCoord[2] = static_cast<std::uint8_t>(tz);
+            texCoord[3] = 1;
             color       = col;
         }
     };
@@ -219,8 +252,6 @@ class Example_BrickPlay : public ExampleBase
         Remove,
     };
 
-    KDTreeNode grid;
-
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
     {
@@ -287,6 +318,9 @@ public:
         // Create all graphics objects
         CreateBuffers();
         CreatePipelines();
+
+        // Render all bricks into thumbnail render-targets for the UI
+        RenderAllBrickThumbnails();
 
         // Load previoulsy saved scene or create default initial scene on failure.
         if (!LoadScene(sceneFilename))
@@ -472,6 +506,8 @@ private:
         // Update instances within the range that is marked as dirty
         if (instanceDirtyRange[0] < instanceDirtyRange[1])
         {
+            LLGL_VERIFY(instanceBuffer != nullptr);
+
             commands->UpdateBuffer(
                 *instanceBuffer,
                 instanceDirtyRange[0]*sizeof(Instance),
@@ -503,6 +539,17 @@ private:
             return &(instances[instanceIndex]);
         }
         return nullptr;
+    }
+
+    // Returns the color palette index for the specified color or -1 if not found.
+    int FindColorPaletteIndex(LLGL::ColorRGBAub color)
+    {
+        for (int i = 0; i < sizeof(colorPalette)/sizeof(colorPalette[0]); ++i)
+        {
+            if (colorPalette[i] == color)
+                return i;
+        }
+        return -1;
     }
 
     // Projects the specified screeen coordinate into a ray originating from the camera view to pick elements in the scene.
@@ -896,6 +943,10 @@ private:
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
 
+        // Create initial instance buffer
+        static_assert(numAllocInitialInstances > 0, "numAllocInitialInstances must be greater than or equal to 1");
+        ResizeInstanceBuffer(sizeof(Instance) * numAllocInitialInstances);
+
         // Create scene view constant buffer
         sceneViewCbuffer = CreateConstantBuffer(sceneView);
 
@@ -917,7 +968,7 @@ private:
         LLGL::TextureDescriptor uiBlankTexDesc;
         {
             uiBlankTexDesc.debugName            = "BlankUITexture";
-            uiBlankTexDesc.extent               = { 1, 1, 1 };
+            uiBlankTexDesc.type                 = LLGL::TextureType::Texture2DArray;
             uiBlankTexDesc.clearValue.color[0]  = 1.0f;
             uiBlankTexDesc.clearValue.color[1]  = 1.0f;
             uiBlankTexDesc.clearValue.color[2]  = 1.0f;
@@ -1039,7 +1090,7 @@ private:
         {
             // Per-vertex attributes
             LLGL::VertexAttribute{ "position", LLGL::Format::RG16SInt,   /*location:*/ 0, /*offset:*/ offsetof(UIVertex, position), /*stride:*/ sizeof(UIVertex) },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG16SInt,   /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RGBA8UInt,  /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
             LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, /*location:*/ 2, /*offset:*/ offsetof(UIVertex, color   ), /*stride:*/ sizeof(UIVertex) },
         };
 
@@ -1421,6 +1472,125 @@ private:
         commands->Draw(group.numVertices, group.firstVertex);
     }
 
+    void TransformSceneViewForThumbnail(BrickType brickType, SceneView& outView)
+    {
+        const float dist = 10.0f;
+
+        Gs::Matrix4f vMatrix;
+        Gs::RotateY(vMatrix, Gs::Deg2Rad(45.0f));
+        Gs::RotateX(vMatrix, Gs::Deg2Rad(45.0f));
+        Gs::Translate(vMatrix, Gs::Vector3f{ 0, 0, -dist });
+
+        outView.viewPos     = Gs::TransformVector(vMatrix, Gs::Vector4f{ 0, 0, 0, 1 });
+        outView.gridScale   = KDTreeNode::gridScale;
+
+        // Visually, we only want to rotate the brick, but they only support 90 degree angles.
+        // So instead, we turn the camera around it but still want the light to look like it shines straight against the brick.
+        outView.lightDir    = -Gs::Vector3f{ Gs::TransformVector(vMatrix, Gs::Vector4f{ 0, -0.25f, +1, 0 }) }.Normalized();
+
+        vMatrix.MakeInverse();
+
+        // Use orthogonal projection for brick thumbnails
+        const float volumeSize = 7.0f;
+        const Gs::Matrix4f thumbnailProjection = OrthogonalProjection(volumeSize, volumeSize, 0.1f, 50.0f);
+        outView.vpMatrix = thumbnailProjection * vMatrix;
+    }
+
+    void RenderBrickThumnail(BrickType brickType, LLGL::RenderTarget& renderTarget)
+    {
+        PreviewBrick thumbnailBrick;
+        SceneView thumbnailSceneView;
+
+        // Move camera so that the thumbnail for the current brick type is clearly visible
+        TransformSceneViewForThumbnail(brickType, thumbnailSceneView);
+        commands->UpdateBuffer(*sceneViewCbuffer, 0, &thumbnailSceneView, sizeof(thumbnailSceneView));
+
+        commands->BeginRenderPass(renderTarget);
+        {
+            commands->SetViewport(LLGL::Extent2D{ uiBrickThumbnailSize, uiBrickThumbnailSize });
+            commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.0f, 0.0f, 0.0f, 0.0f });
+
+            // Draw current thumbnail with preview brick
+            thumbnailBrick.type = static_cast<BrickType>(brickType);
+            RenderPreviewBrick(thumbnailBrick);
+        }
+        commands->EndRenderPass();
+    }
+
+    void RenderAllBrickThumbnails()
+    {
+        // In case thumbnails must be updated, delete previous texture
+        if (uiBrickThumbnailTexture != nullptr)
+        {
+            renderer->Release(*uiBrickThumbnailTexture);
+            uiBrickThumbnailTexture = nullptr;
+        }
+
+        // Create thumbnail array texture
+        LLGL::TextureDescriptor texArrayDesc;
+        {
+            texArrayDesc.debugName      = "BrickThumbnail.Texture2DArray";
+            texArrayDesc.type           = LLGL::TextureType::Texture2DArray;
+            texArrayDesc.extent         = { uiBrickThumbnailSize, uiBrickThumbnailSize, 1 };
+            texArrayDesc.arrayLayers    = BrickType_Num;                    // Each brick type gets its own slot in the array texture
+            texArrayDesc.mipLevels      = 1;                                // No MIP-maps since this is used for UI elements
+            texArrayDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;   // Don't initialize the texture since we render into it right below
+        }
+        uiBrickThumbnailTexture = renderer->CreateTexture(texArrayDesc);
+
+        // Create intermediate render-targets, one for each array layer
+        LLGL::RenderTarget* renderTargets[BrickType_Num] = {};
+
+        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        {
+            const std::string rtLabel = std::string("RenderTarget.Thumbnail_") + brickDictionary.TypeToString(static_cast<BrickType>(brickType));
+            LLGL::RenderTargetDescriptor rtDesc;
+            {
+                rtDesc.debugName                        = rtLabel.c_str();
+                rtDesc.resolution                       = { uiBrickThumbnailSize, uiBrickThumbnailSize };
+                rtDesc.samples                          = GetSampleCount();
+                rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
+                rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
+                rtDesc.resolveAttachments[0].arrayLayer = brickType;                // Render into array layer designated for current brick type
+                rtDesc.depthStencilAttachment.format    = LLGL::Format::D16UNorm;   // 16-bit depth format is enough for the thumbnails
+            }
+            renderTargets[brickType] = renderer->CreateRenderTarget(rtDesc);
+        }
+
+        // Reset preview instance to default
+        instances[0].gridPos        = {};
+        instances[0].gridRotation   = GridRotation_180;
+        instances[0].color          = {};
+
+        MarkInstanceDirty(0);
+
+        // Render bricks as thumbnails into all offscreen render-targets
+        commands->Begin();
+        {
+            FlushInstanceDirtyRange();
+
+            commands->PushDebugGroup("RenderBrickThumbnails");
+            {
+                for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+                {
+                    const std::string debugLabel = std::string("RenderThumbnail_") + brickDictionary.TypeToString(static_cast<BrickType>(brickType));
+                    commands->PushDebugGroup(debugLabel.c_str());
+                    {
+                        RenderBrickThumnail(static_cast<BrickType>(brickType), *renderTargets[brickType]);
+                    }
+                    commands->PopDebugGroup();
+                }
+            }
+            commands->PopDebugGroup();
+        }
+        commands->End();
+        commandQueue->Submit(*commands);
+
+        // Delete all intermediate render-targets, we only need the texture for UI rendering
+        for (LLGL::RenderTarget* renderTarget : renderTargets)
+            renderer->Release(*renderTarget);
+    }
+
     void FlushUIVertexBuffer()
     {
         if (uiVertexBatch.numBatchedVertices > 0)
@@ -1468,16 +1638,16 @@ private:
         // Allocate 6 vertices to draw 2 triangles
         UIVertex* verts = NewUIVertices(6);
 
-        verts[0].Set(x    , y    , -1, -1, color);
-        verts[1].Set(x + w, y    , -1, -1, color);
-        verts[2].Set(x    , y + h, -1, -1, color);
+        verts[0].Set(x    , y    , color);
+        verts[1].Set(x + w, y    , color);
+        verts[2].Set(x    , y + h, color);
 
-        verts[3].Set(x    , y + h, -1, -1, color);
-        verts[4].Set(x + w, y    , -1, -1, color);
-        verts[5].Set(x + w, y + h, -1, -1, color);
+        verts[3].Set(x    , y + h, color);
+        verts[4].Set(x + w, y    , color);
+        verts[5].Set(x + w, y + h, color);
     }
 
-    void Draw2DImage(int x, int y, LLGL::Texture* tex, LLGL::ColorRGBAub color = {})
+    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {})
     {
         SetUITexture(tex);
 
@@ -1488,13 +1658,13 @@ private:
         // Allocate 6 vertices to draw 2 triangles
         UIVertex* verts = NewUIVertices(6);
 
-        verts[0].Set(x    , y    , 0, 0, color);
-        verts[1].Set(x + w, y    , 1, 0, color);
-        verts[2].Set(x    , y + h, 0, 1, color);
+        verts[0].Set(x    , y    , 0, 0, texLayer, color);
+        verts[1].Set(x + w, y    , 1, 0, texLayer, color);
+        verts[2].Set(x    , y + h, 0, 1, texLayer, color);
 
-        verts[3].Set(x    , y + h, 0, 1, color);
-        verts[4].Set(x + w, y    , 1, 0, color);
-        verts[5].Set(x + w, y + h, 1, 1, color);
+        verts[3].Set(x    , y + h, 0, 1, texLayer, color);
+        verts[4].Set(x + w, y    , 1, 0, texLayer, color);
+        verts[5].Set(x + w, y + h, 1, 1, texLayer, color);
     }
 
     bool IsMouseInRect(int x, int y, int w, int h)
@@ -1524,18 +1694,56 @@ private:
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
     }
 
+    bool DrawUIBrickThumbnail(int x, int y, int brickType, bool isHighlighted = false)
+    {
+        int w = uiBrickThumbnailSize + uiButtonFrameSize*2;
+        int h = uiBrickThumbnailSize + uiButtonFrameSize*2;
+        const bool isSelected = IsMouseInRect(x, y, w, h);
+
+        const LLGL::ColorRGBAub brickColor = colorPalette[controller.pickedColorPaletteIndex];
+
+        if (isSelected || isHighlighted)
+        {
+            // Draw button background to highlight selection
+            Draw2DRect(x, y, w, h, uiBrickThumbnailBgColor);
+        }
+
+        // Draw thumbnail texture layer
+        Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnailTexture, brickType, brickColor);
+
+        return (isSelected && input.KeyDown(LLGL::Key::LButton));
+    }
+
     // Draws UI elements and also interacts with user input immediately.
     void DrawUIImmediateMode()
     {
         const LLGL::Extent2D& resolution = swapChain->GetResolution();
+        const int scrW = static_cast<int>(resolution.width);
         const int scrH = static_cast<int>(resolution.height);
 
-        // Draw entire color palette for the user to choose from
-        int uiPos[2] = { uiColorPickerOffset[0], uiColorPickerOffset[1] };
-        const int uiButtonAdvance = uiColorPickerSize + uiButtonFrameSize*2 + uiButtonMargin;
+        // Draw mouse dead zone as transparent background for the UI
+        Draw2DRect(0, 0, uiState.mouseDeadZoneLeft, scrH, uiMenuBgColor);
+        Draw2DRect(uiState.mouseDeadZoneRight, 0, scrW - uiState.mouseDeadZoneRight, scrH, uiMenuBgColor);
+
+        ResetMouseDeadZone(swapChain->GetResolution());
+
+        int uiPos[2], uiButtonAdvance;
+
+        // Draw entire color palette for the user to choose from on the left of the overlay
+        uiButtonAdvance = uiColorPickerSize + uiButtonFrameSize*2 + uiButtonMargin;
+        uiPos[0] = uiColorPickerOffset[0];
+        uiPos[1] = uiColorPickerOffset[1];
 
         for (int i = 0; i < sizeof(colorPalette)/sizeof(colorPalette[0]); ++i)
         {
+            if (uiPos[1] > scrH - uiButtonAdvance)
+            {
+                // Move to next color picker column
+                uiPos[0] += uiButtonAdvance;
+                uiPos[1] = uiColorPickerOffset[1];
+                uiState.mouseDeadZoneLeft += uiButtonAdvance;
+            }
+
             const bool isHighlighted = (controller.pickedColorPaletteIndex == i);
             if (DrawUIColorPicker(uiPos[0], uiPos[1], i, isHighlighted))
             {
@@ -1543,18 +1751,38 @@ private:
                 Instance& previewInstance = instances[0];
                 previewInstance.color = colorPalette[i];
                 controller.pickedColorPaletteIndex = i;
+                MarkInstanceDirty(0);
             }
 
             // Move to next UI element position
             uiPos[1] += uiButtonAdvance;
-            if (uiPos[1] > scrH - uiButtonAdvance)
-            {
-                uiPos[0] += uiButtonAdvance;
-                uiPos[1] = uiColorPickerOffset[1];
-            }
         }
 
+        // Draw brick thumbnails for the user to choose from on the right of the overlay
+        uiButtonAdvance = uiBrickThumbnailSize + uiButtonFrameSize*2 + uiButtonMargin;
+        uiPos[0] = scrW - (uiColorPickerOffset[0] + uiButtonAdvance);
+        uiPos[1] = uiColorPickerOffset[1];
 
+        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        {
+            if (uiPos[1] > scrH - uiButtonAdvance)
+            {
+                // Move to next color picker column
+                uiPos[0] -= uiButtonAdvance;
+                uiPos[1] = uiColorPickerOffset[1];
+                uiState.mouseDeadZoneRight -= uiButtonAdvance;
+            }
+
+            const bool isHighlighted = (viewOptions.previewBrick.type == brickType);
+            if (DrawUIBrickThumbnail(uiPos[0], uiPos[1], brickType, isHighlighted))
+            {
+                // Set new brick type to preview brick
+                viewOptions.previewBrick.type = static_cast<BrickType>(brickType);
+            }
+
+            // Move to next UI element position
+            uiPos[1] += uiButtonAdvance;
+        }
     }
 
     void RenderUIElements()
@@ -1715,8 +1943,8 @@ private:
             // Highlight new picked brick
             if (Instance* newBrickInstance = GetMutableBrickInstance(contact.brick))
             {
-                controller.pickedInstanceColor = newBrickInstance->color;
-                controller.pickedBrick = contact.brick;
+                controller.pickedInstanceColor      = newBrickInstance->color;
+                controller.pickedBrick              = contact.brick;
 
                 newBrickInstance->color = LLGL::ColorRGBAub{ 255, 0, 0, 255 };
             }
@@ -1859,7 +2087,12 @@ private:
                         viewOptions.previewBrick.type           = IdToBrickType(selectedBrick.groupId);
                         viewOptions.previewBrick.isTransparent  = (IdToBrickGroup(selectedBrick.groupId) == BrickGroup_Transparent);
                         previewInstance.color                   = selectedInstance->color;
-                        previewInstance.gridRotation            = selectedInstance->gridRotation; 
+                        previewInstance.gridRotation            = selectedInstance->gridRotation;
+
+                        // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
+                        int colorPaletteIndex = FindColorPaletteIndex(selectedInstance->color);
+                        if (colorPaletteIndex >= 0 && colorPaletteIndex < sizeof(colorPalette)/sizeof(colorPalette[0]))
+                            controller.pickedColorPaletteIndex = colorPaletteIndex;
                     }
 
                     // Change to edit mode that allows the user to move the selected brick around.
@@ -1876,6 +2109,9 @@ private:
 
     void ProcessUserInput()
     {
+        const LLGL::Offset2D mousePos = input.GetMousePosition();
+        const bool isMouseInDeadZone = (mousePos.x < uiState.mouseDeadZoneLeft || mousePos.x > uiState.mouseDeadZoneRight);
+
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
 
@@ -1890,7 +2126,8 @@ private:
 
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
-        if (controller.cameraMode == CameraMode::None)
+        // Only use mouse editing if the mouse isn't in the dead zone, i.e. covered by UI elements
+        if (controller.cameraMode == CameraMode::None && !isMouseInDeadZone)
         {
             if (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
                 ProcessEditModeAddOrMove();
@@ -1928,7 +2165,14 @@ private:
         uiView.pMatrix = Gs::ProjectionMatrix4f::Planar(static_cast<float>(resolution.width), static_cast<float>(resolution.height));
     }
 
-    //////////////////// MAIN LOOP ////////////////////
+    void ResetMouseDeadZone(const LLGL::Extent2D& resolution)
+    {
+        // Update mouse dead zone
+        uiState.mouseDeadZoneLeft   = uiColorPickerOffset[0]*2 + uiColorPickerSize + uiButtonFrameSize*2;
+        uiState.mouseDeadZoneRight  = static_cast<int>(resolution.width) - (uiColorPickerOffset[0]*2 + uiBrickThumbnailSize + uiButtonFrameSize*2);
+    }
+
+    //////////////////// MAIN CALLBACKS ////////////////////
 
     void OnDrawFrame(float /*dt*/) override
     {
@@ -1968,11 +2212,14 @@ private:
                     commands->PopDebugGroup();
                 }
 
-                commands->PushDebugGroup("RenderUIElements");
+                if (controller.editMode != EditMode::None)
                 {
-                    RenderUIElements();
+                    commands->PushDebugGroup("RenderUIElements");
+                    {
+                        RenderUIElements();
+                    }
+                    commands->PopDebugGroup();
                 }
-                commands->PopDebugGroup();
 
                 #if DEBUG_KDTREE
                 if (controller.editMode == EditMode::Remove)
