@@ -161,9 +161,19 @@ struct Brick
         groupId = type * BrickGroup_Num + IdToBrickGroup(groupId);
     }
 
+    BrickType GetType() const
+    {
+        return IdToBrickType(groupId);
+    }
+
     void SetGroup(BrickGroup group)
     {
         groupId = IdToBrickType(groupId) * BrickGroup_Num + group;
+    }
+
+    BrickGroup GetGroup() const
+    {
+        return IdToBrickGroup(groupId);
     }
 
     // Returns true if this brick blocks the view from other bricks. False for invalid and transparent bricks.

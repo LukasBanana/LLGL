@@ -19,3 +19,12 @@ sources:
       - entry: "PSOverlay"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es, spirv, metal]
+
+        # Only translate outline shaders for Desktop OpenGL and Vulkan, where line width rendering is supported.
+        # Other backends need to fallback to simplified highlighted rendering.
+      - entry: "VSBrickOutline"
+        profile: "vs_4_0"
+        targets: [glsl140core, spirv]
+      - entry: "PSBrickOutline"
+        profile: "ps_4_0"
+        targets: [glsl140core, spirv]

@@ -24,14 +24,17 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr std::uint32_t  numAllocInitialInstances    = 1;        // Number of initially allocated instances. Must be at least 1.
+    static constexpr std::uint32_t  numAllocInitialInstances    = 1;                    // Number of initially allocated instances. Must be at least 1.
     static constexpr int            boundingVolume[3]           = { 100, 60, 100 };
     static constexpr float          cameraTurnSpeed             = 0.25f;
     static constexpr float          cameraMoveSpeed             = 0.25f;
-    static constexpr float          previewBlockOffsetY         = 0.075f;   // Y-axis world position offset for the preview block before putting it into place
+    static constexpr float          previewBlockOffsetY         = 0.075f;               // Y-axis world position offset for the preview block before putting it into place
 
-    static constexpr std::uint32_t  maxUIVertexBatchSize        = 64 * 3;   // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
-    static constexpr int            uiColorPickerSize           = 25;       // Size (in pixels) of each color picker button
+    static constexpr float          silhouetteColor[3]          = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
+    static constexpr float          silhouetteWidth             = 5.0f;
+
+    static constexpr std::uint32_t  maxUIVertexBatchSize        = 64 * 3;               // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
+    static constexpr int            uiColorPickerSize           = 25;                   // Size (in pixels) of each color picker button
     static constexpr int            uiColorPickerOffset[2]      = { 15, 15 };
     static constexpr int            uiButtonFrameSize           = 3;
     static constexpr int            uiButtonMargin              = 5;
@@ -60,6 +63,9 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Shader*               fsBrickPreview              = nullptr;
     LLGL::Shader*               vsOverlay                   = nullptr;
     LLGL::Shader*               fsOverlay                   = nullptr;
+    LLGL::Shader*               vsOutline                   = nullptr;
+    LLGL::Shader*               gsOutline                   = nullptr;
+    LLGL::Shader*               fsOutline                   = nullptr;
 
     LLGL::PipelineLayout*       psoLayout                   = nullptr;
     LLGL::PipelineState*        pso[BrickPSO_Num]           = {};
@@ -67,6 +73,12 @@ class Example_BrickPlay : public ExampleBase
     #if DEBUG_KDTREE
     LLGL::PipelineState*        psoDebug                    = nullptr;
     #endif
+
+    LLGL::PipelineLayout*       psoOutlineWriteStencilLayout    = nullptr;
+    LLGL::PipelineState*        psoOutlineWriteStencil          = nullptr;
+
+    LLGL::PipelineLayout*       psoOutlineWriteColorLayout      = nullptr;
+    LLGL::PipelineState*        psoOutlineWriteColor            = nullptr;
 
     LLGL::PipelineLayout*       psoUILayout                 = nullptr;
     LLGL::PipelineState*        psoUI                       = nullptr;
@@ -123,7 +135,11 @@ class Example_BrickPlay : public ExampleBase
         // Preview shaders only
         float           worldOffsetY    = 0.0f;
         std::int32_t    isDithering     = 0;
-        float           pad1[2]         = {};
+
+        // Outline shaders only
+        float           viewportSize[2] = {};
+        float           outlineColor[3] = { silhouetteColor[0], silhouetteColor[1], silhouetteColor[2] };
+        float           outlineWidth    = silhouetteWidth;
     }
     sceneView;
 
@@ -251,6 +267,16 @@ class Example_BrickPlay : public ExampleBase
         Move,
         Remove,
     };
+
+    // Determines what mode to use to render the highlighting of a selected scene object.
+    enum class SelectionRenderMode
+    {
+        NativeLineWidth,    // Native line-width support to render silhouette
+        EmulatedLineWidth,  // Emulated line-width support using a geometry shader (for D3D).
+        Simplified,         // Simplified highlighting without a silhouette (for WebGL).
+    };
+
+    SelectionRenderMode selectionRenderMode = SelectionRenderMode::Simplified;
 
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
@@ -496,7 +522,7 @@ private:
         Instance oldInstance;
         if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
         {
-            const std::uint32_t newGroupId = CombineToBrickId(IdToBrickType(brick.groupId), newGroup);
+            const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
             (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.color);
         }
     }
@@ -655,7 +681,7 @@ private:
     bool IsBrickBlockedTopAndBottom(Brick brick)
     {
         if (const Instance* instance = GetBrickInstance(brick))
-            return IsBrickTypeBlockedTopAndBottom(IdToBrickType(brick.groupId), instance->gridPos, instance->gridRotation);
+            return IsBrickTypeBlockedTopAndBottom(brick.GetType(), instance->gridPos, instance->gridRotation);
         else
             return false;
     }
@@ -665,9 +691,9 @@ private:
     void NotifyBrickChange(Brick brick, bool isBlocking)
     {
         // Only bother to change groups for brick types that support the walls-only group
-        if (GetInstanceGroup(IdToBrickType(brick), BrickGroup_WallsOnly).numVertices > 0)
+        if (GetInstanceGroup(brick.GetType(), BrickGroup_WallsOnly).numVertices > 0)
         {
-            const BrickGroup group = IdToBrickGroup(brick.groupId);
+            const BrickGroup group = brick.GetGroup();
             if (group == BrickGroup_Default && isBlocking)
             {
                 // If brick is now blocked top and bottom, switch to walls-only mesh
@@ -743,7 +769,7 @@ private:
         // Get brick dimension and apply rotation
         if (const Instance* instance = GetBrickInstance(brick))
         {
-            const BrickType brickType = IdToBrickType(brick.groupId);
+            const BrickType brickType = brick.GetType();
             const BrickDimensions brickDim = GetBrickDimensions(brickType, instance->gridRotation);
 
             // Insert brick entries into grid
@@ -922,8 +948,16 @@ private:
         UpdateProjection(swapChain->GetResolution());
 
         // Cache feature support for offset instancing as this will be used every frame
-        hasOffsetInstancing = renderer->GetRenderingCaps().features.hasOffsetInstancing;
+        const LLGL::RenderingCapabilities& caps = renderer->GetRenderingCaps();
+        hasOffsetInstancing = caps.features.hasOffsetInstancing;
         ResetInstanceDirtyRange();
+
+        if (caps.limits.lineWidthRange[1] >= 2.0f)
+            selectionRenderMode = SelectionRenderMode::NativeLineWidth;
+        else if (caps.features.hasGeometryShaders)
+            selectionRenderMode = SelectionRenderMode::EmulatedLineWidth;
+        else
+            selectionRenderMode = SelectionRenderMode::Simplified;
     }
 
     void CreateBuffers()
@@ -990,7 +1024,7 @@ private:
         vsOverlay       = LoadVertexShader  ("BrickPlay", "VSOverlay");
         fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
 
-        // Create pipeline layout
+        // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@2):vert:frag,"
@@ -1085,10 +1119,8 @@ private:
             )
         );
 
-        // Specify vertex formats
         const LLGL::VertexAttribute uiVertexAttribs[] =
         {
-            // Per-vertex attributes
             LLGL::VertexAttribute{ "position", LLGL::Format::RG16SInt,   /*location:*/ 0, /*offset:*/ offsetof(UIVertex, position), /*stride:*/ sizeof(UIVertex) },
             LLGL::VertexAttribute{ "texCoord", LLGL::Format::RGBA8UInt,  /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
             LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, /*location:*/ 2, /*offset:*/ offsetof(UIVertex, color   ), /*stride:*/ sizeof(UIVertex) },
@@ -1106,6 +1138,89 @@ private:
         }
         psoUI = renderer->CreatePipelineState(psoUIDesc);
         ReportPSOErrors(psoUI);
+
+        if (selectionRenderMode != SelectionRenderMode::Simplified)
+        {
+            // Create PSO to render silhouette outline when selecting bricks
+            psoOutlineWriteStencilLayout = renderer->CreatePipelineLayout(
+                LLGL::Parse(
+                    "cbuffer(SceneView@2):vert,"
+                )
+            );
+
+            vsOutline = LoadVertexShader  ("BrickPlay", "VSBrickOutline");
+            fsOutline = LoadFragmentShader("BrickPlay", "PSBrickOutline");
+
+            // Create PSO to write stencil to mask out pixels that are inside the silhouette
+            LLGL::GraphicsPipelineDescriptor psoOutlineDesc;
+            {
+                psoOutlineDesc.debugName                        = "EmulatedLineWidthPSO-WriteStencil";
+                psoOutlineDesc.pipelineLayout                   = psoOutlineWriteStencilLayout;
+                psoOutlineDesc.inputVertexAttribs               = vertexAttribs;
+                psoOutlineDesc.renderPass                       = swapChain->GetRenderPass();
+                psoOutlineDesc.vertexShader                     = vsOutline;
+
+                // Enable stenicil test and write out a reference value of 1
+                psoOutlineDesc.stencil.testEnabled              = true;
+                psoOutlineDesc.stencil.front.depthPassOp        = LLGL::StencilOp::Replace;
+                psoOutlineDesc.stencil.front.compareOp          = LLGL::CompareOp::AlwaysPass;
+                psoOutlineDesc.stencil.front.readMask           = 0x0;
+                psoOutlineDesc.stencil.front.writeMask          = 0x1;
+                psoOutlineDesc.stencil.front.reference          = 0x1;
+
+                psoOutlineDesc.rasterizer.cullMode              = LLGL::CullMode::Back;
+                psoOutlineDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
+                psoOutlineDesc.blend.targets[0].colorMask       = LLGL::ColorMaskFlags::Zero;
+            }
+            psoOutlineWriteStencil = renderer->CreatePipelineState(psoOutlineDesc);
+            ReportPSOErrors(psoOutlineWriteStencil);
+
+            // Create PSO to read stencil and write color output for silhouette
+            if (selectionRenderMode == SelectionRenderMode::NativeLineWidth)
+            {
+                // Use native support for line width
+                psoOutlineWriteColorLayout = renderer->CreatePipelineLayout(
+                    LLGL::Parse(
+                        "cbuffer(SceneView@2):vert:frag,"
+                    )
+                );
+
+                psoOutlineDesc.pipelineLayout                   = psoOutlineWriteColorLayout;
+                psoOutlineDesc.rasterizer.lineWidth             = silhouetteWidth;
+                psoOutlineDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
+            }
+            else
+            {
+                // Emulate line width using a geometry shader
+                gsOutline = LoadGeometryShader("BrickPlay", "GSBrickOutline");
+
+                psoOutlineWriteColorLayout = renderer->CreatePipelineLayout(
+                    LLGL::Parse(
+                        "cbuffer(SceneView@2):vert:geom:frag,"
+                    )
+                );
+
+                psoOutlineDesc.pipelineLayout                   = psoOutlineWriteColorLayout;
+                psoOutlineDesc.geometryShader                   = gsOutline;
+            }
+
+            {
+                psoOutlineDesc.debugName                        = "EmulatedLineWidthPSO-WriteColor";
+                psoOutlineDesc.fragmentShader                   = fsOutline;
+
+                // Enable stencil test and read a reference value of 1, in which case no pixels are written to mask out pixels inside the silhouette
+                psoOutlineDesc.stencil.testEnabled              = true;
+                psoOutlineDesc.stencil.front.depthPassOp        = LLGL::StencilOp::Keep;
+                psoOutlineDesc.stencil.front.compareOp          = LLGL::CompareOp::NotEqual;
+                psoOutlineDesc.stencil.front.readMask           = 0x1;
+                psoOutlineDesc.stencil.front.writeMask          = 0x0;
+                psoOutlineDesc.stencil.front.reference          = 0x1;
+
+                psoOutlineDesc.blend.targets[0].colorMask       = LLGL::ColorMaskFlags::All;
+            }
+            psoOutlineWriteColor = renderer->CreatePipelineState(psoOutlineDesc);
+            ReportPSOErrors(psoOutlineWriteColor);
+        }
     }
 
     void ValidateInstances()
@@ -1457,7 +1572,6 @@ private:
             return;
 
         commands->SetPipelineState(*pso[BrickPSO_Preview]);
-
         commands->SetResource(0, *sceneViewCbuffer);
 
         // Set vertex buffers (vertices and instances).
@@ -1470,6 +1584,47 @@ private:
         commands->SetVertexBuffers(2, vertexBufferViews);
 
         commands->Draw(group.numVertices, group.firstVertex);
+    }
+
+    void RenderSilhouette(Brick brick)
+    {
+        const Instance* brickInstance = GetBrickInstance(brick);
+        if (brickInstance == nullptr)
+            return;
+
+        const InstanceGroup& visibleGroup = GetInstanceGroup(brick.GetType(), BrickGroup_Default);
+        if (visibleGroup.numVertices == 0)
+            return;
+
+        const InstanceGroup& pickedGroup = instanceGroups[brick.groupId];
+        if (pickedGroup.numVertices == 0)
+            return;
+
+        // Bind vertex buffers for single instance. No need to rely on offset instancing support, just always use vertex buffer offset.
+        LLGL::VertexBufferView vertexBufferViews[] =
+        {
+            LLGL::VertexBufferView{ vertexBuffer },
+            LLGL::VertexBufferView{ instanceBuffer, 0, (pickedGroup.firstInstance + brick.groupInstance) * sizeof(Instance) },
+        };
+        commands->SetVertexBuffers(2, vertexBufferViews);
+
+        // First render stencil reference to mask out pixels inside the silhouette. This is the regular brick model.
+        commands->PushDebugGroup("RenderSilhouetteStencil");
+        {
+            commands->SetPipelineState(*psoOutlineWriteStencil);
+            commands->SetResource(0, *sceneViewCbuffer);
+            commands->Draw(visibleGroup.numVertices, visibleGroup.firstVertex);
+        }
+        commands->PopDebugGroup();
+
+        // Now render silhouette by rendering with a wireframe model with thick lines
+        commands->PushDebugGroup("RenderSilhouetteColor");
+        {
+            commands->SetPipelineState(*psoOutlineWriteColor);
+            commands->SetResource(0, *sceneViewCbuffer);
+            commands->Draw(visibleGroup.numVertices, visibleGroup.firstVertex);
+        }
+        commands->PopDebugGroup();
     }
 
     void TransformSceneViewForThumbnail(BrickType brickType, SceneView& outView)
@@ -1551,8 +1706,8 @@ private:
                 rtDesc.samples                          = GetSampleCount();
                 rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
                 rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
-                rtDesc.resolveAttachments[0].arrayLayer = brickType;                // Render into array layer designated for current brick type
-                rtDesc.depthStencilAttachment.format    = LLGL::Format::D16UNorm;   // 16-bit depth format is enough for the thumbnails
+                rtDesc.resolveAttachments[0].arrayLayer = brickType;                            // Render into array layer designated for current brick type
+                rtDesc.depthStencilAttachment.format    = swapChain->GetDepthStencilFormat();   // Use same depth format for thumbnails as for swap-chain (to make PSOs happy)
             }
             renderTargets[brickType] = renderer->CreateRenderTarget(rtDesc);
         }
@@ -1673,11 +1828,16 @@ private:
         return (mousePos.x >= x && mousePos.x <= x + w && mousePos.y >= y && mousePos.y <= y + h);
     }
 
+    bool IsSelectedByMouse(int x, int y, int w, int h)
+    {
+        return (controller.cameraMode == CameraMode::None && IsMouseInRect(x, y, w, h));
+    }
+
     bool DrawUIColorPicker(int x, int y, int paletteIndex, bool isHighlighted = false)
     {
         int w = uiColorPickerSize + uiButtonFrameSize*2;
         int h = uiColorPickerSize + uiButtonFrameSize*2;
-        const bool isSelected = IsMouseInRect(x, y, w, h);
+        const bool isSelected = IsSelectedByMouse(x, y, w, h);
 
         if (isSelected || isHighlighted)
         {
@@ -1698,7 +1858,7 @@ private:
     {
         int w = uiBrickThumbnailSize + uiButtonFrameSize*2;
         int h = uiBrickThumbnailSize + uiButtonFrameSize*2;
-        const bool isSelected = IsMouseInRect(x, y, w, h);
+        const bool isSelected = IsSelectedByMouse(x, y, w, h);
 
         const LLGL::ColorRGBAub brickColor = colorPalette[controller.pickedColorPaletteIndex];
 
@@ -2084,8 +2244,8 @@ private:
                     ResetPreviouslySelectedBrick();
                     Instance& previewInstance = instances[0];
                     {
-                        viewOptions.previewBrick.type           = IdToBrickType(selectedBrick.groupId);
-                        viewOptions.previewBrick.isTransparent  = (IdToBrickGroup(selectedBrick.groupId) == BrickGroup_Transparent);
+                        viewOptions.previewBrick.type           = selectedBrick.GetType();
+                        viewOptions.previewBrick.isTransparent  = (selectedBrick.GetGroup() == BrickGroup_Transparent);
                         previewInstance.color                   = selectedInstance->color;
                         previewInstance.gridRotation            = selectedInstance->gridRotation;
 
@@ -2149,16 +2309,21 @@ private:
     void UpdateSceneAndUIView()
     {
         // Update common scene view states
-        sceneView.viewPos       = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
-        sceneView.vpMatrix      = projection * camera.vMatrix;
+        sceneView.viewPos           = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
+        sceneView.vpMatrix          = projection * camera.vMatrix;
 
-        sceneView.gridScale     = KDTreeNode::gridScale;
+        sceneView.gridScale         = KDTreeNode::gridScale;
 
-        sceneView.lightDir      = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
+        sceneView.lightDir          = Gs::Vector3f{ -0.2f, +0.4f, -1.0f }.Normalized();
 
         // Update preview shader states
-      //sceneView.worldOffsetY  = previewBlockOffsetY;
-        sceneView.isDithering   = (viewOptions.previewBrick.isBlocked ? 1 : 0);
+      //sceneView.worldOffsetY      = previewBlockOffsetY;
+        sceneView.isDithering       = (viewOptions.previewBrick.isBlocked ? 1 : 0);
+
+        // Update outline shader states
+        const LLGL::Extent2D& viewportSize = swapChain->GetResolution();
+        sceneView.viewportSize[0]   = static_cast<float>(viewportSize.width);
+        sceneView.viewportSize[1]   = static_cast<float>(viewportSize.height);
 
         // Update planar projection for UI elements
         const LLGL::Extent2D resolution = swapChain->GetResolution();
@@ -2194,7 +2359,8 @@ private:
 
             commands->BeginRenderPass(*swapChain);
             {
-                commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
+                // Clear all buffers. Stencil might be used for silhouette rendering.
+                commands->Clear(LLGL::ClearFlags::All, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
                 commands->PushDebugGroup("RenderBrickInstances");
@@ -2208,6 +2374,15 @@ private:
                     commands->PushDebugGroup("RenderPreviewBrick");
                     {
                         RenderPreviewBrick(viewOptions.previewBrick);
+                    }
+                    commands->PopDebugGroup();
+                }
+
+                if (controller.editMode == EditMode::Remove)
+                {
+                    commands->PushDebugGroup("RenderSilhouette");
+                    {
+                        RenderSilhouette(controller.pickedBrick);
                     }
                     commands->PopDebugGroup();
                 }
