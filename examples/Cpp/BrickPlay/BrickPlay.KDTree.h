@@ -12,6 +12,8 @@
 #include "BrickPlay.Brick.h"
 #include <GeometryUtils.h>
 #include <memory>
+#include <set>
+#include <functional>
 
 
  // Enable log output to debug kd-Tree construction
@@ -26,6 +28,9 @@
 class KDTreeNode
 {
 
+    // Function callback to notify the collider about a contact with a brick.
+    using OnCollisionContact = std::function<void(Brick, const Gs::Vector3f& contactPoint)>;
+
     enum Axis : std::uint32_t
     {
         Axis_X = 0,
@@ -38,15 +43,15 @@ class KDTreeNode
     std::uint32_t               distance    : 30; // Local distance from node's logical bbMin
     Brick                       brick;
 
-    AABB3i GetChild0AABB(Axis parentAxis, AABB3i aabbParent) const
+    AABB3i GetChild0AABB(AABB3i aabbParent) const
     {
-        aabbParent.bbMax[parentAxis] = aabbParent.bbMin[parentAxis] + static_cast<std::int32_t>(distance);
+        aabbParent.bbMax[axis] = aabbParent.bbMin[axis] + static_cast<std::int32_t>(distance);
         return aabbParent;
     }
 
-    AABB3i GetChild1AABB(Axis parentAxis, AABB3i aabbParent) const
+    AABB3i GetChild1AABB(AABB3i aabbParent) const
     {
-        aabbParent.bbMin[parentAxis] += static_cast<std::int32_t>(distance);
+        aabbParent.bbMin[axis] += static_cast<std::int32_t>(distance);
         return aabbParent;
     }
 
@@ -79,9 +84,9 @@ class KDTreeNode
             distance = std::max(1, gridPos[axis] - aabb.bbMin[axis]);
             #endif
             if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                child[0]->SubdivideAndSetLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
+                child[0]->SubdivideAndSetLeaf(gridPos, GetChild0AABB(aabb), brick);
             else
-                child[1]->SubdivideAndSetLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
+                child[1]->SubdivideAndSetLeaf(gridPos, GetChild1AABB(aabb), brick);
         }
     }
 
@@ -91,9 +96,9 @@ class KDTreeNode
         {
             // Shrink root AABB until we reach a leaf node
             if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                child[0]->FindAndInsertLeaf(gridPos, GetChild0AABB(axis, aabb), brick);
+                child[0]->FindAndInsertLeaf(gridPos, GetChild0AABB(aabb), brick);
             else
-                child[1]->FindAndInsertLeaf(gridPos, GetChild1AABB(axis, aabb), brick);
+                child[1]->FindAndInsertLeaf(gridPos, GetChild1AABB(aabb), brick);
         }
         else
         {
@@ -108,9 +113,9 @@ class KDTreeNode
         {
             // Shrink root AABB until we reach a leaf node
             if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                child[0]->FindAndUpdateLeaf(gridPos, GetChild0AABB(axis, aabb), newGroupInstance);
+                child[0]->FindAndUpdateLeaf(gridPos, GetChild0AABB(aabb), newGroupInstance);
             else
-                child[1]->FindAndUpdateLeaf(gridPos, GetChild1AABB(axis, aabb), newGroupInstance);
+                child[1]->FindAndUpdateLeaf(gridPos, GetChild1AABB(aabb), newGroupInstance);
         }
         else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
         {
@@ -136,7 +141,7 @@ class KDTreeNode
         {
             if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
             {
-                if (child[0]->FindAndRemoveLeaf(gridPos, GetChild0AABB(axis, aabb)))
+                if (child[0]->FindAndRemoveLeaf(gridPos, GetChild0AABB(aabb)))
                 {
                     TryDropChildren();
                     return true;
@@ -144,7 +149,7 @@ class KDTreeNode
             }
             else
             {
-                if (child[1]->FindAndRemoveLeaf(gridPos, GetChild1AABB(axis, aabb)))
+                if (child[1]->FindAndRemoveLeaf(gridPos, GetChild1AABB(aabb)))
                 {
                     TryDropChildren();
                     return true;
@@ -165,9 +170,9 @@ class KDTreeNode
         {
             // Shrink root AABB until we reach a leaf node
             if (gridPos[axis] < aabb.bbMin[axis] + static_cast<std::int32_t>(distance))
-                return child[0]->FindLeaf(gridPos, GetChild0AABB(axis, aabb));
+                return child[0]->FindLeaf(gridPos, GetChild0AABB(aabb));
             else
-                return child[1]->FindLeaf(gridPos, GetChild1AABB(axis, aabb));
+                return child[1]->FindLeaf(gridPos, GetChild1AABB(aabb));
         }
         else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
         {
@@ -212,8 +217,8 @@ class KDTreeNode
                     return childBrick[childIndex];
                 };
 
-                childBrick[0] = child[0]->FindIntersectionWithLeaf(ray, GetChild0AABB(axis, aabb), &(childIntersect[0]));
-                childBrick[1] = child[1]->FindIntersectionWithLeaf(ray, GetChild1AABB(axis, aabb), &(childIntersect[1]));
+                childBrick[0] = child[0]->FindIntersectionWithLeaf(ray, GetChild0AABB(aabb), &(childIntersect[0]));
+                childBrick[1] = child[1]->FindIntersectionWithLeaf(ray, GetChild1AABB(aabb), &(childIntersect[1]));
 
                 if (childBrick[0] && childBrick[1])
                 {
@@ -238,10 +243,26 @@ class KDTreeNode
         return Brick{};
     }
 
+    void FindPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadius2, const AABB3i& aabb, std::set<Brick>& outColliderBricks) const
+    {
+        if (GetSqDistanceToAABB(colliderPoint, aabb) <= colliderRadius2*colliderRadius2)
+        {
+            if (HasChildren())
+            {
+                child[0]->FindPotentialColliderBricks(colliderPoint, colliderRadius2, GetChild0AABB(aabb), outColliderBricks);
+                child[1]->FindPotentialColliderBricks(colliderPoint, colliderRadius2, GetChild1AABB(aabb), outColliderBricks);
+            }
+            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
+            {
+                outColliderBricks.insert(this->brick);
+            }
+        }
+    }
+
     unsigned NumLeafsFromRoot(const AABB3i& aabb) const
     {
         if (HasChildren())
-            return child[0]->NumLeafsFromRoot(GetChild0AABB(axis, aabb)) + child[1]->NumLeafsFromRoot(GetChild1AABB(axis, aabb));
+            return child[0]->NumLeafsFromRoot(GetChild0AABB(aabb)) + child[1]->NumLeafsFromRoot(GetChild1AABB(aabb));
         else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
             return 1;
         else
@@ -306,6 +327,32 @@ public:
     Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
     {
         return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
+    }
+
+    float GetSqDistanceToAABB(const Gs::Vector3f& point, const AABB3i& aabb) const
+    {
+        const Gs::Vector3f closestPointOnAABB
+        {
+            Gs::Clamp(point.x, static_cast<float>(aabb.bbMin.x), static_cast<float>(aabb.bbMax.x)),
+            Gs::Clamp(point.y, static_cast<float>(aabb.bbMin.y), static_cast<float>(aabb.bbMax.y)),
+            Gs::Clamp(point.z, static_cast<float>(aabb.bbMin.z), static_cast<float>(aabb.bbMax.z)),
+        };
+        return Gs::DistanceSq(closestPointOnAABB, point);
+    }
+
+    void ResolveCollision(Gs::Vector3f& colliderPoint, float colliderRadius, const OnCollisionContact& onCollision = nullptr) const
+    {
+        // Find all potential bricks to collide with
+        std::set<Brick> colliderBricks;
+        FindPotentialColliderBricks(colliderPoint, colliderRadius*2.0f, KDTreeNode::rootAABB, colliderBricks);
+
+        // Resolve collisions against AABB faces
+
+
+        // Now resolve collisions against AABB edges and corners
+
+
+
     }
 
     unsigned NumNodes() const

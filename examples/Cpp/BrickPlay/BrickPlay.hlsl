@@ -4,10 +4,11 @@ cbuffer SceneView : register(b2)
 {
     float4x4    vpMatrix;
     float3      gridScale;
-    float       pad0;
-    float4      viewPos;
-    float3      lightDir;
     float       specularPower;  // Blinn-phong specular exponent (usual values between 16 and 90)
+    float4      viewPos;
+    float4      ambientLight;
+    float4      diffuseLight[2];
+    float4      lightDir[2];
 
     // Preview shaders only
     float       worldOffsetY;   // Y-axis for preview world offset
@@ -86,23 +87,32 @@ void VSBrick(VertexIn inp, out VertexOut outp)
     BrickBaseTransform(inp, outp, (float3)0.0);
 }
 
-float BlinnPhongShading(float3 worldPos, float3 normal)
+float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3 color)
 {
-    const float ambient = 0.2;
-    float3 lightVec = normalize(lightDir.xyz);
     float3 viewDir = normalize(viewPos.xyz - worldPos);
     float3 halfVec = normalize(lightVec + viewDir);
     float NdotL = saturate(dot(normal, lightVec));
     float NdotH = saturate(dot(normal, halfVec));
-    float diffuse = lerp(ambient, 1.0, NdotL);
+    float diffuse = NdotL;
     float specular = pow(NdotH, specularPower);
-    return diffuse + specular;
+    return color * (diffuse + specular * NdotL);
+}
+
+float3 ComputeLighting(float3 worldPos, float3 normal)
+{
+    float3 lighting = ambientLight;
+
+    [unroll]
+    for (int i = 0; i < 2; ++i)
+        lighting += BlinnPhongShading(worldPos, normal, lightDir[i].xyz, diffuseLight[i].xyz);
+
+    return lighting;
 }
 
 float4 PSBrick(VertexOut inp) : SV_Target
 {
     // Apply simple lighting 
-    float lighting = BlinnPhongShading(inp.worldPos, normalize(inp.normal));
+    float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
 
@@ -125,7 +135,7 @@ float4 PSBrickPreview(VertexOut inp) : SV_Target
     }
 
     // Apply simple lighting 
-    float lighting = BlinnPhongShading(inp.worldPos, normalize(inp.normal));
+    float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
 
