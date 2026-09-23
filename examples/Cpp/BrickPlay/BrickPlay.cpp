@@ -27,7 +27,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            boundingVolume[3]           = { 100, 60, 100 };
     static constexpr float          cameraTurnSpeed             = 0.25f;
     static constexpr float          cameraMoveSpeed             = 0.25f;
-    static constexpr float          cameraCollisionRadius       = 1.0f;
+    static constexpr float          cameraCollisionRadius       = 1.5f;
     static constexpr float          previewBlockOffsetY         = 0.075f;               // Y-axis world position offset for the preview block before putting it into place
 
     static constexpr float          silhouetteColor[3]          = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
@@ -46,6 +46,8 @@ class Example_BrickPlay : public ExampleBase
 
     static constexpr float          uiThumbnailMinVolumeSize    = 3.0f;                 // Minimum size for a bounding volume of brick thumbnails.
 
+    static constexpr int            planeSubdivisions           = 1;
+
     const char*                     sceneFilename               = "Bricks.txt";
 
     enum BrickPSO
@@ -59,21 +61,23 @@ class Example_BrickPlay : public ExampleBase
     };
 
     // Shaders to render brick instances, the brick preview model, and UI elements
-    LLGL::Shader*               vsBrick                     = nullptr;
-    LLGL::Shader*               fsBrick                     = nullptr;
-    LLGL::Shader*               vsBrickPreview              = nullptr;
-    LLGL::Shader*               fsBrickPreview              = nullptr;
-    LLGL::Shader*               vsOverlay                   = nullptr;
-    LLGL::Shader*               fsOverlay                   = nullptr;
-    LLGL::Shader*               vsOutline                   = nullptr;
-    LLGL::Shader*               gsOutline                   = nullptr;
-    LLGL::Shader*               fsOutline                   = nullptr;
+    LLGL::Shader*               vsBrick                         = nullptr;
+    LLGL::Shader*               fsBrick                         = nullptr;
+    LLGL::Shader*               vsBrickPreview                  = nullptr;
+    LLGL::Shader*               fsBrickPreview                  = nullptr;
+    LLGL::Shader*               vsOverlay                       = nullptr;
+    LLGL::Shader*               fsOverlay                       = nullptr;
+    LLGL::Shader*               vsOutline                       = nullptr;
+    LLGL::Shader*               gsOutline                       = nullptr;
+    LLGL::Shader*               fsOutline                       = nullptr;
+    LLGL::Shader*               vsPlane                         = nullptr;
+    LLGL::Shader*               fsPlane                         = nullptr;
 
-    LLGL::PipelineLayout*       psoLayout                   = nullptr;
-    LLGL::PipelineState*        pso[BrickPSO_Num]           = {};
+    LLGL::PipelineLayout*       psoLayout                       = nullptr;
+    LLGL::PipelineState*        pso[BrickPSO_Num]               = {};
 
     #if DEBUG_KDTREE
-    LLGL::PipelineState*        psoDebug                    = nullptr;
+    LLGL::PipelineState*        psoDebug                        = nullptr;
     #endif
 
     LLGL::PipelineLayout*       psoOutlineWriteStencilLayout    = nullptr;
@@ -84,6 +88,9 @@ class Example_BrickPlay : public ExampleBase
 
     LLGL::PipelineLayout*       psoUILayout                     = nullptr;
     LLGL::PipelineState*        psoUI                           = nullptr;
+
+    LLGL::PipelineLayout*       psoPlaneLayout                  = nullptr;
+    LLGL::PipelineState*        psoPlane[2]                     = {};
 
     LLGL::Buffer*               sceneViewCbuffer                = nullptr;
     LLGL::Buffer*               vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
@@ -155,6 +162,10 @@ class Example_BrickPlay : public ExampleBase
         float           viewportSize[2] = {};
         float           outlineColor[3] = { silhouetteColor[0], silhouetteColor[1], silhouetteColor[2] };
         float           outlineWidth    = silhouetteWidth;
+
+        // Plane shaders only
+        float           planeNormal[3]  = { 0.0f, 1.0f, 0.0f };
+        float           pad0;
     }
     sceneView;
 
@@ -178,6 +189,36 @@ class Example_BrickPlay : public ExampleBase
         PreviewBrick    previewBrick;
     }
     viewOptions;
+
+    struct PlaneVertex
+    {
+        Gs::Vector3f worldPos;
+    };
+
+    struct PlaneModel
+    {
+        static constexpr int            maxNumFaces             = planeSubdivisions * planeSubdivisions;
+        static constexpr int            maxNumVertices          = maxNumFaces * 5;
+        static constexpr int            maxNumIndices           = maxNumFaces * 3 * 3;
+        static constexpr std::uint64_t  meshBufferIndexOffset   = sizeof(PlaneVertex) * PlaneModel::maxNumVertices;
+
+        std::vector<PlaneVertex>    vertices;
+        std::vector<std::uint16_t>  indices;
+
+        std::uint32_t               numVertices = 0;
+        std::uint32_t               numIndices  = 0;
+
+        LLGL::Buffer*               meshBuffer  = nullptr;
+        LLGL::Texture*              colorMap    = nullptr;
+    }
+    planeModel;
+
+    // Brick vertex strucutre for brick instances. They are untextured, solid-colored bricks, so they don't need texture coordinates.
+    struct BrickVertex
+    {
+        Gs::Vector3f position;
+        Gs::Vector3f normal;
+    };
 
     // UI element vertex structure. Pixel-based coordinates are stored as 16-bit integers since the screen won't be larger than 2^15-1 pixels.
     struct UIVertex
@@ -221,13 +262,6 @@ class Example_BrickPlay : public ExampleBase
         LLGL::Texture*              cachedTexture       = nullptr;
     }
     uiVertexBatch;
-
-    // Vertex strucutre for brick instances. They are untextured, solid-colored bricks, so they don't need texture coordinates.
-    struct Vertex
-    {
-        float position[3];
-        float normal[3];
-    };
 
     enum class CameraMode
     {
@@ -325,7 +359,7 @@ public:
         InitAppConfig();
 
         // Create all graphics objects
-        CreateBuffers();
+        CreateResources();
         if (!CreatePipelines())
             return;
 
@@ -399,7 +433,7 @@ private:
         };
     }
 
-    void LoadBrickModel(const char* basename, std::vector<Vertex>& vertices, BrickMesh& outMesh)
+    void LoadBrickModel(const char* basename, std::vector<BrickVertex>& vertices, BrickMesh& outMesh)
     {
         LLGL::Log::Printf("Load brick model: %s\n", basename);
 
@@ -410,23 +444,17 @@ private:
 
         vertices.resize(vertices.size() + intermediateVertices.size());
 
-        auto ConvertVertex = [](Vertex& dst, const TexturedVertex& src) -> void
+        auto ConvertVertex = [](BrickVertex& dst, const TexturedVertex& src) -> void
         {
-            auto ConvertVector = [](float (&vout)[3], const Gs::Vector3f& vin) -> void
-            {
-                vout[0] = vin.x;
-                vout[1] = vin.y;
-                vout[2] = vin.z;
-            };
-            ConvertVector(dst.position, src.position);
-            ConvertVector(dst.normal, src.normal);
+            dst.position    = src.position;
+            dst.normal      = src.normal;
         };
 
         for (std::uint32_t i = 0; i < outMesh.numVertices; ++i)
             ConvertVertex(vertices[outMesh.firstVertex + i], intermediateVertices[i]);
     }
 
-    void LoadAllBrickModels(std::vector<Vertex>& vertices)
+    void LoadAllBrickModels(std::vector<BrickVertex>& vertices)
     {
         LoadBrickModel("Brick1x1x1"          , vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x1));
         LoadBrickModel("Brick1x1x1_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x1, BrickGroup_WallsOnly));
@@ -487,23 +515,23 @@ private:
             selectionRenderMode = SelectionRenderMode::Simplified;
     }
 
-    void CreateBuffers()
+    void CreateResources()
     {
         const float projZAxis = GetProjectionZAxis();
 
-        std::vector<Vertex> vertices;
+        std::vector<BrickVertex> vertices;
         LoadAllBrickModels(vertices);
 
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
         {
             vertexBufferDesc.debugName = "BrickVertexBuffer";
-            vertexBufferDesc.size      = sizeof(Vertex) * vertices.size() + sizeof(Instance);
-            vertexBufferDesc.stride    = sizeof(Vertex);
+            vertexBufferDesc.size      = sizeof(BrickVertex) * vertices.size() + sizeof(Instance);
+            vertexBufferDesc.stride    = sizeof(BrickVertex);
             vertexBufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         vertexAndPreviewInstanceBuffer  = renderer->CreateBuffer(vertexBufferDesc);
-        previewInstanceBufferOffset     = sizeof(Vertex) * vertices.size();
+        previewInstanceBufferOffset     = sizeof(BrickVertex) * vertices.size();
 
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, vertices.data(), previewInstanceBufferOffset);
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
@@ -536,6 +564,22 @@ private:
             uiBlankTexDesc.clearValue.color[3]  = 1.0f;
         }
         uiBlankTexture = renderer->CreateTexture(uiBlankTexDesc);
+
+        // Initialize plane model
+        LLGL::BufferDescriptor planeBufferDesc;
+        {
+            planeBufferDesc.debugName   = "PlaneMeshBuffer";
+            planeBufferDesc.size        = sizeof(PlaneVertex) * PlaneModel::maxNumVertices + sizeof(std::uint16_t) * PlaneModel::maxNumIndices;
+            planeBufferDesc.stride      = sizeof(PlaneVertex);
+            planeBufferDesc.format      = LLGL::Format::R16UInt;
+            planeBufferDesc.bindFlags   = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::IndexBuffer;
+        }
+        planeModel.meshBuffer = renderer->CreateBuffer(planeBufferDesc);
+
+        planeModel.vertices.resize(PlaneModel::maxNumVertices);
+        planeModel.indices.resize(PlaneModel::maxNumIndices);
+
+        planeModel.colorMap = LoadTexture("BrickHead.png");
     }
 
     bool CreatePipelines()
@@ -547,6 +591,8 @@ private:
         fsBrickPreview  = LoadFragmentShader("BrickPlay", "PSBrickPreview");
         vsOverlay       = LoadVertexShader  ("BrickPlay", "VSOverlay");
         fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
+        vsPlane         = LoadVertexShader  ("BrickPlay", "VSPlane");
+        fsPlane         = LoadFragmentShader("BrickPlay", "PSPlane");
 
         // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
@@ -559,8 +605,8 @@ private:
         const LLGL::VertexAttribute vertexAttribs[] =
         {
             // Per-vertex attributes
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1, /*offset:*/ offsetof(Vertex, normal  ), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(BrickVertex, position), /*stride:*/ sizeof(BrickVertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1, /*offset:*/ offsetof(BrickVertex, normal  ), /*stride:*/ sizeof(BrickVertex), /*slot:*/ 0 },
 
             // Per-instance attributes
             LLGL::VertexAttribute{ "gridPos",  LLGL::Format::RGBA32SInt, /*location:*/ 2, /*offset:*/ offsetof(Instance, gridPos), /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
@@ -743,6 +789,48 @@ private:
             if (ReportPSOErrors(psoOutlineWriteColor))
                 return false;
         }
+
+        // Create PSO for plane rendering
+        psoPlaneLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneView@2):vert:frag,"
+                "texture(planeTexture@3):frag,"
+                "sampler(planeSampler@4){}:frag," // Default static sampler
+
+                "sampler<planeTexture, planeSampler>(s_planeTextureplaneSampler@3),"
+            )
+        );
+
+        const LLGL::VertexAttribute planeVertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "worldPos", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(PlaneVertex, worldPos), /*stride:*/ sizeof(PlaneVertex) },
+        };
+
+        // Create graphics PSO for default scene rendering
+        LLGL::GraphicsPipelineDescriptor psoPlaneDesc;
+        {
+            psoPlaneDesc.debugName                      = "PlanePSO";
+            psoPlaneDesc.renderPass                     = swapChain->GetRenderPass();
+            psoPlaneDesc.inputVertexAttribs             = planeVertexAttribs;
+            psoPlaneDesc.vertexShader                   = vsPlane;
+            psoPlaneDesc.fragmentShader                 = fsPlane;
+            psoPlaneDesc.pipelineLayout                 = psoPlaneLayout;
+            psoPlaneDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
+            psoPlaneDesc.depth.testEnabled              = true;
+            psoPlaneDesc.depth.writeEnabled             = true;
+            psoPlaneDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+        };
+        psoPlane[0] = renderer->CreatePipelineState(psoPlaneDesc);
+        if (ReportPSOErrors(psoPlane[0]))
+            return false;
+
+        // Create extra PSO for wireframe mode
+        {
+            psoPlaneDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
+        }
+        psoPlane[1] = renderer->CreatePipelineState(psoPlaneDesc);
+        if (ReportPSOErrors(psoPlane[1]))
+            return false;
 
         return true;
     }
@@ -1022,7 +1110,7 @@ private:
         }
     }
 
-    void RenderBrickScene(const BrickScene& scene)
+    void RenderBrickInstances(const BrickScene& scene)
     {
         // Exit early if no instances have been allocated yet
         LLGL::Buffer* instanceBuffer = scene.GetInstanceBuffer();
@@ -1064,6 +1152,168 @@ private:
                     commands->PopDebugGroup();
                 }
             }
+        }
+    }
+
+    void UpdatePlaneGeometryForViewFrustum()
+    {
+        // Reset plane model state
+        planeModel.numVertices = 0;
+        planeModel.numIndices = 0;
+
+        // Transform vertices into frustum for all subdivision segments
+        const Gs::Matrix4f frustumMatrix = (projection * camera.vMatrix).Inverse();
+
+        // NDC-to-world unprojection requires a perspective divide by W; a plain Vector4->Vector3 cast only truncates .xyz
+        auto UnprojectNDC = [&frustumMatrix](float x, float y, float z) -> Gs::Vector3f
+        {
+            const Gs::Vector4f clip = frustumMatrix * Gs::Vector4f{ x, y, z, 1.0f };
+            return Gs::Vector3f{ clip.x, clip.y, clip.z } * (1.0f / clip.w);
+        };
+
+        const Gs::Vector3f frustumLeftTop     = UnprojectNDC(-1.0f, +1.0f, +1.0f);
+        const Gs::Vector3f frustumRightTop    = UnprojectNDC(+1.0f, +1.0f, +1.0f);
+        const Gs::Vector3f frustumRightBottom = UnprojectNDC(+1.0f, -1.0f, +1.0f);
+        const Gs::Vector3f frustumLeftBottom  = UnprojectNDC(-1.0f, -1.0f, +1.0f);
+
+        // Eye is the camera's world position; no need to unproject the clip-space origin for this
+        const Gs::Vector3f eye = camera.position;
+
+        static_assert(planeSubdivisions > 0, "`planeSubdivisions` must be greater than 0");
+        static_assert(planeSubdivisions <= 16, "`planeSubdivisions` should not be too large; consider keeping it at or below 16!");
+
+        Gs::Vector3f segmentedVertices[planeSubdivisions + 1][planeSubdivisions + 1];
+
+        const float planeSubdivisionsInv = 1.0f / static_cast<float>(planeSubdivisions);
+        for (int x = 0; x <= planeSubdivisions; ++x)
+        {
+            float u = static_cast<float>(x) * planeSubdivisionsInv;
+
+            const Gs::Vector3f horizontalTop    = Gs::Lerp(frustumLeftTop,    frustumRightTop,    u);
+            const Gs::Vector3f horizontalBottom = Gs::Lerp(frustumLeftBottom, frustumRightBottom, u);
+
+            for (int y = 0; y <= planeSubdivisions; ++y)
+            {
+                float v = static_cast<float>(y) * planeSubdivisionsInv;
+
+                segmentedVertices[x][y] = Gs::Lerp(horizontalTop, horizontalBottom, v);
+            }
+        }
+
+        auto GetPlaneIntersection = [](const Gs::Vector3f& eye, const Gs::Vector3f& vert) -> Gs::Vector3f
+        {
+            float interpolator = 0.0f;
+            const Ray3f ray{ eye, (vert - eye).Normalized() };
+
+            const Gs::Vector3f planeNormal{ 0, 1, 0 };
+            if (IntersectRayWithPlane(ray, planeNormal, 0.0f, &interpolator))
+                return ray.Interpolate(interpolator);
+            else
+                return eye;
+        };
+
+        // Now generate plane vertices by projecting them into the scene
+        for (int x = 0; x < planeSubdivisions; ++x)
+        {
+            for (int y = 0; y < planeSubdivisions; ++y)
+            {
+                Gs::Vector3f inVertices[4], outVertices[5];
+
+                inVertices[0] = segmentedVertices[x    ][y    ];
+                inVertices[1] = segmentedVertices[x + 1][y    ];
+                inVertices[2] = segmentedVertices[x + 1][y + 1];
+                inVertices[3] = segmentedVertices[x    ][y + 1];
+
+                int numOutVertices = 0;
+                for (int i = 0; i < 4; ++i)
+                {
+                    const Gs::Vector3f& vert = inVertices[i];
+                    const Gs::Vector3f& prevVert = inVertices[(i - 1) & 3];
+
+                    if (vert.y > 0.0f)
+                    {
+                        if (prevVert.y <= 0.0f)
+                        {
+                            float t = prevVert.y / (prevVert.y - vert.y);
+                            outVertices[numOutVertices++] = Gs::Lerp(prevVert, vert, t);
+                        }
+                    }
+                    else
+                    {
+                        if (prevVert.y > 0.0f)
+                        {
+                            float t = prevVert.y / (prevVert.y - vert.y);
+                            outVertices[numOutVertices++] = Gs::Lerp(prevVert, vert, t);
+                        }
+
+                        // Add intersection between eye-to-vertex with plane
+                        outVertices[numOutVertices++] = GetPlaneIntersection(eye, vert);
+                    }
+                }
+
+                // Too many or not enough output vertices -> skip segment
+                if (numOutVertices < 3 || numOutVertices > 5)
+                    continue;
+
+                // Write output vertices
+                for (int i = 0; i < numOutVertices; ++i)
+                {
+                    PlaneVertex& planeVert = planeModel.vertices[planeModel.numVertices + i];
+                    planeVert.worldPos = { outVertices[i].x, 0.0f, outVertices[i].z };
+                }
+
+                // Write output indices
+                for (int i = 0; i + 2 < numOutVertices; ++i)
+                {
+                    planeModel.indices[planeModel.numIndices + i*3    ] = planeModel.numVertices;
+                    planeModel.indices[planeModel.numIndices + i*3 + 1] = planeModel.numVertices + i + 1;
+                    planeModel.indices[planeModel.numIndices + i*3 + 2] = planeModel.numVertices + i + 2;
+                }
+
+                planeModel.numVertices += numOutVertices;
+                planeModel.numIndices += (numOutVertices - 2)*3;
+            }
+        }
+
+        // Upload both vertex and index data to the GPU
+        if (planeModel.numVertices > 0 && planeModel.numIndices > 0)
+        {
+            commands->UpdateBuffer(*planeModel.meshBuffer, 0, planeModel.vertices.data(), sizeof(PlaneVertex) * planeModel.numVertices);
+            commands->UpdateBuffer(*planeModel.meshBuffer, PlaneModel::meshBufferIndexOffset, planeModel.indices.data(), sizeof(std::uint16_t) * planeModel.numIndices);
+        }
+    }
+
+    void RenderPlane()
+    {
+        // If there is nothing to render, exit early
+        if (planeModel.colorMap == nullptr)
+            return;
+
+        commands->SetPipelineState(*psoPlane[viewOptions.showWireframe ? 1 : 0]);
+        commands->SetResource(0, *sceneViewCbuffer);
+        commands->SetResource(1, *planeModel.colorMap);
+
+        commands->SetIndexBuffer(*planeModel.meshBuffer, LLGL::Format::R16UInt, PlaneModel::meshBufferIndexOffset);
+        commands->SetVertexBuffer(*planeModel.meshBuffer);
+
+        commands->DrawIndexed(planeModel.numIndices, 0);
+    }
+
+    void RenderBrickScene(const BrickScene& scene)
+    {
+        commands->PushDebugGroup("RenderBrickInstances");
+        {
+            RenderBrickInstances(scene);
+        }
+        commands->PopDebugGroup();
+
+        if (planeModel.numIndices > 0)
+        {
+            commands->PushDebugGroup("RenderPlane");
+            {
+                RenderPlane();
+            }
+            commands->PopDebugGroup();
         }
     }
 
@@ -1800,6 +2050,8 @@ private:
 
     void UpdateSceneAndUIView()
     {
+        camera.UpdateTransform();
+
         // Update common scene view states
         sceneView.viewPos           = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
         sceneView.vpMatrix          = projection * camera.vMatrix;
@@ -1837,8 +2089,6 @@ private:
         KDTreeNode::numAABBTests = 0;
         #endif
 
-        camera.UpdateTransform();
-
         ProcessUserInput();
         UpdateSceneAndUIView();
 
@@ -1852,6 +2102,8 @@ private:
 
             commands->UpdateBuffer(*sceneViewCbuffer, 0, &sceneView, sizeof(sceneView));
             commands->UpdateBuffer(*uiViewCbuffer, 0, &uiView, sizeof(uiView));
+
+            UpdatePlaneGeometryForViewFrustum();
 
             currentScene->FlushInstanceDirtyRange(*commands);
 

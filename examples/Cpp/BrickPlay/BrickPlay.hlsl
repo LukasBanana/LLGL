@@ -18,6 +18,9 @@ cbuffer SceneView : register(b2)
     float2      viewportSize;   // Viewport size in pixels; converts outlineWidth into NDC space
     float3      outlineColor;   // Color used for silhouette outlines
     float       outlineWidth;   // Thickness silhouettes outlines
+
+    // Plane shaders only
+    float3      planeNormal;   // Normal vector for the plane model
 };
 
 struct VertexIn
@@ -100,7 +103,7 @@ float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3
 
 float3 ComputeLighting(float3 worldPos, float3 normal)
 {
-    float3 lighting = ambientLight;
+    float3 lighting = ambientLight.rgb;
 
     [unroll]
     for (int i = 0; i < 2; ++i)
@@ -111,7 +114,7 @@ float3 ComputeLighting(float3 worldPos, float3 normal)
 
 float4 PSBrick(VertexOut inp) : SV_Target
 {
-    // Apply simple lighting 
+    // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
@@ -134,7 +137,7 @@ float4 PSBrickPreview(VertexOut inp) : SV_Target
         clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
     }
 
-    // Apply simple lighting 
+    // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
@@ -243,6 +246,41 @@ void GSBrickOutline(triangle OutlineVertexOut inp[3], inout TriangleStream<Outli
 float4 PSBrickOutline() : SV_Target
 {
     return float4(outlineColor, 1);
+}
+
+
+// PLANE SHADERS
+
+struct PlaneVertexIn
+{
+    float3 worldPos : WORLDPOS;
+};
+
+struct PlaneVertexOut
+{
+    float4 position : SV_Position;
+    float3 worldPos : WORLDPOS;
+};
+
+void VSPlane(PlaneVertexIn inp, out PlaneVertexOut outp)
+{
+    outp.position = mul(vpMatrix, float4(inp.worldPos, 1.0));
+    outp.worldPos = inp.worldPos;
+}
+
+Texture2D planeTexture : register(t3);
+SamplerState planeSampler : register(s4);
+
+float4 PSPlane(PlaneVertexOut inp) : SV_Target
+{
+    // Sample texture
+    float4 texColor = planeTexture.Sample(planeSampler, inp.worldPos.xz);
+
+    //TODO: add parallex mapping
+
+    // Apply simple lighting
+    float3 lighting = ComputeLighting(inp.worldPos, normalize(planeNormal));
+    return float4(texColor.rgb * lighting, texColor.a);
 }
 
 
