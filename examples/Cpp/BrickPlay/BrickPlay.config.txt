@@ -1,5 +1,8 @@
 # Configuration file for LLGL's example 'BrickPlay'
 
+# Describe maximum scene bounding volume size
+v 100 60 100
+
 # Describe the color palette
 p FFFFFF # White
 p 858085 # Mid gray

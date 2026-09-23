@@ -40,7 +40,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            uiButtonMargin              = 5;
     const LLGL::ColorRGBAub         uiButtonFrameColor          = { 0, 0, 0, 255 };
 
-    static constexpr int            uiBrickThumbnailSize        = 48;//64;
+    static constexpr int            uiBrickThumbnailSize        = 48;
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor     = { 180, 180, 180, 255 };
     const LLGL::ColorRGBAub         uiMenuBgColor               = { 0, 0, 0, 180 };
 
@@ -297,24 +297,11 @@ class Example_BrickPlay : public ExampleBase
             Gs::RotateX(rotation, Gs::Deg2Rad(pitch));
             position += rotation * direction;
 
-#if 0 //TODO
-            // Resolve collision
-            if (collisionTree != nullptr)
+            // Resolve collisions
+            if (collisionScene != nullptr)
             {
-                const Gs::Vector3f closestPoint = collisionTree->ClosestPointTo(position);
-                if (Gs::DistanceSq(position, closestPoint) < cameraCollisionRadius*cameraCollisionRadius)
-                {
-                    // Collision detected -> push camera out of the contact point
-                    const Gs::Vector3f contactVector = position - closestPoint;
-                    const float contactVectorLen = contactVector.Length();
-                    if (contactVectorLen > Gs::Epsilon<float>())
-                    {
-                        const float impact = cameraCollisionRadius - contactVectorLen;
-                        position += contactVector * (impact / contactVectorLen);
-                    }
-                }
+                collisionScene->ResolveCollision(position, cameraCollisionRadius);
             }
-#endif
         }
 
         void UpdateTransform()

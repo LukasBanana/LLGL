@@ -14,6 +14,7 @@
 #include <ExampleBase.h>
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Container/SmallVector.h>
 #include <set>
 
 
@@ -22,6 +23,9 @@ class BrickScene
 {
 
 public:
+
+    // Function callback to notify the collider about a contact with a brick.
+    using OnCollisionContact = std::function<void(Brick, const Gs::Vector3f& contactPoint, float impact)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
@@ -249,6 +253,97 @@ public:
             }
         }
         return false;
+    }
+
+    void ResolveCollision(Gs::Vector3f& colliderPoint, float colliderRadius, const OnCollisionContact& onCollision = nullptr) const
+    {
+        // First resolve hard-coded collision with floor plane
+        if (colliderPoint.y < colliderRadius)
+            colliderPoint.y = colliderRadius;
+
+        // Find all potential bricks to collide with
+        std::set<Brick> colliderBricks = grid.GatherPotentialColliderBricks(colliderPoint, colliderRadius);
+
+        // Resolve collisions against AABB faces
+        auto GetBrickAABB = [this](Brick brick, const Instance& instance, AABB3i& aabb)
+        {
+            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance.gridRotation);
+
+            aabb.bbMin = instance.gridPos + brickDim.offset;
+            aabb.bbMax = aabb.bbMin + brickDim.extent;
+        };
+
+        auto ClosestPointOnAABBFace = [](const Gs::Vector3f& point, const AABB3i& aabb, Gs::Vector3f& outClosestPoint) -> bool
+        {
+            int numAxisInside = 0;
+
+            for (int axis = 0; axis < 3; ++axis)
+            {
+                const float axisMin = aabb.bbMin[axis] * KDTreeNode::gridScale[axis];
+                if (point[axis] < axisMin)
+                {
+                    outClosestPoint[axis] = axisMin;
+                }
+                else
+                {
+                    const float axisMax = aabb.bbMax[axis] * KDTreeNode::gridScale[axis];
+                    if (point[axis] > axisMax)
+                    {
+                        outClosestPoint[axis] = axisMax;
+                    }
+                    else
+                    {
+                        outClosestPoint[axis] = point[axis];
+                        ++numAxisInside;
+                    }
+                }
+            }
+
+            // Exactly two axes have to be inside for the closest point to be perpendicular to one of the AABB faces 
+            return (numAxisInside == 2);
+        };
+
+        auto ResolveContact = [&colliderPoint, &onCollision, colliderRadius](Brick brick, const Gs::Vector3f& closestPoint) -> void
+        {
+            const float distSq = Gs::DistanceSq(colliderPoint, closestPoint);
+            if (distSq < colliderRadius*colliderRadius)
+            {
+                // Resolve collision by pushing input collider out of the impacted contact and invoke the contact callback
+                Gs::Vector3f contactVector = colliderPoint - closestPoint;
+                const float contactVectorLen = contactVector.Length();
+                const float impact = colliderRadius - contactVectorLen;
+
+                contactVector.Normalize();
+                colliderPoint += contactVector * impact;
+
+                if (onCollision)
+                    onCollision(brick, closestPoint, impact);
+            }
+        };
+
+        AABB3i brickAABB;
+        Gs::Vector3f closestPoint;
+
+        for (Brick brick : colliderBricks)
+        {
+            if (const Instance* instance = GetBrickInstance(brick))
+            {
+                GetBrickAABB(brick, *instance, brickAABB);
+                if (ClosestPointOnAABBFace(colliderPoint, brickAABB, closestPoint))
+                    ResolveContact(brick, closestPoint);
+            }
+        }
+
+        // Now resolve collisions against AABB edges and corners
+        for (Brick brick : colliderBricks)
+        {
+            if (const Instance* instance = GetBrickInstance(brick))
+            {
+                GetBrickAABB(brick, *instance, brickAABB);
+                closestPoint = ClosestPointOnAABB(colliderPoint, brickAABB);
+                ResolveContact(brick, closestPoint);
+            }
+        }
     }
 
     void ValidateInstances()

@@ -23,13 +23,13 @@
 #define UNIFORM_TREE_SUBDIVIDE  0
 
 
+inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& aabb);
+
+
 // Tree hierarchy for the grid of brick cells. A standard 4x2x3 brick for example takes up 24 cells in the grid.
 // There are few exceptions like the roof tiles, which have one row of cells that are skipped, to allow users to place other bricks more closely above them.
 class KDTreeNode
 {
-
-    // Function callback to notify the collider about a contact with a brick.
-    using OnCollisionContact = std::function<void(Brick, const Gs::Vector3f& contactPoint)>;
 
     enum Axis : std::uint32_t
     {
@@ -243,14 +243,14 @@ class KDTreeNode
         return Brick{};
     }
 
-    void FindPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadius2, const AABB3i& aabb, std::set<Brick>& outColliderBricks) const
+    void FindPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadiusSq2, const AABB3i& aabb, std::set<Brick>& outColliderBricks) const
     {
-        if (GetSqDistanceToAABB(colliderPoint, aabb) <= colliderRadius2*colliderRadius2)
+        if (GetSqDistanceToAABB(colliderPoint, aabb) <= colliderRadiusSq2)
         {
             if (HasChildren())
             {
-                child[0]->FindPotentialColliderBricks(colliderPoint, colliderRadius2, GetChild0AABB(aabb), outColliderBricks);
-                child[1]->FindPotentialColliderBricks(colliderPoint, colliderRadius2, GetChild1AABB(aabb), outColliderBricks);
+                child[0]->FindPotentialColliderBricks(colliderPoint, colliderRadiusSq2, GetChild0AABB(aabb), outColliderBricks);
+                child[1]->FindPotentialColliderBricks(colliderPoint, colliderRadiusSq2, GetChild1AABB(aabb), outColliderBricks);
             }
             else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
             {
@@ -331,28 +331,15 @@ public:
 
     float GetSqDistanceToAABB(const Gs::Vector3f& point, const AABB3i& aabb) const
     {
-        const Gs::Vector3f closestPointOnAABB
-        {
-            Gs::Clamp(point.x, static_cast<float>(aabb.bbMin.x), static_cast<float>(aabb.bbMax.x)),
-            Gs::Clamp(point.y, static_cast<float>(aabb.bbMin.y), static_cast<float>(aabb.bbMax.y)),
-            Gs::Clamp(point.z, static_cast<float>(aabb.bbMin.z), static_cast<float>(aabb.bbMax.z)),
-        };
-        return Gs::DistanceSq(closestPointOnAABB, point);
+        return Gs::DistanceSq(point, ClosestPointOnAABB(point, aabb));
     }
 
-    void ResolveCollision(Gs::Vector3f& colliderPoint, float colliderRadius, const OnCollisionContact& onCollision = nullptr) const
+    std::set<Brick> GatherPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadius) const
     {
-        // Find all potential bricks to collide with
         std::set<Brick> colliderBricks;
-        FindPotentialColliderBricks(colliderPoint, colliderRadius*2.0f, KDTreeNode::rootAABB, colliderBricks);
-
-        // Resolve collisions against AABB faces
-
-
-        // Now resolve collisions against AABB edges and corners
-
-
-
+        const float colliderRadius2 = colliderRadius*2.0f;
+        FindPotentialColliderBricks(colliderPoint, colliderRadius2*colliderRadius2, KDTreeNode::rootAABB, colliderBricks);
+        return colliderBricks;
     }
 
     unsigned NumNodes() const
@@ -374,6 +361,21 @@ public:
         child[0].reset();
         child[1].reset();
     }
+};
+
+
+inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& aabb)
+{
+    Gs::Vector3f closestPoint;
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        closestPoint[axis] = Gs::Clamp(
+            point[axis],
+            static_cast<float>(aabb.bbMin[axis]) * KDTreeNode::gridScale[axis],
+            static_cast<float>(aabb.bbMax[axis]) * KDTreeNode::gridScale[axis]
+        );
+    }
+    return closestPoint;
 };
 
 
