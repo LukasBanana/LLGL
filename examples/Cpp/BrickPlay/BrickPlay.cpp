@@ -70,7 +70,7 @@ class Example_BrickPlay : public ExampleBase
         BrickPSO_Num,
     };
 
-    // Shaders to render brick instances, the brick preview model, and UI elements
+    // Shaders to render brick instances, the brick preview model, UI elements, an infinite plne for the floor, and the skybox
     LLGL::Shader*               vsBrick                         = nullptr;
     LLGL::Shader*               fsBrick                         = nullptr;
     LLGL::Shader*               vsBrickPreview                  = nullptr;
@@ -82,6 +82,8 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Shader*               fsOutline                       = nullptr;
     LLGL::Shader*               vsPlane                         = nullptr;
     LLGL::Shader*               fsPlane                         = nullptr;
+    LLGL::Shader*               vsSkybox                        = nullptr;
+    LLGL::Shader*               fsSkybox                        = nullptr;
 
     LLGL::PipelineLayout*       psoLayout                       = nullptr;
     LLGL::PipelineState*        pso[BrickPSO_Num]               = {};
@@ -102,6 +104,9 @@ class Example_BrickPlay : public ExampleBase
     LLGL::PipelineLayout*       psoPlaneLayout                  = nullptr;
     LLGL::PipelineState*        psoPlane[2]                     = {};
 
+    LLGL::PipelineLayout*       psoSkyLayout                    = nullptr;
+    LLGL::PipelineState*        psoSky                          = nullptr;
+
     LLGL::Buffer*               sceneViewCbuffer                = nullptr;
     LLGL::Buffer*               vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
     std::uint64_t               previewInstanceBufferOffset     = 0;
@@ -112,6 +117,8 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Texture*              uiBrickThumbnailTexture         = nullptr;
 
     LLGL::Sampler*              uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
+
+    LLGL::Texture*              skyboxCubemap                   = nullptr;
 
     bool                        hasOffsetInstancing             = false;
     bool                        hasLoadedScene                  = false;
@@ -151,6 +158,8 @@ class Example_BrickPlay : public ExampleBase
     struct alignas(16) SceneView
     {
         Gs::Matrix4f        vpMatrix;                                               // View-projection matrix
+        Gs::Matrix4f        vpMatrixInv;
+        Gs::Matrix4f        vpMatrixInvNoViewPos;
         Gs::Vector3f        gridScale               = Gs::Vector3f{ 1.0f };
         float               specularPower           = 90.0f;                        // Specular exponent for blinn-phone shading model
         Gs::Vector4f        viewPos;                                                // Camera view position (in world space)
@@ -178,7 +187,6 @@ class Example_BrickPlay : public ExampleBase
         float               outlineWidth            = silhouetteWidth;
 
         // Plane shaders only
-        Gs::Matrix4f        vpMatrixInv;
         LLGL::ColorRGBAf    planeBaseColor;
         float               parallaxFadeRange[2]    = { 75.0f, 100.0f };
         float               studHeight              = 0.225f;
@@ -540,6 +548,104 @@ private:
             selectionRenderMode = SelectionRenderMode::Simplified;
     }
 
+    LLGL::Texture* CreateDummyCubeTexture()
+    {
+        LLGL::TextureDescriptor cubeTexDesc;
+        {
+            cubeTexDesc.debugName           = "DummyCubeTexture";
+            cubeTexDesc.type                = LLGL::TextureType::TextureCube;
+            cubeTexDesc.extent.width        = 1;
+            cubeTexDesc.extent.height       = 1;
+            cubeTexDesc.arrayLayers         = 6;
+            cubeTexDesc.clearValue.color[0] = 1.0f;
+            cubeTexDesc.clearValue.color[0] = 1.0f;
+            cubeTexDesc.clearValue.color[0] = 1.0f;
+            cubeTexDesc.clearValue.color[0] = 1.0f;
+        }
+        return renderer->CreateTexture(cubeTexDesc);
+    }
+
+    LLGL::Texture* LoadCubeTexture(const std::string& basename, std::initializer_list<const char*> cubeFaces)
+    {
+        LLGL_VERIFY(cubeFaces.size() == 6);
+
+        // Load individual cube faces
+        LLGL::Texture* cubeFaceTextures[6] = {};
+        int cubeFaceIndex = 0;
+        LLGL::Extent3D cubeFace0Extent;
+
+        for (const char* cubeFaceName : cubeFaces)
+        {
+            // Load cube face texture
+            cubeFaceTextures[cubeFaceIndex] = LoadTexture(basename + cubeFaceName);
+
+            // Validate all cube faces have the same size and are square in size
+            const LLGL::Extent3D cubeFaceExtent = cubeFaceTextures[cubeFaceIndex]->GetMipExtent(0);
+            if (cubeFaceIndex > 0)
+            {
+                if (cubeFaceExtent != cubeFace0Extent)
+                {
+                    LLGL::Log::Errorf(
+                        "Incompatible cube map sizes: face %d (size=%ux%ux%u)\n does not match face 0 (size=%ux%ux%u)\n",
+                        cubeFaceIndex,
+                        cubeFaceExtent.width, cubeFaceExtent.height, cubeFaceExtent.depth,
+                        cubeFace0Extent.width, cubeFace0Extent.height, cubeFace0Extent.depth
+                    );
+                    return CreateDummyCubeTexture();
+                }
+            }
+            else
+            {
+                if (cubeFaceExtent.width != cubeFaceExtent.height || cubeFaceExtent.depth != 1)
+                {
+                    LLGL::Log::Errorf(
+                        "Incompatible cube map size: face 0 (size=%ux%ux%u) does not have a square size\n",
+                        cubeFaceExtent.width, cubeFaceExtent.height, cubeFaceExtent.depth
+                    );
+                    return CreateDummyCubeTexture();
+                }
+                cubeFace0Extent = cubeFaceExtent;
+            }
+            ++cubeFaceIndex;
+        }
+
+        // Create cube texture with no initial data
+        const std::string debugName = "CubeTexture[" + basename + "]";
+        LLGL::TextureDescriptor cubeTexDesc;
+        {
+            cubeTexDesc.debugName       = debugName.c_str();
+            cubeTexDesc.type            = LLGL::TextureType::TextureCube;
+            cubeTexDesc.extent          = cubeFace0Extent;
+            cubeTexDesc.arrayLayers     = 6;
+            cubeTexDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+        }
+        LLGL::Texture* cubeTex = renderer->CreateTexture(cubeTexDesc);
+
+        // Copy all cube faces into cube texture on the GPU and generate MIP-maps
+        commands->Begin();
+        {
+            const std::string debugLabel = "BakeCubemap[" + basename + "]";
+            commands->PushDebugGroup(debugLabel.c_str());
+            {
+                LLGL::TextureLocation dstLocation;
+                const LLGL::TextureLocation srcLocation;
+
+                for (std::uint32_t cubeFaceIndex = 0; cubeFaceIndex < 6u; ++cubeFaceIndex)
+                {
+                    dstLocation.arrayLayer = cubeFaceIndex;
+                    commands->CopyTexture(*cubeTex, dstLocation, *cubeFaceTextures[cubeFaceIndex], srcLocation, cubeFace0Extent);
+                }
+
+                commands->GenerateMips(*cubeTex);
+            }
+            commands->PopDebugGroup();
+        }
+        commands->End();
+        commandQueue->Submit(*commands);
+
+        return cubeTex;
+    }
+
     void CreateResources()
     {
         const float projZAxis = GetProjectionZAxis();
@@ -616,10 +722,21 @@ private:
             #endif
         }
         uvWrapSampler = renderer->CreateSampler(samplerDesc);
+
+        // Load skybox textures
+        skyboxCubemap = LoadCubeTexture("Skybox/sky_74_cubemap_2k/", { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" });
     }
 
     bool CreatePipelines()
     {
+        #define REPORT_PSO_ERRORS(PSO)      \
+            do                              \
+            {                               \
+                if (ReportPSOErrors(PSO))   \
+                    return false;           \
+            }                               \
+            while (false)
+
         const LLGL::ShaderMacro fsPlaneMacros[]
         {
             LLGL::ShaderMacro{ "ENABLE_PARALLAX_OCCLUSION", ENABLE_PARALLAX_OCCLUSION ? "1" : "0" },
@@ -635,6 +752,8 @@ private:
         fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
         vsPlane         = LoadVertexShader  ("BrickPlay", "VSPlane");
         fsPlane         = LoadFragmentShader("BrickPlay", "PSPlane", fsPlaneMacros);
+        vsSkybox        = LoadVertexShader  ("BrickPlay", "VSSkybox");
+        fsSkybox        = LoadFragmentShader("BrickPlay", "PSSkybox");
 
         // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
@@ -675,16 +794,14 @@ private:
             SetPSODefaults(psoDesc);
         }
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
-        if (ReportPSOErrors(pso[BrickPSO_Default]))
-            return false;
+        REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
 
         // Create PSO for wrieframe view mode
         {
             psoDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
         }
         pso[BrickPSO_Wireframe] = renderer->CreatePipelineState(psoDesc);
-        if (ReportPSOErrors(pso[BrickPSO_Wireframe]))
-            return false;
+        REPORT_PSO_ERRORS(pso[BrickPSO_Wireframe]);
 
         // Create PSO for transparent bricks
         LLGL::GraphicsPipelineDescriptor psoTransparentDesc;
@@ -694,8 +811,7 @@ private:
             psoTransparentDesc.blend.targets[0].blendEnabled    = true;
         }
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
-        if (ReportPSOErrors(pso[BrickPSO_Transparent]))
-            return false;
+        REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
 
         // Create PSO for blocked preview object
         LLGL::GraphicsPipelineDescriptor psoPreviewDesc;
@@ -707,8 +823,7 @@ private:
             psoPreviewDesc.rasterizer.depthBias.constantFactor  = -100.0f;
         }
         pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoPreviewDesc);
-        if (ReportPSOErrors(pso[BrickPSO_Preview]))
-            return false;
+        REPORT_PSO_ERRORS(pso[BrickPSO_Preview]);
 
         #if DEBUG_KDTREE
         LLGL::GraphicsPipelineDescriptor psoDebugDesc;
@@ -721,8 +836,7 @@ private:
             psoDebugDesc.depth.testEnabled  = true;
         }
         psoDebug = renderer->CreatePipelineState(psoDebugDesc);
-        if (ReportPSOErrors(psoDebug))
-            return false;
+        REPORT_PSO_ERRORS(psoDebug);
         #endif
 
         // Create PSO to render an overlay with simple UI elements
@@ -754,8 +868,7 @@ private:
             psoUIDesc.blend.targets[0].blendEnabled = true; // Enable default alpha blending for UI elements
         }
         psoUI = renderer->CreatePipelineState(psoUIDesc);
-        if (ReportPSOErrors(psoUI))
-            return false;
+        REPORT_PSO_ERRORS(psoUI);
 
         if (selectionRenderMode != SelectionRenderMode::Simplified)
         {
@@ -789,8 +902,7 @@ private:
                 psoOutlineDesc.blend.targets[0].colorMask       = LLGL::ColorMaskFlags::Zero;
             }
             psoOutlineWriteStencil = renderer->CreatePipelineState(psoOutlineDesc);
-            if (ReportPSOErrors(psoOutlineWriteStencil))
-                return false;
+            REPORT_PSO_ERRORS(psoOutlineWriteStencil);
 
             // Create PSO to read stencil and write color output for silhouette
             if (selectionRenderMode == SelectionRenderMode::NativeLineWidth)
@@ -828,8 +940,7 @@ private:
                 psoOutlineDesc.blend.targets[0].colorMask       = LLGL::ColorMaskFlags::All;
             }
             psoOutlineWriteColor = renderer->CreatePipelineState(psoOutlineDesc);
-            if (ReportPSOErrors(psoOutlineWriteColor))
-                return false;
+            REPORT_PSO_ERRORS(psoOutlineWriteColor);
         }
 
         // Create PSO for plane rendering
@@ -855,7 +966,6 @@ private:
             LLGL::VertexAttribute{ "worldPos", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(PlaneVertex, worldPos), /*stride:*/ sizeof(PlaneVertex) },
         };
 
-        // Create graphics PSO for default scene rendering
         LLGL::GraphicsPipelineDescriptor psoPlaneDesc;
         {
             psoPlaneDesc.debugName                      = "PlanePSO";
@@ -870,16 +980,37 @@ private:
             psoPlaneDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         };
         psoPlane[0] = renderer->CreatePipelineState(psoPlaneDesc);
-        if (ReportPSOErrors(psoPlane[0]))
-            return false;
-
-        // Create extra PSO for wireframe mode
+        REPORT_PSO_ERRORS(psoPlane[0]);
         {
             psoPlaneDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
         }
         psoPlane[1] = renderer->CreatePipelineState(psoPlaneDesc);
-        if (ReportPSOErrors(psoPlane[1]))
-            return false;
+        REPORT_PSO_ERRORS(psoPlane[1]);
+
+        // Create PSO for skybox rendering
+        psoSkyLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneView@2):vert,"
+                "texture(skyboxTexture@3):frag,"
+                "sampler(skyboxSampler@4){}:frag," // Default static sampler
+
+                "sampler<skyboxTexture, skyboxSampler>(s_skyboxTextureskyboxSampler@3),"
+            )
+        );
+
+        LLGL::GraphicsPipelineDescriptor psoSkyDesc;
+        {
+            psoSkyDesc.debugName                        = "SkyboxPSO";
+            psoSkyDesc.renderPass                       = swapChain->GetRenderPass();
+            psoSkyDesc.vertexShader                     = vsSkybox;
+            psoSkyDesc.fragmentShader                   = fsSkybox;
+            psoSkyDesc.pipelineLayout                   = psoSkyLayout;
+            psoSkyDesc.primitiveTopology                = LLGL::PrimitiveTopology::TriangleList;
+            psoSkyDesc.depth.testEnabled                = true;
+            psoSkyDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
+        };
+        psoSky = renderer->CreatePipelineState(psoSkyDesc);
+        REPORT_PSO_ERRORS(psoSky);
 
         return true;
     }
@@ -1350,6 +1481,17 @@ private:
         commands->DrawIndexed(planeModel.numIndices, 0);
     }
 
+    void RenderSkybox()
+    {
+        // Skybopx is rendered with a fullscreen triangle, i.e. the vertex shader generates the vertices on its own. No vertex buffer needed.
+        commands->SetPipelineState(*psoSky);
+
+        commands->SetResource(0, *sceneViewCbuffer);
+        commands->SetResource(1, *skyboxCubemap);
+
+        commands->Draw(3, 0);
+    }
+
     void RenderBrickScene(const BrickScene& scene)
     {
         commands->PushDebugGroup("RenderBrickInstances");
@@ -1366,6 +1508,12 @@ private:
             }
             commands->PopDebugGroup();
         }
+
+        commands->PushDebugGroup("RenderSkybox");
+        {
+            RenderSkybox();
+        }
+        commands->PopDebugGroup();
     }
 
     void BindPreviewBrickPSOStates()
@@ -2121,7 +2269,8 @@ private:
         sceneView.viewportSize[1]   = static_cast<float>(viewportSize.height);
 
         // Update inverse view-projection matrix to displace depth values for parallax occlusion displacement
-        sceneView.vpMatrixInv = sceneView.vpMatrix.Inverse();
+        sceneView.vpMatrixInv           = sceneView.vpMatrix.Inverse();
+        sceneView.vpMatrixInvNoViewPos  = (projection * camera.vMatrixNoPosition).Inverse();
 
         // Update planar projection for UI elements
         const LLGL::Extent2D resolution = swapChain->GetResolution();
@@ -2214,7 +2363,8 @@ private:
 
     void OnExit() override
     {
-        // Only save file if it was loaded successfully
+        // Only save file if it was loaded successfully.
+        // We don't want to override an existing file with an empty scene because something went wrong at startup.
         if (hasLoadedScene)
         {
             // Ensure previoulsy selected brick retains its original color

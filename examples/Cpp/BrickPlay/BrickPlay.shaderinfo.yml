@@ -28,6 +28,12 @@ sources:
       - entry: "PSPlane"
         profile: "ps_4_0"
         targets: [spirv, metal]
+      - entry: "VSSkybox"
+        profile: "vs_4_0"
+        targets: [spirv, metal]
+      - entry: "PSSkybox"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
 
         # Only translate outline shaders for Desktop OpenGL and Vulkan, where line width rendering is supported.
         # Other backends need to fallback to simplified highlighted rendering.
@@ -66,6 +72,12 @@ sources:
         profile: "vs_4_0"
         targets: [glsl300es, glsl140core]
       - entry: "PSPlane"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "VSSkybox"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSSkybox"
         profile: "ps_4_0"
         targets: [glsl300es, glsl140core]
 

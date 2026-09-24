@@ -28,24 +28,25 @@
 cbuffer SceneView : register(b2)
 {
     float4x4    vpMatrix;
+    float4x4    vpMatrixInv;            // Inverse view-projection matrix to displace depth values for parallax occlusion displacement
+    float4x4    vpMatrixInvNoViewPos;   // Inverse view-projection matrix without view position to transform a view ray
     float3      gridScale;
-    float       specularPower;  // Blinn-phong specular exponent (usual values between 16 and 90)
+    float       specularPower;      // Blinn-phong specular exponent (usual values between 16 and 90)
     float4      viewPos;
     float4      ambientLight;
     float4      diffuseLight[2];
     float4      lightDir[2];
 
     // Preview shaders only
-    float       worldOffsetY;   // Y-axis for preview world offset
-    int         isDithering;    // Use dithering in preview shaders
+    float       worldOffsetY;       // Y-axis for preview world offset
+    int         isDithering;        // Use dithering in preview shaders
 
     // Outline shaders only
-    float2      viewportSize;   // Viewport size in pixels; converts outlineWidth into NDC space
-    float3      outlineColor;   // Color used for silhouette outlines
-    float       outlineWidth;   // Thickness silhouettes outlines
+    float2      viewportSize;       // Viewport size in pixels; converts outlineWidth into NDC space
+    float3      outlineColor;       // Color used for silhouette outlines
+    float       outlineWidth;       // Thickness silhouettes outlines
 
     // Plane shaders only
-    float4x4    vpMatrixInv;        // Inverse view-projection matrix to displace depth values for parallax occlusion displacement
     float4      planeBaseColor;
     float2      parallaxFadeRange;  // Range for parallax fade effect
     float       studHeight;         // Height of the studs on the bricks
@@ -420,6 +421,53 @@ void PSPlane(PlaneVertexOut inp, out PlanePixelOut outp)
     // Back project depth to world position, apply displacement, then project depth back into clip space
     outp.depth = ComputeDisplacedDepth(texCoordAndHeight);
     #endif
+}
+
+
+////////////////////// SKYBOX SHADERS //////////////////////
+
+struct SkyVertexOut
+{
+    float4 position : SV_Position;
+    float4 viewRay : VIEWRAY;
+};
+
+/*
+This function generates the coordinates for a fullscreen triangle with its vertex IDs:
+
+(-1,+3)
+   *
+   | \
+   |   \
+   |     \
+   |       \
+(-1,+1)    (+1,+1)
+   *----------*\
+   |          |  \
+   |  screen  |    \
+   |          |      \
+   *----------*--------*
+(-1,-1)    (+1,-1)  (+3,-1)
+*/
+float4 GetFullscreenTriangleVertex(uint id)
+{
+    const float v[4] = { -1.0, +3.0, -1.0, -1.0 };
+    return float4(v[id], v[id + 1], 0.999, 1.0);
+}
+
+void VSSkybox(uint id : SV_VertexID, out SkyVertexOut outp)
+{
+    outp.position = GetFullscreenTriangleVertex(id);
+    outp.viewRay = mul(vpMatrixInvNoViewPos, float4(outp.position.xy, 0.0, 1.0));
+    outp.viewRay /= outp.viewRay.w;
+}
+
+TextureCube skyboxTexture : register(t3);
+SamplerState skyboxSampler : register(s4);
+
+float4 PSSkybox(SkyVertexOut inp) : SV_Target
+{
+    return skyboxTexture.Sample(skyboxSampler, normalize(inp.viewRay.xyz));
 }
 
 
