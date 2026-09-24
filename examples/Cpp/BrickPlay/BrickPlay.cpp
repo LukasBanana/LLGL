@@ -8,8 +8,8 @@
 #include "BrickPlay.Brick.h"
 #include "BrickPlay.Scene.h"
 #include <ExampleBase.h>
-#include <algorithm>
 #include <LLGL/Utils/ForRange.h>
+#include <algorithm>
 #include <set>
 #include <map>
 
@@ -18,37 +18,47 @@
 #include <sstream>
 
 
+// Enables parallax occlusion displacement for rendering the plane studs.
+#define ENABLE_PARALLAX_OCCLUSION 1
+
+
 class Example_BrickPlay : public ExampleBase
 {
 
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr int            boundingVolume[3]           = { 100, 60, 100 };
-    static constexpr float          cameraTurnSpeed             = 0.25f;
-    static constexpr float          cameraMoveSpeed             = 0.25f;
-    static constexpr float          cameraCollisionRadius       = 1.5f;
-    static constexpr float          previewBlockOffsetY         = 0.075f;               // Y-axis world position offset for the preview block before putting it into place
+    static constexpr int            boundingVolume[3]               = { 100, 60, 100 };
+    static constexpr float          cameraTurnSpeed                 = 0.25f;
+    static constexpr float          cameraMoveSpeed                 = 0.25f;
+    static constexpr float          cameraCollisionRadius           = 1.5f;
+    static constexpr float          previewBlockOffsetY             = 0.075f;               // Y-axis world position offset for the preview block before putting it into place
 
-    static constexpr float          silhouetteColor[3]          = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
-    static constexpr float          silhouetteWidth             = 5.0f;
+    static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
+    static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr std::uint32_t  maxUIVertexBatchSize        = 64 * 3;               // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
-    static constexpr int            uiColorPickerSize           = 25;                   // Size (in pixels) of each color picker button
-    static constexpr int            uiColorPickerOffset[2]      = { 15, 15 };
-    static constexpr int            uiButtonFrameSize           = 3;
-    static constexpr int            uiButtonMargin              = 5;
-    const LLGL::ColorRGBAub         uiButtonFrameColor          = { 0, 0, 0, 255 };
+    static constexpr std::uint32_t  maxUIVertexBatchSize            = 64 * 3;               // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
+    static constexpr int            uiColorPickerSize               = 25;                   // Size (in pixels) of each color picker button
+    static constexpr int            uiColorPickerOffset[2]          = { 15, 15 };
+    static constexpr int            uiButtonFrameSize               = 3;
+    static constexpr int            uiButtonMargin                  = 5;
+    const LLGL::ColorRGBAub         uiButtonFrameColor              = { 0, 0, 0, 255 };
 
-    static constexpr int            uiBrickThumbnailSize        = 48;
-    const LLGL::ColorRGBAub         uiBrickThumbnailBgColor     = { 180, 180, 180, 255 };
-    const LLGL::ColorRGBAub         uiMenuBgColor               = { 0, 0, 0, 180 };
+    static constexpr int            uiBrickThumbnailSize            = 48;
+    const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
+    const LLGL::ColorRGBAub         uiMenuBgColor                   = { 0, 0, 0, 180 };
 
-    static constexpr float          uiThumbnailMinVolumeSize    = 3.0f;                 // Minimum size for a bounding volume of brick thumbnails.
+    static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;                 // Minimum size for a bounding volume of brick thumbnails.
 
-    static constexpr int            planeSubdivisions           = 1;
+    static constexpr int            planeSubdivisions               = 1;
 
-    const char*                     sceneFilename               = "Bricks.txt";
+    // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
+    // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
+    // This can be turned off for mobile platforms where this flaw is virtually invisible
+    // and the incurred performance cost of more almost invisible geometry can be avoided.
+    static constexpr bool           useWaterTightBrickOptimization  = true;
+
+    const char*                     sceneFilename                   = "Bricks.txt";
 
     enum BrickPSO
     {
@@ -101,6 +111,8 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Texture*              uiBlankTexture                  = nullptr;
     LLGL::Texture*              uiBrickThumbnailTexture         = nullptr;
 
+    LLGL::Sampler*              uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
+
     bool                        hasOffsetInstancing             = false;
     bool                        hasLoadedScene                  = false;
 
@@ -138,34 +150,39 @@ class Example_BrickPlay : public ExampleBase
 
     struct alignas(16) SceneView
     {
-        Gs::Matrix4f    vpMatrix;                                   // View-projection matrix
-        Gs::Vector3f    gridScale       = Gs::Vector3f{ 1.0f };
-        float           specularPower   = 90.0f;                    // Specular exponent for blinn-phone shading model
-        Gs::Vector4f    viewPos;                                    // Camera view position (in world space)
-        Gs::Vector4f    ambientLight    = { 0.2f, 0.2f, 0.2f, 0.0f };
-        Gs::Vector4f    diffuseLight[2] =
+        Gs::Matrix4f        vpMatrix;                                               // View-projection matrix
+        Gs::Vector3f        gridScale               = Gs::Vector3f{ 1.0f };
+        float               specularPower           = 90.0f;                        // Specular exponent for blinn-phone shading model
+        Gs::Vector4f        viewPos;                                                // Camera view position (in world space)
+        Gs::Vector4f        ambientLight            = { 0.2f, 0.2f, 0.2f, 0.0f };
+        Gs::Vector4f        diffuseLight[2]         =
         {
             Gs::Vector4f{ 0.8f, 0.8f, 0.8f, 1.0f },
             Gs::Vector4f{ 0.1f, 0.1f, 0.1f, 1.0f },
         };
-        Gs::Vector4f    lightDir[2]     =                           // Light vector pointing from a pixel towards the light source
+
+        // Vector for two light sources. They point from a pixel towards the light source as it is common in shading formulas.
+        Gs::Vector4f        lightDir[2]             =
         {
             Gs::Vector4f{ 0.0f,  0.0f, -1.0f, 0.0f }.Normalized(),
             Gs::Vector4f{ 0.0f, -0.2f, +1.0f, 0.0f }.Normalized()
         };
 
         // Preview shaders only
-        float           worldOffsetY    = 0.0f;
-        std::int32_t    isDithering     = 0;
+        float               worldOffsetY            = 0.0f;
+        std::int32_t        isDithering             = 0;
 
         // Outline shaders only
-        float           viewportSize[2] = {};
-        float           outlineColor[3] = { silhouetteColor[0], silhouetteColor[1], silhouetteColor[2] };
-        float           outlineWidth    = silhouetteWidth;
+        float               viewportSize[2]         = {};
+        float               outlineColor[3]         = { silhouetteColor[0], silhouetteColor[1], silhouetteColor[2] };
+        float               outlineWidth            = silhouetteWidth;
 
         // Plane shaders only
-        float           planeNormal[3]  = { 0.0f, 1.0f, 0.0f };
-        float           pad0;
+        Gs::Matrix4f        vpMatrixInv;
+        LLGL::ColorRGBAf    planeBaseColor;
+        float               parallaxFadeRange[2]    = { 75.0f, 100.0f };
+        float               studHeight              = 0.225f;
+        float               pad0;
     }
     sceneView;
 
@@ -210,6 +227,8 @@ class Example_BrickPlay : public ExampleBase
 
         LLGL::Buffer*               meshBuffer  = nullptr;
         LLGL::Texture*              colorMap    = nullptr;
+        LLGL::Texture*              normalMap   = nullptr;
+        LLGL::Texture*              heightMap   = nullptr;
     }
     planeModel;
 
@@ -316,6 +335,7 @@ class Example_BrickPlay : public ExampleBase
 
         Gs::Matrix4f    wMatrix;
         Gs::Matrix4f    vMatrix;
+        Gs::Matrix4f    vMatrixNoPosition;
 
         void Turn(float pitch, float yaw)
         {
@@ -346,6 +366,14 @@ class Example_BrickPlay : public ExampleBase
             Gs::RotateX(wMatrix, Gs::Deg2Rad(pitch));
 
             vMatrix = wMatrix.Inverse();
+
+            vMatrixNoPosition = Gs::Matrix4f
+            {
+                vMatrix(0, 0), vMatrix(0, 1), vMatrix(0, 2), 0.0f,
+                vMatrix(1, 0), vMatrix(1, 1), vMatrix(1, 2), 0.0f,
+                vMatrix(2, 0), vMatrix(2, 1), vMatrix(2, 2), 0.0f,
+                         0.0f,          0.0f,          0.0f, 1.0f
+            };
         }
     }
     camera;
@@ -400,7 +428,7 @@ private:
         return -1;
     }
 
-    // Projects the specified screeen coordinate into a ray originating from the camera view to pick elements in the scene.
+    // Projects the specified screen coordinate into a ray originating from the camera view to pick elements in the scene.
     Ray3f ProjectScreenPosToViewRay(LLGL::Offset2D screenPos)
     {
         const LLGL::Viewport viewport{ swapChain->GetResolution() };
@@ -413,15 +441,7 @@ private:
             1.0f,
         };
 
-        const Gs::Matrix4f vMatrixNoTranslation
-        {
-            camera.vMatrix(0, 0), camera.vMatrix(0, 1), camera.vMatrix(0, 2), 0.0f,
-            camera.vMatrix(1, 0), camera.vMatrix(1, 1), camera.vMatrix(1, 2), 0.0f,
-            camera.vMatrix(2, 0), camera.vMatrix(2, 1), camera.vMatrix(2, 2), 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-
-        Gs::Matrix4f vpMatrixInv = projection * vMatrixNoTranslation;
+        Gs::Matrix4f vpMatrixInv = projection * camera.vMatrixNoPosition;
         vpMatrixInv.MakeInverse();
 
         ndc = vpMatrixInv * ndc;
@@ -433,14 +453,16 @@ private:
         };
     }
 
-    void LoadBrickModel(const char* basename, std::vector<BrickVertex>& vertices, BrickMesh& outMesh)
+    void LoadBrickModel(const char* basename, std::vector<BrickVertex>& vertices, BrickType brickType, BrickGroup brickGroup = BrickGroup_Default)
     {
         LLGL::Log::Printf("Load brick model: %s\n", basename);
 
+        BrickMesh& mesh = BrickDictionary::Get().GetMesh(brickType, brickGroup);
+
         const std::vector<TexturedVertex> intermediateVertices = Load3DModel(std::string("Bricks/") + basename + ".obj");
 
-        outMesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
-        outMesh.numVertices = static_cast<std::uint32_t>(intermediateVertices.size());
+        mesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
+        mesh.numVertices = static_cast<std::uint32_t>(intermediateVertices.size());
 
         vertices.resize(vertices.size() + intermediateVertices.size());
 
@@ -450,44 +472,46 @@ private:
             dst.normal      = src.normal;
         };
 
-        for (std::uint32_t i = 0; i < outMesh.numVertices; ++i)
-            ConvertVertex(vertices[outMesh.firstVertex + i], intermediateVertices[i]);
+        for (std::uint32_t i = 0; i < mesh.numVertices; ++i)
+            ConvertVertex(vertices[mesh.firstVertex + i], intermediateVertices[i]);
     }
 
     void LoadAllBrickModels(std::vector<BrickVertex>& vertices)
     {
-        LoadBrickModel("Brick1x1x1"          , vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x1));
-        LoadBrickModel("Brick1x1x1_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x1, BrickGroup_WallsOnly));
+        enum class ModelOptimization
+        {
+            None,
+            WallsOnly,
+            WallsOnlyExt,
+        };
 
-        LoadBrickModel("Tile1x1"             , vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x1_Tile));
+        auto LoadBrickModelGroups = [this, &vertices](const char* basename, BrickType brickType, ModelOptimization optimization = ModelOptimization::None) -> void
+        {
+            LoadBrickModel(basename, vertices, brickType);
+            if (optimization != ModelOptimization::None)
+            {
+                std::string basenameWallsOnly = std::string(basename) + "_WallsOnly";
+                if (useWaterTightBrickOptimization && optimization == ModelOptimization::WallsOnlyExt)
+                    basenameWallsOnly += "Ext";
+                LoadBrickModel(basenameWallsOnly.c_str(), vertices, brickType, BrickGroup_WallsOnly);
+            }
+        };
 
-        LoadBrickModel("Brick1x1x3"          , vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x3));
-        LoadBrickModel("Brick1x1x3_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_1x1x3, BrickGroup_WallsOnly));
+        LoadBrickModelGroups("Brick1x1x1",  BrickType_1x1x1,        ModelOptimization::WallsOnly   );
+        LoadBrickModelGroups("Tile1x1",     BrickType_1x1x1_Tile                                   );
+        LoadBrickModelGroups("Brick1x1x3",  BrickType_1x1x3,        ModelOptimization::WallsOnly   );
+        LoadBrickModelGroups("Brick1x2x1",  BrickType_1x2x1,        ModelOptimization::WallsOnlyExt);
+        LoadBrickModelGroups("Brick1x2x3",  BrickType_1x2x3,        ModelOptimization::WallsOnlyExt);
+        LoadBrickModelGroups("Brick2x2x1",  BrickType_2x2x1,        ModelOptimization::WallsOnlyExt);
+        LoadBrickModelGroups("Tile2x2",     BrickType_2x2x1_Tile                                   );
+        LoadBrickModelGroups("Brick2x2x3",  BrickType_2x2x3,        ModelOptimization::WallsOnlyExt);
+        LoadBrickModelGroups("Roof2x2x3",   BrickType_2x2x3_Roof                                   );
+        LoadBrickModelGroups("Roof2x3x3",   BrickType_2x3x3_Roof                                   );
+        LoadBrickModelGroups("Brick4x2x1",  BrickType_4x2x1,        ModelOptimization::WallsOnlyExt);
+        LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        ModelOptimization::WallsOnlyExt);
 
-        LoadBrickModel("Brick1x2x1"          , vertices, BrickDictionary::Get().GetMesh(BrickType_1x2x1));
-        LoadBrickModel("Brick1x2x1_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_1x2x1, BrickGroup_WallsOnly));
-
-        LoadBrickModel("Brick1x2x3"          , vertices, BrickDictionary::Get().GetMesh(BrickType_1x2x3));
-        LoadBrickModel("Brick1x2x3_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_1x2x3, BrickGroup_WallsOnly));
-
-        LoadBrickModel("Brick2x2x1"          , vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x1));
-        LoadBrickModel("Brick2x2x1_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x1, BrickGroup_WallsOnly));
-
-        LoadBrickModel("Tile2x2"             , vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x1_Tile));
-
-        LoadBrickModel("Brick2x2x3"          , vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x3));
-        LoadBrickModel("Brick2x2x3_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x3, BrickGroup_WallsOnly  ));
-        LoadBrickModel("Brick2x2x3_Glass"    , vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x3, BrickGroup_Transparent));
-
-        LoadBrickModel("Roof2x2x3"           , vertices, BrickDictionary::Get().GetMesh(BrickType_2x2x3_Roof));
-        LoadBrickModel("Roof2x3x3"           , vertices, BrickDictionary::Get().GetMesh(BrickType_2x3x3_Roof));
-
-        LoadBrickModel("Brick4x2x1"          , vertices, BrickDictionary::Get().GetMesh(BrickType_4x2x1));
-        LoadBrickModel("Brick4x2x1_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_4x2x1, BrickGroup_WallsOnly  ));
-
-        LoadBrickModel("Brick4x2x3"          , vertices, BrickDictionary::Get().GetMesh(BrickType_4x2x3));
-        LoadBrickModel("Brick4x2x3_WallsOnly", vertices, BrickDictionary::Get().GetMesh(BrickType_4x2x3, BrickGroup_WallsOnly  ));
-        LoadBrickModel("Brick4x2x3_Glass"    , vertices, BrickDictionary::Get().GetMesh(BrickType_4x2x3, BrickGroup_Transparent));
+        LoadBrickModel("Brick2x2x3_Glass"    , vertices, BrickType_2x2x3, BrickGroup_Transparent);
+        LoadBrickModel("Brick4x2x3_Glass"    , vertices, BrickType_4x2x3, BrickGroup_Transparent);
     }
 
     void InitAppConfig()
@@ -500,7 +524,8 @@ private:
         };
 
         // Use a longer far plane for this example, since the user can pan the camera around
-        projectionParams.zFar = 500.0f;
+        projectionParams.zNear  = 1.0f;
+        projectionParams.zFar   = 500.0f;
         UpdateProjection(swapChain->GetResolution());
 
         // Cache feature support for offset instancing as this will be used every frame
@@ -579,11 +604,28 @@ private:
         planeModel.vertices.resize(PlaneModel::maxNumVertices);
         planeModel.indices.resize(PlaneModel::maxNumIndices);
 
-        planeModel.colorMap = LoadTexture("BrickHead.png");
+        planeModel.colorMap     = LoadTexture("Bricks/BrickHead_Albedo.png");
+        planeModel.normalMap    = LoadTexture("Bricks/BrickHead_Normals.png");
+        planeModel.heightMap    = LoadTexture("Bricks/BrickHead_Heights.png", LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment, LLGL::Format::R8UNorm);
+
+        // Create primary texture sampler
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            #ifndef LLGL_MOBILE_PLATFORM
+            samplerDesc.maxAnisotropy = 8;
+            #endif
+        }
+        uvWrapSampler = renderer->CreateSampler(samplerDesc);
     }
 
     bool CreatePipelines()
     {
+        const LLGL::ShaderMacro fsPlaneMacros[]
+        {
+            LLGL::ShaderMacro{ "ENABLE_PARALLAX_OCCLUSION", ENABLE_PARALLAX_OCCLUSION ? "1" : "0" },
+            LLGL::ShaderMacro{},
+        };
+
         // Create shaders
         vsBrick         = LoadVertexShader  ("BrickPlay", "VSBrick");
         fsBrick         = LoadFragmentShader("BrickPlay", "PSBrick");
@@ -592,7 +634,7 @@ private:
         vsOverlay       = LoadVertexShader  ("BrickPlay", "VSOverlay");
         fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
         vsPlane         = LoadVertexShader  ("BrickPlay", "VSPlane");
-        fsPlane         = LoadFragmentShader("BrickPlay", "PSPlane");
+        fsPlane         = LoadFragmentShader("BrickPlay", "PSPlane", fsPlaneMacros);
 
         // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
@@ -794,10 +836,17 @@ private:
         psoPlaneLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@2):vert:frag,"
-                "texture(planeTexture@3):frag,"
-                "sampler(planeSampler@4){}:frag," // Default static sampler
+                "sampler(planeSampler@3):frag,"
+                "texture(planeColorMap@4):frag,"
+                "texture(planeNormalMap@5):frag,"
 
-                "sampler<planeTexture, planeSampler>(s_planeTextureplaneSampler@3),"
+                #if ENABLE_PARALLAX_OCCLUSION
+                "texture(planeHeightMap@6):frag,"
+                "sampler<planeHeightMap, planeSampler>(s_planeHeightMapplaneSampler@6),"
+                #endif
+
+                "sampler<planeColorMap, planeSampler>(s_planeColorMapplaneSampler@4),"
+                "sampler<planeNormalMap, planeSampler>(s_planeNormalMapplaneSampler@5),"
             )
         );
 
@@ -1285,13 +1334,15 @@ private:
 
     void RenderPlane()
     {
-        // If there is nothing to render, exit early
-        if (planeModel.colorMap == nullptr)
-            return;
-
         commands->SetPipelineState(*psoPlane[viewOptions.showWireframe ? 1 : 0]);
         commands->SetResource(0, *sceneViewCbuffer);
-        commands->SetResource(1, *planeModel.colorMap);
+        commands->SetResource(1, *uvWrapSampler);
+        commands->SetResource(2, *planeModel.colorMap);
+        commands->SetResource(3, *planeModel.normalMap);
+
+        #if ENABLE_PARALLAX_OCCLUSION
+        commands->SetResource(4, *planeModel.heightMap);
+        #endif
 
         commands->SetIndexBuffer(*planeModel.meshBuffer, LLGL::Format::R16UInt, PlaneModel::meshBufferIndexOffset);
         commands->SetVertexBuffer(*planeModel.meshBuffer);
@@ -1687,7 +1738,7 @@ private:
 
         // Draw brick thumbnails for the user to choose from on the right of the overlay
         uiButtonAdvance = uiBrickThumbnailSize + uiButtonFrameSize*2 + uiButtonMargin;
-        uiPos[0] = scrW - (uiColorPickerOffset[0] + uiButtonAdvance);
+        uiPos[0] = scrW - (uiColorPickerOffset[0] + uiBrickThumbnailSize + uiButtonFrameSize*2);
         uiPos[1] = uiColorPickerOffset[1];
 
         for (int brickType = 0; brickType < BrickType_Num; ++brickType)
@@ -2068,6 +2119,9 @@ private:
         const LLGL::Extent2D& viewportSize = swapChain->GetResolution();
         sceneView.viewportSize[0]   = static_cast<float>(viewportSize.width);
         sceneView.viewportSize[1]   = static_cast<float>(viewportSize.height);
+
+        // Update inverse view-projection matrix to displace depth values for parallax occlusion displacement
+        sceneView.vpMatrixInv = sceneView.vpMatrix.Inverse();
 
         // Update planar projection for UI elements
         const LLGL::Extent2D resolution = swapChain->GetResolution();

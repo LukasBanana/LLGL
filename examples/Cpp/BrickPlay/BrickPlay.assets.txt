@@ -1,2 +1,2 @@
-Bricks/*
-BrickHead.png
+Models/Bricks/*.obj
+Textures/Bricks/*.png

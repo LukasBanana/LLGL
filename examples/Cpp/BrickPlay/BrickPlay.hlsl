@@ -1,5 +1,30 @@
-// HLSL shader version 4.0 (for Direct3D 11/ 12)
+/*
+ * BrickPlay.hlsl
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
 
+#ifndef MAX_NUM_PARALLAX_LAYERS
+#define MAX_NUM_PARALLAX_LAYERS 16
+#endif
+
+#ifndef ENABLE_PARALLAX_OCCLUSION
+#define ENABLE_PARALLAX_OCCLUSION 0
+#endif
+
+#ifndef COMPILE_FOR_GL
+#define COMPILE_FOR_GL 0
+#endif
+
+// Disable early depth-stencil for OpenGL, as it it required higher GLSL versions than 140.
+#if COMPILE_FOR_GL
+#define EARLYDEPTHSTENCIL
+#else
+#define EARLYDEPTHSTENCIL [earlydepthstencil]
+#endif
+
+// General purpose scene view constant buffer. Shared across all shaders in this file.
 cbuffer SceneView : register(b2)
 {
     float4x4    vpMatrix;
@@ -20,8 +45,14 @@ cbuffer SceneView : register(b2)
     float       outlineWidth;   // Thickness silhouettes outlines
 
     // Plane shaders only
-    float3      planeNormal;   // Normal vector for the plane model
+    float4x4    vpMatrixInv;        // Inverse view-projection matrix to displace depth values for parallax occlusion displacement
+    float4      planeBaseColor;
+    float2      parallaxFadeRange;  // Range for parallax fade effect
+    float       studHeight;         // Height of the studs on the bricks
 };
+
+
+////////////////////// PRIMARY INSTANCE SHADERS //////////////////////
 
 struct VertexIn
 {
@@ -41,9 +72,6 @@ struct VertexOut
     float3                  normal   : NORMAL;
     nointerpolation float4  color    : COLOR;
 };
-
-
-// PRIMARY INSTANCE SHADERS
 
 float3x3 BrickRotation(int rotationIndex)
 {
@@ -112,6 +140,7 @@ float3 ComputeLighting(float3 worldPos, float3 normal)
     return lighting;
 }
 
+EARLYDEPTHSTENCIL
 float4 PSBrick(VertexOut inp) : SV_Target
 {
     // Apply simple lighting
@@ -120,7 +149,7 @@ float4 PSBrick(VertexOut inp) : SV_Target
 };
 
 
-// PREVIEW SHADERS
+////////////////////// PREVIEW SHADERS //////////////////////
 
 void VSBrickPreview(VertexIn inp, out VertexOut outp)
 {
@@ -129,6 +158,7 @@ void VSBrickPreview(VertexIn inp, out VertexOut outp)
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
 }
 
+EARLYDEPTHSTENCIL
 float4 PSBrickPreview(VertexOut inp) : SV_Target
 {
     if (isDithering != 0)
@@ -142,8 +172,7 @@ float4 PSBrickPreview(VertexOut inp) : SV_Target
     return float4(inp.color.rgb * lighting, inp.color.a);
 };
 
-
-// SILHOUETTE SHADERS
+////////////////////// SILHOUETTE SHADERS //////////////////////
 
 struct OutlineVertexOut
 {
@@ -167,7 +196,8 @@ OutlineVertexOut MakeOutlineVertex(float2 screenPos, float clipZ, float clipW)
     return outp;
 }
 
-// Worst case is 27 vertices that turned 1 triangle into 9 triangles for a thick outline
+// This geometry shader turns a single triangle into a wireframe version of itself with thick lines, each such line being represented by two triangles.
+// Sharp corners are filled with another triangle. Worst case is 27 vertices that turned 1 triangle into 9 triangles.
 [maxvertexcount(27)]
 void GSBrickOutline(triangle OutlineVertexOut inp[3], inout TriangleStream<OutlineVertexOut> streamOut)
 {
@@ -249,7 +279,7 @@ float4 PSBrickOutline() : SV_Target
 }
 
 
-// PLANE SHADERS
+////////////////////// PLANE SHADERS //////////////////////
 
 struct PlaneVertexIn
 {
@@ -268,23 +298,132 @@ void VSPlane(PlaneVertexIn inp, out PlaneVertexOut outp)
     outp.worldPos = inp.worldPos;
 }
 
-Texture2D planeTexture : register(t3);
-SamplerState planeSampler : register(s4);
+SamplerState planeSampler : register(s3);
+Texture2D<float4> planeColorMap : register(t4);
+Texture2D<float3> planeNormalMap : register(t5);
 
-float4 PSPlane(PlaneVertexOut inp) : SV_Target
+float3 VectorToPlaneTangetSpace(float3 v)
 {
-    // Sample texture
-    float4 texColor = planeTexture.Sample(planeSampler, inp.worldPos.xz);
+    return float3(v.x, v.z, -v.y);
+}
 
-    //TODO: add parallex mapping
+float3 ColorToPlaneNormal(float3 color)
+{
+    return VectorToPlaneTangetSpace(color * 2.0 - 1.0);
+}
+
+#if ENABLE_PARALLAX_OCCLUSION
+
+Texture2D<float> planeHeightMap : register(t6);
+
+float SampleHeightMap(float2 texCoord, float2 dx, float2 dy)
+{
+    return planeHeightMap.SampleGrad(planeSampler, texCoord, dx, dy);
+}
+
+// Adopted from https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
+float3 ParallaxOffset(float2 texCoord, float3 viewDir, float2 dx, float2 dy)
+{
+    const float numLayers = (float)MAX_NUM_PARALLAX_LAYERS;
+
+    // Parameters for stepping through the layers of steep parallax mapping
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 1.0;
+
+    // Amount of shift texture coordinates per layer
+    float2 offset = viewDir.xy / viewDir.z * studHeight;
+    float2 deltaTexCoords = offset * layerDepth;
+
+    // Initial values
+    float2 currentTexCoords = texCoord - offset;
+    float currentHeight = SampleHeightMap(currentTexCoords, dx, dy);
+
+    [unroll(MAX_NUM_PARALLAX_LAYERS)]
+    while (currentLayerDepth > currentHeight)
+    {
+        currentTexCoords += deltaTexCoords;
+        currentHeight = SampleHeightMap(currentTexCoords, dx, dy);
+        currentLayerDepth -= layerDepth;
+    }
+
+    // Write out final texture coordinates and height (in world units)
+    return float3(currentTexCoords, studHeight * currentHeight);
+}
+
+// Returns displaced texture offset (XY) and height (Z)
+float3 ParallaxOffsetWithFade(float2 texCoord, float3 viewDir, float viewDist, float2 dx, float2 dy)
+{
+    // Force branching to ensure pixels with far viewing distance do not perform unnecessary parallax calculations
+    [branch]
+    if (viewDist < parallaxFadeRange[1])
+    {
+        float fade = saturate((viewDist - parallaxFadeRange[0]) / (parallaxFadeRange[1] - parallaxFadeRange[0]));
+        float3 parallaxTexCoord = ParallaxOffset(texCoord, viewDir, dx, dy);
+        return lerp(parallaxTexCoord, float3(texCoord, 0.0), fade);
+    }
+    else
+    {
+        return float3(texCoord, 0.0);
+    }
+}
+
+// Computes the displaced depth for the current fragment based on the parallax occlusion mapping.
+float ComputeDisplacedDepth(float3 texCoordAndHeight)
+{
+    float4 clipPos = mul(vpMatrix, float4(texCoordAndHeight.xzy, 1.0));
+    #if COMPILE_FOR_GL
+    // Adjust for OpenGL's unit cube depth range
+    return (clipPos.z / clipPos.w) * 0.5 + 0.5;
+    #else
+    return clipPos.z / clipPos.w;
+    #endif
+}
+
+#endif // /ENABLE_PARALLAX_OCCLUSION
+
+struct PlanePixelOut
+{
+    float4 color : SV_Target;
+    #if ENABLE_PARALLAX_OCCLUSION
+    float  depth : SV_Depth;
+    #endif
+};
+
+#if !ENABLE_PARALLAX_OCCLUSION
+EARLYDEPTHSTENCIL
+#endif
+void PSPlane(PlaneVertexOut inp, out PlanePixelOut outp)
+{
+    // Apply parallex occlusion displacement
+    float2 texCoord = inp.worldPos.xz;
+    float2 dx = ddx(texCoord);
+    float2 dy = ddy(texCoord);
+
+    float viewDist = length(viewPos.xyz - inp.worldPos.xyz);
+
+    #if ENABLE_PARALLAX_OCCLUSION
+    float3 viewDir = VectorToPlaneTangetSpace(normalize(viewPos.xyz - inp.worldPos.xyz));
+    float3 texCoordAndHeight = ParallaxOffsetWithFade(texCoord, viewDir, viewDist, dx, dy);
+    #else
+    float2 texCoordAndHeight = texCoord;
+    #endif
+
+    float3 planeNormal = ColorToPlaneNormal(planeNormalMap.SampleGrad(planeSampler, texCoordAndHeight.xy, dx, dy));
+
+    float4 color = planeColorMap.SampleGrad(planeSampler, texCoordAndHeight.xy, dx, dy) * planeBaseColor;
 
     // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(planeNormal));
-    return float4(texColor.rgb * lighting, texColor.a);
+    outp.color = float4(color.rgb * lighting, color.a);
+
+    #if ENABLE_PARALLAX_OCCLUSION
+    // Back project depth to world position, apply displacement, then project depth back into clip space
+    outp.depth = ComputeDisplacedDepth(texCoordAndHeight);
+    #endif
 }
 
 
-// DEBUG SHADERS
+////////////////////// DEBUG SHADERS //////////////////////
 
 uniform float4 vertexA;
 uniform float4 vertexB;
@@ -301,7 +440,7 @@ float4 PSDebug() : SV_Target
 }
 
 
-// UI SHADERS
+////////////////////// UI SHADERS //////////////////////
 
 cbuffer UIView : register(b1)
 {

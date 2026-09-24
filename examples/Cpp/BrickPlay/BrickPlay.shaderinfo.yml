@@ -1,30 +1,79 @@
 sources:
   - source: "BrickPlay.hlsl"
+    permutation:
+      macros:
+        ENABLE_PARALLAX_OCCLUSION: 1
     entries:
       - entry: "VSBrick"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
       - entry: "PSBrick"
         profile: "ps_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
       - entry: "VSBrickPreview"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
       - entry: "PSBrickPreview"
         profile: "ps_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
       - entry: "VSOverlay"
         profile: "vs_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
       - entry: "PSOverlay"
         profile: "ps_4_0"
-        targets: [glsl140core, glsl300es, spirv, metal]
+        targets: [spirv, metal]
+      - entry: "VSPlane"
+        profile: "vs_4_0"
+        targets: [spirv, metal]
+      - entry: "PSPlane"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
 
         # Only translate outline shaders for Desktop OpenGL and Vulkan, where line width rendering is supported.
         # Other backends need to fallback to simplified highlighted rendering.
       - entry: "VSBrickOutline"
         profile: "vs_4_0"
-        targets: [glsl140core, spirv]
+        targets: [spirv]
       - entry: "PSBrickOutline"
         profile: "ps_4_0"
-        targets: [glsl140core, spirv]
+        targets: [spirv]
+
+  - source: "BrickPlay.hlsl"
+    permutation:
+      macros:
+        ENABLE_PARALLAX_OCCLUSION: 1
+        COMPILE_FOR_GL: 1
+    entries:
+      - entry: "VSBrick"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSBrick"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "VSBrickPreview"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "VSOverlay"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSOverlay"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "VSPlane"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSPlane"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+
+        # Only translate outline shaders for Desktop OpenGL and Vulkan, where line width rendering is supported.
+        # Other backends need to fallback to simplified highlighted rendering.
+      - entry: "VSBrickOutline"
+        profile: "vs_4_0"
+        targets: [glsl140core]
+      - entry: "PSBrickOutline"
+        profile: "ps_4_0"
+        targets: [glsl140core]
