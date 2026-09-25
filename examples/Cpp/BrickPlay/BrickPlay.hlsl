@@ -17,6 +17,11 @@
 #define COMPILE_FOR_GL 0
 #endif
 
+// For transparent objects, flip the normal vector to simulate light passing through and shading the face from the opposite side
+#ifndef ENABLE_DUAL_SIDED_LIGHTING
+#define ENABLE_DUAL_SIDED_LIGHTING 0
+#endif
+
 // Disable early depth-stencil for OpenGL, as it it required higher GLSL versions than 140.
 #if COMPILE_FOR_GL
 #define EARLYDEPTHSTENCIL
@@ -32,7 +37,8 @@ cbuffer SceneView : register(b2)
     float4x4    vpMatrixInvNoViewPos;   // Inverse view-projection matrix without view position to transform a view ray
     float3      gridScale;
     float       specularPower;      // Blinn-phong specular exponent (usual values between 16 and 90)
-    float4      viewPos;
+    float3      viewPos;
+    float       skyboxDiffuseLOD;       // Maximum level of detail (LOD) for the skybox's diffuse reflection (default to 6.0)
     float4      ambientLight;
     float4      diffuseLight[2];
     float4      lightDir[2];
@@ -48,9 +54,14 @@ cbuffer SceneView : register(b2)
 
     // Plane shaders only
     float4      planeBaseColor;
-    float2      parallaxFadeRange;  // Range for parallax fade effect
-    float       studHeight;         // Height of the studs on the bricks
+    float2      parallaxFadeRange;      // Range for parallax fade effect
+    float       studHeight;             // Height of the studs on the bricks
+
+    float       skyboxDiffuseFactor;    // Factor for blending the skybox's diffuse reflection
 };
+
+TextureCube skyboxTexture : register(t7);
+SamplerState skyboxSampler : register(s8);
 
 
 ////////////////////// PRIMARY INSTANCE SHADERS //////////////////////
@@ -121,13 +132,27 @@ void VSBrick(VertexIn inp, out VertexOut outp)
 
 float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3 color)
 {
-    float3 viewDir = normalize(viewPos.xyz - worldPos);
+    #if ENABLE_DUAL_SIDED_LIGHTING
+    normal = lerp(-normal, normal, step(0.0, dot(normal, lightVec)));
+    #endif
+
+    // Compute light reflection vectors
+    float3 viewDir = normalize(viewPos - worldPos);
     float3 halfVec = normalize(lightVec + viewDir);
     float NdotL = saturate(dot(normal, lightVec));
     float NdotH = saturate(dot(normal, halfVec));
+
+    // Compute diffuse and specular terms
     float diffuse = NdotL;
-    float specular = pow(NdotH, specularPower);
-    return color * (diffuse + specular * NdotL);
+    float specular = pow(NdotH, specularPower) * NdotL;
+
+    // Sample environment map for specular highlights
+    float3 reflectVec = reflect(-viewDir, normal);
+    float envmapLOD = skyboxDiffuseLOD * (1.0 - specular);
+    float3 envmapReflection = skyboxTexture.SampleBias(skyboxSampler, reflectVec, envmapLOD).rgb;
+
+    // Compute final shading
+    return color * (diffuse * lerp(1.0, envmapReflection, 0.2) + specular);
 }
 
 float3 ComputeLighting(float3 worldPos, float3 normal)
@@ -147,7 +172,90 @@ float4 PSBrick(VertexOut inp) : SV_Target
     // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
+}
+
+struct TransparentPixelOut
+{
+    float4 accum  : SV_Target0;
+    float  reveal : SV_Target1;
 };
+
+float Max3(float a, float b, float c)
+{
+    return max(a, max(b, c));
+}
+
+float ComputeWeight(float4 color, float z)
+{
+    // This formula has been adopted straight from https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
+    // I solemnly swear, I have no idea what this does :o)
+    return
+    (
+        max(min(1.0, Max3(color.r, color.g, color.b) * color.a), color.a) *
+        clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3)
+    );
+}
+
+// Adopted from https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
+void PSBrickTransparent(VertexOut inp, out TransparentPixelOut outp)
+{
+    // Apply simple lighting
+    float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
+    float4 outputColor = float4(inp.color.rgb * lighting, inp.color.a);
+
+    // Output weighted color to accumulation buffer
+    float weight = ComputeWeight(outputColor, inp.position.z);
+
+    outp.accum = float4(outputColor.rgb * outputColor.a, outputColor.a) * weight;
+    outp.reveal = outputColor.a;
+}
+
+
+////////////////////// TRANSPARENCY COMPOSITION SHADERS //////////////////////
+
+Texture2D<float3> colorTexture : register(t2);
+Texture2D<float4> accumTexture : register(t3);
+Texture2D<float> revealTexture : register(t4);
+
+/*
+This function generates the coordinates for a fullscreen triangle with its vertex IDs:
+
+(-1,+3)
+   *
+   | \
+   |   \
+   |     \
+   |       \
+(-1,+1)    (+1,+1)
+   *----------*\
+   |          |  \
+   |  screen  |    \
+   |          |      \
+   *----------*--------*
+(-1,-1)    (+1,-1)  (+3,-1)
+*/
+float4 GetFullscreenTriangleVertex(uint id)
+{
+    const float v[4] = { -1.0, +3.0, -1.0, -1.0 };
+    return float4(v[id], v[id + 1], 0.999, 1.0);
+}
+
+float4 VSTransparentComposite(uint id : SV_VertexID) : SV_Position
+{
+    return GetFullscreenTriangleVertex(id);
+}
+
+float4 PSTransparentComposite(float4 screenPos : SV_Position) : SV_Target
+{
+    // Fetch framebuffer information
+    int3 texCoord = int3(screenPos.xy, 0);
+    float3 color = colorTexture.Load(texCoord);
+    float4 accum = accumTexture.Load(texCoord);
+    float reveal = revealTexture.Load(texCoord);
+
+    // Perform custom alpha blending with common SrcAlpha/InvSrcAlpha scheme
+    return float4(lerp(accum.rgb / max(accum.a, 1e-5), color, reveal), 1.0);
+}
 
 
 ////////////////////// PREVIEW SHADERS //////////////////////
@@ -400,10 +508,10 @@ void PSPlane(PlaneVertexOut inp, out PlanePixelOut outp)
     float2 dx = ddx(texCoord);
     float2 dy = ddy(texCoord);
 
-    float viewDist = length(viewPos.xyz - inp.worldPos.xyz);
+    float viewDist = length(viewPos - inp.worldPos.xyz);
 
     #if ENABLE_PARALLAX_OCCLUSION
-    float3 viewDir = VectorToPlaneTangetSpace(normalize(viewPos.xyz - inp.worldPos.xyz));
+    float3 viewDir = VectorToPlaneTangetSpace(normalize(viewPos - inp.worldPos.xyz));
     float3 texCoordAndHeight = ParallaxOffsetWithFade(texCoord, viewDir, viewDist, dx, dy);
     #else
     float2 texCoordAndHeight = texCoord;
@@ -432,38 +540,12 @@ struct SkyVertexOut
     float4 viewRay : VIEWRAY;
 };
 
-/*
-This function generates the coordinates for a fullscreen triangle with its vertex IDs:
-
-(-1,+3)
-   *
-   | \
-   |   \
-   |     \
-   |       \
-(-1,+1)    (+1,+1)
-   *----------*\
-   |          |  \
-   |  screen  |    \
-   |          |      \
-   *----------*--------*
-(-1,-1)    (+1,-1)  (+3,-1)
-*/
-float4 GetFullscreenTriangleVertex(uint id)
-{
-    const float v[4] = { -1.0, +3.0, -1.0, -1.0 };
-    return float4(v[id], v[id + 1], 0.999, 1.0);
-}
-
 void VSSkybox(uint id : SV_VertexID, out SkyVertexOut outp)
 {
     outp.position = GetFullscreenTriangleVertex(id);
     outp.viewRay = mul(vpMatrixInvNoViewPos, float4(outp.position.xy, 0.0, 1.0));
     outp.viewRay /= outp.viewRay.w;
 }
-
-TextureCube skyboxTexture : register(t3);
-SamplerState skyboxSampler : register(s4);
 
 float4 PSSkybox(SkyVertexOut inp) : SV_Target
 {
@@ -490,6 +572,10 @@ float4 PSDebug() : SV_Target
 
 ////////////////////// UI SHADERS //////////////////////
 
+#define UI_MODE_SOLID       0
+#define UI_MODE_DITHERED    1
+#define UI_MODE_TEXTURED    2
+
 cbuffer UIView : register(b1)
 {
     float4x4 pMatrix;
@@ -497,9 +583,9 @@ cbuffer UIView : register(b1)
 
 struct UIVertexIn
 {
-    int2    position    : POSITION;
-    uint4   texCoord    : TEXCOORD;
-    float4  color       : COLOR;
+    int2    position        : POSITION;
+    uint4   texCoordAndMode : TEXCOORDANDMODE;
+    float4  color           : COLOR;
 };
 
 struct UIVertexOut
@@ -507,34 +593,38 @@ struct UIVertexOut
     float4                  position    : SV_Position;
     float3                  texCoord    : TEXCOORD;
     float4                  color       : COLOR;
-    nointerpolation bool    isTextured  : IS_TEXTURED;
+    nointerpolation uint    mode        : MODE;
 };
 
 void VSOverlay(UIVertexIn inp, out UIVertexOut outp)
 {
     outp.position   = mul(pMatrix, float4((float2)inp.position.xy, 0.0, 1.0));
+    outp.texCoord   = (float3)inp.texCoordAndMode.xyz;
     outp.color      = inp.color;
-
-    if (inp.texCoord.w != 0)
-    {
-        outp.texCoord   = (float3)inp.texCoord.xyz;
-        outp.isTextured = true;
-    }
-    else
-    {
-        outp.texCoord   = float3(0.0, 0.0, 0.0);
-        outp.isTextured = false;
-    }
+    outp.mode       = inp.texCoordAndMode.w;
 }
 
 Texture2DArray uiTexture : register(t2);
 SamplerState uiTextureSampler : register(s3);
 
+static bool DitheredPattern(uint2 screenPos)
+{
+    const uint patternSize = 2;
+    //return (screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2);
+    return (screenPos.x % (patternSize*2) >= patternSize) != (screenPos.y % (patternSize*2) >= patternSize);
+}
+
 float4 PSOverlay(UIVertexOut inp) : SV_Target
 {
-    if (inp.isTextured)
-        return uiTexture.Sample(uiTextureSampler, inp.texCoord) * inp.color;
-    else
-        return inp.color;
+    switch (inp.mode)
+    {
+        case UI_MODE_TEXTURED:
+            return uiTexture.Sample(uiTextureSampler, inp.texCoord) * inp.color;
+        case UI_MODE_DITHERED:
+            return lerp(inp.color, (float4)0.0, DitheredPattern((uint2)inp.position.xy));
+        case UI_MODE_SOLID:
+        default:
+            return inp.color;
+    }
 }
 

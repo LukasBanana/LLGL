@@ -161,11 +161,12 @@ public:
         return nullptr;
     }
 
-    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool isTransparent = false)
+    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
     {
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
             return Brick{};
 
+        const bool isTransparent = (color.a < 255);
         const BrickGroup group =
         (
             isTransparent

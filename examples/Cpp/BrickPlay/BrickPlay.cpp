@@ -38,7 +38,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          silhouetteWidth                 = 5.0f;
 
     static constexpr std::uint32_t  maxUIVertexBatchSize            = 64 * 3;               // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
-    static constexpr int            uiColorPickerSize               = 25;                   // Size (in pixels) of each color picker button
+    static constexpr int            uiColorPickerSize               = 26;                   // Size (in pixels) of each color picker button
     static constexpr int            uiColorPickerOffset[2]          = { 15, 15 };
     static constexpr int            uiButtonFrameSize               = 3;
     static constexpr int            uiButtonMargin                  = 5;
@@ -58,14 +58,18 @@ class Example_BrickPlay : public ExampleBase
     // and the incurred performance cost of more almost invisible geometry can be avoided.
     static constexpr bool           useWaterTightBrickOptimization  = true;
 
+    // High precision format for transparency accumulation texture. Set this to either RGBA16Float or RGBA32Float.
+    static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA16Float;
+
     const char*                     sceneFilename                   = "Bricks.txt";
 
     enum BrickPSO
     {
         BrickPSO_Default = 0,
+        BrickPSO_Default_Wireframe,
         BrickPSO_Transparent,
-        BrickPSO_Wireframe,
-        BrickPSO_Preview, // With dithering to indicate blocked position
+        BrickPSO_Transparent_Wireframe,
+        BrickPSO_Preview,               // With dithering to indicate blocked position
 
         BrickPSO_Num,
     };
@@ -73,8 +77,11 @@ class Example_BrickPlay : public ExampleBase
     // Shaders to render brick instances, the brick preview model, UI elements, an infinite plne for the floor, and the skybox
     LLGL::Shader*               vsBrick                         = nullptr;
     LLGL::Shader*               fsBrick                         = nullptr;
+    LLGL::Shader*               fsBrickTransparent              = nullptr;
     LLGL::Shader*               vsBrickPreview                  = nullptr;
     LLGL::Shader*               fsBrickPreview                  = nullptr;
+    LLGL::Shader*               vsTransparentComposite          = nullptr;
+    LLGL::Shader*               fsTransparentComposite          = nullptr;
     LLGL::Shader*               vsOverlay                       = nullptr;
     LLGL::Shader*               fsOverlay                       = nullptr;
     LLGL::Shader*               vsOutline                       = nullptr;
@@ -106,6 +113,9 @@ class Example_BrickPlay : public ExampleBase
 
     LLGL::PipelineLayout*       psoSkyLayout                    = nullptr;
     LLGL::PipelineState*        psoSky                          = nullptr;
+
+    LLGL::PipelineLayout*       psoCompositeLayout              = nullptr;
+    LLGL::PipelineState*        psoComposite                    = nullptr;
 
     LLGL::Buffer*               sceneViewCbuffer                = nullptr;
     LLGL::Buffer*               vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
@@ -141,7 +151,7 @@ class Example_BrickPlay : public ExampleBase
     }
     uiState;
 
-    const LLGL::ColorRGBAub     colorPalette[10] =
+    const LLGL::ColorRGBAub     colorPalette[11] =
     {
         LLGL::ColorRGBAub{ 0xFF, 0xFF, 0xFF }, // White
         LLGL::ColorRGBAub{ 0x85, 0x80, 0x85 }, // Mid gray
@@ -153,6 +163,8 @@ class Example_BrickPlay : public ExampleBase
         LLGL::ColorRGBAub{ 0xFF, 0x69, 0x8F }, // Coral
         LLGL::ColorRGBAub{ 0x92, 0x39, 0x78 }, // Magenta
         LLGL::ColorRGBAub{ 0xD5, 0x40, 0x40 }, // Bright red
+
+        LLGL::ColorRGBAub{ 0xFF, 0xFF, 0xFF, 0xB4 }, // Glass
     };
 
     struct alignas(16) SceneView
@@ -160,9 +172,13 @@ class Example_BrickPlay : public ExampleBase
         Gs::Matrix4f        vpMatrix;                                               // View-projection matrix
         Gs::Matrix4f        vpMatrixInv;
         Gs::Matrix4f        vpMatrixInvNoViewPos;
+
         Gs::Vector3f        gridScale               = Gs::Vector3f{ 1.0f };
         float               specularPower           = 90.0f;                        // Specular exponent for blinn-phone shading model
-        Gs::Vector4f        viewPos;                                                // Camera view position (in world space)
+
+        Gs::Vector3f        viewPos;                                                // Camera view position (in world space)
+        float               skyboxDiffuseLOD        = 6.0f;
+
         Gs::Vector4f        ambientLight            = { 0.2f, 0.2f, 0.2f, 0.0f };
         Gs::Vector4f        diffuseLight[2]         =
         {
@@ -190,7 +206,8 @@ class Example_BrickPlay : public ExampleBase
         LLGL::ColorRGBAf    planeBaseColor;
         float               parallaxFadeRange[2]    = { 75.0f, 100.0f };
         float               studHeight              = 0.225f;
-        float               pad0;
+
+        float               skyboxDiffuseFactor     = 0.2f;
     }
     sceneView;
 
@@ -202,10 +219,9 @@ class Example_BrickPlay : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickType       type            = static_cast<BrickType>(0); // Previews brick with instance index 0.
-        bool            isTransparent   = false;
-        bool            isBlocked       = false;
-        std::int32_t    gridOffset      = 0;
+        BrickType       type        = static_cast<BrickType>(0); // Previews brick with instance index 0.
+        bool            isBlocked   = false;
+        std::int32_t    gridOffset  = 0;
     };
 
     struct ViewOptions
@@ -240,6 +256,37 @@ class Example_BrickPlay : public ExampleBase
     }
     planeModel;
 
+    struct OpaqueFramebuffer
+    {
+        const LLGL::ClearValue  clearValues[1]  =
+        {
+            LLGL::ClearValue{}, // Default depth-stencil clear values
+        };
+
+        LLGL::Texture*          colorBuffer     = nullptr;
+        LLGL::Texture*          depthStencil    = nullptr;
+        LLGL::RenderTarget*     renderTarget    = nullptr;
+        LLGL::RenderPass*       renderPass      = nullptr;
+    }
+    opacity;
+
+    // Framebuffer resources to render transparent bricks with weighted-blended technique.
+    // See https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
+    struct TransparencyFramebuffer
+    {
+        const LLGL::ClearValue  clearValues[2]  =
+        {
+            LLGL::ClearValue{ 0.0f, 0.0f, 0.0f, 0.0f },
+            LLGL::ClearValue{ 1.0f, 0.0f, 0.0f, 0.0f },
+        };
+
+        LLGL::Texture*          accumTexture    = nullptr;
+        LLGL::Texture*          revealTexture   = nullptr;
+        LLGL::RenderTarget*     renderTarget    = nullptr;
+        LLGL::RenderPass*       renderPass      = nullptr;
+    }
+    transparency;
+
     // Brick vertex strucutre for brick instances. They are untextured, solid-colored bricks, so they don't need texture coordinates.
     struct BrickVertex
     {
@@ -247,21 +294,31 @@ class Example_BrickPlay : public ExampleBase
         Gs::Vector3f normal;
     };
 
+    // Encode mode how to render UI elements within each vertex to simplify batched draw calls.
+    // This reduces the number of times vertex data has to be uploaded to the GPU.
+    enum UIRenderMode
+    {
+        UIRenderMode_Solid = 0,
+        UIRenderMode_Dithered,
+        UIRenderMode_Textured,
+    };
+
     // UI element vertex structure. Pixel-based coordinates are stored as 16-bit integers since the screen won't be larger than 2^15-1 pixels.
     struct UIVertex
     {
         std::int16_t        position[2];
-        std::uint8_t        texCoord[4];
+        std::uint8_t        texCoord[3];
+        std::uint8_t        mode;
         LLGL::ColorRGBAub   color;
 
-        void Set(int x, int y, LLGL::ColorRGBAub col)
+        void Set(int x, int y, LLGL::ColorRGBAub col, UIRenderMode render = UIRenderMode_Solid)
         {
             position[0] = static_cast<std::int16_t>(x);
             position[1] = static_cast<std::int16_t>(y);
             texCoord[0] = 0;
             texCoord[1] = 0;
             texCoord[2] = 0;
-            texCoord[3] = 0;
+            mode        = render;
             color       = col;
         }
 
@@ -272,7 +329,7 @@ class Example_BrickPlay : public ExampleBase
             texCoord[0] = static_cast<std::uint8_t>(tx);
             texCoord[1] = static_cast<std::uint8_t>(ty);
             texCoord[2] = static_cast<std::uint8_t>(tz);
-            texCoord[3] = 1;
+            mode        = UIRenderMode_Textured;
             color       = col;
         }
     };
@@ -396,6 +453,7 @@ public:
 
         // Create all graphics objects
         CreateResources();
+        CreateSizeDependentResources(swapChain->GetResolution());
         if (!CreatePipelines())
             return;
 
@@ -486,40 +544,48 @@ private:
 
     void LoadAllBrickModels(std::vector<BrickVertex>& vertices)
     {
-        enum class ModelOptimization
+        enum ModelFlags
         {
-            None,
-            WallsOnly,
-            WallsOnlyExt,
+            Model_IsWallOptimized       = (1 << 0), // Does the model has an optimized version that only renders its walls, with some potential but negligible holes?
+            Model_IsWallOptimizedExt    = (1 << 1), // Does the model has an optimized version that only renders its walls, but is still 'water tight'?
+            Model_IsGlassOptimized      = (1 << 2), // Does the model has a specialized version for transparent materials?
         };
 
-        auto LoadBrickModelGroups = [this, &vertices](const char* basename, BrickType brickType, ModelOptimization optimization = ModelOptimization::None) -> void
+        auto LoadBrickModelGroups = [this, &vertices](const char* basename, BrickType brickType, int flags = 0) -> void
         {
+            // Load base model for this group of bricks
             LoadBrickModel(basename, vertices, brickType);
-            if (optimization != ModelOptimization::None)
+
+            if ((flags & (Model_IsWallOptimized | Model_IsWallOptimizedExt)) != 0)
             {
+                // Load either standard or extended model specialization that only renders its walls.
+                // These are rendered when the brick is blocked above and below to improve performance by rendering less triangels and pixels.
                 std::string basenameWallsOnly = std::string(basename) + "_WallsOnly";
-                if (useWaterTightBrickOptimization && optimization == ModelOptimization::WallsOnlyExt)
+                if (useWaterTightBrickOptimization && (flags & Model_IsWallOptimizedExt) != 0)
                     basenameWallsOnly += "Ext";
                 LoadBrickModel(basenameWallsOnly.c_str(), vertices, brickType, BrickGroup_WallsOnly);
             }
+
+            if ((flags & Model_IsGlassOptimized) != 0)
+            {
+                // Load model specialization for transparent materials. These have less tubes inside them so its easier to see through them.
+                const std::string basenameGlass = std::string(basename) + "_Glass";
+                LoadBrickModel(basenameGlass.c_str(), vertices, brickType, BrickGroup_Transparent);
+            }
         };
 
-        LoadBrickModelGroups("Brick1x1x1",  BrickType_1x1x1,        ModelOptimization::WallsOnly   );
-        LoadBrickModelGroups("Tile1x1",     BrickType_1x1x1_Tile                                   );
-        LoadBrickModelGroups("Brick1x1x3",  BrickType_1x1x3,        ModelOptimization::WallsOnly   );
-        LoadBrickModelGroups("Brick1x2x1",  BrickType_1x2x1,        ModelOptimization::WallsOnlyExt);
-        LoadBrickModelGroups("Brick1x2x3",  BrickType_1x2x3,        ModelOptimization::WallsOnlyExt);
-        LoadBrickModelGroups("Brick2x2x1",  BrickType_2x2x1,        ModelOptimization::WallsOnlyExt);
-        LoadBrickModelGroups("Tile2x2",     BrickType_2x2x1_Tile                                   );
-        LoadBrickModelGroups("Brick2x2x3",  BrickType_2x2x3,        ModelOptimization::WallsOnlyExt);
-        LoadBrickModelGroups("Roof2x2x3",   BrickType_2x2x3_Roof                                   );
-        LoadBrickModelGroups("Roof2x3x3",   BrickType_2x3x3_Roof                                   );
-        LoadBrickModelGroups("Brick4x2x1",  BrickType_4x2x1,        ModelOptimization::WallsOnlyExt);
-        LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        ModelOptimization::WallsOnlyExt);
-
-        LoadBrickModel("Brick2x2x3_Glass"    , vertices, BrickType_2x2x3, BrickGroup_Transparent);
-        LoadBrickModel("Brick4x2x3_Glass"    , vertices, BrickType_4x2x3, BrickGroup_Transparent);
+        LoadBrickModelGroups("Brick1x1x1",  BrickType_1x1x1,        Model_IsWallOptimized);
+        LoadBrickModelGroups("Tile1x1",     BrickType_1x1x1_Tile);
+        LoadBrickModelGroups("Brick1x1x3",  BrickType_1x1x3,        Model_IsWallOptimized);
+        LoadBrickModelGroups("Brick1x2x1",  BrickType_1x2x1,        Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick1x2x3",  BrickType_1x2x3,        Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick2x2x1",  BrickType_2x2x1,        Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Tile2x2",     BrickType_2x2x1_Tile);
+        LoadBrickModelGroups("Brick2x2x3",  BrickType_2x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
+        LoadBrickModelGroups("Roof2x2x3",   BrickType_2x2x3_Roof);
+        LoadBrickModelGroups("Roof2x3x3",   BrickType_2x3x3_Roof);
+        LoadBrickModelGroups("Brick4x2x1",  BrickType_4x2x1,        Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
     }
 
     void InitAppConfig()
@@ -646,6 +712,124 @@ private:
         return cubeTex;
     }
 
+    // Creates all resources that depend on the swap-chain resolution.
+    // This is called once at startup and continously as the window is being resized.
+    void CreateSizeDependentResources(const LLGL::Extent2D& resolution)
+    {
+        CreateOpacityResource(resolution);
+        CreateTransparencyResource(resolution);
+    }
+
+    void CreateOpacityResource(const LLGL::Extent2D& resolution)
+    {
+        // Delete previoulsy created resources
+        if (opacity.colorBuffer != nullptr)
+        {
+            renderer->Release(*opacity.colorBuffer);
+            renderer->Release(*opacity.depthStencil);
+            renderer->Release(*opacity.renderTarget);
+        }
+
+        // Create render-target textures to render into during transparency pass
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.debugName       = "Opacity.ColorBuffer";
+            texDesc.extent.width    = resolution.width;
+            texDesc.extent.height   = resolution.height;
+            texDesc.format          = swapChain->GetColorFormat();
+            texDesc.mipLevels       = 1;
+            texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+        }
+        opacity.colorBuffer = renderer->CreateTexture(texDesc);
+        {
+            texDesc.debugName       = "Opacity.DepthStencil";
+            texDesc.bindFlags       = LLGL::BindFlags::DepthStencilAttachment;
+            texDesc.format          = swapChain->GetDepthStencilFormat();
+
+            if (GetSampleCount() > 1)
+            {
+                texDesc.type    = LLGL::TextureType::Texture2DMS;
+                texDesc.samples = GetSampleCount();
+            }
+        }
+        opacity.depthStencil = renderer->CreateTexture(texDesc);
+
+        // Create render-target with two attachments
+        LLGL::RenderTargetDescriptor renderTargetDesc;
+        {
+            renderTargetDesc.debugName              = "Opacity.RenderTarget";
+            renderTargetDesc.renderPass             = opacity.renderPass;
+            renderTargetDesc.resolution             = resolution;
+            renderTargetDesc.samples                = GetSampleCount();
+
+            if (renderTargetDesc.samples > 1)
+            {
+                renderTargetDesc.colorAttachments[0].format = opacity.colorBuffer->GetFormat();
+                renderTargetDesc.resolveAttachments[0]      = opacity.colorBuffer;
+            }
+            else
+            {
+                renderTargetDesc.colorAttachments[0]        = opacity.colorBuffer;
+            }
+
+            renderTargetDesc.depthStencilAttachment = opacity.depthStencil;
+        }
+        opacity.renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
+    }
+
+    void CreateTransparencyResource(const LLGL::Extent2D& resolution)
+    {
+        // Delete previoulsy created resources
+        if (transparency.accumTexture != nullptr)
+        {
+            renderer->Release(*transparency.accumTexture);
+            renderer->Release(*transparency.revealTexture);
+            renderer->Release(*transparency.renderTarget);
+        }
+
+        // Create render-target textures to render into during transparency pass
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.debugName       = "Transparency.AccumulationTexture";
+            texDesc.extent.width    = resolution.width;
+            texDesc.extent.height   = resolution.height;
+            texDesc.format          = transparencyAccumFormat;
+            texDesc.mipLevels       = 1;
+            texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+        }
+        transparency.accumTexture = renderer->CreateTexture(texDesc);
+        {
+            texDesc.debugName       = "Transparency.RevealTexture";
+            texDesc.format          = LLGL::Format::R8UNorm;
+        }
+        transparency.revealTexture = renderer->CreateTexture(texDesc);
+
+        // Create render-target with two attachments
+        LLGL::RenderTargetDescriptor renderTargetDesc;
+        {
+            renderTargetDesc.debugName              = "Transparency.RenderTarget";
+            renderTargetDesc.renderPass             = transparency.renderPass;
+            renderTargetDesc.resolution             = resolution;
+            renderTargetDesc.samples                = GetSampleCount();
+
+            if (renderTargetDesc.samples > 1)
+            {
+                renderTargetDesc.colorAttachments[0].format = transparency.accumTexture->GetFormat();
+                renderTargetDesc.colorAttachments[1].format = transparency.revealTexture->GetFormat();
+                renderTargetDesc.resolveAttachments[0]      = transparency.accumTexture;
+                renderTargetDesc.resolveAttachments[1]      = transparency.revealTexture;
+            }
+            else
+            {
+                renderTargetDesc.colorAttachments[0]        = transparency.accumTexture;
+                renderTargetDesc.colorAttachments[1]        = transparency.revealTexture;
+            }
+
+            renderTargetDesc.depthStencilAttachment         = opacity.depthStencil;
+        }
+        transparency.renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
+    }
+
     void CreateResources()
     {
         const float projZAxis = GetProjectionZAxis();
@@ -725,6 +909,43 @@ private:
 
         // Load skybox textures
         skyboxCubemap = LoadCubeTexture("Skybox/sky_74_cubemap_2k/", { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" });
+
+        // Create render pass for opacity scene rendering.
+        LLGL::RenderPassDescriptor opacityPassDesc;
+        {
+            opacityPassDesc.debugName                   = "Opacity.RenderPass";
+            opacityPassDesc.samples                     = GetSampleCount();
+
+            opacityPassDesc.colorAttachments[0].format  = swapChain->GetColorFormat();
+            opacityPassDesc.colorAttachments[0].loadOp  = LLGL::AttachmentLoadOp::Undefined;
+            opacityPassDesc.colorAttachments[0].storeOp = LLGL::AttachmentStoreOp::Store;
+
+            opacityPassDesc.depthAttachment.format      = swapChain->GetDepthStencilFormat();
+            opacityPassDesc.depthAttachment.loadOp      = LLGL::AttachmentLoadOp::Clear;
+            opacityPassDesc.depthAttachment.storeOp     = LLGL::AttachmentStoreOp::Store;
+        }
+        opacity.renderPass = renderer->CreateRenderPass(opacityPassDesc);
+
+        // Create render pass for transparenty scene rendering.
+        LLGL::RenderPassDescriptor transparencyPassDesc;
+        {
+            transparencyPassDesc.debugName                      = "Transparency.RenderPass";
+            transparencyPassDesc.samples                        = GetSampleCount();
+
+            transparencyPassDesc.colorAttachments[0].format     = transparencyAccumFormat;
+            transparencyPassDesc.colorAttachments[0].loadOp     = LLGL::AttachmentLoadOp::Clear;
+            transparencyPassDesc.colorAttachments[0].storeOp    = LLGL::AttachmentStoreOp::Store;
+
+            transparencyPassDesc.colorAttachments[1].format     = LLGL::Format::R8UNorm;
+            transparencyPassDesc.colorAttachments[1].loadOp     = LLGL::AttachmentLoadOp::Clear;
+            transparencyPassDesc.colorAttachments[1].storeOp    = LLGL::AttachmentStoreOp::Store;
+
+            // Only load depth-stencil attachment, but don't write to it
+            transparencyPassDesc.depthAttachment.format         = swapChain->GetDepthStencilFormat();
+            transparencyPassDesc.depthAttachment.loadOp         = LLGL::AttachmentLoadOp::Load;
+            transparencyPassDesc.depthAttachment.storeOp        = LLGL::AttachmentStoreOp::Undefined;
+        }
+        transparency.renderPass = renderer->CreateRenderPass(transparencyPassDesc);
     }
 
     bool CreatePipelines()
@@ -743,22 +964,35 @@ private:
             LLGL::ShaderMacro{},
         };
 
+        const LLGL::ShaderMacro fsTransparentMacros[]
+        {
+            LLGL::ShaderMacro{ "ENABLE_DUAL_SIDED_LIGHTING", "1" },
+            LLGL::ShaderMacro{},
+        };
+
         // Create shaders
-        vsBrick         = LoadVertexShader  ("BrickPlay", "VSBrick");
-        fsBrick         = LoadFragmentShader("BrickPlay", "PSBrick");
-        vsBrickPreview  = LoadVertexShader  ("BrickPlay", "VSBrickPreview");
-        fsBrickPreview  = LoadFragmentShader("BrickPlay", "PSBrickPreview");
-        vsOverlay       = LoadVertexShader  ("BrickPlay", "VSOverlay");
-        fsOverlay       = LoadFragmentShader("BrickPlay", "PSOverlay");
-        vsPlane         = LoadVertexShader  ("BrickPlay", "VSPlane");
-        fsPlane         = LoadFragmentShader("BrickPlay", "PSPlane", fsPlaneMacros);
-        vsSkybox        = LoadVertexShader  ("BrickPlay", "VSSkybox");
-        fsSkybox        = LoadFragmentShader("BrickPlay", "PSSkybox");
+        vsBrick                 = LoadVertexShader  ("BrickPlay", "VSBrick");
+        fsBrick                 = LoadFragmentShader("BrickPlay", "PSBrick");
+        fsBrickTransparent      = LoadFragmentShader("BrickPlay", "PSBrickTransparent", fsTransparentMacros);
+        vsBrickPreview          = LoadVertexShader  ("BrickPlay", "VSBrickPreview");
+        fsBrickPreview          = LoadFragmentShader("BrickPlay", "PSBrickPreview");
+        vsTransparentComposite  = LoadVertexShader  ("BrickPlay", "VSTransparentComposite");
+        fsTransparentComposite  = LoadFragmentShader("BrickPlay", "PSTransparentComposite");
+        vsOverlay               = LoadVertexShader  ("BrickPlay", "VSOverlay");
+        fsOverlay               = LoadFragmentShader("BrickPlay", "PSOverlay");
+        vsPlane                 = LoadVertexShader  ("BrickPlay", "VSPlane");
+        fsPlane                 = LoadFragmentShader("BrickPlay", "PSPlane", fsPlaneMacros);
+        vsSkybox                = LoadVertexShader  ("BrickPlay", "VSSkybox");
+        fsSkybox                = LoadFragmentShader("BrickPlay", "PSSkybox");
 
         // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@2):vert:frag,"
+
+                "texture(skyboxTexture@7):frag,"
+                "sampler(skyboxSampler@8){}:frag,"
+                "sampler<skyboxTexture, skyboxSampler>(s_skyboxTextureskyboxSampler@7),"
             )
         );
 
@@ -779,8 +1013,6 @@ private:
         {
             psoDesc.renderPass                      = swapChain->GetRenderPass();
             psoDesc.inputVertexAttribs              = vertexAttribs;
-            psoDesc.vertexShader                    = vsBrick;
-            psoDesc.fragmentShader                  = fsBrick;
             psoDesc.pipelineLayout                  = psoLayout;
             psoDesc.primitiveTopology               = LLGL::PrimitiveTopology::TriangleList;
             psoDesc.depth.testEnabled               = true;
@@ -792,31 +1024,59 @@ private:
         LLGL::GraphicsPipelineDescriptor psoDesc;
         {
             SetPSODefaults(psoDesc);
+            psoDesc.debugName               = "Scene.Opaque.PSO";
+            psoDesc.vertexShader            = vsBrick;
+            psoDesc.fragmentShader          = fsBrick;
         }
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
-
-        // Create PSO for wrieframe view mode
         {
-            psoDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
+            psoDesc.debugName               = "Scene.Opaque.Wireframe.PSO";
+            psoDesc.rasterizer.polygonMode  = LLGL::PolygonMode::Wireframe;
         }
-        pso[BrickPSO_Wireframe] = renderer->CreatePipelineState(psoDesc);
-        REPORT_PSO_ERRORS(pso[BrickPSO_Wireframe]);
+        pso[BrickPSO_Default_Wireframe] = renderer->CreatePipelineState(psoDesc);
+        REPORT_PSO_ERRORS(pso[BrickPSO_Default_Wireframe]);
 
         // Create PSO for transparent bricks
         LLGL::GraphicsPipelineDescriptor psoTransparentDesc;
         {
             SetPSODefaults(psoTransparentDesc);
+
+            psoTransparentDesc.debugName                        = "Scene.Transparent.PSO";
+            psoTransparentDesc.renderPass                       = transparency.renderPass;
+            psoTransparentDesc.vertexShader                     = vsBrick;
+            psoTransparentDesc.fragmentShader                   = fsBrickTransparent;
+
             psoTransparentDesc.depth.writeEnabled               = false;
+            psoTransparentDesc.blend.independentBlendEnabled    = true;
+
             psoTransparentDesc.blend.targets[0].blendEnabled    = true;
+            psoTransparentDesc.blend.targets[0].srcColor        = LLGL::BlendOp::One;
+            psoTransparentDesc.blend.targets[0].srcAlpha        = LLGL::BlendOp::One;
+            psoTransparentDesc.blend.targets[0].dstColor        = LLGL::BlendOp::One;
+            psoTransparentDesc.blend.targets[0].dstAlpha        = LLGL::BlendOp::One;
+
+            psoTransparentDesc.blend.targets[1].blendEnabled    = true;
+            psoTransparentDesc.blend.targets[1].srcColor        = LLGL::BlendOp::Zero;
+            psoTransparentDesc.blend.targets[1].srcAlpha        = LLGL::BlendOp::Zero;
+            psoTransparentDesc.blend.targets[1].dstColor        = LLGL::BlendOp::InvSrcColor;
+            psoTransparentDesc.blend.targets[1].dstAlpha        = LLGL::BlendOp::Zero;
+            psoTransparentDesc.blend.targets[1].colorMask       = LLGL::ColorMaskFlags::R;
         }
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
+        {
+            psoDesc.debugName                                   = "Scene.Transparent.Wireframe.PSO";
+            psoDesc.rasterizer.polygonMode                      = LLGL::PolygonMode::Wireframe;
+        }
+        pso[BrickPSO_Transparent_Wireframe] = renderer->CreatePipelineState(psoTransparentDesc);
+        REPORT_PSO_ERRORS(pso[BrickPSO_Transparent_Wireframe]);
 
         // Create PSO for blocked preview object
         LLGL::GraphicsPipelineDescriptor psoPreviewDesc;
         {
             SetPSODefaults(psoPreviewDesc);
+            psoPreviewDesc.debugName                            = "Scene.Preview.PSO";
             psoPreviewDesc.vertexShader                         = vsBrickPreview;
             psoPreviewDesc.fragmentShader                       = fsBrickPreview;
             psoPreviewDesc.rasterizer.polygonMode               = LLGL::PolygonMode::Fill;
@@ -828,7 +1088,7 @@ private:
         #if DEBUG_KDTREE
         LLGL::GraphicsPipelineDescriptor psoDebugDesc;
         {
-            psoDebugDesc.debugName          = "DebugPSO";
+            psoDebugDesc.debugName          = "Debug.PSO";
             psoDebugDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(SceneView@2):vert,float4(vertexA,vertexB)"));
             psoDebugDesc.vertexShader       = LoadVertexShader  ("BrickPlay", "VSDebug");
             psoDebugDesc.fragmentShader     = LoadFragmentShader("BrickPlay", "PSDebug");
@@ -852,14 +1112,14 @@ private:
 
         const LLGL::VertexAttribute uiVertexAttribs[] =
         {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RG16SInt,   /*location:*/ 0, /*offset:*/ offsetof(UIVertex, position), /*stride:*/ sizeof(UIVertex) },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RGBA8UInt,  /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
-            LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, /*location:*/ 2, /*offset:*/ offsetof(UIVertex, color   ), /*stride:*/ sizeof(UIVertex) },
+            LLGL::VertexAttribute{ "position",        LLGL::Format::RG16SInt,   /*location:*/ 0, /*offset:*/ offsetof(UIVertex, position), /*stride:*/ sizeof(UIVertex) },
+            LLGL::VertexAttribute{ "texCoordAndMode", LLGL::Format::RGBA8UInt,  /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
+            LLGL::VertexAttribute{ "color",           LLGL::Format::RGBA8UNorm, /*location:*/ 2, /*offset:*/ offsetof(UIVertex, color   ), /*stride:*/ sizeof(UIVertex) },
         };
 
         LLGL::GraphicsPipelineDescriptor psoUIDesc;
         {
-            psoUIDesc.debugName                     = "OverlayPSO";
+            psoUIDesc.debugName                     = "Overlay.PSO";
             psoUIDesc.renderPass                    = swapChain->GetRenderPass();
             psoUIDesc.pipelineLayout                = psoUILayout;
             psoUIDesc.inputVertexAttribs            = uiVertexAttribs;
@@ -951,6 +1211,9 @@ private:
                 "texture(planeColorMap@4):frag,"
                 "texture(planeNormalMap@5):frag,"
 
+                "texture(skyboxTexture@7):frag,"
+                "sampler(skyboxSampler@8){}:frag,"
+
                 #if ENABLE_PARALLAX_OCCLUSION
                 "texture(planeHeightMap@6):frag,"
                 "sampler<planeHeightMap, planeSampler>(s_planeHeightMapplaneSampler@6),"
@@ -958,6 +1221,7 @@ private:
 
                 "sampler<planeColorMap, planeSampler>(s_planeColorMapplaneSampler@4),"
                 "sampler<planeNormalMap, planeSampler>(s_planeNormalMapplaneSampler@5),"
+                "sampler<skyboxTexture, skyboxSampler>(s_skyboxTextureskyboxSampler@7),"
             )
         );
 
@@ -968,7 +1232,7 @@ private:
 
         LLGL::GraphicsPipelineDescriptor psoPlaneDesc;
         {
-            psoPlaneDesc.debugName                      = "PlanePSO";
+            psoPlaneDesc.debugName                      = "Plane.PSO";
             psoPlaneDesc.renderPass                     = swapChain->GetRenderPass();
             psoPlaneDesc.inputVertexAttribs             = planeVertexAttribs;
             psoPlaneDesc.vertexShader                   = vsPlane;
@@ -991,16 +1255,16 @@ private:
         psoSkyLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@2):vert,"
-                "texture(skyboxTexture@3):frag,"
-                "sampler(skyboxSampler@4){}:frag," // Default static sampler
+                "texture(skyboxTexture@7):frag,"
+                "sampler(skyboxSampler@8){}:frag," // Default static sampler
 
-                "sampler<skyboxTexture, skyboxSampler>(s_skyboxTextureskyboxSampler@3),"
+                "sampler<skyboxTexture, skyboxSampler>(s_skyboxTextureskyboxSampler@7),"
             )
         );
 
         LLGL::GraphicsPipelineDescriptor psoSkyDesc;
         {
-            psoSkyDesc.debugName                        = "SkyboxPSO";
+            psoSkyDesc.debugName                        = "Skybox.PSO";
             psoSkyDesc.renderPass                       = swapChain->GetRenderPass();
             psoSkyDesc.vertexShader                     = vsSkybox;
             psoSkyDesc.fragmentShader                   = fsSkybox;
@@ -1011,6 +1275,26 @@ private:
         };
         psoSky = renderer->CreatePipelineState(psoSkyDesc);
         REPORT_PSO_ERRORS(psoSky);
+
+        // Create transparency composition PSO
+        psoCompositeLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "texture(colorTexture@2):frag,"
+                "texture(accumTexture@3):frag,"
+                "texture(revealTexture@4):frag,"
+            )
+        );
+
+        LLGL::GraphicsPipelineDescriptor psoCompositeDesc;
+        {
+            psoCompositeDesc.debugName      = "Transparency.Composite.PSO";
+            psoCompositeDesc.pipelineLayout = psoCompositeLayout;
+            psoCompositeDesc.renderPass     = swapChain->GetRenderPass();
+            psoCompositeDesc.vertexShader   = vsTransparentComposite;
+            psoCompositeDesc.fragmentShader = fsTransparentComposite;
+        }
+        psoComposite = renderer->CreatePipelineState(psoCompositeDesc);
+        REPORT_PSO_ERRORS(psoComposite);
 
         return true;
     }
@@ -1261,20 +1545,30 @@ private:
         }
 
         scene.NewBrick(BrickType_4x2x1, { -9, 3, -4 }, GridRotation_90, colorPalette[1]);
-        scene.NewBrick(BrickType_4x2x1, { -9, 3, 0 }, GridRotation_90, colorPalette[1]);
+        scene.NewBrick(BrickType_4x2x1, { -9, 3,  0 }, GridRotation_90, colorPalette[1]);
         scene.NewBrick(BrickType_4x2x1, { -9, 3, +4 }, GridRotation_90, colorPalette[1]);
 
     }
 
     //////////////////// RENDERING ////////////////////
 
-    void BindInstancePSO(BrickPSO psoType)
+    void BindInstancePSO(BrickPSO psoType, LLGL::Buffer* instanceBuffer, LLGL::VertexBufferView (&vertexBufferViews)[2])
     {
+        // Set vertex buffers (vertices and instances)
+        vertexBufferViews[0] = LLGL::VertexBufferView{ vertexAndPreviewInstanceBuffer };
+        vertexBufferViews[1] = LLGL::VertexBufferView{ instanceBuffer };
+
+        // If offset instancing is not supported, set vertex buffers with an offset for each instance group
+        if (hasOffsetInstancing)
+            commands->SetVertexBuffers(2, vertexBufferViews);
+
+        // Bind PSO and resources
         commands->SetPipelineState(*pso[psoType]);
         commands->SetResource(0, *sceneViewCbuffer);
+        commands->SetResource(1, *skyboxCubemap);
     }
 
-    void RenderBrickInstanceGroup(const BrickMesh& mesh, const InstanceGroup& group, LLGL::VertexBufferView (&vertexBufferViews)[2])
+    void RenderBrickInstanceGroup(const BrickMesh mesh, const InstanceGroup& group, LLGL::VertexBufferView (&vertexBufferViews)[2])
     {
         if (hasOffsetInstancing)
         {
@@ -1290,7 +1584,26 @@ private:
         }
     }
 
-    void RenderBrickInstances(const BrickScene& scene)
+    void RenderAllBrickTypesForGroup(const BrickScene& scene, BrickGroup groupType, LLGL::VertexBufferView (&vertexBufferViews)[2])
+    {
+        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        {
+            const std::uint32_t groupId = CombineToBrickId(brickType, groupType);
+            const BrickMesh mesh = GetBrickMeshOrDefault(brickType, groupType);
+            const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+            if (group.numInstances > 0 && mesh.numVertices > 0)
+            {
+                const std::string debugGroup = "InstanceGroup" + std::to_string(groupId);
+                commands->PushDebugGroup(debugGroup.c_str());
+                {
+                    RenderBrickInstanceGroup(mesh, group, vertexBufferViews);
+                }
+                commands->PopDebugGroup();
+            }
+        }
+    }
+
+    void RenderOpaqueBrickInstances(const BrickScene& scene)
     {
         // Exit early if no instances have been allocated yet
         LLGL::Buffer* instanceBuffer = scene.GetInstanceBuffer();
@@ -1298,41 +1611,41 @@ private:
             return;
 
         // Set vertex buffers (vertices and instances)
-        LLGL::VertexBufferView vertexBufferViews[] =
-        {
-            LLGL::VertexBufferView{ vertexAndPreviewInstanceBuffer },
-            LLGL::VertexBufferView{ instanceBuffer },
-        };
-
-        // If offset instancing is not supported, set vertex buffers with an offset for each instance group
-        if (hasOffsetInstancing)
-            commands->SetVertexBuffers(2, vertexBufferViews);
-
-        BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Default);
+        LLGL::VertexBufferView vertexBufferViews[2];
+        BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Default_Wireframe : BrickPSO_Default, instanceBuffer, vertexBufferViews);
 
         // Draw instances of all groups
-        for (int groupType = BrickGroup_Default; groupType < BrickGroup_Num; ++groupType)
-        {
-            // Change PSO for transparent objects
-            if (groupType == BrickGroup_Transparent)
-                BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Wireframe : BrickPSO_Transparent);
+        for (int groupType = BrickGroup_Default; groupType < BrickGroup_Transparent; ++groupType)
+            RenderAllBrickTypesForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
+    }
 
-            for (int brickType = 0; brickType < BrickType_Num; ++brickType)
-            {
-                const std::uint32_t groupId = CombineToBrickId(brickType, groupType);
-                const BrickMesh& mesh = BrickDictionary::Get().GetMesh(brickType, groupType);
-                const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
-                if (group.numInstances > 0 && mesh.numVertices > 0)
-                {
-                    const std::string debugGroup = "InstanceGroup" + std::to_string(groupId);
-                    commands->PushDebugGroup(debugGroup.c_str());
-                    {
-                        RenderBrickInstanceGroup(mesh, group, vertexBufferViews);
-                    }
-                    commands->PopDebugGroup();
-                }
-            }
-        }
+    void RenderTransparentBrickInstances(const BrickScene& scene)
+    {
+        // Exit early if no instances have been allocated yet
+        LLGL::Buffer* instanceBuffer = scene.GetInstanceBuffer();
+        if (instanceBuffer == nullptr)
+            return;
+
+        // Set vertex buffers (vertices and instances)
+        LLGL::VertexBufferView vertexBufferViews[2];
+        BindInstancePSO(viewOptions.showWireframe ? BrickPSO_Transparent_Wireframe : BrickPSO_Transparent, instanceBuffer, vertexBufferViews);
+
+        // Draw instances of the transparent group only
+        const BrickGroup groupType = BrickGroup_Transparent;
+        RenderAllBrickTypesForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
+    }
+
+    // Combines opaque with transparent geometry
+    void RenderTransparentComposite()
+    {
+        // The transparency composition is rendered with a fullscreen triangle, i.e. the vertex shader generates the vertices on its own. No vertex buffer needed.
+        commands->SetPipelineState(*psoComposite);
+
+        commands->SetResource(0, *opacity.colorBuffer);
+        commands->SetResource(1, *transparency.accumTexture);
+        commands->SetResource(2, *transparency.revealTexture);
+
+        commands->Draw(3, 0);
     }
 
     void UpdatePlaneGeometryForViewFrustum()
@@ -1471,8 +1784,10 @@ private:
         commands->SetResource(2, *planeModel.colorMap);
         commands->SetResource(3, *planeModel.normalMap);
 
+        commands->SetResource(4, *skyboxCubemap);
+
         #if ENABLE_PARALLAX_OCCLUSION
-        commands->SetResource(4, *planeModel.heightMap);
+        commands->SetResource(5, *planeModel.heightMap);
         #endif
 
         commands->SetIndexBuffer(*planeModel.meshBuffer, LLGL::Format::R16UInt, PlaneModel::meshBufferIndexOffset);
@@ -1494,9 +1809,9 @@ private:
 
     void RenderBrickScene(const BrickScene& scene)
     {
-        commands->PushDebugGroup("RenderBrickInstances");
+        commands->PushDebugGroup("RenderOpaqueBrickInstances");
         {
-            RenderBrickInstances(scene);
+            RenderOpaqueBrickInstances(scene);
         }
         commands->PopDebugGroup();
 
@@ -1521,6 +1836,8 @@ private:
         commands->SetPipelineState(*pso[BrickPSO_Preview]);
         commands->SetResource(0, *sceneViewCbuffer);
 
+        commands->SetResource(1, *skyboxCubemap);
+
         // Set vertex buffers (vertices and instances).
         // We don't care about offset instancing here, because the preview instance is always the first one (index 0).
         LLGL::VertexBufferView vertexBufferViews[] =
@@ -1531,14 +1848,25 @@ private:
         commands->SetVertexBuffers(2, vertexBufferViews);
     }
 
+    // Returns the mesh information for the specified brick type with a preferred group.
+    // If the preferred group is not available for the brick type, it falls back to the default group.
+    BrickMesh GetBrickMeshOrDefault(int brickType, int preferredGroup = BrickGroup_Default)
+    {
+        if (preferredGroup != BrickGroup_Default)
+        {
+            const BrickMesh preferredMesh = BrickDictionary::Get().GetMesh(brickType, preferredGroup);
+            if (preferredMesh.numVertices > 0)
+                return preferredMesh;
+        }
+        return BrickDictionary::Get().GetMesh(brickType);
+    }
+
     void RenderPreviewBrick(const PreviewBrick& previewBrick)
     {
-        // Not every combination of brick type and group is supported. If number of vertices is 0, exit early.
-        const BrickMesh& mesh = BrickDictionary::Get().GetMesh(previewBrick.type, previewBrick.isTransparent ? BrickGroup_Transparent : BrickGroup_Default);
-        if (mesh.numVertices == 0)
-            return;
-
-        commands->Draw(mesh.numVertices, mesh.firstVertex);
+        const bool isPreviewBrickTransparent = (previewInstance.color.a < 255);
+        const BrickMesh mesh = GetBrickMeshOrDefault(previewBrick.type, isPreviewBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
+        if (mesh.numVertices > 0)
+            commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
     void RenderSilhouette(const BrickScene& scene, Brick brick)
@@ -1552,7 +1880,7 @@ private:
         if (brickInstance == nullptr)
             return;
 
-        const BrickMesh& visibleMesh = BrickDictionary::Get().GetMesh(brick.GetType(), BrickGroup_Default);
+        const BrickMesh visibleMesh = BrickDictionary::Get().GetMesh(brick.GetType());
         if (visibleMesh.numVertices == 0)
             return;
 
@@ -1565,6 +1893,9 @@ private:
             LLGL::VertexBufferView{ instanceBuffer, 0, (pickedGroup.firstInstance + brick.groupInstance) * sizeof(Instance) },
         };
         commands->SetVertexBuffers(2, vertexBufferViews);
+
+        // Clear stencil buffer for silhouette rendering
+        commands->Clear(LLGL::ClearFlags::Stencil);
 
         // First render stencil reference to mask out pixels inside the silhouette. This is the regular brick model.
         commands->PushDebugGroup("RenderSilhouetteStencil");
@@ -1599,7 +1930,7 @@ private:
         Gs::RotateX(vMatrix, Gs::Deg2Rad(45.0f));
         Gs::Translate(vMatrix, Gs::Vector3f{ 0, 0, -dist });
 
-        outView.viewPos     = Gs::TransformVector(vMatrix, Gs::Vector4f{ 0, 0, 0, 1 });
+        outView.viewPos     = Gs::TransformVector(vMatrix, Gs::Vector3f{});
         outView.gridScale   = KDTreeNode::gridScale;
 
         // Visually, we only want to rotate the brick, but they only support 90 degree angles.
@@ -1619,7 +1950,6 @@ private:
 
     void RenderBrickThumnail(LLGL::RenderTarget& renderTarget, BrickType brickType, GridRotation gridRotation)
     {
-        PreviewBrick thumbnailBrick;
         SceneView thumbnailSceneView;
 
         // Move camera so that the thumbnail for the current brick type is clearly visible
@@ -1629,11 +1959,12 @@ private:
         commands->BeginRenderPass(renderTarget);
         {
             commands->SetViewport(LLGL::Extent2D{ uiBrickThumbnailSize, uiBrickThumbnailSize });
-            commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{ 0.0f, 0.0f, 0.0f, 0.0f });
+            commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{});
 
-            // Draw current thumbnail with preview brick
-            thumbnailBrick.type = static_cast<BrickType>(brickType);
-            RenderPreviewBrick(thumbnailBrick);
+            // Draw current thumbnail brick from default group
+            const BrickMesh mesh = BrickDictionary::Get().GetMesh(brickType);
+            if (mesh.numVertices > 0)
+                commands->Draw(mesh.numVertices, mesh.firstVertex);
         }
         commands->EndRenderPass();
     }
@@ -1754,20 +2085,20 @@ private:
         }
     }
 
-    void Draw2DRect(int x, int y, int w, int h, LLGL::ColorRGBAub color)
+    void Draw2DRect(int x, int y, int w, int h, LLGL::ColorRGBAub color, UIRenderMode render = UIRenderMode_Solid)
     {
         SetUITexture(uiBlankTexture);
 
         // Allocate 6 vertices to draw 2 triangles
         UIVertex* verts = NewUIVertices(6);
 
-        verts[0].Set(x    , y    , color);
-        verts[1].Set(x + w, y    , color);
-        verts[2].Set(x    , y + h, color);
+        verts[0].Set(x    , y    , color, render);
+        verts[1].Set(x + w, y    , color, render);
+        verts[2].Set(x    , y + h, color, render);
 
-        verts[3].Set(x    , y + h, color);
-        verts[4].Set(x + w, y    , color);
-        verts[5].Set(x + w, y + h, color);
+        verts[3].Set(x    , y + h, color, render);
+        verts[4].Set(x + w, y    , color, render);
+        verts[5].Set(x + w, y + h, color, render);
     }
 
     void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {})
@@ -1807,16 +2138,19 @@ private:
         int h = uiColorPickerSize + uiButtonFrameSize*2;
         const bool isSelected = IsSelectedByMouse(x, y, w, h);
 
+        LLGL::ColorRGBAub color = colorPalette[paletteIndex];
+        const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
+
         if (isSelected || isHighlighted)
         {
             // Only draw color button when selected
-            Draw2DRect(x, y, w, h, colorPalette[paletteIndex]);
+            Draw2DRect(x, y, w, h, color, render);
         }
         else
         {
             // Draw background frame and then the foreground color
             Draw2DRect(x, y, w, h, uiButtonFrameColor);
-            Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, uiColorPickerSize, uiColorPickerSize, colorPalette[paletteIndex]);
+            Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, uiColorPickerSize, uiColorPickerSize, color, render);
         }
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
@@ -2164,7 +2498,7 @@ private:
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
-            currentScene->NewBrick(previewBrick.type, previewInstance.gridPos, previewInstance.gridRotation, previewInstance.color, previewBrick.isTransparent);
+            currentScene->NewBrick(previewBrick.type, previewInstance.gridPos, previewInstance.gridRotation, previewInstance.color);
             PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick
@@ -2184,10 +2518,9 @@ private:
                 {
                     ResetPreviouslySelectedBrick();
 
-                    viewOptions.previewBrick.type           = selectedBrick.GetType();
-                    viewOptions.previewBrick.isTransparent  = (selectedBrick.GetGroup() == BrickGroup_Transparent);
-                    previewInstance.color                   = selectedInstance->color;
-                    previewInstance.gridRotation            = selectedInstance->gridRotation;
+                    viewOptions.previewBrick.type   = selectedBrick.GetType();
+                    previewInstance.color           = selectedInstance->color;
+                    previewInstance.gridRotation    = selectedInstance->gridRotation;
 
                     // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
                     int colorPaletteIndex = FindColorPaletteIndex(selectedInstance->color);
@@ -2252,7 +2585,7 @@ private:
         camera.UpdateTransform();
 
         // Update common scene view states
-        sceneView.viewPos           = camera.wMatrix * Gs::Vector4f{ 0, 0, 0, 1 };
+        sceneView.viewPos           = Gs::TransformVector(camera.wMatrix, Gs::Vector3f{});
         sceneView.vpMatrix          = projection * camera.vMatrix;
 
         sceneView.gridScale         = KDTreeNode::gridScale;
@@ -2310,11 +2643,13 @@ private:
 
             currentScene->FlushInstanceDirtyRange(*commands);
 
-            commands->BeginRenderPass(*swapChain);
+            const LLGL::Viewport fullViewport{ swapChain->GetResolution() };
+
+            // Draw opaque scene
+            commands->BeginRenderPass(*opacity.renderTarget, opacity.renderPass, 1, opacity.clearValues);
             {
                 // Clear all buffers. Stencil might be used for silhouette rendering.
-                commands->Clear(LLGL::ClearFlags::All, backgroundColor);
-                commands->SetViewport(swapChain->GetResolution());
+                commands->SetViewport(fullViewport);
 
                 commands->PushDebugGroup("RenderBrickScene");
                 {
@@ -2331,6 +2666,32 @@ private:
                     }
                     commands->PopDebugGroup();
                 }
+            }
+            commands->EndRenderPass();
+
+            // Draw transparent scene
+            commands->BeginRenderPass(*transparency.renderTarget, transparency.renderPass, 2, transparency.clearValues);
+            {
+                commands->SetViewport(fullViewport);
+
+                commands->PushDebugGroup("RenderTransparentBrickInstances");
+                {
+                    RenderTransparentBrickInstances(*currentScene);
+                }
+                commands->PopDebugGroup();
+            }
+            commands->EndRenderPass();
+
+            // Draw overlay and UI elements
+            commands->BeginRenderPass(*swapChain);
+            {
+                commands->SetViewport(fullViewport);
+
+                commands->PushDebugGroup("RenderTransparentComposite");
+                {
+                    RenderTransparentComposite();
+                }
+                commands->PopDebugGroup();
 
                 if (controller.editMode == EditMode::Remove)
                 {
@@ -2359,6 +2720,12 @@ private:
         }
         commands->End();
         commandQueue->Submit(*commands);
+    }
+
+    void OnResize(const LLGL::Extent2D& resolution) override
+    {
+        // Re-create all size dependent resources
+        CreateSizeDependentResources(resolution);
     }
 
     void OnExit() override
