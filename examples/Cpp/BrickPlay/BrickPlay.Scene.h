@@ -181,14 +181,22 @@ public:
         hasUnsavedChanges = true;
 
         const bool isTransparent = (color.a < 255);
-        const BrickGroup group =
-        (
-            isTransparent
-                ? BrickGroup_Transparent
-                : IsBrickTypeBlockedTopAndBottom(type, gridPos, gridRotation)
-                    ? BrickGroup_WallsOnly
-                    : BrickGroup_Default
-        );
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, gridRotation);
+
+        const BrickGroup group = [this, &isTransparent, &brickDim, &gridPos, type]() -> BrickGroup
+        {
+            if (IsBrickVolumeBlockedTopAndBottom(gridPos, brickDim))
+            {
+                if (IsBrickVolumeBlockedSideways(gridPos, brickDim))
+                    return BrickGroup_Invisible;
+                else if (!isTransparent && IsBrickTypeOptimized(type))
+                    return BrickGroup_WallsOnly;
+            }
+            if (isTransparent)
+                return BrickGroup_Transparent;
+            return BrickGroup_Default;
+        }();
+
         const std::uint32_t groupId = CombineToBrickId(type, group);
 
         // Insert brick without notification first, so its instance is fully initialized before neighbors can rearrange the groups
@@ -494,9 +502,13 @@ private:
         return true;
     }
 
-    bool IsBrickTypeBlockedTopAndBottom(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation)
+    bool IsGridCellBlocked(const Gs::Vector3i& gridPos) const
     {
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, gridRotation);
+        return grid.GetLeaf(gridPos).IsBlocking();
+    }
+
+    bool IsBrickVolumeBlockedTopAndBottom(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
+    {
         const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
         for_range(yi, 2)
         {
@@ -510,8 +522,7 @@ private:
             {
                 for_range(x, brickDim.extent.x)
                 {
-                    Brick otherBrick = grid.GetLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
-                    if (!otherBrick.IsBlocking())
+                    if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, z }))
                         return false;
                 }
             }
@@ -519,12 +530,31 @@ private:
         return true;
     }
 
-    bool IsBrickBlockedTopAndBottom(Brick brick)
+    bool IsBrickVolumeBlockedSideways(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
     {
-        if (const Instance* instance = GetBrickInstance(brick))
-            return IsBrickTypeBlockedTopAndBottom(brick.GetType(), instance->gridPos, instance->gridRotation);
-        else
-            return false;
+        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        for_subrange(y, -1, brickDim.extent.y + 1)
+        {
+            // If current grid position is under the floor, it's also considered blocked
+            if (alignedGridPos.y + y < KDTreeNode::rootAABB.bbMin.y)
+                continue;
+
+            for_subrange(x, -1, brickDim.extent.x + 1)
+            {
+                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, -1 }))
+                    return false;
+                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, brickDim.extent.z }))
+                    return false;
+            }
+            for_range(z, brickDim.extent.z)
+            {
+                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ -1, y, z }))
+                    return false;
+                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ brickDim.extent.x, y, z }))
+                    return false;
+            }
+        }
+        return true;
     }
 
     // Transfers the specified brick to a new group and returns the updated brick entry
@@ -540,57 +570,121 @@ private:
 
     // Notifies the specified brick that its surrounding has changed,
     // allowing it to transfer to a different mesh group for better rendering performance.
-    void NotifyBrickChange(Brick brick, bool isBlocking)
+    void OnBrickChanged(Brick brick, bool isChangedBrickBlocking, bool isChangeFromTopAndBottom)
     {
-        // Only bother to change groups for brick types that support the walls-only group
-        if (BrickDictionary::Get().GetMesh(brick.GetType(), BrickGroup_WallsOnly).numVertices > 0)
+        if (const Instance* instance = GetBrickInstance(brick))
         {
             const BrickGroup group = brick.GetGroup();
-            if (group == BrickGroup_Default && isBlocking)
+            if (isChangedBrickBlocking)
             {
-                // If brick is now blocked top and bottom, switch to walls-only mesh
-                if (IsBrickBlockedTopAndBottom(brick))
-                    TransferBrickGroup(brick, BrickGroup_WallsOnly);
+                // If brick is now blocked top and bottom, try to transfer brick to group for optimized rendering
+                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
+                if (IsBrickVolumeBlockedTopAndBottom(instance->gridPos, brickDim))
+                {
+                    // If brick is also blocked sidesways (left, right, front, back), don't render brick at all
+                    if (IsBrickVolumeBlockedSideways(instance->gridPos, brickDim))
+                    {
+                        // Transfer brick to group of invisible bricks, these are not rendered at all
+                        TransferBrickGroup(brick, BrickGroup_Invisible);
+                    }
+                    else if (group == BrickGroup_Default)
+                    {
+                        // If brick has a walls-only optimized mesh, transfer it to that group
+                        if (IsBrickTypeOptimized(brick.GetType()))
+                            TransferBrickGroup(brick, BrickGroup_WallsOnly);
+                    }
+                }
             }
-            else if (group == BrickGroup_WallsOnly && !isBlocking)
+            else
             {
-                // Brick is no longer fully blocked top and bottom, so switch back to default mesh
-                TransferBrickGroup(brick, BrickGroup_Default);
+                if (group == BrickGroup_Invisible)
+                {
+                    // Brick is no longer fully blocked and must become visible again. Determine whether it was an opque or transparent brick
+                    const bool isBrickTransparent = (instance->color.a < 255);
+                    if (!isBrickTransparent && !isChangeFromTopAndBottom)
+                    {
+                        // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering
+                        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
+                        if (IsBrickVolumeBlockedTopAndBottom(instance->gridPos, brickDim))
+                        {
+                            TransferBrickGroup(brick, BrickGroup_WallsOnly);
+                            return;
+                        }
+                    }
+                    TransferBrickGroup(brick, isBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
+                }
+                else if (group == BrickGroup_WallsOnly && isChangeFromTopAndBottom)
+                {
+                    // Brick is no longer fully blocked top and bottom, so switch back to default mesh
+                    TransferBrickGroup(brick, BrickGroup_Default);
+                }
             }
         }
     }
 
     // Notifes all bricks surrounding the specified changed brick that their surrounding has changed.
-    void NotifyBrickChangeTopAndBottom(const Gs::Vector3i alignedGridPos, const Gs::Vector3i& brickExtent, Brick changedBrick)
+    void NotifyBrickChangeToNeighbors(const Gs::Vector3i alignedGridPos, const Gs::Vector3i& brickExtent, Brick changedBrick)
     {
         // First gather all brick cells that need to be notified to avoid running the blocking test multiple times for the same brick.
         // Use their cell coordinates instead of storing the brick references as they might be invalidated in the next phase.
         std::set<Brick> visitedBricks;
-        std::vector<Gs::Vector3i> bricksToNotifyCells;
+        std::vector<Gs::Vector3i> topAndBottomBricksToNotify, sidewaysBricksToNotify;
 
         for_range(yi, 2)
         {
             const std::int32_t y = (yi == 0 ? -1 : brickExtent.y);
-            for_range(z, brickExtent.z)
-            {
-                for_range(x, brickExtent.x)
+            grid.ForEachLeaf(
+                alignedGridPos + Gs::Vector3i{ 0, y, 0 },
+                Gs::Vector3i{ brickExtent.x, 1, brickExtent.z },
+                [&visitedBricks, &topAndBottomBricksToNotify](Brick brick, const Gs::Vector3i& gridPos)
                 {
-                    const Gs::Vector3i gridPos = alignedGridPos + Gs::Vector3i{ x, y, z };
-                    if (Brick brick = grid.GetLeaf(gridPos))
-                    {
-                        if (visitedBricks.insert(brick).second)
-                            bricksToNotifyCells.push_back(gridPos);
-                    }
+                    if (visitedBricks.insert(brick).second)
+                        topAndBottomBricksToNotify.push_back(gridPos);
                 }
-            }
+            );
         }
+
+        auto AddSidewaysBricksToNotify = [&visitedBricks, &sidewaysBricksToNotify](Brick brick, const Gs::Vector3i& gridPos)
+        {
+            if (visitedBricks.insert(brick).second)
+                sidewaysBricksToNotify.push_back(gridPos);
+        };
+
+        grid.ForEachLeaf(
+            alignedGridPos + Gs::Vector3i{ -1, -1, 0 },
+            Gs::Vector3i{ brickExtent.x + 2, brickExtent.y + 2, 1 },
+            AddSidewaysBricksToNotify
+        );
+        grid.ForEachLeaf(
+            alignedGridPos + Gs::Vector3i{ -1, -1, brickExtent.z },
+            Gs::Vector3i{ brickExtent.x + 2, brickExtent.y + 2, 1 },
+            AddSidewaysBricksToNotify
+        );
+
+        grid.ForEachLeaf(
+            alignedGridPos + Gs::Vector3i{ -1, 0, -1 },
+            Gs::Vector3i{ 1, brickExtent.y + 2, brickExtent.z },
+            AddSidewaysBricksToNotify
+        );
+        grid.ForEachLeaf(
+            alignedGridPos + Gs::Vector3i{ brickExtent.x + 1, 0, -1 },
+            Gs::Vector3i{ 1, brickExtent.y + 2, brickExtent.z },
+            AddSidewaysBricksToNotify
+        );
 
         // Now notify the bricks that their surrounding has changed
         const bool isBlocking = changedBrick.IsBlocking();
-        for (const Gs::Vector3i& gridPos : bricksToNotifyCells)
+
+        for (const Gs::Vector3i& gridPos : topAndBottomBricksToNotify)
         {
             if (Brick brick = grid.GetLeaf(gridPos))
-                NotifyBrickChange(brick, isBlocking);
+                OnBrickChanged(brick, isBlocking, true);
+        }
+
+        for (const Gs::Vector3i& gridPos : sidewaysBricksToNotify)
+        {
+            if (Brick brick = grid.GetLeaf(gridPos))
+                OnBrickChanged(brick, isBlocking, false);
         }
     }
 
@@ -635,7 +729,7 @@ private:
 
             // Notify top and bottom grid entries that they are now blocked, so they can optimize their mesh if they are now fully blocked
             if (notifyNeighbors)
-                NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, brick);
+                NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, brick);
 
             #if DEBUG_KDTREE
             LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
@@ -658,7 +752,7 @@ private:
 
         // Notify top and bottom grid entries that they are now unblocked, so they need to switch back to the full mesh
         if (notifyNeighbors)
-            NotifyBrickChangeTopAndBottom(alignedGridPos, brickDim.extent, Brick{});
+            NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, Brick{});
 
         #if DEBUG_KDTREE
         LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());

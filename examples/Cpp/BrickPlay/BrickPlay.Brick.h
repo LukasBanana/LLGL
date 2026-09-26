@@ -70,9 +70,10 @@ struct BrickDimensions
 
 enum BrickGroup : std::uint32_t
 {
-    BrickGroup_Default = 0,
-    BrickGroup_WallsOnly,
-    BrickGroup_Transparent,
+    BrickGroup_Default = 0, // Default opaque brick rendering
+    BrickGroup_WallsOnly,   // Bricks rendered with an optimzied version, when blocked from above and below
+    BrickGroup_Transparent, // Render bricks with different shaders
+    BrickGroup_Invisible,   // Not rendered at all, for bricks that are blocked from all sides
 
     BrickGroup_Num,
 };
@@ -178,6 +179,11 @@ public:
     }
 
 };
+
+inline bool IsBrickTypeOptimized(BrickType type)
+{
+    return (BrickDictionary::Get().GetMesh(type, BrickGroup_WallsOnly).numVertices > 0);
+}
 
 struct Brick
 {

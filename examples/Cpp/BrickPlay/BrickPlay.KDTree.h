@@ -43,6 +43,135 @@ class KDTreeNode
     std::uint32_t               distance    : 30; // Local distance from node's logical bbMin
     Brick                       brick;
 
+public:
+
+    using LeafIterator = std::function<void(Brick brick, const Gs::Vector3i& gridPos)>;
+
+    static const Gs::Vector3f   gridScale;
+
+    static AABB3i               rootAABB;
+    static int                  numAABBTests;
+
+    static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
+    {
+        return
+        (
+            gridPos.x >=  KDTreeNode::rootAABB.bbMin.x &&
+            gridPos.y >=  KDTreeNode::rootAABB.bbMin.y &&
+            gridPos.z >=  KDTreeNode::rootAABB.bbMin.z &&
+            gridPos.x <   KDTreeNode::rootAABB.bbMax.x &&
+            gridPos.y <   KDTreeNode::rootAABB.bbMax.y &&
+            gridPos.z <   KDTreeNode::rootAABB.bbMax.z
+        );
+    }
+
+    static void InitBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
+    {
+        LLGL_VERIFY(boundingVolume.size() == 3);
+        KDTreeNode::rootAABB = AABB3i
+        {
+            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
+            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
+        };
+    }
+
+public:
+
+    KDTreeNode() :
+        axis     { Axis_X },
+        distance { 0      }
+    {
+    }
+
+    bool HasChildren() const
+    {
+        return (child[0].get() != nullptr);
+    }
+
+    void InsertLeaf(const Gs::Vector3i& gridPos, Brick brick)
+    {
+        FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
+    }
+
+    void RemoveLeaf(const Gs::Vector3i& gridPos)
+    {
+        FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
+    }
+
+    void UpdateLeaf(const Gs::Vector3i& gridPos, std::uint32_t groupInstance)
+    {
+        FindAndUpdateLeaf(gridPos, KDTreeNode::rootAABB, groupInstance);
+    }
+
+    Brick GetLeaf(const Gs::Vector3i& gridPos) const
+    {
+        // Positions outside the root AABB have no leaf. Without this check, the traversal would return an unrelated leaf.
+        if (KDTreeNode::IsInsideBoundingVolume(gridPos))
+            return FindLeaf(gridPos, KDTreeNode::rootAABB);
+        else
+            return Brick{};
+    }
+
+    void ForEachLeaf(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const LeafIterator& iterator) const
+    {
+        // Clamp AABB to root AABB
+        LLGL_VERIFY(iterator != nullptr);
+        if (extent.x > 0 && extent.y > 0 && extent.z > 0)
+        {
+            AABB3i gridArea;
+            {
+                gridArea.bbMin.x = Gs::Clamp(gridPos.x, KDTreeNode::rootAABB.bbMin.x, KDTreeNode::rootAABB.bbMax.x);
+                gridArea.bbMin.y = Gs::Clamp(gridPos.y, KDTreeNode::rootAABB.bbMin.y, KDTreeNode::rootAABB.bbMax.y);
+                gridArea.bbMin.z = Gs::Clamp(gridPos.z, KDTreeNode::rootAABB.bbMin.z, KDTreeNode::rootAABB.bbMax.z);
+
+                gridArea.bbMax.x = std::min(gridArea.bbMin.x + extent.x, KDTreeNode::rootAABB.bbMax.x);
+                gridArea.bbMax.y = std::min(gridArea.bbMin.y + extent.y, KDTreeNode::rootAABB.bbMax.y);
+                gridArea.bbMax.z = std::min(gridArea.bbMin.z + extent.z, KDTreeNode::rootAABB.bbMax.z);
+            }
+            ForEachLeafInside(gridArea.bbMin, gridArea.bbMax - gridArea.bbMin, KDTreeNode::rootAABB, iterator);
+        }
+    }
+
+    Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
+    {
+        return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
+    }
+
+    float GetSqDistanceToAABB(const Gs::Vector3f& point, const AABB3i& aabb) const
+    {
+        return Gs::DistanceSq(point, ClosestPointOnAABB(point, aabb));
+    }
+
+    std::set<Brick> GatherPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadius) const
+    {
+        std::set<Brick> colliderBricks;
+        const float colliderRadius2 = colliderRadius*2.0f;
+        FindPotentialColliderBricks(colliderPoint, colliderRadius2*colliderRadius2, KDTreeNode::rootAABB, colliderBricks);
+        return colliderBricks;
+    }
+
+    unsigned NumNodes() const
+    {
+        if (HasChildren())
+            return 1 + child[0]->NumNodes() + child[1]->NumNodes();
+        else
+            return 1;
+    }
+
+    unsigned NumLeafs() const
+    {
+        return NumLeafsFromRoot(KDTreeNode::rootAABB);
+    }
+
+    // Deletes the entire tree.
+    void Reset()
+    {
+        child[0].reset();
+        child[1].reset();
+    }
+
+private:
+
     AABB3i GetChild0AABB(AABB3i aabbParent) const
     {
         aabbParent.bbMax[axis] = aabbParent.bbMin[axis] + static_cast<std::int32_t>(distance);
@@ -186,6 +315,43 @@ class KDTreeNode
         }
     }
 
+    void ForEachLeafInside(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const AABB3i& aabb, LeafIterator iterator) const
+    {
+        if (HasChildren())
+        {
+            // Split grid position plus extent range between child0 and child1
+            const std::int32_t split = aabb.bbMin[axis] + static_cast<std::int32_t>(distance);
+            if (gridPos[axis] < split)
+            {
+                Gs::Vector3i child0Extent = extent;
+                child0Extent[axis] = std::min(extent[axis], split - gridPos[axis]);
+                child[0]->ForEachLeafInside(gridPos, child0Extent, GetChild0AABB(aabb), iterator);
+
+                if (gridPos[axis] + extent[axis] > split)
+                {
+                    Gs::Vector3i child1GridPos = gridPos;
+                    child1GridPos[axis] = split;
+
+                    Gs::Vector3i child1Extent = extent;
+                    child1Extent[axis] -= child0Extent[axis];
+
+                    child[1]->ForEachLeafInside(child1GridPos, child1Extent, GetChild1AABB(aabb), iterator);
+                }
+            }
+            else
+            {
+                Gs::Vector3i child1Extent = extent;
+                child1Extent[axis] = std::min(gridPos[axis] + extent[axis], aabb.bbMax[axis]) - gridPos[axis];
+                child[1]->ForEachLeafInside(gridPos, child1Extent, GetChild1AABB(aabb), iterator);
+            }
+        }
+        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        {
+            // We found the leaf node
+            iterator(this->brick, gridPos);
+        }
+    }
+
     bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection = nullptr) const
     {
         #if DEBUG_KDTREE
@@ -269,110 +435,6 @@ class KDTreeNode
             return 0;
     }
 
-public:
-
-    static const Gs::Vector3f   gridScale;
-
-    static AABB3i               rootAABB;
-    static int                  numAABBTests;
-
-    static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
-    {
-        return
-        (
-            gridPos.x >=  KDTreeNode::rootAABB.bbMin.x &&
-            gridPos.y >=  KDTreeNode::rootAABB.bbMin.y &&
-            gridPos.z >=  KDTreeNode::rootAABB.bbMin.z &&
-            gridPos.x <   KDTreeNode::rootAABB.bbMax.x &&
-            gridPos.y <   KDTreeNode::rootAABB.bbMax.y &&
-            gridPos.z <   KDTreeNode::rootAABB.bbMax.z
-        );
-    }
-
-    static void InitBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
-    {
-        LLGL_VERIFY(boundingVolume.size() == 3);
-        KDTreeNode::rootAABB = AABB3i
-        {
-            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
-            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
-        };
-    }
-
-public:
-
-    KDTreeNode() :
-        axis     { Axis_X },
-        distance { 0      }
-    {
-    }
-
-    bool HasChildren() const
-    {
-        return (child[0].get() != nullptr);
-    }
-
-    void InsertLeaf(const Gs::Vector3i& gridPos, Brick brick)
-    {
-        FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
-    }
-
-    void RemoveLeaf(const Gs::Vector3i& gridPos)
-    {
-        FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
-    }
-
-    void UpdateLeaf(const Gs::Vector3i& gridPos, std::uint32_t groupInstance)
-    {
-        FindAndUpdateLeaf(gridPos, KDTreeNode::rootAABB, groupInstance);
-    }
-
-    Brick GetLeaf(const Gs::Vector3i& gridPos) const
-    {
-        // Positions outside the root AABB have no leaf. Without this check, the traversal would return an unrelated leaf.
-        if (KDTreeNode::IsInsideBoundingVolume(gridPos))
-            return FindLeaf(gridPos, KDTreeNode::rootAABB);
-        else
-            return Brick{};
-    }
-
-    Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
-    {
-        return FindIntersectionWithLeaf(ray, KDTreeNode::rootAABB, outIntersection);
-    }
-
-    float GetSqDistanceToAABB(const Gs::Vector3f& point, const AABB3i& aabb) const
-    {
-        return Gs::DistanceSq(point, ClosestPointOnAABB(point, aabb));
-    }
-
-    std::set<Brick> GatherPotentialColliderBricks(const Gs::Vector3f& colliderPoint, float colliderRadius) const
-    {
-        std::set<Brick> colliderBricks;
-        const float colliderRadius2 = colliderRadius*2.0f;
-        FindPotentialColliderBricks(colliderPoint, colliderRadius2*colliderRadius2, KDTreeNode::rootAABB, colliderBricks);
-        return colliderBricks;
-    }
-
-    unsigned NumNodes() const
-    {
-        if (HasChildren())
-            return 1 + child[0]->NumNodes() + child[1]->NumNodes();
-        else
-            return 1;
-    }
-
-    unsigned NumLeafs() const
-    {
-        return NumLeafsFromRoot(KDTreeNode::rootAABB);
-    }
-
-    // Deletes the entire tree.
-    void Reset()
-    {
-        child[0].reset();
-        child[1].reset();
-    }
 };
 
 
