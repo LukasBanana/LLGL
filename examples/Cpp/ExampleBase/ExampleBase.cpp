@@ -194,84 +194,6 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     return rendererModule;
 }
 
-static bool HasArgument(const char* search, int argc, char* argv[])
-{
-    for_subrange(i, 1, argc)
-    {
-        if (::strcmp(search, argv[i]) == 0)
-            return true;
-    }
-    return false;
-}
-
-static bool ParseWindowSize(LLGL::Extent2D& size, int argc, char* argv[])
-{
-    const LLGL::StringView resArg = "-res=";
-    for_subrange(i, 1, argc)
-    {
-        const LLGL::StringView arg = argv[i];
-        if (arg.compare(0, resArg.size(), resArg) == 0)
-        {
-            if (arg.size() < resArg.size() + 3)
-                return false;
-
-            char* tok = ::strtok(argv[i] + resArg.size(), "x");
-            int values[2] = {};
-            for (int tokIndex = 0; tok != nullptr && tokIndex < 2; ++tokIndex)
-            {
-                values[tokIndex] = ::atoi(tok);
-                tok = ::strtok(nullptr, "x");
-            }
-
-            size.width  = static_cast<std::uint32_t>(std::max(1, std::min(values[0], 16384)));
-            size.height = static_cast<std::uint32_t>(std::max(1, std::min(values[1], 16384)));
-
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool ParseIntFromCommandline(int argc, char* argv[], LLGL::StringView inArg, int& outValue)
-{
-    for_subrange(i, 1, argc)
-    {
-        const LLGL::StringView arg = argv[i];
-        if (arg.compare(0, inArg.size(), inArg) == 0)
-        {
-            if (arg.size() < inArg.size() + 1)
-                return false;
-
-            outValue = ::atoi(argv[i] + inArg.size());
-
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool ParseSamples(std::uint32_t& samples, int argc, char* argv[])
-{
-    int value = 0;
-    if (ParseIntFromCommandline(argc, argv, "-ms=", value))
-    {
-        samples = static_cast<std::uint32_t>(std::max(1, std::min(value, 16)));
-        return true;
-    }
-    return false;
-}
-
-static bool ParseSwapChain(std::uint32_t& samples, int argc, char* argv[])
-{
-    int value = 0;
-    if (ParseIntFromCommandline(argc, argv, "-sc=", value))
-    {
-        samples = static_cast<std::uint32_t>(std::max(2, std::min(value, 16)));
-        return true;
-    }
-    return false;
-}
-
 
 /*
  * TrackballRotationModel struct
@@ -470,16 +392,17 @@ bool ExampleBase::ShaderIncludeHandler::Include(const LLGL::UTF8String& inFilena
 
 struct ExampleConfig
 {
-    std::string     rendererModule  = GetDefaultRendererModule();
-    LLGL::Extent2D  windowSize      = { 800, 600 };
-    std::uint32_t   samples         = LLGL_EXAMPLE_MULTISAMPLING;
-    std::uint32_t   swapBuffers     = 2;
-    bool            vsync           = true;
-    bool            debugger        = false;
-    long            flags           = 0;
-    bool            immediateSubmit = false;
-    bool            rightHandedProj = false;
-    bool            verbose         = false;
+    std::vector<char*>  args;
+    std::string         rendererModule  = GetDefaultRendererModule();
+    LLGL::Extent2D      windowSize      = { 800, 600 };
+    std::uint32_t       samples         = LLGL_EXAMPLE_MULTISAMPLING;
+    std::uint32_t       swapBuffers     = 2;
+    bool                vsync           = true;
+    bool                debugger        = false;
+    long                flags           = 0;
+    bool                immediateSubmit = false;
+    bool                rightHandedProj = false;
+    bool                verbose         = false;
 };
 
 static ExampleConfig g_Config;
@@ -488,31 +411,123 @@ static ExampleConfig g_Config;
 android_app* ExampleBase::androidApp_ = nullptr;
 #endif
 
+bool ExampleBase::HasArgument(LLGL::StringView arg)
+{
+    for (LLGL::StringView inputArg : g_Config.args)
+    {
+        if (inputArg == arg)
+            return true;
+    }
+    return false;
+}
+
+const char* ParseArgumentWithAssignment(LLGL::StringView arg)
+{
+    for (const char* argStr : g_Config.args)
+    {
+        const LLGL::StringView inputArg = argStr;
+        if (inputArg.size() > arg.size() + 1 && inputArg[arg.size()] == '=' && inputArg.compare(0, arg.size(), arg) == 0)
+            return argStr + arg.size() + 1;
+    }
+    return nullptr;
+}
+
+bool ExampleBase::ParseArgument(LLGL::StringView arg, std::string& outValue)
+{
+    if (const char* argValue = ParseArgumentWithAssignment(arg))
+    {
+        outValue = argValue;
+        return true;
+    }
+    return false;
+}
+
+bool ExampleBase::ParseArgument(LLGL::StringView arg, int& outValue)
+{
+    if (const char* argValue = ParseArgumentWithAssignment(arg))
+    {
+        outValue = ::atoi(argValue);
+        return true;
+    }
+    return false;
+}
+
+static bool ParseWindowSize(LLGL::Extent2D& size)
+{
+    if (const char* argValue = ParseArgumentWithAssignment("-res"))
+    {
+        const std::size_t argValueSize = ::strlen(argValue) + 1;
+        auto mutableArgValue = std::unique_ptr<char[]>(new char[argValueSize]);
+        ::strncpy(mutableArgValue.get(), argValue, argValueSize);
+        char* tok = ::strtok(mutableArgValue.get(), "x");
+
+        int values[2] = {};
+        for (int tokIndex = 0; tok != nullptr && tokIndex < 2; ++tokIndex)
+        {
+            values[tokIndex] = ::atoi(tok);
+            tok = ::strtok(nullptr, "x");
+        }
+
+        size.width  = static_cast<std::uint32_t>(std::max(1, std::min(values[0], 16384)));
+        size.height = static_cast<std::uint32_t>(std::max(1, std::min(values[1], 16384)));
+
+        return true;
+    }
+    return false;
+}
+
+static bool ParseSamples(std::uint32_t& samples)
+{
+    int value = 0;
+    if (ExampleBase::ParseArgument("-ms", value))
+    {
+        samples = static_cast<std::uint32_t>(std::max(1, std::min(value, 16)));
+        return true;
+    }
+    return false;
+}
+
+static bool ParseSwapChain(std::uint32_t& samples)
+{
+    int value = 0;
+    if (ExampleBase::ParseArgument("-sc", value))
+    {
+        samples = static_cast<std::uint32_t>(std::max(2, std::min(value, 16)));
+        return true;
+    }
+    return false;
+}
+
 void ExampleBase::ParseProgramArgs(int argc, char* argv[])
 {
+    if (argc > 1)
+        g_Config.args = std::vector<char*>(argv + 1, argv + argc);
+
     g_Config.rendererModule = GetSelectedRendererModule(argc, argv);
-    ParseWindowSize(g_Config.windowSize, argc, argv);
-    ParseSamples(g_Config.samples, argc, argv);
-    ParseSwapChain(g_Config.swapBuffers, argc, argv);
-    if (HasArgument("-v0", argc, argv) || HasArgument("--novsync", argc, argv))
+
+    ParseWindowSize(g_Config.windowSize);
+    ParseSamples(g_Config.samples);
+    ParseSwapChain(g_Config.swapBuffers);
+
+    if (HasArgument("-v0") || HasArgument("--novsync"))
         g_Config.vsync = false;
-    if (HasArgument("-d", argc, argv) || HasArgument("--debug", argc, argv))
+    if (HasArgument("-d") || HasArgument("--debug"))
         g_Config.debugger = true;
-    if (HasArgument("-i", argc, argv) || HasArgument("--icontext", argc, argv))
+    if (HasArgument("-i") || HasArgument("--icontext"))
         g_Config.immediateSubmit = true;
-    if (HasArgument("-r", argc, argv) || HasArgument("--right-handed", argc, argv))
+    if (HasArgument("-r") || HasArgument("--right-handed"))
         g_Config.rightHandedProj = true;
-    if (HasArgument("-b", argc, argv) || HasArgument("--break", argc, argv))
+    if (HasArgument("-b") || HasArgument("--break"))
         g_Config.flags |= LLGL::RenderSystemFlags::DebugBreakOnError;
-    if (HasArgument("-v", argc, argv) || HasArgument("--verbose", argc, argv))
+    if (HasArgument("-v") || HasArgument("--verbose"))
         g_Config.verbose = true;
-    if (HasArgument("--nvidia", argc, argv))
+    if (HasArgument("--nvidia"))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
-    if (HasArgument("--amd", argc, argv))
+    if (HasArgument("--amd"))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferAMD;
-    if (HasArgument("--intel", argc, argv))
+    if (HasArgument("--intel"))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferIntel;
-    if (HasArgument("--ref", argc, argv))
+    if (HasArgument("--ref"))
         g_Config.flags |= LLGL::RenderSystemFlags::SoftwareDevice;
 }
 

@@ -72,6 +72,8 @@ private:
     // Used for scene picking, mesh optimization, and collision detection.
     KDTreeNode                      grid;
 
+    bool                            hasUnsavedChanges           = false;
+
 public:
 
     BrickScene(const BrickScene&) = delete;
@@ -87,6 +89,16 @@ public:
     ~BrickScene()
     {
         ReleaseInstanceBuffer();
+    }
+
+    bool HasUnsavedChanges() const
+    {
+        return hasUnsavedChanges;
+    }
+
+    void MarkSaved()
+    {
+        hasUnsavedChanges = false;
     }
 
     LLGL::Buffer* GetInstanceBuffer() const
@@ -166,6 +178,8 @@ public:
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
             return Brick{};
 
+        hasUnsavedChanges = true;
+
         const bool isTransparent = (color.a < 255);
         const BrickGroup group =
         (
@@ -186,6 +200,7 @@ public:
     {
         constexpr bool notifyNeighbors = true;
         RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, nullptr, notifyNeighbors);
+        hasUnsavedChanges = true;
     }
 
     void ResetScene()
@@ -204,6 +219,8 @@ public:
 
         // Destroy the entire kd-Tree
         grid.Reset();
+
+        hasUnsavedChanges = true;
     }
 
     bool BrickFitsInGrid(const Gs::Vector3i& gridPos, BrickType type, GridRotation rotation) const
@@ -258,9 +275,7 @@ public:
 
     void ResolveCollision(Gs::Vector3f& colliderPoint, float colliderRadius, const OnCollisionContact& onCollision = nullptr) const
     {
-        // First resolve hard-coded collision with floor plane
-        if (colliderPoint.y < colliderRadius)
-            colliderPoint.y = colliderRadius;
+        KeepColliderInsidePlayArea(colliderPoint, colliderRadius);
 
         // Find all potential bricks to collide with
         std::set<Brick> colliderBricks = grid.GatherPotentialColliderBricks(colliderPoint, colliderRadius);
@@ -345,28 +360,6 @@ public:
                 ResolveContact(brick, closestPoint);
             }
         }
-    }
-
-    void ValidateInstances()
-    {
-#if _DEBUG && _WIN32 //TEST
-        for_range(brickType, BrickType_Num)
-        {
-            for_range(groupType, BrickGroup_Num)
-            {
-                const InstanceGroup& group = GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
-                for_range(i, group.numInstances)
-                {
-                    const Instance& instance = instances[group.firstInstance + i];
-                    if (instance.gridPos.x < -10000 || instance.gridPos.y < -10000 || instance.gridPos.z < -10000 ||
-                        instance.gridPos.x > +10000 || instance.gridPos.y > +10000 || instance.gridPos.z > +10000)
-                    {
-                        __debugbreak();
-                    }
-                }
-            }
-        }
-#endif
     }
 
 private:
@@ -463,10 +456,6 @@ private:
                 );
             }
         }
-
-#if 1 //TEST
-        ValidateInstances();
-#endif
 
         return newBrick;
     }
@@ -685,6 +674,28 @@ private:
         const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
             grid.UpdateLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, groupInstance);
+    }
+
+    void KeepColliderInsidePlayArea(Gs::Vector3f& colliderPoint, float colliderRadius) const
+    {
+        // First resolve hard-coded collision with floor plane
+        if (colliderPoint.y < colliderRadius)
+            colliderPoint.y = colliderRadius;
+
+        // Also don't let the collider leave the play area too far, 200% the bounding volume
+        const Gs::Vector3i aabbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
+        const Gs::Vector3f aabbCenter = (KDTreeNode::rootAABB.bbMin + KDTreeNode::rootAABB.bbMax).Cast<float>() * 0.5f;
+        const Gs::Vector3f colliderToCenterVector = colliderPoint - aabbCenter;
+
+        const float outsideAreaTolerance = 50.0f;
+        const float maxDist = static_cast<float>(std::max(aabbExtent.x, std::max(aabbExtent.y, aabbExtent.z))) * 0.5f + outsideAreaTolerance;
+
+        const float colliderDistSqFromCenter = Gs::LengthSq(colliderToCenterVector);
+        if (colliderDistSqFromCenter > maxDist*maxDist)
+        {
+            const float impactOutsideVolume = std::sqrt(colliderDistSqFromCenter) - maxDist;
+            colliderPoint -= colliderToCenterVector.Normalized() * impactOutsideVolume;
+        }
     }
 
 };

@@ -289,6 +289,18 @@ public:
         );
     }
 
+    static void InitBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
+    {
+        LLGL_VERIFY(boundingVolume.size() == 3);
+        KDTreeNode::rootAABB = AABB3i
+        {
+            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
+            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
+        };
+    }
+
+public:
+
     KDTreeNode() :
         axis     { Axis_X },
         distance { 0      }

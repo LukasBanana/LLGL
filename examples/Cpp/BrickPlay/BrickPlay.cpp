@@ -28,7 +28,7 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr int            boundingVolume[3]               = { 100, 60, 100 };
+    static constexpr int            initialBoundingVolume[3]        = { 100, 60, 100 };
     static constexpr float          cameraTurnSpeed                 = 0.25f;
     static constexpr float          cameraMoveSpeed                 = 0.25f;
     static constexpr float          cameraCollisionRadius           = 1.5f;
@@ -61,7 +61,7 @@ class Example_BrickPlay : public ExampleBase
     // High precision format for transparency accumulation texture. Set this to either RGBA16Float or RGBA32Float.
     static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA16Float;
 
-    const char*                     sceneFilename                   = "Bricks.txt";
+    std::string                     sceneFilename                   = "Bricks.txt";
 
     enum BrickPSO
     {
@@ -446,7 +446,7 @@ class Example_BrickPlay : public ExampleBase
 public:
 
     Example_BrickPlay() :
-        ExampleBase { "LLGL Example: Instancing Advanced" }
+        ExampleBase { "LLGL Example: BrickPlay" }
     {
         // Initialize kd-Tree vounding volume and camera projection parameters
         InitAppConfig();
@@ -462,10 +462,13 @@ public:
 
         // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
-        if (LoadScene(*currentScene, sceneFilename))
+        if (LoadScene(*currentScene, sceneFilename.c_str()))
             hasLoadedScene = true;
         else
             CreateDefaultScene(*currentScene);
+
+        // Resolve initial scene collision with camera
+        currentScene->ResolveCollision(camera.position, cameraCollisionRadius);
 
         // Print info
         LLGL::Log::Printf(
@@ -588,14 +591,28 @@ private:
         LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
     }
 
+    void InitSceneBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
+    {
+        KDTreeNode::InitBoundingVolume(boundingVolume);
+        LLGL::Log::Printf(
+            "Scene bounding volume extent: %d x %d x %d\n",
+            boundingVolume[0], boundingVolume[1], boundingVolume[2]
+        );
+    }
+
     void InitAppConfig()
     {
+        // Allow user to override scene file
+        std::string sceneFilenameOverride;
+        if (ParseArgument("-file", sceneFilenameOverride))
+            sceneFilename = std::move(sceneFilenameOverride);
+
         // Store root AABB of kd-Tree
-        KDTreeNode::rootAABB = AABB3i
-        {
-            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
-            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
-        };
+        std::vector<int> boundingVolumeOverride;
+        if (ParseArgument("-grid", boundingVolumeOverride, 'x') && boundingVolumeOverride.size() == 3)
+            InitSceneBoundingVolume(boundingVolumeOverride);
+        else
+            InitSceneBoundingVolume(initialBoundingVolume);
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -1066,8 +1083,8 @@ private:
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
         {
-            psoDesc.debugName                                   = "Scene.Transparent.Wireframe.PSO";
-            psoDesc.rasterizer.polygonMode                      = LLGL::PolygonMode::Wireframe;
+            psoTransparentDesc.debugName                        = "Scene.Transparent.Wireframe.PSO";
+            psoTransparentDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
         }
         pso[BrickPSO_Transparent_Wireframe] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent_Wireframe]);
@@ -1299,7 +1316,7 @@ private:
         return true;
     }
 
-    bool SaveScene(const BrickScene& scene, const char* filename)
+    bool SaveScene(BrickScene& scene, const char* filename)
     {
         // Open file for writing
         std::ofstream file{ filename };
@@ -1393,6 +1410,9 @@ private:
                 }
             }
         }
+
+        // Mark file as saved after scaing completed successful
+        scene.MarkSaved();
 
         LLGL::Log::Printf("Saved scene to file: %s\n", filename);
         return true;
@@ -1523,6 +1543,9 @@ private:
                 return false;
             }
         }
+
+        // Mark scene as saved after loading, since no changes have been made that are not saved in the file we just loaded.
+        scene.MarkSaved();
 
         LLGL::Log::Printf("Loaded scene from file: %s\n", filename);
         return true;
@@ -2736,7 +2759,8 @@ private:
         {
             // Ensure previoulsy selected brick retains its original color
             ResetPreviouslySelectedBrick();
-            SaveScene(*currentScene, sceneFilename);
+            if (currentScene->HasUnsavedChanges())
+                SaveScene(*currentScene, sceneFilename.c_str());
         }
         currentScene.reset();
     }

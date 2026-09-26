@@ -95,6 +95,15 @@ public:
     // Lets the user select a renderer module from the standard input.
     static void ParseProgramArgs(int argc, char* argv[]);
 
+    // Returns true if the application was launched with the specified argument.
+    static bool HasArgument(LLGL::StringView arg);
+
+    // Returns true if the application was launched with the specified argument with an assigned value, e.g. use "-file" when "-file=FILE" is accepted.
+    static bool ParseArgument(LLGL::StringView arg, std::string& outValue);
+    static bool ParseArgument(LLGL::StringView arg, int& outValue);
+
+public:
+
     #if defined LLGL_OS_ANDROID
     static void SetAndroidApp(android_app* androidApp);
     static android_app* GetAndroidApp();
