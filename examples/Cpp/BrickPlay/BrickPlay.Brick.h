@@ -185,6 +185,9 @@ inline bool IsBrickTypeOptimized(BrickType type)
     return (BrickDictionary::Get().GetMesh(type, BrickGroup_WallsOnly).numVertices > 0);
 }
 
+// Brick handle to reference an instance in the grid.
+// These change as bricks are being transferred between groups for optimized rendering.
+// It's important to keep this in mind especially inside 
 struct Brick
 {
     static constexpr std::uint32_t groupIdBits      = 8;
@@ -233,12 +236,6 @@ struct Brick
         return IdToBrickGroup(groupId);
     }
 
-    // Returns true if this brick blocks the view from other bricks. False for invalid and transparent bricks.
-    bool IsBlocking() const
-    {
-        return (groupId != groupIdInvalid && IdToBrickGroup(groupId) != BrickGroup_Transparent);
-    }
-
     operator bool() const
     {
         return (groupId != groupIdInvalid);
@@ -247,6 +244,11 @@ struct Brick
     bool operator == (const Brick& rhs) const
     {
         return (groupId == rhs.groupId && groupInstance == rhs.groupInstance);
+    }
+
+    bool operator != (const Brick& rhs) const
+    {
+        return !(*this == rhs);
     }
 
     // Required for std::set. Without it, the implicit bool conversion would be used and treat all valid bricks as equal.

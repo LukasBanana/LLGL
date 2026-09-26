@@ -53,7 +53,7 @@ cbuffer SceneView : register(b2)
     float       outlineWidth;       // Thickness silhouettes outlines
 
     // Plane shaders only
-    float4      planeBaseColor;
+    float4      planeBaseColors[2];
     float2      parallaxFadeRange;      // Range for parallax fade effect
     float       studHeight;             // Height of the studs on the bricks
 
@@ -519,7 +519,14 @@ void PSPlane(PlaneVertexOut inp, out PlanePixelOut outp)
 
     float3 planeNormal = ColorToPlaneNormal(planeNormalMap.SampleGrad(planeSampler, texCoordAndHeight.xy, dx, dy));
 
-    float4 color = planeColorMap.SampleGrad(planeSampler, texCoordAndHeight.xy, dx, dy) * planeBaseColor;
+    // Apply tint for marking the bounds of the grid
+    int2 gridPos = (int2)texCoordAndHeight.xy;
+    int2 gridBounds[2] = { int2(-50, -50), int2(+50, +50) };
+    bool isOutsideGrid = (any(gridPos <= gridBounds[0]) || any(gridPos >= gridBounds[1]));
+    float4 baseColor = lerp(planeBaseColors[0], planeBaseColors[1], isOutsideGrid);
+
+    // Sample plane color map
+    float4 color = planeColorMap.SampleGrad(planeSampler, texCoordAndHeight.xy, dx, dy) * baseColor;
 
     // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(planeNormal));

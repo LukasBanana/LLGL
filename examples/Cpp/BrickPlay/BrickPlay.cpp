@@ -203,7 +203,7 @@ class Example_BrickPlay : public ExampleBase
         float               outlineWidth            = silhouetteWidth;
 
         // Plane shaders only
-        LLGL::ColorRGBAf    planeBaseColor;
+        LLGL::ColorRGBAf    planeBaseColors[2]      = { LLGL::ColorRGBAf{ 1.0f }, LLGL::ColorRGBAf{ 0.5f, 0.9f, 0.5f } };
         float               parallaxFadeRange[2]    = { 75.0f, 100.0f };
         float               studHeight              = 0.225f;
 
@@ -616,7 +616,7 @@ private:
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
-        projectionParams.zFar   = 500.0f;
+        projectionParams.zFar   = 1000.0f;
         UpdateProjection(swapChain->GetResolution());
 
         // Cache feature support for offset instancing as this will be used every frame
@@ -1343,9 +1343,6 @@ private:
             << ' ' << camera.yaw
             << std::endl;
 
-        // Write all instances for each brick type
-        BrickType lastWrittenBrickType = BrickType_Num;
-
         char colorStr[9] = {};
 
         auto ColorToString = [&colorStr](LLGL::ColorRGBAub color) -> const char*
@@ -1380,6 +1377,79 @@ private:
             return colorStr;
         };
 
+        // Write color palette if number of colors are less than 50% of bricks. Otherwise, write colors individually for each brick
+        std::map<std::uint32_t, int> colorToPaletteIndex;
+
+        auto ColorToUint32 = [](LLGL::ColorRGBAub col) -> std::uint32_t
+        {
+            return
+            (
+                std::uint32_t(col.r) << 24 |
+                std::uint32_t(col.g) << 16 |
+                std::uint32_t(col.b) <<  8 |
+                std::uint32_t(col.a)
+            );
+        };
+
+        auto Uint32ToColor = [](std::uint32_t col) -> LLGL::ColorRGBAub
+        {
+            return LLGL::ColorRGBAub
+            {
+                 col >> 24        ,
+                (col >> 16) & 0xFF,
+                (col >>  8) & 0xFF,
+                (col      ) & 0xFF
+            };
+        };
+
+        std::size_t numTotalInstances = 0;
+        for_range(brickType, BrickType_Num)
+        {
+            for_range(groupType, BrickGroup_Num)
+            {
+                // Write new brick type
+                const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                for_range(i, group.numInstances)
+                {
+                    const Instance& instance = scene.GetInstanceByIndex(group.firstInstance + i);
+                    colorToPaletteIndex.insert(std::make_pair(ColorToUint32(instance.color), 0));
+                }
+                numTotalInstances += group.numInstances;
+            }
+        }
+
+        const bool useColorPalette = (colorToPaletteIndex.size() < numTotalInstances/2);
+        if (useColorPalette)
+        {
+            // Write color for palette and assign their indices
+            int colorPaletteIndex = 0;
+            for (auto& it : colorToPaletteIndex)
+            {
+                file << "p " << ColorToString(Uint32ToColor(it.first)) << std::endl;
+                it.second = colorPaletteIndex++;
+            }
+        }
+
+        // Write all instances for each brick type
+        BrickType lastWrittenBrickType = BrickType_Num;
+
+        auto ColorToStringOrPaletteIndex = [&](LLGL::ColorRGBAub color) -> const char*
+        {
+            // Try to find color in palette first
+            if (useColorPalette)
+            {
+                auto it = colorToPaletteIndex.find(ColorToUint32(color));
+                if (it != colorToPaletteIndex.end())
+                {
+                    ::snprintf(colorStr, sizeof(colorStr), "p%d", it->second);
+                    return colorStr;
+                }
+            }
+
+            // Otherwise, write individual color
+            return ColorToString(color);
+        };
+
         for_range(brickType, BrickType_Num)
         {
             for_range(groupType, BrickGroup_Num)
@@ -1405,7 +1475,7 @@ private:
                         << ' ' << instance.gridPos.y
                         << ' ' << instance.gridPos.z
                         << ' ' << static_cast<int>(instance.gridRotation * 90)
-                        << ' ' << ColorToString(instance.color)
+                        << ' ' << ColorToStringOrPaletteIndex(instance.color)
                         << std::endl;
                 }
             }
@@ -1429,6 +1499,8 @@ private:
 
         BrickType currentBrickType = BrickType_Num;
         Gs::Vector3i currentOffset;
+
+        std::vector<LLGL::ColorRGBAub> colorPalette;
 
         auto ColorFromString = [](const std::string& s) -> LLGL::ColorRGBAub
         {
@@ -1463,6 +1535,23 @@ private:
             }
 
             return color;
+        };
+
+        auto ColorOrPaletteIndexFromString = [&colorPalette, &ColorFromString](const std::string& s) -> LLGL::ColorRGBAub
+        {
+            // Try to parse palette index first
+            if (!s.empty() && s.front() == 'p')
+            {
+                int paletteIndex = std::atoi(&s[1]);
+                if (paletteIndex < colorPalette.size())
+                    return colorPalette[paletteIndex];
+
+                LLGL::Log::Errorf("Color palette index %d out of bounds\n", paletteIndex);
+                return {};
+            }
+
+            // Otherwise, parse individual color value
+            return ColorFromString(s);
         };
 
         // Parse every line and interpret it
@@ -1510,7 +1599,7 @@ private:
                     LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
 
                 // Create new brick instance
-                scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), ColorFromString(colorStr));
+                scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), ColorOrPaletteIndexFromString(colorStr));
             }
             else if (cmd == 'b')
             {
@@ -1535,6 +1624,20 @@ private:
             {
                 // Parse camera orientation
                 stream >> camera.position.x >> camera.position.y >> camera.position.z >> camera.pitch >> camera.yaw;
+            }
+            else if (cmd == 'p')
+            {
+                if (currentBrickType != BrickType_Num)
+                {
+                    LLGL::Log::Errorf("Color palette entries must appear before brick types\n");
+                    scene.ResetScene();
+                    return false;
+                }
+
+                // Parse color palette entry
+                std::string colorStr;
+                stream >> colorStr;
+                colorPalette.push_back(ColorFromString(colorStr));
             }
             else
             {

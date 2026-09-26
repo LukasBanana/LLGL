@@ -25,6 +25,8 @@
 
 inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& aabb);
 
+inline bool IsPointInsideAABB(const Gs::Vector3i& point, const AABB3i& aabb);
+
 
 // Tree hierarchy for the grid of brick cells. A standard 4x2x3 brick for example takes up 24 cells in the grid.
 // There are few exceptions like the roof tiles, which have one row of cells that are skipped, to allow users to place other bricks more closely above them.
@@ -54,15 +56,7 @@ public:
 
     static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
     {
-        return
-        (
-            gridPos.x >=  KDTreeNode::rootAABB.bbMin.x &&
-            gridPos.y >=  KDTreeNode::rootAABB.bbMin.y &&
-            gridPos.z >=  KDTreeNode::rootAABB.bbMin.z &&
-            gridPos.x <   KDTreeNode::rootAABB.bbMax.x &&
-            gridPos.y <   KDTreeNode::rootAABB.bbMax.y &&
-            gridPos.z <   KDTreeNode::rootAABB.bbMax.z
-        );
+        return IsPointInsideAABB(gridPos, KDTreeNode::rootAABB);
     }
 
     static void InitBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
@@ -120,6 +114,7 @@ public:
         {
             AABB3i gridArea;
             {
+                // Clamp area into kd-Tree AABB. If coordinate for bbMin is equal to bbMax, its extent will be 0
                 gridArea.bbMin.x = Gs::Clamp(gridPos.x, KDTreeNode::rootAABB.bbMin.x, KDTreeNode::rootAABB.bbMax.x);
                 gridArea.bbMin.y = Gs::Clamp(gridPos.y, KDTreeNode::rootAABB.bbMin.y, KDTreeNode::rootAABB.bbMax.y);
                 gridArea.bbMin.z = Gs::Clamp(gridPos.z, KDTreeNode::rootAABB.bbMin.z, KDTreeNode::rootAABB.bbMax.z);
@@ -319,10 +314,10 @@ private:
     {
         if (HasChildren())
         {
-            // Split grid position plus extent range between child0 and child1
             const std::int32_t split = aabb.bbMin[axis] + static_cast<std::int32_t>(distance);
             if (gridPos[axis] < split)
             {
+                // Split grid position plus extent range between child0 and child1
                 Gs::Vector3i child0Extent = extent;
                 child0Extent[axis] = std::min(extent[axis], split - gridPos[axis]);
                 child[0]->ForEachLeafInside(gridPos, child0Extent, GetChild0AABB(aabb), iterator);
@@ -340,9 +335,8 @@ private:
             }
             else
             {
-                Gs::Vector3i child1Extent = extent;
-                child1Extent[axis] = std::min(gridPos[axis] + extent[axis], aabb.bbMax[axis]) - gridPos[axis];
-                child[1]->ForEachLeafInside(gridPos, child1Extent, GetChild1AABB(aabb), iterator);
+                // Pass parameters to child1. No need to clamp the extent, this already happend in the above branch from a parent node.
+                child[1]->ForEachLeafInside(gridPos, extent, GetChild1AABB(aabb), iterator);
             }
         }
         else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
@@ -450,7 +444,20 @@ inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& 
         );
     }
     return closestPoint;
-};
+}
+
+inline bool IsPointInsideAABB(const Gs::Vector3i& point, const AABB3i& aabb)
+{
+    return
+    (
+        point.x >=  aabb.bbMin.x &&
+        point.y >=  aabb.bbMin.y &&
+        point.z >=  aabb.bbMin.z &&
+        point.x <   aabb.bbMax.x &&
+        point.y <   aabb.bbMax.y &&
+        point.z <   aabb.bbMax.z
+    );
+}
 
 
 #endif // /LLGL_EXAMPLE_BRICKPLAY_KDTREE_H

@@ -173,10 +173,10 @@ public:
         return nullptr;
     }
 
-    Brick NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
+    bool NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
     {
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
-            return Brick{};
+            return false;
 
         hasUnsavedChanges = true;
 
@@ -446,7 +446,7 @@ private:
 
     // This function must not take `gridPos` as constant reference parameter.
     // When it comes from an instance (like the preview model), it will invalidate that pointer in AllocateInstancesInGroup().
-    Brick AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
+    bool AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
     {
         Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
 
@@ -456,16 +456,15 @@ private:
             newInstance->gridRotation   = gridRotation;
             newInstance->color          = color;
 
-            if (!InsertBrickIntoGrid(newBrick, notifyNeighbors))
-            {
-                LLGL::Log::Errorf(
-                    "Failed to insert brick (groupId=%u, groupInstance=%u) into grid\n",
-                    newBrick.groupId, newBrick.groupInstance
-                );
-            }
+            if (InsertBrickIntoGrid(newBrick, notifyNeighbors))
+                return true;
         }
 
-        return newBrick;
+        LLGL::Log::Errorf(
+            "Failed to insert brick (groupId=%u, groupInstance=%u) into grid\n",
+            newBrick.groupId, newBrick.groupInstance
+        );
+        return false;
     }
 
     bool RemoveInstanceFromGroup(std::uint32_t groupId, std::uint32_t groupInstance, Instance* outRemovedInstance = nullptr, bool notifyNeighbors = false)
@@ -502,9 +501,20 @@ private:
         return true;
     }
 
+    // Returns true if the specified brick is blocking the view of other bricks. False for transparent bricks.
+    bool IsBrickBlocking(Brick brick) const
+    {
+        if (const Instance* brickInstance = GetBrickInstance(brick))
+        {
+            const bool isTransparent = (brickInstance->color.a < 255);
+            return !isTransparent;
+        }
+        return false;
+    }
+
     bool IsGridCellBlocked(const Gs::Vector3i& gridPos) const
     {
-        return grid.GetLeaf(gridPos).IsBlocking();
+        return IsBrickBlocking(grid.GetLeaf(gridPos));
     }
 
     bool IsBrickVolumeBlockedTopAndBottom(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
@@ -557,14 +567,22 @@ private:
         return true;
     }
 
-    // Transfers the specified brick to a new group and returns the updated brick entry
-    void TransferBrickGroup(Brick brick, BrickGroup newGroup)
+    // Tries to transfer the specified brick to a new group.
+    void TryTransferBrickGroup(Brick brick, BrickGroup newGroup)
     {
-        Instance oldInstance;
-        if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
+        // Don't transfer bricks if the group doesn't change
+        if (brick.GetGroup() != newGroup)
         {
-            const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
-            (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.color);
+            // Don't transfer bricks into walls-only optimized group if their mesh doesn't support this group
+            if (newGroup != BrickGroup_WallsOnly || IsBrickTypeOptimized(brick.GetType()))
+            {
+                Instance oldInstance;
+                if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
+                {
+                    const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
+                    (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.color);
+                }
+            }
         }
     }
 
@@ -585,13 +603,12 @@ private:
                     if (IsBrickVolumeBlockedSideways(instance->gridPos, brickDim))
                     {
                         // Transfer brick to group of invisible bricks, these are not rendered at all
-                        TransferBrickGroup(brick, BrickGroup_Invisible);
+                        TryTransferBrickGroup(brick, BrickGroup_Invisible);
                     }
                     else if (group == BrickGroup_Default)
                     {
-                        // If brick has a walls-only optimized mesh, transfer it to that group
-                        if (IsBrickTypeOptimized(brick.GetType()))
-                            TransferBrickGroup(brick, BrickGroup_WallsOnly);
+                        // Transfer brick into walls-only optimized group, ignore transparent bricks or bricks already in that group
+                        TryTransferBrickGroup(brick, BrickGroup_WallsOnly);
                     }
                 }
             }
@@ -607,16 +624,16 @@ private:
                         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
                         if (IsBrickVolumeBlockedTopAndBottom(instance->gridPos, brickDim))
                         {
-                            TransferBrickGroup(brick, BrickGroup_WallsOnly);
+                            TryTransferBrickGroup(brick, BrickGroup_WallsOnly);
                             return;
                         }
                     }
-                    TransferBrickGroup(brick, isBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
+                    TryTransferBrickGroup(brick, isBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
                 }
                 else if (group == BrickGroup_WallsOnly && isChangeFromTopAndBottom)
                 {
                     // Brick is no longer fully blocked top and bottom, so switch back to default mesh
-                    TransferBrickGroup(brick, BrickGroup_Default);
+                    TryTransferBrickGroup(brick, BrickGroup_Default);
                 }
             }
         }
@@ -626,65 +643,44 @@ private:
     void NotifyBrickChangeToNeighbors(const Gs::Vector3i alignedGridPos, const Gs::Vector3i& brickExtent, Brick changedBrick)
     {
         // First gather all brick cells that need to be notified to avoid running the blocking test multiple times for the same brick.
-        // Use their cell coordinates instead of storing the brick references as they might be invalidated in the next phase.
-        std::set<Brick> visitedBricks;
-        std::vector<Gs::Vector3i> topAndBottomBricksToNotify, sidewaysBricksToNotify;
+        // Use their cell coordinates instead of storing the brick handles as they might be invalidated in the next phase.
+        std::set<Brick> visitedBricks[2];
+        std::vector<Gs::Vector3i> bricksToNotifyCells[2];
 
-        for_range(yi, 2)
+        const AABB3i topAndBottomAABB
         {
-            const std::int32_t y = (yi == 0 ? -1 : brickExtent.y);
-            grid.ForEachLeaf(
-                alignedGridPos + Gs::Vector3i{ 0, y, 0 },
-                Gs::Vector3i{ brickExtent.x, 1, brickExtent.z },
-                [&visitedBricks, &topAndBottomBricksToNotify](Brick brick, const Gs::Vector3i& gridPos)
-                {
-                    if (visitedBricks.insert(brick).second)
-                        topAndBottomBricksToNotify.push_back(gridPos);
-                }
-            );
-        }
-
-        auto AddSidewaysBricksToNotify = [&visitedBricks, &sidewaysBricksToNotify](Brick brick, const Gs::Vector3i& gridPos)
-        {
-            if (visitedBricks.insert(brick).second)
-                sidewaysBricksToNotify.push_back(gridPos);
+            alignedGridPos + Gs::Vector3i{ 0, -1, 0 },
+            alignedGridPos + brickExtent + Gs::Vector3i{ 0, 2, 0}
         };
 
         grid.ForEachLeaf(
-            alignedGridPos + Gs::Vector3i{ -1, -1, 0 },
-            Gs::Vector3i{ brickExtent.x + 2, brickExtent.y + 2, 1 },
-            AddSidewaysBricksToNotify
-        );
-        grid.ForEachLeaf(
-            alignedGridPos + Gs::Vector3i{ -1, -1, brickExtent.z },
-            Gs::Vector3i{ brickExtent.x + 2, brickExtent.y + 2, 1 },
-            AddSidewaysBricksToNotify
-        );
-
-        grid.ForEachLeaf(
-            alignedGridPos + Gs::Vector3i{ -1, 0, -1 },
-            Gs::Vector3i{ 1, brickExtent.y + 2, brickExtent.z },
-            AddSidewaysBricksToNotify
-        );
-        grid.ForEachLeaf(
-            alignedGridPos + Gs::Vector3i{ brickExtent.x + 1, 0, -1 },
-            Gs::Vector3i{ 1, brickExtent.y + 2, brickExtent.z },
-            AddSidewaysBricksToNotify
+            alignedGridPos + Gs::Vector3i{ -1 },
+            brickExtent + Gs::Vector3i{ 2 },
+            [&visitedBricks, &bricksToNotifyCells, changedBrick, &topAndBottomAABB](Brick brick, const Gs::Vector3i& gridPos)
+            {
+                // Don't notify the brick that just changed itself and also don't notify bricks more than once
+                if (brick != changedBrick)
+                {
+                    // Notify bricks via two separate lists: (1) About changes above and blow a brick and (2) For all other neighbors.
+                    const bool isChangeFromTopAndBottom = IsPointInsideAABB(gridPos, topAndBottomAABB);
+                    const int listIndex = (isChangeFromTopAndBottom ? 0 : 1);
+                    if (visitedBricks[listIndex].insert(brick).second)
+                        bricksToNotifyCells[listIndex].push_back(gridPos);
+                }
+            }
         );
 
         // Now notify the bricks that their surrounding has changed
-        const bool isBlocking = changedBrick.IsBlocking();
+        const bool isChangedBrickBlocking = IsBrickBlocking(changedBrick);
 
-        for (const Gs::Vector3i& gridPos : topAndBottomBricksToNotify)
+        for_range(listIndex, 2)
         {
-            if (Brick brick = grid.GetLeaf(gridPos))
-                OnBrickChanged(brick, isBlocking, true);
-        }
-
-        for (const Gs::Vector3i& gridPos : sidewaysBricksToNotify)
-        {
-            if (Brick brick = grid.GetLeaf(gridPos))
-                OnBrickChanged(brick, isBlocking, false);
+            const bool isChangeFromTopAndBottom = (listIndex == 0);
+            for (const Gs::Vector3i& gridPos : bricksToNotifyCells[listIndex])
+            {
+                if (Brick brick = grid.GetLeaf(gridPos))
+                    OnBrickChanged(brick, isChangedBrickBlocking, isChangeFromTopAndBottom);
+            }
         }
     }
 
@@ -748,7 +744,11 @@ private:
         // Remove brick entries from grid
         const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
-            grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
+        {
+            const Gs::Vector3i cellPos{ x, y, z };
+            if (!IsBrickCellExcluded(type, instance.gridRotation, cellPos))
+                grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
+        }
 
         // Notify top and bottom grid entries that they are now unblocked, so they need to switch back to the full mesh
         if (notifyNeighbors)
@@ -782,7 +782,7 @@ private:
         const Gs::Vector3f colliderToCenterVector = colliderPoint - aabbCenter;
 
         const float outsideAreaTolerance = 50.0f;
-        const float maxDist = static_cast<float>(std::max(aabbExtent.x, std::max(aabbExtent.y, aabbExtent.z))) * 0.5f + outsideAreaTolerance;
+        const float maxDist = Gs::Length(aabbExtent.Cast<float>()) * 0.5f + outsideAreaTolerance;
 
         const float colliderDistSqFromCenter = Gs::LengthSq(colliderToCenterVector);
         if (colliderDistSqFromCenter > maxDist*maxDist)
