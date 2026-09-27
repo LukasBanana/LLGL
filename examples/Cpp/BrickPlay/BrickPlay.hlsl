@@ -53,6 +53,7 @@ cbuffer SceneView : register(b2)
     float       outlineWidth;       // Thickness silhouettes outlines
 
     // Plane shaders only
+    int4        gridBounds;             // XY: minimum grid bounds, ZW: maximum grid bounds (negated for easier comparison)
     float4      planeBaseColors[2];
     float2      parallaxFadeRange;      // Range for parallax fade effect
     float       studHeight;             // Height of the studs on the bricks
@@ -521,8 +522,7 @@ void PSPlane(PlaneVertexOut inp, out PlanePixelOut outp)
 
     // Apply tint for marking the bounds of the grid
     int2 gridPos = (int2)texCoordAndHeight.xy;
-    int2 gridBounds[2] = { int2(-50, -50), int2(+50, +50) };
-    bool isOutsideGrid = (any(gridPos <= gridBounds[0]) || any(gridPos >= gridBounds[1]));
+    bool isOutsideGrid = any(int4(gridPos, -gridPos) <= gridBounds);
     float4 baseColor = lerp(planeBaseColors[0], planeBaseColors[1], isOutsideGrid);
 
     // Sample plane color map
@@ -557,23 +557,6 @@ void VSSkybox(uint id : SV_VertexID, out SkyVertexOut outp)
 float4 PSSkybox(SkyVertexOut inp) : SV_Target
 {
     return skyboxTexture.Sample(skyboxSampler, normalize(inp.viewRay.xyz));
-}
-
-
-////////////////////// DEBUG SHADERS //////////////////////
-
-uniform float4 vertexA;
-uniform float4 vertexB;
-
-float4 VSDebug(uint id : SV_VertexID) : SV_Position
-{
-    float4 vertices[2] = { vertexA, vertexB };
-    return mul(vpMatrix, vertices[id]);
-}
-
-float4 PSDebug() : SV_Target
-{
-    return float4(1, 1, 1, 1);
 }
 
 

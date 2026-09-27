@@ -13,6 +13,7 @@
 #include "BrickPlay.KDTree.h"
 #include <ExampleBase.h>
 #include <algorithm>
+#include <functional>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <set>
@@ -25,7 +26,10 @@ class BrickScene
 public:
 
     // Function callback to notify the collider about a contact with a brick.
-    using OnCollisionContact = std::function<void(Brick, const Gs::Vector3f& contactPoint, float impact)>;
+    using OnCollisionContact = std::function<void(Brick brick, const Gs::Vector3f& contactPoint, float impact)>;
+
+    // Function callback to paint the color of a brick for auto-generated chunks.
+    using OnBrickPaint = std::function<LLGL::ColorRGBAub(BrickType brickType, const Gs::Vector3i& gridPos)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
@@ -203,6 +207,55 @@ public:
         constexpr bool notifyNeighbors = true;
         return AddInstanceToGroup(groupId, gridPos, gridRotation, color, notifyNeighbors);
     }
+
+    // Adds new bricks to the scene to fill up the specified AABB and returns the number of bricks that were added.
+    int NewBricksChunk(const Gs::Vector3i& bbOffset, const Gs::Vector3i& bbExtent, const OnBrickPaint& painter)
+    {
+        int count = 0;
+
+        auto NewBrickAndCount = [this, &bbOffset, &count, &painter](int x, int y, int z, int w, int h, int d) -> void
+        {
+            BrickType brickType = BrickDictionary::Get().FindBrickTypeForDimension(Gs::Vector3i{ w, h, d });
+            if (brickType < BrickType_Num)
+            {
+                // Counter offset brick so that its boundary is (0,0,0) to (W,H,D). The bricks are usually centered for better user placement.
+                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, GridRotation_0);
+                const Gs::Vector3i gridPos = bbOffset + Gs::Vector3i{ x, y, z } - brickDim.offset;
+
+                if (NewBrick(brickType, gridPos, GridRotation_0, painter(brickType, gridPos)))
+                    ++count;
+            }
+        };
+
+        int y = 0;
+        int z = 0;
+
+        auto NewBricksZAxis = [this, &bbExtent, &NewBrickAndCount, &y, &z](int yStep, int zStep) -> void
+        {
+            for (; z + zStep <= bbExtent.z; z += zStep)
+            {
+                int x = 0;
+              //for (; x + 4 <= bbExtent.x; x += 4) { NewBrickAndCount(x,y,z, 4,yStep,zStep); }
+                for (; x + 2 <= bbExtent.x; x += 2) { NewBrickAndCount(x,y,z, 2,yStep,zStep); }
+                for (; x + 1 <= bbExtent.x; x += 1) { NewBrickAndCount(x,y,z, 1,yStep,zStep); }
+            }
+        };
+
+        auto NewBricksYAxis = [this, &bbExtent, &NewBricksZAxis, &y, &z](int yStep) -> void
+        {
+            for (; y + yStep <= bbExtent.y; y += yStep)
+            {
+                z = 0;
+                NewBricksZAxis(yStep, 2);
+                NewBricksZAxis(yStep, 1);
+            }
+        };
+
+        NewBricksYAxis(3);
+        NewBricksYAxis(1);
+
+        return count;
+    };
 
     void DestroyBrick(Brick brick)
     {
@@ -512,11 +565,6 @@ private:
         return false;
     }
 
-    bool IsGridCellBlocked(const Gs::Vector3i& gridPos) const
-    {
-        return IsBrickBlocking(grid.GetLeaf(gridPos));
-    }
-
     bool IsBrickVolumeBlockedTopAndBottom(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
     {
         const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
@@ -528,14 +576,17 @@ private:
             if (alignedGridPos.y + y < KDTreeNode::rootAABB.bbMin.y)
                 continue;
 
-            for_range(z, brickDim.extent.z)
-            {
-                for_range(x, brickDim.extent.x)
+            // Iterate through all cells within the current Y-axis layer and break iteration once a brick that is non-blocking has been found
+            const bool areAllBlocking = grid.ForEachCell(
+                alignedGridPos + Gs::Vector3i{ 0, y, 0 },
+                Gs::Vector3i{ brickDim.extent.x, 1, brickDim.extent.z },
+                [this](Brick brick, const Gs::Vector3i& /*gridPos*/) -> bool
                 {
-                    if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, z }))
-                        return false;
+                    return IsBrickBlocking(brick);
                 }
-            }
+            );
+            if (!areAllBlocking)
+                return false;
         }
         return true;
     }
@@ -543,28 +594,30 @@ private:
     bool IsBrickVolumeBlockedSideways(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
     {
         const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
-        for_subrange(y, -1, brickDim.extent.y + 1)
-        {
-            // If current grid position is under the floor, it's also considered blocked
-            if (alignedGridPos.y + y < KDTreeNode::rootAABB.bbMin.y)
-                continue;
 
-            for_subrange(x, -1, brickDim.extent.x + 1)
-            {
-                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, -1 }))
-                    return false;
-                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ x, y, brickDim.extent.z }))
-                    return false;
-            }
-            for_range(z, brickDim.extent.z)
-            {
-                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ -1, y, z }))
-                    return false;
-                if (!IsGridCellBlocked(alignedGridPos + Gs::Vector3i{ brickDim.extent.x, y, z }))
-                    return false;
-            }
+        // Any X/Z grid position outside its bounds is considered visible since the camera can move outside the grid, but never under the floor
+        if (alignedGridPos.x <= KDTreeNode::rootAABB.bbMin.x || alignedGridPos.x + brickDim.extent.x >= KDTreeNode::rootAABB.bbMax.x ||
+            alignedGridPos.z <= KDTreeNode::rootAABB.bbMin.z || alignedGridPos.z + brickDim.extent.z >= KDTreeNode::rootAABB.bbMax.z)
+        {
+            return false;
         }
-        return true;
+
+        // Iterate through all cells within the AABB of the brick and its neighbor cells. Even though we ignore all the cells that are inside the brick itself,
+        // this is a lot faster than probing each cell one by one via `GetLeaf()` since it reduces the amount of tree traversal quite drastically.
+        return grid.ForEachCell(
+            alignedGridPos + Gs::Vector3i{ -1 },
+            brickDim.extent + Gs::Vector3i{ +2 },
+            [this, &alignedGridPos, &brickDim](Brick brick, const Gs::Vector3i& cellPos) -> bool
+            {
+                // Ignore cells inside the brick itself for the entire Y-axis; they are already handled by IsBrickVolumeBlockedTopAndBottom()
+                if (!(cellPos.x >= alignedGridPos.x && cellPos.x < alignedGridPos.x + brickDim.extent.x &&
+                      cellPos.z >= alignedGridPos.z && cellPos.z < alignedGridPos.z + brickDim.extent.z))
+                {
+                    return IsBrickBlocking(brick);
+                }
+                return true;
+            }
+        );
     }
 
     // Tries to transfer the specified brick to a new group.
@@ -653,10 +706,10 @@ private:
             alignedGridPos + brickExtent + Gs::Vector3i{ 0, 2, 0}
         };
 
-        grid.ForEachLeaf(
+        grid.ForEachCell(
             alignedGridPos + Gs::Vector3i{ -1 },
             brickExtent + Gs::Vector3i{ 2 },
-            [&visitedBricks, &bricksToNotifyCells, changedBrick, &topAndBottomAABB](Brick brick, const Gs::Vector3i& gridPos)
+            [&visitedBricks, &bricksToNotifyCells, changedBrick, &topAndBottomAABB](Brick brick, const Gs::Vector3i& gridPos) -> bool
             {
                 // Don't notify the brick that just changed itself and also don't notify bricks more than once
                 if (brick != changedBrick)
@@ -667,7 +720,9 @@ private:
                     if (visitedBricks[listIndex].insert(brick).second)
                         bricksToNotifyCells[listIndex].push_back(gridPos);
                 }
-            }
+                return true;
+            },
+            /*iterateThroughLeavesOnly:*/ true
         );
 
         // Now notify the bricks that their surrounding has changed

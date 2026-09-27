@@ -10,6 +10,7 @@
 
 
 #include <Gauss/Vector3.h>
+#include <Gauss/Equals.h> // For Vector3 == operator
 #include <string>
 #include <cstdint>
 #include <map>
@@ -176,6 +177,17 @@ public:
     const BrickMesh& GetMesh(int brickType, int brickGroup = BrickGroup_Default) const
     {
         return brickMeshes[CombineToBrickId(brickType, brickGroup)];
+    }
+
+    BrickType FindBrickTypeForDimension(const Gs::Vector3i& extent) const
+    {
+        // Try to find brick with the specified dimensions
+        for (const auto& it : typeToInfoMap)
+        {
+            if (it.second.extent == extent)
+                return it.first;
+        }
+        return BrickType_Num; // No such brick found
     }
 
 };

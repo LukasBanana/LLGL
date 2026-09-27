@@ -8,10 +8,12 @@
 #include "BrickPlay.Brick.h"
 #include "BrickPlay.Scene.h"
 #include <ExampleBase.h>
+#include <PerlinNoise.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <set>
 #include <map>
+#include <chrono>
 
 // File and string streams for simple scene file writer/reader
 #include <fstream>
@@ -32,13 +34,13 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          cameraTurnSpeed                 = 0.25f;
     static constexpr float          cameraMoveSpeed                 = 0.25f;
     static constexpr float          cameraCollisionRadius           = 1.5f;
-    static constexpr float          previewBlockOffsetY             = 0.075f;               // Y-axis world position offset for the preview block before putting it into place
+    static constexpr float          previewBlockOffsetY             = 0.075f;   // Y-axis world position offset for the preview block before putting it into place
 
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr std::uint32_t  maxUIVertexBatchSize            = 64 * 3;               // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
-    static constexpr int            uiColorPickerSize               = 26;                   // Size (in pixels) of each color picker button
+    static constexpr std::uint32_t  maxUIVertexBatchSize            = 64 * 3;   // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
+    static constexpr int            uiColorPickerSize               = 26;       // Size (in pixels) of each color picker button
     static constexpr int            uiColorPickerOffset[2]          = { 15, 15 };
     static constexpr int            uiButtonFrameSize               = 3;
     static constexpr int            uiButtonMargin                  = 5;
@@ -48,9 +50,11 @@ class Example_BrickPlay : public ExampleBase
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
     const LLGL::ColorRGBAub         uiMenuBgColor                   = { 0, 0, 0, 180 };
 
-    static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;                 // Minimum size for a bounding volume of brick thumbnails.
+    static constexpr float          uiThumbnailMinVolumeSize        = 3.0f; // Minimum size for a bounding volume of brick thumbnails.
 
     static constexpr int            planeSubdivisions               = 1;
+
+    static constexpr int            heightFieldChunkSize            = 2;    // Build bricks from height field in 4x4 grid chunks so that the largest bricks can be utilized
 
     // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
     // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
@@ -61,7 +65,12 @@ class Example_BrickPlay : public ExampleBase
     // High precision format for transparency accumulation texture. Set this to either RGBA16Float or RGBA32Float.
     static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA16Float;
 
-    std::string                     sceneFilename                   = "Bricks.txt";
+    struct Options
+    {
+        std::string                 sceneFilename                   = "Bricks.txt";
+        int                         scenePresetNo                   = -1; // Auto-generate preset scene
+    }
+    options;
 
     enum BrickPSO
     {
@@ -94,10 +103,6 @@ class Example_BrickPlay : public ExampleBase
 
     LLGL::PipelineLayout*       psoLayout                       = nullptr;
     LLGL::PipelineState*        pso[BrickPSO_Num]               = {};
-
-    #if DEBUG_KDTREE
-    LLGL::PipelineState*        psoDebug                        = nullptr;
-    #endif
 
     LLGL::PipelineLayout*       psoOutlineWriteStencilLayout    = nullptr;
     LLGL::PipelineState*        psoOutlineWriteStencil          = nullptr;
@@ -203,6 +208,7 @@ class Example_BrickPlay : public ExampleBase
         float               outlineWidth            = silhouetteWidth;
 
         // Plane shaders only
+        std::int32_t        gridBounds[4]           = {};
         LLGL::ColorRGBAf    planeBaseColors[2]      = { LLGL::ColorRGBAf{ 1.0f }, LLGL::ColorRGBAf{ 0.5f, 0.9f, 0.5f } };
         float               parallaxFadeRange[2]    = { 75.0f, 100.0f };
         float               studHeight              = 0.225f;
@@ -372,6 +378,15 @@ class Example_BrickPlay : public ExampleBase
 
     SelectionRenderMode selectionRenderMode = SelectionRenderMode::Simplified;
 
+    // Height field and perlin noise generator parameters. See PerlinNoise::Noise().
+    struct HeightFieldParameters
+    {
+        int             yRange[2]   = { -15, 20 };  // Y-coordinate grid range for auto-generated height fields
+        std::uint32_t   frequency   = 5;
+        std::uint32_t   octaves     = 5;
+        float           persistence = 0.5f;
+    };
+
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
     {
@@ -384,11 +399,6 @@ class Example_BrickPlay : public ExampleBase
         LLGL::ColorRGBAub   pickedInstanceColor;
 
         int                 pickedColorPaletteIndex = 0;
-
-        #if DEBUG_KDTREE
-        Gs::Vector3f        pickedPosition;
-        Gs::Vector3f        pickedNormal;
-        #endif
     }
     controller;
 
@@ -462,10 +472,16 @@ public:
 
         // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
-        if (LoadScene(*currentScene, sceneFilename.c_str()))
-            hasLoadedScene = true;
+        if (options.scenePresetNo < 0)
+        {
+            if (LoadScene(*currentScene, options.sceneFilename.c_str()))
+                hasLoadedScene = true;
+        }
         else
-            CreateDefaultScene(*currentScene);
+        {
+            CreateDefaultScene(*currentScene, options.scenePresetNo);
+            hasLoadedScene = true;
+        }
 
         // Resolve initial scene collision with camera
         currentScene->ResolveCollision(camera.position, cameraCollisionRadius);
@@ -594,18 +610,27 @@ private:
     void InitSceneBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
     {
         KDTreeNode::InitBoundingVolume(boundingVolume);
+
+        // Store grid boundaries as positive minimum and negative maximum so the shader can evaluate it in a single vector operation (see fragment shader 'PSPlane')
+        sceneView.gridBounds[0] = +KDTreeNode::rootAABB.bbMin.x;
+        sceneView.gridBounds[1] = +KDTreeNode::rootAABB.bbMin.z;
+
+        sceneView.gridBounds[2] = -KDTreeNode::rootAABB.bbMax.x;
+        sceneView.gridBounds[3] = -KDTreeNode::rootAABB.bbMax.z;
+
         LLGL::Log::Printf(
             "Scene bounding volume extent: %d x %d x %d\n",
             boundingVolume[0], boundingVolume[1], boundingVolume[2]
         );
     }
 
-    void InitAppConfig()
+    void ParseCommandLineOptions()
     {
         // Allow user to override scene file
-        std::string sceneFilenameOverride;
-        if (ParseArgument("-file", sceneFilenameOverride))
-            sceneFilename = std::move(sceneFilenameOverride);
+        if (ParseArgument("-preset", options.scenePresetNo))
+            options.sceneFilename = "Bricks.Preset" + std::to_string(options.scenePresetNo) + ".txt";
+
+        ParseArgument("-file", options.sceneFilename);
 
         // Store root AABB of kd-Tree
         std::vector<int> boundingVolumeOverride;
@@ -613,6 +638,11 @@ private:
             InitSceneBoundingVolume(boundingVolumeOverride);
         else
             InitSceneBoundingVolume(initialBoundingVolume);
+    }
+
+    void InitAppConfig()
+    {
+        ParseCommandLineOptions();
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -648,6 +678,7 @@ private:
         return renderer->CreateTexture(cubeTexDesc);
     }
 
+    // Load textures and bakes them into a cube texture via `CopyTexture()` command.
     LLGL::Texture* LoadCubeTexture(const std::string& basename, std::initializer_list<const char*> cubeFaces)
     {
         LLGL_VERIFY(cubeFaces.size() == 6);
@@ -1101,20 +1132,6 @@ private:
         }
         pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoPreviewDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Preview]);
-
-        #if DEBUG_KDTREE
-        LLGL::GraphicsPipelineDescriptor psoDebugDesc;
-        {
-            psoDebugDesc.debugName          = "Debug.PSO";
-            psoDebugDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(SceneView@2):vert,float4(vertexA,vertexB)"));
-            psoDebugDesc.vertexShader       = LoadVertexShader  ("BrickPlay", "VSDebug");
-            psoDebugDesc.fragmentShader     = LoadFragmentShader("BrickPlay", "PSDebug");
-            psoDebugDesc.primitiveTopology  = LLGL::PrimitiveTopology::LineList;
-            psoDebugDesc.depth.testEnabled  = true;
-        }
-        psoDebug = renderer->CreatePipelineState(psoDebugDesc);
-        REPORT_PSO_ERRORS(psoDebug);
-        #endif
 
         // Create PSO to render an overlay with simple UI elements
         psoUILayout = renderer->CreatePipelineLayout(
@@ -1654,26 +1671,116 @@ private:
         return true;
     }
 
-    void CreateDefaultScene(BrickScene& scene)
+    void BuildBrickChunkFromHeightField(
+        BrickScene& scene, int xOffset, int zOffset, int xExtent, int zExtent, const int (&yRange)[2], const std::vector<float>& heightField, int rowStride)
     {
-        // Place initial camera position
-        camera.position = { 0, 10.0f, -20.0f };
-        camera.pitch    = 20.0f;
+        // Gather height field values and min/max range
+        float fieldMin = FLT_MAX;
+        float fieldMax = 0.0f;
+        float field[heightFieldChunkSize][heightFieldChunkSize];
 
-        //TODO
-
-        for (int i = 0; i <= 4; ++i)
+        for (int z = 0; z < zExtent; ++z)
         {
-            for (int j = 0; j <= 4 - i; ++j)
+            for (int x = 0; x < xExtent; ++x)
             {
-                scene.NewBrick(BrickType_4x2x3, { 4*(i-2)+j*2, j*3,  0 }, GridRotation_0, colorPalette[i%5]);
+                field[z][x] = heightField[(zOffset + z) * rowStride + (xOffset + x)];
+                fieldMin = std::min(fieldMin, field[z][x]);
+                fieldMax = std::max(fieldMax, field[z][x]);
             }
         }
 
-        scene.NewBrick(BrickType_4x2x1, { -9, 3, -4 }, GridRotation_90, colorPalette[1]);
-        scene.NewBrick(BrickType_4x2x1, { -9, 3,  0 }, GridRotation_90, colorPalette[1]);
-        scene.NewBrick(BrickType_4x2x1, { -9, 3, +4 }, GridRotation_90, colorPalette[1]);
+        const LLGL::ColorRGBAub colorLevels[3]
+        {
+            { 255, 255, 255 },
+            { 200, 255, 190 },
+            {  90, 220, 100 },
+        };
 
+        auto BrickPainter = [&colorLevels](BrickType brickType, const Gs::Vector3i& gridPos) -> LLGL::ColorRGBAub
+        {
+            int level = gridPos.y/4;
+            return colorLevels[Gs::Clamp(level, 0, 2)];
+        };
+
+        // Build foundation with largest bricks possible
+        int heightFieldUpperBound = (yRange[1] - yRange[0]);
+        int yMaxChunk = static_cast<int>(fieldMin * heightFieldUpperBound);
+
+        const Gs::Vector3i bbOffset
+        {
+            KDTreeNode::rootAABB.bbMin.x + xOffset,
+            KDTreeNode::rootAABB.bbMin.y + yRange[0],
+            KDTreeNode::rootAABB.bbMin.z + zOffset
+        };
+        scene.NewBricksChunk(bbOffset, Gs::Vector3i{ xExtent, yMaxChunk, zExtent }, BrickPainter);
+
+        // Build finer details at the top of the current chunk
+        const float fieldHeightRange = (fieldMax - fieldMax);
+
+        for (int z = 0; z < zExtent; ++z)
+        {
+            for (int x = 0; x < xExtent; ++x)
+            {
+                int yField = static_cast<int>(field[z][x] * heightFieldUpperBound);
+                if (yField > yMaxChunk)
+                {
+                    const BrickType brickType1x1 = (yField > yMaxChunk + 1 ? BrickType_1x1x1 : BrickType_1x1x1_Tile);
+                    const Gs::Vector3i gridPos
+                    {
+                        KDTreeNode::rootAABB.bbMin.x + xOffset + x,
+                        KDTreeNode::rootAABB.bbMin.y + yRange[0] + yMaxChunk,
+                        KDTreeNode::rootAABB.bbMin.z + zOffset + z
+                    };
+                    scene.NewBrick(brickType1x1, gridPos, GridRotation_0, BrickPainter(brickType1x1, gridPos));
+                }
+            }
+        }
+    }
+
+    void CreateDefaultScene(BrickScene& scene, int presetNo)
+    {
+        // Measure time to generate height field
+        auto startTime = std::chrono::system_clock::now();
+        {
+            const HeightFieldParameters fieldParams[]
+            {
+                HeightFieldParameters{ { -15, 20 }, 5, 5, 0.50f }, // Smooth hills
+                HeightFieldParameters{ { -35, 35 }, 2, 5, 0.35f }, // A lonely hill
+                HeightFieldParameters{ { -15, 20 }, 4, 4, 1.00f }, // Sharp spikes in the hills, looks noiser
+            };
+
+            constexpr int numPresets = (sizeof(fieldParams)/sizeof(fieldParams[0]));
+            GenerateHeightFieldScene(scene, fieldParams[presetNo % numPresets]);
+        }
+        auto endTime = std::chrono::system_clock::now();
+        auto elapsedSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+        LLGL::Log::Printf("Generated height field scene in %.03fs\n", static_cast<double>(elapsedSeconds) / 1000.0);
+    }
+
+    void GenerateHeightFieldScene(BrickScene& scene, const HeightFieldParameters& heightFieldParams)
+    {
+        const Gs::Vector3f bbCenter = (KDTreeNode::rootAABB.bbMax + KDTreeNode::rootAABB.bbMin).Cast<float>() * 0.5f;
+        const Gs::Vector3i bbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
+
+        // Generate height field from Perlin noise
+        std::vector<float> noiseBuffer;
+        PerlinNoise{}.GenerateBuffer(noiseBuffer, bbExtent.x, 1, bbExtent.z, heightFieldParams.frequency, heightFieldParams.octaves, heightFieldParams.persistence);
+
+        for (int z = 0; z + heightFieldChunkSize < bbExtent.z; z += heightFieldChunkSize)
+        {
+            for (int x = 0; x + heightFieldChunkSize < bbExtent.x; x += heightFieldChunkSize)
+            {
+                int yRange[2] = { (heightFieldParams.yRange[0] / 3) * 3, heightFieldParams.yRange[1] };
+                BuildBrickChunkFromHeightField(scene, x, z, heightFieldChunkSize, heightFieldChunkSize, yRange, noiseBuffer, bbExtent.x);
+            }
+        }
+
+        // Place initial camera position
+        camera.position = { bbCenter.x, bbCenter.y + static_cast<float>(bbExtent.y)*0.5f, bbCenter.z - static_cast<float>(bbExtent.z)*0.7f };
+
+        const Gs::Vector3f lookAtVector = camera.position - Gs::Vector3f{ bbCenter.x, 0.0f, bbCenter.z };
+        camera.pitch    = 180.0f - Gs::Rad2Deg(Gs::Angle(lookAtVector, Gs::Vector3f{ 0, 0, 1 }));
     }
 
     //////////////////// RENDERING ////////////////////
@@ -2388,21 +2495,6 @@ private:
         FlushUIVertexBuffer();
     }
 
-    #if DEBUG_KDTREE
-    void RenderDebugInfo()
-    {
-        commands->SetPipelineState(*psoDebug);
-        const Gs::Vector4f vertices[2] =
-        {
-            Gs::Vector4f{ controller.pickedPosition, 1.0f },
-            Gs::Vector4f{ controller.pickedPosition + controller.pickedNormal, 1.0f }
-        };
-        commands->SetResource(0, *sceneViewCbuffer);
-        commands->SetUniforms(0, vertices, sizeof(vertices));
-        commands->Draw(2, 0);
-    }
-    #endif
-
     //////////////////// USER INPUT HANDLING ////////////////////
 
     void StartCameraMode(CameraMode newMode)
@@ -2511,12 +2603,6 @@ private:
 
                 newBrickInstance->color = LLGL::ColorRGBAub{ 255, 0, 0, 255 };
             }
-
-            #if DEBUG_KDTREE
-            controller.pickedPosition   = contact.point;
-            controller.pickedNormal     = contact.normal.Cast<float>();
-            #endif
-
             return contact.brick;
         }
 
@@ -2836,11 +2922,6 @@ private:
                     }
                     commands->PopDebugGroup();
                 }
-
-                #if DEBUG_KDTREE
-                if (controller.editMode == EditMode::Remove)
-                    RenderDebugInfo();
-                #endif
             }
             commands->EndRenderPass();
         }
@@ -2863,7 +2944,7 @@ private:
             // Ensure previoulsy selected brick retains its original color
             ResetPreviouslySelectedBrick();
             if (currentScene->HasUnsavedChanges())
-                SaveScene(*currentScene, sceneFilename.c_str());
+                SaveScene(*currentScene, options.sceneFilename.c_str());
         }
         currentScene.reset();
     }

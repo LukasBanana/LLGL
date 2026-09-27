@@ -47,7 +47,7 @@ class KDTreeNode
 
 public:
 
-    using LeafIterator = std::function<void(Brick brick, const Gs::Vector3i& gridPos)>;
+    using LeafIterator = std::function<bool(Brick brick, const Gs::Vector3i& gridPos)>;
 
     static const Gs::Vector3f   gridScale;
 
@@ -106,7 +106,8 @@ public:
             return Brick{};
     }
 
-    void ForEachLeaf(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const LeafIterator& iterator) const
+    // Invokes the iterator callback on every cell (leaf or non-leaf) within the specified area and stops early when the iterator returns false.
+    bool ForEachCell(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const LeafIterator& iterator, bool iterateThroughLeavesOnly = false) const
     {
         // Clamp AABB to root AABB
         LLGL_VERIFY(iterator != nullptr);
@@ -119,12 +120,13 @@ public:
                 gridArea.bbMin.y = Gs::Clamp(gridPos.y, KDTreeNode::rootAABB.bbMin.y, KDTreeNode::rootAABB.bbMax.y);
                 gridArea.bbMin.z = Gs::Clamp(gridPos.z, KDTreeNode::rootAABB.bbMin.z, KDTreeNode::rootAABB.bbMax.z);
 
-                gridArea.bbMax.x = std::min(gridArea.bbMin.x + extent.x, KDTreeNode::rootAABB.bbMax.x);
-                gridArea.bbMax.y = std::min(gridArea.bbMin.y + extent.y, KDTreeNode::rootAABB.bbMax.y);
-                gridArea.bbMax.z = std::min(gridArea.bbMin.z + extent.z, KDTreeNode::rootAABB.bbMax.z);
+                gridArea.bbMax.x = Gs::Clamp(gridPos.x + extent.x, gridArea.bbMin.x, KDTreeNode::rootAABB.bbMax.x);
+                gridArea.bbMax.y = Gs::Clamp(gridPos.y + extent.y, gridArea.bbMin.y, KDTreeNode::rootAABB.bbMax.y);
+                gridArea.bbMax.z = Gs::Clamp(gridPos.z + extent.z, gridArea.bbMin.z, KDTreeNode::rootAABB.bbMax.z);
             }
-            ForEachLeafInside(gridArea.bbMin, gridArea.bbMax - gridArea.bbMin, KDTreeNode::rootAABB, iterator);
+            return ForEachCellInside(gridArea.bbMin, gridArea.bbMax - gridArea.bbMin, KDTreeNode::rootAABB, iterator, iterateThroughLeavesOnly);
         }
+        return false;
     }
 
     Brick IntersectWithLeaf(const Ray3f& ray, AABBIntersection* outIntersection = nullptr) const
@@ -310,7 +312,7 @@ private:
         }
     }
 
-    void ForEachLeafInside(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const AABB3i& aabb, LeafIterator iterator) const
+    bool ForEachCellInside(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const AABB3i& aabb, LeafIterator iterator, bool iterateThroughLeavesOnly) const
     {
         if (HasChildren())
         {
@@ -320,7 +322,8 @@ private:
                 // Split grid position plus extent range between child0 and child1
                 Gs::Vector3i child0Extent = extent;
                 child0Extent[axis] = std::min(extent[axis], split - gridPos[axis]);
-                child[0]->ForEachLeafInside(gridPos, child0Extent, GetChild0AABB(aabb), iterator);
+                if (!child[0]->ForEachCellInside(gridPos, child0Extent, GetChild0AABB(aabb), iterator, iterateThroughLeavesOnly))
+                    return false;
 
                 if (gridPos[axis] + extent[axis] > split)
                 {
@@ -330,20 +333,41 @@ private:
                     Gs::Vector3i child1Extent = extent;
                     child1Extent[axis] -= child0Extent[axis];
 
-                    child[1]->ForEachLeafInside(child1GridPos, child1Extent, GetChild1AABB(aabb), iterator);
+                    if (!child[1]->ForEachCellInside(child1GridPos, child1Extent, GetChild1AABB(aabb), iterator, iterateThroughLeavesOnly))
+                        return false;
                 }
             }
             else
             {
                 // Pass parameters to child1. No need to clamp the extent, this already happend in the above branch from a parent node.
-                child[1]->ForEachLeafInside(gridPos, extent, GetChild1AABB(aabb), iterator);
+                if (!child[1]->ForEachCellInside(gridPos, extent, GetChild1AABB(aabb), iterator, iterateThroughLeavesOnly))
+                    return false;
             }
         }
         else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
         {
-            // We found the leaf node
-            iterator(this->brick, gridPos);
+            // We found a leaf node
+            return iterator(this->brick, gridPos);
         }
+        else if (!iterateThroughLeavesOnly)
+        {
+            // Iterate through empty cells
+            Gs::Vector3i cellPos;
+            const Brick emptyBrick;
+
+            for (cellPos.z = gridPos.z; cellPos.z < gridPos.z + extent.z; ++cellPos.z)
+            {
+                for (cellPos.y = gridPos.y; cellPos.y < gridPos.y + extent.y; ++cellPos.y)
+                {
+                    for (cellPos.x = gridPos.x; cellPos.x < gridPos.x + extent.x; ++cellPos.x)
+                    {
+                        if (!iterator(emptyBrick, gridPos))
+                            return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection = nullptr) const
