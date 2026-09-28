@@ -9,6 +9,10 @@
 #define MAX_NUM_PARALLAX_LAYERS 16
 #endif
 
+#ifndef MAX_NUM_COLOR_PALETTE
+#define MAX_NUM_COLOR_PALETTE 32
+#endif
+
 #ifndef ENABLE_PARALLAX_OCCLUSION
 #define ENABLE_PARALLAX_OCCLUSION 0
 #endif
@@ -61,6 +65,11 @@ cbuffer SceneView : register(b2)
     float       skyboxDiffuseFactor;    // Factor for blending the skybox's diffuse reflection
 };
 
+cbuffer ColorPalette : register(b3)
+{
+    uint4 colorPalette[(MAX_NUM_COLOR_PALETTE + 3) / 4];
+};
+
 TextureCube skyboxTexture : register(t7);
 SamplerState skyboxSampler : register(s8);
 
@@ -75,7 +84,7 @@ struct VertexIn
     
     // Per-instance attributes
     int4        gridPos     : GRIDPOS; // xyz (position), w (rotation: 0=default, 1=90 degrees)
-    float4      color       : COLOR;
+    uint        colorIndex  : COLORINDEX;
 };
 
 struct VertexOut
@@ -115,6 +124,22 @@ float3x3 BrickRotation(int rotationIndex)
     return rotationMatrices[rotationIndex];
 }
 
+float4 UnpackColorRGBA8UNorm(uint packedColor)
+{
+    uint4 color;
+    color.r = ((packedColor      ) & 0xFF);
+    color.g = ((packedColor >>  8) & 0xFF);
+    color.b = ((packedColor >> 16) & 0xFF);
+    color.a = ( packedColor >> 24  & 0xFF);
+    return (float4)color / 255.0;
+}
+
+float4 ColorFromPalette(uint colorIndex)
+{
+    uint packedColor = colorPalette[colorIndex / 4][colorIndex % 4];
+    return UnpackColorRGBA8UNorm(packedColor);
+}
+
 void BrickBaseTransform(VertexIn inp, out VertexOut outp, float3 worldOffset)
 {
     float3x3 rotation = BrickRotation(inp.gridPos.w);
@@ -123,7 +148,7 @@ void BrickBaseTransform(VertexIn inp, out VertexOut outp, float3 worldOffset)
     outp.worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale + worldOffset;
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
     outp.normal   = mul(rotation, inp.normal);
-    outp.color    = inp.color;
+    outp.color    = ColorFromPalette(inp.colorIndex);
 }
 
 void VSBrick(VertexIn inp, out VertexOut outp)
@@ -198,6 +223,7 @@ float ComputeWeight(float4 color, float z)
 }
 
 // Adopted from https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
+EARLYDEPTHSTENCIL
 void PSBrickTransparent(VertexOut inp, out TransparentPixelOut outp)
 {
     // Apply simple lighting

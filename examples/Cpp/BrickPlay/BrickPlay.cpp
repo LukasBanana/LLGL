@@ -7,6 +7,7 @@
 
 #include "BrickPlay.Brick.h"
 #include "BrickPlay.Scene.h"
+#include "BrickPlay.Utils.h"
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
 #include <LLGL/Utils/ForRange.h>
@@ -30,10 +31,13 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr int            initialBoundingVolume[3]        = { 100, 60, 100 };
+    static constexpr bool           useCameraAcceleration           = true;
     static constexpr float          cameraTurnSpeed                 = 0.25f;
-    static constexpr float          cameraMoveSpeed                 = 0.25f;
+    static constexpr float          cameraMoveSpeed                 = 25.0f;
+    static constexpr float          cameraMass                      = 0.1f;     // Camera mass for physics based movement.
+    static constexpr float          cameraDampingCeofficient        = 0.99f;
     static constexpr float          cameraCollisionRadius           = 1.5f;
+
     static constexpr float          previewBlockOffsetY             = 0.075f;   // Y-axis world position offset for the preview block before putting it into place
 
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
@@ -67,8 +71,10 @@ class Example_BrickPlay : public ExampleBase
 
     struct Options
     {
-        std::string                 sceneFilename                   = "Bricks.txt";
+        std::string                 sceneFilename                   = "Bricks.scene.txt";
+        std::string                 configFilename                  = "BrickPlay.config.txt";
         int                         scenePresetNo                   = -1; // Auto-generate preset scene
+        int                         sceneBoundingVolume[3]          = { 100, 60, 100 };
     }
     options;
 
@@ -84,93 +90,80 @@ class Example_BrickPlay : public ExampleBase
     };
 
     // Shaders to render brick instances, the brick preview model, UI elements, an infinite plne for the floor, and the skybox
-    LLGL::Shader*               vsBrick                         = nullptr;
-    LLGL::Shader*               fsBrick                         = nullptr;
-    LLGL::Shader*               fsBrickTransparent              = nullptr;
-    LLGL::Shader*               vsBrickPreview                  = nullptr;
-    LLGL::Shader*               fsBrickPreview                  = nullptr;
-    LLGL::Shader*               vsTransparentComposite          = nullptr;
-    LLGL::Shader*               fsTransparentComposite          = nullptr;
-    LLGL::Shader*               vsOverlay                       = nullptr;
-    LLGL::Shader*               fsOverlay                       = nullptr;
-    LLGL::Shader*               vsOutline                       = nullptr;
-    LLGL::Shader*               gsOutline                       = nullptr;
-    LLGL::Shader*               fsOutline                       = nullptr;
-    LLGL::Shader*               vsPlane                         = nullptr;
-    LLGL::Shader*               fsPlane                         = nullptr;
-    LLGL::Shader*               vsSkybox                        = nullptr;
-    LLGL::Shader*               fsSkybox                        = nullptr;
+    LLGL::Shader*                   vsBrick                         = nullptr;
+    LLGL::Shader*                   fsBrick                         = nullptr;
+    LLGL::Shader*                   fsBrickTransparent              = nullptr;
+    LLGL::Shader*                   vsBrickPreview                  = nullptr;
+    LLGL::Shader*                   fsBrickPreview                  = nullptr;
+    LLGL::Shader*                   vsTransparentComposite          = nullptr;
+    LLGL::Shader*                   fsTransparentComposite          = nullptr;
+    LLGL::Shader*                   vsOverlay                       = nullptr;
+    LLGL::Shader*                   fsOverlay                       = nullptr;
+    LLGL::Shader*                   vsOutline                       = nullptr;
+    LLGL::Shader*                   gsOutline                       = nullptr;
+    LLGL::Shader*                   fsOutline                       = nullptr;
+    LLGL::Shader*                   vsPlane                         = nullptr;
+    LLGL::Shader*                   fsPlane                         = nullptr;
+    LLGL::Shader*                   vsSkybox                        = nullptr;
+    LLGL::Shader*                   fsSkybox                        = nullptr;
 
-    LLGL::PipelineLayout*       psoLayout                       = nullptr;
-    LLGL::PipelineState*        pso[BrickPSO_Num]               = {};
+    LLGL::PipelineLayout*           psoLayout                       = nullptr;
+    LLGL::PipelineState*            pso[BrickPSO_Num]               = {};
 
-    LLGL::PipelineLayout*       psoOutlineWriteStencilLayout    = nullptr;
-    LLGL::PipelineState*        psoOutlineWriteStencil          = nullptr;
+    LLGL::PipelineLayout*           psoOutlineWriteStencilLayout    = nullptr;
+    LLGL::PipelineState*            psoOutlineWriteStencil          = nullptr;
 
-    LLGL::PipelineLayout*       psoOutlineWriteColorLayout      = nullptr;
-    LLGL::PipelineState*        psoOutlineWriteColor            = nullptr;
+    LLGL::PipelineLayout*           psoOutlineWriteColorLayout      = nullptr;
+    LLGL::PipelineState*            psoOutlineWriteColor            = nullptr;
 
-    LLGL::PipelineLayout*       psoUILayout                     = nullptr;
-    LLGL::PipelineState*        psoUI                           = nullptr;
+    LLGL::PipelineLayout*           psoUILayout                     = nullptr;
+    LLGL::PipelineState*            psoUI                           = nullptr;
 
-    LLGL::PipelineLayout*       psoPlaneLayout                  = nullptr;
-    LLGL::PipelineState*        psoPlane[2]                     = {};
+    LLGL::PipelineLayout*           psoPlaneLayout                  = nullptr;
+    LLGL::PipelineState*            psoPlane[2]                     = {};
 
-    LLGL::PipelineLayout*       psoSkyLayout                    = nullptr;
-    LLGL::PipelineState*        psoSky                          = nullptr;
+    LLGL::PipelineLayout*           psoSkyLayout                    = nullptr;
+    LLGL::PipelineState*            psoSky                          = nullptr;
 
-    LLGL::PipelineLayout*       psoCompositeLayout              = nullptr;
-    LLGL::PipelineState*        psoComposite                    = nullptr;
+    LLGL::PipelineLayout*           psoCompositeLayout              = nullptr;
+    LLGL::PipelineState*            psoComposite                    = nullptr;
 
-    LLGL::Buffer*               sceneViewCbuffer                = nullptr;
-    LLGL::Buffer*               vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
-    std::uint64_t               previewInstanceBufferOffset     = 0;
+    LLGL::Buffer*                   sceneViewCbuffer                = nullptr;
+    LLGL::Buffer*                   colorPaletteCbuffer             = nullptr;
+    LLGL::Buffer*                   vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
+    std::uint64_t                   previewInstanceBufferOffset     = 0;
 
-    LLGL::Buffer*               uiVertexBuffer                  = nullptr;
-    LLGL::Buffer*               uiViewCbuffer                   = nullptr;
-    LLGL::Texture*              uiBlankTexture                  = nullptr;
-    LLGL::Texture*              uiBrickThumbnailTexture         = nullptr;
+    LLGL::Buffer*                   uiVertexBuffer                  = nullptr;
+    LLGL::Buffer*                   uiViewCbuffer                   = nullptr;
+    LLGL::Texture*                  uiBlankTexture                  = nullptr;
+    LLGL::Texture*                  uiBrickThumbnailTexture         = nullptr;
 
-    LLGL::Sampler*              uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
+    LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
 
-    LLGL::Texture*              skyboxCubemap                   = nullptr;
+    LLGL::Texture*                  skyboxCubemap                   = nullptr;
 
-    bool                        hasOffsetInstancing             = false;
-    bool                        hasLoadedScene                  = false;
+    bool                            hasOffsetInstancing             = false;
+    bool                            hasLoadedScene                  = false;
 
-    std::unique_ptr<BrickScene> currentScene;
+    std::unique_ptr<BrickScene>     currentScene;
+
+    using ColorPalette      = BrickUtils::ColorPalette;
 
     using Instance          = BrickScene::Instance;
     using InstanceGroup     = BrickScene::InstanceGroup;
     using RayIntersection   = BrickScene::RayIntersection;
 
-    Instance                    previewInstance                 = {};
+    Instance                        previewInstance                 = {};
 
     struct UIState
     {
         // To avoid competing mouse interactions between scene picking and UI elements,
         // declare a dead zone for the scene picker when the menu is active on the left and on the right.
         // This adjusted according to screen resolution when UI elements have to shift.
-        int                     menuBarLeft                     = 0;
-        int                     menuBarRight                    = 0;
+        int menuBarLeft     = 0;
+        int menuBarRight    = 0;
     }
     uiState;
-
-    const LLGL::ColorRGBAub     colorPalette[11] =
-    {
-        LLGL::ColorRGBAub{ 0xFF, 0xFF, 0xFF }, // White
-        LLGL::ColorRGBAub{ 0x85, 0x80, 0x85 }, // Mid gray
-        LLGL::ColorRGBAub{ 0x20, 0x25, 0x22 }, // Dark gray
-        LLGL::ColorRGBAub{ 0xFF, 0xF0, 0x3A }, // Bright light yellow
-        LLGL::ColorRGBAub{ 0x73, 0xDC, 0xA1 }, // Medium green
-        LLGL::ColorRGBAub{ 0x62, 0xFA, 0x78 }, // Bright green
-        LLGL::ColorRGBAub{ 0x20, 0x32, 0xB0 }, // Dark blue
-        LLGL::ColorRGBAub{ 0xFF, 0x69, 0x8F }, // Coral
-        LLGL::ColorRGBAub{ 0x92, 0x39, 0x78 }, // Magenta
-        LLGL::ColorRGBAub{ 0xD5, 0x40, 0x40 }, // Bright red
-
-        LLGL::ColorRGBAub{ 0xFF, 0xFF, 0xFF, 0xB4 }, // Glass
-    };
 
     struct alignas(16) SceneView
     {
@@ -390,20 +383,22 @@ class Example_BrickPlay : public ExampleBase
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
     {
-        CameraMode          cameraMode              = CameraMode::None;
-        EditMode            editMode                = EditMode::None;
+        CameraMode          cameraMode                  = CameraMode::None;
+        EditMode            editMode                    = EditMode::None;
 
         LLGL::Offset2D      lastCursorPos;
 
         Brick               pickedBrick;
-        LLGL::ColorRGBAub   pickedInstanceColor;
+        int                 pickedInstanceColorIndex    = 0; // Color palette index of lasted picked brick
 
-        int                 pickedColorPaletteIndex = 0;
+        int                 pickedColorPaletteIndex     = 0;
     }
     controller;
 
     struct Camera
     {
+        Gs::Vector3f    forces;
+        Gs::Vector3f    velocity;
         Gs::Vector3f    position;
         float           pitch       = 0.0f;
         float           yaw         = 0.0f;
@@ -418,19 +413,61 @@ class Example_BrickPlay : public ExampleBase
             this->yaw   = this->yaw + yaw;
         }
 
-        void Move(const Gs::Vector3f& direction, const BrickScene* collisionScene = nullptr)
+        void Move(const Gs::Vector3f& direction)
         {
             // Move camera into the direction, taking camera rotation into account
             Gs::Matrix3f rotation;
             Gs::RotateY(rotation, Gs::Deg2Rad(yaw));
             Gs::RotateX(rotation, Gs::Deg2Rad(pitch));
-            position += rotation * direction;
+            forces += rotation * direction;
 
-            // Resolve collisions
-            if (collisionScene != nullptr)
+        }
+
+        void ApplyForces(float dt, const BrickScene* collisionScene = nullptr)
+        {
+            if (useCameraAcceleration)
             {
-                collisionScene->ResolveCollision(position, cameraCollisionRadius);
+                // Apply forces to velocity
+                const Gs::Vector3f damping = -velocity * cameraDampingCeofficient;
+                const Gs::Vector3f acceleration = (forces + damping) / cameraMass;
+                velocity += acceleration * dt;
             }
+            else
+            {
+                // Without physics integration, simply set velocity to input forces
+                velocity = forces;
+            }
+
+            // Apply velocity to position and resolve collisions
+            const Gs::Vector3f velocityDelta = velocity * dt;
+            const float velocityDeltaLen = velocityDelta.Length();
+
+            if (velocityDeltaLen > GS_EPSILON_F32)
+            {
+                // Resolve collisions in iterations by maximum velocity length
+                if (collisionScene != nullptr)
+                {
+                    const float travelStep = cameraCollisionRadius * 0.9f;
+                    const Gs::Vector3f moveDir = velocityDelta.Normalized();
+
+                    float travelDist = 0.0f;
+                    while (travelDist + travelStep < velocityDeltaLen)
+                    {
+                        position += moveDir * travelStep;
+                        collisionScene->ResolveCollision(position, cameraCollisionRadius);
+                        travelDist += travelStep;
+                    }
+                    position += moveDir * (velocityDeltaLen - travelDist);
+                    collisionScene->ResolveCollision(position, cameraCollisionRadius);
+                }
+                else
+                {
+                    position += velocityDelta;
+                }
+            }
+
+            // Reset forces
+            forces = {};
         }
 
         void UpdateTransform()
@@ -502,15 +539,74 @@ public:
 
 private:
 
-    // Returns the color palette index for the specified color or -1 if not found.
-    int FindColorPaletteIndex(LLGL::ColorRGBAub color)
+    // Loads the configuration file and imports its color palette and brick models
+    bool ImportConfigs(const char* filename)
     {
-        for (int i = 0; i < sizeof(colorPalette)/sizeof(colorPalette[0]); ++i)
+        std::ifstream file{ filename };
+        if (!file.good())
         {
-            if (colorPalette[i] == color)
-                return i;
+            LLGL::Log::Errorf("Failed to import configuration file: %s\n", filename);
+            return false;
         }
-        return -1;
+
+        const bool success = BrickUtils::ParseTextFile(
+            file,
+            [&](std::stringstream& stream, int lineNo) -> bool
+            {
+                char cmd = '\0';
+                stream >> cmd;
+
+                if (cmd == 'b')
+                {
+                    // Parse brick model
+
+                    //TODO
+
+                }
+                else if (cmd == 'e')
+                {
+                    // Parse excluded cell from brick model
+
+                    //TODO
+
+                }
+                else if (cmd == 'v')
+                {
+                    // Parse bounding volume size
+                    stream >> options.sceneBoundingVolume[0] >> options.sceneBoundingVolume[1] >> options.sceneBoundingVolume[2];
+                    for (int size : options.sceneBoundingVolume)
+                    {
+                        if (size < 1)
+                        {
+                            LLGL::Log::Errorf(
+                                "Invalid scene bounding volume dimensions %dx%dx%d in %s:d\n",
+                                options.sceneBoundingVolume[0], options.sceneBoundingVolume[1], options.sceneBoundingVolume[2], filename, lineNo
+                            );
+                            return false;
+                        }
+                    }
+                }
+                else if (cmd == 'p')
+                {
+                    // Parse entry for intermediate color palette that's exclusive to this scene
+                    std::string colorStr;
+                    stream >> colorStr;
+                    ColorPalette::Get().Insert(BrickUtils::ColorFromString(colorStr));
+                }
+                else
+                {
+                    LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
+                    return false;
+                }
+
+                return true;
+            }
+        );
+        if (!success)
+            return false;
+
+        LLGL::Log::Printf("Imported configuration file: %s\n", filename);
+        return true;
     }
 
     // Projects the specified screen coordinate into a ray originating from the camera view to pick elements in the scene.
@@ -624,25 +720,13 @@ private:
         );
     }
 
-    void ParseCommandLineOptions()
+    void InitAppConfig()
     {
         // Allow user to override scene file
         if (ParseArgument("-preset", options.scenePresetNo))
             options.sceneFilename = "Bricks.Preset" + std::to_string(options.scenePresetNo) + ".txt";
 
         ParseArgument("-file", options.sceneFilename);
-
-        // Store root AABB of kd-Tree
-        std::vector<int> boundingVolumeOverride;
-        if (ParseArgument("-grid", boundingVolumeOverride, 'x') && boundingVolumeOverride.size() == 3)
-            InitSceneBoundingVolume(boundingVolumeOverride);
-        else
-            InitSceneBoundingVolume(initialBoundingVolume);
-    }
-
-    void InitAppConfig()
-    {
-        ParseCommandLineOptions();
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -659,6 +743,18 @@ private:
             selectionRenderMode = SelectionRenderMode::EmulatedLineWidth;
         else
             selectionRenderMode = SelectionRenderMode::Simplified;
+
+        // Import configurations and finalize color palette
+        if (!ImportConfigs(options.configFilename.c_str()))
+            ColorPalette::Get().InitDefault();
+        ColorPalette::Get().Finalize();
+
+        // Store root AABB of kd-Tree
+        std::vector<int> boundingVolumeOverride;
+        if (ParseArgument("-grid", boundingVolumeOverride, 'x') && boundingVolumeOverride.size() == 3)
+            InitSceneBoundingVolume(boundingVolumeOverride);
+        else
+            InitSceneBoundingVolume(options.sceneBoundingVolume);
     }
 
     LLGL::Texture* CreateDummyCubeTexture()
@@ -899,8 +995,17 @@ private:
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, vertices.data(), previewInstanceBufferOffset);
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
 
-        // Create scene view constant buffer
+        // Create scene view and color palette constant buffers
         sceneViewCbuffer = CreateConstantBuffer(sceneView);
+
+        LLGL::BufferDescriptor colorCbufferDesc;
+        {
+            colorCbufferDesc.debugName  = "ColorPaletteCbuffer";
+            colorCbufferDesc.size       = sizeof(LLGL::ColorRGBAub) * ColorPalette::maxNumColors;
+            colorCbufferDesc.bindFlags  = LLGL::BindFlags::ConstantBuffer;
+        }
+        colorPaletteCbuffer = renderer->CreateBuffer(colorCbufferDesc);
+        renderer->WriteBuffer(*colorPaletteCbuffer, 0, ColorPalette::Get().Data(), ColorPalette::Get().DataSize());
 
         // Create UI buffers
         uiViewCbuffer = CreateConstantBuffer(uiView);
@@ -1037,6 +1142,7 @@ private:
         psoLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(SceneView@2):vert:frag,"
+                "cbuffer(ColorPalette@3):vert,"
 
                 "texture(skyboxTexture@7):frag,"
                 "sampler(skyboxSampler@8){}:frag,"
@@ -1048,12 +1154,12 @@ private:
         const LLGL::VertexAttribute vertexAttribs[] =
         {
             // Per-vertex attributes
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(BrickVertex, position), /*stride:*/ sizeof(BrickVertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1, /*offset:*/ offsetof(BrickVertex, normal  ), /*stride:*/ sizeof(BrickVertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "position",   LLGL::Format::RGB32Float, /*location:*/ 0, offsetof(BrickVertex, position), sizeof(BrickVertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "normal",     LLGL::Format::RGB32Float, /*location:*/ 1, offsetof(BrickVertex, normal  ), sizeof(BrickVertex), /*slot:*/ 0 },
 
             // Per-instance attributes
-            LLGL::VertexAttribute{ "gridPos",  LLGL::Format::RGBA32SInt, /*location:*/ 2, /*offset:*/ offsetof(Instance, gridPos), /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, /*location:*/ 3, /*offset:*/ offsetof(Instance, color  ), /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "gridPos",    LLGL::Format::RGBA32SInt, /*location:*/ 2, offsetof(Instance, gridPos   ), sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "colorIndex", LLGL::Format::R8UInt,     /*location:*/ 3, offsetof(Instance, colorIndex), sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
         };
 
         // Create graphics PSO for default scene rendering
@@ -1360,64 +1466,8 @@ private:
             << ' ' << camera.yaw
             << std::endl;
 
-        char colorStr[9] = {};
-
-        auto ColorToString = [&colorStr](LLGL::ColorRGBAub color) -> const char*
-        {
-            auto UbyteToHex = [](char* out, std::uint8_t val) -> void
-            {
-                const char* alphabet = "0123456789ABCDEF";
-                out[0] = alphabet[val / 0x10];
-                out[1] = alphabet[val % 0x10];
-            };
-
-            if (color.r == color.g && color.g == color.b && color.a == 0xFF)
-            {
-                // Write color out as gray-scaled value
-                UbyteToHex(colorStr, color.r);
-                colorStr[2] = '\0';
-            }
-            else
-            {
-                // Write out RGB channels
-                UbyteToHex(colorStr    , color.r);
-                UbyteToHex(colorStr + 2, color.g);
-                UbyteToHex(colorStr + 4, color.b);
-
-                // Skip alpha channel if its opaque (0xFF)
-                if (color.a == 0xFF)
-                    colorStr[6] = '\0';
-                else
-                    UbyteToHex(colorStr + 6, color.a);
-            }
-
-            return colorStr;
-        };
-
-        // Write color palette if number of colors are less than 50% of bricks. Otherwise, write colors individually for each brick
+        // Write intermediate color palette if number of colors are less than 50% of bricks. Otherwise, write colors individually for each brick
         std::map<std::uint32_t, int> colorToPaletteIndex;
-
-        auto ColorToUint32 = [](LLGL::ColorRGBAub col) -> std::uint32_t
-        {
-            return
-            (
-                std::uint32_t(col.r) << 24 |
-                std::uint32_t(col.g) << 16 |
-                std::uint32_t(col.b) <<  8 |
-                std::uint32_t(col.a)
-            );
-        };
-
-        auto Uint32ToColor = [](std::uint32_t col) -> LLGL::ColorRGBAub
-        {
-            return LLGL::ColorRGBAub
-            {
-                 col >> 24        ,
-                (col >> 16) & 0xFF,
-                (col >>  8) & 0xFF,
-                (col      ) & 0xFF
-            };
-        };
 
         std::size_t numTotalInstances = 0;
         for_range(brickType, BrickType_Num)
@@ -1429,7 +1479,7 @@ private:
                 for_range(i, group.numInstances)
                 {
                     const Instance& instance = scene.GetInstanceByIndex(group.firstInstance + i);
-                    colorToPaletteIndex.insert(std::make_pair(ColorToUint32(instance.color), 0));
+                    colorToPaletteIndex.insert(std::make_pair(ColorPalette::Get().IndexToPacked(instance.colorIndex), 0));
                 }
                 numTotalInstances += group.numInstances;
             }
@@ -1442,20 +1492,21 @@ private:
             int colorPaletteIndex = 0;
             for (auto& it : colorToPaletteIndex)
             {
-                file << "p " << ColorToString(Uint32ToColor(it.first)) << std::endl;
+                file << "p " << BrickUtils::ColorToString(BrickUtils::Uint32ToColor(it.first)) << std::endl;
                 it.second = colorPaletteIndex++;
             }
         }
 
         // Write all instances for each brick type
         BrickType lastWrittenBrickType = BrickType_Num;
+        char colorStr[9] = {};
 
         auto ColorToStringOrPaletteIndex = [&](LLGL::ColorRGBAub color) -> const char*
         {
             // Try to find color in palette first
             if (useColorPalette)
             {
-                auto it = colorToPaletteIndex.find(ColorToUint32(color));
+                auto it = colorToPaletteIndex.find(BrickUtils::ColorToUint32(color));
                 if (it != colorToPaletteIndex.end())
                 {
                     ::snprintf(colorStr, sizeof(colorStr), "p%d", it->second);
@@ -1464,7 +1515,7 @@ private:
             }
 
             // Otherwise, write individual color
-            return ColorToString(color);
+            return BrickUtils::ColorToString(color);
         };
 
         for_range(brickType, BrickType_Num)
@@ -1492,7 +1543,7 @@ private:
                         << ' ' << instance.gridPos.y
                         << ' ' << instance.gridPos.z
                         << ' ' << static_cast<int>(instance.gridRotation * 90)
-                        << ' ' << ColorToStringOrPaletteIndex(instance.color)
+                        << ' ' << ColorToStringOrPaletteIndex(ColorPalette::Get().IndexToColor(instance.colorIndex))
                         << std::endl;
                 }
             }
@@ -1517,152 +1568,109 @@ private:
         BrickType currentBrickType = BrickType_Num;
         Gs::Vector3i currentOffset;
 
-        std::vector<LLGL::ColorRGBAub> colorPalette;
+        std::vector<LLGL::ColorRGBAub> intermediateColors;
 
-        auto ColorFromString = [](const std::string& s) -> LLGL::ColorRGBAub
-        {
-            LLGL::ColorRGBAub color;
-
-            auto HexToUbyte = [](const char* s) -> std::uint8_t
-            {
-                std::uint8_t val = 0;
-                for (int i = 0; i < 2; ++i)
-                {
-                    val *= 0x10;
-                         if (s[i] >= '0' && s[i] <= '9') { val += s[i] - '0';       }
-                    else if (s[i] >= 'A' && s[i] <= 'F') { val += s[i] - 'A' + 0xA; }
-                    else if (s[i] >= 'a' && s[i] <= 'f') { val += s[i] - 'a' + 0xA; }
-                }
-                return val;
-            };
-
-            if (s.size() == 2)
-            {
-                // Parse string as gray-scaled color value
-                color.r = color.g = color.b = HexToUbyte(&s[0]);
-            }
-            else if (s.size() >= 6)
-            {
-                // Parse RGB values and optional Alpha channel
-                color.r = HexToUbyte(&s[0]);
-                color.g = HexToUbyte(&s[2]);
-                color.b = HexToUbyte(&s[4]);
-                if (s.size() == 8)
-                    color.a = HexToUbyte(&s[6]);
-            }
-
-            return color;
-        };
-
-        auto ColorOrPaletteIndexFromString = [&colorPalette, &ColorFromString](const std::string& s) -> LLGL::ColorRGBAub
+        auto ColorOrPaletteIndexFromString = [&intermediateColors](const std::string& s) -> LLGL::ColorRGBAub
         {
             // Try to parse palette index first
             if (!s.empty() && s.front() == 'p')
             {
                 int paletteIndex = std::atoi(&s[1]);
-                if (paletteIndex < colorPalette.size())
-                    return colorPalette[paletteIndex];
+                if (paletteIndex < intermediateColors.size())
+                    return intermediateColors[paletteIndex];
 
                 LLGL::Log::Errorf("Color palette index %d out of bounds\n", paletteIndex);
                 return {};
             }
 
             // Otherwise, parse individual color value
-            return ColorFromString(s);
+            return BrickUtils::ColorFromString(s);
         };
 
         // Parse every line and interpret it
-        int lineNo = 0;
-        for (std::string line; std::getline(file, line);)
-        {
-            ++lineNo;
-
-            // Ignore empty line
-            if (line.empty())
-                continue;
-
-            // Ignore line only consisting of whitespace characters
-            std::size_t firstNoneWhitespace = line.find_first_not_of(" \t");
-            if (firstNoneWhitespace == std::string::npos)
-                continue;
-
-            // Ignore comment line
-            if (line[firstNoneWhitespace] == '#')
-                continue;
-
-            // Parse current line with stringstream
-            std::stringstream stream{ line };
-
-            char cmd = '\0';
-            stream >> cmd;
-
-            if (cmd == 'i')
+        const bool success = BrickUtils::ParseTextFile(
+            file,
+            [&](std::stringstream& stream, int lineNo) -> bool
             {
-                if (currentBrickType == BrickType_Num)
+                // Parse current line with stringstream
+                char cmd = '\0';
+                stream >> cmd;
+
+                if (cmd == 'i')
                 {
-                    LLGL::Log::Errorf("Missing brick type 'b' before new instance 'i' in %s:%d\n", filename, lineNo);
+                    if (currentBrickType == BrickType_Num)
+                    {
+                        LLGL::Log::Errorf("Missing brick type 'b' before new instance 'i' in %s:%d\n", filename, lineNo);
+                        scene.ResetScene();
+                        return false;
+                    }
+
+                    // Parse instance data
+                    Gs::Vector3i gridPos;
+                    int gridRotation = 0;
+                    std::string colorStr;
+
+                    stream >> gridPos.x >> gridPos.y >> gridPos.z >> gridRotation >> colorStr;
+
+                    if (gridRotation % 90 != 0)
+                        LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
+
+                    // Find closest color from global palette
+                    int colorIndex = ColorPalette::Get().FindClosestColorIndex(ColorOrPaletteIndexFromString(colorStr));
+
+                    // Create new brick instance
+                    scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), colorIndex);
+                }
+                else if (cmd == 'b')
+                {
+                    // Parse brick type and make it current
+                    std::string brickTypeStr;
+                    stream >> brickTypeStr;
+                    currentBrickType = BrickDictionary::Get().TypeFromString(brickTypeStr.c_str());
+
+                    if (currentBrickType == BrickType_Num)
+                    {
+                        LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
+                        scene.ResetScene();
+                        return false;
+                    }
+                }
+                else if (cmd == 'o')
+                {
+                    // Parse grid offset
+                    stream >> currentOffset.x >> currentOffset.y >> currentOffset.z;
+                }
+                else if (cmd == 'c')
+                {
+                    // Parse camera orientation
+                    stream >> camera.position.x >> camera.position.y >> camera.position.z >> camera.pitch >> camera.yaw;
+                }
+                else if (cmd == 'p')
+                {
+                    if (currentBrickType != BrickType_Num)
+                    {
+                        LLGL::Log::Errorf("Color palette entries must appear before brick types\n");
+                        scene.ResetScene();
+                        return false;
+                    }
+
+                    // Parse entry for intermediate color palette that's exclusive to this scene
+                    std::string colorStr;
+                    stream >> colorStr;
+                    intermediateColors.push_back(BrickUtils::ColorFromString(colorStr));
+                }
+                else
+                {
+                    LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
                     scene.ResetScene();
                     return false;
                 }
 
-                // Parse instance data
-                Gs::Vector3i gridPos;
-                int gridRotation = 0;
-                std::string colorStr;
-
-                stream >> gridPos.x >> gridPos.y >> gridPos.z >> gridRotation >> colorStr;
-
-                if (gridRotation % 90 != 0)
-                    LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
-
-                // Create new brick instance
-                scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), ColorOrPaletteIndexFromString(colorStr));
+                return true;
             }
-            else if (cmd == 'b')
-            {
-                // Parse brick type and make it current
-                std::string brickTypeStr;
-                stream >> brickTypeStr;
-                currentBrickType = BrickDictionary::Get().TypeFromString(brickTypeStr.c_str());
-
-                if (currentBrickType == BrickType_Num)
-                {
-                    LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
-                    scene.ResetScene();
-                    return false;
-                }
-            }
-            else if (cmd == 'o')
-            {
-                // Parse grid offset
-                stream >> currentOffset.x >> currentOffset.y >> currentOffset.z;
-            }
-            else if (cmd == 'c')
-            {
-                // Parse camera orientation
-                stream >> camera.position.x >> camera.position.y >> camera.position.z >> camera.pitch >> camera.yaw;
-            }
-            else if (cmd == 'p')
-            {
-                if (currentBrickType != BrickType_Num)
-                {
-                    LLGL::Log::Errorf("Color palette entries must appear before brick types\n");
-                    scene.ResetScene();
-                    return false;
-                }
-
-                // Parse color palette entry
-                std::string colorStr;
-                stream >> colorStr;
-                colorPalette.push_back(ColorFromString(colorStr));
-            }
-            else
-            {
-                LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
-                scene.ResetScene();
-                return false;
-            }
-        }
+        );
+        if (!success)
+            return false;
 
         // Mark scene as saved after loading, since no changes have been made that are not saved in the file we just loaded.
         scene.MarkSaved();
@@ -1689,17 +1697,17 @@ private:
             }
         }
 
-        const LLGL::ColorRGBAub colorLevels[3]
+        const int levelColorIndices[3]
         {
-            { 255, 255, 255 },
-            { 200, 255, 190 },
-            {  90, 220, 100 },
+            ColorPalette::Get().FindClosestColorIndex(LLGL::ColorRGBAub{ 255, 255, 255 }),
+            ColorPalette::Get().FindClosestColorIndex(LLGL::ColorRGBAub{ 200, 255, 190 }),
+            ColorPalette::Get().FindClosestColorIndex(LLGL::ColorRGBAub{  90, 220, 100 }),
         };
 
-        auto BrickPainter = [&colorLevels](BrickType brickType, const Gs::Vector3i& gridPos) -> LLGL::ColorRGBAub
+        auto BrickPainter = [&levelColorIndices](BrickType brickType, const Gs::Vector3i& gridPos) -> int
         {
             int level = gridPos.y/4;
-            return colorLevels[Gs::Clamp(level, 0, 2)];
+            return levelColorIndices[Gs::Clamp(level, 0, 2)];
         };
 
         // Build foundation with largest bricks possible
@@ -1798,7 +1806,8 @@ private:
         // Bind PSO and resources
         commands->SetPipelineState(*pso[psoType]);
         commands->SetResource(0, *sceneViewCbuffer);
-        commands->SetResource(1, *skyboxCubemap);
+        commands->SetResource(1, *colorPaletteCbuffer);
+        commands->SetResource(2, *skyboxCubemap);
     }
 
     void RenderBrickInstanceGroup(const BrickMesh mesh, const InstanceGroup& group, LLGL::VertexBufferView (&vertexBufferViews)[2])
@@ -2068,8 +2077,8 @@ private:
     {
         commands->SetPipelineState(*pso[BrickPSO_Preview]);
         commands->SetResource(0, *sceneViewCbuffer);
-
-        commands->SetResource(1, *skyboxCubemap);
+        commands->SetResource(1, *colorPaletteCbuffer);
+        commands->SetResource(2, *skyboxCubemap);
 
         // Set vertex buffers (vertices and instances).
         // We don't care about offset instancing here, because the preview instance is always the first one (index 0).
@@ -2096,7 +2105,7 @@ private:
 
     void RenderPreviewBrick(const PreviewBrick& previewBrick)
     {
-        const bool isPreviewBrickTransparent = (previewInstance.color.a < 255);
+        const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(previewInstance.colorIndex);
         const BrickMesh mesh = GetBrickMeshOrDefault(previewBrick.type, isPreviewBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
         if (mesh.numVertices > 0)
             commands->Draw(mesh.numVertices, mesh.firstVertex);
@@ -2247,7 +2256,7 @@ private:
 
         previewInstance.gridPos         = {};
         previewInstance.gridRotation    = thumbnailRotation;
-        previewInstance.color           = {};
+        previewInstance.colorIndex      = 0;
 
         // Render bricks as thumbnails into all offscreen render-targets
         commands->Begin();
@@ -2371,7 +2380,7 @@ private:
         int h = uiColorPickerSize + uiButtonFrameSize*2;
         const bool isSelected = IsSelectedByMouse(x, y, w, h);
 
-        LLGL::ColorRGBAub color = colorPalette[paletteIndex];
+        LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
         const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
 
         if (isSelected || isHighlighted)
@@ -2395,7 +2404,7 @@ private:
         int h = uiBrickThumbnailSize + uiButtonFrameSize*2;
         const bool isSelected = IsSelectedByMouse(x, y, w, h);
 
-        const LLGL::ColorRGBAub brickColor = colorPalette[controller.pickedColorPaletteIndex];
+        const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[controller.pickedColorPaletteIndex];
 
         if (isSelected || isHighlighted)
         {
@@ -2429,7 +2438,7 @@ private:
         uiPos[0] = uiColorPickerOffset[0];
         uiPos[1] = uiColorPickerOffset[1];
 
-        for (int i = 0; i < sizeof(colorPalette)/sizeof(colorPalette[0]); ++i)
+        for (int i = 0; i < ColorPalette::Get().Count(); ++i)
         {
             if (uiPos[1] > scrH - uiButtonAdvance)
             {
@@ -2443,7 +2452,7 @@ private:
             if (DrawUIColorPicker(uiPos[0], uiPos[1], i, isHighlighted))
             {
                 // Set new color from palette to preview brick
-                previewInstance.color = colorPalette[i];
+                previewInstance.colorIndex = i;
                 controller.pickedColorPaletteIndex = i;
             }
 
@@ -2513,7 +2522,7 @@ private:
         LLGL::Display::ShowCursor(true);
     }
 
-    void ControlCameraByUserInput()
+    void ControlCameraByUserInput(float dt)
     {
         if (input.KeyDown(LLGL::Key::RButton) && controller.cameraMode == CameraMode::None)
             StartCameraMode(CameraMode::TurnCamera);
@@ -2527,6 +2536,7 @@ private:
 
         if (controller.cameraMode == CameraMode::TurnCamera)
         {
+            // Turn camera by mouse motion
             const LLGL::Offset2D motion = input.GetMouseMotion();
             const float pitch = static_cast<float>(+motion.y) * cameraTurnSpeed;
             const float yaw   = static_cast<float>(-motion.x) * cameraTurnSpeed;
@@ -2534,21 +2544,24 @@ private:
         }
         else if (controller.cameraMode == CameraMode::MoveCamera)
         {
+            // Move camera by mouse motion
+            const float cameraMoveCoefficient = (0.5f / 60.0f) / dt;
             const LLGL::Offset2D motion = input.GetMouseMotion();
-            const float xAxis = static_cast<float>(+motion.x) * cameraMoveSpeed * 0.5f;
-            const float yAxis = static_cast<float>(-motion.y) * cameraMoveSpeed * 0.5f;
-            camera.Move({ xAxis, yAxis, 0 }, currentScene.get());
+            const float xAxis = static_cast<float>(+motion.x) * cameraMoveSpeed * cameraMoveCoefficient;
+            const float yAxis = static_cast<float>(-motion.y) * cameraMoveSpeed * cameraMoveCoefficient;
+            camera.Move({ xAxis, yAxis, 0 });
         }
 
+        // Move camera by keyboard
         const float moveSpeed = (input.KeyPressed(LLGL::Key::Shift) ? cameraMoveSpeed*3.0f : cameraMoveSpeed);
         if (input.KeyPressed(LLGL::Key::A) || input.KeyPressed(LLGL::Key::Left))
-            camera.Move({ -moveSpeed, 0, 0 }, currentScene.get());
+            camera.Move({ -moveSpeed, 0, 0 });
         if (input.KeyPressed(LLGL::Key::D) || input.KeyPressed(LLGL::Key::Right))
-            camera.Move({ +moveSpeed, 0, 0 }, currentScene.get());
+            camera.Move({ +moveSpeed, 0, 0 });
         if (input.KeyPressed(LLGL::Key::W) || input.KeyPressed(LLGL::Key::Up))
-            camera.Move({ 0, 0, +moveSpeed }, currentScene.get());
+            camera.Move({ 0, 0, +moveSpeed });
         if (input.KeyPressed(LLGL::Key::S) || input.KeyPressed(LLGL::Key::Down))
-            camera.Move({ 0, 0, -moveSpeed }, currentScene.get());
+            camera.Move({ 0, 0, -moveSpeed });
     }
 
     Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const Gs::Vector3i& contactNormal, const BrickDimensions& brickDim)
@@ -2580,7 +2593,7 @@ private:
         // Reset previously picked brick
         if (Instance* oldBrickInstance = currentScene->GetMutableBrickInstance(controller.pickedBrick))
         {
-            oldBrickInstance->color = controller.pickedInstanceColor;
+            oldBrickInstance->colorIndex = controller.pickedInstanceColorIndex;
             controller.pickedBrick = {};
             return oldBrickInstance;
         }
@@ -2598,10 +2611,10 @@ private:
             // Highlight new picked brick
             if (Instance* newBrickInstance = currentScene->GetMutableBrickInstance(contact.brick))
             {
-                controller.pickedInstanceColor      = newBrickInstance->color;
+                controller.pickedInstanceColorIndex = newBrickInstance->colorIndex;
                 controller.pickedBrick              = contact.brick;
 
-                newBrickInstance->color = LLGL::ColorRGBAub{ 255, 0, 0, 255 };
+                newBrickInstance->colorIndex = ColorPalette::Get().HighlightColorIndex();
             }
             return contact.brick;
         }
@@ -2710,7 +2723,7 @@ private:
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
-            currentScene->NewBrick(previewBrick.type, previewInstance.gridPos, previewInstance.gridRotation, previewInstance.color);
+            currentScene->NewBrick(previewBrick.type, previewInstance.gridPos, previewInstance.gridRotation, previewInstance.colorIndex);
             PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick
@@ -2731,13 +2744,12 @@ private:
                     ResetPreviouslySelectedBrick();
 
                     viewOptions.previewBrick.type   = selectedBrick.GetType();
-                    previewInstance.color           = selectedInstance->color;
+                    previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
 
                     // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
-                    int colorPaletteIndex = FindColorPaletteIndex(selectedInstance->color);
-                    if (colorPaletteIndex >= 0 && colorPaletteIndex < sizeof(colorPalette)/sizeof(colorPalette[0]))
-                        controller.pickedColorPaletteIndex = colorPaletteIndex;
+                    if (selectedInstance->colorIndex < ColorPalette::Get().Count())
+                        controller.pickedColorPaletteIndex = selectedInstance->colorIndex;
 
                     // Change to edit mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
@@ -2753,7 +2765,7 @@ private:
         }
     }
 
-    void ProcessUserInput()
+    void ProcessUserInput(float dt)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
         const bool isMouseInDeadZone = (mousePos.x < uiState.menuBarLeft || mousePos.x > uiState.menuBarRight);
@@ -2761,7 +2773,7 @@ private:
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
 
-        ControlCameraByUserInput();
+        ControlCameraByUserInput(dt);
 
         if (input.KeyDown(LLGL::Key::D1))
             controller.editMode = EditMode::None;
@@ -2781,8 +2793,10 @@ private:
                 ProcessEditModeRemove();
         }
 
-        #if DEBUG_KDTREE
-        if (GetBrickInstance(controller.pickedBrick) != oldBrickInstance)
+        camera.ApplyForces(dt, currentScene.get());
+
+        #if KDTREE_DEBUG_LEVEL >= 1
+        if (currentScene->GetBrickInstance(controller.pickedBrick) != oldBrickInstance)
         {
             LLGL::Log::Printf(
                 "Selected brick (type=%u, instance=%u): %u Ray/AABB tests\n",
@@ -2831,13 +2845,13 @@ private:
 
     //////////////////// MAIN CALLBACKS ////////////////////
 
-    void OnDrawFrame(float /*dt*/) override
+    void OnDrawFrame(float dt) override
     {
-        #if DEBUG_KDTREE
+        #if KDTREE_DEBUG_LEVEL
         KDTreeNode::numAABBTests = 0;
         #endif
 
-        ProcessUserInput();
+        ProcessUserInput(dt);
         UpdateSceneAndUIView();
 
         const bool isPreviewBrickVisible = (controller.cameraMode == CameraMode::None && (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move));

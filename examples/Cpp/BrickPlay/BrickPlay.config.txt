@@ -3,7 +3,7 @@
 # Describe maximum scene bounding volume size
 v 100 60 100
 
-# Describe the color palette
+# Describe the color palette (maximum of 32, more will be ignored)
 p FFFFFF # White
 p 858085 # Mid gray
 p 202522 # Dark gray
@@ -14,6 +14,7 @@ p 2032B0 # Dark blue
 p FF698F # Coral
 p 923978 # Magenta
 p D54040 # Bright red
+p FFFFFFB4 # Glass
 
 # Describe all brick types
 

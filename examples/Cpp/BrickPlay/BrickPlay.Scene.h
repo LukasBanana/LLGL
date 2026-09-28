@@ -11,6 +11,7 @@
 
 #include "BrickPlay.Brick.h"
 #include "BrickPlay.KDTree.h"
+#include "BrickPlay.Utils.h"
 #include <ExampleBase.h>
 #include <algorithm>
 #include <functional>
@@ -29,14 +30,14 @@ public:
     using OnCollisionContact = std::function<void(Brick brick, const Gs::Vector3f& contactPoint, float impact)>;
 
     // Function callback to paint the color of a brick for auto-generated chunks.
-    using OnBrickPaint = std::function<LLGL::ColorRGBAub(BrickType brickType, const Gs::Vector3i& gridPos)>;
+    using OnBrickPaint = std::function<int(BrickType brickType, const Gs::Vector3i& gridPos)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
     {
-        Gs::Vector3i        gridPos;
-        GridRotation        gridRotation;
-        LLGL::ColorRGBAub   color;
+        Gs::Vector3i gridPos;
+        GridRotation gridRotation;
+        std::uint8_t colorIndex;
     };
 
     struct InstanceGroup
@@ -177,14 +178,14 @@ public:
         return nullptr;
     }
 
-    bool NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {})
+    bool NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
     {
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
             return false;
 
         hasUnsavedChanges = true;
 
-        const bool isTransparent = (color.a < 255);
+        const bool isTransparent = BrickUtils::ColorPalette::Get().IsTransparent(colorIndex);
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, gridRotation);
 
         const BrickGroup group = [this, &isTransparent, &brickDim, &gridPos, type]() -> BrickGroup
@@ -205,7 +206,7 @@ public:
 
         // Insert brick without notification first, so its instance is fully initialized before neighbors can rearrange the groups
         constexpr bool notifyNeighbors = true;
-        return AddInstanceToGroup(groupId, gridPos, gridRotation, color, notifyNeighbors);
+        return AddInstanceToGroup(groupId, gridPos, gridRotation, colorIndex, notifyNeighbors);
     }
 
     // Adds new bricks to the scene to fill up the specified AABB and returns the number of bricks that were added.
@@ -499,7 +500,7 @@ private:
 
     // This function must not take `gridPos` as constant reference parameter.
     // When it comes from an instance (like the preview model), it will invalidate that pointer in AllocateInstancesInGroup().
-    bool AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, LLGL::ColorRGBAub color = {}, bool notifyNeighbors = false)
+    bool AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0, bool notifyNeighbors = false)
     {
         Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
 
@@ -507,7 +508,7 @@ private:
         {
             newInstance->gridPos        = gridPos;
             newInstance->gridRotation   = gridRotation;
-            newInstance->color          = color;
+            newInstance->colorIndex     = static_cast<std::uint8_t>(colorIndex);
 
             if (InsertBrickIntoGrid(newBrick, notifyNeighbors))
                 return true;
@@ -559,7 +560,7 @@ private:
     {
         if (const Instance* brickInstance = GetBrickInstance(brick))
         {
-            const bool isTransparent = (brickInstance->color.a < 255);
+            const bool isTransparent = BrickUtils::ColorPalette::Get().IsTransparent(brickInstance->colorIndex);
             return !isTransparent;
         }
         return false;
@@ -633,7 +634,7 @@ private:
                 if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
                 {
                     const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
-                    (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.color);
+                    (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.colorIndex);
                 }
             }
         }
@@ -670,7 +671,7 @@ private:
                 if (group == BrickGroup_Invisible)
                 {
                     // Brick is no longer fully blocked and must become visible again. Determine whether it was an opque or transparent brick
-                    const bool isBrickTransparent = (instance->color.a < 255);
+                    const bool isBrickTransparent = BrickUtils::ColorPalette::Get().IsTransparent(instance->colorIndex);
                     if (!isBrickTransparent && !isChangeFromTopAndBottom)
                     {
                         // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering
@@ -782,7 +783,7 @@ private:
             if (notifyNeighbors)
                 NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, brick);
 
-            #if DEBUG_KDTREE
+            #if KDTREE_DEBUG_LEVEL >= 2
             LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
             #endif
 
@@ -809,7 +810,7 @@ private:
         if (notifyNeighbors)
             NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, Brick{});
 
-        #if DEBUG_KDTREE
+        #if KDTREE_DEBUG_LEVEL >= 2
         LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
         #endif
     }

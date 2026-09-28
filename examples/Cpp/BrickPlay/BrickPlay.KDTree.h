@@ -16,10 +16,10 @@
 #include <functional>
 
 
- // Enable log output to debug kd-Tree construction
-#define DEBUG_KDTREE            0
+// Enable log output to debug kd-Tree construction. 0 (Disabled), 1 (Minimal output), 2 (Maximal output)
+#define KDTREE_DEBUG_LEVEL      1
 
- // Subdivide kd-Tree uniformly. This is only used for performance testing.
+// Subdivide kd-Tree uniformly. This is only used for performance testing.
 #define UNIFORM_TREE_SUBDIVIDE  0
 
 
@@ -372,7 +372,7 @@ private:
 
     bool IntersectRayWithScaledAABB(const Ray3f& ray, const AABB3i& aabb, AABBIntersection* outIntersection = nullptr) const
     {
-        #if DEBUG_KDTREE
+        #if KDTREE_DEBUG_LEVEL
         KDTreeNode::numAABBTests++;
         #endif
 
