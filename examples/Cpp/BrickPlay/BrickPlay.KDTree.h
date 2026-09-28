@@ -25,7 +25,7 @@
 
 inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& aabb);
 
-inline bool IsPointInsideAABB(const Gs::Vector3i& point, const AABB3i& aabb);
+inline bool IsPointInsideAABB(const GridVec3i& point, const AABB3i& aabb);
 
 
 // Tree hierarchy for the grid of brick cells. A standard 4x2x3 brick for example takes up 24 cells in the grid.
@@ -47,25 +47,37 @@ class KDTreeNode
 
 public:
 
-    using LeafIterator = std::function<bool(Brick brick, const Gs::Vector3i& gridPos)>;
+    using LeafIterator = std::function<bool(Brick brick, const GridVec3i& gridPos)>;
 
     static const Gs::Vector3f   gridScale;
 
     static AABB3i               rootAABB;
     static int                  numAABBTests;
 
-    static bool IsInsideBoundingVolume(const Gs::Vector3i& gridPos)
+    static bool IsInsideBoundingVolume(const GridVec3i& gridPos)
     {
         return IsPointInsideAABB(gridPos, KDTreeNode::rootAABB);
     }
 
     static void InitBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
     {
+        // Clamp values to min/max range of 16-bit integers. No need to create larger worlds in this example.
+        // This allows us to store each brick instance with just 8 bytes: 16-bit XYZ, 8-bit rotation, and 8-bit color index.
         LLGL_VERIFY(boundingVolume.size() == 3);
         KDTreeNode::rootAABB = AABB3i
         {
-            Gs::Vector3i{ -boundingVolume[0]/2,                  0, -boundingVolume[2]/2 },
-            Gs::Vector3i{ +boundingVolume[0]/2, +boundingVolume[1], +boundingVolume[2]/2 }
+            GridVec3i
+            {
+                std::max<int>(INT16_MIN, -boundingVolume[0]/2),
+                0, // Clamp to floor level
+                std::max<int>(INT16_MIN, -boundingVolume[2]/2)
+            },
+            GridVec3i
+            {
+                std::min<int>(INT16_MAX, +boundingVolume[0]/2),
+                std::min<int>(INT16_MAX, +boundingVolume[1]),
+                std::min<int>(INT16_MAX, +boundingVolume[2]/2)
+            }
         };
     }
 
@@ -82,22 +94,22 @@ public:
         return (child[0].get() != nullptr);
     }
 
-    void InsertLeaf(const Gs::Vector3i& gridPos, Brick brick)
+    void InsertLeaf(const GridVec3i& gridPos, Brick brick)
     {
         FindAndInsertLeaf(gridPos, KDTreeNode::rootAABB, brick);
     }
 
-    void RemoveLeaf(const Gs::Vector3i& gridPos)
+    void RemoveLeaf(const GridVec3i& gridPos)
     {
         FindAndRemoveLeaf(gridPos, KDTreeNode::rootAABB);
     }
 
-    void UpdateLeaf(const Gs::Vector3i& gridPos, std::uint32_t groupInstance)
+    void UpdateLeaf(const GridVec3i& gridPos, std::uint32_t groupInstance)
     {
         FindAndUpdateLeaf(gridPos, KDTreeNode::rootAABB, groupInstance);
     }
 
-    Brick GetLeaf(const Gs::Vector3i& gridPos) const
+    Brick GetLeaf(const GridVec3i& gridPos) const
     {
         // Positions outside the root AABB have no leaf. Without this check, the traversal would return an unrelated leaf.
         if (KDTreeNode::IsInsideBoundingVolume(gridPos))
@@ -107,7 +119,7 @@ public:
     }
 
     // Invokes the iterator callback on every cell (leaf or non-leaf) within the specified area and stops early when the iterator returns false.
-    bool ForEachCell(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const LeafIterator& iterator, bool iterateThroughLeavesOnly = false) const
+    bool ForEachCell(const GridVec3i& gridPos, const GridVec3i& extent, const LeafIterator& iterator, bool iterateThroughLeavesOnly = false) const
     {
         // Clamp AABB to root AABB
         LLGL_VERIFY(iterator != nullptr);
@@ -155,9 +167,9 @@ public:
             return 1;
     }
 
-    unsigned NumLeafs() const
+    unsigned NumLeaves() const
     {
-        return NumLeafsFromRoot(KDTreeNode::rootAABB);
+        return NumLeavesFromRoot(KDTreeNode::rootAABB);
     }
 
     // Deletes the entire tree.
@@ -181,9 +193,9 @@ private:
         return aabbParent;
     }
 
-    void SubdivideAndSetLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
+    void SubdivideAndSetLeaf(const GridVec3i& gridPos, const AABB3i& aabb, Brick brick)
     {
-        if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
         {
             // If we found a leaf node with AABB of size 1x1x1, put the brick into the leaf
             this->brick = brick;
@@ -194,7 +206,7 @@ private:
             child[0] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
             child[1] = std::unique_ptr<KDTreeNode>(new KDTreeNode());
 
-            const Gs::Vector3i aabbExtent = aabb.bbMax - aabb.bbMin;
+            const GridVec3i aabbExtent = aabb.bbMax - aabb.bbMin;
             LLGL_VERIFY(aabbExtent.x > 0 && aabbExtent.y > 0 && aabbExtent.z > 0);
             if (aabbExtent.x >= aabbExtent.y && aabbExtent.x >= aabbExtent.z)
                 axis = Axis_X;
@@ -216,7 +228,7 @@ private:
         }
     }
 
-    void FindAndInsertLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, Brick brick)
+    void FindAndInsertLeaf(const GridVec3i& gridPos, const AABB3i& aabb, Brick brick)
     {
         if (HasChildren())
         {
@@ -233,7 +245,7 @@ private:
         }
     }
 
-    void FindAndUpdateLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb, std::uint32_t newGroupInstance)
+    void FindAndUpdateLeaf(const GridVec3i& gridPos, const AABB3i& aabb, std::uint32_t newGroupInstance)
     {
         if (HasChildren())
         {
@@ -243,7 +255,7 @@ private:
             else
                 child[1]->FindAndUpdateLeaf(gridPos, GetChild1AABB(aabb), newGroupInstance);
         }
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
         {
             // Update leaf entry if not empty
             if (this->brick)
@@ -261,7 +273,7 @@ private:
         }
     }
 
-    bool FindAndRemoveLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb)
+    bool FindAndRemoveLeaf(const GridVec3i& gridPos, const AABB3i& aabb)
     {
         if (HasChildren())
         {
@@ -282,7 +294,7 @@ private:
                 }
             }
         }
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
         {
             this->brick = {};
             return true;
@@ -290,7 +302,7 @@ private:
         return false;
     }
 
-    Brick FindLeaf(const Gs::Vector3i& gridPos, const AABB3i& aabb) const
+    Brick FindLeaf(const GridVec3i& gridPos, const AABB3i& aabb) const
     {
         if (HasChildren())
         {
@@ -300,7 +312,7 @@ private:
             else
                 return child[1]->FindLeaf(gridPos, GetChild1AABB(aabb));
         }
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
         {
             // We found the leaf node
             return this->brick;
@@ -312,7 +324,7 @@ private:
         }
     }
 
-    bool ForEachCellInside(const Gs::Vector3i& gridPos, const Gs::Vector3i& extent, const AABB3i& aabb, LeafIterator iterator, bool iterateThroughLeavesOnly) const
+    bool ForEachCellInside(const GridVec3i& gridPos, const GridVec3i& extent, const AABB3i& aabb, LeafIterator iterator, bool iterateThroughLeavesOnly) const
     {
         if (HasChildren())
         {
@@ -320,17 +332,17 @@ private:
             if (gridPos[axis] < split)
             {
                 // Split grid position plus extent range between child0 and child1
-                Gs::Vector3i child0Extent = extent;
+                GridVec3i child0Extent = extent;
                 child0Extent[axis] = std::min(extent[axis], split - gridPos[axis]);
                 if (!child[0]->ForEachCellInside(gridPos, child0Extent, GetChild0AABB(aabb), iterator, iterateThroughLeavesOnly))
                     return false;
 
                 if (gridPos[axis] + extent[axis] > split)
                 {
-                    Gs::Vector3i child1GridPos = gridPos;
+                    GridVec3i child1GridPos = gridPos;
                     child1GridPos[axis] = split;
 
-                    Gs::Vector3i child1Extent = extent;
+                    GridVec3i child1Extent = extent;
                     child1Extent[axis] -= child0Extent[axis];
 
                     if (!child[1]->ForEachCellInside(child1GridPos, child1Extent, GetChild1AABB(aabb), iterator, iterateThroughLeavesOnly))
@@ -344,7 +356,7 @@ private:
                     return false;
             }
         }
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
         {
             // We found a leaf node
             return iterator(this->brick, gridPos);
@@ -352,9 +364,10 @@ private:
         else if (!iterateThroughLeavesOnly)
         {
             // Iterate through empty cells
-            Gs::Vector3i cellPos;
+            GridVec3i cellPos;
             const Brick emptyBrick;
 
+            //foreach_dimension(x, y, z, extent)
             for (cellPos.z = gridPos.z; cellPos.z < gridPos.z + extent.z; ++cellPos.z)
             {
                 for (cellPos.y = gridPos.y; cellPos.y < gridPos.y + extent.y; ++cellPos.y)
@@ -418,7 +431,7 @@ private:
                     return ReturnIntersection(1);
             }
         }
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 } && this->brick)
         {
             // Make final intersection test against AABB of current node
             if (IntersectRayWithScaledAABB(ray, aabb, outIntersection))
@@ -436,18 +449,18 @@ private:
                 child[0]->FindPotentialColliderBricks(colliderPoint, colliderRadiusSq2, GetChild0AABB(aabb), outColliderBricks);
                 child[1]->FindPotentialColliderBricks(colliderPoint, colliderRadiusSq2, GetChild1AABB(aabb), outColliderBricks);
             }
-            else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 } && this->brick)
+            else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 } && this->brick)
             {
                 outColliderBricks.insert(this->brick);
             }
         }
     }
 
-    unsigned NumLeafsFromRoot(const AABB3i& aabb) const
+    unsigned NumLeavesFromRoot(const AABB3i& aabb) const
     {
         if (HasChildren())
-            return child[0]->NumLeafsFromRoot(GetChild0AABB(aabb)) + child[1]->NumLeafsFromRoot(GetChild1AABB(aabb));
-        else if (aabb.bbMax == aabb.bbMin + Gs::Vector3i{ 1 })
+            return child[0]->NumLeavesFromRoot(GetChild0AABB(aabb)) + child[1]->NumLeavesFromRoot(GetChild1AABB(aabb));
+        else if (aabb.bbMax == aabb.bbMin + GridVec3i{ 1 })
             return 1;
         else
             return 0;
@@ -470,7 +483,7 @@ inline Gs::Vector3f ClosestPointOnAABB(const Gs::Vector3f& point, const AABB3i& 
     return closestPoint;
 }
 
-inline bool IsPointInsideAABB(const Gs::Vector3i& point, const AABB3i& aabb)
+inline bool IsPointInsideAABB(const GridVec3i& point, const AABB3i& aabb)
 {
     return
     (

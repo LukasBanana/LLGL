@@ -11,13 +11,21 @@
 
 #include <Gauss/Vector3.h>
 #include <Gauss/Equals.h> // For Vector3 == operator
+#include <GeometryUtils.h>
 #include <string>
 #include <cstdint>
 #include <map>
 
 
+// 3D vector type for the Brick grid.
+using GridVec3i = Gs::Vector3i;
+
+// Axis-aligned bounding box for the Brick grid.
+using AABB3i = AABB<GridVec3i>;
+
+
 // How bricks can be rotated in this example. Only multiples of 90 degrees is supported.
-enum GridRotation : std::int32_t
+enum GridRotation : std::uint8_t
 {
     GridRotation_0 = 0,
     GridRotation_90,
@@ -50,8 +58,8 @@ enum BrickType : std::uint32_t
 // Meta data for each brick.
 struct BrickInfo
 {
-    std::string     label;
-    Gs::Vector3i    extent;
+    std::string label;
+    GridVec3i   extent;
 };
 
 struct BrickMesh
@@ -65,8 +73,8 @@ struct BrickMesh
 
 struct BrickDimensions
 {
-    Gs::Vector3i offset;
-    Gs::Vector3i extent;
+    GridVec3i offset;
+    GridVec3i extent;
 };
 
 enum BrickGroup : std::uint32_t
@@ -148,10 +156,22 @@ public:
         return BrickType_Num;
     }
 
-    Gs::Vector3i GetExtent(BrickType type) const
+    const char* GroupToString(BrickGroup g) const
+    {
+        switch (g)
+        {
+            case BrickGroup_Default :       return "Default";
+            case BrickGroup_WallsOnly:      return "WallsOnly";
+            case BrickGroup_Transparent:    return "Transparent";
+            case BrickGroup_Invisible:      return "Invisible";
+            default:                        return "";
+        }
+    }
+
+    GridVec3i GetExtent(BrickType type) const
     {
         auto it = typeToInfoMap.find(type);
-        return (it != typeToInfoMap.end() ? it->second.extent : Gs::Vector3i{});
+        return (it != typeToInfoMap.end() ? it->second.extent : GridVec3i{});
     }
 
     BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation) const
@@ -179,7 +199,7 @@ public:
         return brickMeshes[CombineToBrickId(brickType, brickGroup)];
     }
 
-    BrickType FindBrickTypeForDimension(const Gs::Vector3i& extent) const
+    BrickType FindBrickTypeForDimension(const GridVec3i& extent) const
     {
         // Try to find brick with the specified dimensions
         for (const auto& it : typeToInfoMap)

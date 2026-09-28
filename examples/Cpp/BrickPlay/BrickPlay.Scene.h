@@ -30,32 +30,47 @@ public:
     using OnCollisionContact = std::function<void(Brick brick, const Gs::Vector3f& contactPoint, float impact)>;
 
     // Function callback to paint the color of a brick for auto-generated chunks.
-    using OnBrickPaint = std::function<int(BrickType brickType, const Gs::Vector3i& gridPos)>;
+    using OnBrickPaint = std::function<int(BrickType brickType, const GridVec3i& gridPos)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
     {
-        Gs::Vector3i gridPos;
-        GridRotation gridRotation;
-        std::uint8_t colorIndex;
+        std::int16_t    gridPos[3];
+        GridRotation    gridRotation;
+        std::uint8_t    colorIndex;
+
+        inline GridVec3i GetPos() const
+        {
+            return GridVec3i{ gridPos[0], gridPos[1], gridPos[2] };
+        }
+
+        inline void SetPos(const GridVec3i& pos)
+        {
+            gridPos[0] = pos[0];
+            gridPos[1] = pos[1];
+            gridPos[2] = pos[2];
+        }
     };
 
     struct InstanceGroup
     {
+        // Debug label constructed from BrickType and BrickGroup. Pre-allocate to avoid string concatenation during rendering (minor optimization).
+        std::string     debugName;
+
         // Number of instances to render for this group
-        std::uint32_t numInstances      = 0;
+        std::uint32_t   numInstances      = 0;
 
         // Zero-based index to the first instance into the global `instances` container for this group. Instance 0 is reserved for the preview instance.
-        std::uint32_t firstInstance     = 0;
+        std::uint32_t   firstInstance     = 0;
 
         // Number of instances allocated for this group in the global `instances` container. This must always be greater than or equal to `numInstances`.
-        std::uint32_t instanceCapacity  = 0;
+        std::uint32_t   instanceCapacity  = 0;
     };
 
     struct RayIntersection
     {
         Gs::Vector3f    point;
-        Gs::Vector3i    normal;
+        GridVec3i       normal;
         Brick           brick;
     };
 
@@ -89,6 +104,7 @@ public:
     {
         // Initialize scene by restting it. This initializes the instance for the preview mesh.
         ResetScene();
+        InitInstanceGroupDebugNames();
     }
 
     ~BrickScene()
@@ -178,7 +194,7 @@ public:
         return nullptr;
     }
 
-    bool NewBrick(BrickType type, const Gs::Vector3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
+    bool NewBrick(BrickType type, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
     {
         if (!BrickFitsInGrid(gridPos, type, gridRotation))
             return false;
@@ -210,18 +226,18 @@ public:
     }
 
     // Adds new bricks to the scene to fill up the specified AABB and returns the number of bricks that were added.
-    int NewBricksChunk(const Gs::Vector3i& bbOffset, const Gs::Vector3i& bbExtent, const OnBrickPaint& painter)
+    int NewBricksChunk(const GridVec3i& bbOffset, const GridVec3i& bbExtent, const OnBrickPaint& painter)
     {
         int count = 0;
 
         auto NewBrickAndCount = [this, &bbOffset, &count, &painter](int x, int y, int z, int w, int h, int d) -> void
         {
-            BrickType brickType = BrickDictionary::Get().FindBrickTypeForDimension(Gs::Vector3i{ w, h, d });
+            BrickType brickType = BrickDictionary::Get().FindBrickTypeForDimension(GridVec3i{ w, h, d });
             if (brickType < BrickType_Num)
             {
                 // Counter offset brick so that its boundary is (0,0,0) to (W,H,D). The bricks are usually centered for better user placement.
                 const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, GridRotation_0);
-                const Gs::Vector3i gridPos = bbOffset + Gs::Vector3i{ x, y, z } - brickDim.offset;
+                const GridVec3i gridPos = bbOffset + GridVec3i{ x, y, z } - brickDim.offset;
 
                 if (NewBrick(brickType, gridPos, GridRotation_0, painter(brickType, gridPos)))
                     ++count;
@@ -285,13 +301,13 @@ public:
         hasUnsavedChanges = true;
     }
 
-    bool BrickFitsInGrid(const Gs::Vector3i& gridPos, BrickType type, GridRotation rotation) const
+    bool BrickFitsInGrid(const GridVec3i& gridPos, BrickType type, GridRotation rotation) const
     {
         // Get brick dimension and apply rotation
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, rotation);
 
         // Brick must fit inside the root AABB
-        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        const GridVec3i alignedGridPos = gridPos + brickDim.offset;
         if (alignedGridPos.x                     < KDTreeNode::rootAABB.bbMin.x ||
             alignedGridPos.y                     < KDTreeNode::rootAABB.bbMin.y ||
             alignedGridPos.z                     < KDTreeNode::rootAABB.bbMin.z ||
@@ -305,7 +321,7 @@ public:
         // Check if there is any blocking brick
         foreach_dimension(x, y, z, brickDim.extent)
         {
-            if (grid.GetLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }))
+            if (grid.GetLeaf(alignedGridPos + GridVec3i{ x, y, z }))
                 return false;
         }
 
@@ -323,7 +339,7 @@ public:
         }
         else
         {
-            const Gs::Vector3i planeNormal{ 0, 1, 0 };
+            const GridVec3i planeNormal{ 0, 1, 0 };
             if (IntersectRayWithPlane(ray, planeNormal.Cast<float>(), 0.0f, &aabbIntersection.interpolator))
             {
                 // Place pending brick at picked location on the floor plane
@@ -347,7 +363,7 @@ public:
         {
             const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance.gridRotation);
 
-            aabb.bbMin = instance.gridPos + brickDim.offset;
+            aabb.bbMin = instance.GetPos() + brickDim.offset;
             aabb.bbMax = aabb.bbMin + brickDim.extent;
         };
 
@@ -424,7 +440,50 @@ public:
         }
     }
 
+    std::size_t NumTotalInstances() const
+    {
+        std::size_t n = 0;
+        for (std::uint32_t groupId = 0; groupId < BrickType_Num * BrickGroup_Num; ++groupId)
+            n += instanceGroups[groupId].numInstances;
+        return n;
+    }
+
+    void PrintInfo() const
+    {
+        LLGL::Log::Printf(
+            "Scene information:\n"
+            "  - Bricks: %s\n"
+            "  - Instance GPU buffer size: %s\n"
+            "  - kd-Tree nodes: %s\n"
+            "  - kd-Tree leaves: %s\n"
+            ,
+            BrickUtils::NumToStr_enUS(NumTotalInstances()).c_str(),
+            BrickUtils::NumToBytes_enUS(instanceBufferSize).c_str(),
+            BrickUtils::NumToStr_enUS(grid.NumNodes()).c_str(),
+            BrickUtils::NumToStr_enUS(grid.NumLeaves()).c_str()
+        );
+    }
+
 private:
+
+    void InitInstanceGroupDebugNames()
+    {
+        // Initialize debug group names for all instance groups
+        for_range(brickType, BrickType_Num)
+        {
+            for_range(groupType, BrickGroup_Num)
+            {
+                // Write new brick type
+                InstanceGroup& group = GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                group.debugName =
+                (
+                    std::string("InstanceGroup_") +
+                    BrickDictionary::Get().GroupToString(static_cast<BrickGroup>(groupType)) + '_' +
+                    BrickDictionary::Get().TypeToString(static_cast<BrickType>(brickType))
+                );
+            }
+        }
+    }
 
     void ReleaseInstanceBuffer()
     {
@@ -500,13 +559,13 @@ private:
 
     // This function must not take `gridPos` as constant reference parameter.
     // When it comes from an instance (like the preview model), it will invalidate that pointer in AllocateInstancesInGroup().
-    bool AddInstanceToGroup(std::uint32_t groupId, Gs::Vector3i gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0, bool notifyNeighbors = false)
+    bool AddInstanceToGroup(std::uint32_t groupId, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0, bool notifyNeighbors = false)
     {
         Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
 
         if (Instance* newInstance = AllocateInstancesInGroup(groupId))
         {
-            newInstance->gridPos        = gridPos;
+            newInstance->SetPos(gridPos);
             newInstance->gridRotation   = gridRotation;
             newInstance->colorIndex     = static_cast<std::uint8_t>(colorIndex);
 
@@ -566,9 +625,9 @@ private:
         return false;
     }
 
-    bool IsBrickVolumeBlockedTopAndBottom(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
+    bool IsBrickVolumeBlockedTopAndBottom(const GridVec3i& gridPos, const BrickDimensions& brickDim)
     {
-        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        const GridVec3i alignedGridPos = gridPos + brickDim.offset;
         for_range(yi, 2)
         {
             const std::int32_t y = (yi == 0 ? -1 : brickDim.extent.y);
@@ -579,9 +638,9 @@ private:
 
             // Iterate through all cells within the current Y-axis layer and break iteration once a brick that is non-blocking has been found
             const bool areAllBlocking = grid.ForEachCell(
-                alignedGridPos + Gs::Vector3i{ 0, y, 0 },
-                Gs::Vector3i{ brickDim.extent.x, 1, brickDim.extent.z },
-                [this](Brick brick, const Gs::Vector3i& /*gridPos*/) -> bool
+                alignedGridPos + GridVec3i{ 0, y, 0 },
+                GridVec3i{ brickDim.extent.x, 1, brickDim.extent.z },
+                [this](Brick brick, const GridVec3i& /*gridPos*/) -> bool
                 {
                     return IsBrickBlocking(brick);
                 }
@@ -592,9 +651,9 @@ private:
         return true;
     }
 
-    bool IsBrickVolumeBlockedSideways(const Gs::Vector3i& gridPos, const BrickDimensions& brickDim)
+    bool IsBrickVolumeBlockedSideways(const GridVec3i& gridPos, const BrickDimensions& brickDim)
     {
-        const Gs::Vector3i alignedGridPos = gridPos + brickDim.offset;
+        const GridVec3i alignedGridPos = gridPos + brickDim.offset;
 
         // Any X/Z grid position outside its bounds is considered visible since the camera can move outside the grid, but never under the floor
         if (alignedGridPos.x <= KDTreeNode::rootAABB.bbMin.x || alignedGridPos.x + brickDim.extent.x >= KDTreeNode::rootAABB.bbMax.x ||
@@ -606,9 +665,9 @@ private:
         // Iterate through all cells within the AABB of the brick and its neighbor cells. Even though we ignore all the cells that are inside the brick itself,
         // this is a lot faster than probing each cell one by one via `GetLeaf()` since it reduces the amount of tree traversal quite drastically.
         return grid.ForEachCell(
-            alignedGridPos + Gs::Vector3i{ -1 },
-            brickDim.extent + Gs::Vector3i{ +2 },
-            [this, &alignedGridPos, &brickDim](Brick brick, const Gs::Vector3i& cellPos) -> bool
+            alignedGridPos + GridVec3i{ -1 },
+            brickDim.extent + GridVec3i{ +2 },
+            [this, &alignedGridPos, &brickDim](Brick brick, const GridVec3i& cellPos) -> bool
             {
                 // Ignore cells inside the brick itself for the entire Y-axis; they are already handled by IsBrickVolumeBlockedTopAndBottom()
                 if (!(cellPos.x >= alignedGridPos.x && cellPos.x < alignedGridPos.x + brickDim.extent.x &&
@@ -634,7 +693,7 @@ private:
                 if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
                 {
                     const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
-                    (void)AddInstanceToGroup(newGroupId, oldInstance.gridPos, oldInstance.gridRotation, oldInstance.colorIndex);
+                    (void)AddInstanceToGroup(newGroupId, oldInstance.GetPos(), oldInstance.gridRotation, oldInstance.colorIndex);
                 }
             }
         }
@@ -651,10 +710,10 @@ private:
             {
                 // If brick is now blocked top and bottom, try to transfer brick to group for optimized rendering
                 const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
-                if (IsBrickVolumeBlockedTopAndBottom(instance->gridPos, brickDim))
+                if (IsBrickVolumeBlockedTopAndBottom(instance->GetPos(), brickDim))
                 {
                     // If brick is also blocked sidesways (left, right, front, back), don't render brick at all
-                    if (IsBrickVolumeBlockedSideways(instance->gridPos, brickDim))
+                    if (IsBrickVolumeBlockedSideways(instance->GetPos(), brickDim))
                     {
                         // Transfer brick to group of invisible bricks, these are not rendered at all
                         TryTransferBrickGroup(brick, BrickGroup_Invisible);
@@ -676,7 +735,7 @@ private:
                     {
                         // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering
                         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
-                        if (IsBrickVolumeBlockedTopAndBottom(instance->gridPos, brickDim))
+                        if (IsBrickVolumeBlockedTopAndBottom(instance->GetPos(), brickDim))
                         {
                             TryTransferBrickGroup(brick, BrickGroup_WallsOnly);
                             return;
@@ -694,23 +753,23 @@ private:
     }
 
     // Notifes all bricks surrounding the specified changed brick that their surrounding has changed.
-    void NotifyBrickChangeToNeighbors(const Gs::Vector3i alignedGridPos, const Gs::Vector3i& brickExtent, Brick changedBrick)
+    void NotifyBrickChangeToNeighbors(const GridVec3i alignedGridPos, const GridVec3i& brickExtent, Brick changedBrick)
     {
         // First gather all brick cells that need to be notified to avoid running the blocking test multiple times for the same brick.
         // Use their cell coordinates instead of storing the brick handles as they might be invalidated in the next phase.
         std::set<Brick> visitedBricks[2];
-        std::vector<Gs::Vector3i> bricksToNotifyCells[2];
+        std::vector<GridVec3i> bricksToNotifyCells[2];
 
         const AABB3i topAndBottomAABB
         {
-            alignedGridPos + Gs::Vector3i{ 0, -1, 0 },
-            alignedGridPos + brickExtent + Gs::Vector3i{ 0, 2, 0}
+            alignedGridPos + GridVec3i{ 0, -1, 0 },
+            alignedGridPos + brickExtent + GridVec3i{ 0, 2, 0}
         };
 
         grid.ForEachCell(
-            alignedGridPos + Gs::Vector3i{ -1 },
-            brickExtent + Gs::Vector3i{ 2 },
-            [&visitedBricks, &bricksToNotifyCells, changedBrick, &topAndBottomAABB](Brick brick, const Gs::Vector3i& gridPos) -> bool
+            alignedGridPos + GridVec3i{ -1 },
+            brickExtent + GridVec3i{ 2 },
+            [&visitedBricks, &bricksToNotifyCells, changedBrick, &topAndBottomAABB](Brick brick, const GridVec3i& gridPos) -> bool
             {
                 // Don't notify the brick that just changed itself and also don't notify bricks more than once
                 if (brick != changedBrick)
@@ -732,7 +791,7 @@ private:
         for_range(listIndex, 2)
         {
             const bool isChangeFromTopAndBottom = (listIndex == 0);
-            for (const Gs::Vector3i& gridPos : bricksToNotifyCells[listIndex])
+            for (const GridVec3i& gridPos : bricksToNotifyCells[listIndex])
             {
                 if (Brick brick = grid.GetLeaf(gridPos))
                     OnBrickChanged(brick, isChangedBrickBlocking, isChangeFromTopAndBottom);
@@ -742,7 +801,7 @@ private:
 
     // Returns true if the specified cell (position relative to brick, not to the grid) is excluded from the brick type.
     // This is used for a few select bricks that don't cover a full bounding box, like the roof tile.
-    bool IsBrickCellExcluded(BrickType brickType, GridRotation brickRotation, const Gs::Vector3i& cellPos)
+    bool IsBrickCellExcluded(BrickType brickType, GridRotation brickRotation, const GridVec3i& cellPos)
     {
         if (brickType == BrickType_2x3x3_Roof)
         {
@@ -771,10 +830,10 @@ private:
             const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, instance->gridRotation);
 
             // Insert brick entries into grid
-            const Gs::Vector3i alignedGridPos = instance->gridPos + brickDim.offset;
+            const GridVec3i alignedGridPos = instance->GetPos() + brickDim.offset;
             foreach_dimension(x, y, z, brickDim.extent)
             {
-                const Gs::Vector3i cellPos{ x, y, z };
+                const GridVec3i cellPos{ x, y, z };
                 if (!IsBrickCellExcluded(brickType, instance->gridRotation, cellPos))
                     grid.InsertLeaf(alignedGridPos + cellPos, brick);
             }
@@ -798,12 +857,12 @@ private:
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, instance.gridRotation);
 
         // Remove brick entries from grid
-        const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
+        const GridVec3i alignedGridPos = instance.GetPos() + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
         {
-            const Gs::Vector3i cellPos{ x, y, z };
+            const GridVec3i cellPos{ x, y, z };
             if (!IsBrickCellExcluded(type, instance.gridRotation, cellPos))
-                grid.RemoveLeaf(alignedGridPos + Gs::Vector3i{ x, y, z });
+                grid.RemoveLeaf(alignedGridPos + GridVec3i{ x, y, z });
         }
 
         // Notify top and bottom grid entries that they are now unblocked, so they need to switch back to the full mesh
@@ -821,9 +880,9 @@ private:
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, instance.gridRotation);
 
         // Remove brick entries from grid
-        const Gs::Vector3i alignedGridPos = instance.gridPos + brickDim.offset;
+        const GridVec3i alignedGridPos = instance.GetPos() + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
-            grid.UpdateLeaf(alignedGridPos + Gs::Vector3i{ x, y, z }, groupInstance);
+            grid.UpdateLeaf(alignedGridPos + GridVec3i{ x, y, z }, groupInstance);
     }
 
     void KeepColliderInsidePlayArea(Gs::Vector3f& colliderPoint, float colliderRadius) const
@@ -833,7 +892,7 @@ private:
             colliderPoint.y = colliderRadius;
 
         // Also don't let the collider leave the play area too far, 200% the bounding volume
-        const Gs::Vector3i aabbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
+        const GridVec3i    aabbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
         const Gs::Vector3f aabbCenter = (KDTreeNode::rootAABB.bbMin + KDTreeNode::rootAABB.bbMax).Cast<float>() * 0.5f;
         const Gs::Vector3f colliderToCenterVector = colliderPoint - aabbCenter;
 

@@ -14,7 +14,7 @@ p 2032B0 # Dark blue
 p FF698F # Coral
 p 923978 # Magenta
 p D54040 # Bright red
-p FFFFFFB4 # Glass
+p FFFFFF90 # Glass
 
 # Describe all brick types
 

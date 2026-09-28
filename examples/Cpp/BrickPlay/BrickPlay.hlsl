@@ -79,12 +79,11 @@ SamplerState skyboxSampler : register(s8);
 struct VertexIn
 {
     // Per-vertex attributes
-    float3      position    : POSITION;
-    float3      normal      : NORMAL;
+    float3      position        : POSITION;
+    float3      normal          : NORMAL;
     
     // Per-instance attributes
-    int4        gridPos     : GRIDPOS; // xyz (position), w (rotation: 0=default, 1=90 degrees)
-    uint        colorIndex  : COLORINDEX;
+    int4        packedInstance  : PACKEDINSTANCE; // xyz (position), w[31:16] (rotation: 0=default, 1=90 degrees), w[15:0] (color index)
 };
 
 struct VertexOut
@@ -142,13 +141,20 @@ float4 ColorFromPalette(uint colorIndex)
 
 void BrickBaseTransform(VertexIn inp, out VertexOut outp, float3 worldOffset)
 {
-    float3x3 rotation = BrickRotation(inp.gridPos.w);
+    // Unpack W component from packed instanced data
+    uint packedInstanceW = asuint(inp.packedInstance.w);
+
+    int3 gridPos = inp.packedInstance.xyz;
+    uint rotationMode = packedInstanceW & 0xFF;
+    uint colorIndex = packedInstanceW >> 8;
+
+    float3x3 rotation = BrickRotation(rotationMode);
 
     // Transform vertex position from local space to world space based on instance's rotation and grid position
-    outp.worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale + worldOffset;
+    outp.worldPos = mul(rotation, inp.position) + (float3)gridPos * gridScale + worldOffset;
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
     outp.normal   = mul(rotation, inp.normal);
-    outp.color    = ColorFromPalette(inp.colorIndex);
+    outp.color    = ColorFromPalette(colorIndex);
 }
 
 void VSBrick(VertexIn inp, out VertexOut outp)
@@ -317,10 +323,16 @@ struct OutlineVertexOut
 
 void VSBrickOutline(VertexIn inp, out OutlineVertexOut outp)
 {
-    float3x3 rotation = BrickRotation(inp.gridPos.w);
+    // Unpack W component from packed instanced data
+    uint packedInstanceW = asuint(inp.packedInstance.w);
+
+    int3 gridPos = inp.packedInstance.xyz;
+    uint rotationMode = packedInstanceW & 0xFF;
+
+    float3x3 rotation = BrickRotation(rotationMode);
 
     // Transform vertex position from local space to world space based on instance's rotation and grid position
-    float3 worldPos = mul(rotation, inp.position) + (float3)inp.gridPos.xyz * gridScale;
+    float3 worldPos = mul(rotation, inp.position) + (float3)gridPos * gridScale;
     outp.position = mul(vpMatrix, float4(worldPos, 1.0));
 }
 

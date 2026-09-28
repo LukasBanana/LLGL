@@ -520,6 +520,8 @@ public:
             hasLoadedScene = true;
         }
 
+        currentScene->PrintInfo();
+
         // Resolve initial scene collision with camera
         currentScene->ResolveCollision(camera.position, cameraCollisionRadius);
 
@@ -1154,12 +1156,11 @@ private:
         const LLGL::VertexAttribute vertexAttribs[] =
         {
             // Per-vertex attributes
-            LLGL::VertexAttribute{ "position",   LLGL::Format::RGB32Float, /*location:*/ 0, offsetof(BrickVertex, position), sizeof(BrickVertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "normal",     LLGL::Format::RGB32Float, /*location:*/ 1, offsetof(BrickVertex, normal  ), sizeof(BrickVertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "position",  LLGL::Format::RGB32Float, /*location:*/ 0, offsetof(BrickVertex, position), sizeof(BrickVertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "normal",    LLGL::Format::RGB32Float, /*location:*/ 1, offsetof(BrickVertex, normal  ), sizeof(BrickVertex), /*slot:*/ 0 },
 
             // Per-instance attributes
-            LLGL::VertexAttribute{ "gridPos",    LLGL::Format::RGBA32SInt, /*location:*/ 2, offsetof(Instance, gridPos   ), sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "colorIndex", LLGL::Format::R8UInt,     /*location:*/ 3, offsetof(Instance, colorIndex), sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "packedInstance", LLGL::Format::RGBA16SInt, /*location:*/ 2, 0, sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
         };
 
         // Create graphics PSO for default scene rendering
@@ -1539,9 +1540,9 @@ private:
                     const Instance& instance = scene.GetInstanceByIndex(group.firstInstance + i);
                     file
                         << 'i'
-                        << ' ' << instance.gridPos.x
-                        << ' ' << instance.gridPos.y
-                        << ' ' << instance.gridPos.z
+                        << ' ' << instance.gridPos[0]
+                        << ' ' << instance.gridPos[1]
+                        << ' ' << instance.gridPos[2]
                         << ' ' << static_cast<int>(instance.gridRotation * 90)
                         << ' ' << ColorToStringOrPaletteIndex(ColorPalette::Get().IndexToColor(instance.colorIndex))
                         << std::endl;
@@ -1566,7 +1567,7 @@ private:
         }
 
         BrickType currentBrickType = BrickType_Num;
-        Gs::Vector3i currentOffset;
+        GridVec3i currentOffset;
 
         std::vector<LLGL::ColorRGBAub> intermediateColors;
 
@@ -1606,7 +1607,7 @@ private:
                     }
 
                     // Parse instance data
-                    Gs::Vector3i gridPos;
+                    GridVec3i gridPos;
                     int gridRotation = 0;
                     std::string colorStr;
 
@@ -1704,7 +1705,7 @@ private:
             ColorPalette::Get().FindClosestColorIndex(LLGL::ColorRGBAub{  90, 220, 100 }),
         };
 
-        auto BrickPainter = [&levelColorIndices](BrickType brickType, const Gs::Vector3i& gridPos) -> int
+        auto BrickPainter = [&levelColorIndices](BrickType brickType, const GridVec3i& gridPos) -> int
         {
             int level = gridPos.y/4;
             return levelColorIndices[Gs::Clamp(level, 0, 2)];
@@ -1714,13 +1715,13 @@ private:
         int heightFieldUpperBound = (yRange[1] - yRange[0]);
         int yMaxChunk = static_cast<int>(fieldMin * heightFieldUpperBound);
 
-        const Gs::Vector3i bbOffset
+        const GridVec3i bbOffset
         {
             KDTreeNode::rootAABB.bbMin.x + xOffset,
             KDTreeNode::rootAABB.bbMin.y + yRange[0],
             KDTreeNode::rootAABB.bbMin.z + zOffset
         };
-        scene.NewBricksChunk(bbOffset, Gs::Vector3i{ xExtent, yMaxChunk, zExtent }, BrickPainter);
+        scene.NewBricksChunk(bbOffset, GridVec3i{ xExtent, yMaxChunk, zExtent }, BrickPainter);
 
         // Build finer details at the top of the current chunk
         const float fieldHeightRange = (fieldMax - fieldMax);
@@ -1733,7 +1734,7 @@ private:
                 if (yField > yMaxChunk)
                 {
                     const BrickType brickType1x1 = (yField > yMaxChunk + 1 ? BrickType_1x1x1 : BrickType_1x1x1_Tile);
-                    const Gs::Vector3i gridPos
+                    const GridVec3i gridPos
                     {
                         KDTreeNode::rootAABB.bbMin.x + xOffset + x,
                         KDTreeNode::rootAABB.bbMin.y + yRange[0] + yMaxChunk,
@@ -1768,8 +1769,8 @@ private:
 
     void GenerateHeightFieldScene(BrickScene& scene, const HeightFieldParameters& heightFieldParams)
     {
-        const Gs::Vector3f bbCenter = (KDTreeNode::rootAABB.bbMax + KDTreeNode::rootAABB.bbMin).Cast<float>() * 0.5f;
-        const Gs::Vector3i bbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
+        const Gs::Vector3f  bbCenter = (KDTreeNode::rootAABB.bbMax + KDTreeNode::rootAABB.bbMin).Cast<float>() * 0.5f;
+        const GridVec3i     bbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
 
         // Generate height field from Perlin noise
         std::vector<float> noiseBuffer;
@@ -1832,11 +1833,10 @@ private:
         {
             const std::uint32_t groupId = CombineToBrickId(brickType, groupType);
             const BrickMesh mesh = GetBrickMeshOrDefault(brickType, groupType);
-            const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+            const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), groupType);
             if (group.numInstances > 0 && mesh.numVertices > 0)
             {
-                const std::string debugGroup = "InstanceGroup" + std::to_string(groupId);
-                commands->PushDebugGroup(debugGroup.c_str());
+                commands->PushDebugGroup(group.debugName.c_str());
                 {
                     RenderBrickInstanceGroup(mesh, group, vertexBufferViews);
                 }
@@ -2163,8 +2163,8 @@ private:
         const float dist = 25.0f;
 
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, gridRotation);
-        const Gs::Vector3i brickCenter = (brickDim.offset*2 + brickDim.extent);
-        const Gs::Vector3i unitOffset{ brickCenter.x % 2, brickDim.extent.y, brickCenter.z % 2 };
+        const GridVec3i brickCenter = (brickDim.offset*2 + brickDim.extent);
+        const GridVec3i unitOffset{ brickCenter.x % 2, brickDim.extent.y, brickCenter.z % 2 };
 
         Gs::Matrix4f vMatrix;
         Gs::Translate(vMatrix, unitOffset.Cast<float>() * KDTreeNode::gridScale * 0.5f);
@@ -2254,7 +2254,7 @@ private:
         // Reset preview instance to default
         constexpr GridRotation thumbnailRotation = GridRotation_270;
 
-        previewInstance.gridPos         = {};
+        previewInstance.SetPos({});
         previewInstance.gridRotation    = thumbnailRotation;
         previewInstance.colorIndex      = 0;
 
@@ -2564,7 +2564,7 @@ private:
             camera.Move({ 0, 0, -moveSpeed });
     }
 
-    Gs::Vector3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const Gs::Vector3i& contactNormal, const BrickDimensions& brickDim)
+    GridVec3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const GridVec3i& contactNormal, const BrickDimensions& brickDim)
     {
         constexpr float minOffset = 0.01f;
 
@@ -2579,7 +2579,7 @@ private:
         const float yOffsetReal = minOffset;
         const float zOffsetReal = AxisToOffset(brickDim.offset.z, brickDim.extent.z, contactNormal.z);
 
-        return Gs::Vector3i
+        return GridVec3i
         {
             static_cast<std::int32_t>(std::floor(worldPos.x / KDTreeNode::gridScale.x + xOffsetReal)),
             static_cast<std::int32_t>(std::floor(worldPos.y / KDTreeNode::gridScale.y + yOffsetReal)),
@@ -2624,7 +2624,7 @@ private:
 
     void ClampBrickGridOffset(BrickType type, std::int32_t& offset)
     {
-        const Gs::Vector3i brickExtent = BrickDictionary::Get().GetExtent(type);
+        const GridVec3i brickExtent = BrickDictionary::Get().GetExtent(type);
         const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
         if (maxWidthOrDepth > 2)
         {
@@ -2656,7 +2656,7 @@ private:
 
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
-        Gs::Vector3i newPreviewGridPos = previewInstance.gridPos;
+        GridVec3i newPreviewGridPos = previewInstance.GetPos();
 
         RayIntersection contact;
         if (currentScene->PickScene(pickerRay, contact))
@@ -2702,16 +2702,16 @@ private:
         }
 
         // If grid position changed, re-evaluate whether that position is blocked for the preview brick
-        if (previewInstance.gridPos         != newPreviewGridPos    ||
+        if (previewInstance.GetPos()        != newPreviewGridPos    ||
             previewInstance.gridRotation    != newPreviewRotation   ||
             previewBrick.type               != newBrickType)
         {
             previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newPreviewGridPos, newBrickType, newPreviewRotation);
 
             // Update brick position and rotation
-            previewBrick.type               = newBrickType;
-            previewInstance.gridPos         = newPreviewGridPos;
-            previewInstance.gridRotation    = newPreviewRotation;
+            previewBrick.type = newBrickType;
+            previewInstance.SetPos(newPreviewGridPos);
+            previewInstance.gridRotation = newPreviewRotation;
         }
     }
 
@@ -2723,7 +2723,7 @@ private:
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
-            currentScene->NewBrick(previewBrick.type, previewInstance.gridPos, previewInstance.gridRotation, previewInstance.colorIndex);
+            currentScene->NewBrick(previewBrick.type, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
             PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick

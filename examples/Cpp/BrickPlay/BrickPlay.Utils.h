@@ -29,7 +29,7 @@ namespace BrickUtils
         );
     };
 
-    LLGL::ColorRGBAub Uint32ToColor(std::uint32_t col)
+    inline LLGL::ColorRGBAub Uint32ToColor(std::uint32_t col)
     {
         return LLGL::ColorRGBAub
         {
@@ -138,6 +138,50 @@ namespace BrickUtils
         }
 
         return true;
+    }
+
+    // Returns the specified number as en-US localized string, e.g. 1000 becomes "1,000".
+    inline std::string NumToStr_enUS(std::uint64_t n, int base = 10, char sep = ',')
+    {
+        LLGL_VERIFY(base >= 2 && base <= 16);
+        const int cycles[15] = { 8, 0, 0, 0, 0, 0, 4, 0, 3, 0, 0, 0, 0, 0, 2 };
+        const char* alphabet = "0123456789ABCDEF";
+
+        if (n == 0)
+            return "0";
+
+        std::string s;
+
+        // Build string in reverse to simplify string allocations
+        const int cycle = cycles[base - 2];
+        for (int i = 0; n > 0; ++i)
+        {
+            if (i > 0 && i % cycle == 0)
+                s.push_back(sep);
+            s.push_back(alphabet[n % base]);
+            n /= base;
+        }
+
+        // Now flip string from left to right
+        for (std::size_t i = 0, sHalfLen = s.size()/2; i < sHalfLen; ++i)
+            std::swap(s[i], s[s.size() - 1 - i]);
+
+        return s;
+    }
+
+    inline std::string NumToBytes_enUS(std::uint64_t n)
+    {
+        constexpr std::uint64_t KiB1 = 1024;
+        constexpr std::uint64_t MiB2 = KiB1*KiB1;
+
+        if (n == 1)
+            return "1 byte";
+        if (n > MiB2)
+            return NumToStr_enUS(n / MiB2) + '.' + std::to_string((n % MiB2) * 1000 * 1000 / MiB2) + " MiB";
+        if (n > KiB1)
+            return NumToStr_enUS(n / KiB1) + '.' + std::to_string((n % KiB1) * 1000 / KiB1) + " KiB";
+
+        return NumToStr_enUS(n) + " bytes";
     }
 
     // Color palette singleton.
