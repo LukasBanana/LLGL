@@ -270,7 +270,7 @@ This function generates the coordinates for a fullscreen triangle with its verte
 float4 GetFullscreenTriangleVertex(uint id)
 {
     const float v[4] = { -1.0, +3.0, -1.0, -1.0 };
-    return float4(v[id], v[id + 1], 0.999, 1.0);
+    return float4(v[id], v[id + 1], 1.0, 1.0);
 }
 
 float4 VSTransparentComposite(uint id : SV_VertexID) : SV_Position
@@ -282,6 +282,15 @@ float4 PSTransparentComposite(float4 screenPos : SV_Position) : SV_Target
 {
     // Fetch framebuffer information
     int3 texCoord = int3(screenPos.xy, 0);
+
+    #if COMPILE_FOR_GL
+    // `layout(origin_upper_left)` is not supported in ESSL 300, so just query the texture dimensions to flip the Y-axis in GL backend.
+    // This can be optimized by using `viewportSize.y` instead, but to keep the C++ code simple across all backends, we use this method.
+    uint2 colorTextureSize = (uint2)0;
+    colorTexture.GetDimensions(colorTextureSize.x, colorTextureSize.y);
+    texCoord.y = (int)colorTextureSize.y - texCoord.y - 1;
+    #endif
+
     float3 color = colorTexture.Load(texCoord);
     float4 accum = accumTexture.Load(texCoord);
     float reveal = revealTexture.Load(texCoord);

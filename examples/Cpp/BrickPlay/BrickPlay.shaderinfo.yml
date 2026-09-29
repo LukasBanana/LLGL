@@ -10,10 +10,19 @@ sources:
       - entry: "PSBrick"
         profile: "ps_4_0"
         targets: [spirv, metal]
+      - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
       - entry: "VSBrickPreview"
         profile: "vs_4_0"
         targets: [spirv, metal]
       - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
+      - entry: "VSTransparentComposite"
+        profile: "vs_4_0"
+        targets: [spirv, metal]
+      - entry: "PSTransparentComposite"
         profile: "ps_4_0"
         targets: [spirv, metal]
       - entry: "VSOverlay"
@@ -56,10 +65,19 @@ sources:
       - entry: "PSBrick"
         profile: "ps_4_0"
         targets: [glsl300es, glsl140core]
+      - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
       - entry: "VSBrickPreview"
         profile: "vs_4_0"
         targets: [glsl300es, glsl140core]
       - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "VSTransparentComposite"
+        profile: "vs_4_0"
+        targets: [glsl300es, glsl140core]
+      - entry: "PSTransparentComposite"
         profile: "ps_4_0"
         targets: [glsl300es, glsl140core]
       - entry: "VSOverlay"

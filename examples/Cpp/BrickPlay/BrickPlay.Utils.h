@@ -33,10 +33,10 @@ namespace BrickUtils
     {
         return LLGL::ColorRGBAub
         {
-             col >> 24        ,
-            (col >> 16) & 0xFF,
-            (col >>  8) & 0xFF,
-            (col      ) & 0xFF
+            static_cast<std::uint8_t>( col >> 24        ),
+            static_cast<std::uint8_t>((col >> 16) & 0xFF),
+            static_cast<std::uint8_t>((col >>  8) & 0xFF),
+            static_cast<std::uint8_t>((col      ) & 0xFF)
         };
     };
 

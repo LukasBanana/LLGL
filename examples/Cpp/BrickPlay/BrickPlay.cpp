@@ -11,10 +11,12 @@
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Platform/Platform.h>
 #include <algorithm>
 #include <set>
 #include <map>
 #include <chrono>
+#include <float.h> // for FLT_MAX
 
 // File and string streams for simple scene file writer/reader
 #include <fstream>
@@ -30,6 +32,15 @@ class Example_BrickPlay : public ExampleBase
 
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
+
+    static constexpr bool           isMultiSamplingEnabled          =
+    (
+        #if LLGL_OS_WASM
+        false // Disable multi-sampling on WebGL, since multi-sampled textures are not supported
+        #else
+        true
+        #endif
+    );
 
     static constexpr bool           useCameraAcceleration           = true;
     static constexpr float          cameraTurnSpeed                 = 0.25f;
@@ -144,6 +155,7 @@ class Example_BrickPlay : public ExampleBase
 
     bool                            hasOffsetInstancing             = false;
     bool                            hasLoadedScene                  = false;
+    bool                            canCombineVertexAndIndexBuffers = false; // WebGL 2 cannot combine vertex and index buffers
 
     std::unique_ptr<BrickScene>     currentScene;
 
@@ -248,10 +260,11 @@ class Example_BrickPlay : public ExampleBase
         std::uint32_t               numVertices = 0;
         std::uint32_t               numIndices  = 0;
 
-        LLGL::Buffer*               meshBuffer  = nullptr;
-        LLGL::Texture*              colorMap    = nullptr;
-        LLGL::Texture*              normalMap   = nullptr;
-        LLGL::Texture*              heightMap   = nullptr;
+        LLGL::Buffer*               vertexOrMeshBuffer  = nullptr; // Combine vertex with index buffer if possible
+        LLGL::Buffer*               indexBuffer         = nullptr; // WebGL 2 needs index buffers separate from all other buffers
+        LLGL::Texture*              colorMap            = nullptr;
+        LLGL::Texture*              normalMap           = nullptr;
+        LLGL::Texture*              heightMap           = nullptr;
     }
     planeModel;
 
@@ -493,7 +506,7 @@ class Example_BrickPlay : public ExampleBase
 public:
 
     Example_BrickPlay() :
-        ExampleBase { "LLGL Example: BrickPlay" }
+        ExampleBase{ "LLGL Example: BrickPlay", /*overrideSwapChainSamples"*/ (isMultiSamplingEnabled ? 0 : 1) }
     {
         // Initialize kd-Tree vounding volume and camera projection parameters
         InitAppConfig();
@@ -757,6 +770,9 @@ private:
             InitSceneBoundingVolume(boundingVolumeOverride);
         else
             InitSceneBoundingVolume(options.sceneBoundingVolume);
+
+        // Explicitly disable combined vertex/index buffers for WebGL backend
+        canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
     }
 
     LLGL::Texture* CreateDummyCubeTexture()
@@ -907,6 +923,7 @@ private:
             renderTargetDesc.renderPass             = opacity.renderPass;
             renderTargetDesc.resolution             = resolution;
             renderTargetDesc.samples                = GetSampleCount();
+            renderTargetDesc.depthStencilAttachment = opacity.depthStencil;
 
             if (renderTargetDesc.samples > 1)
             {
@@ -918,7 +935,6 @@ private:
                 renderTargetDesc.colorAttachments[0]        = opacity.colorBuffer;
             }
 
-            renderTargetDesc.depthStencilAttachment = opacity.depthStencil;
         }
         opacity.renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
     }
@@ -1036,15 +1052,38 @@ private:
         uiBlankTexture = renderer->CreateTexture(uiBlankTexDesc);
 
         // Initialize plane model
-        LLGL::BufferDescriptor planeBufferDesc;
+        if (canCombineVertexAndIndexBuffers)
         {
-            planeBufferDesc.debugName   = "PlaneMeshBuffer";
-            planeBufferDesc.size        = sizeof(PlaneVertex) * PlaneModel::maxNumVertices + sizeof(std::uint16_t) * PlaneModel::maxNumIndices;
-            planeBufferDesc.stride      = sizeof(PlaneVertex);
-            planeBufferDesc.format      = LLGL::Format::R16UInt;
-            planeBufferDesc.bindFlags   = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::IndexBuffer;
+            LLGL::BufferDescriptor planeBufferDesc;
+            {
+                planeBufferDesc.debugName   = "PlaneMeshBuffer(Vertices+Indices)";
+                planeBufferDesc.size        = sizeof(PlaneVertex) * PlaneModel::maxNumVertices + sizeof(std::uint16_t) * PlaneModel::maxNumIndices;
+                planeBufferDesc.stride      = sizeof(PlaneVertex);
+                planeBufferDesc.format      = LLGL::Format::R16UInt;
+                planeBufferDesc.bindFlags   = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::IndexBuffer;
+            }
+            planeModel.vertexOrMeshBuffer = renderer->CreateBuffer(planeBufferDesc);
         }
-        planeModel.meshBuffer = renderer->CreateBuffer(planeBufferDesc);
+        else
+        {
+            LLGL::BufferDescriptor planeVbufferDesc;
+            {
+                planeVbufferDesc.debugName   = "PlaneVertexBuffer";
+                planeVbufferDesc.size        = sizeof(PlaneVertex) * PlaneModel::maxNumVertices;
+                planeVbufferDesc.stride      = sizeof(PlaneVertex);
+                planeVbufferDesc.bindFlags   = LLGL::BindFlags::VertexBuffer;
+            }
+            planeModel.vertexOrMeshBuffer = renderer->CreateBuffer(planeVbufferDesc);
+
+            LLGL::BufferDescriptor planeIbufferDesc;
+            {
+                planeIbufferDesc.debugName   = "PlaneIndexBuffer";
+                planeIbufferDesc.size        = sizeof(std::uint16_t) * PlaneModel::maxNumIndices;
+                planeIbufferDesc.format      = LLGL::Format::R16UInt;
+                planeIbufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
+            }
+            planeModel.indexBuffer = renderer->CreateBuffer(planeIbufferDesc);
+        }
 
         planeModel.vertices.resize(PlaneModel::maxNumVertices);
         planeModel.indices.resize(PlaneModel::maxNumIndices);
@@ -1166,7 +1205,7 @@ private:
         // Create graphics PSO for default scene rendering
         auto SetPSODefaults = [this, &vertexAttribs](LLGL::GraphicsPipelineDescriptor& psoDesc) -> void
         {
-            psoDesc.renderPass                      = swapChain->GetRenderPass();
+            psoDesc.renderPass                      = opacity.renderPass;
             psoDesc.inputVertexAttribs              = vertexAttribs;
             psoDesc.pipelineLayout                  = psoLayout;
             psoDesc.primitiveTopology               = LLGL::PrimitiveTopology::TriangleList;
@@ -1266,6 +1305,7 @@ private:
             psoUIDesc.inputVertexAttribs            = uiVertexAttribs;
             psoUIDesc.vertexShader                  = vsOverlay;
             psoUIDesc.fragmentShader                = fsOverlay;
+            psoUIDesc.rasterizer.multiSampleEnabled = (swapChain->GetSamples() > 1);
             psoUIDesc.blend.targets[0].blendEnabled = true; // Enable default alpha blending for UI elements
         }
         psoUI = renderer->CreatePipelineState(psoUIDesc);
@@ -1299,7 +1339,7 @@ private:
                 psoOutlineDesc.stencil.front.reference          = 0x1;
 
                 psoOutlineDesc.rasterizer.cullMode              = LLGL::CullMode::Back;
-                psoOutlineDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
+                psoOutlineDesc.rasterizer.multiSampleEnabled    = (swapChain->GetSamples() > 1);
                 psoOutlineDesc.blend.targets[0].colorMask       = LLGL::ColorMaskFlags::Zero;
             }
             psoOutlineWriteStencil = renderer->CreatePipelineState(psoOutlineDesc);
@@ -1374,7 +1414,7 @@ private:
         LLGL::GraphicsPipelineDescriptor psoPlaneDesc;
         {
             psoPlaneDesc.debugName                      = "Plane.PSO";
-            psoPlaneDesc.renderPass                     = swapChain->GetRenderPass();
+            psoPlaneDesc.renderPass                     = opacity.renderPass;
             psoPlaneDesc.inputVertexAttribs             = planeVertexAttribs;
             psoPlaneDesc.vertexShader                   = vsPlane;
             psoPlaneDesc.fragmentShader                 = fsPlane;
@@ -1406,12 +1446,13 @@ private:
         LLGL::GraphicsPipelineDescriptor psoSkyDesc;
         {
             psoSkyDesc.debugName                        = "Skybox.PSO";
-            psoSkyDesc.renderPass                       = swapChain->GetRenderPass();
+            psoSkyDesc.renderPass                       = opacity.renderPass;
             psoSkyDesc.vertexShader                     = vsSkybox;
             psoSkyDesc.fragmentShader                   = fsSkybox;
             psoSkyDesc.pipelineLayout                   = psoSkyLayout;
             psoSkyDesc.primitiveTopology                = LLGL::PrimitiveTopology::TriangleList;
             psoSkyDesc.depth.testEnabled                = true;
+            psoSkyDesc.depth.compareOp                  = LLGL::CompareOp::LessEqual;
             psoSkyDesc.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         };
         psoSky = renderer->CreatePipelineState(psoSkyDesc);
@@ -1428,11 +1469,12 @@ private:
 
         LLGL::GraphicsPipelineDescriptor psoCompositeDesc;
         {
-            psoCompositeDesc.debugName      = "Transparency.Composite.PSO";
-            psoCompositeDesc.pipelineLayout = psoCompositeLayout;
-            psoCompositeDesc.renderPass     = swapChain->GetRenderPass();
-            psoCompositeDesc.vertexShader   = vsTransparentComposite;
-            psoCompositeDesc.fragmentShader = fsTransparentComposite;
+            psoCompositeDesc.debugName                      = "Transparency.Composite.PSO";
+            psoCompositeDesc.pipelineLayout                 = psoCompositeLayout;
+            psoCompositeDesc.renderPass                     = swapChain->GetRenderPass();
+            psoCompositeDesc.vertexShader                   = vsTransparentComposite;
+            psoCompositeDesc.fragmentShader                 = fsTransparentComposite;
+            psoCompositeDesc.rasterizer.multiSampleEnabled  = (swapChain->GetSamples() > 1);
         }
         psoComposite = renderer->CreatePipelineState(psoCompositeDesc);
         REPORT_PSO_ERRORS(psoComposite);
@@ -2013,8 +2055,14 @@ private:
         // Upload both vertex and index data to the GPU
         if (planeModel.numVertices > 0 && planeModel.numIndices > 0)
         {
-            commands->UpdateBuffer(*planeModel.meshBuffer, 0, planeModel.vertices.data(), sizeof(PlaneVertex) * planeModel.numVertices);
-            commands->UpdateBuffer(*planeModel.meshBuffer, PlaneModel::meshBufferIndexOffset, planeModel.indices.data(), sizeof(std::uint16_t) * planeModel.numIndices);
+            // Update plane vertex data
+            commands->UpdateBuffer(*planeModel.vertexOrMeshBuffer, 0, planeModel.vertices.data(), sizeof(PlaneVertex) * planeModel.numVertices);
+
+            // Update plane index data
+            if (canCombineVertexAndIndexBuffers)
+                commands->UpdateBuffer(*planeModel.vertexOrMeshBuffer, PlaneModel::meshBufferIndexOffset, planeModel.indices.data(), sizeof(std::uint16_t) * planeModel.numIndices);
+            else
+                commands->UpdateBuffer(*planeModel.indexBuffer, 0, planeModel.indices.data(), sizeof(std::uint16_t) * planeModel.numIndices);
         }
     }
 
@@ -2032,8 +2080,12 @@ private:
         commands->SetResource(5, *planeModel.heightMap);
         #endif
 
-        commands->SetIndexBuffer(*planeModel.meshBuffer, LLGL::Format::R16UInt, PlaneModel::meshBufferIndexOffset);
-        commands->SetVertexBuffer(*planeModel.meshBuffer);
+        if (canCombineVertexAndIndexBuffers)
+            commands->SetIndexBuffer(*planeModel.vertexOrMeshBuffer, LLGL::Format::R16UInt, PlaneModel::meshBufferIndexOffset);
+        else
+            commands->SetIndexBuffer(*planeModel.indexBuffer);
+
+        commands->SetVertexBuffer(*planeModel.vertexOrMeshBuffer);
 
         commands->DrawIndexed(planeModel.numIndices, 0);
     }

@@ -331,7 +331,8 @@ public:
     bool PickScene(const Ray3f& ray, RayIntersection& outContact)
     {
         AABBIntersection aabbIntersection;
-        if (outContact.brick = grid.IntersectWithLeaf(ray, &aabbIntersection))
+        outContact.brick = grid.IntersectWithLeaf(ray, &aabbIntersection);
+        if (outContact.brick)
         {
             outContact.point = ray.Interpolate(aabbIntersection.interpolator);
             outContact.normal = aabbIntersection.normal;
