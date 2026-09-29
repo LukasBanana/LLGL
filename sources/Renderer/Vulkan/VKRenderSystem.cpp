@@ -132,7 +132,7 @@ SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainD
 
 void VKRenderSystem::Release(SwapChain& swapChain)
 {
-    swapChains_.erase(&swapChain);
+    SyncGPUAndReleaseResource(swapChains_, swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -153,7 +153,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
 
 void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    commandBuffers_.erase(&commandBuffer);
+    SyncGPUAndReleaseResource(commandBuffers_, commandBuffer);
 }
 
 /* ----- Buffers ------ */
@@ -211,6 +211,8 @@ BufferArray* VKRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> buffe
 
 void VKRenderSystem::Release(Buffer& buffer)
 {
+    SyncGPU();
+
     /* Release device memory regions for primary buffer and internal staging buffer, then release buffer object */
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     bufferVK.GetDeviceBuffer().ReleaseMemoryRegion(*deviceMemoryMngr_);
@@ -508,6 +510,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
 void VKRenderSystem::Release(Texture& texture)
 {
+    SyncGPU();
+
     /* Release device memory region, then release texture object */
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
     deviceMemoryMngr_->Release(textureVK.GetMemoryRegion());
@@ -703,7 +707,7 @@ Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 
 void VKRenderSystem::Release(Sampler& sampler)
 {
-    samplers_.erase(&sampler);
+    SyncGPUAndReleaseResource(samplers_, sampler);
 }
 
 /* ----- Resource Heaps ----- */
@@ -715,7 +719,7 @@ ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& r
 
 void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    resourceHeaps_.erase(&resourceHeap);
+    SyncGPUAndReleaseResource(resourceHeaps_, resourceHeap);
 }
 
 std::uint32_t VKRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
@@ -733,7 +737,7 @@ RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderP
 
 void VKRenderSystem::Release(RenderPass& renderPass)
 {
-    renderPasses_.erase(&renderPass);
+    SyncGPUAndReleaseResource(renderPasses_, renderPass);
 }
 
 /* ----- Render Targets ----- */
@@ -745,7 +749,7 @@ RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& r
 
 void VKRenderSystem::Release(RenderTarget& renderTarget)
 {
-    renderTargets_.erase(&renderTarget);
+    SyncGPUAndReleaseResource(renderTargets_, renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -758,7 +762,7 @@ Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 
 void VKRenderSystem::Release(Shader& shader)
 {
-    shaders_.erase(&shader);
+    SyncGPUAndReleaseResource(shaders_, shader);
 }
 
 /* ----- Pipeline Layouts ----- */
@@ -770,7 +774,7 @@ PipelineLayout* VKRenderSystem::CreatePipelineLayout(const PipelineLayoutDescrip
 
 void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    pipelineLayouts_.erase(&pipelineLayout);
+    SyncGPUAndReleaseResource(pipelineLayouts_, pipelineLayout);
 }
 
 /* ----- Pipeline Caches ----- */
@@ -782,7 +786,7 @@ PipelineCache* VKRenderSystem::CreatePipelineCache(const Blob& initialBlob)
 
 void VKRenderSystem::Release(PipelineCache& pipelineCache)
 {
-    pipelineCaches_.erase(&pipelineCache);
+    SyncGPUAndReleaseResource(pipelineCaches_, pipelineCache);
 }
 
 /* ----- Pipeline States ----- */
@@ -1331,6 +1335,18 @@ bool VKRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabi
         physicalDevice_.QueryRenderingCaps(*outCaps);
     }
     return true;
+}
+
+void VKRenderSystem::SyncGPU()
+{
+    commandQueue_->WaitIdle();
+}
+
+template <typename TSub, typename TBase>
+void VKRenderSystem::SyncGPUAndReleaseResource(HWObjectContainer<TSub>& container, TBase& resource)
+{
+    SyncGPU();
+    container.erase(&resource);
 }
 
 

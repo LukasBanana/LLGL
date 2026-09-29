@@ -1338,6 +1338,23 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void VKCommandBuffer::PushDebugGroup(const char* name)
 {
+    #if VK_EXT_debug_utils
+    if (HasExtension(VKExt::EXT_debug_utils))
+    {
+        VkDebugUtilsLabelEXT debugUtilsLabel;
+        {
+            debugUtilsLabel.sType       = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+            debugUtilsLabel.pNext       = nullptr;
+            debugUtilsLabel.pLabelName  = name;
+            debugUtilsLabel.color[0]    = 0.0f;
+            debugUtilsLabel.color[1]    = 0.0f;
+            debugUtilsLabel.color[2]    = 0.0f;
+            debugUtilsLabel.color[3]    = 0.0f;
+        }
+        vkCmdBeginDebugUtilsLabelEXT(commandBuffer_, &debugUtilsLabel);
+    }
+    else
+    #endif // /VK_EXT_debug_utils
     if (HasExtension(VKExt::EXT_debug_marker))
     {
         VkDebugMarkerMarkerInfoEXT markerInfo;
@@ -1356,6 +1373,11 @@ void VKCommandBuffer::PushDebugGroup(const char* name)
 
 void VKCommandBuffer::PopDebugGroup()
 {
+    #if VK_EXT_debug_utils
+    if (HasExtension(VKExt::EXT_debug_utils))
+        vkCmdEndDebugUtilsLabelEXT(commandBuffer_);
+    else
+    #endif
     if (HasExtension(VKExt::EXT_debug_marker))
         vkCmdDebugMarkerEndEXT(commandBuffer_);
 }

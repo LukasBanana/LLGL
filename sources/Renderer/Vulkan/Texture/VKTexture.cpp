@@ -224,7 +224,7 @@ SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
 
 void VKTexture::SetDebugName(const char* name)
 {
-    #if VK_EXT_debug_marker
+    #if VK_EXT_debug_utils
     VKSetDebugName(device_, VK_OBJECT_TYPE_IMAGE, reinterpret_cast<std::uint64_t>(GetVkImage()), name);
     #endif
 }

@@ -25,7 +25,7 @@ VKSampler::VKSampler(VkDevice device, const SamplerDescriptor& desc) :
 
 void VKSampler::SetDebugName(const char* name)
 {
-    #if VK_EXT_debug_marker
+    #if VK_EXT_debug_utils
     VKSetDebugName(device_, VK_OBJECT_TYPE_SAMPLER, reinterpret_cast<std::uint64_t>(GetVkSampler()), name);
     #endif
 }

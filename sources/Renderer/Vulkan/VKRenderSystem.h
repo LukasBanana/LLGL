@@ -102,6 +102,11 @@ class VKRenderSystem final : public RenderSystem
         VkCommandBuffer AllocCommandBuffer(bool begin = true);
         void FlushCommandBuffer(VkCommandBuffer commandBuffer);
 
+        void SyncGPU();
+
+        template <typename TSub, typename TBase>
+        void SyncGPUAndReleaseResource(HWObjectContainer<TSub>& container, TBase& resource);
+
     private:
 
         /* ----- Common objects ----- */

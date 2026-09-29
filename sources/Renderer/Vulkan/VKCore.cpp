@@ -158,7 +158,7 @@ VkBool32 VKBoolean(bool value)
     return (value ? VK_TRUE : VK_FALSE);
 }
 
-#if VK_EXT_debug_marker
+#if VK_EXT_debug_utils
 
 void VKSetDebugName(VkDevice device, VkObjectType type, std::uint64_t handle, const char* name)
 {
@@ -176,7 +176,7 @@ void VKSetDebugName(VkDevice device, VkObjectType type, std::uint64_t handle, co
     }
 }
 
-#endif // /VK_EXT_debug_marker
+#endif // /VK_EXT_debug_utils
 
 
 /* ----- Query Functions ----- */

@@ -153,7 +153,7 @@ void VKBuffer::SetStride(std::uint32_t stride)
 
 void VKBuffer::SetDebugName(const char* name)
 {
-    #if VK_EXT_debug_marker
+    #if VK_EXT_debug_utils
     VKSetDebugName(device_, VK_OBJECT_TYPE_BUFFER, reinterpret_cast<std::uint64_t>(GetVkBuffer()), name);
     #endif
 }
