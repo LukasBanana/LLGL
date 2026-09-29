@@ -99,8 +99,9 @@ public:
     static bool HasArgument(LLGL::StringView arg);
 
     // Returns true if the application was launched with the specified argument with an assigned value, e.g. use "-file" when "-file=FILE" is accepted.
-    static bool ParseArgument(LLGL::StringView arg, std::string& outValue);
     static bool ParseArgument(LLGL::StringView arg, int& outValue);
+    static bool ParseArgument(LLGL::StringView arg, std::string& outValue);
+    static bool ParseArgument(LLGL::StringView arg, std::vector<int>& outValues, char separator = ',');
 
 public:
 
@@ -259,7 +260,9 @@ protected:
 
 protected:
 
-    ExampleBase(const LLGL::UTF8String& title);
+    // Initializes the render system, swap-chain, and primary command buffer.
+    // @param overrideSwapChainSamles If non-zero, this overrides the user's configured multisamples if the app needs a specific number.
+    ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamles = 0);
 
     // Callback to draw each frame
     virtual void OnDrawFrame(float deltaTime) = 0;
@@ -403,7 +406,7 @@ protected:
     // Quits the application by closing the window. This is used to quit prematurely when loading a PSO has failed.
     void Quit(int returnCode = 0);
 
-    // Returns the number of samples that was used when the swap-chain was created.
+    // Returns the number of samples this app was configured with. The swap-chain is created with this parameter, unless the app initialization disables it.
     inline std::uint32_t GetSampleCount() const
     {
         return samples_;

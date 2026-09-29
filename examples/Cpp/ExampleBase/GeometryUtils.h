@@ -74,7 +74,6 @@ struct AABB
 };
 
 using AABB3f = AABB<Gs::Vector3f>;
-using AABB3i = AABB<Gs::Vector3i>;
 
 struct AABBIntersection
 {

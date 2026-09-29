@@ -47,6 +47,7 @@ else
 fi
 
 # Copy HTML5 examples to the target web page directory
+copy_example_to_target "Example_BrickPlay"
 copy_example_to_target "Example_Fonts"
 copy_example_to_target "Example_HelloGame"
 copy_example_to_target "Example_Instancing"

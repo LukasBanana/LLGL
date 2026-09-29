@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <float.h> // for FLT_MAX
 #include <sstream>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Trap.h>

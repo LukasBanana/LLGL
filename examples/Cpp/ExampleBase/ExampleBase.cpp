@@ -432,16 +432,6 @@ const char* ParseArgumentWithAssignment(LLGL::StringView arg)
     return nullptr;
 }
 
-bool ExampleBase::ParseArgument(LLGL::StringView arg, std::string& outValue)
-{
-    if (const char* argValue = ParseArgumentWithAssignment(arg))
-    {
-        outValue = argValue;
-        return true;
-    }
-    return false;
-}
-
 bool ExampleBase::ParseArgument(LLGL::StringView arg, int& outValue)
 {
     if (const char* argValue = ParseArgumentWithAssignment(arg))
@@ -452,25 +442,43 @@ bool ExampleBase::ParseArgument(LLGL::StringView arg, int& outValue)
     return false;
 }
 
-static bool ParseWindowSize(LLGL::Extent2D& size)
+bool ExampleBase::ParseArgument(LLGL::StringView arg, std::string& outValue)
 {
-    if (const char* argValue = ParseArgumentWithAssignment("-res"))
+    if (const char* argValue = ParseArgumentWithAssignment(arg))
     {
-        const std::size_t argValueSize = ::strlen(argValue) + 1;
-        auto mutableArgValue = std::unique_ptr<char[]>(new char[argValueSize]);
-        ::strncpy(mutableArgValue.get(), argValue, argValueSize);
-        char* tok = ::strtok(mutableArgValue.get(), "x");
+        outValue = argValue;
+        return true;
+    }
+    return false;
+}
 
-        int values[2] = {};
-        for (int tokIndex = 0; tok != nullptr && tokIndex < 2; ++tokIndex)
+bool ExampleBase::ParseArgument(LLGL::StringView arg, std::vector<int>& outValues, char separator)
+{
+    if (const char* argValue = ParseArgumentWithAssignment(arg))
+    {
+        // Append all values separated by the input character
+        while (const char* separatorPtr = ::strchr(argValue, separator))
         {
-            values[tokIndex] = ::atoi(tok);
-            tok = ::strtok(nullptr, "x");
+            outValues.push_back(std::stoi(std::string(argValue, separatorPtr)));
+            argValue = separatorPtr + 1;
         }
 
+        // Append last value
+        if (*argValue != '\0')
+            outValues.push_back(std::atoi(argValue));
+
+        return true;
+    }
+    return false;
+}
+
+static bool ParseWindowSize(LLGL::Extent2D& size)
+{
+    std::vector<int> values;
+    if (ExampleBase::ParseArgument("-res", values, 'x') && values.size() == 2)
+    {
         size.width  = static_cast<std::uint32_t>(std::max(1, std::min(values[0], 16384)));
         size.height = static_cast<std::uint32_t>(std::max(1, std::min(values[1], 16384)));
-
         return true;
     }
     return false;
@@ -664,7 +672,7 @@ static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const
         return res;
 }
 
-ExampleBase::ExampleBase(const LLGL::UTF8String& title)
+ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamles)
 {
     // Set report callback to standard output if not already done
     LLGL::Log::RegisterCallbackStd();
@@ -725,11 +733,18 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     {
         swapChainDesc.debugName     = "SwapChain";
         swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
-        #ifdef LLGL_OS_WASM
-        swapChainDesc.samples       = g_Config.samples; //TODO: workaround to avoid intermediate WebGL context
-        #else
-        swapChainDesc.samples       = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
-        #endif
+
+        if (overrideSwapChainSamles == 0)
+        {
+            #ifdef LLGL_OS_WASM
+            swapChainDesc.samples   = g_Config.samples; //TODO: workaround to avoid intermediate WebGL context
+            #else
+            swapChainDesc.samples   = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
+            #endif
+        }
+        else
+            swapChainDesc.samples   = overrideSwapChainSamles;
+
         swapChainDesc.swapBuffers   = g_Config.swapBuffers;
         swapChainDesc.resizable     = true;
     }
@@ -737,7 +752,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
 
-    samples_            = swapChain->GetSamples();
+    samples_            = std::min(swapChainDesc.samples, swapChain->GetSamples());
     drawableSize_       = swapChain->GetResolution();
     useRightHandedProj_ = g_Config.rightHandedProj;
 
