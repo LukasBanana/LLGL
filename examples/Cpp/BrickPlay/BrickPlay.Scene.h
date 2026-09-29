@@ -30,7 +30,7 @@ public:
     using OnCollisionContact = std::function<void(Brick brick, const Gs::Vector3f& contactPoint, float impact)>;
 
     // Function callback to paint the color of a brick for auto-generated chunks.
-    using OnBrickPaint = std::function<int(BrickType brickType, const GridVec3i& gridPos)>;
+    using OnBrickPaint = std::function<int(BrickId brickId, const GridVec3i& gridPos)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
@@ -52,21 +52,6 @@ public:
         }
     };
 
-    struct InstanceGroup
-    {
-        // Debug label constructed from BrickType and BrickGroup. Pre-allocate to avoid string concatenation during rendering (minor optimization).
-        std::string     debugName;
-
-        // Number of instances to render for this group
-        std::uint32_t   numInstances      = 0;
-
-        // Zero-based index to the first instance into the global `instances` container for this group. Instance 0 is reserved for the preview instance.
-        std::uint32_t   firstInstance     = 0;
-
-        // Number of instances allocated for this group in the global `instances` container. This must always be greater than or equal to `numInstances`.
-        std::uint32_t   instanceCapacity  = 0;
-    };
-
     struct RayIntersection
     {
         Gs::Vector3f    point;
@@ -85,7 +70,6 @@ private:
     std::uint64_t                   instanceBufferSize          = 0;
 
     std::vector<Instance>           instances;
-    InstanceGroup                   instanceGroups[BrickType_Num * BrickGroup_Num];
     std::size_t                     instanceDirtyRange[2]       = { 0, 0 };
 
     // The scene grid stores cells with references to the brick instances.
@@ -129,17 +113,22 @@ public:
 
     const InstanceGroup& GetInstanceGroupById(std::uint32_t groupId) const
     {
-        return instanceGroups[groupId];
+        return GetInstanceGroup(GroupIdToBrickId(groupId), GroupIdToBrickGroup(groupId));
     }
 
-    const InstanceGroup& GetInstanceGroup(BrickType type, BrickGroup group = BrickGroup_Default) const
+    InstanceGroup& GetInstanceGroupById(std::uint32_t groupId)
     {
-        return instanceGroups[CombineToBrickId(type, group)];
+        return GetInstanceGroup(GroupIdToBrickId(groupId), GroupIdToBrickGroup(groupId));
     }
 
-    InstanceGroup& GetInstanceGroup(BrickType type, BrickGroup group = BrickGroup_Default)
+    const InstanceGroup& GetInstanceGroup(BrickId id, BrickGroup group = BrickGroup_Default) const
     {
-        return instanceGroups[CombineToBrickId(type, group)];
+        return BrickDictionary::Get().GetInfo(id).instanceGroups[group];
+    }
+
+    InstanceGroup& GetInstanceGroup(BrickId id, BrickGroup group = BrickGroup_Default)
+    {
+        return BrickDictionary::Get().GetInfo(id).instanceGroups[group];
     }
 
     void MarkInstanceDirty(std::size_t first, std::size_t count = 1)
@@ -194,23 +183,23 @@ public:
         return nullptr;
     }
 
-    bool NewBrick(BrickType type, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
+    bool NewBrick(BrickId brickId, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
     {
-        if (!BrickFitsInGrid(gridPos, type, gridRotation))
+        if (!BrickFitsInGrid(brickId, gridPos, gridRotation))
             return false;
 
         hasUnsavedChanges = true;
 
         const bool isTransparent = BrickUtils::ColorPalette::Get().IsTransparent(colorIndex);
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, gridRotation);
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, gridRotation);
 
-        const BrickGroup group = [this, &isTransparent, &brickDim, &gridPos, type]() -> BrickGroup
+        const BrickGroup group = [this, &isTransparent, &brickDim, &gridPos, brickId]() -> BrickGroup
         {
             if (IsBrickVolumeBlockedTopAndBottom(gridPos, brickDim))
             {
                 if (IsBrickVolumeBlockedSideways(gridPos, brickDim))
                     return BrickGroup_Invisible;
-                else if (!isTransparent && IsBrickTypeOptimized(type))
+                else if (!isTransparent && IsBrickTypeOptimized(brickId))
                     return BrickGroup_WallsOnly;
             }
             if (isTransparent)
@@ -218,7 +207,7 @@ public:
             return BrickGroup_Default;
         }();
 
-        const std::uint32_t groupId = CombineToBrickId(type, group);
+        const std::uint32_t groupId = CombineToBrickId(brickId, group);
 
         // Insert brick without notification first, so its instance is fully initialized before neighbors can rearrange the groups
         constexpr bool notifyNeighbors = true;
@@ -232,14 +221,14 @@ public:
 
         auto NewBrickAndCount = [this, &bbOffset, &count, &painter](int x, int y, int z, int w, int h, int d) -> void
         {
-            BrickType brickType = BrickDictionary::Get().FindBrickTypeForDimension(GridVec3i{ w, h, d });
-            if (brickType < BrickType_Num)
+            BrickId brickId = BrickDictionary::Get().FindBrickIdForDimension(GridVec3i{ w, h, d });
+            if (brickId != INVALID_BRICK_ID)
             {
                 // Counter offset brick so that its boundary is (0,0,0) to (W,H,D). The bricks are usually centered for better user placement.
-                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, GridRotation_0);
+                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, GridRotation_0);
                 const GridVec3i gridPos = bbOffset + GridVec3i{ x, y, z } - brickDim.offset;
 
-                if (NewBrick(brickType, gridPos, GridRotation_0, painter(brickType, gridPos)))
+                if (NewBrick(brickId, gridPos, GridRotation_0, painter(brickId, gridPos)))
                     ++count;
             }
         };
@@ -287,12 +276,15 @@ public:
         instances.clear();
 
         // Reset instance range of all instance groups (not the vertex range)
-        for (std::uint32_t groupId = 0; groupId < BrickType_Num * BrickGroup_Num; ++groupId)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
-            InstanceGroup& group = instanceGroups[groupId];
-            group.numInstances      = 0;
-            group.firstInstance     = 0;
-            group.instanceCapacity  = 0;
+            for_range(groupType, BrickGroup_Num)
+            {
+                InstanceGroup& group = BrickDictionary::Get().GetInfo(brickId).instanceGroups[groupType];
+                group.numInstances      = 0;
+                group.firstInstance     = 0;
+                group.instanceCapacity  = 0;
+            }
         }
 
         // Destroy the entire kd-Tree
@@ -301,10 +293,10 @@ public:
         hasUnsavedChanges = true;
     }
 
-    bool BrickFitsInGrid(const GridVec3i& gridPos, BrickType type, GridRotation rotation) const
+    bool BrickFitsInGrid(BrickId brickId, const GridVec3i& gridPos, GridRotation rotation) const
     {
         // Get brick dimension and apply rotation
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, rotation);
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, rotation);
 
         // Brick must fit inside the root AABB
         const GridVec3i alignedGridPos = gridPos + brickDim.offset;
@@ -362,7 +354,7 @@ public:
         // Resolve collisions against AABB faces
         auto GetBrickAABB = [this](Brick brick, const Instance& instance, AABB3i& aabb)
         {
-            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance.gridRotation);
+            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetId(), instance.gridRotation);
 
             aabb.bbMin = instance.GetPos() + brickDim.offset;
             aabb.bbMax = aabb.bbMin + brickDim.extent;
@@ -444,8 +436,11 @@ public:
     std::size_t NumTotalInstances() const
     {
         std::size_t n = 0;
-        for (std::uint32_t groupId = 0; groupId < BrickType_Num * BrickGroup_Num; ++groupId)
-            n += instanceGroups[groupId].numInstances;
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
+        {
+            for_range(groupType, BrickGroup_Num)
+                n += BrickDictionary::Get().GetInfo(brickId).instanceGroups[groupType].numInstances;
+        }
         return n;
     }
 
@@ -470,17 +465,17 @@ private:
     void InitInstanceGroupDebugNames()
     {
         // Initialize debug group names for all instance groups
-        for_range(brickType, BrickType_Num)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
             for_range(groupType, BrickGroup_Num)
             {
                 // Write new brick type
-                InstanceGroup& group = GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                InstanceGroup& group = GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 group.debugName =
                 (
                     std::string("InstanceGroup_") +
                     BrickDictionary::Get().GroupToString(static_cast<BrickGroup>(groupType)) + '_' +
-                    BrickDictionary::Get().TypeToString(static_cast<BrickType>(brickType))
+                    BrickDictionary::Get().TypeToString(brickId)
                 );
             }
         }
@@ -497,7 +492,12 @@ private:
 
     std::size_t BrickToInstance(Brick brick) const
     {
-        return (brick ? instanceGroups[brick.groupId].firstInstance + brick.groupInstance : static_cast<std::size_t>(-1));
+        if (brick)
+        {
+            const InstanceGroup& group = GetInstanceGroup(brick.GetId(), brick.GetGroup());
+            return group.firstInstance + brick.groupInstance;
+        }
+        return static_cast<std::size_t>(-1);
     }
 
     // Resizes the instance buffer, but only increases in size.
@@ -528,7 +528,7 @@ private:
     // Adds the specified number of instances to the group.
     Instance* AllocateInstancesInGroup(std::uint32_t groupId, std::uint32_t count = 1)
     {
-        InstanceGroup& group = instanceGroups[groupId];
+        InstanceGroup& group = GetInstanceGroupById(groupId);
         if (group.numInstances + count > group.instanceCapacity)
         {
             const std::uint32_t numMinCount = group.numInstances + count;
@@ -543,8 +543,8 @@ private:
                 MarkInstanceDirty(0, instances.size());
 
             // Update instance offsets in subsequent groups
-            for (int nextGroupId = groupId + 1; nextGroupId < BrickType_Num * BrickGroup_Num; ++nextGroupId)
-                instanceGroups[nextGroupId].firstInstance += instanceGrowth;
+            for (std::uint32_t nextGroupId = groupId + 1; nextGroupId < BrickDictionary::Get().NumBrickTypes() * BrickGroup_Num; ++nextGroupId)
+                GetInstanceGroupById(nextGroupId).firstInstance += instanceGrowth;
 
             // Store new instance capacity for this group
             group.instanceCapacity = numCapacity;
@@ -562,7 +562,7 @@ private:
     // When it comes from an instance (like the preview model), it will invalidate that pointer in AllocateInstancesInGroup().
     bool AddInstanceToGroup(std::uint32_t groupId, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0, bool notifyNeighbors = false)
     {
-        Brick newBrick{ groupId, instanceGroups[groupId].numInstances };
+        Brick newBrick{ groupId, GetInstanceGroupById(groupId).numInstances };
 
         if (Instance* newInstance = AllocateInstancesInGroup(groupId))
         {
@@ -584,7 +584,7 @@ private:
     bool RemoveInstanceFromGroup(std::uint32_t groupId, std::uint32_t groupInstance, Instance* outRemovedInstance = nullptr, bool notifyNeighbors = false)
     {
         // Early exit if instance is out of bounds
-        InstanceGroup& group = instanceGroups[groupId];
+        InstanceGroup& group = GetInstanceGroupById(groupId);
         if (groupInstance >= group.numInstances)
             return false;
 
@@ -595,7 +595,7 @@ private:
         if (outRemovedInstance != nullptr)
             *outRemovedInstance = retiredInstance;
 
-        const BrickType brickType = IdToBrickType(groupId);
+        const BrickId brickId = GroupIdToBrickId(groupId);
 
         group.numInstances--;
         if (groupInstance < group.numInstances)
@@ -603,11 +603,11 @@ private:
             // Remove instance from group by writing last instance in that group into the position of the old instance and update its grid entry
             const Instance& lastInstance = instances[group.firstInstance + group.numInstances];
             instances[group.firstInstance + groupInstance] = lastInstance;
-            UpdateBrickInstanceInGrid(brickType, lastInstance, groupInstance);
+            UpdateBrickInstanceInGrid(brickId, lastInstance, groupInstance);
         }
 
         // Remove destroyed instance from grid
-        RemoveBrickFromGrid(brickType, retiredInstance, notifyNeighbors);
+        RemoveBrickFromGrid(brickId, retiredInstance, notifyNeighbors);
 
         // Mark all remaining instances of that group as dirty
         MarkInstanceDirty(group.firstInstance + groupInstance);
@@ -688,12 +688,12 @@ private:
         if (brick.GetGroup() != newGroup)
         {
             // Don't transfer bricks into walls-only optimized group if their mesh doesn't support this group
-            if (newGroup != BrickGroup_WallsOnly || IsBrickTypeOptimized(brick.GetType()))
+            if (newGroup != BrickGroup_WallsOnly || IsBrickTypeOptimized(brick.GetId()))
             {
                 Instance oldInstance;
                 if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, &oldInstance))
                 {
-                    const std::uint32_t newGroupId = CombineToBrickId(brick.GetType(), newGroup);
+                    const std::uint32_t newGroupId = CombineToBrickId(brick.GetId(), newGroup);
                     (void)AddInstanceToGroup(newGroupId, oldInstance.GetPos(), oldInstance.gridRotation, oldInstance.colorIndex);
                 }
             }
@@ -710,7 +710,7 @@ private:
             if (isChangedBrickBlocking)
             {
                 // If brick is now blocked top and bottom, try to transfer brick to group for optimized rendering
-                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
+                const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetId(), instance->gridRotation);
                 if (IsBrickVolumeBlockedTopAndBottom(instance->GetPos(), brickDim))
                 {
                     // If brick is also blocked sidesways (left, right, front, back), don't render brick at all
@@ -735,7 +735,7 @@ private:
                     if (!isBrickTransparent && !isChangeFromTopAndBottom)
                     {
                         // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering
-                        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetType(), instance->gridRotation);
+                        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetId(), instance->gridRotation);
                         if (IsBrickVolumeBlockedTopAndBottom(instance->GetPos(), brickDim))
                         {
                             TryTransferBrickGroup(brick, BrickGroup_WallsOnly);
@@ -802,9 +802,10 @@ private:
 
     // Returns true if the specified cell (position relative to brick, not to the grid) is excluded from the brick type.
     // This is used for a few select bricks that don't cover a full bounding box, like the roof tile.
-    bool IsBrickCellExcluded(BrickType brickType, GridRotation brickRotation, const GridVec3i& cellPos)
+    bool IsBrickCellExcluded(BrickId brickId, GridRotation brickRotation, const GridVec3i& cellPos)
     {
-        if (brickType == BrickType_2x3x3_Roof)
+#if 0 //TODO: use user configured excluded cells
+        if (brickId == BrickType_2x3x3_Roof)
         {
             // This is hardcoded but if more bricks are added, this should be generalized.
             // The 2x3x3 roof tile has two cells that can be excluded, but the coordinate depends on its rotation.
@@ -819,6 +820,7 @@ private:
                 }
             }
         }
+#endif
         return false;
     }
 
@@ -827,15 +829,15 @@ private:
         // Get brick dimension and apply rotation
         if (const Instance* instance = GetBrickInstance(brick))
         {
-            const BrickType brickType = brick.GetType();
-            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, instance->gridRotation);
+            const BrickId brickId = brick.GetId();
+            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, instance->gridRotation);
 
             // Insert brick entries into grid
             const GridVec3i alignedGridPos = instance->GetPos() + brickDim.offset;
             foreach_dimension(x, y, z, brickDim.extent)
             {
                 const GridVec3i cellPos{ x, y, z };
-                if (!IsBrickCellExcluded(brickType, instance->gridRotation, cellPos))
+                if (!IsBrickCellExcluded(brickId, instance->gridRotation, cellPos))
                     grid.InsertLeaf(alignedGridPos + cellPos, brick);
             }
 
@@ -852,17 +854,17 @@ private:
         return false;
     }
 
-    void RemoveBrickFromGrid(BrickType type, const Instance& instance, bool notifyNeighbors = false)
+    void RemoveBrickFromGrid(BrickId brickId, const Instance& instance, bool notifyNeighbors = false)
     {
         // Get brick dimension and apply rotation
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, instance.gridRotation);
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, instance.gridRotation);
 
         // Remove brick entries from grid
         const GridVec3i alignedGridPos = instance.GetPos() + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
         {
             const GridVec3i cellPos{ x, y, z };
-            if (!IsBrickCellExcluded(type, instance.gridRotation, cellPos))
+            if (!IsBrickCellExcluded(brickId, instance.gridRotation, cellPos))
                 grid.RemoveLeaf(alignedGridPos + GridVec3i{ x, y, z });
         }
 
@@ -875,10 +877,10 @@ private:
         #endif
     }
 
-    void UpdateBrickInstanceInGrid(BrickType type, const Instance& instance, std::uint32_t groupInstance)
+    void UpdateBrickInstanceInGrid(BrickId brickId, const Instance& instance, std::uint32_t groupInstance)
     {
         // Get brick dimension and apply rotation
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(type, instance.gridRotation);
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, instance.gridRotation);
 
         // Remove brick entries from grid
         const GridVec3i alignedGridPos = instance.GetPos() + brickDim.offset;

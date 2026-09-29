@@ -54,7 +54,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr std::uint32_t  maxUIVertexBatchSize            = 64 * 3;   // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
+    static constexpr std::uint32_t  maxUIVertexBatchSize            = 128 * 3;  // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
     static constexpr int            uiColorPickerSize               = 26;       // Size (in pixels) of each color picker button
     static constexpr int            uiColorPickerOffset[2]          = { 15, 15 };
     static constexpr int            uiButtonFrameSize               = 3;
@@ -66,6 +66,8 @@ class Example_BrickPlay : public ExampleBase
     const LLGL::ColorRGBAub         uiMenuBgColor                   = { 0, 0, 0, 180 };
 
     static constexpr float          uiThumbnailMinVolumeSize        = 3.0f; // Minimum size for a bounding volume of brick thumbnails.
+
+    static constexpr int            maxBrickExtent                  = 16;   // Limit how large bricks can be in X/Y/Z dimension
 
     static constexpr int            planeSubdivisions               = 1;
 
@@ -162,7 +164,6 @@ class Example_BrickPlay : public ExampleBase
     using ColorPalette      = BrickUtils::ColorPalette;
 
     using Instance          = BrickScene::Instance;
-    using InstanceGroup     = BrickScene::InstanceGroup;
     using RayIntersection   = BrickScene::RayIntersection;
 
     Instance                        previewInstance                 = {};
@@ -230,7 +231,7 @@ class Example_BrickPlay : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickType       type        = static_cast<BrickType>(0); // Previews brick with instance index 0.
+        BrickId         id          = static_cast<BrickId>(0); // Previews brick with instance index 0.
         bool            isBlocked   = false;
         std::int32_t    gridOffset  = 0;
     };
@@ -305,6 +306,8 @@ class Example_BrickPlay : public ExampleBase
         Gs::Vector3f position;
         Gs::Vector3f normal;
     };
+
+    std::vector<BrickVertex> brickVertices;
 
     // Encode mode how to render UI elements within each vertex to simplify batched draw calls.
     // This reduces the number of times vertex data has to be uploaded to the GPU.
@@ -574,16 +577,75 @@ private:
                 if (cmd == 'b')
                 {
                     // Parse brick model
+                    std::string label;
+                    stream >> label;
 
-                    //TODO
+                    BrickInfo& brickInfo = BrickDictionary::Get().FindOrInsert(std::move(label));
 
+                    GridVec3i brickExtent;
+                    stream >> brickExtent.x >> brickExtent.y >> brickExtent.z;
+
+                    if (brickInfo.extent != GridVec3i{} && brickInfo.extent != brickExtent)
+                    {
+                        LLGL::Log::Errorf(
+                            "Mismatch between initial brick '%s' extent (%d x %d x %d) and appendix group (%d x %d x %d) in %s:%d\n",
+                            brickInfo.label.c_str(),
+                            brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z,
+                            brickExtent.x, brickExtent.y, brickExtent.z,
+                            filename, lineNo
+                        );
+                        return false;
+                    }
+                    brickInfo.extent = brickExtent;
+
+                    // Sanity check
+                    if (brickInfo.extent.x < 1 || brickInfo.extent.x > maxBrickExtent ||
+                        brickInfo.extent.y < 1 || brickInfo.extent.y > maxBrickExtent ||
+                        brickInfo.extent.z < 1 || brickInfo.extent.z > maxBrickExtent)
+                    {
+                        LLGL::Log::Errorf(
+                            "Brick '%s' extent out of bounds [1, %d]: %d x %d x %d\n",
+                            brickInfo.label.c_str(), maxBrickExtent, brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z
+                        );
+                        return false;
+                    }
+
+                    // Load 3D mesh and emplace into group
+                    std::string modelFilename, groupName;
+                    stream >> modelFilename >> groupName;
+
+                    BrickGroup brickGroup = BrickDictionary::Get().GroupFromString(groupName.c_str());
+                    if (brickGroup >= BrickGroup_Num)
+                    {
+                        LLGL::Log::Errorf("Invalid brick group '%s' in %s:%d\n", groupName.c_str(), filename, lineNo);
+                        return false;
+                    }
+                    if (brickInfo.meshes[brickGroup].numVertices > 0)
+                    {
+                        LLGL::Log::Errorf(
+                            "Warning: Brick '%s' overrides previous group model for '%s' in %s:%d\n",
+                            brickInfo.label.c_str(), groupName.c_str(), filename, lineNo
+                        );
+                    }
+
+                    if (!LoadBrickModelFile(brickInfo.meshes[brickGroup], modelFilename.c_str()))
+                    {
+                        LLGL::Log::Errorf("Failed to load brick model '%s' in %s:%d\n", modelFilename.c_str(), filename, lineNo);
+                        return false;
+                    }
                 }
                 else if (cmd == 'e')
                 {
                     // Parse excluded cell from brick model
+                    std::string label;
+                    stream >> label;
 
-                    //TODO
+                    BrickInfo& brickInfo = BrickDictionary::Get().FindOrInsert(std::move(label));
 
+                    GridVec3i excludedCell;
+                    stream >> excludedCell.x >> excludedCell.y >> excludedCell.z;
+
+                    brickInfo.excludedCells.push_back(excludedCell);
                 }
                 else if (cmd == 'v')
                 {
@@ -594,7 +656,7 @@ private:
                         if (size < 1)
                         {
                             LLGL::Log::Errorf(
-                                "Invalid scene bounding volume dimensions %dx%dx%d in %s:d\n",
+                                "Invalid scene bounding volume dimensions %dx%dx%d in %s:%d\n",
                                 options.sceneBoundingVolume[0], options.sceneBoundingVolume[1], options.sceneBoundingVolume[2], filename, lineNo
                             );
                             return false;
@@ -649,18 +711,18 @@ private:
         };
     }
 
-    void LoadBrickModel(const char* basename, std::vector<BrickVertex>& vertices, BrickType brickType, BrickGroup brickGroup = BrickGroup_Default)
+    bool LoadBrickModelFile(BrickMesh& outMesh, const char* filename)
     {
-        LLGL::Log::Printf("Load brick model: %s\n", basename);
+        LLGL::Log::Printf("Load brick model: %s\n", filename);
 
-        BrickMesh& mesh = BrickDictionary::Get().GetMesh(brickType, brickGroup);
+        const std::vector<TexturedVertex> intermediateVertices = Load3DModel(filename);
+        if (intermediateVertices.empty())
+            return false;
 
-        const std::vector<TexturedVertex> intermediateVertices = Load3DModel(std::string("Bricks/") + basename + ".obj");
+        outMesh.firstVertex = static_cast<std::uint32_t>(brickVertices.size());
+        outMesh.numVertices = static_cast<std::uint32_t>(intermediateVertices.size());
 
-        mesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
-        mesh.numVertices = static_cast<std::uint32_t>(intermediateVertices.size());
-
-        vertices.resize(vertices.size() + intermediateVertices.size());
+        brickVertices.resize(brickVertices.size() + intermediateVertices.size());
 
         auto ConvertVertex = [](BrickVertex& dst, const TexturedVertex& src) -> void
         {
@@ -668,12 +730,15 @@ private:
             dst.normal      = src.normal;
         };
 
-        for (std::uint32_t i = 0; i < mesh.numVertices; ++i)
-            ConvertVertex(vertices[mesh.firstVertex + i], intermediateVertices[i]);
+        for (std::uint32_t i = 0; i < outMesh.numVertices; ++i)
+            ConvertVertex(brickVertices[outMesh.firstVertex + i], intermediateVertices[i]);
+
+        return true;
     }
 
-    void LoadAllBrickModels(std::vector<BrickVertex>& vertices)
+    void LoadAllDefaultBrickModels()
     {
+#if 0
         enum ModelFlags
         {
             Model_IsWallOptimized       = (1 << 0), // Does the model has an optimized version that only renders its walls, with some potential but negligible holes?
@@ -681,10 +746,17 @@ private:
             Model_IsGlassOptimized      = (1 << 2), // Does the model has a specialized version for transparent materials?
         };
 
-        auto LoadBrickModelGroups = [this, &vertices](const char* basename, BrickType brickType, int flags = 0) -> void
+        auto LoadBrickModelGroups = [this](const char* basename, BrickId brickId, int flags = 0) -> void
         {
+            auto LoadBrickModel = [this, brickId](const char* name, BrickGroup brickGroup) -> void
+            {
+                BrickMesh& mesh = BrickDictionary::Get().GetMesh(brickId, brickGroup);
+                const std::string filename = std::string("Bricks/") + name + ".obj";
+                (void)LoadBrickModelFile(mesh, filename.c_str());
+            };
+
             // Load base model for this group of bricks
-            LoadBrickModel(basename, vertices, brickType);
+            LoadBrickModel(basename, BrickGroup_Default);
 
             if ((flags & (Model_IsWallOptimized | Model_IsWallOptimizedExt)) != 0)
             {
@@ -693,14 +765,14 @@ private:
                 std::string basenameWallsOnly = std::string(basename) + "_WallsOnly";
                 if (useWaterTightBrickOptimization && (flags & Model_IsWallOptimizedExt) != 0)
                     basenameWallsOnly += "Ext";
-                LoadBrickModel(basenameWallsOnly.c_str(), vertices, brickType, BrickGroup_WallsOnly);
+                LoadBrickModel(basenameWallsOnly.c_str(), BrickGroup_WallsOnly);
             }
 
             if ((flags & Model_IsGlassOptimized) != 0)
             {
                 // Load model specialization for transparent materials. These have less tubes inside them so its easier to see through them.
                 const std::string basenameGlass = std::string(basename) + "_Glass";
-                LoadBrickModel(basenameGlass.c_str(), vertices, brickType, BrickGroup_Transparent);
+                LoadBrickModel(basenameGlass.c_str(), BrickGroup_Transparent);
             }
         };
 
@@ -716,6 +788,7 @@ private:
         LoadBrickModelGroups("Roof2x3x3",   BrickType_2x3x3_Roof);
         LoadBrickModelGroups("Brick4x2x1",  BrickType_4x2x1,        Model_IsWallOptimizedExt);
         LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
+#endif
     }
 
     void InitSceneBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
@@ -761,7 +834,10 @@ private:
 
         // Import configurations and finalize color palette
         if (!ImportConfigs(options.configFilename.c_str()))
+        {
             ColorPalette::Get().InitDefault();
+            LoadAllDefaultBrickModels();
+        }
         ColorPalette::Get().Finalize();
 
         // Store root AABB of kd-Tree
@@ -996,21 +1072,18 @@ private:
     {
         const float projZAxis = GetProjectionZAxis();
 
-        std::vector<BrickVertex> vertices;
-        LoadAllBrickModels(vertices);
-
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
         {
             vertexBufferDesc.debugName = "BrickVertexBuffer";
-            vertexBufferDesc.size      = sizeof(BrickVertex) * vertices.size() + sizeof(Instance);
+            vertexBufferDesc.size      = sizeof(BrickVertex) * brickVertices.size() + sizeof(Instance);
             vertexBufferDesc.stride    = sizeof(BrickVertex);
             vertexBufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         vertexAndPreviewInstanceBuffer  = renderer->CreateBuffer(vertexBufferDesc);
-        previewInstanceBufferOffset     = sizeof(BrickVertex) * vertices.size();
+        previewInstanceBufferOffset     = sizeof(BrickVertex) * brickVertices.size();
 
-        renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, vertices.data(), previewInstanceBufferOffset);
+        renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, brickVertices.data(), previewInstanceBufferOffset);
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
 
         // Create scene view and color palette constant buffers
@@ -1513,12 +1586,12 @@ private:
         std::map<std::uint32_t, int> colorToPaletteIndex;
 
         std::size_t numTotalInstances = 0;
-        for_range(brickType, BrickType_Num)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
             for_range(groupType, BrickGroup_Num)
             {
                 // Write new brick type
-                const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                const InstanceGroup& group = scene.GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 for_range(i, group.numInstances)
                 {
                     const Instance& instance = scene.GetInstanceByIndex(group.firstInstance + i);
@@ -1541,7 +1614,7 @@ private:
         }
 
         // Write all instances for each brick type
-        BrickType lastWrittenBrickType = BrickType_Num;
+        BrickId lastWrittenBrickType = INVALID_BRICK_ID;
         char colorStr[9] = {};
 
         auto ColorToStringOrPaletteIndex = [&](LLGL::ColorRGBAub color) -> const char*
@@ -1561,18 +1634,18 @@ private:
             return BrickUtils::ColorToString(color);
         };
 
-        for_range(brickType, BrickType_Num)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
             for_range(groupType, BrickGroup_Num)
             {
                 // Write new brick type
-                const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), static_cast<BrickGroup>(groupType));
+                const InstanceGroup& group = scene.GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 if (group.numInstances > 0)
                 {
-                    if (lastWrittenBrickType != brickType)
+                    if (lastWrittenBrickType != brickId)
                     {
-                        lastWrittenBrickType = static_cast<BrickType>(brickType);
-                        file << "b " << BrickDictionary::Get().TypeToString(static_cast<BrickType>(brickType)) << std::endl;
+                        lastWrittenBrickType = brickId;
+                        file << "b " << BrickDictionary::Get().TypeToString(brickId) << std::endl;
                     }
                 }
 
@@ -1608,7 +1681,7 @@ private:
             return false;
         }
 
-        BrickType currentBrickType = BrickType_Num;
+        BrickId currentBrickType = INVALID_BRICK_ID;
         GridVec3i currentOffset;
 
         std::vector<LLGL::ColorRGBAub> intermediateColors;
@@ -1641,7 +1714,7 @@ private:
 
                 if (cmd == 'i')
                 {
-                    if (currentBrickType == BrickType_Num)
+                    if (currentBrickType == INVALID_BRICK_ID)
                     {
                         LLGL::Log::Errorf("Missing brick type 'b' before new instance 'i' in %s:%d\n", filename, lineNo);
                         scene.ResetScene();
@@ -1671,9 +1744,9 @@ private:
                     stream >> brickTypeStr;
                     currentBrickType = BrickDictionary::Get().TypeFromString(brickTypeStr.c_str());
 
-                    if (currentBrickType == BrickType_Num)
+                    if (currentBrickType == INVALID_BRICK_ID)
                     {
-                        LLGL::Log::Errorf("Unknown brick type 'b %s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
+                        LLGL::Log::Errorf("Unknown brick type '%s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
                         scene.ResetScene();
                         return false;
                     }
@@ -1690,7 +1763,7 @@ private:
                 }
                 else if (cmd == 'p')
                 {
-                    if (currentBrickType != BrickType_Num)
+                    if (currentBrickType != INVALID_BRICK_ID)
                     {
                         LLGL::Log::Errorf("Color palette entries must appear before brick types\n");
                         scene.ResetScene();
@@ -1723,7 +1796,10 @@ private:
     }
 
     void BuildBrickChunkFromHeightField(
-        BrickScene& scene, int xOffset, int zOffset, int xExtent, int zExtent, const int (&yRange)[2], const std::vector<float>& heightField, int rowStride)
+        BrickScene& scene,
+        int xOffset, int zOffset, int xExtent, int zExtent,
+        const int (&yRange)[2], const std::vector<float>& heightField, int rowStride,
+        BrickId brickId1x1, BrickId brickId1x1Tile)
     {
         // Gather height field values and min/max range
         float fieldMin = FLT_MAX;
@@ -1747,7 +1823,7 @@ private:
             ColorPalette::Get().FindClosestColorIndex(LLGL::ColorRGBAub{  90, 220, 100 }),
         };
 
-        auto BrickPainter = [&levelColorIndices](BrickType brickType, const GridVec3i& gridPos) -> int
+        auto BrickPainter = [&levelColorIndices](BrickId brickId, const GridVec3i& gridPos) -> int
         {
             int level = gridPos.y/4;
             return levelColorIndices[Gs::Clamp(level, 0, 2)];
@@ -1775,14 +1851,17 @@ private:
                 int yField = static_cast<int>(field[z][x] * heightFieldUpperBound);
                 if (yField > yMaxChunk)
                 {
-                    const BrickType brickType1x1 = (yField > yMaxChunk + 1 ? BrickType_1x1x1 : BrickType_1x1x1_Tile);
-                    const GridVec3i gridPos
+                    const BrickId brickId1x1 = (yField > yMaxChunk + 1 ? brickId1x1 : brickId1x1Tile);
+                    if (brickId1x1 != INVALID_BRICK_ID)
                     {
-                        KDTreeNode::rootAABB.bbMin.x + xOffset + x,
-                        KDTreeNode::rootAABB.bbMin.y + yRange[0] + yMaxChunk,
-                        KDTreeNode::rootAABB.bbMin.z + zOffset + z
-                    };
-                    scene.NewBrick(brickType1x1, gridPos, GridRotation_0, BrickPainter(brickType1x1, gridPos));
+                        const GridVec3i gridPos
+                        {
+                            KDTreeNode::rootAABB.bbMin.x + xOffset + x,
+                            KDTreeNode::rootAABB.bbMin.y + yRange[0] + yMaxChunk,
+                            KDTreeNode::rootAABB.bbMin.z + zOffset + z
+                        };
+                        scene.NewBrick(brickId1x1, gridPos, GridRotation_0, BrickPainter(brickId1x1, gridPos));
+                    }
                 }
             }
         }
@@ -1811,6 +1890,11 @@ private:
 
     void GenerateHeightFieldScene(BrickScene& scene, const HeightFieldParameters& heightFieldParams)
     {
+        // Obtain brick IDs for 1x1 and 1x1_tile bricks
+        const BrickId brickId1x1 = BrickDictionary::Get().TypeFromString("1x1x1");
+        const BrickId brickId1x1Tile = BrickDictionary::Get().TypeFromString("1x1_tile");
+
+        // Get height field dimensions
         const Gs::Vector3f  bbCenter = (KDTreeNode::rootAABB.bbMax + KDTreeNode::rootAABB.bbMin).Cast<float>() * 0.5f;
         const GridVec3i     bbExtent = (KDTreeNode::rootAABB.bbMax - KDTreeNode::rootAABB.bbMin);
 
@@ -1823,7 +1907,7 @@ private:
             for (int x = 0; x + heightFieldChunkSize < bbExtent.x; x += heightFieldChunkSize)
             {
                 int yRange[2] = { (heightFieldParams.yRange[0] / 3) * 3, heightFieldParams.yRange[1] };
-                BuildBrickChunkFromHeightField(scene, x, z, heightFieldChunkSize, heightFieldChunkSize, yRange, noiseBuffer, bbExtent.x);
+                BuildBrickChunkFromHeightField(scene, x, z, heightFieldChunkSize, heightFieldChunkSize, yRange, noiseBuffer, bbExtent.x, brickId1x1, brickId1x1Tile);
             }
         }
 
@@ -1869,13 +1953,12 @@ private:
         }
     }
 
-    void RenderAllBrickTypesForGroup(const BrickScene& scene, BrickGroup groupType, LLGL::VertexBufferView (&vertexBufferViews)[2])
+    void RenderAllBricksForGroup(const BrickScene& scene, BrickGroup groupType, LLGL::VertexBufferView (&vertexBufferViews)[2])
     {
-        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
-            const std::uint32_t groupId = CombineToBrickId(brickType, groupType);
-            const BrickMesh mesh = GetBrickMeshOrDefault(brickType, groupType);
-            const InstanceGroup& group = scene.GetInstanceGroup(static_cast<BrickType>(brickType), groupType);
+            const BrickMesh mesh = GetBrickMeshOrDefault(brickId, groupType);
+            const InstanceGroup& group = scene.GetInstanceGroup(brickId, groupType);
             if (group.numInstances > 0 && mesh.numVertices > 0)
             {
                 commands->PushDebugGroup(group.debugName.c_str());
@@ -1900,7 +1983,7 @@ private:
 
         // Draw instances of all groups
         for (int groupType = BrickGroup_Default; groupType < BrickGroup_Transparent; ++groupType)
-            RenderAllBrickTypesForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
+            RenderAllBricksForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
     }
 
     void RenderTransparentBrickInstances(const BrickScene& scene)
@@ -1916,7 +1999,7 @@ private:
 
         // Draw instances of the transparent group only
         const BrickGroup groupType = BrickGroup_Transparent;
-        RenderAllBrickTypesForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
+        RenderAllBricksForGroup(scene, static_cast<BrickGroup>(groupType), vertexBufferViews);
     }
 
     // Combines opaque with transparent geometry
@@ -2144,21 +2227,21 @@ private:
 
     // Returns the mesh information for the specified brick type with a preferred group.
     // If the preferred group is not available for the brick type, it falls back to the default group.
-    BrickMesh GetBrickMeshOrDefault(int brickType, int preferredGroup = BrickGroup_Default)
+    BrickMesh GetBrickMeshOrDefault(BrickId brickId, BrickGroup preferredGroup = BrickGroup_Default)
     {
         if (preferredGroup != BrickGroup_Default)
         {
-            const BrickMesh preferredMesh = BrickDictionary::Get().GetMesh(brickType, preferredGroup);
+            const BrickMesh preferredMesh = BrickDictionary::Get().GetMesh(brickId, preferredGroup);
             if (preferredMesh.numVertices > 0)
                 return preferredMesh;
         }
-        return BrickDictionary::Get().GetMesh(brickType);
+        return BrickDictionary::Get().GetMesh(brickId);
     }
 
     void RenderPreviewBrick(const PreviewBrick& previewBrick)
     {
         const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(previewInstance.colorIndex);
-        const BrickMesh mesh = GetBrickMeshOrDefault(previewBrick.type, isPreviewBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
+        const BrickMesh mesh = GetBrickMeshOrDefault(previewBrick.id, isPreviewBrickTransparent ? BrickGroup_Transparent : BrickGroup_Default);
         if (mesh.numVertices > 0)
             commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
@@ -2174,7 +2257,7 @@ private:
         if (brickInstance == nullptr)
             return;
 
-        const BrickMesh visibleMesh = BrickDictionary::Get().GetMesh(brick.GetType());
+        const BrickMesh visibleMesh = BrickDictionary::Get().GetMesh(brick.GetId());
         if (visibleMesh.numVertices == 0)
             return;
 
@@ -2210,11 +2293,11 @@ private:
         commands->PopDebugGroup();
     }
 
-    void TransformSceneViewForThumbnail(BrickType brickType, GridRotation gridRotation, SceneView& outView)
+    void TransformSceneViewForThumbnail(BrickId brickId, GridRotation gridRotation, SceneView& outView)
     {
         const float dist = 25.0f;
 
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickType, gridRotation);
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, gridRotation);
         const GridVec3i brickCenter = (brickDim.offset*2 + brickDim.extent);
         const GridVec3i unitOffset{ brickCenter.x % 2, brickDim.extent.y, brickCenter.z % 2 };
 
@@ -2242,12 +2325,12 @@ private:
         outView.vpMatrix = thumbnailProjection * vMatrix;
     }
 
-    void RenderBrickThumnail(LLGL::RenderTarget& renderTarget, BrickType brickType, GridRotation gridRotation)
+    void RenderBrickThumnail(LLGL::RenderTarget& renderTarget, BrickId brickId, GridRotation gridRotation)
     {
         SceneView thumbnailSceneView;
 
         // Move camera so that the thumbnail for the current brick type is clearly visible
-        TransformSceneViewForThumbnail(brickType, gridRotation, thumbnailSceneView);
+        TransformSceneViewForThumbnail(brickId, gridRotation, thumbnailSceneView);
         commands->UpdateBuffer(*sceneViewCbuffer, 0, &thumbnailSceneView, sizeof(thumbnailSceneView));
 
         commands->BeginRenderPass(renderTarget);
@@ -2256,7 +2339,7 @@ private:
             commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{});
 
             // Draw current thumbnail brick from default group
-            const BrickMesh mesh = BrickDictionary::Get().GetMesh(brickType);
+            const BrickMesh mesh = BrickDictionary::Get().GetMesh(brickId);
             if (mesh.numVertices > 0)
                 commands->Draw(mesh.numVertices, mesh.firstVertex);
         }
@@ -2265,6 +2348,8 @@ private:
 
     void RenderAllBrickThumbnails()
     {
+        const std::uint32_t numBrickTypes = BrickDictionary::Get().NumBrickTypes();
+
         // In case thumbnails must be updated, delete previous texture
         if (uiBrickThumbnailTexture != nullptr)
         {
@@ -2278,18 +2363,19 @@ private:
             texArrayDesc.debugName      = "BrickThumbnail.Texture2DArray";
             texArrayDesc.type           = LLGL::TextureType::Texture2DArray;
             texArrayDesc.extent         = { uiBrickThumbnailSize, uiBrickThumbnailSize, 1 };
-            texArrayDesc.arrayLayers    = BrickType_Num;                    // Each brick type gets its own slot in the array texture
+            texArrayDesc.arrayLayers    = numBrickTypes;                    // Each brick type gets its own slot in the array texture
             texArrayDesc.mipLevels      = 1;                                // No MIP-maps since this is used for UI elements
             texArrayDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;   // Don't initialize the texture since we render into it right below
         }
         uiBrickThumbnailTexture = renderer->CreateTexture(texArrayDesc);
 
         // Create intermediate render-targets, one for each array layer
-        LLGL::RenderTarget* renderTargets[BrickType_Num] = {};
+        std::vector<LLGL::RenderTarget*> renderTargets;
+        renderTargets.resize(numBrickTypes);
 
-        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        for_range(brickId, numBrickTypes)
         {
-            const std::string rtLabel = std::string("RenderTarget.Thumbnail_") + BrickDictionary::Get().TypeToString(static_cast<BrickType>(brickType));
+            const std::string rtLabel = std::string("RenderTarget.Thumbnail_") + BrickDictionary::Get().TypeToString(brickId);
             LLGL::RenderTargetDescriptor rtDesc;
             {
                 rtDesc.debugName                        = rtLabel.c_str();
@@ -2297,10 +2383,10 @@ private:
                 rtDesc.samples                          = GetSampleCount();
                 rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
                 rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
-                rtDesc.resolveAttachments[0].arrayLayer = brickType;                            // Render into array layer designated for current brick type
+                rtDesc.resolveAttachments[0].arrayLayer = brickId;                            // Render into array layer designated for current brick type
                 rtDesc.depthStencilAttachment.format    = swapChain->GetDepthStencilFormat();   // Use same depth format for thumbnails as for swap-chain (to make PSOs happy)
             }
-            renderTargets[brickType] = renderer->CreateRenderTarget(rtDesc);
+            renderTargets[brickId] = renderer->CreateRenderTarget(rtDesc);
         }
 
         // Reset preview instance to default
@@ -2319,12 +2405,12 @@ private:
 
             commands->PushDebugGroup("RenderBrickThumbnails");
             {
-                for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+                for_range(brickId, numBrickTypes)
                 {
-                    const std::string debugLabel = std::string("RenderThumbnail_") + BrickDictionary::Get().TypeToString(static_cast<BrickType>(brickType));
+                    const std::string debugLabel = std::string("RenderThumbnail_") + BrickDictionary::Get().TypeToString(brickId);
                     commands->PushDebugGroup(debugLabel.c_str());
                     {
-                        RenderBrickThumnail(*renderTargets[brickType], static_cast<BrickType>(brickType), thumbnailRotation);
+                        RenderBrickThumnail(*renderTargets[brickId], brickId, thumbnailRotation);
                     }
                     commands->PopDebugGroup();
                 }
@@ -2517,7 +2603,7 @@ private:
         uiPos[0] = scrW - (uiColorPickerOffset[0] + uiBrickThumbnailSize + uiButtonFrameSize*2);
         uiPos[1] = uiColorPickerOffset[1];
 
-        for (int brickType = 0; brickType < BrickType_Num; ++brickType)
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
             if (uiPos[1] > scrH - uiButtonAdvance)
             {
@@ -2527,11 +2613,11 @@ private:
                 uiState.menuBarRight -= uiButtonAdvance;
             }
 
-            const bool isHighlighted = (viewOptions.previewBrick.type == brickType);
-            if (DrawUIBrickThumbnail(uiPos[0], uiPos[1], brickType, isHighlighted))
+            const bool isHighlighted = (viewOptions.previewBrick.id == brickId);
+            if (DrawUIBrickThumbnail(uiPos[0], uiPos[1], brickId, isHighlighted))
             {
                 // Set new brick type to preview brick
-                viewOptions.previewBrick.type = static_cast<BrickType>(brickType);
+                viewOptions.previewBrick.id = brickId;
             }
 
             // Move to next UI element position
@@ -2674,9 +2760,9 @@ private:
         return Brick{};
     }
 
-    void ClampBrickGridOffset(BrickType type, std::int32_t& offset)
+    void ClampBrickGridOffset(BrickId brickId, std::int32_t& offset)
     {
-        const GridVec3i brickExtent = BrickDictionary::Get().GetExtent(type);
+        const GridVec3i brickExtent = BrickDictionary::Get().GetExtent(brickId);
         const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
         if (maxWidthOrDepth > 2)
         {
@@ -2696,15 +2782,15 @@ private:
         if (input.KeyDown(LLGL::Key::Space))
             newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
 
-        BrickType newBrickType = previewBrick.type;
+        BrickId newBrickId = previewBrick.id;
         if (input.KeyDown(LLGL::Key::PageUp))
-            newBrickType = static_cast<BrickType>((newBrickType + 1) % BrickType_Num);
+            newBrickId = static_cast<BrickId>((newBrickId + 1) % BrickDictionary::Get().NumBrickTypes());
         if (input.KeyDown(LLGL::Key::PageDown))
-            newBrickType = static_cast<BrickType>(ModuloSignInt(newBrickType - 1, BrickType_Num));
+            newBrickId = static_cast<BrickId>(ModuloSignInt(newBrickId - 1, BrickDictionary::Get().NumBrickTypes()));
 
         previewBrick.gridOffset += input.GetWheelMotion();
 
-        ClampBrickGridOffset(newBrickType, previewBrick.gridOffset);
+        ClampBrickGridOffset(newBrickId, previewBrick.gridOffset);
 
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetMousePosition());
@@ -2713,7 +2799,7 @@ private:
         RayIntersection contact;
         if (currentScene->PickScene(pickerRay, contact))
         {
-            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickType, newPreviewRotation);
+            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickId, newPreviewRotation);
 
             // Find a potential grid position for the preview brick
             auto ApplyNormalOffset = [](std::int32_t& gridPos, int normal, int brickOffset, int brickExtent) -> void
@@ -2756,12 +2842,12 @@ private:
         // If grid position changed, re-evaluate whether that position is blocked for the preview brick
         if (previewInstance.GetPos()        != newPreviewGridPos    ||
             previewInstance.gridRotation    != newPreviewRotation   ||
-            previewBrick.type               != newBrickType)
+            previewBrick.id                 != newBrickId)
         {
-            previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newPreviewGridPos, newBrickType, newPreviewRotation);
+            previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newBrickId, newPreviewGridPos, newPreviewRotation);
 
             // Update brick position and rotation
-            previewBrick.type = newBrickType;
+            previewBrick.id = newBrickId;
             previewInstance.SetPos(newPreviewGridPos);
             previewInstance.gridRotation = newPreviewRotation;
         }
@@ -2775,7 +2861,7 @@ private:
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
-            currentScene->NewBrick(previewBrick.type, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
+            currentScene->NewBrick(previewBrick.id, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
             PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick
@@ -2795,7 +2881,7 @@ private:
                 {
                     ResetPreviouslySelectedBrick();
 
-                    viewOptions.previewBrick.type   = selectedBrick.GetType();
+                    viewOptions.previewBrick.id     = selectedBrick.GetId();
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
 

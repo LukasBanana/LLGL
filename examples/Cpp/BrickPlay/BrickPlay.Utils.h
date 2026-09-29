@@ -130,8 +130,8 @@ namespace BrickUtils
             if (line[firstNoneWhitespace] == '#')
                 continue;
 
-            // Parse current line with stringstream
-            std::stringstream stream{ line };
+            // Parse current line with stringstream (also trim trailing whitespaces)
+            std::stringstream stream{ line.substr(0, line.find('#')) };
 
             if (!parseLine(stream, lineNo))
                 return false;

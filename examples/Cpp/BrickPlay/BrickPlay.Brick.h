@@ -17,6 +17,8 @@
 #include <map>
 
 
+#define INVALID_BRICK_ID UINT32_MAX
+
 // 3D vector type for the Brick grid.
 using GridVec3i = Gs::Vector3i;
 
@@ -35,47 +37,7 @@ enum GridRotation : std::uint8_t
     GridRotation_Num,
 };
 
-// Types of brick shapes.
-enum BrickType : std::uint32_t
-{
-    //        WxDxH
-    BrickType_1x1x3 = 0,
-    BrickType_1x2x3,
-    BrickType_2x2x3,
-    BrickType_4x2x3,
-    BrickType_1x1x1,
-    BrickType_1x2x1,
-    BrickType_2x2x1,
-    BrickType_4x2x1,
-    BrickType_1x1x1_Tile,
-    BrickType_2x2x1_Tile,
-    BrickType_2x2x3_Roof,
-    BrickType_2x3x3_Roof,
-
-    BrickType_Num,
-};
-
-// Meta data for each brick.
-struct BrickInfo
-{
-    std::string label;
-    GridVec3i   extent;
-};
-
-struct BrickMesh
-{
-    // Number of vertices to render.
-    std::uint32_t numVertices = 0;
-
-    // Zero-based index to the first vertex into the vertex buffer.
-    std::uint32_t firstVertex = 0;
-};
-
-struct BrickDimensions
-{
-    GridVec3i offset;
-    GridVec3i extent;
-};
+using BrickId = std::uint32_t;
 
 enum BrickGroup : std::uint32_t
 {
@@ -87,42 +49,67 @@ enum BrickGroup : std::uint32_t
     BrickGroup_Num,
 };
 
+struct BrickMesh
+{
+    // Number of vertices to render.
+    std::uint32_t numVertices = 0;
+
+    // Zero-based index to the first vertex into the vertex buffer.
+    std::uint32_t firstVertex = 0;
+};
+
+struct InstanceGroup
+{
+    // Debug label constructed from BrickId and BrickGroup. Pre-allocate to avoid string concatenation during rendering (minor optimization).
+    std::string     debugName;
+
+    // Number of instances to render for this group
+    std::uint32_t   numInstances      = 0;
+
+    // Zero-based index to the first instance into the global `instances` container for this group. Instance 0 is reserved for the preview instance.
+    std::uint32_t   firstInstance     = 0;
+
+    // Number of instances allocated for this group in the global `instances` container. This must always be greater than or equal to `numInstances`.
+    std::uint32_t   instanceCapacity  = 0;
+};
+
+// Meta data for each brick.
+struct BrickInfo
+{
+    std::string             label;
+    GridVec3i               extent;
+    std::vector<GridVec3i>  excludedCells;
+    BrickMesh               meshes[BrickGroup_Num];
+    InstanceGroup           instanceGroups[BrickGroup_Num];
+};
+
+struct BrickDimensions
+{
+    GridVec3i offset;
+    GridVec3i extent;
+};
+
 inline std::uint32_t CombineToBrickId(int type, int group)
 {
     return static_cast<std::uint32_t>(type * BrickGroup_Num + group);
 }
 
-inline BrickType IdToBrickType(std::uint32_t groupId)
+inline BrickId GroupIdToBrickId(std::uint32_t groupId)
 {
-    return static_cast<BrickType>(groupId / BrickGroup_Num);
+    return static_cast<BrickId>(groupId / BrickGroup_Num);
 }
 
-inline BrickGroup IdToBrickGroup(std::uint32_t groupId)
+inline BrickGroup GroupIdToBrickGroup(std::uint32_t groupId)
 {
     return static_cast<BrickGroup>(groupId % BrickGroup_Num);
 }
 
-// Helper class to convert BrickType to meta data and vice-versa.
+// Helper class to convert BrickId to meta data and vice-versa.
 class BrickDictionary
 {
 
-    const std::map<BrickType, BrickInfo> typeToInfoMap
-    {
-        { BrickType_1x1x1,      BrickInfo{ "1x1x1",    { 1, 1, 1 } } },
-        { BrickType_1x1x1_Tile, BrickInfo{ "1x1_tile", { 1, 1, 1 } } },
-        { BrickType_1x1x3,      BrickInfo{ "1x1x3",    { 1, 3, 1 } } },
-        { BrickType_1x2x1,      BrickInfo{ "1x2x1",    { 1, 1, 2 } } },
-        { BrickType_1x2x3,      BrickInfo{ "1x2x3",    { 1, 3, 2 } } },
-        { BrickType_2x2x1,      BrickInfo{ "2x2x1",    { 2, 1, 2 } } },
-        { BrickType_2x2x1_Tile, BrickInfo{ "2x2_tile", { 2, 1, 2 } } },
-        { BrickType_2x2x3,      BrickInfo{ "2x2x3",    { 2, 3, 2 } } },
-        { BrickType_2x2x3_Roof, BrickInfo{ "2x2_roof", { 2, 3, 2 } } },
-        { BrickType_2x3x3_Roof, BrickInfo{ "2x3_roof", { 2, 3, 3 } } },
-        { BrickType_4x2x1,      BrickInfo{ "4x2x1",    { 4, 1, 2 } } },
-        { BrickType_4x2x3,      BrickInfo{ "4x2x3",    { 4, 3, 2 } } },
-    };
-
-    BrickMesh brickMeshes[BrickType_Num * BrickGroup_Num];
+    std::vector<BrickInfo>          brickInfos;
+    std::map<std::string, BrickId>  labelToBrickId;
 
     BrickDictionary() = default;
 
@@ -138,22 +125,68 @@ public:
         return self;
     }
 
-    // Returns the specified BrickType as a string representation. Used by the scene file writer.
-    const char* TypeToString(BrickType t) const
+    // Returns the BrickInfo entry for the specified label.
+    BrickInfo& FindOrInsert(std::string&& label)
     {
-        auto it = typeToInfoMap.find(t);
-        return (it != typeToInfoMap.end() ? it->second.label.c_str() : "");
+        auto it = labelToBrickId.find(label);
+        if (it == labelToBrickId.end())
+        {
+            // Map label to brick ID
+            labelToBrickId[label] = static_cast<BrickId>(brickInfos.size());
+
+            // Add new entry
+            brickInfos.push_back({});
+            brickInfos.back().label = std::move(label);
+            return brickInfos.back();
+        }
+        return brickInfos[it->second];
     }
 
-    // Returns the BrickType that's mapped from the specified string. Used by the scene file reader.
-    BrickType TypeFromString(const char* s) const
+    std::uint32_t NumBrickTypes() const
     {
-        for (const std::pair<BrickType, BrickInfo>& it : typeToInfoMap)
-        {
-            if (it.second.label == s)
-                return it.first;
-        }
-        return BrickType_Num;
+        return static_cast<std::uint32_t>(brickInfos.size());
+    }
+
+    const BrickInfo& GetInfo(BrickId id) const
+    {
+        return brickInfos[id];
+    }
+
+    BrickInfo& GetInfo(BrickId id)
+    {
+        return brickInfos[id];
+    }
+
+    const BrickMesh& GetMesh(BrickId id, BrickGroup group = BrickGroup_Default) const
+    {
+        return GetInfo(id).meshes[group];
+    }
+
+    BrickMesh& GetMesh(BrickId id, BrickGroup group = BrickGroup_Default)
+    {
+        return GetInfo(id).meshes[group];
+    }
+
+    // Returns the specified BrickId as a string representation. Used by the scene file writer.
+    const char* TypeToString(BrickId id) const
+    {
+        return (id < brickInfos.size() ? GetInfo(id).label.c_str() : "");
+    }
+
+    // Returns the BrickId that's mapped from the specified string. Used by the scene file reader.
+    BrickId TypeFromString(const char* s) const
+    {
+        auto it = labelToBrickId.find(s);
+        return (it != labelToBrickId.end() ? it->second : INVALID_BRICK_ID);
+    }
+
+    BrickGroup GroupFromString(const char* s) const
+    {
+        if (::strcmp(s, "Default"    ) == 0) return BrickGroup_Default;
+        if (::strcmp(s, "WallsOnly"  ) == 0) return BrickGroup_WallsOnly;
+        if (::strcmp(s, "Transparent") == 0) return BrickGroup_Transparent;
+        if (::strcmp(s, "Invisible"  ) == 0) return BrickGroup_Invisible;
+        return BrickGroup_Num;
     }
 
     const char* GroupToString(BrickGroup g) const
@@ -168,17 +201,16 @@ public:
         }
     }
 
-    GridVec3i GetExtent(BrickType type) const
+    GridVec3i GetExtent(BrickId id) const
     {
-        auto it = typeToInfoMap.find(type);
-        return (it != typeToInfoMap.end() ? it->second.extent : GridVec3i{});
+        return (id < brickInfos.size() ? brickInfos[id].extent : GridVec3i{});
     }
 
-    BrickDimensions GetBrickDimensions(BrickType type, GridRotation rotation) const
+    BrickDimensions GetBrickDimensions(BrickId id, GridRotation rotation) const
     {
         BrickDimensions brickDim;
 
-        brickDim.extent = GetExtent(type);
+        brickDim.extent = GetExtent(id);
         if (rotation == GridRotation_90 || rotation == GridRotation_270)
             std::swap(brickDim.extent.x, brickDim.extent.z);
 
@@ -189,32 +221,22 @@ public:
         return brickDim;
     }
 
-    BrickMesh& GetMesh(int brickType, int brickGroup = BrickGroup_Default)
-    {
-        return brickMeshes[CombineToBrickId(brickType, brickGroup)];
-    }
-
-    const BrickMesh& GetMesh(int brickType, int brickGroup = BrickGroup_Default) const
-    {
-        return brickMeshes[CombineToBrickId(brickType, brickGroup)];
-    }
-
-    BrickType FindBrickTypeForDimension(const GridVec3i& extent) const
+    BrickId FindBrickIdForDimension(const GridVec3i& extent) const
     {
         // Try to find brick with the specified dimensions
-        for (const auto& it : typeToInfoMap)
+        for (BrickId id = 0; id < brickInfos.size(); ++id)
         {
-            if (it.second.extent == extent)
-                return it.first;
+            if (brickInfos[id].extent == extent)
+                return id;
         }
-        return BrickType_Num; // No such brick found
+        return INVALID_BRICK_ID; // No such brick found
     }
 
 };
 
-inline bool IsBrickTypeOptimized(BrickType type)
+inline bool IsBrickTypeOptimized(BrickId id)
 {
-    return (BrickDictionary::Get().GetMesh(type, BrickGroup_WallsOnly).numVertices > 0);
+    return (BrickDictionary::Get().GetInfo(id).meshes[BrickGroup_WallsOnly].numVertices > 0);
 }
 
 // Brick handle to reference an instance in the grid.
@@ -225,10 +247,10 @@ struct Brick
     static constexpr std::uint32_t groupIdBits      = 8;
     static constexpr std::uint32_t groupIdInvalid   = (1u << groupIdBits) - 1;
 
-    static_assert(
+    /*static_assert(
         (1u << groupIdBits) > BrickType_Num * BrickGroup_Num,
         "Not enough bits to encode `BrickType x BrickGroup` elements; Increase `Brick::groupIdBits` when adding elements to BrickType or BrickGroup!"
-    );
+    );*/
 
     Brick() :
         groupId       { groupIdInvalid },
@@ -248,24 +270,24 @@ struct Brick
     // Index into the group's instance. Use `group.firstInstance + groupInstance` to get index into global `instances` container.
     std::uint32_t   groupInstance   : (32 - groupIdBits);
 
-    void SetType(BrickType type)
+    void SetId(BrickId id)
     {
-        groupId = type * BrickGroup_Num + IdToBrickGroup(groupId);
+        groupId = id * BrickGroup_Num + GroupIdToBrickGroup(groupId);
     }
 
-    BrickType GetType() const
+    BrickId GetId() const
     {
-        return IdToBrickType(groupId);
+        return GroupIdToBrickId(groupId);
     }
 
     void SetGroup(BrickGroup group)
     {
-        groupId = IdToBrickType(groupId) * BrickGroup_Num + group;
+        groupId = GroupIdToBrickId(groupId) * BrickGroup_Num + group;
     }
 
     BrickGroup GetGroup() const
     {
-        return IdToBrickGroup(groupId);
+        return GroupIdToBrickGroup(groupId);
     }
 
     operator bool() const
