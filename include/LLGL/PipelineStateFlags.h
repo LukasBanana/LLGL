@@ -517,7 +517,10 @@ struct StencilDescriptor
     StencilFaceDescriptor   back;
 };
 
-//! Depth bias descriptor structure to control fragment depth values.
+/**
+\brief Depth bias descriptor structure to control fragment depth values.
+\see RasterizerDescriptor::depthBias
+*/
 struct DepthBiasDescriptor
 {
     /**
@@ -544,7 +547,11 @@ struct DepthBiasDescriptor
 */
 struct RasterizerDescriptor
 {
-    //! Polygon render mode. By default PolygonMode::Fill.
+    /**
+    \brief Polygon render mode. By default PolygonMode::Fill.
+    \note On WebGL 2, if depth-bias is used (i.e. DepthBiasDescriptor::constantFactor or DepthBiasDescriptor::slopeFactor is non-zero), then this \b must be PolygonMode::Fill.
+    \see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/polygonOffset
+    */
     PolygonMode         polygonMode                 = PolygonMode::Fill;
 
     //! Polygon face culling mode. By default CullMode::Disabled.

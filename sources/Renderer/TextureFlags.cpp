@@ -201,7 +201,7 @@ LLGL_EXPORT std::size_t GetMemoryFootprint(const TextureType type, const Format 
 
 LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)
 {
-    return (!IsMultiSampleTexture(textureDesc.type) && (textureDesc.mipLevels == 0 || textureDesc.mipLevels > 1));
+    return (!IsMultiSampleTexture(textureDesc.type) && textureDesc.mipLevels != 1);
 }
 
 LLGL_EXPORT bool IsArrayTexture(const TextureType type)

@@ -57,10 +57,13 @@ GLRasterizerState::GLRasterizerState(const RasterizerDescriptor& desc)
     lineSmoothEnabled_      = desc.antiAliasedLineEnabled;
     lineWidth_              = desc.lineWidth;
     polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.depthBias);
-    polygonOffsetMode_      = ToPolygonOffsetState(desc.polygonMode);
-    polygonOffsetFactor_    = desc.depthBias.slopeFactor;
-    polygonOffsetUnits_     = desc.depthBias.constantFactor;
-    polygonOffsetClamp_     = desc.depthBias.clamp;
+    if (polygonOffsetEnabled_)
+    {
+        polygonOffsetMode_      = ToPolygonOffsetState(desc.polygonMode);
+        polygonOffsetFactor_    = desc.depthBias.slopeFactor;
+        polygonOffsetUnits_     = desc.depthBias.constantFactor;
+        polygonOffsetClamp_     = desc.depthBias.clamp;
+    }
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     conservativeRaster_     = desc.conservativeRasterization;
@@ -122,10 +125,13 @@ int GLRasterizerState::CompareSWO(const GLRasterizerState& lhs, const GLRasteriz
     LLGL_COMPARE_BOOL_MEMBER_SWO( lineSmoothEnabled_    );
     LLGL_COMPARE_MEMBER_SWO     ( lineWidth_            );
     LLGL_COMPARE_BOOL_MEMBER_SWO( polygonOffsetEnabled_ );
-    LLGL_COMPARE_MEMBER_SWO     ( polygonOffsetMode_    );
-    LLGL_COMPARE_MEMBER_SWO     ( polygonOffsetFactor_  );
-    LLGL_COMPARE_MEMBER_SWO     ( polygonOffsetUnits_   );
-    LLGL_COMPARE_MEMBER_SWO     ( polygonOffsetClamp_   );
+    if (lhs.polygonOffsetEnabled_)
+    {
+        LLGL_COMPARE_MEMBER_SWO ( polygonOffsetMode_    );
+        LLGL_COMPARE_MEMBER_SWO ( polygonOffsetFactor_  );
+        LLGL_COMPARE_MEMBER_SWO ( polygonOffsetUnits_   );
+        LLGL_COMPARE_MEMBER_SWO ( polygonOffsetClamp_   );
+    }
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     LLGL_COMPARE_BOOL_MEMBER_SWO( conservativeRaster_   );

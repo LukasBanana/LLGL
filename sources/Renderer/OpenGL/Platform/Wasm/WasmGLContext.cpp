@@ -152,6 +152,10 @@ void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const Render
     if (!webGLContextHandle_)
         LLGL_TRAP("emscripten_webgl_create_context() failed");
 
+    /* Deduce color and depth-stencil formats */
+    SetDefaultColorFormat();
+    DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
+    
     /* Make WebGL context current */
     EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(webGLContextHandle_);
     LLGL_ASSERT(result == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");

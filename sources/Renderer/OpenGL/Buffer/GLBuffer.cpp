@@ -169,7 +169,8 @@ void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags
 void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data, bool useHazardTrackingIfAvailable)
 {
     #if LLGL_GL_BUFFER_HAZARD_TRACKING
-    if (useHazardTrackingIfAvailable)
+    /* Hazard tracking cannot be used for index data, since WebGL isolates index buffers and only support glBufferSubData() */
+    if (useHazardTrackingIfAvailable && GetGLTarget() != GL_ELEMENT_ARRAY_BUFFER)
     {
         /* Update buffer data through staging buffer when hazard tracking is enabled */
         GLContext* currentGLContext = GLContext::GetCurrent();

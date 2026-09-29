@@ -15,6 +15,8 @@
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
+#include <LLGL/Log.h> //TEST
+
 
 namespace LLGL
 {
@@ -58,11 +60,69 @@ static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
 
 static GLenum GetDefaultInitialGLImageFormat(Format format)
 {
+    // OpenGL (especially WebGL) is very pedantic about the image data even when it's mean to default initialize the texture.
+    // So match the image component layout with the input format.
+    const FormatAttributes& formatAttribs = GetFormatAttribs(format);
     #if !LLGL_GL_ENABLE_OPENGL2X
-    return (IsIntegerFormat(format) ? GL_RGBA_INTEGER : GL_RGBA);
-    #else
-    return GL_RGBA;
+    if (IsIntegerFormat(format))
+    {
+        switch (formatAttribs.format)
+        {
+            #if GL_ALPHA_INTEGER
+            case ImageFormat::Alpha:        return GL_ALPHA_INTEGER;
+            #else
+            case ImageFormat::Alpha:        return GL_RED_INTEGER; // Emulate Alpha with component swizzling
+            #endif
+            case ImageFormat::R:            return GL_RED_INTEGER;
+            case ImageFormat::RG:           return GL_RG_INTEGER;
+            case ImageFormat::RGB:          return GL_RGB_INTEGER;
+            case ImageFormat::RGBA:         return GL_RGBA_INTEGER;
+            #if GL_BGR_INTEGER
+            case ImageFormat::BGR:          return GL_BGR_INTEGER;
+            #else
+            case ImageFormat::BGR:          return GL_RGB_INTEGER; // Emulate BGR with component swizzling
+            #endif
+            #if GL_BGRA_INTEGER
+            case ImageFormat::BGRA:         return GL_BGRA_INTEGER;
+            #else
+            case ImageFormat::BGRA:         return GL_RGBA_INTEGER; // Emulate BGRA with component swizzling
+            #endif
+            default:                        break;
+        }
+        return GL_RGBA_INTEGER;
+    }
+    else
     #endif
+    {
+        switch (formatAttribs.format)
+        {
+            case ImageFormat::Alpha:        return GL_ALPHA;
+            case ImageFormat::R:            return GL_RED;
+            case ImageFormat::RG:           return GL_RG;
+            case ImageFormat::RGB:          return GL_RGB;
+            case ImageFormat::RGBA:         return GL_RGBA;
+            #if GL_BGR
+            case ImageFormat::BGR:          return GL_BGR;
+            #else
+            case ImageFormat::BGR:          return GL_RGB; // Emulate BGR with component swizzling
+            #endif
+            #if GL_BGRA
+            case ImageFormat::BGRA:         return GL_BGRA;
+            #else
+            case ImageFormat::BGRA:         return GL_RGBA; // Emulate BGRA with component swizzling
+            #endif
+            case ImageFormat::Depth:        return GL_DEPTH_COMPONENT;
+            case ImageFormat::DepthStencil: return GL_DEPTH_STENCIL;
+            case ImageFormat::Stencil:      return GL_STENCIL_INDEX;
+            default:                        break;
+        }
+        return GL_RGBA;
+    }
+}
+
+static GLenum GetDefaultInitialGLDataType(Format format)
+{
+    return (IsFloatFormat(format) ? GL_FLOAT : GL_UNSIGNED_BYTE);
 }
 
 [[noreturn]]
@@ -534,7 +594,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.format,
             desc.extent.width,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }
@@ -645,7 +705,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.extent.width,
             desc.extent.height,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }
@@ -698,7 +758,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.extent.height,
             desc.extent.depth,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }
@@ -828,7 +888,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
                 desc.extent.height,
                 arrayLayer,
                 GetDefaultInitialGLImageFormat(desc.format),
-                GL_UNSIGNED_BYTE,
+                GetDefaultInitialGLDataType(desc.format),
                 nullptr
             );
         }
@@ -881,7 +941,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* im
             desc.extent.width,
             desc.arrayLayers,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }
@@ -999,7 +1059,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
             desc.extent.height,
             desc.arrayLayers,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }
@@ -1054,7 +1114,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* 
             desc.extent.height,
             desc.arrayLayers,
             GetDefaultInitialGLImageFormat(desc.format),
-            GL_UNSIGNED_BYTE,
+            GetDefaultInitialGLDataType(desc.format),
             nullptr
         );
     }

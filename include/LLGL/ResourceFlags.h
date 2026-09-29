@@ -77,6 +77,8 @@ struct BindFlags
         /**
         \brief The resource can be used to bind a stream of indices.
         \remarks This can only be used for Buffer resources.
+        \note On WebGL 2, this must \e not be combined with any other bind flags except for CopySrc and CopyDst.
+        This means WebGL 2 does not support sharing vertex with index data in the same buffer.
         \see CommandBuffer::SetIndexBuffer
         */
         IndexBuffer             = (1 << 1),
