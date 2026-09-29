@@ -42,6 +42,8 @@ enum class AttachmentLoadOp
 /**
 \brief Enumeration for render pass attachment store operations.
 \see AttachmentFormatDescriptor
+\todo Add new field `Resolve` to allow users to control whether the end of a render-pass should immediately resolve multi-sampled render targets or not.
+This way multiple render-passes can render into the same multi-sampled render-targets while only the last one resolves them into the standard textures.
 */
 enum class AttachmentStoreOp
 {
@@ -51,8 +53,16 @@ enum class AttachmentStoreOp
     */
     Undefined,
 
-    //! Stores the outcome in the respective render target attachment.
+    //! Store the outcome into the respective render target attachment.
     Store,
+
+#if 0 //TODO: not implemented yet
+    /**
+    \brief Store the outcome into the respective render target attachment and if it's a multi-sampled render target, resolve it into its respective resolve attachment.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+    Resolve,
+#endif
 };
 
 

@@ -87,10 +87,10 @@ enum class UniformType
     Int2,           //!< Two component vector of 32-bit signed integers. Use \c "int2" for parsing.
     Int3,           //!< Three component vector of 32-bit signed integers. Use \c "int3" for parsing.
     Int4,           //!< Four component vector of 32-bit signed integers. Use \c "int4" for parsing.
-    UInt1,          //!< Single scalar of a 32-bit unsigned integer. Use \c "int1" or \c "int" for parsing.
-    UInt2,          //!< Two component vector of 32-bit unsigned integers. Use \c "int2" for parsing.
-    UInt3,          //!< Three component vector of 32-bit unsigned integers. Use \c "int3" for parsing.
-    UInt4,          //!< Four component vector of 32-bit unsigned integers. Use \c "int4" for parsing.
+    UInt1,          //!< Single scalar of a 32-bit unsigned integer. Use \c "uint1" or \c "uint" for parsing.
+    UInt2,          //!< Two component vector of 32-bit unsigned integers. Use \c "uint2" for parsing.
+    UInt3,          //!< Three component vector of 32-bit unsigned integers. Use \c "uint3" for parsing.
+    UInt4,          //!< Four component vector of 32-bit unsigned integers. Use \c "uint4" for parsing.
     Bool1,          //!< Single scalar of a 32-bit boolean. Use \c "bool1" or \c "bool" for parsing.
     Bool2,          //!< Two component vector of 32-bit booleans. Use \c "bool2" for parsing.
     Bool3,          //!< Three component vector of 32-bit booleans. Use \c "bool3" for parsing.

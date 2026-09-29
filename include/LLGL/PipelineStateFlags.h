@@ -581,7 +581,11 @@ struct RasterizerDescriptor
     */
     bool                scissorTestEnabled          = false;
 
-    //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    /**
+    \brief Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    \todo Remove this! This information must be provided by the render-pass.
+    If this mismatches the multisampling state of the render-pass, Vulkan corrupts the viewport extent.
+    */
     bool                multiSampleEnabled          = false;
 
     //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.

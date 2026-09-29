@@ -111,6 +111,9 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 
         void ValidateInputAssemblyDescriptor(const GraphicsPipelineDescriptor& pipelineStateDesc);
+        void ValidateDepthDescriptor(const DepthDescriptor& depthDesc);
+        void ValidateStencilFaceDescriptor(const StencilFaceDescriptor& stencilFaceDesc, bool isReferenceDynamic);
+        void ValidateStencilDescriptor(const StencilDescriptor& stencilDesc);
         void ValidateBlendTargetDescriptor(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx);
         void ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader, bool hasDualSourceBlend);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc);

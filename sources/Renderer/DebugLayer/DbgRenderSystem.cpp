@@ -2169,6 +2169,47 @@ void DbgRenderSystem::ValidateInputAssemblyDescriptor(const GraphicsPipelineDesc
     }
 }
 
+void DbgRenderSystem::ValidateDepthDescriptor(const DepthDescriptor& depthDesc)
+{
+    if (!depthDesc.testEnabled && depthDesc.writeEnabled)
+    {
+        LLGL_DBG_WARN(
+            WarningType::ImproperArgument,
+            "depth stencil write enabled but test is enabled; consider using `compareOp=LLGL::CompareOp::AlwaysPass` instead!"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateStencilFaceDescriptor(const StencilFaceDescriptor& stencilFaceDesc, bool isReferenceDynamic)
+{
+    if (!isReferenceDynamic)
+    {
+        /* Validate reference value fits into the write mask if any of the stencil operations replaces it */
+        if (stencilFaceDesc.stencilFailOp == LLGL::StencilOp::Replace ||
+            stencilFaceDesc.depthFailOp   == LLGL::StencilOp::Replace ||
+            stencilFaceDesc.depthPassOp   == LLGL::StencilOp::Replace)
+        {
+            if ((stencilFaceDesc.reference & stencilFaceDesc.writeMask) != stencilFaceDesc.reference)
+            {
+                LLGL_DBG_WARN(
+                    WarningType::ImproperArgument,
+                    "stencil reference (0x%08X) for replace-operation does not fit into write mask (0x%08X)",
+                    stencilFaceDesc.reference, stencilFaceDesc.writeMask
+                );
+            }
+        }
+    }
+}
+
+void DbgRenderSystem::ValidateStencilDescriptor(const StencilDescriptor& stencilDesc)
+{
+    if (stencilDesc.testEnabled)
+    {
+        ValidateStencilFaceDescriptor(stencilDesc.front, stencilDesc.referenceDynamic);
+        ValidateStencilFaceDescriptor(stencilDesc.back, stencilDesc.referenceDynamic);
+    }
+}
+
 void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader, bool hasDualSourceBlend)
 {
     /* Validate proper use of logic pixel operations */
@@ -2336,6 +2377,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass, hasDualSourceBlend);
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
+    ValidateDepthDescriptor(pipelineStateDesc.depth);
+    ValidateStencilDescriptor(pipelineStateDesc.stencil);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
     ValidateVertexInputAttribs(pipelineStateDesc.inputVertexAttribs, "PSO", pipelineStateDesc.debugName);
     ValidateVertexOutputAttribs(pipelineStateDesc.outputVertexAttribs, "PSO", pipelineStateDesc.debugName);

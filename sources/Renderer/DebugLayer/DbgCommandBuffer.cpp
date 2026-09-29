@@ -1743,8 +1743,8 @@ void DbgCommandBuffer::PushDebugGroup(const char* name)
 
     debugGroups_.push(name);
 
-    UTF8String annotation = UTF8String::Printf("PushDebugGroup(%s)", name);
-    LLGL_DBG_START_TIMER((StringLiteral{ annotation.c_str(), CopyTag{} }));
+    const StringLiteral annotation{ (name != nullptr && *name != '\0' ? name : "PushDebugGroup(null)"), CopyTag{} };
+    LLGL_DBG_START_TIMER(annotation);
     instance.PushDebugGroup(name);
 }
 
