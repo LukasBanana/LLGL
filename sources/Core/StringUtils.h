@@ -112,12 +112,6 @@ inline std::size_t StrLength(const T* s)
 
 /* ----- Functions ----- */
 
-// Reads the specified text file into a string.
-LLGL_EXPORT std::string ReadFileString(const char* filename);
-
-// Reads the specified binary file into a buffer.
-LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
-
 // Converts the UTF8 input string to UTF16 string.
 LLGL_EXPORT std::wstring ToWideString(const std::string& str);
 LLGL_EXPORT std::wstring ToWideString(const char* str);

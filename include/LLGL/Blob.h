@@ -11,6 +11,7 @@
 
 #include <LLGL/NonCopyable.h>
 #include <LLGL/Container/DynamicArray.h>
+#include <LLGL/Container/StringView.h>
 #include <vector>
 #include <string>
 #include <memory>
@@ -97,16 +98,22 @@ class LLGL_EXPORT Blob : public NonCopyable
         /**
         \brief Creates a new Blob instance with the data read from the specified binary file.
         \param[in] filename Specifies the file that is to be read.
+        \param[in] isTextFile Specifies whether to read the file as text file.
+        If true, platform dependent line breaks will be interpreted as single \c `'\n'` newline characters
+        and the internal buffer is NUL-terminated, which is also reflected in the value returned by GetSize.
         \return New instance of Blob that manages the memory of a content copy from the specified file or null if the file could not be read.
         */
-        static Blob CreateFromFile(const char* filename);
+        static Blob CreateFromFile(const char* filename, bool isTextFile = false);
 
         /**
         \brief Creates a new Blob instance with the data read from the specified binary file.
         \param[in] filename Specifies the file that is to be read.
+        \param[in] isTextFile Specifies whether to read the file as text file.
+        If true, platform dependent line breaks will be interpreted as single \c `'\n'` newline characters
+        and the internal buffer is NUL-terminated, which is also reflected in the value returned by GetSize.
         \return New instance of Blob that manages the memory of a content copy from the specified file or null if the file could not be read.
         */
-        static Blob CreateFromFile(const std::string& filename);
+        static Blob CreateFromFile(const std::string& filename, bool isTextFile = false);
 
     public:
 
@@ -115,6 +122,18 @@ class LLGL_EXPORT Blob : public NonCopyable
 
         //! Returns the size (in bytes) of the internal buffer or zero if this is a default initialized blob.
         std::size_t GetSize() const;
+
+        /**
+        \brief Returns the content of this blob as a NUL-terminated C-style string.
+        \remarks If the content of this blob does not end with a '\0' character, the return value is null.
+        */
+        const char* AsCString() const;
+
+        /**
+        \brief Returns the content of this blob as a string view.
+        \remarks If the content of this blob ends with a '\0' character, it is deducted from the string view range.
+        */
+        StringView AsStringView() const;
 
     public:
 

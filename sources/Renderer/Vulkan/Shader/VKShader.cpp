@@ -593,16 +593,16 @@ bool VKShader::CompileSource(const ShaderDescriptor& shaderDesc)
 bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
 {
     /* Get shader binary */
-    std::vector<char>   fileContent;
-    const char*         binaryBuffer = nullptr;
-    std::size_t         binaryLength = 0;
+    Blob        fileContent;
+    const void* binaryBuffer = nullptr;
+    std::size_t binaryLength = 0;
 
     if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
     {
         /* Load binary from file */
-        fileContent = ReadFileBuffer(shaderDesc.source);
-        binaryBuffer = fileContent.data();
-        binaryLength = fileContent.size();
+        fileContent = Blob::CreateFromFile(shaderDesc.source);
+        binaryBuffer = fileContent.GetData();
+        binaryLength = fileContent.GetSize();
     }
     else
     {

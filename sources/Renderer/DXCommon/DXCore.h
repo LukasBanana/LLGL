@@ -13,6 +13,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include "../VideoAdapter.h"
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Blob.h>
 #include "ComPtr.h"
 #include <dxgi.h>
 #include <string>
@@ -54,13 +55,13 @@ std::string DXGetBlobString(ID3DBlob* blob);
 // Returns the blob data as char vector.
 std::vector<char> DXGetBlobData(ID3DBlob* blob);
 
-// Returns a blob and copies the specified data into the blob.
+// Returns an ID3DBlob object and copies the specified data into the blob.
 ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size);
 
-// Returns a blob and copies the specified data into the blob.
-ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data);
+// Returns an ID3DBlob object and copies the specified data into the blob.
+ComPtr<ID3DBlob> DXCreateBlob(const Blob& inBlob);
 
-// Returns a blob that was created from a resource (*.rc files).
+// Returns an ID3DBlob object that was created from a resource (*.rc files).
 ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID);
 
 // Returns the default list of supported D3D texture formats.

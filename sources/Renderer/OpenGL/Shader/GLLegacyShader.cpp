@@ -12,6 +12,7 @@
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../../../Core/Exception.h"
+#include <LLGL/Blob.h>
 
 
 namespace LLGL
@@ -118,8 +119,8 @@ void GLLegacyShader::CompileSource(const ShaderDescriptor& shaderDesc)
 
         if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
         {
-            const std::string fileContent = ReadFileString(shaderDesc.source);
-            GLShader::PatchShaderSource(sourceCallback, fileContent.c_str(), shaderDesc, enabledFlags);
+            const Blob fileContent = Blob::CreateFromFile(shaderDesc.source, true);
+            GLShader::PatchShaderSource(sourceCallback, static_cast<const char*>(fileContent.GetData()), shaderDesc, enabledFlags);
         }
         else
             GLShader::PatchShaderSource(sourceCallback, shaderDesc.source, shaderDesc, enabledFlags);
@@ -144,16 +145,16 @@ void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
     {
         /* Get shader binary */
-        std::vector<char>   fileContent;
-        const void*         binaryBuffer    = nullptr;
-        GLsizei             binaryLength    = 0;
+        Blob        fileContent;
+        const void* binaryBuffer    = nullptr;
+        GLsizei     binaryLength    = 0;
 
         if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
         {
             /* Load binary from file */
-            fileContent = ReadFileBuffer(shaderDesc.source);
-            binaryBuffer = fileContent.data();
-            binaryLength = static_cast<GLsizei>(fileContent.size());
+            fileContent = Blob::CreateFromFile(shaderDesc.source);
+            binaryBuffer = fileContent.GetData();
+            binaryLength = static_cast<GLsizei>(fileContent.GetSize());
         }
         else
         {

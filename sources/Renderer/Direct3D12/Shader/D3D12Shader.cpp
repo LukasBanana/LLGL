@@ -15,6 +15,7 @@
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Blob.h>
 #include <algorithm>
 #include <d3dcompiler.h>
 #include <comdef.h>
@@ -169,17 +170,21 @@ static bool IsProfileDxcAppropriate(const char* target)
 bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
     /* Get source code */
-    std::string fileContent;
+    Blob        fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
     const char* sourceName      = nullptr;
 
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
-        fileContent     = ReadFileString(shaderDesc.source);
-        sourceCode      = fileContent.c_str();
-        sourceLength    = fileContent.size();
-        sourceName      = shaderDesc.debugName != nullptr ? shaderDesc.debugName : shaderDesc.source;
+        fileContent = Blob::CreateFromFile(shaderDesc.source, true);
+        const StringView fileContentString = fileContent.AsStringView();
+        if (!fileContentString.empty())
+        {
+            sourceCode      = fileContentString.data();
+            sourceLength    = fileContentString.size();
+            sourceName      = shaderDesc.debugName != nullptr ? shaderDesc.debugName : shaderDesc.source;
+        }
     }
     else
     {
@@ -286,7 +291,7 @@ bool D3D12Shader::LoadBinary(const ShaderDescriptor& shaderDesc)
     if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
     {
         /* Load binary code from file */
-        byteCode_ = DXCreateBlob(ReadFileBuffer(shaderDesc.source));
+        byteCode_ = DXCreateBlob(Blob::CreateFromFile(shaderDesc.source));
     }
     else
     {

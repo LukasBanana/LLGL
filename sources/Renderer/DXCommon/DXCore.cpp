@@ -242,9 +242,9 @@ ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size)
     return blob;
 }
 
-ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data)
+ComPtr<ID3DBlob> DXCreateBlob(const Blob& inBlob)
 {
-    return DXCreateBlob(data.data(), data.size());
+    return DXCreateBlob(inBlob.GetData(), inBlob.GetSize());
 }
 
 ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID)

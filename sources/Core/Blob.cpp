@@ -8,6 +8,24 @@
 #include <LLGL/Blob.h>
 #include <fstream>
 #include "CoreUtils.h"
+#include "Assertion.h"
+#include "../Platform/Path.h"
+
+
+#include <LLGL/Platform/Platform.h>
+
+#if LLGL_OS_ANDROID
+
+#include "../Platform/Android/AndroidApp.h"
+
+#ifndef __USE_BSD
+#define __USE_BSD /* Defines funopen() */
+#endif
+
+#include <stdio.h>
+#include <android/asset_manager.h>
+
+#endif // /LLGL_OS_ANDROID
 
 
 namespace LLGL
@@ -208,34 +226,119 @@ Blob Blob::CreateStrongRef(std::string&& str)
     return blob;
 }
 
-Blob Blob::CreateFromFile(const char* filename)
-{
-    if (filename == nullptr || *filename == '\0')
-        return Blob{};
+#if LLGL_OS_ANDROID
 
+static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
+{
+    AAssetManager* assetMngr = AndroidApp::Get().GetContext().assetManager;
+    LLGL_ASSERT(assetMngr != nullptr, "AndroidContext::assetManager must be set to read files by path");
+
+    if (AAsset* asset = AAssetManager_open(assetMngr, filename, AASSET_MODE_STREAMING))
+    {
+        /* Get asset size by setting position at end of stream */
+        const off_t assetSize = AAsset_seek(asset, 0, SEEK_END);
+        AAsset_seek(asset, 0, SEEK_SET);
+        if (assetSize > 0)
+        {
+            /* Allocate internal container and optional NUL-terminator */
+            if (isNULTerminated)
+            {
+                outContent = DynamicByteArray{ assetSize + 1, UninitializeTag{} };
+                outContent[assetSize] = '\0';
+            }
+            else
+                outContent = DynamicByteArray{ assetSize, UninitializeTag{} };
+
+            /* Read entire asset content */
+            AAsset_read(asset, outContent.data(), static_cast<size_t>(assetSize));
+        }
+        AAsset_close(asset);
+        return true;
+    }
+    return false;
+}
+
+#else // LLGL_OS_ANDROID
+
+static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
+{
     /* Read file as binary */
-    std::ifstream file{ filename, std::ios::in | std::ios::binary };
+    std::ifstream file{ filename, (std::ios::in | std::ios::binary) };
     if (!file.good())
-        return Blob{};
+        return false;
 
     /* Determine file size */
     file.seekg(0, std::ios::end);
     const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
     file.seekg(0, std::ios::beg);
 
-    /* Read binary file into container */
-    DynamicByteArray buffer{ fileSize, UninitializeTag{} };
-    file.read(buffer.data(), fileSize);
+    /* Allocate internal container and optional NUL-terminator */
+    if (isNULTerminated)
+    {
+        outContent = DynamicByteArray{ fileSize + 1, UninitializeTag{} };
+        outContent[fileSize] = '\0';
+    }
+    else
+        outContent = DynamicByteArray{ fileSize, UninitializeTag{} };
 
-    /* Return blob that manages the read buffer */
-    Blob blob;
-    blob.pimpl_ = MakeInternalBlob(std::move(buffer));
-    return blob;
+    /* Read entire file into output content */
+    file.read(outContent.data(), fileSize);
+
+    return true;
 }
 
-Blob Blob::CreateFromFile(const std::string& filename)
+#endif // /LLGL_OS_ANDROID
+
+static Blob::Pimpl* MakeInternalBlobAndSanitizeNewlineChars(DynamicByteArray&& buffer)
 {
-    return CreateFromFile(filename.c_str());
+    /* If there are no carriage return characters, just return the input buffer as blob container */
+    if (buffer.empty() || std::find(buffer.begin(), buffer.end(), '\r') == buffer.end())
+        return MakeInternalBlob(std::move(buffer));
+
+    /* Otherwise, pre-allocate string with same size and append all characters, consolidating '\r'+'\n' characters to a single '\n'. */
+    std::string converted;
+    converted.reserve(buffer.size() - 1);
+
+    for (const char* s = static_cast<const char*>(buffer.data()); *s != '\0'; ++s)
+    {
+        if (s[0] == '\r' && s[1] == '\n')
+            continue;
+        else
+            converted.append(1, s[0]);
+    }
+
+    return MakeInternalBlob(std::move(converted));
+}
+
+Blob Blob::CreateFromFile(const char* filename, bool isTextFile)
+{
+    if (filename != nullptr && *filename != '\0')
+    {
+        #if LLGL_MOBILE_PLATFORM
+        /* Substitute filename with its absolute path for mobile platforms. */
+        const UTF8String fullFilePath = Path::GetAbsolutePath(filename);
+        filename = fullFilePath.c_str();
+        #endif
+
+        /* Read binary file into container */
+        DynamicByteArray buffer;
+        if (ReadBufferFromFile(filename, buffer, isTextFile))
+        {
+            /* Return blob that manages the read buffer */
+            Blob blob;
+            if (isTextFile)
+                blob.pimpl_ = MakeInternalBlobAndSanitizeNewlineChars(std::move(buffer));
+            else
+                blob.pimpl_ = MakeInternalBlob(std::move(buffer));
+            return blob;
+        }
+    }
+    return Blob{};
+}
+
+Blob Blob::CreateFromFile(const std::string& filename, bool isTextFile)
+{
+    return CreateFromFile(filename.c_str(), isTextFile);
 }
 
 const void* Blob::GetData() const
@@ -246,6 +349,39 @@ const void* Blob::GetData() const
 std::size_t Blob::GetSize() const
 {
     return (pimpl_ != nullptr ? pimpl_->GetSize() : 0);
+}
+
+const char* Blob::AsCString() const
+{
+    if (pimpl_ != nullptr)
+    {
+        if (const void* data = pimpl_->GetData())
+        {
+            if (const std::size_t size = pimpl_->GetSize())
+            {
+                const char* str = static_cast<const char*>(data);
+                if (str[size - 1] == '\0')
+                    return str;
+            }
+        }
+    }
+    return nullptr;
+}
+
+StringView Blob::AsStringView() const
+{
+    if (pimpl_ != nullptr)
+    {
+        if (const void* data = pimpl_->GetData())
+        {
+            if (const std::size_t size = pimpl_->GetSize())
+            {
+                const char* str = static_cast<const char*>(data);
+                return (str[size - 1] == '\0' ? StringView{ str, size - 1 } : StringView{ str, size });
+            }
+        }
+    }
+    return {};
 }
 
 Blob::operator bool () const
