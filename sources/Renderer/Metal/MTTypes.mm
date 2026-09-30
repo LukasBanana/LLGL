@@ -141,6 +141,8 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RG11B10Float:      return MTLPixelFormatRG11B10Float;
         case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
         case Format::BGR5A1UNorm:       break; //return MTLPixelFormatBGR5A1Unorm;
+        case Format::B5G6R5UNorm:       return MTLPixelFormatB5G6R5Unorm;
+        case Format::BGRA4UNorm:        break; // MTLPixelFormatABGR4Unorm has a different component order
 
         /* --- Depth-stencil formats --- */
         #ifdef LLGL_OS_IOS
@@ -612,6 +614,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatRGB10A2Uint:             return Format::RGB10A2UInt;
         case MTLPixelFormatRG11B10Float:            return Format::RG11B10Float;
         case MTLPixelFormatRGB9E5Float:             return Format::RGB9E5Float;
+        case MTLPixelFormatB5G6R5Unorm:             return Format::B5G6R5UNorm;
         //case MTLPixelFormatBGR5A1Unorm:             return Format::BGR5A1UNorm;
 
         /* --- Depth-stencil formats --- */

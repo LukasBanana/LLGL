@@ -53,6 +53,8 @@ static GLSwizzleFormat MapToGLSwizzleFormat(const Format format)
     const auto& formatDesc = GetFormatAttribs(format);
     if (formatDesc.format == ImageFormat::Alpha)
         return GLSwizzleFormat::Alpha;
+    else if (formatDesc.format == ImageFormat::BGR)
+        return GLSwizzleFormat::BGR;
     else if (formatDesc.format == ImageFormat::BGRA)
         return GLSwizzleFormat::BGRA;
     else
@@ -291,6 +293,7 @@ static Format MapGLSwizzleFormat(const Format format, const GLSwizzleFormat swiz
     switch (swizzle)
     {
         case GLSwizzleFormat::Alpha:    return MapGLSwizzleFormatAlpha(format);
+        case GLSwizzleFormat::BGR:      return format; // GL_RGB565 is only used for B5G6R5UNorm, so it's unmapped correctly already
         case GLSwizzleFormat::BGRA:     return MapGLSwizzleFormatBGRA(format);
         default:                        return format;
     }
@@ -338,6 +341,29 @@ static TextureSwizzleRGBA GetTextureSwizzlePermutationBGRA(const TextureSwizzleR
         permutation.g = GetTextureSwizzlePermutationBGRAComponent(swizzle.g);
         permutation.b = GetTextureSwizzlePermutationBGRAComponent(swizzle.b);
         permutation.a = GetTextureSwizzlePermutationBGRAComponent(swizzle.a);
+    }
+    return permutation;
+}
+
+static TextureSwizzle GetTextureSwizzlePermutationBGRComponent(const TextureSwizzle swizzleComponent)
+{
+    switch (swizzleComponent)
+    {
+        case TextureSwizzle::Red:   return TextureSwizzle::Blue;    // Swap red with blue component
+        case TextureSwizzle::Blue:  return TextureSwizzle::Red;     // Swap blue with red component
+        case TextureSwizzle::Alpha: return TextureSwizzle::One;     // No alpha component, so read one like other backends
+        default:                    return swizzleComponent;        // Use input value for all other components
+    }
+}
+
+static TextureSwizzleRGBA GetTextureSwizzlePermutationBGR(const TextureSwizzleRGBA& swizzle)
+{
+    TextureSwizzleRGBA permutation;
+    {
+        permutation.r = GetTextureSwizzlePermutationBGRComponent(swizzle.r);
+        permutation.g = GetTextureSwizzlePermutationBGRComponent(swizzle.g);
+        permutation.b = GetTextureSwizzlePermutationBGRComponent(swizzle.b);
+        permutation.a = TextureSwizzle::One;                            // BGR formats have no alpha component
     }
     return permutation;
 }
@@ -394,6 +420,10 @@ static void InitializeGLTextureSwizzleWithFormat(
     {
         case GLSwizzleFormat::RGBA:
             InitializeGLTextureSwizzle(target, swizzle);
+            break;
+
+        case GLSwizzleFormat::BGR:
+            InitializeGLTextureSwizzle(target, GetTextureSwizzlePermutationBGR(swizzle));
             break;
 
         case GLSwizzleFormat::BGRA:

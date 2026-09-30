@@ -152,6 +152,17 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     }
     #endif
 
+    /* Packed 16-bit formats are only supported on Apple GPUs */
+    #ifdef LLGL_OS_IOS
+    caps.textureFormats.push_back(Format::B5G6R5UNorm);
+    #else
+    if (@available(macOS 11.0, *))
+    {
+        if ([device supportsFamily:MTLGPUFamilyApple1])
+            caps.textureFormats.push_back(Format::B5G6R5UNorm);
+    }
+    #endif
+
     /* Query supported hardware vertex formats */
     caps.vertexFormats = MTGetSupportedVertexFormats();
 

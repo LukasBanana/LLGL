@@ -210,6 +210,7 @@ static std::vector<Format> GetDefaultSupportedVKTextureFormats()
         Format::RGB8UNorm_sRGB,     Format::RGBA8UNorm_sRGB,    Format::BGRA8UNorm_sRGB,
         Format::BGRA8SNorm,         Format::BGRA8UInt,          Format::BGRA8SInt,
         Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+        Format::B5G6R5UNorm,        Format::BGRA4UNorm,
         Format::D16UNorm,           Format::D24UNormS8UInt,     Format::D32Float,           Format::D32FloatS8X24UInt,
     };
     GetSupportedVKBaseFormats(textureFormats);

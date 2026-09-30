@@ -301,6 +301,7 @@ void DXGetDefaultSupportedTextureFormats(std::vector<Format>& textureFormats)
             Format::A8UNorm,
             Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
             Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+            Format::B5G6R5UNorm,        Format::BGRA4UNorm,
             Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
             Format::BC1UNorm,           Format::BC1UNorm_sRGB,
             Format::BC2UNorm,           Format::BC2UNorm_sRGB,
