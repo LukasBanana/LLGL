@@ -32,9 +32,12 @@ class D3D12StagingBuffer
         D3D12StagingBuffer(
             ID3D12Device*   device,
             UINT64          size,
-            UINT            alignment   = 256u,
-            D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
+            UINT            alignment       = 256u,
+            D3D12_HEAP_TYPE heapType        = D3D12_HEAP_TYPE_UPLOAD,
+            bool            persistentMap   = false
         );
+
+        ~D3D12StagingBuffer();
 
         D3D12StagingBuffer(D3D12StagingBuffer&& rhs) noexcept;
         D3D12StagingBuffer& operator = (D3D12StagingBuffer&& rhs) noexcept;
@@ -46,8 +49,9 @@ class D3D12StagingBuffer
         void Create(
             ID3D12Device*   device,
             UINT64          size,
-            UINT            alignment   = 256u,
-            D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
+            UINT            alignment       = 256u,
+            D3D12_HEAP_TYPE heapType        = D3D12_HEAP_TYPE_UPLOAD,
+            bool            persistentMap   = false
         );
 
         // Resets the writing offset.
@@ -94,9 +98,20 @@ class D3D12StagingBuffer
 
     private:
 
+        // Returns true if this buffer is persistently mapped.
+        inline bool IsPersistentMap() const
+        {
+            return (mappedData_ != nullptr);
+        }
+
+        void Unmap();
+
+    private:
+
         ComPtr<ID3D12Resource>  native_;
-        UINT64                  size_   = 0;
-        UINT64                  offset_ = 0;
+        char*                   mappedData_ = nullptr;
+        UINT64                  size_       = 0;
+        UINT64                  offset_     = 0;
 
 };
 
