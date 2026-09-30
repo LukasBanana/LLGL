@@ -29,7 +29,25 @@ static void CopyMTLAttachmentDesc(MTLRenderPassAttachmentDescriptor* dst, const 
     dst.depthPlane  = src.depthPlane;
     dst.loadAction  = src.loadAction;
     dst.storeAction = src.storeAction;
+    dst.resolveTexture  = src.resolveTexture;
+    dst.resolveLevel    = src.resolveLevel;
+    dst.resolveSlice    = src.resolveSlice;
     //[dst.texture retain];
+}
+
+// Depth-stencil resolve takes sample 0, see RenderTargetDescriptor::depthStencilResolveAttachment
+static void SetDepthStencilResolveFilters(MTLRenderPassDescriptor* renderPass)
+{
+    if (@available(macOS 10.14, iOS 12.0, *))
+    {
+        if (renderPass.depthAttachment.resolveTexture != nil)
+            renderPass.depthAttachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
+    }
+    if (@available(macOS 10.14, iOS 12.0, *))
+    {
+        if (renderPass.stencilAttachment.resolveTexture != nil)
+            renderPass.stencilAttachment.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
+    }
 }
 
 MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescriptor& desc) :
@@ -71,7 +89,7 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                 device,
                 nativeRenderPass_.depthAttachment,
                 attachment,
-                nullptr,
+                &(desc.depthStencilResolveAttachment),
                 renderPass_.GetDepthAttachment(),
                 0
             );
@@ -84,7 +102,7 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                 device,
                 nativeRenderPass_.depthAttachment,
                 attachment,
-                nullptr,
+                &(desc.depthStencilResolveAttachment),
                 renderPass_.GetDepthAttachment(),
                 0
             );
@@ -96,13 +114,15 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                 device,
                 nativeRenderPass_.stencilAttachment,
                 attachment,
-                nullptr,
+                &(desc.depthStencilResolveAttachment),
                 renderPass_.GetStencilAttachment(),
                 0
             );
         }
         else
             LLGL_TRAP("invalid format for render-target depth-stencil attachment: %s", ToString(format));
+
+        SetDepthStencilResolveFilters(nativeRenderPass_);
     }
 }
 
@@ -224,8 +244,13 @@ void MTRenderTarget::CreateAttachment(
     outAttachment.loadAction   = fmt.loadAction;
     outAttachment.storeAction  = fmt.storeAction;
 
-    if (outAttachment.storeAction == MTLStoreActionStore && outAttachment.resolveTexture != nil)
-        outAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+    if (outAttachment.resolveTexture != nil)
+    {
+        if (outAttachment.storeAction == MTLStoreActionStore)
+            outAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        else if (outAttachment.storeAction == MTLStoreActionDontCare)
+            outAttachment.storeAction = MTLStoreActionMultisampleResolve;
+    }
 }
 
 MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(

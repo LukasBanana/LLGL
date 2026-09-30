@@ -119,6 +119,14 @@ static std::vector<Format> MTGetSupportedVertexFormats()
     return vertexFormats;
 }
 
+// Depth and stencil resolve are both supported on Apple5 and Mac2 GPU families
+static bool MTSupportsDepthStencilResolve(id<MTLDevice> device)
+{
+    if (@available(macOS 10.15, iOS 13.0, *))
+        return ([device supportsFamily:MTLGPUFamilyApple5] || [device supportsFamily:MTLGPUFamilyMac2]);
+    return false;
+}
+
 static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
 {
     /* Assume minimum of 256 MB (268,435,456 bytes) if maxBufferLength is not supported */
@@ -225,6 +233,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = false;
     features.hasLogicOp                     = false;
+    features.hasDepthStencilResolve         = MTSupportsDepthStencilResolve(device);
 
     /* Specify limits */
     auto& limits = caps.limits;
