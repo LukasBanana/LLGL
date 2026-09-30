@@ -78,7 +78,6 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
         Format::A8UNorm,
 
         Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
-        Format::B5G6R5UNorm,
         Format::RGBA8UNorm_sRGB,    Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
         Format::D16UNorm,           Format::D32Float,           Format::D32FloatS8X24UInt,
 
@@ -150,6 +149,17 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
             caps.textureFormats.push_back(Format::D24UNormS8UInt);
             g_formatCaps.hasD24S8UIntFormat = true;
         }
+    }
+    #endif
+
+    /* Packed 16-bit formats are only supported on Apple GPUs */
+    #ifdef LLGL_OS_IOS
+    caps.textureFormats.push_back(Format::B5G6R5UNorm);
+    #else
+    if (@available(macOS 11.0, *))
+    {
+        if ([device supportsFamily:MTLGPUFamilyApple1])
+            caps.textureFormats.push_back(Format::B5G6R5UNorm);
     }
     #endif
 

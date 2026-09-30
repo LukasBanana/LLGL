@@ -1753,6 +1753,8 @@ static Format StringToFormat(StringView tok)
     if (tok == "rg11b10float" || tok == "rg11b10f")     return Format::RG11B10Float;
     if (tok == "rgb9e5float" || tok == "rgb9e5f")       return Format::RGB9E5Float;
     if (tok == "bgr5a1unorm")                           return Format::BGR5A1UNorm;
+    if (tok == "b5g6r5unorm")                           return Format::B5G6R5UNorm;
+    if (tok == "bgra4unorm")                            return Format::BGRA4UNorm;
     
     if (tok == "d16unorm")                              return Format::D16UNorm;
     if (tok == "d24unorm_s8uint")                       return Format::D24UNormS8UInt;
