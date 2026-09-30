@@ -38,7 +38,7 @@ struct VMorphTargetMesh_in
     float2 in_var_TEXCOORD [[attribute(4)]];
 };
 
-vertex VMorphTargetMesh_out VMorphTargetMesh(VMorphTargetMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(0)]], constant type_SceneView& SceneView [[buffer(3)]])
+vertex VMorphTargetMesh_out VMorphTargetMesh(VMorphTargetMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(4)]], constant type_SceneView& SceneView [[buffer(3)]])
 {
     VMorphTargetMesh_out out = {};
     float3 _48 = float3(dynamicState.interpolationFactor);

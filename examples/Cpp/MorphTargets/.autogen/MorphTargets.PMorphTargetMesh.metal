@@ -33,7 +33,7 @@ struct PMorphTargetMesh_in
     float in_var_FLIPFACE [[user(locn2), flat]];
 };
 
-fragment PMorphTargetMesh_out PMorphTargetMesh(PMorphTargetMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(0)]], constant type_SceneView& SceneView [[buffer(3)]], texture2d<float> paperDetailMap [[texture(4)]], texture2d<float> frontPageColorMap [[texture(6)]], texture2d<float> backPageColorMap [[texture(8)]], sampler paperDetailMapSampler [[sampler(5)]], sampler frontPageSampler [[sampler(7)]], sampler backPageSampler [[sampler(9)]], bool gl_FrontFacing [[front_facing]])
+fragment PMorphTargetMesh_out PMorphTargetMesh(PMorphTargetMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(4)]], constant type_SceneView& SceneView [[buffer(3)]], texture2d<float> paperDetailMap [[texture(4)]], texture2d<float> frontPageColorMap [[texture(6)]], texture2d<float> backPageColorMap [[texture(8)]], sampler paperDetailMapSampler [[sampler(5)]], sampler frontPageSampler [[sampler(7)]], sampler backPageSampler [[sampler(9)]], bool gl_FrontFacing [[front_facing]])
 {
     PMorphTargetMesh_out out = {};
     float2 _74;

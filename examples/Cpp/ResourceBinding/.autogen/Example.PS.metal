@@ -20,7 +20,7 @@ struct PS_in
     float2 in_var_TEXCOORD [[user(locn2)]];
 };
 
-fragment PS_out PS(PS_in in [[stage_in]], constant type_PushConstant_ModelData& model [[buffer(0)]], texture2d<float> colorMap [[texture(4)]], sampler colorMapSampler [[sampler(5)]])
+fragment PS_out PS(PS_in in [[stage_in]], constant type_PushConstant_ModelData& model [[buffer(2)]], texture2d<float> colorMap [[texture(4)]], sampler colorMapSampler [[sampler(5)]])
 {
     PS_out out = {};
     float4 _36 = colorMap.sample(colorMapSampler, in.in_var_TEXCOORD);
