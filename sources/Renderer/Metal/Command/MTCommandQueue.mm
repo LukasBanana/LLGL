@@ -37,9 +37,12 @@ void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
     if (commandBufferMT.IsMultiSubmitCmdBuffer())
     {
         auto& multiSubmitCommandBufferMT = LLGL_CAST(MTMultiSubmitCommandBuffer&, commandBufferMT);
-        context_.Reset([native_ commandBuffer]);
-        ExecuteMTMultiSubmitCommandBuffer(multiSubmitCommandBufferMT, context_);
-        SubmitCommandBuffer(context_.GetCommandBuffer());
+        @autoreleasepool
+        {
+            context_.Reset([native_ commandBuffer]);
+            ExecuteMTMultiSubmitCommandBuffer(multiSubmitCommandBufferMT, context_);
+            SubmitCommandBuffer(context_.GetCommandBuffer());
+        }
     }
     else
     {
