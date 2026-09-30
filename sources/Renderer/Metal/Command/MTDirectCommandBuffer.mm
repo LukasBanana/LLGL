@@ -46,6 +46,13 @@ MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueu
     cmdBufferSemaphore_ = dispatch_semaphore_create(MTCommandBuffer::maxNumCommandBuffersInFlight);
 }
 
+MTDirectCommandBuffer::~MTDirectCommandBuffer()
+{
+    for (id<MTLDrawable> d : drawables_)
+        [d release];
+    [cmdBuffer_ release];
+}
+
 /* ----- Encoding ----- */
 
 void MTDirectCommandBuffer::Begin()
@@ -60,17 +67,21 @@ void MTDirectCommandBuffer::Begin()
         cmdBufferDirty_ = true;
     }
 
-    /* Allocate new command buffer from command queue */
-    cmdBuffer_ = [cmdQueue_.GetNative() commandBuffer];
+    /* Allocate new command buffer from command queue; hold our own reference so we don't rely on the client's autorelease pool */
+    @autoreleasepool
+    {
+        [cmdBuffer_ release];
+        cmdBuffer_ = [[cmdQueue_.GetNative() commandBuffer] retain];
 
-    /* Append complete handler to signal semaphore */
-    __block dispatch_semaphore_t blockSemaphore = cmdBufferSemaphore_;
-    [cmdBuffer_
-        addCompletedHandler:^(id<MTLCommandBuffer> cmdBuffer)
-        {
-            dispatch_semaphore_signal(blockSemaphore);
-        }
-    ];
+        /* Append complete handler to signal semaphore */
+        __block dispatch_semaphore_t blockSemaphore = cmdBufferSemaphore_;
+        [cmdBuffer_
+            addCompletedHandler:^(id<MTLCommandBuffer> cmdBuffer)
+            {
+                dispatch_semaphore_signal(blockSemaphore);
+            }
+        ];
+    }
 
     /* Reset schedulers and pools */
     context_.Reset(cmdBuffer_);
@@ -481,16 +492,20 @@ void MTDirectCommandBuffer::BeginRenderPass(
     const ClearValue*   clearValues,
     std::uint32_t       /*swapBufferIndex*/)
 {
-    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
+    /* MetalKit view returns autoreleased drawables and render pass descriptors */
+    @autoreleasepool
     {
-        /* Put current drawable into queue */
-        auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
-        QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
-    }
+        if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
+        {
+            /* Put current drawable into queue */
+            auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
+            QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
+        }
 
-    /* Get next render pass descriptor from MetalKit view */
-    auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
-    context_.BeginRenderPass(&renderTarget, renderPassMT, numClearValues, clearValues);
+        /* Get next render pass descriptor from MetalKit view */
+        auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+        context_.BeginRenderPass(&renderTarget, renderPassMT, numClearValues, clearValues);
+    }
 }
 
 void MTDirectCommandBuffer::EndRenderPass()
@@ -1096,13 +1111,19 @@ void MTDirectCommandBuffer::QueueDrawable(id<MTLDrawable> drawable)
         if (d == drawable)
             return;
     }
-    drawables_.push_back(drawable);
+    drawables_.push_back([drawable retain]);
 }
 
 void MTDirectCommandBuffer::PresentDrawables()
 {
-    for (id<MTLDrawable> d : drawables_)
-        [cmdBuffer_ presentDrawable:d];
+    @autoreleasepool
+    {
+        for (id<MTLDrawable> d : drawables_)
+        {
+            [cmdBuffer_ presentDrawable:d];
+            [d release];
+        }
+    }
     drawables_.clear();
 }
 

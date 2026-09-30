@@ -83,7 +83,10 @@ bool MTSwapChain::IsPresentable() const
 void MTSwapChain::Present()
 {
     /* Present backbuffer */
-    [view_ draw];
+    @autoreleasepool
+    {
+        [view_ draw];
+    }
 
     /* Release mutable render pass as the view's render pass changes between backbuffers */
     if (nativeMutableRenderPass_ != nil)

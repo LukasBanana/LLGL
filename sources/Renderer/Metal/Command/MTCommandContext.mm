@@ -64,16 +64,19 @@ void MTCommandContext::Flush()
     if (renderEncoder_ != nil)
     {
         [renderEncoder_ endEncoding];
+        [renderEncoder_ release];
         renderEncoder_ = nil;
     }
     else if (computeEncoder_ != nil)
     {
         [computeEncoder_ endEncoding];
+        [computeEncoder_ release];
         computeEncoder_ = nil;
     }
     else if (blitEncoder_ != nil)
     {
         [blitEncoder_ endEncoding];
+        [blitEncoder_ release];
         blitEncoder_ = nil;
     }
 }
@@ -143,7 +146,10 @@ id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
     if (computeEncoder_ == nil)
     {
         Flush();
-        computeEncoder_ = [cmdBuffer_ computeCommandEncoder];
+        @autoreleasepool
+        {
+            computeEncoder_ = [[cmdBuffer_ computeCommandEncoder] retain];
+        }
 
         /* A new compute command encoder forces all pipeline states to be reset */
         computeDirtyBits_ = ~0;
@@ -170,7 +176,10 @@ id<MTLBlitCommandEncoder> MTCommandContext::BindBlitEncoder()
     if (blitEncoder_ == nil)
     {
         Flush();
-        blitEncoder_ = [cmdBuffer_ blitCommandEncoder];
+        @autoreleasepool
+        {
+            blitEncoder_ = [[cmdBuffer_ blitCommandEncoder] retain];
+        }
 
         /* Store blit encoder mode */
         contextState_.encoderState = MTEncoderState::Blit;
@@ -602,7 +611,10 @@ void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* re
 void MTCommandContext::BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc)
 {
     Flush();
-    renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+    @autoreleasepool
+    {
+        renderEncoder_ = [[cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc] retain];
+    }
 
     /* A new render command encoder forces all pipeline states to be reset */
     renderDirtyBits_ = ~0;
