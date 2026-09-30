@@ -1,3 +1,3 @@
-Models/HelloGame_*.obj
+Models/HelloGame/HelloGame_*.obj
 Textures/Grass.jpg
 HelloGame.levels.txt

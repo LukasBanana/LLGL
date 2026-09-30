@@ -211,9 +211,9 @@ private:
 
         for (std::uint32_t i = 0; i <= numPlantImages; ++i)
         {
-            // Setup filename for "Plants_N.png" where N is from 0 to 9
+            // Setup filename for "Plants/Plants_N.png" where N is from 0 to 9
             if (i < numPlantImages)
-                filename = "Plants_" + std::to_string(i) + ".png";
+                filename = "Plants/Plants_" + std::to_string(i) + ".png";
             else
                 filename = "Grass.jpg";
 

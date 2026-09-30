@@ -921,10 +921,10 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        mdlPlayer   = Load3DModel(vertices, "HelloGame_Player.obj");
-        mdlBlock    = Load3DModel(vertices, "HelloGame_Block.obj");
-        mdlTree     = Load3DModel(vertices, "HelloGame_Tree.obj");
-        mdlGround   = Load3DModel(vertices, "HelloGame_Ground.obj");
+        mdlPlayer   = Load3DModel(vertices, "HelloGame/HelloGame_Player.obj");
+        mdlBlock    = Load3DModel(vertices, "HelloGame/HelloGame_Block.obj");
+        mdlTree     = Load3DModel(vertices, "HelloGame/HelloGame_Tree.obj");
+        mdlGround   = Load3DModel(vertices, "HelloGame/HelloGame_Ground.obj");
 
         // Create vertex, index, and constant buffer
         vertexBuffer    = CreateVertexBuffer(vertices, sizeof(Vertex));
