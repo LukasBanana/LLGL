@@ -363,7 +363,7 @@ static TextureSwizzleRGBA GetTextureSwizzlePermutationBGR(const TextureSwizzleRG
         permutation.r = GetTextureSwizzlePermutationBGRComponent(swizzle.r);
         permutation.g = GetTextureSwizzlePermutationBGRComponent(swizzle.g);
         permutation.b = GetTextureSwizzlePermutationBGRComponent(swizzle.b);
-        permutation.a = GetTextureSwizzlePermutationBGRComponent(swizzle.a);
+        permutation.a = TextureSwizzle::One;                            // BGR formats have no alpha component
     }
     return permutation;
 }
