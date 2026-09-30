@@ -74,9 +74,10 @@ class VKRenderSystem final : public RenderSystem
     private:
 
         void QuerySupportedInstanceExtensions();
+        bool AppendUserInstanceExtensions(const RendererConfigurationVulkan* config);
         void CreateInstance(const RendererConfigurationVulkan* config);
         void CreateDebugMessenger();
-        bool PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
+        bool PickPhysicalDevice(const RendererConfigurationVulkan* config, long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
         void CreateLogicalDevice(VkDevice customLogicalDevice = VK_NULL_HANDLE);
 
         bool IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const;

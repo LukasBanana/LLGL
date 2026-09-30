@@ -83,18 +83,20 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
                 );
         }
         VKLoadInstanceExtensions(instance_, supportedInstanceExtensions_);
-        if (!PickPhysicalDevice(preferredDeviceFlags, customNativeHandle->physicalDevice))
+        if (!PickPhysicalDevice(rendererConfigVK, preferredDeviceFlags, customNativeHandle->physicalDevice))
             return;
         CreateLogicalDevice(customNativeHandle->device);
     }
     else
     {
         /* Create Vulkan instance and device objects */
+        if (!AppendUserInstanceExtensions(rendererConfigVK))
+            return;
         CreateInstance(rendererConfigVK);
         if (isDebugLayerEnabled_)
             CreateDebugMessenger();
         VKLoadInstanceExtensions(instance_, supportedInstanceExtensions_);
-        if (!PickPhysicalDevice(preferredDeviceFlags))
+        if (!PickPhysicalDevice(rendererConfigVK, preferredDeviceFlags))
             return;
         CreateLogicalDevice();
     }
@@ -887,6 +889,52 @@ void VKRenderSystem::QuerySupportedInstanceExtensions()
     }
 }
 
+bool VKRenderSystem::AppendUserInstanceExtensions(const RendererConfigurationVulkan* config)
+{
+    if (config == nullptr)
+        return true;
+
+    /* Returns the name from the queried properties, so we don't depend on the lifetime of the input strings */
+    auto FindExtension = [this](const char* name) -> const char*
+    {
+        for (const VkExtensionProperties& prop : instanceExtensionProperties_)
+        {
+            if (std::strcmp(prop.extensionName, name) == 0)
+                return prop.extensionName;
+        }
+        return nullptr;
+    };
+
+    auto AppendExtension = [this](const char* name) -> void
+    {
+        for (const char* extension : supportedInstanceExtensions_)
+        {
+            if (std::strcmp(extension, name) == 0)
+                return;
+        }
+        supportedInstanceExtensions_.push_back(name);
+    };
+
+    for (const char* name : config->requiredInstanceExtensions)
+    {
+        if (const char* extension = FindExtension(name))
+            AppendExtension(extension);
+        else
+        {
+            GetMutableReport().Errorf("required Vulkan instance extension not supported: %s", name);
+            return false;
+        }
+    }
+
+    for (const char* name : config->optionalInstanceExtensions)
+    {
+        if (const char* extension = FindExtension(name))
+            AppendExtension(extension);
+    }
+
+    return true;
+}
+
 void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 {
     /* Determine supported Vulkan API version */
@@ -1135,7 +1183,7 @@ void VKRenderSystem::CreateDebugMessenger()
     VKThrowIfFailed(result, "failed to create Vulkan debug utils messenger");
 }
 
-bool VKRenderSystem::PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice)
+bool VKRenderSystem::PickPhysicalDevice(const RendererConfigurationVulkan* config, long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice)
 {
     /* Pick physical device with Vulkan support */
     if (customPhysicalDevice != VK_NULL_HANDLE)
@@ -1143,9 +1191,20 @@ bool VKRenderSystem::PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDev
         /* Load weak reference to custom native physical device */
         physicalDevice_.LoadPhysicalDeviceWeakRef(customPhysicalDevice);
     }
-    else if (!physicalDevice_.PickPhysicalDevice(instance_, supportedInstanceExtensions_, preferredDeviceFlags))
+    else if (
+        !physicalDevice_.PickPhysicalDevice(
+            instance_,
+            supportedInstanceExtensions_,
+            preferredDeviceFlags,
+            (config != nullptr ? config->requiredDeviceExtensions : ArrayView<const char*>{}),
+            (config != nullptr ? config->optionalDeviceExtensions : ArrayView<const char*>{})
+        )
+    )
     {
-        GetMutableReport().Errorf("failed to find suitable Vulkan device");
+        if (config != nullptr && !config->requiredDeviceExtensions.empty())
+            GetMutableReport().Errorf("failed to find suitable Vulkan device that supports all required device extensions");
+        else
+            GetMutableReport().Errorf("failed to find suitable Vulkan device");
         return false;
     }
 

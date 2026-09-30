@@ -96,7 +96,13 @@ class VKPhysicalDevice
         /* ----- Common ----- */
 
         // Picks the physical Vulkan device by enumerating the available devices from the specified Vulkan instance.
-        bool PickPhysicalDevice(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions, long preferredDeviceFlags = 0);
+        bool PickPhysicalDevice(
+            VkInstance                      instance,
+            const ArrayView<const char*>&   supportedInstanceExtensions,
+            long                            preferredDeviceFlags        = 0,
+            const ArrayView<const char*>&   requiredUserExtensions      = {},
+            const ArrayView<const char*>&   optionalUserExtensions      = {}
+        );
 
         // Loads the physical Vulkan device from a custom native handle.
         void LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice);
@@ -163,7 +169,9 @@ class VKPhysicalDevice
 
     private:
 
+        bool EnableExtension(const char* name);
         bool EnableExtensions(const char** extensions, bool required = false);
+        bool EnableExtensions(const ArrayView<const char*>& extensions, bool required = false);
 
         void QueryDeviceInfo();
         void QueryDeviceFeatures();
