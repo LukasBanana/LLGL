@@ -191,7 +191,7 @@ struct RenderTargetDescriptor
     averaging depth is not meaningful, and taking a single sample is the only mode every implementation supports.
     \remarks Requires RenderingFeatures::hasDepthStencilResolve. Leave this attachment disabled if the multi-sampled
     depth buffer is only used for depth testing within the pass, which lets the backend keep it in tile memory.
-    \note Only supported with: Vulkan, Metal.
+    \note Only supported with: Vulkan, OpenGL, Metal.
     \see RenderingFeatures::hasDepthStencilResolve
     */
     AttachmentDescriptor    depthStencilResolveAttachment;

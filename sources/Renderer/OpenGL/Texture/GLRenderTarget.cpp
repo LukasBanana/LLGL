@@ -87,7 +87,7 @@ const RenderPass* GLRenderTarget::GetRenderPass() const
 
 bool GLRenderTarget::CanResolveMultisampledFBO() const
 {
-    return (framebufferResolve_.Valid() && !drawBuffersResolve_.empty());
+    return (framebufferResolve_.Valid() && (!drawBuffersResolve_.empty() || resolveDepthStencilMask_ != 0));
 }
 
 void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
@@ -122,6 +122,10 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
                 GLFramebuffer::Blit(resolution_[0], resolution_[1], GL_COLOR_BUFFER_BIT);
             }
         }
+
+        /* Resolve depth-stencil by taking a single sample; depth and stencil must use GL_NEAREST */
+        if (resolveDepthStencilMask_ != 0)
+            GLFramebuffer::Blit(resolution_[0], resolution_[1], resolveDepthStencilMask_);
 
         stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, 0);
         stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);
@@ -196,7 +200,12 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
 
     /* Create secondary FBO if there are any resolve targets */
     const std::uint32_t numResolveAttachments = NumActiveResolveAttachments(desc);
-    if (numResolveAttachments > 0)
+    const bool hasDepthStencilResolve = (
+        samples_ > 1 &&
+        IsAttachmentEnabled(desc.depthStencilAttachment) &&
+        desc.depthStencilResolveAttachment.texture != nullptr
+    );
+    if (numResolveAttachments > 0 || hasDepthStencilResolve)
     {
         /* Create secondary FBO if standard multi-sampling is enabled */
         framebufferResolve_.GenFramebuffer();
@@ -217,6 +226,10 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
                 if (desc.resolveAttachments[colorTarget].texture != nullptr)
                     BuildResolveAttachment(desc.resolveAttachments[colorTarget], colorTarget, isAttachmentListSeparated);
             }
+
+            /* Attach depth-stencil resolve target */
+            if (hasDepthStencilResolve)
+                BuildDepthStencilResolveAttachment(desc.depthStencilResolveAttachment);
 
             if (isAttachmentListSeparated)
             {
@@ -360,6 +373,17 @@ GLenum GLRenderTarget::AllocDepthStencilAttachmentBinding(const Format format)
     depthStencilBinding_ = binding;
 
     return binding;
+}
+
+void GLRenderTarget::BuildDepthStencilResolveAttachment(const AttachmentDescriptor& attachmentDesc)
+{
+    const Format format = attachmentDesc.texture->GetFormat();
+    BuildAttachmentWithTexture(ToGLDepthStencilAttachmentBinding(format), attachmentDesc);
+
+    if (IsDepthFormat(format))
+        resolveDepthStencilMask_ |= GL_DEPTH_BUFFER_BIT;
+    if (IsStencilFormat(format))
+        resolveDepthStencilMask_ |= GL_STENCIL_BUFFER_BIT;
 }
 
 
