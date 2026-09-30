@@ -1502,7 +1502,6 @@ void TestbedContext::CreateConstantBuffers()
         bufDesc.debugName   = "sceneCbuffer";
         bufDesc.size        = sizeof(SceneConstants);
         bufDesc.bindFlags   = BindFlags::ConstantBuffer;
-        bufDesc.miscFlags   = MiscFlags::DynamicUsage;
     }
     sceneCbuffer = renderer->CreateBuffer(bufDesc, &sceneCbuffer);
 }

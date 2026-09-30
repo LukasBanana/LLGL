@@ -8,6 +8,7 @@
 #include "D3D12StagingBuffer.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include "../D3DX12/d3dx12.h"
 #include <string.h>
 
@@ -62,7 +63,6 @@ void D3D12StagingBuffer::Create(
     bool            persistentMap)
 {
     Unmap();
-    native_.Reset();
 
     size = GetAlignedSize<UINT64>(size, alignment);
 
@@ -85,7 +85,7 @@ void D3D12StagingBuffer::Create(
     if (persistentMap)
     {
         const D3D12_RANGE readRange{ 0, 0 };
-        HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData_));
+        hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData_));
         DXThrowIfFailed(hr, "failed to persistently map D3D12 staging buffer");
     }
 
@@ -112,12 +112,11 @@ HRESULT D3D12StagingBuffer::Write(
     UINT64                      dataSize)
 {
     char* mappedData = mappedData_;
-    HRESULT hr = S_OK;
-    if (mappedData == nullptr)
+    if (!IsPersistentMap())
     {
         /* Map GPU host memory to CPU memory space CPU-memory to upload buffer */
         const D3D12_RANGE readRange{ 0, 0 };
-        hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+        HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
         if (FAILED(hr))
             return hr;
     }
@@ -125,7 +124,7 @@ HRESULT D3D12StagingBuffer::Write(
     /* Copy input data to staging buffer */
     ::memcpy(mappedData + offset_, data, static_cast<std::size_t>(dataSize));
 
-    if (mappedData_ == nullptr)
+    if (!IsPersistentMap())
     {
         /* Unmap buffer with range of written data */
         const D3D12_RANGE writtenRange
@@ -156,8 +155,9 @@ HRESULT D3D12StagingBuffer::WriteAndIncrementOffset(
 
 void D3D12StagingBuffer::Unmap()
 {
-    if (mappedData_ != nullptr && native_ != nullptr)
+    if (IsPersistentMap())
     {
+        LLGL_ASSERT_PTR(native_.Get());
         native_->Unmap(0, nullptr);
         mappedData_ = nullptr;
     }
