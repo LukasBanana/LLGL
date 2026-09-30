@@ -121,7 +121,7 @@ MTConstantsCacheLayout::MTShaderBuffer* MTConstantsCacheLayout::FindOrAppendShad
             newBuffer.cbuffer.stages    = stage;
             newBuffer.cbuffer.index     = index;
             newBuffer.cbuffer.offset    = 0;
-            newBuffer.cbuffer.size      = static_cast<std::uint16_t>(size);
+            newBuffer.cbuffer.size      = static_cast<std::uint16_t>(GetAlignedSize<NSUInteger>(size, 16u)); // Metal expects constant buffer arguments padded to 16 bytes
         }
         shaderBuffers.insert(shaderBuffers.begin() + insertionPos, newBuffer);
         return &(shaderBuffers[insertionPos]);
