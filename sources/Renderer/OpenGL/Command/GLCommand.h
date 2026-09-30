@@ -190,13 +190,6 @@ struct GLCmdBindVertexArray
     GLSharedContextVertexArray* vertexArray;
 };
 
-struct GLCmdBuildVertexArray
-{
-    GLBufferWithVAO*    bufferWithVAO;
-    std::uint32_t       numVertexAttribs;
-//  GLVertexAttribute   vertexAttribs[numVertexAttribs];
-};
-
 struct GLCmdBindElementArrayBufferToVAO
 {
     GLuint id;

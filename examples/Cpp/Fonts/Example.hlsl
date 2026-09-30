@@ -1,10 +1,19 @@
-// HLSL texturing shader
+// HLSL font shader
 
-cbuffer Scene : register(b1)
+struct Scene_t
 {
     float4x4    projection;
     float2      glyphAtlasInvSize;
+};
+
+#if __spirv__
+[[vk::push_constant]] Scene_t scene;
+#else
+cbuffer Scene : register(b1)
+{
+    Scene_t scene;
 }
+#endif
 
 struct InputVS
 {
@@ -32,8 +41,8 @@ void VS(InputVS inp, out OutputVS outp)
     float v = (float)inp.texCoord.y;
 
     // Write vertex output attributes
-    outp.position = mul(projection, float4(x, y, 0, 1));
-    outp.texCoord = glyphAtlasInvSize * float2(u, v);
+    outp.position = mul(scene.projection, float4(x, y, 0, 1));
+    outp.texCoord = scene.glyphAtlasInvSize * float2(u, v);
     outp.color    = inp.color;
 }
 
@@ -41,7 +50,7 @@ void VS(InputVS inp, out OutputVS outp)
 // PIXEL SHADER
 
 Texture2D glyphTexture : register(t0);
-SamplerState linearSampler : register(s0);
+SamplerState linearSampler : register(s2);
 
 float4 PS(OutputVS inp) : SV_Target
 {

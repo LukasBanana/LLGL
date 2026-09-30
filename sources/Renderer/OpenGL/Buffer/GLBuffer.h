@@ -37,7 +37,7 @@ class GLBuffer : public Buffer
         ~GLBuffer();
 
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);
-        void BufferSubData(GLintptr offset, GLsizeiptr size, const void* data);
+        void BufferSubData(GLintptr offset, GLsizeiptr size, const void* data, bool useHazardTrackingIfAvailable = false);
 
         void GetBufferSubData(GLintptr offset, GLsizeiptr size, void* data);
 
@@ -101,6 +101,11 @@ class GLBuffer : public Buffer
         {
             return texInternalFormat_;
         }
+
+    public:
+
+        // Creates a new GL native buffer. This only allocates the ID, not any storage size.
+        static void CreateNativeGLBuffers(GLsizei count, GLuint* buffers);
 
     private:
 

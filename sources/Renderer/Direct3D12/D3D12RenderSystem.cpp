@@ -160,10 +160,9 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, cons
     return bufferD3D;
 }
 
-BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* D3D12RenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<D3D12BufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<D3D12BufferArray>(bufferViews);
 }
 
 void D3D12RenderSystem::Release(Buffer& buffer)
@@ -321,7 +320,7 @@ void D3D12RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc, initialResourceViews);
 }
@@ -332,7 +331,7 @@ void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
     return resourceHeapD3D.CreateResourceViewHandles(device_.GetNative(), firstDescriptor, resourceViews);
@@ -785,22 +784,12 @@ void D3D12RenderSystem::QueryRendererInfo(RendererInfo& info)
 
 static std::vector<Format> GetDefaultSupportedDXTextureFormats()
 {
-    std::vector<Format> formats;
-
-    std::size_t numFormats = 0;
-    DXGetDefaultSupportedTextureFormats(nullptr, &numFormats);
-
-    formats.resize(numFormats, Format::Undefined);
-    DXGetDefaultSupportedTextureFormats(formats.data(), nullptr);
-
-    formats.insert(
-        formats.end(),
-        {
-            Format::BC4UNorm,   Format::BC4SNorm,   Format::BC5UNorm, Format::BC5SNorm,
-            Format::BC6HUFloat, Format::BC6HSFloat, Format::BC7UNorm, Format::BC7UNorm_sRGB,
-        }
-    );
-
+    std::vector<Format> formats =
+    {
+        Format::BC4UNorm,   Format::BC4SNorm,   Format::BC5UNorm, Format::BC5SNorm,
+        Format::BC6HUFloat, Format::BC6HSFloat, Format::BC7UNorm, Format::BC7UNorm_sRGB,
+    };
+    DXGetDefaultSupportedTextureFormats(formats);
     return formats;
 }
 
@@ -866,6 +855,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
     deviceCaps_.viewInstancingTier = options3.ViewInstancingTier;
 
+    /* Check variable rate shading support */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6));
+    deviceCaps_.variableShadingRateTier = options6.VariableShadingRateTier;
+
     /* Check mesh shader support */
     D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
@@ -878,6 +872,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = DXGetHLSLVersions(device_.GetShaderModel());
     caps.textureFormats                             = GetDefaultSupportedDXTextureFormats();
+    caps.vertexFormats                              = GetSupportedDXVertexFormats();
     caps.swapChainColorFormats                      = GetSupportedDXSwapChainColorFormats();
     caps.swapChainDepthStencilFormats               = GetSupportedDXSwapChainDepthStencilFormats();
 
@@ -915,6 +910,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasPipelineCaching                = true;
     caps.features.hasPipelineStatistics             = true;
     caps.features.hasRenderCondition                = true;
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    caps.features.hasVariableRateShading            = (deviceCaps_.variableShadingRateTier != D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED);
+    #else
+    caps.features.hasMeshShaders                    = false;
+    #endif
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;
@@ -941,6 +941,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     #endif
     caps.limits.maxBufferSize                       = ULLONG_MAX;
     caps.limits.maxConstantBufferSize               = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+    caps.limits.maxVertexBufferInputs               = (featureLevel >= D3D_FEATURE_LEVEL_10_1 ? D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT : 16);
     caps.limits.maxStreamOutputs                    = 4u;
     caps.limits.maxTessFactor                       = 64u;
     caps.limits.minConstantBufferAlignment          = 256u;

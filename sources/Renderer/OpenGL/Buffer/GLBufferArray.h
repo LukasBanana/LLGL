@@ -9,10 +9,10 @@
 #define LLGL_GL_BUFFER_ARRAY_H
 
 
-#include <LLGL/BufferArray.h>
 #include "../OpenGL.h"
-#include <vector>
-#include <cstdint>
+#include <LLGL/BufferArray.h>
+#include <LLGL/Container/ArrayView.h>
+#include "GLBufferInputLayout.h"
 
 
 namespace LLGL
@@ -20,27 +20,32 @@ namespace LLGL
 
 
 class Buffer;
+class GLBufferWithXFB;
 
+// GL implementation of BufferArray interface for vertex buffer input layouts.
 class GLBufferArray : public BufferArray
 {
 
     public:
 
-        GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        GLBufferArray(ArrayView<VertexBufferView> bufferViews);
 
-        // Returns the array of buffer IDs.
-        inline const std::vector<GLuint>& GetIDArray() const
+        // Returns the GL buffer input layout with hash over all buffers.
+        inline const GLBufferInputLayout& GetInputLayout() const
         {
-            return idArray_;
+            return bufferInputLayout_;
         }
 
-    protected:
-
-        void BuildArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        // Returns a pointer to a transform-feedback buffer in slot 0, if the buffer array was created with one. Otherwise, null.
+        inline GLBufferWithXFB* GetBufferSlot0WithXFB() const
+        {
+            return bufferSlot0WithXFB_;
+        }
 
     private:
 
-        std::vector<GLuint> idArray_;
+        GLBufferInputLayout bufferInputLayout_;
+        GLBufferWithXFB*    bufferSlot0WithXFB_ = nullptr;
 
 };
 

@@ -1,0 +1,1155 @@
+#!/usr/bin/env python3
+
+"""
+TranslateShaders.py
+
+Part of the LLGL project
+Written by L. Hermanns 8/30/2026
+
+Translate HLSL shaders described by *.shaderinfo.yml files.
+"""
+
+import argparse
+import importlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    yaml = importlib.import_module("yaml")
+except ModuleNotFoundError:
+    yaml = None
+
+
+STAGE_EXTENSIONS = {
+    "vs": "vert",
+    "ps": "frag",
+    "gs": "geom",
+    "hs": "tesc",
+    "ds": "tese",
+    "cs": "comp",
+    "as": "task",
+    "ms": "mesh",
+}
+GLSL_TARGET_PATTERN = re.compile(r"^glsl(?P<version>\d+)(?P<flavor>core|es)$")
+HIGHLIGHT_COLOR = "\033[1;33m"
+ERROR_COLOR = "\033[1;31m"
+RESET_COLOR = "\033[0m"
+
+
+class ShaderInfoError(Exception):
+    """Raised when a shader-info file does not match the supported schema."""
+
+
+class Options:
+    """Holds user-provided configuration options for the shader translation process."""
+    def __init__(self):
+        # User-provided options
+        self.debug: bool = False
+        self.verbose: bool = False
+        self.trimmed_entries = set()
+        self.enabled_targets = set()
+        self.disabled_targets = set()
+
+        # Optional paths to external tools
+        self.dxc_path: Path | None = None
+        self.fxc_path: Path | None = None
+        self.glslang_path: Path | None = None
+        self.spirv_cross_path: Path | None = None
+        self.spirv_dis_path: Path | None = None
+        self.spirv_opt_path: Path | None = None
+
+
+class Toolchain:
+    """Holds paths to the shader compilation tools."""
+    def __init__(self):
+        self.dxc: Path | None = None
+        self.fxc: Path | None = None
+        self.glslang: Path | None = None
+        self.spirv_cross: Path | None = None
+        self.spirv_dis: Path | None = None
+        self.spirv_opt: Path | None = None
+
+
+class ShaderInfo:
+    """Information per *.shaderinfo.yml file"""
+    def __init__(self, input_filename, output: Path | None = None):
+        self.info_filename: Path = input_filename
+        self.input_directory: Path = input_filename.parent
+        self.output_directory: Path = output if output and output.is_absolute() else self.input_directory / (output or Path(".autogen"))
+        self.permutation = None
+        self.has_geometry_output: bool = False
+
+    def print_processing_info(self, root_dir: Path, color: bool, source_index: int, source_count: int) -> None:
+        source_no = source_index + 1
+        relative_path = self.info_filename.relative_to(root_dir)
+        print(f"   {source_no:2d}/{source_count} [{source_no * 100 // source_count:3d}%]: {f'{HIGHLIGHT_COLOR}{relative_path}{RESET_COLOR}' if color else relative_path}")
+
+
+class CompileContext:
+    """Holds the compilation context, including user options and toolchain paths."""
+    def __init__(self):
+        self.opt: Options = Options()
+        self.tools: Toolchain = Toolchain()
+        self.include_dir_args: list[str] = []
+
+    def set_shader_include_dirs(self, include_dirs: list[Path]):
+        self.include_dir_args = [f"-I{str(dir)}" for dir in include_dirs]
+
+    def compile_hlsl_to_spirv(self, source, output, profile, extra_args, in_entry: str, out_entry: str = None, input_directory: Path = None, opt_level: int = 3):
+        dxc_args = [
+            self.tools.dxc,
+            "-nologo",
+            "-no-warnings",
+            "-spirv",
+            "-fspv-reflect",
+            "-fvk-auto-shift-bindings",
+            f"-O{opt_level}",
+            "-T", clamp_dxc_profile(profile),
+            "-E", in_entry,
+            "-Fo", output,
+            source
+        ] + extra_args + self.include_dir_args
+
+        if out_entry:
+            dxc_args.append(f"-fspv-entrypoint-name={out_entry}")
+
+        run_command(dxc_args, input_directory, self.opt)
+
+    def compile_spirv_to_glsl(self, input_spirv, output_file, target, shaderinfo: ShaderInfo):
+        # Compile to GLSL using SPIRV-Cross
+        command = [
+            self.tools.spirv_cross,
+            "--no-420pack-extension",
+            "--combined-samplers-inherit-bindings",
+            "--no-support-nonzero-baseinstance",
+            input_spirv
+        ]
+
+        target_match = GLSL_TARGET_PATTERN.fullmatch(target)
+        if target_match:
+            command.append("--version")
+            command.append(target_match["version"])
+            if target_match["flavor"] == "es":
+                command.append("--es")
+
+        command.extend(["--output", output_file])
+
+        run_command(command, shaderinfo.input_directory, self.opt)
+
+        # Patch GLSL output to make it work with the LLGL example projects
+        patch_glsl_output(output_file, has_geometry_output=shaderinfo.has_geometry_output)
+
+    def compile_spirv_to_metal(self, input_spirv, output_file, shaderinfo: ShaderInfo):
+        run_command(
+            [
+                self.tools.spirv_cross,
+                input_spirv,
+                "--msl",
+                "--msl-decoration-binding", # LLGL examples maintain the same binding locations for all languages
+                "--output", output_file
+            ],
+            shaderinfo.input_directory,
+            self.opt,
+        )
+
+    def compile_spirv_to_hlsl(self, input_spirv, output_file, shaderinfo: ShaderInfo, shader_model: int = 50):
+        run_command(
+            [
+                self.tools.spirv_cross,
+                input_spirv,
+                "--hlsl",
+                "--hlsl-user-semantic",
+                "--shader-model", str(shader_model),
+                "--output", output_file
+            ],
+            shaderinfo.input_directory,
+            self.opt,
+        )
+    
+    def compile_hlsl_to_dxil(self, source_file, output_file, shaderinfo: ShaderInfo, entry, dxc_macro_args = []):
+        debug_args = ["-Zi", "-Fd", f"{output_file}.pdb"] if self.opt.debug else []
+        optimization_args = [] if self.opt.debug else ["-O3"]
+        run_command(
+            [
+                self.tools.dxc,
+                "-nologo",
+                "-no-warnings",
+                "-T", clamp_dxc_profile(entry["profile"]),
+                "-E", entry["entry"],
+                "-Fo", output_file,
+                source_file
+            ] + optimization_args + debug_args + dxc_macro_args,
+            shaderinfo.input_directory,
+            self.opt,
+        )
+
+    def disassemble_spirv(self, input_spirv, shaderinfo: ShaderInfo):
+        if self.opt.debug:
+            run_command(
+                [
+                    self.tools.spirv_dis,
+                    input_spirv,
+                    "-o", input_spirv.with_suffix(".spvasm")
+                ],
+                shaderinfo.input_directory,
+                self.opt,
+            )
+
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description="Translate HLSL shaders described by *.shaderinfo.yml files."
+    )
+    parser.add_argument(
+        "input_positional",
+        nargs="?",
+        metavar="INPUT",
+        help="Search folder; equivalent to --input.",
+    )
+    parser.add_argument(
+        "-i", "--input",
+        metavar="INPUT",
+        help="Search folder (default: examples/).",
+    )
+    parser.add_argument(
+        "-s", "--search-depth",
+        type=int,
+        default=2,
+        metavar="N",
+        help="Maximum number of subfolder levels to search (default: 2).",
+    )
+    parser.add_argument(
+        "-d", "--debug",
+        action="store_true",
+        help="Generate SPIR-V disassembly (*.spvasm) alongside SPIR-V binaries.",
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Print every generated output and compiler action.",
+    )
+    parser.add_argument(
+        "-c", "--color",
+        action="store_true",
+        help="Highlight processed shader-info files with ANSI terminal colors.",
+    )
+    parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress output for processed shader-info files.",
+    )
+    parser.add_argument(
+        "-o", "--output",
+        metavar="OUTPUT",
+        help=(
+            "Output folder relative to each shader-info file. Use '.' to write beside "
+            "the input source (default: .autogen/). Absolute path is also allowed."
+        ),
+    )
+    parser.add_argument(
+        "--trim-stem",
+        default="",
+        metavar="ENTRIES",
+        help="Entry names to omit from generated output stems if possible (default: none).",
+    )
+    parser.add_argument(
+        "-t", "--targets",
+        metavar="TARGETS",
+        help="Comma-separated output targets to enable (default: all configured targets).",
+    )
+    parser.add_argument(
+        "-not", "--not-targets",
+        metavar="TARGETS",
+        help="Comma-separated output targets to disable (default: no targets are disabled).",
+    )
+    parser.add_argument(
+        "--dxc-path",
+        metavar="PATH",
+        help="Path to the external DXC compiler executable.",
+    )
+    parser.add_argument(
+        "--fxc-path",
+        metavar="PATH",
+        help="Path to the external FXC compiler executable.",
+    )
+    parser.add_argument(
+        "--glslang-path",
+        metavar="PATH",
+        help="Path to the external glslangValidator (or glslang) executable.",
+    )
+    parser.add_argument(
+        "--spirv-cross-path",
+        metavar="PATH",
+        help="Path to the external SPIRV-Cross executable.",
+    )
+    parser.add_argument(
+        "--spirv-dis-path",
+        metavar="PATH",
+        help="Path to the external spirv-dis executable.",
+    )
+    parser.add_argument(
+        "--spirv-opt-path",
+        metavar="PATH",
+        help="Path to the external spirv-opt executable.",
+    )
+    parser.add_argument(
+        "-I",
+        dest="shader_include_dirs",
+        action="append",
+        type=Path,
+        default=[],
+        metavar="PATH",
+        help="Add a shader include directory; may be specified multiple times.",
+    )
+    arguments = parser.parse_args()
+
+    if arguments.input and arguments.input_positional:
+        parser.error("specify the input directory either positionally or with --input, not both")
+    if arguments.search_depth < 0:
+        parser.error("--search-depth must be zero or greater")
+
+    arguments.input = Path(arguments.input or arguments.input_positional or "examples")
+    arguments.output = Path(arguments.output) if arguments.output else None
+    arguments.trim_stem = {
+        entry_name.strip()
+        for entry_name in arguments.trim_stem.split(",")
+        if entry_name.strip()
+    }
+    arguments.targets = (
+        {
+            target.strip()
+            for target in arguments.targets.split(",")
+            if target.strip()
+        }
+        if arguments.targets is not None
+        else None
+    )
+    arguments.disabled_targets = (
+        {
+            target.strip()
+            for target in arguments.not_targets.split(",")
+            if target.strip()
+        }
+        if arguments.not_targets is not None
+        else None
+    )
+    return arguments
+
+
+def require_tool(tool: str, install_url: str, external_path: Path = None, is_optional: bool = False) -> Path:
+    if external_path is not None:
+        if external_path.is_file():
+            return external_path
+        else:
+            print(f"External tool path does not exist: '{external_path}'; Falling back to default")
+    if shutil.which(tool) is None:
+        if is_optional:
+            return None
+        raise RuntimeError(
+            f"Required tool '{tool}' was not found on PATH. Install it from {install_url} "
+            "and add its executable directory to PATH."
+        )
+    return Path(tool)
+
+
+def require_glslang_tool(external_path: Path = None) -> Path:
+    if external_path is not None:
+        return external_path
+    for tool in ("glslangValidator", "glslang"):
+        if shutil.which(tool) is not None:
+            return Path(tool)
+    raise RuntimeError(
+        "Required GLSL compiler 'glslangValidator' (or 'glslang') was not found on PATH. "
+        "Install it from https://github.com/KhronosGroup/glslang and add its executable "
+        "directory to PATH."
+    )
+
+
+def find_fxc_in_sdk_bin(sdk_bin: Path, architecture: str = "x64") -> Path | None:
+    if not sdk_bin.is_dir():
+        return None
+    version_directories = sorted(
+        (directory for directory in sdk_bin.iterdir() if directory.name.startswith("10.")),
+        key=lambda directory: tuple(int(part) for part in directory.name.split(".")),
+        reverse=True,
+    )
+    for version_directory in version_directories:
+        fxc_path = version_directory / architecture / "fxc.exe"
+        if fxc_path.is_file():
+            return fxc_path
+    return None
+
+
+def find_fxc_via_vswhere(architecture: str = "x64") -> Path | None:
+    program_files_x86 = Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)"))
+    vswhere_path = program_files_x86 / "Microsoft Visual Studio" / "Installer" / "vswhere.exe"
+    if not vswhere_path.is_file():
+        return None
+
+    result = subprocess.run(
+        [
+            vswhere_path,
+            "-latest",
+            "-requires", "Microsoft.VisualStudio.Component.Windows10SDK",
+            "-format", "json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    try:
+        if not json.loads(result.stdout):
+            return None
+    except json.JSONDecodeError:
+        return None
+
+    return find_fxc_in_sdk_bin(program_files_x86 / "Windows Kits" / "10" / "bin", architecture)
+
+
+def find_fxc_tool_path() -> Path | None:
+    fxc_path = shutil.which("fxc")
+    if fxc_path is not None:
+        return Path(fxc_path)
+
+    fxc_path = find_fxc_via_vswhere()
+    if fxc_path is not None:
+        return fxc_path
+
+    sdk_roots = [
+        Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Windows Kits" / "10" / "bin",
+        Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Windows Kits" / "10" / "bin",
+    ]
+    for sdk_root in sdk_roots:
+        fxc_path = find_fxc_in_sdk_bin(sdk_root)
+        if fxc_path is not None:
+            return fxc_path
+    return None
+
+
+def find_fxc_tool(verbose: bool, external_path: Path = None) -> Path | None:
+    # Skip FXC outside of Windows environment
+    if sys.platform != "win32":
+        if verbose:
+            print("FXC is only available on Windows")
+        return None
+
+    fxc_path = find_fxc_tool_path() if external_path is None else external_path
+    if verbose:
+        if fxc_path is None:
+            print("FXC was not found on PATH or in the Windows SDK")
+        else:
+            print(f"Found FXC: {fxc_path}")
+    return fxc_path
+
+
+def filter_targets(targets, opt: Options):
+    if opt.enabled_targets is not None:
+        return [target for target in targets if target in opt.enabled_targets]
+    if opt.disabled_targets is not None:
+        return [target for target in targets if target not in opt.disabled_targets]
+    return targets
+
+
+def find_tools(opt: Options, sources) -> Toolchain:
+    tools = Toolchain()
+
+    requested_targets = {
+        target
+        for source in sources
+        for entry in source["entries"]
+        for target in filter_targets(entry["targets"], opt)
+    }
+    has_hlsl_targets = any(
+        Path(source["source"]).suffix.lower() == ".hlsl"
+        and any(filter_targets(entry["targets"], opt) for entry in source["entries"])
+        for source in sources
+    )
+    has_glsl_sources = any(
+        Path(source["source"]).suffix.lower() != ".hlsl"
+        and any(filter_targets(entry["targets"], opt) for entry in source["entries"])
+        for source in sources
+    )
+
+    # dxc
+    if has_hlsl_targets or "dxil" in requested_targets:
+        tools.dxc = require_tool("dxc", "https://github.com/microsoft/DirectXShaderCompiler", external_path=opt.dxc_path)
+
+    # spirv-cross
+    requires_spirv_cross = has_hlsl_targets or "metal" in requested_targets
+    if requires_spirv_cross:
+        tools.spirv_cross = require_tool("spirv-cross", "https://github.com/KhronosGroup/SPIRV-Cross", external_path=opt.spirv_cross_path)
+
+    # glslang / glslangValidator
+    if has_glsl_sources:
+        tools.glslang = require_glslang_tool(external_path=opt.glslang_path)
+        tools.spirv_opt = require_tool("spirv-opt", "https://github.com/KhronosGroup/SPIRV-Tools", external_path=opt.spirv_opt_path, is_optional=True)
+
+    # fxc
+    if "dxbc" in requested_targets:
+        tools.fxc = find_fxc_tool(opt.verbose, external_path=opt.fxc_path)
+
+    # spirv-dis
+    if opt.debug:
+        tools.spirv_dis = require_tool("spirv-dis", "https://github.com/KhronosGroup/SPIRV-Tools", external_path=opt.spirv_dis_path)
+
+    return tools
+
+
+def unquote_yaml_string(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    return value
+
+
+# Built-in YAML parser with more restricted syntax.
+# This serves as a fallback when PyYAML is not available.
+def parse_shader_info_without_yaml(filename: Path) -> dict:
+    sources = []
+    current_source = None
+    current_entry = None
+    in_targets = False
+    in_macros = False
+
+    for line_number, raw_line in enumerate(filename.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw_line.split("#", 1)[0].strip()
+        if not line or line == "sources:":
+            continue
+
+        source_match = re.fullmatch(r"-\s*source\s*:\s*(.+)", line)
+        if source_match:
+            current_source = {
+                "source": unquote_yaml_string(source_match.group(1)),
+                "entries": [],
+            }
+            sources.append(current_source)
+            current_entry = None
+            in_targets = False
+            in_macros = False
+            continue
+
+        if line == "permutation:":
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: permutation must belong to a source")
+            current_source["permutation"] = {"macros": {}}
+            current_entry = None
+            in_targets = False
+            in_macros = False
+            continue
+
+        if line == "entries:":
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: entries must belong to a source")
+            current_entry = None
+            in_targets = False
+            in_macros = False
+            continue
+
+        if current_source is not None and "permutation" in current_source:
+            override_match = re.fullmatch(r"override\s*:\s*(.+)", line)
+            if override_match:
+                current_source["permutation"]["override"] = unquote_yaml_string(override_match.group(1))
+                in_macros = False
+                continue
+            if line == "macros:":
+                in_macros = True
+                continue
+            macro_match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.+)", line)
+            if in_macros and macro_match:
+                current_source["permutation"]["macros"][macro_match.group(1)] = unquote_yaml_string(macro_match.group(2))
+                continue
+
+        entry_match = re.fullmatch(r"-\s*entry\s*:\s*(.+)", line)
+        if entry_match:
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: entry must belong to a source")
+            current_entry = {"entry": unquote_yaml_string(entry_match.group(1)), "targets": {}}
+            current_source["entries"].append(current_entry)
+            in_targets = False
+            continue
+
+        if current_entry is not None:
+            optimize_match = re.fullmatch(r"optimize\s*:\s*(.+)", line)
+            if optimize_match:
+                optimize_value = unquote_yaml_string(optimize_match.group(1))
+                try:
+                    current_entry["optimize"] = int(optimize_value)
+                except ValueError as error:
+                    raise ShaderInfoError(f"{filename}:{line_number}: optimize must be an integer") from error
+                in_targets = False
+                continue
+
+        if re.fullmatch(r"-\s*targets\s*:", line):
+            if current_source is None:
+                raise ShaderInfoError(f"{filename}:{line_number}: entry must belong to a source")
+            current_entry = {"targets": {}}
+            current_source["entries"].append(current_entry)
+            in_targets = True
+            continue
+
+        if current_entry is None:
+            raise ShaderInfoError(f"{filename}:{line_number}: expected source or entry")
+
+        profile_match = re.fullmatch(r"profile\s*:\s*(.+)", line)
+        if profile_match:
+            current_entry["profile"] = unquote_yaml_string(profile_match.group(1))
+            in_targets = False
+            continue
+
+        if line == "targets:":
+            in_targets = True
+            continue
+
+        inline_targets_match = re.fullmatch(r"targets\s*:\s*(.+)", line)
+        if inline_targets_match:
+            target_value = inline_targets_match.group(1).strip()
+            if target_value.startswith("[") and target_value.endswith("]"):
+                target_names = [
+                    unquote_yaml_string(target.strip())
+                    for target in target_value[1:-1].split(",")
+                    if target.strip()
+                ]
+            else:
+                target_names = target_value.split()
+            current_entry["targets"] = {
+                target: None
+                for target in target_names
+            }
+            in_targets = False
+            continue
+
+        target_match = re.fullmatch(r"([A-Za-z0-9_]+)\s*:", line)
+        if in_targets and target_match:
+            current_entry["targets"][target_match.group(1)] = None
+            continue
+
+        raise ShaderInfoError(f"{filename}:{line_number}: unsupported YAML syntax without PyYAML")
+
+    return {"sources": sources}
+
+
+def normalize_targets(filename: Path, targets) -> list[str]:
+    if isinstance(targets, dict):
+        target_names = list(targets)
+    elif isinstance(targets, str):
+        target_value = targets.strip()
+        if target_value.startswith("[") and target_value.endswith("]"):
+            target_names = [
+                unquote_yaml_string(target.strip())
+                for target in target_value[1:-1].split(",")
+                if target.strip()
+            ]
+        else:
+            target_names = target_value.split()
+    elif isinstance(targets, list):
+        target_names = targets
+    else:
+        raise ShaderInfoError(f"{filename}: each entry needs a non-empty targets mapping, list, or string")
+    if not target_names or not all(isinstance(target, str) and target for target in target_names):
+        raise ShaderInfoError(f"{filename}: target names must be non-empty strings")
+    return target_names
+
+
+def parse_shader_info(filename: Path):
+    if yaml is None:
+        document = parse_shader_info_without_yaml(filename)
+    else:
+        try:
+            document = yaml.safe_load(filename.read_text(encoding="utf-8"))
+        except yaml.YAMLError as error:
+            raise ShaderInfoError(f"{filename}: invalid YAML: {error}") from error
+
+    if not isinstance(document, dict):
+        raise ShaderInfoError(f"{filename}: root YAML value must be a mapping")
+
+    sources = document.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return None
+
+    parsed_sources = []
+    for source_info in sources:
+        if not isinstance(source_info, dict):
+            raise ShaderInfoError(f"{filename}: each source must be a mapping")
+        source = source_info.get("source")
+        entries = source_info.get("entries")
+        if not isinstance(source, str) or not source:
+            raise ShaderInfoError(f"{filename}: each source needs a non-empty source field")
+        if not isinstance(entries, list) or not entries:
+            raise ShaderInfoError(f"{filename}: each source needs a non-empty entries list")
+
+        permutation = source_info.get("permutation")
+        if permutation is not None:
+            if not isinstance(permutation, dict):
+                raise ShaderInfoError(f"{filename}: permutation must be a mapping")
+            override = permutation.get("override")
+            macros = permutation.get("macros")
+            if override and not isinstance(override, str):
+                raise ShaderInfoError(f"{filename}: permutation override must be a string")
+            if not isinstance(macros, dict):
+                raise ShaderInfoError(f"{filename}: permutation macros must be a mapping")
+            if not all(isinstance(name, str) and name for name in macros):
+                raise ShaderInfoError(f"{filename}: permutation macro names must be non-empty strings")
+            if not all(isinstance(value, (str, int, float, bool)) for value in macros.values()):
+                raise ShaderInfoError(f"{filename}: permutation macro values must be scalar values")
+            permutation = {
+                "override": override,
+                "macros": {name: str(value) for name, value in macros.items()},
+            }
+
+        parsed_entries = []
+        is_hlsl = Path(source).suffix.lower() == ".hlsl"
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ShaderInfoError(f"{filename}: each entry must be a mapping")
+            targets = normalize_targets(filename, entry.get("targets"))
+            optimize = entry.get("optimize", 3)
+            if isinstance(optimize, bool) or not isinstance(optimize, int):
+                raise ShaderInfoError(f"{filename}: optimize must be an integer")
+            parsed_entry = {"targets": targets, "optimize": optimize}
+            if is_hlsl:
+                entry_point = entry.get("entry")
+                profile = entry.get("profile")
+                if not isinstance(entry_point, str) or not entry_point:
+                    raise ShaderInfoError(f"{filename}: each HLSL entry needs a non-empty entry field")
+                if not isinstance(profile, str) or not profile:
+                    raise ShaderInfoError(f"{filename}: each HLSL entry needs a non-empty profile field")
+                parsed_entry.update({"entry": entry_point, "profile": profile})
+            else:
+                entry_point = entry.get("entry")
+                parsed_entry.update({"entry": entry_point})
+            parsed_entries.append(parsed_entry)
+        parsed_source = {"source": source, "entries": parsed_entries}
+        if permutation is not None:
+            parsed_source["permutation"] = permutation
+        parsed_sources.append(parsed_source)
+
+    return parsed_sources
+
+
+def find_shaderinfo_filenames(input_directory, search_depth):
+    for filename in sorted(input_directory.rglob("*.shaderinfo.yml")):
+        relative_parent = filename.parent.relative_to(input_directory)
+        if len(relative_parent.parts) <= search_depth:
+            yield filename
+
+
+def format_command_argument(argument, input_directory: Path) -> str:
+    if isinstance(argument, Path):
+        try:
+            return str(argument.relative_to(input_directory))
+        except ValueError:
+            return str(argument)
+    return str(argument)
+
+
+def try_run_command(command, input_directory: Path = None, opt: Options = None) -> int:
+    if opt and opt.verbose and input_directory is not None:
+        print("    " + " ".join(
+            format_command_argument(argument, input_directory)
+            for argument in command
+        ))
+    return subprocess.run(command, check=True).returncode
+
+
+def run_command(command, input_directory: Path = None, opt: Options = None):
+    returncode = try_run_command(command, input_directory, opt)
+    if returncode != 0:
+        raise ShaderInfoError(f"command failed with exit code {returncode}: {' '.join(command)}")
+
+
+def get_stage_extension(profile):
+    stage, separator, _ = profile.partition("_")
+    extension = STAGE_EXTENSIONS.get(stage)
+    if not separator or extension is None:
+        raise ShaderInfoError(f"unsupported HLSL profile '{profile}'")
+    return extension
+
+
+def clamp_dxc_profile(profile: str) -> str:
+    match = re.fullmatch(r"([a-z]+)_(\d+)_(\d+)", profile)
+    if match is None:
+        raise ShaderInfoError(f"unsupported HLSL profile '{profile}'")
+    stage, major_version, minor_version = match.groups()
+    if (int(major_version), int(minor_version)) < (6, 0):
+        return f"{stage}_6_0"
+    return profile
+
+
+def output_stem(source, entry = None, trimmed_entries = None, target = None, stage = None, override = None):
+    stem = source.stem
+    if override:
+        stem += f".{override}"
+    if entry and (trimmed_entries is None or entry not in trimmed_entries):
+        stem += f".{entry}"
+    if target:
+        stem += f".{target}"
+    if stage:
+        stem += f".{stage}"
+    return stem
+
+
+def patch_glsl_output(output_file: Path, has_geometry_output: bool = False):
+    with open(output_file, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    is_vertex_shader = output_file.suffix == ".vert"
+    is_geometry_shader = output_file.suffix == ".geom"
+    is_fragment_shader = output_file.suffix == ".frag"
+
+    # Remove all 'in_var_' prefixes from vertex shader inputs
+    if is_vertex_shader:
+        content = content.replace("in_var_", "")
+        content = content.replace("out_var_", "v_")
+
+    if has_geometry_output:
+        if is_geometry_shader:
+            content = content.replace("in_var_", "v_")
+            content = content.replace("out_var_", "g_")
+        elif is_fragment_shader:
+            content = content.replace("in_var_", "g_")
+            content = content.replace("out_var_", "")
+    else:
+        if is_fragment_shader:
+            content = content.replace("in_var_", "v_")
+            content = content.replace("out_var_", "")
+
+    # Strip wrappers from combined dummy-sampler identifiers.
+    # This happens for textures that are accessed through load intrinsics rather than sampler intrinsics.
+    # They should keep their original texture name and not include any of the proxy prefix and suffix from SPIRV-Cross.
+    content = re.sub(
+        r"(?<![A-Za-z0-9_])SPIRV_Cross_Combined([A-Za-z_][A-Za-z0-9_]*?)SPIRV_Cross_DummySampler(?![A-Za-z0-9_])",
+        r"\1",
+        content,
+    )
+
+    # Insert '#extension GL_ARB_viewport_array : enable' statement after `#version`-directive.
+    if is_geometry_shader and "gl_ViewportIndex" in content:
+        content = re.sub(
+            r"(#version\s+\d+\s*\n)",
+            r"\1#extension GL_ARB_viewport_array : enable\n",
+            content,
+            count=1,
+        )
+
+    # Rename the prefix of all combined texture-samplers.
+    # These must be distinguishable from the original texture and sampler identifiers.
+    content = content.replace("SPIRV_Cross_Combined", "s_")
+
+    # Rename SPIRV-Cross UBO types and remove their instance aliases.
+    for uniform_match in re.finditer(
+        r"uniform\s+type_(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{.*?\}\s*(?P=name)\s*;",
+        content,
+        re.DOTALL,
+    ):
+        uniform_name = uniform_match.group("name")
+        sanitized_uniform = re.sub(
+            rf"\s*\}}\s*{re.escape(uniform_name)}\s*;$",
+            "\n};",
+            uniform_match.group(0),
+        ).replace(f"type_{uniform_name}", uniform_name, 1)
+        content = content.replace(uniform_match.group(0), sanitized_uniform)
+        content = content.replace(f"{uniform_name}.", "")
+
+    # Write back into the same output file
+    with open(output_file, "w", encoding="utf-8") as file:
+        file.write(content)
+
+
+def translate_hlsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
+    targets = filter_targets(entry["targets"], context.opt)
+    if not targets:
+        return
+
+    stage_extension = get_stage_extension(entry["profile"])
+    shaderinfo.output_directory.mkdir(parents=True, exist_ok=True)
+    override = shaderinfo.permutation["override"] if shaderinfo.permutation is not None else None
+    macros = shaderinfo.permutation["macros"] if shaderinfo.permutation is not None else {}
+    dxc_macro_args = [f"-D{name}={value}" for name, value in macros.items()]
+    fxc_macro_args = [f"/D{name}={value}" for name, value in macros.items()]
+    intermediate_spv = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, '450core', stage_extension, override)}.temp.spv"
+
+    # Compile HLSL to SPIR-V using DXC to be used for cross-compiling to high-level language (GLSL, Metal etc.)
+    context.compile_hlsl_to_spirv(
+        source = source_file,
+        output = intermediate_spv,
+        profile = entry["profile"],
+        extra_args = dxc_macro_args,
+        in_entry = entry["entry"],
+        input_directory = shaderinfo.input_directory,
+        opt_level = entry["optimize"],
+    )
+
+    for target in targets:
+        if target == "spirv":
+            # Compile to SPIR-V and set entry point to "main()" as LLGL's examples don't use custom entry points
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, '450core', stage_extension, override)}.spv"
+            optimization_args = [] if context.opt.debug else ["-O3"]
+            context.compile_hlsl_to_spirv(
+                source = source_file,
+                output = output_file,
+                profile = entry["profile"],
+                extra_args = optimization_args + dxc_macro_args,
+                in_entry = entry["entry"],
+                out_entry = "main", #TODO: this should retain the original entry point, but during the examples' transitionioning phase, use "main" for compatibility
+                input_directory = shaderinfo.input_directory,
+            )
+
+            # Produce SPIR-V disassembly as debug output
+            context.disassemble_spirv(output_file, shaderinfo)
+            continue
+
+        if target == "metal":
+            # Compile to Metal using SPIRV-Cross
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.metal"
+            context.compile_spirv_to_metal(intermediate_spv, output_file, shaderinfo)
+            continue
+
+        if target == "dxil":
+            # Compile to DXIL bytecode using DXC
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.dxil"
+            context.compile_hlsl_to_dxil(source_file, output_file, shaderinfo, entry, dxc_macro_args)
+            continue
+
+        if target == "dxbc":
+            # Compile to DXBC bytecode using FXC
+            if context.tools.fxc is None:
+                print(
+                    f"warning: skipping DXBC output for {source_file.name} entry "
+                    f"'{entry['entry']}': 'fxc' was not found on PATH or in the Windows SDK. Install it from "
+                    "https://learn.microsoft.com/en-us/windows/win32/direct3dtools/fxc",
+                    file=sys.stderr,
+                )
+                continue
+            output_file = shaderinfo.output_directory / f"{output_stem(source_file, entry['entry'], context.opt.trimmed_entries, override=override)}.dxbc"
+            debug_args = ["/Zi", "/Fd", f"{output_file}.pdb"] if context.opt.debug else []
+            run_command(
+                [
+                    context.tools.fxc,
+                    "/nologo",
+                    "/T", entry["profile"],
+                    "/E", entry["entry"],
+                    "/Fo", output_file,
+                    source_file
+                ] + debug_args + fxc_macro_args,
+                shaderinfo.input_directory,
+                context.opt,
+            )
+            continue
+
+        # Compile to GLSL using SPIRV-Cross
+        target_match = GLSL_TARGET_PATTERN.fullmatch(target)
+        if target_match is None:
+            raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
+        output_file = shaderinfo.output_directory / output_stem(source_file, entry['entry'], context.opt.trimmed_entries, target_match['version'] + target_match['flavor'], stage_extension, override)
+        context.compile_spirv_to_glsl(intermediate_spv, output_file, target, shaderinfo)
+
+    # Clean up intermediate files that are not needed in the final outut
+    intermediate_spv.unlink()
+    if context.opt.verbose:
+        print(f"    Removed intermediate {format_command_argument(intermediate_spv, shaderinfo.input_directory)}")
+
+
+def translate_glsl_source(source_file, entry, shaderinfo: ShaderInfo, context: CompileContext):
+    targets = filter_targets(entry["targets"], context.opt)
+    if not targets:
+        return
+
+    stage_extension = Path(source_file.name).suffix[1:]
+    override = shaderinfo.permutation["override"] if shaderinfo.permutation is not None else None
+    shaderinfo.output_directory.mkdir(parents=True, exist_ok=True)
+
+    # Compile GLSL source to SPIR-V
+    optimize_spirv = context.tools.spirv_opt is not None
+    spirv_basename = shaderinfo.output_directory / output_stem(source_file, stage=stage_extension, override=override)
+    spirv_file = Path(f"{spirv_basename}.temp.spv" if optimize_spirv else f"{spirv_basename}.spv")
+    run_command(
+        [
+            context.tools.glslang,
+            "-V",
+            "-o", spirv_file,
+            source_file
+        ],
+        shaderinfo.input_directory,
+        context.opt,
+    )
+
+    # Optimize SPIR-V with spirv-opt if available
+    if optimize_spirv:
+        optimized_spirv_file = f"{spirv_basename}.spv"
+        run_command(
+            [
+                context.tools.spirv_opt,
+                spirv_file,
+                "-o", optimized_spirv_file,
+                "-O"
+            ],
+            shaderinfo.input_directory,
+            context.opt,
+        )
+
+        # Remove intermediate SPIR-V file
+        spirv_file.unlink()
+        if context.opt.verbose:
+            print(f"    Removed intermediate {format_command_argument(spirv_file, shaderinfo.input_directory)}")
+        spirv_file = Path(optimized_spirv_file)
+
+    for target in targets:
+        # Vulkan SPIR-V output
+        if target == "spirv":
+            # SPIR-V debug output
+            context.disassemble_spirv(spirv_file, shaderinfo)
+            continue
+
+        # Metal output
+        if target == "metal":
+            metal_file = shaderinfo.output_directory / f"{output_stem(source_file, stage=stage_extension, override=override)}.metal"
+            context.compile_spirv_to_metal(spirv_file, metal_file, shaderinfo)
+            continue
+
+        # HLSL output
+        if target == "hlsl":
+            hlsl_file = shaderinfo.output_directory / f"{output_stem(source_file, stage=stage_extension, override=override)}.hlsl"
+            context.compile_spirv_to_hlsl(spirv_file, hlsl_file, shaderinfo)
+            continue
+
+        # Compile to GLSL using SPIRV-Cross
+        target_match = GLSL_TARGET_PATTERN.fullmatch(target)
+        if target_match is None:
+            raise ShaderInfoError(f"unsupported target '{target}'; must follow the pattern 'glsl<version>[es|core]'!")
+        output_file = shaderinfo.output_directory / output_stem(source_file, target=target_match['version'] + target_match['flavor'], stage=stage_extension, override=override)
+        context.compile_spirv_to_glsl(spirv_file, output_file, target, shaderinfo)
+    
+    # Clean up intermediate files that are not needed in the final outut
+    if "spirv" not in targets:
+        spirv_file.unlink()
+        if context.opt.verbose:
+            print(f"    Removed intermediate {format_command_argument(spirv_file, shaderinfo.input_directory)}")
+
+
+def print_source_compile(source_file: Path, source_type: str, verbose: bool) -> None:
+    if verbose:
+        print(f'  Compiling {source_type} source "{source_file.name}"')
+
+
+def print_error(message: str, color: bool = False, indent: int = 0) -> None:
+    indent_str = " " * indent
+    if color:
+        print(f"{indent_str}{ERROR_COLOR}error:{RESET_COLOR} {message}", file=sys.stderr)
+    else:
+        print(f"{indent_str}error: {message}", file=sys.stderr)
+
+
+def main():
+    script_dir = Path(__file__).resolve().parent
+    root_dir = script_dir.parent
+
+    arguments = parse_arguments()
+    input_directory = arguments.input.resolve()
+    if not input_directory.is_dir():
+        raise RuntimeError(f"input directory does not exist: {input_directory}")
+
+    shaderinfo_filenames = list(find_shaderinfo_filenames(input_directory, arguments.search_depth))
+    if not shaderinfo_filenames:
+        print(f"No *.shaderinfo.yml files found in {input_directory}")
+        return
+
+    # Initialize the compilation context with the specified options
+    context = CompileContext()
+    context.opt.debug = arguments.debug
+    context.opt.verbose = arguments.verbose
+    context.opt.trimmed_entries = arguments.trim_stem
+    context.opt.enabled_targets = arguments.targets
+    context.opt.disabled_targets = arguments.disabled_targets
+
+    context.opt.dxc_path = Path(arguments.dxc_path) if arguments.dxc_path else None
+    context.opt.fxc_path = Path(arguments.fxc_path) if arguments.fxc_path else None
+    context.opt.glslang_path = Path(arguments.glslang_path) if arguments.glslang_path else None
+    context.opt.spirv_cross_path = Path(arguments.spirv_cross_path) if arguments.spirv_cross_path else None
+    context.opt.spirv_dis_path = Path(arguments.spirv_dis_path) if arguments.spirv_dis_path else None
+    context.opt.spirv_opt_path = Path(arguments.spirv_opt_path) if arguments.spirv_opt_path else None
+    context.set_shader_include_dirs(arguments.shader_include_dirs)
+
+    if arguments.verbose:
+        if yaml:
+            print("Parsing with PyYAML")
+        else:
+            print("Parsing with built-in YAML parser")
+
+    parsed_shaderinfos = []
+    for info_filename in shaderinfo_filenames:
+        try:
+            shader_info_source = parse_shader_info(info_filename)
+
+            # Only append shaderinfo if there are any targets to compile to
+            if shader_info_source and any(filter_targets(entry["targets"], context.opt) for source in shader_info_source for entry in source["entries"]):
+                parsed_shaderinfos.append((ShaderInfo(info_filename, arguments.output), shader_info_source))
+        except ShaderInfoError as error:
+            print_error(f"{error}", arguments.color, indent=2)
+
+    all_sources = [source for _, sources in parsed_shaderinfos for source in sources]
+    if not all_sources:
+        return
+
+    context.tools = find_tools(context.opt, all_sources)
+
+    #if not any(filter_targets(entry["targets"], context.opt) for source in sources for entry in source["entries"]):
+    #    continue
+
+    # Process all *.shaderinfo.yml files
+    return_code = 0
+    source_index = 0
+    source_count = len(parsed_shaderinfos)
+
+    if not arguments.quiet:
+        print(f"Translating {source_count} shader info {'file' if source_count == 1 else 'files'} in {input_directory.relative_to(root_dir)} ...")
+
+    for shaderinfo, sources in parsed_shaderinfos:
+        try:
+            if not arguments.quiet:
+                shaderinfo.print_processing_info(root_dir, arguments.color, source_index, source_count)
+
+            for source in sources:
+                # Extract source file path
+                source_file = shaderinfo.input_directory / source["source"]
+                if not source_file.is_file():
+                    raise ShaderInfoError(f"{shaderinfo.info_filename}: source file does not exist: {source_file}")
+                if not any(filter_targets(entry["targets"], context.opt) for entry in source["entries"]):
+                    continue
+
+                shaderinfo.permutation = source.get("permutation")
+                shaderinfo.has_geometry_output = any(entry["profile"].startswith("gs_") for entry in source["entries"])
+
+                if source_file.suffix.lower() == ".hlsl":
+                    print_source_compile(source_file, "HLSL", context.opt.verbose)
+                    for entry in source["entries"]:
+                        translate_hlsl_source(source_file, entry, shaderinfo, context)
+                else:
+                    entries = source["entries"]
+                    if len(entries) != 1:
+                        raise ShaderInfoError(f"unsupported list of entry points for '{source_file}'; GLSL source can only have 'main'!")
+                    entry = source["entries"][0]
+                    translate_glsl_source(source_file, entry, shaderinfo, context)
+
+        except (ShaderInfoError, OSError, subprocess.CalledProcessError) as error:
+            print_error(f"{error}", arguments.color, indent=2)
+            return_code = 1
+
+        source_index += 1
+    return return_code
+
+
+if __name__ == "__main__":
+    try:
+        return_code = main()
+        sys.exit(return_code)
+    except (OSError, RuntimeError, ShaderInfoError, subprocess.CalledProcessError) as error:
+        print_error(f"{error}", False)
+        sys.exit(1)

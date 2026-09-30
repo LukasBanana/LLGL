@@ -378,6 +378,7 @@ func convertRasterizerDescriptor(dst *C.LLGLRasterizerDescriptor, src *Rasterize
 	dst.antiAliasedLineEnabled		= C.bool(src.AntiAliasedLineEnabled)
 	dst.conservativeRasterization	= C.bool(src.ConservativeRasterization)
 	dst.lineWidth					= C.float(src.LineWidth)
+	dst.shadingRateEnabled			= C.bool(src.ShadingRateEnabled)
 }
 
 func convertBlendTargetDescriptor(dst *C.LLGLBlendTargetDescriptor, src *BlendTargetDescriptor) {

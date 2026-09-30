@@ -43,9 +43,9 @@ float4 PS(OutputVS inp) : SV_Target
 {
     float4 color = colorMap.Sample(samplerState, inp.texCoord);
 
-	// Apply lambert factor for simple shading
-	float NdotL = dot(lightVec, normalize(inp.normal));
-	color.rgb *= lerp(0.2, 1.0, NdotL);
+    // Apply lambert factor for simple shading
+    float NdotL = dot(lightVec, normalize(inp.normal));
+    color.rgb *= lerp(0.2, 1.0, NdotL);
 
     return color;
 }

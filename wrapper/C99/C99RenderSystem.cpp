@@ -204,7 +204,19 @@ LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArray(uint32_t numBuffers, const L
 {
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(buffers);
-    return LLGLBufferArray{ g_CurrentRenderSystem->CreateBufferArray(numBuffers, reinterpret_cast<Buffer* const*>(buffers)) };
+    SmallVector<VertexBufferView> internalBufferViews;
+    internalBufferViews.resize(numBuffers);
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+        internalBufferViews[i] = VertexBufferView{ static_cast<Buffer*>(buffers[i].internal) };
+    return LLGLBufferArray{ g_CurrentRenderSystem->CreateBufferArray(internalBufferViews) };
+}
+
+LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArrayExt(uint32_t numBufferViews, const LLGLVertexBufferView* bufferViews)
+{
+    LLGL_ASSERT_RENDER_SYSTEM();
+    LLGL_ASSERT_PTR(bufferViews);
+    const ArrayView<VertexBufferView> internalBufferViews{ reinterpret_cast<const VertexBufferView*>(bufferViews), numBufferViews };
+    return LLGLBufferArray{ g_CurrentRenderSystem->CreateBufferArray(internalBufferViews) };
 }
 
 LLGL_C_EXPORT void llglReleaseBufferArray(LLGLBufferArray bufferArray)

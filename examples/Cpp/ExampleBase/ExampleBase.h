@@ -23,7 +23,6 @@
 #include <map>
 #include <type_traits>
 #include "GeometryUtils.h"
-#include "Stopwatch.h"
 
 #ifdef LLGL_OS_ANDROID
 #   include <android_native_app_glue.h>
@@ -65,6 +64,23 @@ struct ShaderPipeline
     LLGL::Shader* cs = nullptr; // Compute shader
 };
 
+class TrackballRotationModel
+{
+    LLGL::Offset2D  cursorStartPosition_;
+    Gs::Vector3f    cursorStartVector_;
+    Gs::Quaternionf modelStartRotation_;
+
+public:
+    void Rotate(
+        Gs::Quaternionf&        rotation,
+        const LLGL::Viewport&   viewport,
+        const LLGL::Offset2D&   cursorPosition,
+        bool                    isStartPosition = false,
+        float                   projZAxis       = 1.0f
+    );
+
+};
+
 class ExampleBase
 {
 
@@ -81,7 +97,7 @@ public:
     virtual ~ExampleBase() = default;
 
     // Runs the main loop.
-    void Run();
+    int Run();
 
     // Draws a frame and presents the result on the screen.
     void DrawFrame();
@@ -96,27 +112,18 @@ protected:
 
     struct ShaderDescWrapper
     {
-        ShaderDescWrapper(
-            LLGL::ShaderType    type,
-            const std::string&  filename
-        );
+        ShaderDescWrapper(LLGL::ShaderType type, const char* filename);
+        ShaderDescWrapper(LLGL::ShaderType type, const char* filename, const char* entryPoint, const char* profile);
 
-        ShaderDescWrapper(
-            LLGL::ShaderType    type,
-            const std::string&  filename,
-            const std::string&  entryPoint,
-            const std::string&  profile
-        );
-
-        LLGL::ShaderType    type;
-        std::string         filename;
-        std::string         entryPoint;
-        std::string         profile;
+        LLGL::ShaderType    type        = LLGL::ShaderType::Undefined;
+        const char*         filename    = nullptr;
+        const char*         entryPoint  = nullptr;
+        const char*         profile     = nullptr;
     };
 
 private:
 
-    class WindowEventHandler : public LLGL::Window::EventListener
+    class WindowEventHandler final : public LLGL::Window::EventListener
     {
 
         public:
@@ -134,7 +141,7 @@ private:
 
     };
 
-    class CanvasEventHandler : public LLGL::Canvas::EventListener
+    class CanvasEventHandler final : public LLGL::Canvas::EventListener
     {
 
         public:
@@ -152,57 +159,89 @@ private:
 
     };
 
+    class ShaderIncludeHandler final : public LLGL::IncludeHandler
+    {
+
+        public:
+
+            void Source(const char* sourceFilename);
+
+            bool Include(const LLGL::UTF8String& inFilename, LLGL::Blob& outFileContent, LLGL::Report& outReport) override;
+
+        public:
+
+            std::vector<std::string>    searchPaths;
+
+        private:
+
+            std::string                 sourceFileDir_;
+
+    };
+
 private:
 
+    using RenderingDebuggerPtr = std::unique_ptr<LLGL::RenderingDebugger>;
+
     #ifdef LLGL_OS_ANDROID
-    static android_app*                         androidApp_;
+    static android_app*         androidApp_;
     #endif
 
-    std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
+    RenderingDebuggerPtr        debuggerObj_;
 
-    bool                                        loadingDone_        = false;
-    std::uint32_t                               samples_            = 1;
-    LLGL::Extent2D                              initialResolution_;
-    bool                                        showTimeRecords_    = false;
-    bool                                        fullscreen_         = false;
-    bool                                        useRightHandedProj_ = false;
+    std::uint32_t               samples_            = 1;
+    LLGL::Extent2D              initialResolution_;
+    LLGL::Extent2D              drawableSize_;
+    bool                        showTimeRecords_    = false;
+    bool                        fullscreen_         = false;
+    bool                        useRightHandedProj_ = false;
+    int                         returnCode_         = 0;
+    std::uint64_t               lastFrameTick_      = 0;
 
-    LLGL::Extent2D                              drawableSize_;
+    TrackballRotationModel      trackballRotation_;
+    ShaderIncludeHandler        shaderIncludeHandler_;
+
+    struct ShaderModelInfo
+    {
+        std::string minHLSLShaderModel  = "5_0";
+        std::string minMetalShaderModel = "1.1";
+        std::string intermediateHLSLProfile;
+    }
+    shaderModelInfo_;
 
 protected:
 
     friend class ResizeEventHandler;
 
     // Default background color for all tutorials
-    const float                                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f, 1.0f };
+    const float                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f, 1.0f };
 
     // Render system
-    LLGL::RenderSystemPtr                       renderer;
+    LLGL::RenderSystemPtr       renderer;
 
     // Main swap-chain
-    LLGL::SwapChain*                            swapChain           = nullptr;
+    LLGL::SwapChain*            swapChain           = nullptr;
 
     // Main command buffer
-    LLGL::CommandBuffer*                        commands            = nullptr;
+    LLGL::CommandBuffer*        commands            = nullptr;
+
+    // If Tier1 is supported, this points to the same command buffer as `commands`. Otherwise, null.
+    LLGL::CommandBufferTier1*   commandsTier1       = nullptr;
 
     // Command queue
-    LLGL::CommandQueue*                         commandQueue        = nullptr;
+    LLGL::CommandQueue*         commandQueue        = nullptr;
 
     // User input event listener
-    LLGL::Input                                 input;
-
-    // Primary timer object
-    Stopwatch                                   timer;
+    LLGL::Input                 input;
 
     // Primary camera projection
-    Gs::Matrix4f                                projection;
+    Gs::Matrix4f                projection;
 
 protected:
 
     ExampleBase(const LLGL::UTF8String& title);
 
     // Callback to draw each frame
-    virtual void OnDrawFrame() = 0;
+    virtual void OnDrawFrame(float deltaTime) = 0;
 
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
     virtual void OnResize(const LLGL::Extent2D& resolution);
@@ -215,61 +254,61 @@ private:
     void MainLoop();
 
     // Internal function to load a shader.
-    LLGL::Shader* LoadShaderInternal(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-        const LLGL::VertexFormat&                   streamOutputFormat,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-        const LLGL::ShaderMacro*                    defines,
-        bool                                        patchClippingOrigin
+    LLGL::Shader* LoadShaderInternal(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines, long compileFlags);
+
+    struct ShaderTargetInfo
+    {
+        LLGL::ShadingLanguage               targetLanguage;
+        const char*                         profile;
+        std::initializer_list<const char*>  suffixes;
+    };
+
+    LLGL::Shader* LoadShaderForTargetLanguage(
+        LLGL::ShaderType                                type,
+        const char*                                     basename,
+        const char*                                     entryPoint,
+        const LLGL::ShaderMacro*                        defines,
+        long                                            compileFlags,
+        const std::initializer_list<ShaderTargetInfo>&  targetInfos
     );
 
 protected:
 
-    // Loads a shader from file with optional vertex formats and stream-output format.
-    LLGL::Shader* LoadShader(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
-        const LLGL::VertexFormat&                   streamOutputFormat  = {},
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
+    // Sets the minimum required shader model for the target platform.
+    // If unsupported, the function initiates to exit the application and returns false.
+    bool MinimumShaderModel(const char* hlslVersion = "5.0", const char* glslVersion = "150", const char* esslVersion = "300", const char* metalVersion = "1.1");
 
-    // Loads a shader from file with fragment attributes.
-    LLGL::Shader* LoadShader(
-        const ShaderDescWrapper&                    shaderDesc,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
+    // Loads a shader from file with optional vertex formats and stream-output format.
+    LLGL::Shader* LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
 
     // Load a shader from file and adds 'PatchClippingOrigin' to the compile flags if the screen origin is lower-left; see IsScreenOriginLowerLeft().
-    LLGL::Shader* LoadShaderAndPatchClippingOrigin(
-        const ShaderDescWrapper&                    shaderDesc,
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
-        const LLGL::VertexFormat&                   streamOutputFormat  = {},
-        const LLGL::ShaderMacro*                    defines             = nullptr
-    );
+    LLGL::Shader* LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines = nullptr);
 
-    // Loads a vertex shader with standard filename convention.
-    LLGL::Shader* LoadStandardVertexShader(
-        const char*                                 entryPoint      = "VS",
-        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats   = {},
-        const LLGL::ShaderMacro*                    defines         = nullptr);
+    // Loads a vertex/fragment/compute shader with standard filename convention.
+    LLGL::Shader* LoadVertexShader(const char* basename, const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadTessControlShader(const char* basename, const char* entryPoint = "HS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadTessEvaluationShader(const char* basename, const char* entryPoint = "DS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadGeometryShader(const char* basename, const char* entryPoint = "GS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadFragmentShader(const char* basename, const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
+    LLGL::Shader* LoadComputeShader(const char* basename, const char* entryPoint = "CS", const LLGL::ShaderMacro* defines = nullptr, long compileFlags = 0);
 
-    // Loads a fragment shader with standard filename convention.
-    LLGL::Shader* LoadStandardFragmentShader(
-        const char*                                 entryPoint      = "PS",
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs = {},
-        const LLGL::ShaderMacro*                    defines         = nullptr
-    );
+    inline LLGL::Shader* LoadStandardVertexShader(const char* entryPoint = "VS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadVertexShader("Example", entryPoint, defines);
+    }
 
-    // Loads a compute shader with standard filename convention.
-    LLGL::Shader* LoadStandardComputeShader(
-        const char*                 entryPoint  = "CS",
-        const LLGL::ShaderMacro*    defines     = nullptr
-    );
+    inline LLGL::Shader* LoadStandardFragmentShader(const char* entryPoint = "PS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadFragmentShader("Example", entryPoint, defines);
+    }
+
+    inline LLGL::Shader* LoadStandardComputeShader(const char* entryPoint = "CS", const LLGL::ShaderMacro* defines = nullptr)
+    {
+        return LoadComputeShader("Example", entryPoint, defines);
+    }
 
     // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
-    ShaderPipeline LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats);
+    ShaderPipeline LoadStandardShaderPipeline();
 
     // Throws an exception if the specified PSO creation failed.
     bool ReportPSOErrors(const LLGL::PipelineState* pso);
@@ -288,8 +327,8 @@ protected:
     LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
 
     // Loads a 3D model from file and determines the coordinates depending on the current projection matrix.
-    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3);
-    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3);
+    TriangleMesh Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
+    std::vector<TexturedVertex> Load3DModel(const std::string& filename, unsigned verticesPerFace = 3, long flags = 0);
 
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
@@ -309,9 +348,6 @@ protected:
     // Returns true if Metal is used as rendering API.
     bool IsMetal() const;
 
-    // Used by the window resize handler
-    bool IsLoadingDone() const;
-
     // Returns true if the screen origin of the selected renderer is lower-left. See RenderingCapabilities::screenOrigin.
     bool IsScreenOriginLowerLeft() const;
 
@@ -329,13 +365,16 @@ protected:
     Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far) const;
 
     // Returns a quoternion for the specified rotation
-    Gs::Quaternionf Rotation(float x, float y) const;
+    Gs::Quaternionf Rotation(float pitch, float yaw) const;
 
-    // Rotates the specified quaternion for a model-to-world transformation matrix.
-    Gs::Matrix4f RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const;
+    // Rotates the specified quaternion in a trackball motion (like in Blender).
+    void TrackballRotation(Gs::Quaternionf& rotation, bool isStartPosition = false, const LLGL::Offset2D* cursorPosition = nullptr);
 
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
+
+    // Quits the application by closing the window. This is used to quit prematurely when loading a PSO has failed.
+    void Quit(int returnCode = 0);
 
     // Returns the number of samples that was used when the swap-chain was created.
     inline std::uint32_t GetSampleCount() const
@@ -363,27 +402,27 @@ protected:
     }
 
     template <typename Container>
-    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, const LLGL::VertexFormat& vertexFormat)
+    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, std::uint32_t stride, const char* debugName = "VertexBuffer")
     {
-        LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), vertexFormat);
-        bufferDesc.debugName = "VertexBuffer";
+        LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), stride);
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &vertices[0]);
     }
 
     template <typename Container>
-    LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format)
+    LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format, const char* debugName = "IndexBuffer")
     {
         LLGL::BufferDescriptor bufferDesc = LLGL::IndexBufferDesc(GetArraySize(indices), format);
-        bufferDesc.debugName = "IndexBuffer";
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &indices[0]);
     }
 
     template <typename T>
-    LLGL::Buffer* CreateConstantBuffer(const T& initialData)
+    LLGL::Buffer* CreateConstantBuffer(const T& initialData, const char* debugName = "ConstantBuffer")
     {
         static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
         LLGL::BufferDescriptor bufferDesc = LLGL::ConstantBufferDesc(sizeof(T));
-        bufferDesc.debugName = "ConstantBuffer";
+        bufferDesc.debugName = debugName;
         return renderer->CreateBuffer(bufferDesc, &initialData);
     }
 
@@ -398,16 +437,20 @@ protected:
 template <typename T>
 void RunExample(android_app* state)
 {
+    #if LLGL_EXCEPTIONS_SUPPORTED
     try
+    #endif
     {
         ExampleBase::SetAndroidApp(state);
         T tutorial;
         tutorial.Run();
     }
+    #if LLGL_EXCEPTIONS_SUPPORTED
     catch (const std::exception& e)
     {
         LLGL_ANDROID_STDERR("%s\n", e.what());
     }
+    #endif
 }
 
 #define LLGL_IMPLEMENT_EXAMPLE(CLASS)       \
@@ -431,20 +474,29 @@ extern std::unique_ptr<ExampleBase> InstantiateExample();
 template <typename T>
 int RunExample(int argc, char* argv[])
 {
+    int returnCode = 0;
+
+    #if LLGL_EXCEPTIONS_SUPPORTED
     try
+    #endif
     {
         ExampleBase::ParseProgramArgs(argc, argv);
         T example;
-        example.Run();
+        returnCode = example.Run();
     }
+    #if LLGL_EXCEPTIONS_SUPPORTED
     catch (const std::exception& e)
     {
         LLGL::Log::Errorf("%s\n", e.what());
-        #if _WIN32
-        system("pause");
-        #endif
+        returnCode = 1;
     }
-    return 0;
+    #endif
+
+    #if _WIN32
+    if (returnCode != 0) { system("pause"); }
+    #endif
+
+    return returnCode;
 }
 
 #define LLGL_IMPLEMENT_EXAMPLE(CLASS)           \

@@ -11,6 +11,7 @@
 
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 
 
@@ -49,7 +50,7 @@ enum class OpenGLContextProfile
     ESProfile,
 
     //! \deprecated Since 0.04b; Use OpenGLContextProfile::Auto instead!
-    DefaultProfile = Auto, // DEPRECATED
+    DefaultProfile LLGL_DEPRECATED_ENUMCASE("Identifier `DefaultProfile` is deprecated since 0.05b; Use `Auto` instead!", "Auto") = Auto, // DEPRECATED
 };
 
 
@@ -59,6 +60,7 @@ enum class OpenGLContextProfile
 \brief Application descriptor structure.
 \note Only supported with: Vulkan.
 \see RendererConfigurationVulkan::application
+\todo Rename this to ApplicationInfo. "Descriptor" is intended to describe GPU objects like buffer, textures, PSOs etc.
 */
 struct ApplicationDescriptor
 {

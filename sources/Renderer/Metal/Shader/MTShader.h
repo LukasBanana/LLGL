@@ -67,8 +67,6 @@ class MTShader final : public Shader
         bool CompileFromLibraryWithData(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
         bool CompileFromDefaultLibrary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
 
-        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
-
         bool LoadShaderFunction(const char* entryPoint, NSError* error = nullptr);
 
         bool ReflectComputePipeline(ShaderReflection& reflection) const;

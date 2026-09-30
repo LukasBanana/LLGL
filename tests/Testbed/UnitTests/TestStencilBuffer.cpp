@@ -47,6 +47,7 @@ DEF_TEST( StencilBuffer )
     {
         psoDesc.pipelineLayout              = layouts[PipelineSolid];
         psoDesc.renderPass                  = renderTarget->GetRenderPass();
+        psoDesc.inputVertexAttribs          = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader                = shaders[VSSolid];
         psoDesc.stencil.testEnabled         = true;
         psoDesc.stencil.referenceDynamic    = true;

@@ -391,21 +391,28 @@ void MTDirectCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor
 
 /* ----- Input Assembly ------ */
 
-//private
-void MTDirectCommandBuffer::SetVertexBufferInternal(Buffer& buffer)
+void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     context_.SetVertexBuffer(bufferMT.GetNative(), 0);
 }
 
-void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer)
+void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
 {
-    SetVertexBufferInternal(buffer);
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    context_.SetVertexBuffer(bufferMT.GetNative(), static_cast<NSUInteger>(offset));
 }
 
-void MTDirectCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
+void MTDirectCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
 {
-    SetVertexBufferInternal(buffer);
+    if (numBufferViews == 0 || bufferViews == nullptr)
+        return;
+
+    id<MTLBuffer> buffers[MTCommandContext::maxNumVertexBuffers];
+    NSUInteger offsets[MTCommandContext::maxNumVertexBuffers];
+    TranslateVertexBufferViews(numBufferViews, bufferViews, buffers, offsets);
+
+    context_.SetVertexBuffers(buffers, offsets, static_cast<NSUInteger>(numBufferViews));
 }
 
 void MTDirectCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

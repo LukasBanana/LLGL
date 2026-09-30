@@ -16,18 +16,28 @@ namespace LLGL
 {
 
 
-static std::vector<NullBuffer*> GetNullBuffers(std::uint32_t numBuffers, Buffer* const * bufferArray)
+static std::vector<NullBuffer*> GetNullBuffers(ArrayView<VertexBufferView> bufferViews)
 {
     std::vector<NullBuffer*> buffers;
-    buffers.reserve(numBuffers);
-    for_range(i, numBuffers)
-        buffers.push_back(LLGL_CAST(NullBuffer*, bufferArray[i]));
+    buffers.resize(bufferViews.size());
+    for_range(i, bufferViews.size())
+        buffers[i] = LLGL_CAST(NullBuffer*, bufferViews[i].buffer);
     return buffers;
 }
 
-NullBufferArray::NullBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) },
-    buffers     { GetNullBuffers(numBuffers, bufferArray)       }
+static std::vector<std::uint64_t> GetBufferOffsets(ArrayView<VertexBufferView> bufferViews)
+{
+    std::vector<std::uint64_t> offsets;
+    offsets.resize(bufferViews.size());
+    for_range(i, bufferViews.size())
+        offsets[i] = bufferViews[i].offset;
+    return offsets;
+}
+
+NullBufferArray::NullBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) },
+    buffers     { GetNullBuffers(bufferViews)       },
+    offsets     { GetBufferOffsets(bufferViews)     }
 {
 }
 

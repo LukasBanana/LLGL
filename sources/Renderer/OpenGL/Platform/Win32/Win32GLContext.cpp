@@ -366,6 +366,7 @@ HGLRC Win32GLContext::CreateExplicitWGLContext(HDC hDC, Win32GLContext* sharedCo
     /* Set up context flags */
     int contextFlags = 0;
 
+    //TODO: make this dependent on RenderSystemFlags::DebugDevice instead of LLGL_DEBUG macro!
     #ifdef LLGL_DEBUG
     contextFlags |= WGL_CONTEXT_DEBUG_BIT_ARB;
     #endif
@@ -377,7 +378,7 @@ HGLRC Win32GLContext::CreateExplicitWGLContext(HDC hDC, Win32GLContext* sharedCo
         WGL_CONTEXT_MINOR_VERSION_ARB,  minor,
         WGL_CONTEXT_FLAGS_ARB,          contextFlags,
         WGL_CONTEXT_PROFILE_MASK_ARB,   GLContextProfileToBitmask(profile_.contextProfile),
-        0, 0
+        0 // Array terminator
     };
 
     /* Get shared WGL context */

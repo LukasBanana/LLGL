@@ -57,8 +57,7 @@ public:
         ExampleBase { "LLGL Example: Texturing" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
+        CreateBuffers();
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
@@ -75,26 +74,20 @@ public:
         ::fflush(stdout);
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
         // Create vertex and index buffers
-        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), vertexFormat);
+        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), sizeof(TexturedVertex));
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::Format::R32UInt);
 
         // Create constant buffer
         sceneBuffer = CreateConstantBuffer(scene);
-
-        return vertexFormat;
     }
 
     void CreatePipelines()
     {
+        shaderPipeline = LoadStandardShaderPipeline();
+
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
@@ -106,7 +99,7 @@ public:
             };
             layoutDesc.combinedTextureSamplers =
             {
-                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "samplerState", 2 }
+                LLGL::CombinedTextureSamplerDescriptor{ "s_colorMapsamplerState", "colorMap", "samplerState", 2 }
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -114,6 +107,7 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
@@ -137,27 +131,21 @@ public:
         LLGL::ImageView imageView = reader.GetImageView();
 
         // Upload image data onto hardware texture and stop the time
-        timer.Start();
+        LLGL::TextureDescriptor texDesc;
         {
-            // Create texture
-            LLGL::TextureDescriptor texDesc;
-            {
-                // Texture type: 2D
-                texDesc.type        = LLGL::TextureType::Texture2D;
+            // Texture type: 2D
+            texDesc.type        = LLGL::TextureType::Texture2D;
 
-                // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format      = LLGL::Format::RGBA8UNorm; //BGRA8UNorm
+            // Texture hardware format: RGBA with normalized 8-bit unsigned char type
+            texDesc.format      = LLGL::Format::RGBA8UNorm; //BGRA8UNorm
 
-                // Texture size
-                texDesc.extent      = reader.GetTextureDesc().extent;
+            // Texture size
+            texDesc.extent      = reader.GetTextureDesc().extent;
 
-                // Generate all MIP-map levels for this texture
-                texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
-            }
-            colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
+            // Generate all MIP-map levels for this texture
+            texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
         }
-        double texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
-        LLGL::Log::Printf("texture creation time: %f ms\n", texCreationTime * 1000.0);
+        colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
     }
 
     void LoadCompressedTexture(const std::string& filename)
@@ -233,7 +221,7 @@ public:
 
 private:
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         const float projZAxis = GetProjectionZAxis();
 
@@ -260,13 +248,16 @@ private:
         }
 
         // Update scene constants
-        static float rotation = Gs::Deg2Rad(-20.0f);
-        if (input.KeyPressed(LLGL::Key::LButton) || input.KeyPressed(LLGL::Key::RButton))
-            rotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+        static Gs::Quaternionf rotation = Rotation(Gs::Deg2Rad(-20.0f), 0.0f);
+        if (input.KeyPressed(LLGL::Key::LButton))
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
 
         scene.wMatrix.LoadIdentity();
         Gs::Translate(scene.wMatrix, Gs::Vector3f{ 0, 0, 5 * projZAxis });
-        Gs::RotateFree(scene.wMatrix, Gs::Vector3f{ 0, 1, 0 }, rotation * projZAxis);
+
+        Gs::Matrix4f rotationMatrix;
+        Gs::QuaternionToMatrix(rotationMatrix, rotation);
+        scene.wMatrix *= rotationMatrix;
 
         scene.wvpMatrix = projection;
         scene.wvpMatrix *= scene.wMatrix;

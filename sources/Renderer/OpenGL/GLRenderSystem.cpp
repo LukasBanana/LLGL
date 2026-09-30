@@ -19,7 +19,8 @@
 #include "Shader/GLLegacyShader.h"
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferWithXFB.h"
-#include "Buffer/GLBufferArrayWithVAO.h"
+#include "Buffer/GLBufferArray.h"
+#include "Buffer/GLVertexArrayCache.h"
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
@@ -55,7 +56,7 @@ static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescri
 }
 
 GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    contextMngr_
+    contextMngrScope_
     {
         GetGLProfileFromDesc(renderSystemDesc),
         std::bind(&GLRenderSystem::RegisterNewGLContext, this, std::placeholders::_1, std::placeholders::_2),
@@ -76,13 +77,14 @@ GLRenderSystem::~GLRenderSystem()
     GLTextureViewPool::Get().Clear();
     GLMipGenerator::Get().Clear();
     GLStatePool::Get().Clear();
+    GLVertexArrayCache::Get().Clear();
 }
 
 /* ----- Swap-chain ----- */
 
 SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<GLSwapChain>(*this, swapChainDesc, surface, contextMngr_);
+    return swapChains_.emplace<GLSwapChain>(*this, swapChainDesc, surface);
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
@@ -175,29 +177,29 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     return bufferGL;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 // private
 GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    #if LLGL_GLEXT_TRANSFORM_FEEDBACK2 || defined(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
     if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
         /* Create buffer with VAO and transform feedback object */
         auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
     else
-    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2
+    #endif // /LLGL_GLEXT_TRANSFORM_FEEDBACK2 / GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
         auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -212,27 +214,12 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     }
 }
 
-// Returns true if at least one of the buffers in the specified array has a VertexBuffer binding flag.
-static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    for_range(i, numBuffers)
-    {
-        if ((bufferArray[i]->GetBindFlags() & BindFlags::VertexBuffer) != 0)
-            return true;
-    }
-    return false;
-}
+LLGL_DEPRECATED_IGNORE_POP()
 
-BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* GLRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
     CreateGLContextOnce();
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-
-    /* Create vertex buffer array and build VAO if there is at least one buffer with VertexBuffer binding */
-    if (IsBufferArrayWithVertexBufferBinding(numBuffers, bufferArray))
-        return bufferArrays_.emplace<GLBufferArrayWithVAO>(numBuffers, bufferArray);
-    else
-        return bufferArrays_.emplace<GLBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<GLBufferArray>(bufferViews);
 }
 
 void GLRenderSystem::Release(Buffer& buffer)
@@ -415,7 +402,7 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<GLResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -425,7 +412,7 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     return resourceHeapGL.WriteResourceViews(firstDescriptor, resourceViews);
@@ -590,7 +577,7 @@ void GLRenderSystem::Release(Fence& fence)
 bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize != 0)
-        return contextMngr_.AllocContext()->GetNativeHandle(nativeHandle, nativeHandleSize);
+        return GLContextManager::Get().AllocContext()->GetNativeHandle(nativeHandle, nativeHandleSize);
     else
         return false;
 }
@@ -602,7 +589,7 @@ bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
 void GLRenderSystem::CreateGLContextOnce()
 {
-    (void)contextMngr_.AllocContext();
+    (void)GLContextManager::Get().AllocContext();
 }
 
 void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelFormat& pixelFormat)
@@ -695,6 +682,7 @@ static void GLQueryRendererInfo(RendererInfo& info)
 
     const std::set<const char*>& extensionNames = GetLoadedOpenGLExtensions();
     info.extensionNames = std::vector<UTF8String>(extensionNames.begin(), extensionNames.end());
+    std::sort(info.extensionNames.begin(), info.extensionNames.end());
 
     GLQueryPipelineCacheID(info.pipelineCacheID);
 }

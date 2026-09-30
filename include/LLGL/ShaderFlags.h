@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
+#include <LLGL/IncludeHandler.h>
 #include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
@@ -68,6 +69,7 @@ enum class ShaderSourceType
 
 /**
 \brief Shader compilation flags enumeration.
+\remarks The shader compile flags are heavily backend dependent and are therefore silently ignored if they are not supported by the backend.
 \see ShaderDescriptor::flags
 \todo Rename to CompileFlags.
 */
@@ -167,6 +169,38 @@ struct ShaderCompileFlags
         \note Only supported with: Metal.
         */
         DefaultLibrary          = (1 << 8),
+
+        /**
+        \brief Specifies whether input/output attributes should be treated case insensitive.
+
+        \remarks This can be used to simplify compatibility with GLSL shaders of older versions that were cross-compiled from HLSL.
+        Some compiler toolchains use the HLSL \e semantic name for the GLSL counterpart, but HLSL attributes are already case-insensitive.
+
+        \remarks
+        Consider the following HLSL code snippet of a vertex shader:
+        \code{hlsl}
+        struct VertexInput {
+            float3 position : POSITION;
+            float2 texCoord : TEXCOORD;
+        };
+        \endcode
+        A hand-written translated GLSL shader for these attributes might look like this:
+        \code{glsl}
+        in vec3 position;
+        in vec2 texCoord;
+        \endcode
+        An auto-generated GLSL shader for these attributes on the other hand might look like this:
+        \code{glsl}
+        in vec3 POSITION;
+        in vec2 TEXCOORD;
+        \endcode
+        This flag relaxes this condition by making the lookup case-insensitive.
+        GLSL shaders with <code>#version 420</code> or higher can ignore this,
+        since attributes are already bound within the shader themselves via their <code>layout(location=N)</code> qualifier.
+
+        \note Only supported with: OpenGL.
+        */
+        CaseInsensitiveAttribs  = (1 << 9),
     };
 };
 
@@ -310,6 +344,18 @@ struct ComputeShaderAttributes
 */
 struct ShaderDescriptor
 {
+    //TODO: remove these delcaration once deprecation has ended {
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    ShaderDescriptor(const ShaderDescriptor&) = default;
+    ShaderDescriptor(ShaderDescriptor&&) = default;
+    ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
+    ShaderDescriptor& operator = (ShaderDescriptor&&) = default;
+    ~ShaderDescriptor() = default;
+    LLGL_DEPRECATED_IGNORE_POP()
+    // }
+
+    LLGL_DEPRECATED_IGNORE_PUSH()
+
     ShaderDescriptor() = default;
 
     //! Constructor to initialize the shader descriptor with a source filename.
@@ -334,6 +380,8 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
+
+    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.
@@ -414,7 +462,16 @@ struct ShaderDescriptor
     */
     long                        flags           = 0;
 
-    //! Vertex (or geometry) shader specific attributes.
+    /**
+    \brief Optional include handler. By default, the backend specific default include handler will be used.
+    \remarks This can be used to handle customized search paths for include directories.
+    This is only relevant when compiling from source as binary files generally do not contain <code>#include</code>-directives.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    IncludeHandler*             includeHandler  = nullptr;
+
+    //! \deprecated Since 0.05b; Use GraphicsPipelineDescriptor::inputVertexAttribs instead!
+    LLGL_DEPRECATED("LLGL::ShaderDescriptor::vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGL::GraphicsPipelineDescriptor instead")
     VertexShaderAttributes      vertex;
 
     //! Fragment shader specific attributes.

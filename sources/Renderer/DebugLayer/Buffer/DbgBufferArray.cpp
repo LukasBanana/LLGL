@@ -6,16 +6,33 @@
  */
 
 #include "DbgBufferArray.h"
+#include "DbgBuffer.h"
 
 
 namespace LLGL
 {
 
 
-DbgBufferArray::DbgBufferArray(BufferArray& instance, long bindFlags, std::vector<DbgBuffer*>&& buffers) :
-    BufferArray { bindFlags          },
-    instance    { instance           },
-    buffers     { std::move(buffers) }
+/*
+ * DbgVertexBufferSlot struct
+ */
+
+DbgVertexBufferSlot::DbgVertexBufferSlot(DbgBuffer* buffer, std::uint32_t stride, std::uint64_t offset) :
+    buffer { buffer                                                             },
+    stride { stride != 0 ? stride : buffer != nullptr ? buffer->desc.stride : 0 },
+    offset { offset                                                             }
+{
+}
+
+
+/*
+ * DbgBufferArray class
+ */
+
+DbgBufferArray::DbgBufferArray(BufferArray& instance, long bindFlags, DbgVertexBufferSlotVector&& bufferSlots) :
+    BufferArray { bindFlags              },
+    instance    { instance               },
+    bufferSlots { std::move(bufferSlots) }
 {
 }
 

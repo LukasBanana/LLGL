@@ -9,6 +9,7 @@
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../Ext/VKExtensionRegistry.h"
+#include "../Ext/VKExtensions.h"
 #include "../../RenderPassUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
@@ -173,13 +174,152 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits, desc.views);
 }
 
+#if VK_KHR_create_renderpass2 && VK_KHR_depth_stencil_resolve
+
+static VkAttachmentDescription2KHR ToVkAttachmentDescription2(const VkAttachmentDescription& src)
+{
+    VkAttachmentDescription2KHR dst = {};
+    {
+        dst.sType           = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR;
+        dst.pNext           = nullptr;
+        dst.flags           = src.flags;
+        dst.format          = src.format;
+        dst.samples         = src.samples;
+        dst.loadOp          = src.loadOp;
+        dst.storeOp         = src.storeOp;
+        dst.stencilLoadOp   = src.stencilLoadOp;
+        dst.stencilStoreOp  = src.stencilStoreOp;
+        dst.initialLayout   = src.initialLayout;
+        dst.finalLayout     = src.finalLayout;
+    }
+    return dst;
+}
+
+static VkAttachmentReference2KHR ToVkAttachmentReference2(const VkAttachmentReference& src)
+{
+    VkAttachmentReference2KHR dst = {};
+    {
+        dst.sType       = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR;
+        dst.pNext       = nullptr;
+        dst.attachment  = src.attachment;
+        dst.layout      = src.layout;
+        dst.aspectMask  = 0; // Only read for input attachments, of which there are none
+    }
+    return dst;
+}
+
+/*
+Creates the render pass through VK_KHR_create_renderpass2, which is the only entry point that accepts a
+depth-stencil resolve description (it chains into VkSubpassDescription2, not VkSubpassDescription).
+Mirrors the version-1 path in CreateVkRenderPassWithDescriptors one-for-one, except that multiview moves from
+a chained VkRenderPassMultiviewCreateInfo to VkSubpassDescription2::viewMask.
+*/
+static VkResult CreateVkRenderPass2WithDepthStencilResolve(
+    VkDevice                        device,
+    const VkAttachmentDescription*  attachmentDescs,
+    std::uint32_t                   numAttachments,
+    const VkAttachmentReference*    colorAttachmentsRefs,
+    std::uint32_t                   numColorAttachments,
+    const VkAttachmentReference*    resolveAttachmentsRefs,
+    const VkAttachmentReference&    depthStencilAttachmentRef,
+    const VkAttachmentReference&    depthStencilResolveAttachmentRef,
+    const VkSubpassDependency&      subpassDep,
+    std::uint32_t                   viewMask,
+    VkRenderPass*                   outRenderPass)
+{
+    /* Convert the version-1 descriptors and references this class builds into their version-2 counterparts */
+    VkAttachmentDescription2KHR attachmentDescs2[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1];
+    for_range(i, numAttachments)
+        attachmentDescs2[i] = ToVkAttachmentDescription2(attachmentDescs[i]);
+
+    VkAttachmentReference2KHR colorAttachmentsRefs2[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkAttachmentReference2KHR resolveAttachmentsRefs2[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    for_range(i, numColorAttachments)
+    {
+        colorAttachmentsRefs2[i] = ToVkAttachmentReference2(colorAttachmentsRefs[i]);
+        if (resolveAttachmentsRefs != nullptr)
+            resolveAttachmentsRefs2[i] = ToVkAttachmentReference2(resolveAttachmentsRefs[i]);
+    }
+
+    const VkAttachmentReference2KHR depthStencilAttachmentRef2          = ToVkAttachmentReference2(depthStencilAttachmentRef);
+    const VkAttachmentReference2KHR depthStencilResolveAttachmentRef2   = ToVkAttachmentReference2(depthStencilResolveAttachmentRef);
+
+    /*
+    Resolve by taking sample 0 rather than averaging: an averaged depth does not correspond to any surface that
+    was rasterized, and a compositor reprojecting from it would warp against geometry that never existed.
+    SAMPLE_ZERO is also the only mode the specification requires every implementation to support.
+
+    Both aspects deliberately use the same mode. Resolving one aspect but not the other requires
+    VkPhysicalDeviceDepthStencilResolveProperties::independentResolveNone, whereas identical modes are always
+    permitted; the stencil mode is simply ignored when the format carries no stencil aspect.
+    */
+    VkSubpassDescriptionDepthStencilResolveKHR depthStencilResolve = {};
+    {
+        depthStencilResolve.sType                           = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR;
+        depthStencilResolve.pNext                           = nullptr;
+        depthStencilResolve.depthResolveMode                = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR;
+        depthStencilResolve.stencilResolveMode              = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR;
+        depthStencilResolve.pDepthStencilResolveAttachment  = (&depthStencilResolveAttachmentRef2);
+    }
+
+    VkSubpassDescription2KHR subpassDesc2 = {};
+    {
+        subpassDesc2.sType                      = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2_KHR;
+        subpassDesc2.pNext                      = (&depthStencilResolve);
+        subpassDesc2.flags                      = 0;
+        subpassDesc2.pipelineBindPoint          = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDesc2.viewMask                   = viewMask;
+        subpassDesc2.inputAttachmentCount       = 0;
+        subpassDesc2.pInputAttachments          = nullptr;
+        subpassDesc2.colorAttachmentCount       = numColorAttachments;
+        subpassDesc2.pColorAttachments          = colorAttachmentsRefs2;
+        subpassDesc2.pResolveAttachments        = (resolveAttachmentsRefs != nullptr && numColorAttachments > 0 ? resolveAttachmentsRefs2 : nullptr);
+        subpassDesc2.pDepthStencilAttachment    = (&depthStencilAttachmentRef2);
+        subpassDesc2.preserveAttachmentCount    = 0;
+        subpassDesc2.pPreserveAttachments       = nullptr;
+    }
+
+    VkSubpassDependency2KHR subpassDep2 = {};
+    {
+        subpassDep2.sType           = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2_KHR;
+        subpassDep2.pNext           = nullptr;
+        subpassDep2.srcSubpass      = subpassDep.srcSubpass;
+        subpassDep2.dstSubpass      = subpassDep.dstSubpass;
+        subpassDep2.srcStageMask    = subpassDep.srcStageMask;
+        subpassDep2.dstStageMask    = subpassDep.dstStageMask;
+        subpassDep2.srcAccessMask   = subpassDep.srcAccessMask;
+        subpassDep2.dstAccessMask   = subpassDep.dstAccessMask;
+        subpassDep2.dependencyFlags = subpassDep.dependencyFlags;
+        subpassDep2.viewOffset      = 0; // All views depend on the same source view; matches the version-1 path
+    }
+
+    VkRenderPassCreateInfo2KHR createInfo2 = {};
+    {
+        createInfo2.sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR;
+        createInfo2.pNext                   = nullptr;
+        createInfo2.flags                   = 0;
+        createInfo2.attachmentCount         = numAttachments;
+        createInfo2.pAttachments            = attachmentDescs2;
+        createInfo2.subpassCount            = 1;
+        createInfo2.pSubpasses              = (&subpassDesc2);
+        createInfo2.dependencyCount         = 1;
+        createInfo2.pDependencies           = (&subpassDep2);
+        createInfo2.correlatedViewMaskCount = (viewMask != 0 ? 1u : 0u);
+        createInfo2.pCorrelatedViewMasks    = (viewMask != 0 ? (&viewMask) : nullptr);
+    }
+    return vkCreateRenderPass2KHR(device, &createInfo2, nullptr, outRenderPass);
+}
+
+#endif // /VK_KHR_create_renderpass2 && VK_KHR_depth_stencil_resolve
+
 void VKRenderPass::CreateVkRenderPassWithDescriptors(
     VkDevice                        device,
     std::uint32_t                   numAttachments,
     std::uint32_t                   numColorAttachments,
     const VkAttachmentDescription*  attachmentDescs,
     VkSampleCountFlagBits           sampleCountBits,
-    std::uint32_t                   numViews)
+    std::uint32_t                   numViews,
+    bool                            hasDepthStencilResolve)
 {
     LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -188,8 +328,9 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     VkAttachmentReference colorAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     VkAttachmentReference resolveAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     VkAttachmentReference depthStencilAttachmentRef;
+    VkAttachmentReference depthStencilResolveAttachmentRef;
 
-    SmallVector<VkAttachmentDescription, LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS> sanitizedAttachmentDescs;
+    SmallVector<VkAttachmentDescription, LLGL_MAX_NUM_ATTACHMENTS * 2> sanitizedAttachmentDescs;
 
     /* Store sample count bits and number of color attachments (required for default blend states in VKGraphicsPipeline) */
     sampleCountBits_        = sampleCountBits;
@@ -225,9 +366,10 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     }
 
     const bool hasMultiSampling = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
+    std::uint32_t resolveAttachmentIndex = numAttachments;
+
     if (hasMultiSampling)
     {
-        std::uint32_t resolveAttachmentIndex = numAttachments;
         for_range(i, numColorAttachments)
         {
             if (attachmentDescs[numAttachments + i].format == VK_FORMAT_UNDEFINED)
@@ -242,6 +384,19 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
                 sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + i]);
             }
         }
+    }
+
+    /*
+    A multi-sampled depth-stencil attachment cannot be resolved through the sub-pass' resolve list, which is
+    color-only. It needs VkSubpassDescriptionDepthStencilResolve, and that only chains into a version-2 sub-pass
+    description -- hence the separate creation path below.
+    */
+    const bool resolvesDepthStencil = (hasDepthStencilResolve && hasMultiSampling && hasDepthStencil);
+    if (resolvesDepthStencil)
+    {
+        depthStencilResolveAttachmentRef.attachment = resolveAttachmentIndex++;
+        depthStencilResolveAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + numColorAttachments]);
     }
 
     /* Initialize sub-pass descriptor */
@@ -276,30 +431,57 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     view mask. The correlation mask hints that all views are rendered from correlated geometry, which lets
     drivers optimize. This requires VK_KHR_multiview (core in Vulkan 1.1).
     */
+    const std::uint32_t viewMask = (numViews_ > 1 ? ((1u << numViews_) - 1u) : 0u);
+    if (numViews_ > 1 && !HasExtension(VKExt::KHR_multiview))
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("A Vulkan render pass with multiple views was requested but the multiview extension is not supported");
+
+    /*
+    Take the version-2 entry point when the depth-stencil attachment is resolved; it is the only one that accepts
+    the resolve description. Everything else keeps using the version-1 entry point, so the widely-travelled path
+    is untouched. Note the two versions express multiview differently: version 1 chains
+    VkRenderPassMultiviewCreateInfo, version 2 carries the view mask on the sub-pass description itself.
+    */
+    if (resolvesDepthStencil)
+    {
+        #if VK_KHR_create_renderpass2 && VK_KHR_depth_stencil_resolve
+        if (HasExtension(VKExt::KHR_create_renderpass2) && HasExtension(VKExt::KHR_depth_stencil_resolve))
+        {
+            VkResult result = CreateVkRenderPass2WithDepthStencilResolve(
+                device,
+                sanitizedAttachmentDescs.data(),
+                static_cast<std::uint32_t>(sanitizedAttachmentDescs.size()),
+                colorAttachmentsRefs,
+                numColorAttachments,
+                (numColorAttachments > 0 ? resolveAttachmentsRefs : nullptr),
+                depthStencilAttachmentRef,
+                depthStencilResolveAttachmentRef,
+                subpassDep,
+                viewMask,
+                renderPass_.ReleaseAndGetAddressOf()
+            );
+            VKThrowIfFailed(result, "failed to create Vulkan render pass with depth-stencil resolve");
+            return;
+        }
+        #endif // /VK_KHR_create_renderpass2 && VK_KHR_depth_stencil_resolve
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("VK_KHR_depth_stencil_resolve");
+    }
+
     const void* createInfoNext = nullptr;
     #if VK_KHR_multiview
     VkRenderPassMultiviewCreateInfoKHR multiviewCreateInfo = {};
-    const std::uint32_t viewMask = (numViews_ > 1 ? ((1u << numViews_) - 1u) : 0u);
     if (numViews_ > 1)
     {
-        if (HasExtension(VKExt::KHR_multiview))
-        {
-            multiviewCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
-            multiviewCreateInfo.pNext = nullptr;
-            multiviewCreateInfo.subpassCount = 1;
-            multiviewCreateInfo.pViewMasks = (&viewMask);
-            multiviewCreateInfo.dependencyCount = 0;
-            multiviewCreateInfo.pViewOffsets = nullptr;
-            multiviewCreateInfo.correlationMaskCount = 1;
-            multiviewCreateInfo.pCorrelationMasks = (&viewMask);
-            createInfoNext = (&multiviewCreateInfo);
-        }
-        else
-        {
-            LLGL_TRAP_FEATURE_NOT_SUPPORTED("A Vulkan render pass with multiple views was requested but the multiview extension is not supported");
-        }
+        multiviewCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
+        multiviewCreateInfo.pNext = nullptr;
+        multiviewCreateInfo.subpassCount = 1;
+        multiviewCreateInfo.pViewMasks = (&viewMask);
+        multiviewCreateInfo.dependencyCount = 0;
+        multiviewCreateInfo.pViewOffsets = nullptr;
+        multiviewCreateInfo.correlationMaskCount = 1;
+        multiviewCreateInfo.pCorrelationMasks = (&viewMask);
+        createInfoNext = (&multiviewCreateInfo);
     }
-#endif // /VK_KHR_multiview
+    #endif // /VK_KHR_multiview
 
     /* Create swap-chain render pass */
     VkRenderPassCreateInfo createInfo;

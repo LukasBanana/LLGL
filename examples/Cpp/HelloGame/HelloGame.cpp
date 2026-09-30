@@ -899,8 +899,8 @@ public:
         ExampleBase { "LLGL Example: HelloGame" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateResources();
-        CreateShaders(vertexFormat);
+        CreateResources();
+        CreateShaders();
         CreatePipelines();
         LoadLevels();
         SelectLevel(0);
@@ -914,19 +914,10 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateResources()
+    void CreateResources()
     {
         // Initialize instance buffer
         instanceBuffer.Init(renderer->GetRenderingCaps());
-
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.attributes =
-        {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, offsetof(Vertex, position), sizeof(Vertex) },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1, offsetof(Vertex, normal  ), sizeof(Vertex) },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 2, offsetof(Vertex, texCoord), sizeof(Vertex) },
-        };
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
@@ -936,7 +927,7 @@ private:
         mdlGround   = Load3DModel(vertices, "HelloGame_Ground.obj");
 
         // Create vertex, index, and constant buffer
-        vertexBuffer    = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer    = CreateVertexBuffer(vertices, sizeof(Vertex));
         cbufferScene    = CreateConstantBuffer(scene);
 
         // Load texture and sampler
@@ -993,8 +984,6 @@ private:
 
         // Pass inverse size of shadow map to shader for PCF shadow mapping
         scene.shadowSizeInv = 1.0f / static_cast<float>(shadowMapSize);
-
-        return vertexFormat;
     }
 
     static std::string BytesToString(std::uint64_t val)
@@ -1011,58 +1000,18 @@ private:
         return std::string(buf);
     }
 
-    void CreateShaders(const LLGL::VertexFormat& vertexFormat)
+    void CreateShaders()
     {
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "vs_5_0" }, { vertexFormat });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "ps_5_0" });
+        sceneShaders.vs  = LoadVertexShader  ("HelloGame", "VSInstance", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        sceneShaders.ps  = LoadFragmentShader("HelloGame", "PSInstance");
 
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
-        {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" }, { vertexFormat });
-            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" }, { vertexFormat });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.300es.vert" }, { vertexFormat });
-            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.300es.frag" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.300es.vert" }, { vertexFormat });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.300es.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert.spv" }, { vertexFormat });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag.spv" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" }, { vertexFormat });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "1.1" }, { vertexFormat });
-            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "1.1" });
-
-            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "1.1" }, { vertexFormat });
-            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "1.1" });
-        }
-        else
-        {
-            LLGL_THROW_RUNTIME_ERROR("No shaders provided for this backend");
-        }
+        groundShaders.vs = LoadVertexShader  ("HelloGame", "VSGround");
+        groundShaders.ps = LoadFragmentShader("HelloGame", "PSGround");
     }
 
     void CreatePipelines()
     {
         const bool needsExplicitMultiSample = (GetSampleCount() > 1 && !IsDirect3D());
-        const bool needsUniqueBindingSlots  = (IsVulkan());
 
         // Create PSO for instanced meshes
         scenePSOLayout[0] = renderer->CreatePipelineLayout(
@@ -1070,20 +1019,27 @@ private:
                 "cbuffer(Scene@1):vert:frag,"
                 "%s(instances@2):vert,"
                 "texture(shadowMap@4):frag,"
-                "sampler(shadowMapSampler@%d):frag,"
-                "float3(worldOffset),"  // Uniform_worldOffset   (0)
-                "float(bendIntensity)," // Uniform_bendIntensity (1)
-                "uint(firstInstance),", // Uniform_firstInstance (2)
-                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
-                (needsUniqueBindingSlots ? 5 : 4)
+                "sampler(shadowMapSampler@5):frag,"
+
+                "float3( globals.worldOffset   )," // Uniform_worldOffset   (0)
+                "float ( globals.bendIntensity )," // Uniform_bendIntensity (1)
+                "uint  ( globals.firstInstance )," // Uniform_firstInstance (2)
+
+                "sampler<shadowMap, shadowMapSampler>(s_shadowMapshadowMapSampler@4),"
+                ,
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
             )
         );
+
+        // Specify vertex format
+        LLGL::DynamicVector<LLGL::VertexAttribute> vertexAttribs = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
 
         LLGL::GraphicsPipelineDescriptor scenePSODesc;
         {
             scenePSODesc.debugName                      = "InstancedMesh.PSO";
             scenePSODesc.pipelineLayout                 = scenePSOLayout[0];
             scenePSODesc.renderPass                     = swapChain->GetRenderPass();
+            scenePSODesc.inputVertexAttribs             = vertexAttribs;
             scenePSODesc.vertexShader                   = sceneShaders.vs;
             scenePSODesc.fragmentShader                 = sceneShaders.ps;
             scenePSODesc.depth.testEnabled              = true;
@@ -1100,9 +1056,11 @@ private:
             LLGL::Parse(
                 "cbuffer(Scene@1):vert,"
                 "%s(instances@2):vert,"
-                "float3(worldOffset),"
-                "float(bendIntensity),"
-                "uint(firstInstance),",
+
+                "float3( globals.worldOffset   )," // Uniform_worldOffset   (0)
+                "float ( globals.bendIntensity )," // Uniform_bendIntensity (1)
+                "uint  ( globals.firstInstance )," // Uniform_firstInstance (2)
+                ,
                 (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
             )
         );
@@ -1127,11 +1085,12 @@ private:
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
                 "texture(colorMap@2):frag,"
-                "sampler(colorMapSampler@%d):frag,"
+                "sampler(colorMapSampler@3):frag,"
                 "texture(shadowMap@4):frag,"
-                "sampler(shadowMapSampler@%d):frag,",
-                (needsUniqueBindingSlots ? 3 : 2),
-                (needsUniqueBindingSlots ? 5 : 4)
+                "sampler(shadowMapSampler@5):frag,"
+
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@2),"
+                "sampler<shadowMap, shadowMapSampler>(s_shadowMapshadowMapSampler@4),"
             )
         );
 
@@ -1139,6 +1098,7 @@ private:
         {
             groundPSODesc.debugName                     = "Ground.PSO";
             groundPSODesc.pipelineLayout                = groundPSOLayout;
+            groundPSODesc.inputVertexAttribs            = vertexAttribs;
             groundPSODesc.vertexShader                  = groundShaders.vs;
             groundPSODesc.fragmentShader                = groundShaders.ps;
             groundPSODesc.renderPass                    = swapChain->GetRenderPass();
@@ -2204,11 +2164,10 @@ private:
         }
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
-        timer.MeasureTime();
-        UpdateScene(static_cast<float>(timer.GetDeltaTime()));
+        UpdateScene(dt);
 
         commands->Begin();
         {

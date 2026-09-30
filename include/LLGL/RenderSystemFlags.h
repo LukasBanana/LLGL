@@ -18,9 +18,11 @@
 #include <LLGL/Container/StringLiteral.h>
 #include <LLGL/Container/DynamicVector.h>
 
+#include <LLGL/Deprecated.h>
+
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
-#   include <android_native_app_glue.h>
+struct android_app;
 #endif
 
 #include <cstddef>
@@ -326,6 +328,7 @@ struct RendererInfo
 \remarks This can be used for some refinements of a specific renderer, e.g. to configure the Vulkan device memory manager.
 \see RenderSystem::Load
 */
+LLGL_DEPRECATED_IGNORE_PUSH() // Suppress warnings the deprecated ::androidApp member raises via the implicit copy functions
 struct RenderSystemDescriptor
 {
     RenderSystemDescriptor() = default;
@@ -434,54 +437,60 @@ struct RenderSystemDescriptor
     */
     std::size_t         nativeHandleSize    = 0;
 
-    #ifdef LLGL_OS_ANDROID
-
     /**
-    \brief Android specific application descriptor. This descriptor is defined by the "native app glue" from the Android NDK.
-    \remarks This \b must be specified when compiling for the Android platform.
-    \remarks Here is an example for the main entry point on Android:
+    \brief Optional raw pointer to a platform specific context structure the render system is brought up with. By default null.
+    \remarks The structure it points to is identified by ::platformContextSize. Currently only used on Android,
+    where it is \b required and points to one of the following two structures:
+    \remarks A NativeActivity-based application - one entered through \c android_main(android_app*) - must hand
+    over its \c android_app state. Such an application advances through its startup lifecycle only while the
+    glue's event loop is pumped, and RenderSystem::Load does that pumping until the native window and content are
+    ready. It is also what LLGL's own windowing is built on: Canvas, Display, and the input events they deliver
+    all come from this loop, and LLGL installs its \c onInputEvent handler here.
     \code
-    #include <LLGL/LLGL.h>
-
-    ...
-
-    void MyMain(const LLGL::RenderSystemDescriptor& desc)
-    {
-       myRenderSystem = LLGL::RenderSystem::Load(desc);
-       ...
-    }
-
-    #if defined LLGL_OS_ANDROID
-
-    // Android specific main function
     void android_main(android_app* state)
     {
         LLGL::RenderSystemDescriptor desc{ "OpenGLES3" };
-        desc.androidApp = state;
-        MyMain(desc);
+        desc.platformContext     = state;
+        desc.platformContextSize = sizeof(*state);
+        myRenderSystem = LLGL::RenderSystem::Load(desc);
     }
-
-    #else
-
-    // Standard C/C++ main function
-    int main()
-    {
-        MyMain("OpenGL");
-        return 0;
-    }
-
-    #endif
     \endcode
-    \note Only supported on: Android.
+    \remarks An application whose Activity is written in Java - as with SDL - has no \c android_app to give, and
+    supplies an LLGL::AndroidContext filled in from its windowing library instead:
+    \code
+    LLGL::AndroidContext androidContext;
+    androidContext.applicationVM        = vm;        // from the JNI environment
+    androidContext.applicationActivity  = activity;  // a global reference
+    desc.platformContext     = &androidContext;
+    desc.platformContextSize = sizeof(androidContext);
+    \endcode
+    \see platformContextSize
+    \see AndroidContext
     */
+    void*               platformContext     = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the structure \c platformContext points to (use \c sizeof with the respective structure). By default 0.
+    \remarks This size is what identifies which structure \c platformContext points to.
+    \remarks If \c platformContext is null then this field is ignored.
+    \see platformContext
+    */
+    std::size_t         platformContextSize = 0;
+
+    #ifdef LLGL_OS_ANDROID
+
+    //! \deprecated Since 0.05b; Use platformContext instead!
+    LLGL_DEPRECATED("Identifier `androidApp` is deprecated since 0.05b; Use `platformContext` instead!", "platformContext")
     android_app*        androidApp          = nullptr;
 
     #endif // /LLGL_OS_ANDROID
 };
+LLGL_DEPRECATED_IGNORE_POP()
 
 /**
 \brief Contains the attributes for all supported rendering features.
 \see RenderingCapabilities::features
+\todo Add bitmask `:1` to all fields to drastically reduce size of this struct. This will be a breaking change as they can no longer be referenced individually.
 */
 struct RenderingFeatures
 {
@@ -616,6 +625,8 @@ struct RenderingFeatures
     \see ShaderType::Task
     \see ShaderType::Mesh
     \see RenderSystem::CreatePipelineState(const MeshPipelineDescriptor&)
+    \see CommandBufferTier1::DrawMesh
+    \see CommandBufferTier1::DrawMeshIndirect
     */
     bool hasMeshShaders                 = false;
 
@@ -660,6 +671,18 @@ struct RenderingFeatures
     bool hasMultiview                   = false;
 
     /**
+    \brief Specifies whether a multi-sampled depth-stencil attachment can be resolved.
+    \remarks Color attachments can always be resolved, but depth requires dedicated support: the implementation
+    must be told how to combine the samples (the depth of one sample, or their minimum or maximum) rather than
+    averaging them. Without this, a multi-sampled depth attachment's contents cannot be transferred to a
+    single-sampled texture, which matters when the single-sampled image is owned by something else - an XR
+    runtime submitting depth for reprojection, for instance.
+    \note Only supported with: Vulkan.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+    bool hasDepthStencilResolve         = false;
+
+    /**
     \brief Specifies whether conservative rasterization is supported.
     \see RasterizerDescriptor::conservativeRasterization
     */
@@ -702,6 +725,13 @@ struct RenderingFeatures
     \see CommandBuffer:BeginRenderCondition
     */
     bool hasRenderCondition             = false;
+
+    /**
+    \brief Specifies whether variable rate shading (VRS) is supported.
+    \note Only supported with: Direct3D 12, Vulkan.
+    \see CommandBufferTier1::SetShadingRate
+    */
+    bool hasVariableRateShading         = false;
 };
 
 /**
@@ -821,6 +851,14 @@ struct RenderingLimits
     std::uint64_t   maxConstantBufferSize               = 0;
 
     /**
+    \brief Specifies the maximum number of vertex buffer input slots that is supported by the graphics device.
+    \remarks
+    \see RenderSystem::CreateBufferArray
+    \see CommandBuffer::SetVertexBuffers
+    */
+    std::uint32_t   maxVertexBufferInputs               = 0;
+
+    /**
     \brief Specifies the maximum number of simultaneous stream-output buffers.
     \remarks This must not be larger than \c LLGL_MAX_NUM_SO_BUFFERS which is 4.
     \see CommandBuffer::BeginStreamOutput
@@ -927,6 +965,13 @@ struct RenderingCapabilities
     \see Format
     */
     std::vector<Format>             textureFormats;
+
+    /**
+    \brief Specifies the list of supported hardware vertex formats.
+    \remarks This is usually a much shorter list than \c textureFormats and does generally \e not include compressed or sRGB formats.
+    \see Format
+    */
+    std::vector<Format>             vertexFormats;
 
     /**
     \brief Specifies the list of color formats a swap-chain color buffer can have.

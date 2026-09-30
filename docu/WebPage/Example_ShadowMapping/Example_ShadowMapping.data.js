@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Scene.450core.frag", "start": 0, "end": 1020}, {"filename": "/assets/Scene.450core.vert", "start": 1020, "end": 1526}, {"filename": "/assets/Scene.frag", "start": 1526, "end": 3098}, {"filename": "/assets/Scene.vert", "start": 3098, "end": 3545}, {"filename": "/assets/ShadowMap.450core.vert", "start": 3545, "end": 3867}, {"filename": "/assets/ShadowMap.vert", "start": 3867, "end": 4193}, {"filename": "/assets/SimpleRoom.obj", "start": 4193, "end": 6216}, {"filename": "/assets/WiredBox.obj", "start": 6216, "end": 24138}], "remote_package_size": 24138});
+    loadPackage({"files": [{"filename": "/assets/Example.PScene.300es.frag", "start": 0, "end": 1098}, {"filename": "/assets/Example.VScene.300es.vert", "start": 1098, "end": 1796}, {"filename": "/assets/Example.VShadowMap.300es.vert", "start": 1796, "end": 2316}, {"filename": "/assets/Scene.450core.frag", "start": 2316, "end": 3336}, {"filename": "/assets/Scene.450core.vert", "start": 3336, "end": 3842}, {"filename": "/assets/Scene.frag", "start": 3842, "end": 5414}, {"filename": "/assets/Scene.vert", "start": 5414, "end": 5861}, {"filename": "/assets/ShadowMap.450core.vert", "start": 5861, "end": 6183}, {"filename": "/assets/ShadowMap.vert", "start": 6183, "end": 6509}, {"filename": "/assets/SimpleRoom.obj", "start": 6509, "end": 8532}, {"filename": "/assets/WiredBox.obj", "start": 8532, "end": 26454}], "remote_package_size": 26454});
 
   })();

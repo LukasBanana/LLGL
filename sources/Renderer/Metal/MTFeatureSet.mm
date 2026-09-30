@@ -8,6 +8,7 @@
 #include "MTFeatureSet.h"
 #include "MTDevice.h"
 #include "OSXAvailability.h"
+#include "Command/MTCommandContext.h"
 #include <LLGL/ShaderFlags.h>
 #include <AvailabilityMacros.h>
 #include <initializer_list>
@@ -52,23 +53,33 @@ static int FeatureSetToVersion(MTLFeatureSet fset)
     return 100; // 1.0
 }
 
+static void GetDefaultSupportedMTBaseFormats(std::vector<Format>& formats)
+{
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+            Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+            Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+            Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+            Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+            Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+            Format::RGBA8UNorm,         Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+            Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+            Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+        }
+    );
+}
+
 static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 {
-    return
+    std::vector<Format> textureFormats =
     {
         Format::A8UNorm,
-        Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
-        Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
-        Format::R32UInt,            Format::R32SInt,            Format::R32Float,
-        Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
-        Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
-        Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
-        Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
-        Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
-        Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
-        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
-        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,       Format::B5G6R5UNorm,
 
+        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,        Format::BGR5A1UNorm,
+        Format::B5G6R5UNorm,
+        Format::RGBA8UNorm_sRGB,    Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
         Format::D16UNorm,           Format::D32Float,           Format::D32FloatS8X24UInt,
 
         #ifndef LLGL_OS_IOS
@@ -98,6 +109,15 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 
         Format::ETC2UNorm,          Format::ETC2UNorm_sRGB,
     };
+    GetDefaultSupportedMTBaseFormats(textureFormats);
+    return textureFormats;
+}
+
+static std::vector<Format> MTGetSupportedVertexFormats()
+{
+    std::vector<Format> vertexFormats;
+    GetDefaultSupportedMTBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
@@ -133,6 +153,9 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     }
     #endif
 
+    /* Query supported hardware vertex formats */
+    caps.vertexFormats = MTGetSupportedVertexFormats();
+
     /*
     Query supported swap-chain formats.
     The color formats are the ones a CAMetalLayer can be configured with; MTSwapChain takes its
@@ -154,14 +177,26 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
 
     caps.shadingLanguages = { ShadingLanguage::Metal, ShadingLanguage::Metal_1_0 };
 
-    if (version >= 101)
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_1);
-    if (version >= 102)
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_2);
-    if (version >= 201)
+    struct MetalVersion
     {
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_0);
-        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_1);
+        int             versionNo;
+        ShadingLanguage language;
+    };
+
+    for (const MetalVersion& versionMapping :
+        {
+            MetalVersion{ 101, ShadingLanguage::Metal_1_1 },
+            MetalVersion{ 102, ShadingLanguage::Metal_1_2 },
+            MetalVersion{ 200, ShadingLanguage::Metal_2_0 },
+            MetalVersion{ 201, ShadingLanguage::Metal_2_1 },
+            MetalVersion{ 202, ShadingLanguage::Metal_2_2 },
+            MetalVersion{ 203, ShadingLanguage::Metal_2_3 },
+            MetalVersion{ 204, ShadingLanguage::Metal_2_4 },
+            MetalVersion{ 300, ShadingLanguage::Metal_3_0 },
+        })
+    {
+        if (version >= versionMapping.versionNo)
+            caps.shadingLanguages.push_back(versionMapping.language);
     }
 
     /* Specify features */
@@ -197,6 +232,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
 
     limits.maxBufferSize                    = GetMaxMTBufferSize(device);
     limits.maxConstantBufferSize            = 65536u;
+    limits.maxVertexBufferInputs            = MTCommandContext::maxNumVertexBuffers;
     limits.max1DTextureSize                 = 16384u;
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;

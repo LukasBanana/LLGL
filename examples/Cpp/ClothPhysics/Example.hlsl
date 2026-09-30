@@ -2,6 +2,10 @@
  * HLSL cloth physics shader
  */
 
+#ifndef ENABLE_STORAGE_TEXTURES
+#define ENABLE_STORAGE_TEXTURES 0
+#endif
+
 cbuffer SceneState : register(b0)
 {
     float4x4    wvpMatrix;
@@ -27,7 +31,7 @@ struct ParticleView
 };
 
 // Particle buffers
-#ifdef ENABLE_STORAGE_TEXTURES
+#if ENABLE_STORAGE_TEXTURES
 
 Texture2D<float4>   parBase     : register(t1); // UV (.xy) and inverse mass (.z)
 RWTexture2D<float4> parCurrPos  : register(u2);
@@ -69,7 +73,7 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
     }
 
     // Read neighbor particle
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
     uint2 idx = (uint2)neighborGridPos;
     #else
     uint idx = GridPosToIndex((uint2)neighborGridPos);
@@ -93,7 +97,7 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
 
 float3 ReadParticlePos(uint2 gridPos)
 {
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
     return parCurrPos[gridPos].xyz;
     #else
     return parCurrPos[GridPosToIndex(gridPos)].xyz;
@@ -150,7 +154,7 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
 [numthreads(1, 1, 1)]
 void CSForces(uint2 threadID : SV_DispatchThreadID)
 {
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
     uint2 idx = threadID;
     #else
     uint idx = GridPosToIndex(threadID);
@@ -158,7 +162,7 @@ void CSForces(uint2 threadID : SV_DispatchThreadID)
 
     // Accumulate force and multiply by inverse mass
     float invMass = parBase[idx].z;
-    float4 force = gravity;
+    float4 force = mul(gravity, wMatrix);
     force *= invMass;
 
     // Apply velocity and damping
@@ -171,7 +175,7 @@ void CSForces(uint2 threadID : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 {
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
     uint2 idx = threadID;
     #else
     uint idx = GridPosToIndex(threadID);
@@ -196,7 +200,7 @@ void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
 {
-    #ifdef ENABLE_STORAGE_TEXTURES
+    #if ENABLE_STORAGE_TEXTURES
     uint2 idx = threadID;
     #else
     uint idx = GridPosToIndex(threadID);
@@ -220,11 +224,11 @@ struct VOut
     float2 texCoord : TEXCOORD;
 };
 
-#ifdef ENABLE_STORAGE_TEXTURES
+#if ENABLE_STORAGE_TEXTURES
 
 Texture2D<float4> vertexBase    : register(t1); // UV (.xy) and inverse mass (.z)
 Texture2D<float4> vertexPos     : register(t2);
-Texture2D<float4> vertexNormal  : register(t3);
+Texture2D<float4> vertexNormal  : register(t6);
 
 void VS(uint id : SV_VertexID, out VOut outp)
 {
@@ -257,8 +261,8 @@ void VS(in VIn inp, out VOut outp)
  * HLSL pixel shader
  */
 
-Texture2D colorMap : register(t0);
-SamplerState linearSampler : register(s0);
+Texture2D colorMap : register(t4);
+SamplerState linearSampler : register(s5);
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {

@@ -15,7 +15,10 @@
 // Set up the Vulkan-flavored OpenXR opt-in BEFORE including OpenXRPlatform.h, which
 // is the first place openxr_platform.h gets pulled in. Header guards inside the SDK
 // only honor XR_USE_* macros set before its first inclusion.
-#include <vulkan/vulkan.h>
+//
+// Through Vulkan.h rather than <vulkan/vulkan.h> directly, so that the platform surface
+// extension is configured before the Vulkan headers are pulled in -- see Vulkan.h.
+#include "../Vulkan.h"
 #ifndef XR_USE_GRAPHICS_API_VULKAN
 #   define XR_USE_GRAPHICS_API_VULKAN
 #endif

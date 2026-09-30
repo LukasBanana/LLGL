@@ -92,10 +92,9 @@ Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
-BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* MTRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<MTBufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<MTBufferArray>(bufferViews);
 }
 
 void MTRenderSystem::Release(Buffer& buffer)
@@ -170,7 +169,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 [blitCmdEncoder generateMipmapsForTexture:textureMT->GetNative()];
                 [blitCmdEncoder endEncoding];
             }
-            [cmdBuffer commit];
+            commandQueue_->SubmitCommandBuffer(cmdBuffer);
         }
     }
 
@@ -210,7 +209,7 @@ void MTRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<MTResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -220,7 +219,7 @@ void MTRenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
     return resourceHeapMT.WriteResourceViews(firstDescriptor, resourceViews);
@@ -352,7 +351,7 @@ bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-id<MTLDevice> MTRenderSystem::CreateMetalDevice(long renderSystemFlags)
+id<MTLDevice> MTRenderSystem::CreateMetalDevice(long /*renderSystemFlags*/)
 {
     id<MTLDevice> outDevice = nil;
 

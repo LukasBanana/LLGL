@@ -9,7 +9,7 @@
 #define LLGL_VK_DESCRIPTOR_SET_WRITER_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <vector>
 #include <cstdint>
 

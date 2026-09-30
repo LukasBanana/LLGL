@@ -1,5 +1,5 @@
 Models/UVSphere.obj
-Models/WiredBox.obj
+Models/UVCube.obj
 Textures/PBR/mp_alpha/alpha-island_*.tga
 Textures/PBR/Metal04/Metal04_*.jpg
 Textures/PBR/Tiles22/Tiles22_*.jpg

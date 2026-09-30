@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include <LLGL/Backend/Metal/NativeCommand.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -55,6 +56,22 @@ void MTCommandBuffer::WriteStagingBuffer(
     NSUInteger&     outSrcOffset)
 {
     stagingBufferPools_[currentStagingPool_].Write(data, dataSize, outSrcBuffer, outSrcOffset);
+}
+
+void MTCommandBuffer::TranslateVertexBufferViews(
+    std::uint32_t           numBufferViews,
+    const VertexBufferView* inBufferViews,
+    id<MTLBuffer>*          outBuffers,
+    NSUInteger*             outOffsets)
+{
+    for_range(i, numBufferViews)
+    {
+        auto* bufferMT = LLGL_CAST(MTBuffer*, inBufferViews[i].buffer);
+        if (bufferMT == nullptr)
+            return; // Invalid buffer
+        outBuffers[i] = bufferMT->GetNative();
+        outOffsets[i] = static_cast<NSUInteger>(inBufferViews[i].offset);
+    }
 }
 
 

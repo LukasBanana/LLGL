@@ -29,11 +29,11 @@ D3D11ConstantsCache::D3D11ConstantsCache(
     /* Reflect all constant buffers from all shaders */
     std::vector<const D3D11ConstantBufferReflection*> cbufferReflections;
 
-    auto FindCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> std::pair<const D3D11ConstantBufferReflection*, const D3D11ConstantReflection*>
+    auto FindCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> std::pair<const D3D11ConstantBufferReflection*, const DXConstantReflection*>
     {
         for (const D3D11ConstantBufferReflection* cbuffer : cbufferReflections)
         {
-            for (const D3D11ConstantReflection& field : cbuffer->fields)
+            for (const DXConstantReflection& field : cbuffer->fields)
             {
                 if (field.name == name)
                     return { cbuffer, &field };

@@ -50,14 +50,14 @@ static VkDescriptorType SpirvTypeToVkDescriptorType(const SpirvReflect::SpvType*
             case spv::OpTypeImage:
                 if (derefType->dimension == spv::DimBuffer)
                 {
-                    if (type->readonly || isSampledImage)
+                    if (derefType->readonly || isSampledImage)
                         return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
                     else
                         return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
                 }
                 else
                 {
-                    if (type->readonly || isSampledImage)
+                    if (derefType->readonly || isSampledImage)
                         return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
                     else
                         return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;

@@ -72,7 +72,6 @@ enum class SamplerAddressMode
 \see SamplerDescriptor::minFilter
 \see SamplerDescriptor::magFilter
 \see SamplerDescriptor::mipMapFilter
-\see Image::Resize(const Extent3D&, const SamplerFilter)
 */
 enum class SamplerFilter
 {

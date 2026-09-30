@@ -15,8 +15,10 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <string>
 #include <algorithm>
+#include <unordered_map>
 
 
 namespace LLGL
@@ -138,43 +140,132 @@ void D3D12PipelineLayout::ReleaseRootSignature()
     finalizedRootSignature_.Reset();
 }
 
+static bool MatchRootConstants(const D3D12_ROOT_CONSTANTS& lhs, const D3D12_ROOT_CONSTANTS& rhs)
+{
+    return
+    (
+        lhs.ShaderRegister  == rhs.ShaderRegister   &&
+        lhs.RegisterSpace   == rhs.RegisterSpace    &&
+        lhs.Num32BitValues  == rhs.Num32BitValues
+    );
+}
+
+static bool MatchConstantReflection(const DXConstantReflection& lhs, const DXConstantReflection& rhs)
+{
+    return
+    (
+        lhs.name    == rhs.name     &&
+        lhs.offset  == rhs.offset   &&
+        lhs.size    == rhs.size
+    );
+}
+
+static bool TryMergeCbufferFields(D3D12ConstantBufferReflection& dstCbuffer, const D3D12ConstantBufferReflection& srcCbuffer, Report& outReport)
+{
+    for (const DXConstantReflection& srcField : srcCbuffer.fields)
+    {
+        std::size_t insertPos = 0;
+        DXConstantReflection* existingField = FindInSortedArray<DXConstantReflection>(
+            dstCbuffer.fields.data(), dstCbuffer.fields.size(),
+            [&srcField](const DXConstantReflection& cmpField) -> int
+            {
+                LLGL_COMPARE_SEPARATE_MEMBERS_SWO(srcField.offset, cmpField.offset);
+                return 0;
+            },
+            &insertPos
+        );
+        if (existingField == nullptr)
+        {
+            /* Insert new field from source cbuffer to destination buffer at insert position */
+            dstCbuffer.fields.insert(dstCbuffer.fields.begin() + insertPos, srcField);
+        }
+        else if (!MatchConstantReflection(srcField, *existingField))
+        {
+            outReport.Errorf(
+                "Mismatch between shader stages for root constant '%s' (register=%u, space=%u, count=%u)\n",
+                srcField.name.c_str(),
+                srcCbuffer.rootConstants.ShaderRegister,
+                srcCbuffer.rootConstants.RegisterSpace,
+                srcCbuffer.rootConstants.Num32BitValues
+            );
+            return false;
+        }
+    }
+    return true;
+}
+
 ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitConstants(
     const ArrayView<D3D12Shader*>&          shaders,
-    std::vector<D3D12RootConstantLocation>& outRootConstantMap) const
+    std::vector<D3D12RootConstantLocation>& outRootConstantMap,
+    Report&                                 outReport) const
 {
     if (!rootSignature_)
         return nullptr;
 
     /* Reflect all constant buffers from all shaders */
     long cbufferStageFlags = 0;
-    std::vector<const D3D12ConstantBufferReflection*> cbufferReflections;
+    std::vector<D3D12ConstantBufferReflection> cbufferReflections;
 
     struct D3D12CbufferField
     {
-        const D3D12_ROOT_CONSTANTS*     constants;
-        const D3D12ConstantReflection*  reflection;
-        D3D12_SHADER_VISIBILITY         visibility;
+        const D3D12_ROOT_CONSTANTS* constants;
+        const DXConstantReflection* reflection;
+        D3D12_SHADER_VISIBILITY     visibility;
     };
 
     auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const LLGL::StringView& name) -> D3D12CbufferField
     {
-        for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
+        for (const D3D12ConstantBufferReflection& cbuffer : cbufferReflections)
         {
-            for (const D3D12ConstantReflection& field : cbuffer->fields)
+            for (const DXConstantReflection& field : cbuffer.fields)
             {
                 if (field.name == name)
                 {
-                    cbufferStageFlags |= cbuffer->stageFlags;
+                    cbufferStageFlags |= cbuffer.stageFlags;
                     return D3D12CbufferField
                     {
-                        &(cbuffer->rootConstants),
+                        &(cbuffer.rootConstants),
                         &field,
-                        D3D12RootParameter::FindSuitableVisibility(cbuffer->stageFlags)
+                        D3D12RootParameter::FindSuitableVisibility(cbuffer.stageFlags)
                     };
                 }
             }
         }
         return {};
+    };
+
+    auto FindSimilarCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> const char*
+    {
+        for (const D3D12ConstantBufferReflection& cbuffer : cbufferReflections)
+        {
+            for (const DXConstantReflection& field : cbuffer.fields)
+            {
+                if (field.name.find(name.data(), 0, name.size()) != std::string::npos)
+                    return field.name.c_str();
+            }
+        }
+        return nullptr;
+    };
+
+    auto MergeOrAppendCbufferReflection = [&cbufferReflections, &outReport](const D3D12ConstantBufferReflection& newCbufferReflection) -> bool
+    {
+        for (D3D12ConstantBufferReflection& oldCbufferReflection : cbufferReflections)
+        {
+            if (!MatchRootConstants(oldCbufferReflection.rootConstants, newCbufferReflection.rootConstants))
+                continue;
+
+            /* If root constants are identical, try to merge fields into the same cbuffer */
+            if (!TryMergeCbufferFields(oldCbufferReflection, newCbufferReflection, outReport))
+                return false;
+
+            /* Merge stage flags and verify fields are identical */
+            oldCbufferReflection.stageFlags |= newCbufferReflection.stageFlags;
+            return true;
+        }
+
+        /* If merging wasn't possible, append to the list */
+        cbufferReflections.push_back(newCbufferReflection);
+        return true;
     };
 
     for (D3D12Shader* shader : shaders)
@@ -184,12 +275,19 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         /* Get cached cbuffer reflection from shader */
         const std::vector<D3D12ConstantBufferReflection>* currentCbufferReflections = nullptr;
         HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
-        DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D12 shader");
+        if (FAILED(hr))
+        {
+            outReport.Errorf("Failed to reflect constant buffers for %s shader (error=%s)\n", ToString(shader->GetType()), DXErrorToStrOrHex(hr));
+            return nullptr;
+        }
         LLGL_ASSERT_PTR(currentCbufferReflections);
 
         cbufferReflections.reserve(cbufferReflections.size() + currentCbufferReflections->size());
         for (const D3D12ConstantBufferReflection& cbufferReflection : *currentCbufferReflections)
-            cbufferReflections.push_back(&cbufferReflection);
+        {
+            if (!MergeOrAppendCbufferReflection(cbufferReflection))
+                return nullptr;
+        }
     }
 
     /* Create root signature copy and append parameters to permutation */
@@ -213,8 +311,15 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     {
         /* Find constant buffer field for specified uniform name */
         const D3D12CbufferField field = FindCbufferField(uniforms_[i].name);
-        LLGL_ASSERT_PTR(field.constants);
-        LLGL_ASSERT_PTR(field.reflection);
+        const bool isUniformFound = (field.constants != nullptr && field.reflection != nullptr);
+        if (!isUniformFound)
+        {
+            if (const char* similarFieldName = FindSimilarCbufferField(uniforms_[i].name))
+                outReport.Errorf("Failed to find cbuffer field for uniform '%s'; did you mean '%s'?\n", uniforms_[i].name.c_str(), similarFieldName);
+            else
+                outReport.Errorf("Failed to find cbuffer field for uniform '%s'\n", uniforms_[i].name.c_str());
+            return nullptr;
+        }
 
         /* Find or append root parameter for root constants */
         UINT                rootParamIndex  = FindOrAppendRootParameter(*field.constants, field.visibility);

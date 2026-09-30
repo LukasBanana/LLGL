@@ -19,6 +19,7 @@ namespace LLGL
 enum D3D11Opcode : std::uint8_t
 {
     D3D11OpcodeSetVertexBuffer = 1,
+    D3D11OpcodeSetVertexBuffers,
     D3D11OpcodeSetVertexBufferArray,
     D3D11OpcodeSetIndexBuffer,
     D3D11OpcodeSetPipelineState,

@@ -14,6 +14,8 @@
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
+#include "../Buffer/GLVertexArrayPool.h"
+#include "../Buffer/GLStagingBufferPool.h"
 
 
 namespace LLGL
@@ -46,6 +48,9 @@ class GLContext
 
     public:
 
+        GLContext(const GLContext&) = delete;
+        GLContext& operator = (const GLContext&) = delete;
+
         virtual ~GLContext() = default;
 
         // Returns the number of samples for this GL context. Must be in range [1, 64].
@@ -76,6 +81,20 @@ class GLContext
         {
             return stateMngr_;
         }
+
+        // Returns the vertex array object (VAO) pool of this context since VAOs cannot be natively shared across GL contexts.
+        inline GLVertexArrayPool& GetVertexArrayPool()
+        {
+            return vertexArrayPool_;
+        }
+
+        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        // Returns the staging buffer pool for environments that demand manual hazard tracking, like the Metal backend in ANGLE.
+        inline GLStagingBufferPool& GetStagingBufferPool()
+        {
+            return stagingBufferPool_;
+        }
+        #endif
 
         // Returns the global index of this GL context. This is assigned when the context is created. The first index starts with 1. The invalid index is 0.
         inline unsigned GetGlobalIndex() const
@@ -130,10 +149,16 @@ class GLContext
 
     private:
 
-        GLStateManager  stateMngr_;
-        Format          colorFormat_        = Format::Undefined;
-        Format          depthStencilFormat_ = Format::Undefined;
-        unsigned        globalIndex_        = 0;
+        GLStateManager      stateMngr_;
+        GLVertexArrayPool   vertexArrayPool_;
+
+        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        GLStagingBufferPool stagingBufferPool_;
+        #endif
+
+        Format              colorFormat_        = Format::Undefined;
+        Format              depthStencilFormat_ = Format::Undefined;
+        unsigned            globalIndex_        = 0;
 
 };
 

@@ -37,6 +37,12 @@ struct EnumHasher
     }
 };
 
+template <typename TPair>
+struct PairHasher
+{
+    std::size_t operator() (const TPair& pair) const;
+};
+
 
 /* ----- Template functions ----- */
 
@@ -143,25 +149,6 @@ typename Container::reference AppendElementNoRealloc(Container& cont)
     return *ResizeNoRealloc(cont, 1);
 }
 
-
-/*
-\brief Returns the next resource from the specified resource array.
-\param[in,out] numResources Specifies the remaining number of resources in the array.
-\param[in,out] resourceArray Pointer to the remaining array of resource pointers.
-\remarks If the last element in the array is reached,
-'resourceArray' is points to the location after the last entry, and 'numResources' is 0.
-*/
-template <typename TSub, typename TBase>
-TSub* NextArrayResource(std::uint32_t& numResources, TBase* const * & resourceArray)
-{
-    if (numResources > 0)
-    {
-        --numResources;
-        return LLGL_CAST(TSub*, (*(resourceArray++)));
-    }
-    return nullptr;
-}
-
 // Searches an entry in an array that is always sorted; complexity is O(log n).
 template <typename T>
 T* FindInSortedArray(
@@ -259,6 +246,15 @@ void HashCombine(std::size_t& seed, const T& value)
 {
     constexpr std::size_t approxGoldenRatio = 0x9E3779B9;
     seed ^= std::hash<T>{}(value) + approxGoldenRatio + (seed << 6) + (seed >> 2);
+}
+
+template <typename TPair>
+std::size_t PairHasher<TPair>::operator() (const TPair& pair) const
+{
+    std::size_t h = 0;
+    HashCombine(h, pair.first);
+    HashCombine(h, pair.second);
+    return h;
 }
 
 

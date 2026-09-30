@@ -30,16 +30,6 @@ static std::uint32_t GLGetUInt(GLenum param)
     return static_cast<std::uint32_t>(GLGetInt(param));
 };
 
-static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
-{
-    GLint attr = 0;
-    #if GL_EXT_draw_buffers2
-    if (HasExtension(GLExt::EXT_draw_buffers2))
-        glGetIntegeri_v(param, index, &attr);
-    #endif
-    return static_cast<std::uint32_t>(attr);
-};
-
 static float GLGetFloat(GLenum param)
 {
     GLfloat attr = 0.0f;
@@ -109,22 +99,41 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
+static void GetDefaultSupportedGLBaseFormats(std::vector<Format>& formats)
+{
+    formats.insert(
+        formats.end(),
+        {
+            Format::R8UNorm,        Format::R16UNorm,
+            Format::RG8UNorm,       Format::RG16UNorm,
+            Format::RGB8UNorm,      Format::RGB16UNorm,
+            Format::RGBA8UNorm,     Format::RGBA16UNorm,
+            Format::BGRA8UNorm,
+        }
+    );
+}
+
 static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
-    return
+    std::vector<Format> textureFormats =
     {
         Format::A8UNorm,
-        Format::R8UNorm,
-        Format::R16UNorm,
-        Format::RG8UNorm,
-        Format::RG16UNorm,
-        Format::RGB8UNorm,          Format::RGB8UNorm_sRGB,
-        Format::RGB16UNorm,
-        Format::RGBA8UNorm,
-        Format::RGBA16UNorm,
-        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
+        Format::RGB8UNorm_sRGB,
+        Format::BGRA8UNorm_sRGB,
         Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
     };
+    GetDefaultSupportedGLBaseFormats(textureFormats);
+    return textureFormats;
+}
+
+static std::vector<Format> GLGetSupportedVertexFormats()
+{
+    std::vector<Format> vertexFormats =
+    {
+        Format::BGRA8UNorm, // Only one BGRA vertex format (GL_ARB_vertex_array_bgra)
+    };
+    GetDefaultSupportedGLBaseFormats(vertexFormats);
+    return vertexFormats;
 }
 
 static void GLGetRenderingAttribs(RenderingCapabilities& caps)
@@ -241,6 +250,7 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     #ifdef GL_MAX_UNIFORM_BLOCK_SIZE
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
     #endif
+    limits.maxVertexBufferInputs            = static_cast<std::uint32_t>(GLGetUInt(GL_MAX_VERTEX_ATTRIBS));
 
     /* Determine maximum number of stream-outputs */
     #ifdef GL_ARB_transform_feedback3
@@ -341,6 +351,7 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
 {
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
+    caps.vertexFormats                  = GLGetSupportedVertexFormats();
     caps.swapChainColorFormats          = GLGetSupportedSwapChainColorFormats();
     caps.swapChainDepthStencilFormats   = GLGetSupportedSwapChainDepthStencilFormats();
     GLGetSupportedFeatures(caps.features);

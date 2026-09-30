@@ -10,17 +10,17 @@ For the first example, this could be `/Users/JohnDoe/LLGL/examples/C99/HelloTria
 
 This example illustrates how to interact with LLGL in the C programing language.
 
-<p align="center"><img src="HelloTriangle/HelloTriangle.png" width="400" height="300"/></p>
+<p align="center"><img src="HelloTriangle/HelloTriangle.png" style="width:auto;height:225px;"/></p>
 
 ### [Texturing](Texturing)
 
 Texturing example with loading an image from file (using STB lib), indexed-drawing, and dynamic resources.
 
-<p align="center"><img src="Texturing/Texturing.png" width="400" height="300"/></p>
+<p align="center"><img src="Texturing/Texturing.png" style="width:auto;height:225px;"/></p>
 
 ### [Offscreen](Offscreen)
 
 Offscreen example renders into a texture and outputs the result onto disk instead of the screen.
 
-<p align="center"><img src="Offscreen/Offscreen.png" width="300" height="300"/></p>
+<p align="center"><img src="Offscreen/Offscreen.png" style="width:auto;height:225px;"/></p>
 

@@ -6,6 +6,7 @@
  */
 
 #include "GLVertexArrayObject.h"
+#include "GLVertexArrayPool.h"
 #include "GLSharedContextVertexArray.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -21,38 +22,31 @@ namespace LLGL
 {
 
 
-void GLVertexArrayObject::Release()
+void GLVertexArrayObject::Release(GLVertexArrayPool& vaoPool)
 {
     #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
-    //TODO: this must use some form of deferred deletion as this d'tor is not guaranteed to be invoked with the correct GL context in place
     if (id_ != 0)
     {
-        glDeleteVertexArrays(1, &id_);
+        vaoPool.ReleaseOnAnyContext(id_);
         GLStateManager::Get().NotifyVertexArrayRelease(id_);
         id_ = 0;
     }
 
-    /* Reset input layout information */
     attribIndexEnd_ = 0;
-    inputLayoutHash_ = 0;
 
     #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
-void GLVertexArrayObject::BuildVertexLayout(const GLVertexInputLayout& inputLayout)
+void GLVertexArrayObject::BuildVertexLayout(GLVertexArrayPool& vaoPool, const GLVertexInputLayout& inputLayout)
 {
     #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
-
-    /* Skip call if input layout hasn't changed */
-    if (id_ != 0 && inputLayoutHash_ == inputLayout.GetHash())
-        return;
 
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
 
     /* Generate a VAO if not already done */
     if (id_ == 0)
-        glGenVertexArrays(1, &id_);
+        id_ = vaoPool.Allocate();
 
     /* Build vertex attributes for this VAO */
     GLuint newAttribsLastIndex = 0;
@@ -71,9 +65,7 @@ void GLVertexArrayObject::BuildVertexLayout(const GLVertexInputLayout& inputLayo
     }
     GLStateManager::Get().BindVertexArray(0);
 
-    /* Store input layout hash */
-    inputLayoutHash_    = inputLayout.GetHash();
-    attribIndexEnd_     = newAttribsLastIndex;
+    attribIndexEnd_ = newAttribsLastIndex;
 
     #else // LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 

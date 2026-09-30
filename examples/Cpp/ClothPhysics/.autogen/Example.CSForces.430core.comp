@@ -1,0 +1,30 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0, std140) uniform SceneState
+{
+    layout(row_major) mat4 wvpMatrix;
+    layout(row_major) mat4 wMatrix;
+    vec4 gravity;
+    uvec2 gridSize;
+    uvec2 _pad0;
+    float damping;
+    float dTime;
+    float dStiffness;
+    float _pad1;
+    vec4 lightVec;
+};
+
+layout(binding = 1) uniform samplerBuffer parBase;
+layout(binding = 2, rgba32f) uniform imageBuffer parCurrPos;
+layout(binding = 5, rgba32f) uniform imageBuffer parVelocity;
+
+mat4 spvWorkaroundRowMajor(mat4 wrap) { return wrap; }
+
+void main()
+{
+    uint _41 = (gl_GlobalInvocationID.y * gridSize.x) + gl_GlobalInvocationID.x;
+    imageStore(parVelocity, int(_41), imageLoad(parVelocity, int(_41)) + ((((spvWorkaroundRowMajor(wMatrix) * gravity) * texelFetch(parBase, int(_41)).z) * dTime) * damping));
+    imageStore(parCurrPos, int(_41), imageLoad(parCurrPos, int(_41)) + (vec4(imageLoad(parVelocity, int(_41)).xyz, 0.0) * dTime));
+}
+

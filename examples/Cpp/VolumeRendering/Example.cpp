@@ -37,11 +37,11 @@ class Example_VolumeRendering : public ExampleBase
     LLGL::RenderTarget*         depthRangeRenderTarget  = nullptr;
 
     TriangleMesh                mesh;
-    Gs::Matrix4f                rotation;
+    Gs::Quaternionf             rotation;
 
     PerlinNoise                 perlinNoise;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f            wMatrix;
         Gs::Matrix4f            wMatrixInv;
@@ -53,6 +53,8 @@ class Example_VolumeRendering : public ExampleBase
         float                   threshold               = 0.1f;                         // Density threshold in the range [0, 0.5].
         LLGL::ColorRGBf         albedo                  = { 0.5f, 0.6f, 1.0f };         // Albedo material color
         float                   reflectance             = 0.4f;                         // Specular reflectance intensity
+        std::int32_t            viewportExtent[2]       = {};
+        std::int32_t            pad0[2];
     }
     settings;
 
@@ -62,8 +64,8 @@ public:
         ExampleBase { "LLGL Example: VolumeRendering" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
+        LoadShaders();
         CreateTextures();
         CreateSamplers();
         CreatePipelineLayouts();
@@ -82,50 +84,22 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         mesh = Load3DModel(vertices, "Suzanne.obj");
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         // Load shader programs
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
+        vsScene = LoadVertexShader  ("Example", "VScene", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        fsScene = LoadFragmentShader("Example", "PScene");
     }
 
     void CreateDepthRangeTextureAndRenderTarget(const LLGL::Extent2D& resolution)
@@ -215,20 +189,28 @@ private:
             LLGL::Parse(
                 "heap{"
                 "  cbuffer(Settings@1):frag:vert,"
-                "  texture(noiseTexture@2, depthRangeTexture@3):frag, sampler(linearSampler@4):frag,"
+                "  texture(noiseTexture@2, depthRangeTexture@3):frag,"
+                "  sampler(linearSampler@4):frag,"
                 "},"
-                "sampler<noiseTexture, linearSampler>(noiseTexture@2),"
-                "sampler<depthRangeTexture, linearSampler>(depthRangeTexture@3),"
+                "sampler<noiseTexture, linearSampler>(s_noiseTexturelinearSampler@2),"
             )
         );
     }
 
     void CreatePipelines()
     {
+        // Specify vertex format
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for depth-range pass
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.renderPass                     = depthRangeRenderTarget->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
@@ -240,12 +222,14 @@ private:
                 pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineRangePass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineRangePass);
         }
 
         // Create graphics pipeline for Z-pre pass
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
@@ -257,12 +241,14 @@ private:
                 pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineZPrePass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineZPrePass);
         }
 
         // Create graphics pipeline for final scene rendering
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
@@ -281,6 +267,7 @@ private:
                 blendTarget.srcColor                        = LLGL::BlendOp::SrcAlpha;
             }
             pipelineFinalPass = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineFinalPass);
         }
     }
 
@@ -310,15 +297,14 @@ private:
         const float projZAxis = GetProjectionZAxis();
 
         // Update input
+        if (input.KeyPressed(LLGL::Key::LButton))
+            TrackballRotation(rotation, input.KeyDown(LLGL::Key::LButton));
+
         const Gs::Vector2f mouseMotion
         {
             static_cast<float>(input.GetMouseMotion().x),
             static_cast<float>(input.GetMouseMotion().y),
         };
-
-        Gs::Vector2f rotationVec;
-        if (input.KeyPressed(LLGL::Key::LButton))
-            rotationVec = mouseMotion*0.005f;
 
         // Update density threshold
         if (input.KeyPressed(LLGL::Key::RButton))
@@ -332,22 +318,23 @@ private:
             ::fflush(stdout);
         }
 
-        // Rotate model around X and Y axes
-        Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, rotationVec.y * projZAxis);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, rotationVec.x * projZAxis);
-        rotation = deltaRotation * rotation;
-
         // Transform scene mesh
         settings.wMatrix.LoadIdentity();
         Gs::Translate(settings.wMatrix, { 0, 0, 5 * projZAxis });
-        settings.wMatrix *= rotation;
+        Gs::Matrix4f rotationMatrix;
+        Gs::QuaternionToMatrix(rotationMatrix, rotation);
+        settings.wMatrix *= rotationMatrix;
 
         settings.wMatrixInv = settings.wMatrix.Inverse();
 
         // Update view-projection matrix
         settings.vpMatrix       = projection;
         settings.vpMatrixInv    = projection.Inverse();
+
+        // Update viewport extent for GL backend
+        const LLGL::Extent2D res = swapChain->GetResolution();
+        settings.viewportExtent[0] = static_cast<std::int32_t>(res.width);
+        settings.viewportExtent[1] = static_cast<std::int32_t>(res.height);
     }
 
     void OnResize(const LLGL::Extent2D& resolution) override
@@ -355,11 +342,11 @@ private:
         // Re-create depth-range texture and its render target.
         CreateDepthRangeTextureAndRenderTarget(resolution);
 
-        // Also re-create resource haps that refer to the re-created depth-texture
+        // Also re-create resource heaps that refer to the re-created depth-texture
         CreateResourceHeaps();
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
         UpdateScene();

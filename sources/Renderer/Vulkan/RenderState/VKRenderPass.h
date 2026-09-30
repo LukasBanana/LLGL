@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderPass.h>
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h" // Configures the platform surface extension before <vulkan/vulkan.h> is pulled in
 #include "../VKPtr.h"
 #include <cstdint>
 
@@ -35,13 +35,20 @@ class VKRenderPass final : public RenderPass
             const RenderPassDescriptor& desc
         );
 
+        /*
+        Creates the render pass from a flat array of native attachment descriptors, laid out as
+        [0, numColorAttachments) color, [numColorAttachments] depth-stencil (if numColorAttachments < numAttachments),
+        [numAttachments, numAttachments + numColorAttachments) color resolve targets (only read when multi-sampled),
+        and [numAttachments + numColorAttachments] the depth-stencil resolve target (only read when 'hasDepthStencilResolve').
+        */
         void CreateVkRenderPassWithDescriptors(
             VkDevice                        device,
             std::uint32_t                   numAttachments,
             std::uint32_t                   numColorAttachments,
             const VkAttachmentDescription*  attachmentDescs,
             VkSampleCountFlagBits           sampleCountBits,
-            std::uint32_t                   numViews = 1
+            std::uint32_t                   numViews = 1,
+            bool                            hasDepthStencilResolve = false
         );
 
         // Returns the Vulkan render pass object.

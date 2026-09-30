@@ -10,7 +10,8 @@
 
 
 #include <LLGL/VertexAttribute.h>
-#include "GLVertexArrayHash.h"
+#include <LLGL/Container/ArrayView.h>
+#include "GLVertexAttribute.h"
 #include <vector>
 
 
@@ -29,29 +30,23 @@ class GLVertexInputLayout
         // Resets all vertex attributes and the hash.
         void Reset();
 
-        // Appends the specified vertex attributes and the hash over all of them.
-        void Append(const ArrayView<GLVertexAttribute>& attributes);
-        void Append(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
-
-        // Finalizes the input layout by updating the hash.
-        void Finalize();
+        // Appends the specified vertex attributes. Call Finalize() after all invocations of Append().
+        void SetAttribs(ArrayView<GLVertexAttribute> attributes);
+        void SetAttribs(ArrayView<VertexAttribute> attributes);
 
         // Returns the array of input vertex attributes this shader was created with. This is a direct copy of the input attributes.
-        inline const std::vector<GLVertexAttribute>& GetAttribs() const
+        inline ArrayView<GLVertexAttribute> GetAttribs() const
         {
             return attribs_;
         }
 
-        // Returns the hash over all vertex attributes.
-        inline std::size_t GetHash() const
-        {
-            return attribsHash_.Get();
-        }
+    public:
+
+        static int CompareSWO(const GLVertexInputLayout& lhs, const GLVertexInputLayout& rhs);
 
     private:
 
-        std::vector<GLVertexAttribute>  attribs_;
-        GLVertexArrayHash               attribsHash_;
+        std::vector<GLVertexAttribute> attribs_;
 
 };
 

@@ -74,30 +74,18 @@ int main(int argc, char* argv[])
         { { -s, -s }, { 0, 0, 255, 255 } }, // 3rd vertex: left-bottom, blue
     };
 
-    // Vertex format with 2D floating-point vector for position and 4D byte vector for color
-    LLGLVertexAttribute vertexAttributes[2] =
-    {
-        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = offsetof(Vertex, position), .stride = sizeof(Vertex) },
-        { .name = "color",    .format = LLGLFormatRGBA8UNorm, .location = 1, .offset = offsetof(Vertex, color   ), .stride = sizeof(Vertex) },
-    };
-
     // Create vertex buffer
     LLGLBufferDescriptor vertexBufferDesc =
     {
-        .size               = sizeof(vertices),     // Size (in bytes) of the vertex buffer
-        .bindFlags          = LLGLBindVertexBuffer, // Enables the buffer to be bound to a vertex buffer slot
-        .numVertexAttribs   = 2,
-        .vertexAttribs      = vertexAttributes,     // Vertex format layout
+        .size       = sizeof(vertices),     // Size (in bytes) of the vertex buffer
+        .stride     = sizeof(Vertex),       // Stride (in bytes) between vertices
+        .bindFlags  = LLGLBindVertexBuffer, // Enables the buffer to be bound to a vertex buffer slot
     };
     LLGLBuffer vertexBuffer = llglCreateBuffer(&vertexBufferDesc, vertices);
 
     // Create shaders
-    LLGLShaderDescriptor vertShaderDesc = { .type = LLGLShaderTypeVertex,   .source = "HelloTriangle.vert", .sourceType = LLGLShaderSourceTypeCodeFile, };
-    LLGLShaderDescriptor fragShaderDesc = { .type = LLGLShaderTypeFragment, .source = "HelloTriangle.frag", .sourceType = LLGLShaderSourceTypeCodeFile, };
-
-    // Specify vertex attributes for vertex shader
-    vertShaderDesc.vertex.numInputAttribs   = 2;
-    vertShaderDesc.vertex.inputAttribs      = vertexAttributes;
+    const LLGLShaderDescriptor vertShaderDesc = { .type = LLGLShaderTypeVertex,   .source = "HelloTriangle.vert", .sourceType = LLGLShaderSourceTypeCodeFile, };
+    const LLGLShaderDescriptor fragShaderDesc = { .type = LLGLShaderTypeFragment, .source = "HelloTriangle.frag", .sourceType = LLGLShaderSourceTypeCodeFile, };
 
     LLGLShader shaders[2] =
     {
@@ -115,9 +103,19 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Vertex format with 2D floating-point vector for position and 4D byte vector for color
+    const LLGLVertexAttribute vertexAttributes[2] =
+    {
+        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = offsetof(Vertex, position), .stride = sizeof(Vertex) },
+        { .name = "color",    .format = LLGLFormatRGBA8UNorm, .location = 1, .offset = offsetof(Vertex, color   ), .stride = sizeof(Vertex) },
+    };
+
     // Create graphics pipeline
     LLGLGraphicsPipelineDescriptor pipelineDesc =
     {
+        .debugName                  = "VertexColorPSO",
+        .numInputVertexAttribs      = sizeof(vertexAttributes)/sizeof(vertexAttributes[0]),
+        .inputVertexAttribs         = vertexAttributes,
         .vertexShader               = shaders[0],
         .fragmentShader             = shaders[1],
         .renderPass                 = llglGetRenderTargetRenderPass(LLGL_GET_AS(LLGLRenderTarget, swapChain)),
@@ -169,15 +167,15 @@ int main(int argc, char* argv[])
         // Begin recording commands
         llglBegin(cmdBuffer);
         {
-            // Set viewport and scissor rectangle
-            llglSetViewport(&viewport);
-
             // Set vertex buffer
             llglSetVertexBuffer(vertexBuffer);
 
             // Set the swap-chain as the initial render target
             llglBeginRenderPass(LLGL_GET_AS(LLGLRenderTarget, swapChain));
             {
+                // Set viewport and scissor rectangle
+                llglSetViewport(&viewport);
+
                 // Clear color buffer
                 llglClear(LLGLClearColor, &clearColor);
 

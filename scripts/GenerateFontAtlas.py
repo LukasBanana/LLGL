@@ -9,23 +9,83 @@
 
 import sys
 import os
+import argparse
+from pathlib import Path
 from PIL import ImageFont, ImageDraw, Image
 
-# Parse command line arguments
-if len(sys.argv) != 3:
-    sys.exit('Missing arguments! Usage: GenerateFontAtlas.py FILE SIZE')
 
-inputFilename = sys.argv[1]
+class Options:
+    inputFilename = ''
+    outputDir = ''
+    fontSize = 12
+    useAlphaChannel = False
+    border = 1
 
-fontSize = int(sys.argv[2])
-if fontSize < 2:
-    sys.exit('Font size is too small: {fontSize}')
-elif fontSize > 128:
-    sys.exit('Font size is too big: {fontSize}')
 
-outputFilenameBase = f'{os.path.dirname(inputFilename)}/{os.path.splitext(os.path.basename(inputFilename))[0]}.atlas-{fontSize}'
+def ParseArguments():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description='Generate font atlas and texture-coordinate mappings.'
+    )
+    parser.add_argument(
+        "input_positional",
+        nargs="?",
+        metavar="INPUT",
+        help="Search folder; equivalent to --input.",
+    )
+    parser.add_argument(
+        '-i', '--input',
+        metavar='INPUT',
+        help='Input font filename.',
+    )
+    parser.add_argument(
+        '-o', '--output',
+        metavar='OUTPUT',
+        help='Output directory (default: derived from input filename).',
+    )
+    parser.add_argument(
+        '-s', '--size',
+        metavar='SIZE',
+        type=int,
+        default=12,
+        help='Font size in range [2, 128] (default: 12).',
+    )
+    parser.add_argument(
+        '-b', '--border',
+        metavar='BORDER',
+        type=int,
+        default=1,
+        help='Border size around each glyph in the atlas in range [0, 10] (default: 1).',
+    )
+    parser.add_argument(
+        '-a', '--alpha',
+        action="store_true",
+        help='Enable alpha channel for the font atlas.',
+    )
+    arguments = parser.parse_args()
 
-border = 1
+    if arguments.input and arguments.input_positional:
+        parser.error("specify the input font file either positionally or with -i/--input, not both")
+    if arguments.input is None and arguments.input_positional is None:
+        parser.error("missing input font file; use either positionally or with -i/--input")
+
+    Options.inputFilename = arguments.input or arguments.input_positional
+    Options.outputDir = os.path.dirname(Options.inputFilename) if arguments.output is None else Path(arguments.output)
+
+    Options.fontSize = arguments.size
+    if Options.fontSize < 2:
+        sys.exit(f'Font size is too small: {Options.fontSize}; Range is [2, 128]')
+    elif Options.fontSize > 128:
+        sys.exit(f'Font size is too big: {Options.fontSize}; Range is [2, 128]')
+
+    Options.border = arguments.border
+    if Options.border < 0:
+        sys.exit(f'Border size is too small: {Options.border}')
+    elif Options.border > 10:
+        sys.exit(f'Border size is too big: {Options.border}')
+
+    Options.useAlphaChannel = arguments.alpha
+
 
 class Glyph:
     char = chr(0)
@@ -39,11 +99,12 @@ class Glyph:
 
     @property
     def width(self):
-        return self.bbox[2] - self.bbox[0] + border*2
+        return self.bbox[2] - self.bbox[0] + Options.border*2
 
     @property
     def height(self):
-        return self.bbox[3] - self.bbox[1] + border*2
+        return self.bbox[3] - self.bbox[1] + Options.border*2
+
 
 class GlyphNode:
     subnodes = None # tuple[2]
@@ -100,8 +161,8 @@ class GlyphNode:
     def draw(self, context, font):
         if self.glyph is not None:
             glyphOrigin = (
-                self.bbox[0] - self.glyph.bbox[0] + border,
-                self.bbox[1] - self.glyph.bbox[1] + border
+                self.bbox[0] - self.glyph.bbox[0] + Options.border,
+                self.bbox[1] - self.glyph.bbox[1] + Options.border
             )
             context.text(glyphOrigin, self.glyph.char, font=font)
         if self.subnodes is not None:
@@ -114,6 +175,7 @@ class GlyphNode:
         if self.glyph is not None:
             return [self]
         return []
+
 
 class FontAtlas:
     image = None
@@ -156,6 +218,11 @@ class FontAtlas:
 
         self.glyphTree.draw(self.context, self.font)
 
+        if Options.useAlphaChannel:
+            alpha = self.image.convert('L')
+            self.image = Image.new(mode='RGBA', size=atlasSize, color=(255, 255, 255, 0))
+            self.image.putalpha(alpha)
+
         # Log statistics
         print( 'Generated font atlas:')
         print(f' - Font filename: {filename}')
@@ -173,13 +240,19 @@ class FontAtlas:
             for glyph in self.glyphLeaves:
                 print(
                     f'{ord(glyph.glyph.char)} ' +
-                    f'{glyph.bbox[0] + border} {glyph.bbox[1] + border} {glyph.bbox[2] - border} {glyph.bbox[3] - border} ' +
+                    f'{glyph.bbox[0] + Options.border} {glyph.bbox[1] + Options.border} {glyph.bbox[2] - Options.border} {glyph.bbox[3] - Options.border} ' +
                     f'{glyph.glyph.bbox[0]} {glyph.glyph.bbox[1]} ' +
                     f'{int(glyph.glyph.spacing)}',
                     file=file
                 )
 
-# Generate font atlas and save output
-atlas = FontAtlas(inputFilename, size=fontSize)
-atlas.saveImage(f'{outputFilenameBase}.png')
-atlas.saveDataset(f'{outputFilenameBase}.map')
+
+if __name__ == "__main__":
+    ParseArguments()
+
+    # Generate font atlas and save output
+    outputFilenameBase = f'{Options.outputDir}/{os.path.splitext(os.path.basename(Options.inputFilename))[0]}.atlas-{Options.fontSize}'
+    atlas = FontAtlas(Options.inputFilename, size=Options.fontSize)
+    atlas.saveImage  (f'{outputFilenameBase}.png')
+    atlas.saveDataset(f'{outputFilenameBase}.map')
+

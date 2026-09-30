@@ -18,7 +18,7 @@ namespace LLGL
 
 
 /**
-\brief Returns whether the specified object is an instance of the interface specified by template parameter <T>.
+\brief Returns whether the specified object is an instance of the interface specified by template parameter \c T.
 \remarks The typename \c T must be a sub class of Interface and implement the following function:
 \code
 static InterfaceID GetInterfaceID();

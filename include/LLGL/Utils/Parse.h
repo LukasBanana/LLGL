@@ -89,8 +89,9 @@ class LLGL_EXPORT ParseContext
             - \c sampler for sampler states (i.e. ResourceType::Sampler).
         - Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
         - The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
-        - The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
-        - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
+        - The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets
+          (e.g. <code>"texture(1[2])"</code> or <code>"texture(tex@1[2])"</code>) or after the resource name (e.g. <code>texture(tex[2]@1)</code>), but not both.
+        - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3,arr1[2]@4,arr2@6[3])"</code>).
         - Each binding point is separated by a comma, the last comma being optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
         - The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after each binding point with a preceding colon using the following identifiers:
             - \c vert for the vertex shader stage (i.e. StageFlags::VertexStage).
@@ -103,7 +104,8 @@ class LLGL_EXPORT ParseContext
         - The following syntax can be used for uniform descriptors (see LLGL::UniformType for accepted type names):
             \code
             arraySize   := '[' INT ']'
-            uniform     := NAME | NAME arraySize
+            uniform     := uniformName | uniformName arraySize
+            uniformName := IDENT | IDENT '.' uniformName
             uniformList := uniform | uniform ',' uniformList
             uniformDesc := TYPE '(' uniformList ')'
             \endcode
@@ -266,6 +268,27 @@ class LLGL_EXPORT ParseContext
         */
         TextureSwizzleRGBA AsTextureSwizzleRGBA() const;
 
+        /**
+        \brief Generates a basic vertex attribute descriptor from this parse context. This only includes format and identifier.
+        \remarks The syntax for this conversion is as follows:
+        - Attribute type translates to Format, e.g. 'rgb32float' translates to RGB32Float.
+        - Followed by the name in parenthesis, e.g. '(position)'.
+        \remarks Format identifiers can be abbreviated as follows:
+        - \c 'float' can be abbreviated with \c 'f', e.g. \c 'rgb32float' as \c 'rgb32f'.
+        - \c 'sint' can be abbreviated with \c 'i', e.g. \c 'rgba16sint' as \c 'rgba16i'.
+        - \c 'uint' can be abbreviated with \c 'u', e.g. \c 'rgba16uint' as \c 'rgba16u'.
+        \remarks A full vertex attribute might look like this \c "rgb32f(position)".
+        */
+        VertexAttribute AsVertexAttribute() const;
+
+        /**
+        \brief Generates a vector of basic vertex attributes from this parse context.
+        \remarks This parses a comma separated list of vertex attributes, the last comma being optional.
+        \remarks A full vertex attribute list might look like this \c "rgb32f(position),rgba8unorm(color),".
+        \see AsVertexAttribute
+        */
+        DynamicVector<VertexAttribute> AsVertexAttributeVector() const;
+
     public:
 
         /**
@@ -322,6 +345,25 @@ class LLGL_EXPORT ParseContext
             return AsTextureSwizzleRGBA();
         }
 
+        /**
+        \brief Implicit conversion to VertexAttribute.
+        \see AsVertexAttribute
+        */
+        inline operator VertexAttribute() const
+        {
+            return AsVertexAttribute();
+        }
+
+
+        /**
+        \brief Implicit conversion to DynamicVector<VertexAttribute>.
+        \see AsVertexAttributeVector
+        */
+        inline operator DynamicVector<VertexAttribute>() const
+        {
+            return AsVertexAttributeVector();
+        }
+
     private:
 
         UTF8String      data_;
@@ -332,7 +374,7 @@ class LLGL_EXPORT ParseContext
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] format Specifies the input string. This is treated just like a \c ::printf input string
+\param[in] format Specifies the input string. This is treated just like a \c ::printf input string
 and each token preceded with a \c '%' character will be substituted with the next variadic argument.
 If no \c '%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
@@ -342,7 +384,7 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...);
 
 /**
 \brief Returns a parse context for the input source code.
-\paramp[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
+\param[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */

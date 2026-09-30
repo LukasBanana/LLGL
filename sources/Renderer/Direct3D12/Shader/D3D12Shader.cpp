@@ -7,8 +7,10 @@
 
 #include "D3D12Shader.h"
 #include "../D3D12RenderSystem.h"
+#include "../RenderState/D3D12GraphicsPSO.h"
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXShaderReflection.h"
+#include "../../DXCommon/DXIncludeHandler.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Exception.h"
@@ -17,7 +19,7 @@
 #include <d3dcompiler.h>
 #include <comdef.h>
 
-#ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+#if LLGL_D3D12_ENABLE_DXCOMPILER
 #   include "../../DXCommon/DXC/DXCInstance.h"
 #endif
 
@@ -25,6 +27,8 @@
 namespace LLGL
 {
 
+
+LLGL_DEPRECATED_IGNORE_PUSH()
 
 D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc) :
     Shader        { desc.type    },
@@ -39,11 +43,13 @@ D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor
             /* Build input layout and stream-output descriptors for vertex/geometry shaders */
             ReserveVertexAttribs(desc);
             if (GetType() == ShaderType::Vertex)
-                BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
-            BuildStreamOutput(static_cast<UINT>(desc.vertex.outputAttribs.size()), desc.vertex.outputAttribs.data());
+                D3D12GraphicsPSO::BuildInputLayout(desc.vertex.inputAttribs, inputElements_, vertexAttribNames_);
+            D3D12GraphicsPSO::BuildStreamOutput(desc.vertex.outputAttribs, soDeclEntries_, soBufferStrides_, vertexAttribNames_);
         }
     }
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 const Report* D3D12Shader::GetReport() const
 {
@@ -137,101 +143,6 @@ void D3D12Shader::ReserveVertexAttribs(const ShaderDescriptor& shaderDesc)
         vertexAttribNames_.Reserve(attr.name.size());
 }
 
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    dst.SemanticName            = stringContainer.CopyString(src.name);
-    dst.SemanticIndex           = src.semanticIndex;
-    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
-    dst.InputSlot               = src.slot;
-    dst.AlignedByteOffset       = src.offset;
-    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
-    dst.InstanceDataStepRate    = src.instanceDivisor;
-}
-
-void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    /* Build input element descriptors */
-    inputElements_.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-        Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
-}
-
-/*
-Converts a vertex attributes to a D3D12 input element descriptor
-and stores the semantic name in the specified linear string container
-*/
-static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
-{
-    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0;
-    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
-    dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;
-    dst.ComponentCount  = GetFormatAttribs(src.format).components;
-    dst.OutputSlot      = src.slot;
-}
-
-void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
-{
-    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
-
-    /* Reserve memory for the buffer strides */
-    UINT maxSlot = 0;
-    for_range(i, numVertexAttribs)
-        maxSlot = std::max(maxSlot, vertexAttribs[i].slot);
-
-    soBufferStrides_.clear();
-    soBufferStrides_.resize(maxSlot + 1, 0);
-
-    /* Build stream-output entries and buffer strides */
-    soDeclEntries_.resize(numVertexAttribs);
-    for_range(i, numVertexAttribs)
-    {
-        const VertexAttribute& attr = vertexAttribs[i];
-
-        /* Convert vertex attribute to stream-output entry */
-        ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
-
-        /* Store buffer stide */
-        UINT& bufferStride = soBufferStrides_[attr.slot];
-        if (attr.stride == 0)
-        {
-            /* Error: vertex attribute must not have stride of zero */
-            LLGL_TRAP(
-                "buffer stride in stream-output attribute must not be zero: %s",
-                attr.name.c_str()
-            );
-        }
-        else if (bufferStride == 0)
-        {
-            /* Store new buffer stride */
-            bufferStride = attr.stride;
-        }
-        else if (bufferStride != attr.stride)
-        {
-            LLGL_TRAP(
-                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
-                bufferStride, attr.stride, attr.name.c_str()
-            );
-        }
-    }
-
-    /* Build buffer stride */
-    for_range(i, soBufferStrides_.size())
-    {
-        if (soBufferStrides_[i] == 0)
-            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
-    }
-}
-
 static bool IsProfileDxcAppropriate(const char* target)
 {
     // LLGL allows for a blank string to be sent into the target of a ShaderDescriptor, but
@@ -291,7 +202,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     ComPtr<ID3DBlob> errors;
     HRESULT hr = S_OK;
 
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_DXCOMPILER
     if (IsProfileDxcAppropriate(target))
     {
         /* Load DXC compiler */
@@ -339,19 +250,22 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
             compilerArgs.data(),
             compilerArgs.size(),
             byteCode_.ReleaseAndGetAddressOf(),
-            errors.ReleaseAndGetAddressOf()
+            errors.ReleaseAndGetAddressOf(),
+            shaderDesc.includeHandler,
+            &report_
         );
     }
     else
     #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
     {
         /* Compile shader to DXBC with FXC */
+        DXIncludeHandler includeHandler{ shaderDesc.includeHandler, report_ };
         hr = D3DCompile(
             sourceCode,
             sourceLength,
             sourceName,                         // LPCSTR               pSourceName
             defines,                            // D3D_SHADER_MACRO*    pDefines
-            D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
+            includeHandler.GetSelfOrDefault(),  // ID3DInclude*         pInclude
             entry,                              // LPCSTR               pEntrypoint
             target,                             // LPCSTR               pTarget
             DXGetFxcCompilerFlags(flags),       // UINT                 Flags1
@@ -387,7 +301,7 @@ static HRESULT ReflectD3D12ShaderBytecode(ID3DBlob* byteCode, ComPtr<ID3D12Shade
 {
     HRESULT hr = D3DReflect(byteCode->GetBufferPointer(), byteCode->GetBufferSize(), IID_PPV_ARGS(outReflection.ReleaseAndGetAddressOf()));
 
-    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+    #if LLGL_D3D12_ENABLE_DXCOMPILER
     if (FAILED(hr))
     {
         // Check if DXC can reflect this shader. This case occurs for SM6 shaders.
@@ -495,7 +409,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
             if (FAILED(hr))
                 return hr;
 
-            std::vector<D3D12ConstantReflection> fieldsInfo;
+            std::vector<DXConstantReflection> fieldsInfo;
 
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {
@@ -509,8 +423,21 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
                 if (FAILED(hr))
                     return hr;
 
-                if ((fieldDesc.uFlags & D3D_SVF_USED) != 0)
-                    fieldsInfo.push_back(D3D12ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
+                if ((fieldDesc.uFlags & D3D_SVF_USED) == 0)
+                    continue;
+
+                /* Get type reflection of current field */
+                DXShaderTypeReflection<ID3D12ShaderReflectionType, D3D12_SHADER_TYPE_DESC> fieldType;
+                fieldType.type = fieldReflection->GetType();
+                hr = fieldType.type->GetDesc(&(fieldType.desc));
+                if (FAILED(hr))
+                    return hr;
+
+                hr = DXReflectCbufferField<ID3D12ShaderReflectionType, D3D12_SHADER_TYPE_DESC>(
+                    fieldsInfo, fieldType, fieldDesc.StartOffset, fieldDesc.Size, fieldDesc.Name
+                );
+                if (FAILED(hr))
+                    return hr;
             }
 
             /* Write reflection output */

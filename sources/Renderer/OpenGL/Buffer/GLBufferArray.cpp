@@ -6,34 +6,35 @@
  */
 
 #include "GLBufferArray.h"
-#include "GLBuffer.h"
+#include "GLBufferWithXFB.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-GLBufferArray::GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+static std::vector<GLBufferView> GetAsGLBufferViews(ArrayView<VertexBufferView> bufferViews)
 {
-    BuildArray(numBuffers, bufferArray);
+    std::vector<GLBufferView> outBufferViews;
+    outBufferViews.resize(bufferViews.size());
+    for_range(i, bufferViews.size())
+    {
+        outBufferViews[i].buffer = LLGL_CAST(GLBuffer*, bufferViews[i].buffer);
+        outBufferViews[i].offset = static_cast<GLintptr>(bufferViews[i].offset);
+    }
+    return outBufferViews;
 }
 
-
-/*
- * ======= Protected: =======
- */
-
-void GLBufferArray::BuildArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+GLBufferArray::GLBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray        { GetCombinedBindFlags(bufferViews) },
+    bufferInputLayout_ { GetAsGLBufferViews(bufferViews)   }
 {
-    /* Store the ID of each GLBuffer inside the array */
-    idArray_.clear();
-    idArray_.reserve(numBuffers);
-    while (GLBuffer* next = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
-        idArray_.push_back(next->GetID());
+    /* Store pointer to first buffer slot if it a transform-feedback buffer */
+    if (!bufferViews.empty() && (bufferViews.front().buffer->GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+        bufferSlot0WithXFB_ = LLGL_CAST(GLBufferWithXFB*, bufferViews.front().buffer);
 }
 
 

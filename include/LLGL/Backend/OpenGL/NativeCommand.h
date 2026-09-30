@@ -20,25 +20,25 @@ namespace OpenGL
 
 
 /**
- * \brief Enumeration of all native commands the OpenGL backend can execute.
- * \see NativeCommand::type
- */
+\brief Enumeration of all native commands the OpenGL backend can execute.
+\see NativeCommand::type
+*/
 enum class NativeCommandType
 {
     /**
-     * \brief Clears the internal command buffer cache.
-     * \remarks This should be used when a native command buffer handle is retrieved
-     * and LLGL is supposed to continue dispatching graphics and compute commands after the native command buffer has been modified.
-     * \remarks This is a slow operation because all internally managed OpenGL states will be retrieved from the current GL context,
-     * i.e. a large number of <code>glGet*</code> functions will be invoked by this operation.
-     */
+    \brief Clears the internal command buffer cache.
+    \remarks This should be used when a native command buffer handle is retrieved
+    and LLGL is supposed to continue dispatching graphics and compute commands after the native command buffer has been modified.
+    \remarks This is a slow operation because all internally managed OpenGL states will be retrieved from the current GL context,
+    i.e. a large number of <code>glGet*</code> functions will be invoked by this operation.
+    */
     ClearCache = 1u,
 };
 
 /**
- * \brief Native command data structure as a workaround for backend differences.
- * \see CommandBuffer::DoNativeCommand
- */
+\brief Native command data structure as a workaround for backend differences.
+\see CommandBuffer::DoNativeCommand
+*/
 struct NativeCommand
 {
     NativeCommandType type;

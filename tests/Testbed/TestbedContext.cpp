@@ -12,11 +12,20 @@
 #include <string.h>
 #include <fstream>
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 static const char* k_defaultOutputDir       = "Output/";
@@ -365,7 +374,7 @@ unsigned TestbedContext::RunAllTests()
         return failures;
     }
 
-    #define RUN_TEST(TEST)                                                          \
+    #define LLGL_UNIT_TEST(TEST)                                                    \
         if (opt.ContainsTest(#TEST))                                                \
         {                                                                           \
             const TestResult result = RunTest(                                      \
@@ -374,69 +383,14 @@ unsigned TestbedContext::RunAllTests()
             RecordTestResult(result, #TEST);                                        \
         }
 
-    #define RUN_C99_TEST(TEST)                          \
+    #define LLGL_CUSTOM_PRESENT_UNIT_TEST(TEST)         \
         if (opt.ContainsTest(#TEST))                    \
         {                                               \
             const TestResult result = Test##TEST(0);    \
             RecordTestResult(result, #TEST);            \
         }
 
-    // Run all command buffer tests
-    RUN_TEST( CommandBufferSubmit         );
-    RUN_TEST( CommandBufferEncode         );
-
-    // Run all resource tests (these don't render to the screen)
-    RUN_TEST( NativeHandle                );
-    RUN_TEST( BufferWriteAndRead          );
-    RUN_TEST( BufferMap                   );
-    RUN_TEST( BufferFill                  );
-    RUN_TEST( BufferUpdate                );
-    RUN_TEST( BufferCopy                  );
-    RUN_TEST( TextureTypes                );
-    RUN_TEST( TextureWriteAndRead         );
-    RUN_TEST( TextureCopy                 );
-    RUN_TEST( TextureToBufferCopy         );
-    RUN_TEST( BufferToTextureCopy         );
-    RUN_TEST( RenderTargetNoAttachments   );
-    RUN_TEST( RenderTarget1Attachment     );
-    RUN_TEST( RenderTargetNAttachments    );
-    RUN_TEST( MipMaps                     );
-    RUN_TEST( PipelineCaching             );
-    RUN_TEST( ShaderErrors                );
-    RUN_TEST( SamplerBuffer               );
-    RUN_TEST( ByteBuffer                  );
-    RUN_TEST( BarrierReadAfterWrite       );
-    RUN_TEST( Multiview                   );
-
-    // Run all rendering tests (these are meant to render to the Testbed output window)
-    RUN_TEST( DepthBuffer                 );
-    RUN_TEST( StencilBuffer               );
-    RUN_TEST( SceneUpdate                 );
-    RUN_TEST( VertexBuffer                );
-    RUN_TEST( BlendStates                 );
-    RUN_TEST( DualSourceBlending          );
-    RUN_TEST( AlphaOnlyTexture            );
-    //RUN_TEST( CommandBufferMultiThreading ); //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
-    RUN_TEST( CommandBufferSecondary      );
-    RUN_TEST( TriangleStripCutOff         );
-    RUN_TEST( TextureViews                );
-    RUN_TEST( TextureStrides              );
-    RUN_TEST( Uniforms                    );
-    RUN_TEST( ShadowMapping               );
-    RUN_TEST( ViewportAndScissor          );
-    RUN_TEST( ResourceBinding             );
-    RUN_TEST( ResourceArrays              );
-    RUN_TEST( StreamOutput                );
-    RUN_TEST( ResourceCopy                );
-    RUN_TEST( CombinedTexSamplers         );
-    RUN_TEST( MeshShaders                 );
-
-    // Reset main renderer and run C99 tests
-    // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)
-    renderer.reset();
-    RUN_C99_TEST( OffscreenC99 );
-
-    #undef RUN_TEST
+    #include "UnitTests/DeclTests.inl"
 
     // Print summary
     PrintTestSummary(failures);
@@ -454,34 +408,33 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     if (!opt.selectedTests.empty())
     {
         std::vector<const char*> knownTests;
-        #define GATHER_KNOWN_TESTS
+
+        #define LLGL_ADD_KNOWN_TEST(NAME) \
+            knownTests.push_back(#NAME)
+
+        #define LLGL_STANDALONE_UNIT_TEST(NAME)     LLGL_ADD_KNOWN_TEST(NAME)
+        #define LLGL_UNIT_TEST(NAME)                LLGL_ADD_KNOWN_TEST(NAME)
+        #define LLGL_CUSTOM_PRESENT_UNIT_TEST(NAME) LLGL_ADD_KNOWN_TEST(NAME)
+
         #include "UnitTests/DeclTests.inl"
-        #undef GATHER_KNOWN_TESTS
+
+        #undef LLGL_ADD_KNOWN_TEST
+
         PrintUnknownTests(opt.selectedTests, knownTests);
     }
 
-    #define RUN_TEST(TEST)                                                  \
+    #define LLGL_STANDALONE_UNIT_TEST(NAME)                                 \
         {                                                                   \
-            if (opt.ContainsTest(#TEST))                                    \
+            if (opt.ContainsTest(#NAME))                                    \
             {                                                               \
-                const TestResult result = TestbedContext::Test##TEST(opt);  \
-                PrintTestResult(result, #TEST);                             \
+                const TestResult result = TestbedContext::Test##NAME(opt);  \
+                PrintTestResult(result, #NAME);                             \
                 if (TestFailed(result))                                     \
                     ++failures;                                             \
             }                                                               \
         }
 
-    RUN_TEST( ContainerDynamicArray );
-    RUN_TEST( ContainerSmallVector );
-    RUN_TEST( ContainerUTF8String );
-    RUN_TEST( ContainerStringLiteral );
-    RUN_TEST( ContainerStringOperators );
-    RUN_TEST( ParseUtil );
-    RUN_TEST( ImageConversions );
-    RUN_TEST( ImageStrides );
-    RUN_TEST( FormatAttribs );
-
-    #undef RUN_TEST
+    #include "UnitTests/DeclTests.inl"
 
     // Print summary
     PrintTestSummary(failures);
@@ -519,7 +472,7 @@ TestResult TestbedContext::CreateBuffer(
 
     if (buf == nullptr)
     {
-        Log::Errorf("Failed to create buffer: %s\n", name);
+        Log::Errorf(Log::ColorFlags::StdError, "Failed to create buffer: %s\n", name);
         return TestResult::FailedErrors;
     }
 
@@ -531,6 +484,7 @@ TestResult TestbedContext::CreateBuffer(
     if (resultDesc.size < desc.size)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between buffer \"%s\" descriptor (size = %" PRIu64 ") and actual buffer (size = %" PRIu64 ")\n",
             name, desc.size, resultDesc.size
         );
@@ -557,7 +511,7 @@ TestResult TestbedContext::CreateTexture(
 
     if (tex == nullptr)
     {
-        Log::Errorf("Failed to create texture: %s\n", name);
+        Log::Errorf(Log::ColorFlags::StdError, "Failed to create texture: %s\n", name);
         return TestResult::FailedErrors;
     }
 
@@ -569,6 +523,7 @@ TestResult TestbedContext::CreateTexture(
     if (resultDesc.type != desc.type)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between texture \"%s\" descriptor (type = %s) and actual texture (type = %s)\n",
             name, ToString(desc.type), ToString(resultDesc.type)
         );
@@ -578,6 +533,7 @@ TestResult TestbedContext::CreateTexture(
     if (resultDesc.extent != desc.extent)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between texture \"%s\" descriptor (extent = %u x %u x %u) and actual texture (extent = %u x %u x %u)\n",
             name,
             desc.extent.width, desc.extent.height, desc.extent.depth,
@@ -598,6 +554,7 @@ TestResult TestbedContext::CreateTexture(
     if (resultDesc.arrayLayers != desc.arrayLayers)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between texture \"%s\" descriptor (arrayLayers = %u) and actual texture (arrayLayers = %u)\n",
             name, desc.arrayLayers, resultDesc.arrayLayers
         );
@@ -610,6 +567,7 @@ TestResult TestbedContext::CreateTexture(
         if (expectedMipLevels != desc.mipLevels)
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between texture \"%s\" descriptor (mipLevels = %u; deduced from %u) and actual texture (mipLevels = %u)\n",
                 name, expectedMipLevels, desc.mipLevels, resultDesc.mipLevels
             );
@@ -617,6 +575,7 @@ TestResult TestbedContext::CreateTexture(
         else
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between texture \"%s\" descriptor (mipLevels = %u) and actual texture (mipLevels = %u)\n",
                 name, expectedMipLevels, resultDesc.mipLevels
             );
@@ -628,6 +587,7 @@ TestResult TestbedContext::CreateTexture(
     if (resultDesc.samples < desc.samples)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between texture \"%s\" descriptor (samples = %u) and actual texture (samples = %u)\n",
             name, desc.samples, resultDesc.samples
         );
@@ -642,6 +602,7 @@ TestResult TestbedContext::CreateTexture(
         if (resultMipExtent != expectedMipExtent)
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between texture \"%s\" MIP [%u] extent (%u x %u x %u) and actual extent (%u x %u x %u)\n",
                 name, level,
                 resultMipExtent.width, resultMipExtent.height, resultMipExtent.depth,
@@ -676,7 +637,7 @@ TestResult TestbedContext::CreateRenderTarget(
 
     if (target == nullptr)
     {
-        Log::Errorf("Failed to create render target: %s\n", name);
+        Log::Errorf(Log::ColorFlags::StdError, "Failed to create render target: %s\n", name);
         return TestResult::FailedErrors;
     }
 
@@ -687,6 +648,7 @@ TestResult TestbedContext::CreateRenderTarget(
     if (resultResolution != desc.resolution)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between render target \"%s\" descriptor (resolution = %u x %u) and actual render target (resolution = %u x %u)\n",
             name,
             desc.resolution.width, desc.resolution.height,
@@ -724,6 +686,7 @@ TestResult TestbedContext::CreateRenderTarget(
         if (resultSamples != maxSamples)
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between render target \"%s\" descriptor (samples = %u) and actual render target (samples = %u; max = %u)\n",
                 name, desc.samples, resultSamples, maxSamples
             );
@@ -758,6 +721,7 @@ TestResult TestbedContext::CreateRenderTarget(
     if (resultAttachments != expectedAttachments)
     {
         Log::Errorf(
+            Log::ColorFlags::StdError,
             "Mismatch between render target \"%s\" descriptor (colorAttachments = %u) and actual render target (colorAttachments = %u)\n",
             name, expectedAttachments, resultAttachments
         );
@@ -767,12 +731,20 @@ TestResult TestbedContext::CreateRenderTarget(
     const Format expectedDepthStencilFormat = AttachmentFormat(desc.depthStencilAttachment);
     if (IsDepthFormat(expectedDepthStencilFormat) && !target->HasDepthAttachment())
     {
-        Log::Errorf("Mismatch between render target \"%s\" descriptor (with depth attachment) and actual render target (no depth attachment)\n", name);
+        Log::Errorf(
+            Log::ColorFlags::StdError,
+            "Mismatch between render target \"%s\" descriptor (with depth attachment) and actual render target (no depth attachment)\n",
+            name
+        );
         return TestResult::FailedMismatch;
     }
     if (IsStencilFormat(expectedDepthStencilFormat) && !target->HasStencilAttachment())
     {
-        Log::Errorf("Mismatch between render target \"%s\" descriptor (with stencil attachment) and actual render target (no stencil attachment)\n", name);
+        Log::Errorf(
+            Log::ColorFlags::StdError,
+            "Mismatch between render target \"%s\" descriptor (with stencil attachment) and actual render target (no stencil attachment)\n",
+            name
+        );
         return TestResult::FailedMismatch;
     }
 
@@ -959,6 +931,7 @@ TestbedContext::Options TestbedContext::ParseOptions(int argc, char* argv[])
     opt.sanityCheck     = (HasProgramArgument(argc, argv, "-s") || HasProgramArgument(argc, argv, "--sanity-check"));
     opt.showTiming      = (HasProgramArgument(argc, argv, "-t") || HasProgramArgument(argc, argv, "--timing"));
     opt.fastTest        = (HasProgramArgument(argc, argv, "-f") || HasProgramArgument(argc, argv, "--fast"));
+    opt.updateRefs      = HasProgramArgument(argc, argv, "--update");
     opt.resolution      = { g_testbedWinSize[0], g_testbedWinSize[1] };
     opt.selectedTests   = FindSelectedTests(argc, argv);
     return opt;
@@ -1009,7 +982,8 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
             "Configuration:\n"
             " - Profile: %s\n"
             " - DSA extension: %s\n"
-            " - %s\n",
+            " - %s\n"
+            "--------------------\n",
             renderer->GetName(),
             (hasDSAExtension ? "Yes" : "No"),
             cmdBufferContextInfo
@@ -1019,17 +993,38 @@ void TestbedContext::LogRendererInfo(bool isImmediateContext)
     {
         Log::Printf(
             "Configuration:\n"
-            " - %s\n",
+            " - %s\n"
+            "--------------------\n",
             cmdBufferContextInfo
         );
+    }
+
+    if (opt.verbose && !info.extensionNames.empty())
+    {
+        Log::Printf("Extensions:\n");
+        for (const UTF8String& extName : info.extensionNames)
+            Log::Printf("  %s\n", extName.c_str());
+        Log::Printf("--------------------\n");
     }
 }
 
 bool TestbedContext::LoadShaders()
 {
-    const ShaderMacro definesEnableTexturing[] =
+    const ShaderMacro definesInstanced[] =
     {
-        ShaderMacro{ "ENABLE_TEXTURING", "1" },
+        ShaderMacro{ "IS_INSTANCED", "1" },
+        ShaderMacro{ nullptr, nullptr }
+    };
+
+    const ShaderMacro definesNumTextures1[] =
+    {
+        ShaderMacro{ "NUM_TEXTURES", "1" },
+        ShaderMacro{ nullptr, nullptr }
+    };
+
+    const ShaderMacro definesNumTextures8[] =
+    {
+        ShaderMacro{ "NUM_TEXTURES", "8" },
         ShaderMacro{ nullptr, nullptr }
     };
 
@@ -1042,17 +1037,20 @@ bool TestbedContext::LoadShaders()
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesInstanced);
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0");
-        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", definesEnableTexturing);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesNumTextures1);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", definesNumTextures1);
+        shaders[VSTextured8]        = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesNumTextures8);
+        shaders[PSTextured8]        = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", definesNumTextures8);
         shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Fragment,        "PSMain",  "ps_5_0");
-        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
-        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,          "VShadow", "vs_5_0");
         shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,          "VScene",  "vs_5_0");
         shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Fragment,        "PScene",  "ps_5_0");
@@ -1060,28 +1058,26 @@ bool TestbedContext::LoadShaders()
         shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Fragment,        "PSMain",  "ps_5_0");
         if ((caps.limits.storageResourceStageFlags & StageFlags::VertexStage) != 0)
         {
-            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Vertex,          "VSMain",  "vs_5_0");
             shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Fragment,        "PSMain",  "ps_5_0");
             shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Compute,         "CSMain",  "cs_5_0");
         }
-        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment,        "PSMain",  "ps_5_0");
-        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[VSStreamOutputXfb]  = shaders[VSStreamOutput];
         shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessControl,     "HSMain",  "hs_5_0");
-        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessEvaluation,  "DSMain",  "ds_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessEvaluation,  "DSMain",  "ds_5_0");
         shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
-        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0");
+        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.hlsl",         ShaderType::Compute,         "CSMain",  "cs_5_0");
         shaders[CSByteBuffer]       = LoadShaderFromFile("ByteBuffer.hlsl",            ShaderType::Compute,         "CSMain",  "cs_5_0");
         shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.hlsl",        ShaderType::Compute,         "CSMain",  "cs_5_0");
-        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout0);
-        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout1);
-        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", definesVertexFormat1, VertFmtLayout2);
-        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtLayout3);
+        shaders[VSVertexFormatA]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[VSVertexFormatB]    = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Vertex,          "VSMain",  "vs_5_0", definesVertexFormat1);
         shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.hlsl",         ShaderType::Fragment,        "PSMain",  "ps_5_0");
         if (caps.features.hasMeshShaders)
         {
@@ -1097,20 +1093,23 @@ bool TestbedContext::LoadShaders()
             return false;
         }
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex);
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesInstanced);
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment);
-        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr);
-        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr);
-        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesNumTextures1);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesNumTextures1);
+        shaders[VSTextured8]        = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesNumTextures8);
+        shaders[PSTextured8]        = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesNumTextures8);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.vert",   ShaderType::Vertex);
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.frag",   ShaderType::Fragment);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.vert",       ShaderType::Vertex);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.frag",       ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_420))
         {
-            shaders[VSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.vert", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-            shaders[PSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.frag", ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[VSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.vert", ShaderType::Vertex);
+            shaders[PSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.frag", ShaderType::Fragment);
         }
-        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.330core.vert",      ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.330core.frag",      ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.330core.vert",      ShaderType::Vertex);
+        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.330core.frag",      ShaderType::Fragment);
         shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.VShadow.330core.vert", ShaderType::Vertex);
         shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.VScene.330core.vert",  ShaderType::Vertex);
         shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
@@ -1118,106 +1117,105 @@ bool TestbedContext::LoadShaders()
         shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.330core.frag",        ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_450))
         {
-            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert",   ShaderType::Vertex);
             shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag",   ShaderType::Fragment);
             shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp",   ShaderType::Compute);
             shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp",     ShaderType::Compute);
             shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp",    ShaderType::Compute);
         }
-        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_410))
         {
-            shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.vert",      ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.vert",      ShaderType::Vertex);
             shaders[VSStreamOutputXfb]  = shaders[VSStreamOutput];
             shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tesc",      ShaderType::TessControl);
-            shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tese",      ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tese",      ShaderType::TessEvaluation);
             shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
-            shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.410core.geom",      ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-            shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.frag",      ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.410core.geom",      ShaderType::Geometry);
+            shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.frag",      ShaderType::Fragment);
         }
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.vert",      ShaderType::Vertex);
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.frag",      ShaderType::Fragment);
-        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout0);
-        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout1);
-        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, definesVertexFormat1, VertFmtLayout2);
-        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout3);
+        shaders[VSVertexFormatA]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex);
+        shaders[VSVertexFormatB]    = LoadShaderFromFile("VertexFormats.330core.vert",         ShaderType::Vertex, nullptr, nullptr, definesVertexFormat1);
         shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.330core.frag",         ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
         shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1");
         shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1");
-        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesEnableTexturing);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesNumTextures1);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesNumTextures1);
+        shaders[VSTextured8]        = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesNumTextures8);
+        shaders[PSTextured8]        = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesNumTextures8);
         shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.metal",  ShaderType::Vertex,   "VSMain",  "1.1");
         shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.metal",  ShaderType::Fragment, "PSMain",  "1.1");
-        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Fragment, "PSMain",  "1.1", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Vertex,   "VSMain",  "1.2", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Fragment, "PSMain",  "1.2", nullptr, VertFmtEmpty);
-        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.metal",     ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
-        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.metal",     ShaderType::Fragment, "PSMain",  "1.1", nullptr, VertFmtEmpty);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Vertex,   "VSMain",  "1.2");
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Fragment, "PSMain",  "1.2");
+        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.metal",     ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.metal",     ShaderType::Fragment, "PSMain",  "1.1");
         shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Vertex,   "VShadow", "1.1");
         shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Vertex,   "VScene",  "1.1");
         shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Fragment, "PScene",  "1.1");
-//      shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
+//      shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Vertex,   "VSMain",  "1.1");
 //      shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Fragment, "PSMain",  "1.1");
 //      shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
-        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1");
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
         /*if (IsShadingLanguageSupported(ShadingLanguage::Metal_1_2))
         {
             shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.metal",   ShaderType::Compute,  "CSMain",  "1.2"); // access::read_write requires Metal 1.2
         }*/
-        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout0);
-        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout1);
-        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", definesVertexFormat1, VertFmtLayout2);
-        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtLayout3);
+        shaders[VSVertexFormatA]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[VSVertexFormatB]    = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Vertex,   "VSMain",  "1.1", definesVertexFormat1);
         shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.metal",        ShaderType::Fragment, "PSMain",  "1.1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
-        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
-        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
-        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
-        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
-        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.vert.spv",   ShaderType::Vertex);
-        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.frag.spv",   ShaderType::Fragment);
-        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.frag.spv",    ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.450core.vert.spv",      ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.450core.frag.spv",      ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.VShadow.450core.vert.spv", ShaderType::Vertex);
-        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.VScene.450core.vert.spv",  ShaderType::Vertex);
-        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.PScene.450core.frag.spv",  ShaderType::Fragment);
-        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.vert.spv",        ShaderType::Vertex);
-        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.frag.spv",        ShaderType::Fragment);
-        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag.spv",       ShaderType::Fragment);
-        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp.spv",       ShaderType::Compute);
-        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.450core.vert.spv",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.450core.frag.spv",           ShaderType::Fragment);
-        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.vert.spv",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[VSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.vert.xfb.spv",      ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tesc.spv",          ShaderType::TessControl);
-        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tese.spv",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[DSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.tese.xfb.spv",      ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.geom.xfb.spv",      ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.frag.spv",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp.spv",         ShaderType::Compute);
-        shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp.spv",        ShaderType::Compute);
-        shaders[VSVertexFormat0]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout0);
-        shaders[VSVertexFormat1]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout1);
-        shaders[VSVertexFormat2]    = LoadShaderFromFile("VertexFormats.Format1.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout2);
-        shaders[VSVertexFormat3]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv", ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtLayout3);
-        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.450core.frag.spv",         ShaderType::Fragment);
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.450core.vert.spv",           ShaderType::Vertex);
+        shaders[VSSolidInstanced]   = LoadShaderFromFile("TriangleMesh.Instanced.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.450core.frag.spv",           ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.vert.spv",  ShaderType::Vertex);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.frag.spv",  ShaderType::Fragment);
+        shaders[VSTextured8]        = LoadShaderFromFile("TriangleMesh.Textured8.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSTextured8]        = LoadShaderFromFile("TriangleMesh.Textured8.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.vert.spv",    ShaderType::Vertex);
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.frag.spv",    ShaderType::Fragment);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.vert.spv",        ShaderType::Vertex);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.frag.spv",        ShaderType::Fragment);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.vert.spv",     ShaderType::Vertex);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.frag.spv",     ShaderType::Fragment);
+        shaders[VSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.450core.vert.spv",       ShaderType::Vertex);
+        shaders[PSAlphaOnlyTexture] = LoadShaderFromFile("AlphaOnlyTexture.450core.frag.spv",       ShaderType::Fragment);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.VShadow.450core.vert.spv",  ShaderType::Vertex);
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.VScene.450core.vert.spv",   ShaderType::Vertex);
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.PScene.450core.frag.spv",   ShaderType::Fragment);
+        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.vert.spv",         ShaderType::Vertex);
+        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.frag.spv",         ShaderType::Fragment);
+        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert.spv",        ShaderType::Vertex);
+        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag.spv",        ShaderType::Fragment);
+        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp.spv",        ShaderType::Compute);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.450core.vert.spv",            ShaderType::Vertex);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.450core.frag.spv",            ShaderType::Fragment);
+        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.vert.spv",           ShaderType::Vertex);
+        shaders[VSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.vert.xfb.spv",       ShaderType::Vertex);
+        shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tesc.spv",           ShaderType::TessControl);
+        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tese.spv",           ShaderType::TessEvaluation);
+        shaders[DSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.tese.xfb.spv",       ShaderType::TessEvaluation);
+        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.geom.xfb.spv",       ShaderType::Geometry);
+        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.frag.spv",           ShaderType::Fragment);
+        shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp.spv",          ShaderType::Compute);
+        shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp.spv",         ShaderType::Compute);
+        shaders[VSVertexFormatA]    = LoadShaderFromFile("VertexFormats.Format0.450core.vert.spv",  ShaderType::Vertex);
+        shaders[VSVertexFormatB]    = LoadShaderFromFile("VertexFormats.Format1.450core.vert.spv",  ShaderType::Vertex);
+        shaders[PSVertexFormat]     = LoadShaderFromFile("VertexFormats.450core.frag.spv",          ShaderType::Fragment);
         if (caps.features.hasMeshShaders)
         {
-            shaders[MSMeshlet]      = LoadShaderFromFile("Meshlet.450core.mesh.spv",               ShaderType::Mesh);
-            shaders[PSMeshlet]      = LoadShaderFromFile("Meshlet.450core.frag.spv",               ShaderType::Fragment);
+            shaders[MSMeshlet]      = LoadShaderFromFile("Meshlet.450core.mesh.spv",                ShaderType::Mesh);
+            shaders[PSMeshlet]      = LoadShaderFromFile("Meshlet.450core.frag.spv",                ShaderType::Fragment);
         }
     }
     else
@@ -1359,6 +1357,12 @@ void TestbedContext::CreateTriangleMeshes()
         VertexAttribute{ "color",    Format::RGBA8UNorm, 1, offsetof(UnprojectedVertex, color   ), sizeof(UnprojectedVertex) },
     };
 
+    vertexFormats[VertFmtUnprojectedBGRA].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float,  0, offsetof(UnprojectedVertex, position), sizeof(UnprojectedVertex) },
+        VertexAttribute{ "color",    Format::BGRA8UNorm, 1, offsetof(UnprojectedVertex, color   ), sizeof(UnprojectedVertex) },
+    };
+
     vertexFormats[VertFmtLayout0].attributes =
     {
         VertexAttribute{ "position", Format::RG32Float, 0, offsetof(InterleavedVertex, posA), sizeof(InterleavedVertex) },
@@ -1395,9 +1399,10 @@ void TestbedContext::CreateTriangleMeshes()
     // Create GPU mesh buffer
     BufferDescriptor meshBufferDesc;
     {
-        meshBufferDesc.size             = vertexBufferSize + indexBufferSize;
-        meshBufferDesc.bindFlags        = BindFlags::VertexBuffer | BindFlags::IndexBuffer;
-        meshBufferDesc.vertexAttribs    = vertexFormats[VertFmtStd].attributes;
+        meshBufferDesc.debugName    = "Testbed.MeshBuffer";
+        meshBufferDesc.size         = vertexBufferSize + indexBufferSize;
+        meshBufferDesc.bindFlags    = BindFlags::VertexBuffer | BindFlags::IndexBuffer;
+        meshBufferDesc.stride       = sizeof(StandardVertex);
     }
     meshBuffer = renderer->CreateBuffer(meshBufferDesc);
 
@@ -1511,9 +1516,7 @@ Shader* TestbedContext::LoadShaderFromFile(
     ShaderType          type,
     const char*         entry,
     const char*         profile,
-    const ShaderMacro*  defines,
-    VertFmt             vertFmt,
-    VertFmt             vertOutFmt)
+    const ShaderMacro*  defines)
 {
     auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
     {
@@ -1543,17 +1546,13 @@ Shader* TestbedContext::LoadShaderFromFile(
     // Create shader from file
     ShaderDescriptor shaderDesc;
     {
-        shaderDesc.type                 = type;
-        shaderDesc.source               = filePath.c_str();
-        shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
-        shaderDesc.entryPoint           = entry;
-        shaderDesc.profile              = profile;
-        shaderDesc.defines              = defines;
-        shaderDesc.flags                = ShaderCompileFlags::PatchClippingOrigin;
-        if (type == ShaderType::Vertex)
-            shaderDesc.vertex.inputAttribs  = vertexFormats[vertFmt].attributes;
-        if (vertOutFmt != VertFmtCount)
-            shaderDesc.vertex.outputAttribs = vertexFormats[vertOutFmt].attributes;
+        shaderDesc.type         = type;
+        shaderDesc.source       = filePath.c_str();
+        shaderDesc.sourceType   = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
+        shaderDesc.entryPoint   = entry;
+        shaderDesc.profile      = profile;
+        shaderDesc.defines      = defines;
+        shaderDesc.flags        = ShaderCompileFlags::PatchClippingOrigin;
     }
     Shader* shader = renderer->CreateShader(shaderDesc);
 
@@ -1716,10 +1715,19 @@ bool TestbedContext::IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::
     );
 }
 
+const char* TestbedContext::GetResultFileSuffix() const
+{
+    return opt.updateRefs ? ".Ref.png" : ".Result.png";
+}
+
+std::string TestbedContext::GetResultPath() const
+{
+    return opt.updateRefs ? "Reference/" : opt.outputDir + moduleName + "/";
+}
+
 void TestbedContext::SaveColorImage(const std::vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name)
 {
-    const std::string path = opt.outputDir + moduleName + "/";
-    SaveImage(image, extent, path + name + ".Result.png", opt.verbose);
+    SaveImage(image, extent, GetResultPath() + name + GetResultFileSuffix(), opt.verbose);
 }
 
 void TestbedContext::SaveDepthImage(const std::vector<float>& image, const Extent2D& extent, const std::string& filename)
@@ -1765,8 +1773,7 @@ void TestbedContext::SaveDepthImage(const std::vector<float>& image, const LLGL:
         colors[i] = ColorRGBub{ color };
     }
 
-    const std::string path = opt.outputDir + moduleName + "/";
-    SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
+    SaveImage(colors, extent, GetResultPath() + name + GetResultFileSuffix(), opt.verbose);
 }
 
 void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name)
@@ -1777,8 +1784,7 @@ void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, co
     for_range(i, image.size())
         colors[i] = ColorRGBub{ image[i] };
 
-    const std::string path = opt.outputDir + moduleName + "/";
-    SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
+    SaveImage(colors, extent, GetResultPath() + name + GetResultFileSuffix(), opt.verbose);
 }
 
 LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, Format format, const LLGL::Extent2D& extent)
@@ -1888,12 +1894,16 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
 
 TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, unsigned tolerance, int scale)
 {
+    // If references are updated in this session, don't run analysis on their diff as they will always be identical
+    if (opt.updateRefs)
+        return DiffResult{};
+
     // Load input images and validate they have the same dimensions
     std::vector<ColorRGBub> pixelsA, pixelsB;
     std::vector<ColorRGBAub> pixelsDiff;
     Extent2D extentA, extentB;
 
-    const std::string resultPath    = opt.outputDir + moduleName + "/";
+    const std::string resultPath    = GetResultPath();
     const std::string refPath       = "Reference/";
     const std::string diffPath      = opt.outputDir + moduleName + "/";
 
@@ -1967,7 +1977,7 @@ bool TestbedContext::QueryResultsWithTimeout(
         const std::uint64_t endTick = Timer::Tick();
         if (endTick - startTick > ticksUntilTimeout)
         {
-            Log::Errorf("Query object 'LLGL::QueryType::%s' timed out\n", ToString(queryHeap.GetType()));
+            Log::Errorf(Log::ColorFlags::StdError, "Query object 'LLGL::QueryType::%s' timed out\n", ToString(queryHeap.GetType()));
             return false;
         }
         std::this_thread::yield();
@@ -2166,9 +2176,9 @@ TestResult TestbedContext::DiffResult::Evaluate(const char* name, unsigned frame
     if (Mismatch())
     {
         if (frame != ~0u)
-            Log::Errorf("Mismatch between reference and result image for %s [frame %u] (%s)\n", name, frame, Print());
+            Log::Errorf(Log::ColorFlags::StdError, "Mismatch between reference and result image for %s [frame %u] (%s)\n", name, frame, Print());
         else
-            Log::Errorf("Mismatch between reference and result image for %s (%s)\n", name, Print());
+            Log::Errorf(Log::ColorFlags::StdError, "Mismatch between reference and result image for %s (%s)\n", name, Print());
         if (histogram != nullptr)
             histogram->Print();
         return TestResult::FailedMismatch;

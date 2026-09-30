@@ -19,8 +19,8 @@ namespace LLGL
 /**
 \brief Extended tier-1 command buffer interface.
 \remarks This command buffer extends the base interface with functions to record advanced rendering commands such as mesh pipeline tasks.
+\note Only supported with: Direct3D 12, Vulkan.
 \see RenderSystem::CreateCommandBuffer
-\note Only supported with: Direct3D 12.
 */
 class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
 {
@@ -28,6 +28,28 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         LLGL_DECLARE_INTERFACE( InterfaceID::CommandBufferTier1 );
 
     public:
+
+        /* ----- Variable Rate Shading (VRS) ----- */
+
+        /**
+        \brief Sets the shading rate for subsequent drawing commands.
+        \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
+        \remarks This must only be used on a graphics or mesh pipeline that has variable rate shading enabled.
+        \see RasterizerDescriptor::shadingRateEnabled
+        \see RenderingFeatures::hasVariableRateShading
+        */
+        virtual void SetShadingRate(ShadingRate shadingRate) = 0;
+
+        /**
+        \brief Sets the shading rate for subsequent drawing commands.
+        \param[in] shadingRate Specifies the new shading rate. To reset to the default shading rate of 1x1 pixels, use ShadingRate::Size1x1.
+        \param[in combinerOpX Specifies how rendered primitives combine their X-axis shading rates.
+        \param[in combinerOpY Specifies how rendered primitives combine their Y-axis shading rates.
+        \remarks This must only be used on a graphics or mesh pipeline that has variable rate shading enabled.
+        \see RasterizerDescriptor::shadingRateEnabled
+        \see RenderingFeatures::hasVariableRateShading
+        */
+        virtual void SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY) = 0;
 
         /* ----- Mesh pipeline ----- */
 
@@ -48,6 +70,7 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
         \param[in] stride Specifies the stride (in bytes) between consecutive sets of arguments,
         which is commonly greater than or equal to <code>sizeof(DrawMeshIndirectArguments)</code>. This stride must be a multiple of 4.
+
         \see DrawMeshIndirectArguments
         \see RenderingFeatures::hasMeshShaders
         */
@@ -56,8 +79,8 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         /**
         \brief Draws an unknown amount of meshes whose draw command arguments are taken from a buffer object.
 
-        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BindFlags::IndirectBuffer binding flag.
-        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \param[in] argumentsBuffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BindFlags::IndirectBuffer binding flag.
+        \param[in] argumentsOffset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] countBuffer Specifies the buffer from which the number of draw command arguments are taken. This buffer must have been created with the BindFlags::IndirectBuffer binding flag.
         \param[in] countOffset Specifies the offset within the count buffer.
         \param[in] maxNumCommands Specifies the maximum number of draw commands that are to be taken from the argument buffer.
@@ -65,6 +88,7 @@ class LLGL_EXPORT CommandBufferTier1 : public CommandBuffer
         The exact number of commands processed is as \f$\min \left\{ \mathit{countBuffer}_{\mathit{countOffset}}, \mathit{maxNumCommands} \right\}\f$.
         \param[in] stride Specifies the stride (in bytes) between consecutive sets of arguments,
         which is commonly greater than or equal to <code>sizeof(DrawMeshIndirectArguments)</code>. This stride must be a multiple of 4.
+
         \see DrawMeshIndirectArguments
         \see RenderingFeatures::hasMeshShaders
         */

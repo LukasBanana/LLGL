@@ -14,10 +14,8 @@ project(LLGL_Vulkan)
 
 # === Options ===
 
-if(NOT APPLE)
-    option(LLGL_VK_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
-    option(LLGL_VK_ENABLE_GPU_ASSISTED_VALIDATION "Enable Vulkan GPU assisted validation" ON)
-endif()
+option(LLGL_VK_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
+option(LLGL_VK_ENABLE_GPU_ASSISTED_VALIDATION "Enable Vulkan GPU assisted validation" ON)
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     ADD_DEFINE(LLGL_VK_ENABLE_SPIRV_REFLECT)

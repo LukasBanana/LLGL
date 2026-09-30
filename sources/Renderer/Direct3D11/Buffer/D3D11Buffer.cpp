@@ -266,6 +266,8 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 static UINT GetD3DBufferStride(const BufferDescriptor& desc)
 {
     if (!desc.vertexAttribs.empty())
@@ -274,6 +276,8 @@ static UINT GetD3DBufferStride(const BufferDescriptor& desc)
         return desc.stride;
     return (GetFormatAttribs(desc.format).bitSize / 8);
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {

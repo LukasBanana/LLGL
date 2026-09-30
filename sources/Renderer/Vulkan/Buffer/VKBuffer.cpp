@@ -103,11 +103,19 @@ static VkAccessFlags GetBufferVkAccessFlags(long bindFlags)
     return accessFlags;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 static std::uint32_t GetVKBufferStride(const BufferDescriptor& desc)
 {
     /* Just return first vertex attribute stride, since all attributes must have equal strides within the same buffer */
-    return (desc.vertexAttribs.empty() ? 1 : std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride));
+    if (!desc.vertexAttribs.empty())
+        return std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride); //DEPRECATED
+    if (desc.stride > 0)
+        return desc.stride;
+    return 1u;
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     Buffer            { desc.bindFlags                         },

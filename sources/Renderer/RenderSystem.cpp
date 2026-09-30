@@ -94,7 +94,28 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
 
-    AndroidApp::Get().Initialize(renderSystemDesc.androidApp);
+    void* platformContext           = renderSystemDesc.platformContext;
+    std::size_t platformContextSize = renderSystemDesc.platformContextSize;
+
+    /* For backwards compatibility, fall back to the deprecated ::androidApp field */
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    if (platformContext == nullptr && renderSystemDesc.androidApp != nullptr)
+    {
+        platformContext     = renderSystemDesc.androidApp;
+        platformContextSize = sizeof(android_app);
+    }
+    LLGL_DEPRECATED_IGNORE_POP()
+
+    AndroidContext androidContext;
+    android_app* androidAppState = nullptr;
+    if (!AndroidInterpretPlatformContext(androidContext, androidAppState, platformContext, platformContextSize))
+    {
+        return ReportException(
+            report, "RenderSystemDescriptor::platformContextSize (%u) matches neither android_app nor LLGL::AndroidContext",
+            static_cast<unsigned>(platformContextSize));
+    }
+
+    AndroidApp::Get().Initialize(androidContext, androidAppState);
 
     #endif
 
@@ -217,12 +238,25 @@ const RendererInfo& RenderSystem::GetRendererInfo()
     return pimpl_->info;
 }
 
+template <typename T>
+static void SortVector(std::vector<T>& cont)
+{
+    std::sort(cont.begin(), cont.end());
+}
+
 const RenderingCapabilities& RenderSystem::GetRenderingCaps()
 {
     if (!pimpl_->hasCaps)
     {
         if (QueryRendererDetails(nullptr, &(pimpl_->caps)))
+        {
+            /* Sort format entries in ascending order */
+            SortVector(pimpl_->caps.textureFormats);
+            SortVector(pimpl_->caps.vertexFormats);
+            SortVector(pimpl_->caps.swapChainColorFormats);
+            SortVector(pimpl_->caps.swapChainDepthStencilFormats);
             pimpl_->hasCaps = true;
+        }
     }
     return pimpl_->caps;
 }
@@ -267,7 +301,8 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
         BindFlags::StreamOutputBuffer   |
         BindFlags::IndirectBuffer       |
         BindFlags::CopySrc              |
-        BindFlags::CopyDst
+        BindFlags::CopyDst              |
+        BindFlags::TexelBuffer // Valid but not necessary for CreateBuffer()
     );
 
     LLGL_ASSERT(
@@ -275,25 +310,6 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
         "buffer descriptor with invalid binding flags 0x%08X",
         static_cast<unsigned>(bufferDesc.bindFlags)
     );
-}
-
-static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const char* resourceName)
-{
-    /* Validate number of buffers */
-    LLGL_ASSERT(!(numResources == 0), "cannot create %s array with zero elements", resourceName);
-
-    /* Validate array pointer */
-    LLGL_ASSERT(!(resourceArray == nullptr), "cannot create %s array with null pointer for array", resourceName);
-
-    /* Validate pointers in array */
-    for_range(i, numResources)
-        LLGL_ASSERT(!(resourceArray[i] == nullptr), "cannot create %s array with null pointer for array element [%u]", resourceName, i);
-}
-
-void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
 }
 
 void RenderSystem::AssertCreateShader(const ShaderDescriptor& shaderDesc)

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/ArrayView.h>
 #include <vector>
 
 
@@ -25,11 +26,12 @@ class NullBufferArray final : public BufferArray
 
     public:
 
-        NullBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        NullBufferArray(ArrayView<VertexBufferView> bufferViews);
 
     public:
 
-        const std::vector<NullBuffer*> buffers;
+        const std::vector<NullBuffer*>      buffers;
+        const std::vector<std::uint64_t>    offsets;
 
 };
 

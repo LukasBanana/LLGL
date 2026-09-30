@@ -2,6 +2,8 @@
  * HLSL compute shader
  */
 
+#include <HlslToSpirvInterop.hlsli>
+
 #define MIN_DIST    ( 0.5 )
 #define MAX_DIST    ( 0.5 )
 #define MIN_RADIUS  ( 0.1 )
@@ -127,7 +129,7 @@ struct VOut
 VOut VS(in VIn inp)
 {
     VOut outp;
-    outp.position   = float4((mul(inp.rotation, inp.coord) + inp.position) * float2(aspectRatio, 1.0), 0, 1);
+    outp.position   = float4((VERTEX_ATTRIB_MUL(inp.rotation, inp.coord) + inp.position) * float2(aspectRatio, 1.0), 0, 1);
     outp.color      = inp.color;
     return outp;
 }

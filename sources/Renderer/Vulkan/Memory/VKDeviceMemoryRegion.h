@@ -9,7 +9,7 @@
 #define LLGL_VK_DEVICE_MEMORY_REGION_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <cstdint>
 #include <memory>
 

@@ -358,8 +358,7 @@ void MTMultiSubmitCommandBuffer::SetNativeVertexBuffers(NSUInteger count, const 
     }
 }
 
-//private
-void MTMultiSubmitCommandBuffer::SetVertexBufferInternal(Buffer& buffer)
+void MTMultiSubmitCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     id<MTLBuffer> bufferId = bufferMT.GetNative();
@@ -367,14 +366,24 @@ void MTMultiSubmitCommandBuffer::SetVertexBufferInternal(Buffer& buffer)
     SetNativeVertexBuffers(1, &bufferId, &bufferOffset);
 }
 
-void MTMultiSubmitCommandBuffer::SetVertexBuffer(Buffer& buffer)
+void MTMultiSubmitCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
 {
-    SetVertexBufferInternal(buffer);
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    id<MTLBuffer> bufferId = bufferMT.GetNative();
+    const NSUInteger bufferOffset = static_cast<NSUInteger>(offset);
+    SetNativeVertexBuffers(1, &bufferId, &bufferOffset);
 }
 
-void MTMultiSubmitCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*numVertexAttribs*/, const VertexAttribute* /*vertexAttribs*/)
+void MTMultiSubmitCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
 {
-    SetVertexBufferInternal(buffer);
+    if (numBufferViews == 0 || bufferViews == nullptr)
+        return;
+
+    id<MTLBuffer> buffers[MTCommandContext::maxNumVertexBuffers];
+    NSUInteger offsets[MTCommandContext::maxNumVertexBuffers];
+    TranslateVertexBufferViews(numBufferViews, bufferViews, buffers, offsets);
+    
+    SetNativeVertexBuffers(static_cast<NSUInteger>(numBufferViews), buffers, offsets);
 }
 
 void MTMultiSubmitCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

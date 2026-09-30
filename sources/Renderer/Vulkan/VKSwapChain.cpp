@@ -281,7 +281,7 @@ void VKSwapChain::CopyImage(
  * ======= Private: =======
  */
 
-bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
+Extent2D VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Check if new resolution would actually change the swap-chain extent */
     if (swapChainExtent_.width  != resolution.width ||
@@ -297,7 +297,9 @@ bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
         ReleaseRenderBuffers();
         CreateResolutionDependentResources(resolution);
     }
-    return true;
+
+    /* Report the extent the swap-chain was actually created with, which may have been clamped to the surface capabilities */
+    return Extent2D{ swapChainExtent_.width, swapChainExtent_.height };
 }
 
 void VKSwapChain::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
@@ -502,6 +504,13 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
 {
     /* Pick swap-chain extent by resolution */
     swapChainExtent_ = PickSwapExtent(surfaceSupportDetails_.caps, resolution);
+
+    /*
+    Report the extent that was actually picked, not the one that was requested:
+    PickSwapExtent() clamps to the surface's min/max image extent, which on most
+    windowing systems both equal the window's current client area.
+    */
+    SetResolution(Extent2D{ swapChainExtent_.width, swapChainExtent_.height });
 
     /* Get device queues for graphics and presentation */
     VkSurfaceKHR surface = surface_.Get();

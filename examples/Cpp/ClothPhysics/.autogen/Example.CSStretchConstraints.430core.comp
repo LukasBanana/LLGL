@@ -1,0 +1,209 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct ParticleView
+{
+    vec4 currPos;
+    vec4 nextPos;
+    vec4 origPos;
+    vec4 normal;
+    float invMass;
+};
+
+layout(binding = 0, std140) uniform SceneState
+{
+    layout(row_major) mat4 wvpMatrix;
+    layout(row_major) mat4 wMatrix;
+    vec4 gravity;
+    uvec2 gridSize;
+    uvec2 _pad0;
+    float damping;
+    float dTime;
+    float dStiffness;
+    float _pad1;
+    vec4 lightVec;
+};
+
+layout(binding = 1) uniform samplerBuffer parBase;
+layout(binding = 2, rgba32f) uniform readonly imageBuffer parCurrPos;
+layout(binding = 3, rgba32f) uniform writeonly imageBuffer parNextPos;
+layout(binding = 4, rgba32f) uniform readonly writeonly imageBuffer parPrevPos;
+layout(binding = 5, rgba32f) uniform readonly writeonly imageBuffer parVelocity;
+layout(binding = 6, rgba32f) uniform imageBuffer parNormal;
+
+uint GridPosToIndex(uvec2 gridPos)
+{
+    return (gridPos.y * gridSize.x) + gridPos.x;
+}
+
+vec4 UVToOrigPos(vec2 uv)
+{
+    return vec4((uv.x * 2.0) - 1.0, 0.0, uv.y * (-2.0), 1.0);
+}
+
+void AccumulateStretchConstraints(ParticleView par, ivec2 neighborGridPos, inout vec3 dCorrection)
+{
+    bool temp_var_logical = true;
+    if (!(neighborGridPos.x < 0))
+    {
+        temp_var_logical = uint(neighborGridPos.x) >= gridSize.x;
+    }
+    bool temp_var_logical_1 = true;
+    if (!temp_var_logical)
+    {
+        temp_var_logical_1 = neighborGridPos.y < 0;
+    }
+    bool temp_var_logical_2 = true;
+    if (!temp_var_logical_1)
+    {
+        temp_var_logical_2 = uint(neighborGridPos.y) >= gridSize.y;
+    }
+    if (temp_var_logical_2)
+    {
+        return;
+    }
+    uvec2 param_var_gridPos = uvec2(neighborGridPos);
+    uint idx = GridPosToIndex(param_var_gridPos);
+    vec4 otherCurrPos = imageLoad(parCurrPos, int(idx));
+    vec2 param_var_uv = texelFetch(parBase, int(idx)).xy;
+    vec4 otherOrigPos = UVToOrigPos(param_var_uv);
+    float otherInvMass = texelFetch(parBase, int(idx)).z;
+    vec3 dPos = (par.nextPos - otherCurrPos).xyz;
+    float currDist = length(dPos);
+    float edgeDist = distance(par.origPos, otherOrigPos);
+    dPos = normalize(dPos) * ((currDist - edgeDist) / (par.invMass + otherInvMass));
+    dCorrection += (dPos * (-par.invMass));
+}
+
+vec3 ReadParticlePos(uvec2 gridPos)
+{
+    uvec2 param_var_gridPos = gridPos;
+    return imageLoad(parCurrPos, int(GridPosToIndex(param_var_gridPos))).xyz;
+}
+
+void AccumulateSurfaceNormal(vec4 pos, ivec2 gridPos0, ivec2 gridPos1, inout vec4 normal)
+{
+    bool temp_var_logical = true;
+    if (!(gridPos0.x < 0))
+    {
+        temp_var_logical = uint(gridPos0.x) >= gridSize.x;
+    }
+    bool temp_var_logical_1 = true;
+    if (!temp_var_logical)
+    {
+        temp_var_logical_1 = gridPos0.y < 0;
+    }
+    bool temp_var_logical_2 = true;
+    if (!temp_var_logical_1)
+    {
+        temp_var_logical_2 = uint(gridPos0.y) >= gridSize.y;
+    }
+    bool temp_var_logical_3 = true;
+    if (!temp_var_logical_2)
+    {
+        temp_var_logical_3 = gridPos1.x < 0;
+    }
+    bool temp_var_logical_4 = true;
+    if (!temp_var_logical_3)
+    {
+        temp_var_logical_4 = uint(gridPos1.x) >= gridSize.x;
+    }
+    bool temp_var_logical_5 = true;
+    if (!temp_var_logical_4)
+    {
+        temp_var_logical_5 = gridPos1.y < 0;
+    }
+    bool temp_var_logical_6 = true;
+    if (!temp_var_logical_5)
+    {
+        temp_var_logical_6 = uint(gridPos1.y) >= gridSize.y;
+    }
+    if (temp_var_logical_6)
+    {
+        return;
+    }
+    uvec2 param_var_gridPos = uvec2(gridPos0);
+    vec3 v0 = ReadParticlePos(param_var_gridPos) - pos.xyz;
+    uvec2 param_var_gridPos_1 = uvec2(gridPos1);
+    vec3 v1 = ReadParticlePos(param_var_gridPos_1) - pos.xyz;
+    vec3 _471 = normal.xyz + cross(v0, v1);
+    normal = vec4(_471.x, _471.y, _471.z, normal.w);
+}
+
+void ApplyStretchConstraints(inout ParticleView par, ivec2 gridPos)
+{
+    if (par.invMass == 0.0)
+    {
+        return;
+    }
+    vec3 dPos = vec3(0.0);
+    ParticleView param_var_par = par;
+    ivec2 param_var_neighborGridPos = gridPos + ivec2(0, -1);
+    AccumulateStretchConstraints(param_var_par, param_var_neighborGridPos, dPos);
+    ParticleView param_var_par_1 = par;
+    ivec2 param_var_neighborGridPos_1 = gridPos + ivec2(0, 1);
+    AccumulateStretchConstraints(param_var_par_1, param_var_neighborGridPos_1, dPos);
+    ParticleView param_var_par_2 = par;
+    ivec2 param_var_neighborGridPos_2 = gridPos + ivec2(-1, 0);
+    AccumulateStretchConstraints(param_var_par_2, param_var_neighborGridPos_2, dPos);
+    ParticleView param_var_par_3 = par;
+    ivec2 param_var_neighborGridPos_3 = gridPos + ivec2(1, 0);
+    AccumulateStretchConstraints(param_var_par_3, param_var_neighborGridPos_3, dPos);
+    ParticleView param_var_par_4 = par;
+    ivec2 param_var_neighborGridPos_4 = gridPos + ivec2(-1);
+    AccumulateStretchConstraints(param_var_par_4, param_var_neighborGridPos_4, dPos);
+    ParticleView param_var_par_5 = par;
+    ivec2 param_var_neighborGridPos_5 = gridPos + ivec2(1, -1);
+    AccumulateStretchConstraints(param_var_par_5, param_var_neighborGridPos_5, dPos);
+    ParticleView param_var_par_6 = par;
+    ivec2 param_var_neighborGridPos_6 = gridPos + ivec2(-1, 1);
+    AccumulateStretchConstraints(param_var_par_6, param_var_neighborGridPos_6, dPos);
+    ParticleView param_var_par_7 = par;
+    ivec2 param_var_neighborGridPos_7 = gridPos + ivec2(1);
+    AccumulateStretchConstraints(param_var_par_7, param_var_neighborGridPos_7, dPos);
+    dPos /= vec3(8.0);
+    vec4 normal = vec4(0.0);
+    vec4 param_var_pos = par.currPos;
+    ivec2 param_var_gridPos0 = gridPos + ivec2(0, 1);
+    ivec2 param_var_gridPos1 = gridPos + ivec2(1, 0);
+    AccumulateSurfaceNormal(param_var_pos, param_var_gridPos0, param_var_gridPos1, normal);
+    vec4 param_var_pos_1 = par.currPos;
+    ivec2 param_var_gridPos0_1 = gridPos + ivec2(1, 0);
+    ivec2 param_var_gridPos1_1 = gridPos + ivec2(0, -1);
+    AccumulateSurfaceNormal(param_var_pos_1, param_var_gridPos0_1, param_var_gridPos1_1, normal);
+    vec4 param_var_pos_2 = par.currPos;
+    ivec2 param_var_gridPos0_2 = gridPos + ivec2(0, -1);
+    ivec2 param_var_gridPos1_2 = gridPos + ivec2(-1, 0);
+    AccumulateSurfaceNormal(param_var_pos_2, param_var_gridPos0_2, param_var_gridPos1_2, normal);
+    vec4 param_var_pos_3 = par.currPos;
+    ivec2 param_var_gridPos0_3 = gridPos + ivec2(-1, 0);
+    ivec2 param_var_gridPos1_3 = gridPos + ivec2(0, 1);
+    AccumulateSurfaceNormal(param_var_pos_3, param_var_gridPos0_3, param_var_gridPos1_3, normal);
+    par.normal = normal / vec4(4.0);
+    vec3 _265 = par.nextPos.xyz + (dPos * dStiffness);
+    par.nextPos = vec4(_265.x, _265.y, _265.z, par.nextPos.w);
+}
+
+void src_CSStretchConstraints(uvec2 threadID)
+{
+    uvec2 param_var_gridPos = threadID;
+    uint idx = GridPosToIndex(param_var_gridPos);
+    ParticleView par;
+    par.currPos = imageLoad(parCurrPos, int(idx));
+    par.nextPos = par.currPos;
+    vec2 param_var_uv = texelFetch(parBase, int(idx)).xy;
+    par.origPos = UVToOrigPos(param_var_uv);
+    par.normal = imageLoad(parNormal, int(idx));
+    par.invMass = texelFetch(parBase, int(idx)).z;
+    ivec2 param_var_gridPos_1 = ivec2(threadID);
+    ApplyStretchConstraints(par, param_var_gridPos_1);
+    imageStore(parNextPos, int(idx), par.nextPos);
+    imageStore(parNormal, int(idx), par.normal);
+}
+
+void main()
+{
+    uvec2 param_var_threadID = gl_GlobalInvocationID.xy;
+    src_CSStretchConstraints(param_var_threadID);
+}
+

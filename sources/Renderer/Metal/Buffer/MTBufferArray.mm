@@ -9,23 +9,26 @@
 #include "MTBuffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-MTBufferArray::MTBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
+MTBufferArray::MTBufferArray(ArrayView<VertexBufferView> bufferViews) :
+    BufferArray { GetCombinedBindFlags(bufferViews) }
 {
     /* Store id<MTLBuffer> of each buffer object inside the array */
-    idArray_.reserve(numBuffers);
-    offsets_.reserve(numBuffers);
-    while (MTBuffer* next = NextArrayResource<MTBuffer>(numBuffers, bufferArray))
+    idArray_.resize(bufferViews.size());
+    offsets_.resize(bufferViews.size());
+
+    for_range(i, bufferViews.size())
     {
-        idArray_.push_back(next->GetNative());
-        offsets_.push_back(0);
+        const VertexBufferView& view = bufferViews[i];
+        auto* bufferMT = LLGL_CAST(MTBuffer*, view.buffer);
+        idArray_[i] = bufferMT->GetNative();
+        offsets_[i] = static_cast<NSUInteger>(view.offset);
     }
 }
 

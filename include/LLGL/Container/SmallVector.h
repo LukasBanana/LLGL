@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/AlignedArray.h>
+#include <LLGL/Tags.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -169,6 +170,12 @@ class LLGL_EXPORT SmallVector
             operator = (other);
         }
 
+        // Ignore warning C26439 - missing noexcept specifier
+        #if _MSC_VER
+        #   pragma warning(push)
+        #   pragma warning(disable : 26439)
+        #endif
+
         /**
         \brief Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
         \remarks This function is intentionally not marked noexcept because we have to copy the data in case the vector is static.
@@ -178,6 +185,10 @@ class LLGL_EXPORT SmallVector
         {
             operator = (std::forward<SmallVector&&>(other));
         }
+
+        #if _MSC_VER
+        #   pragma warning(pop)
+        #endif
 
         //! Initializes the vector with the specified elements in the half-open range <code>[from, to)</code>.
         template <typename InputIter>
@@ -201,6 +212,22 @@ class LLGL_EXPORT SmallVector
         {
         }
 
+        //! Initializes the vector with a copy of all elements from the specified array view.
+        SmallVector(ArrayView<T> list) :
+            SmallVector { list.begin(), list.end() }
+        {
+        }
+
+        /**
+        \brief Initializes the vector with a copy of all elements from the specified data with a fixed size array.
+        \remarks The size of this container will be equal to the template parameter \c <N>.
+        */
+        template <std::size_t N>
+        SmallVector(const T (&data)[N]) :
+            SmallVector { std::begin(data), std::end(data) }
+        {
+        }
+
         //! Initializes the vector with the specified number of elements and initial default value.
         explicit SmallVector(size_type count) :
             SmallVector {}
@@ -213,6 +240,13 @@ class LLGL_EXPORT SmallVector
             SmallVector {}
         {
             resize(count, value);
+        }
+
+        //! Pre-allocates the vector with the specified number of elements but keeps them all uninitialized.
+        explicit SmallVector(size_type count, UninitializeTag) :
+            SmallVector {}
+        {
+            resize(count, UninitializeTag{});
         }
 
         //! Destroys all elements in this vector.
@@ -345,6 +379,26 @@ class LLGL_EXPORT SmallVector
             {
                 reserve(size);
                 construct_single(begin() + size_, begin() + size, value);
+                size_ = size;
+            }
+            else if (size_ > size)
+            {
+                destroy_range(begin() + size, end());
+                size_ = size;
+            }
+        }
+
+        /**
+        \brief Resizes this vector to the new size and explicitly keeps all newly elements uninitialized.
+        \param[in] size Specifies the new vector size (in number of elements).
+        \remarks After this call, \c size() returns the same value as the input parameter \c size.
+        \see resize(size_type)
+        */
+        void resize(size_type size, UninitializeTag)
+        {
+            if (size_ < size)
+            {
+                reserve(size);
                 size_ = size;
             }
             else if (size_ > size)
@@ -599,6 +653,12 @@ class LLGL_EXPORT SmallVector
             insert(end(), rhs.begin(), rhs.end());
             return *this;
         }
+        
+        // Ignore warning C26439 - missing noexcept specifier
+        #if _MSC_VER
+        #   pragma warning(push)
+        #   pragma warning(disable : 26439)
+        #endif
 
         /**
         \brief Takes the ownership of dynamically allocated elements from the \c rhs vector or copies all elements if the dynamic allocation is not used yet.
@@ -634,6 +694,10 @@ class LLGL_EXPORT SmallVector
             }
             return *this;
         }
+        
+        #if _MSC_VER
+        #   pragma warning(pop)
+        #endif
 
         const_reference operator [] (size_type pos) const
         {

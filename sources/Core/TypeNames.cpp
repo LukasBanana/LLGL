@@ -61,6 +61,7 @@ LLGL_EXPORT const char* ToString(const WarningType val)
         case T::ImproperState:      return "improper state";
         case T::PointlessOperation: return "pointless operation";
         case T::VaryingBehavior:    return "varying behavior";
+        case T::DeprecatedFeature:  return "deprecated feature";
     }
 
     return nullptr;

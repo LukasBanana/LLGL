@@ -7,11 +7,6 @@
 
 #include <ExampleBase.h>
 
-//#define DEBUG_FPS
-#ifdef DEBUG_FPS
-#include <chrono>//!!!
-#endif
-
 // Enables custom render pass to clear at the begin of a render pass section (more efficient)
 #define ENABLE_CUSTOM_RENDER_PASS 1
 
@@ -37,8 +32,6 @@ class Example_PostProcessing : public ExampleBase
     LLGL::ResourceHeap*     resourceHeapBlur    = nullptr;
     LLGL::ResourceHeap*     resourceHeapFinal   = nullptr;
 
-    LLGL::VertexFormat      vertexFormatScene;
-
     std::uint32_t           numSceneVertices    = 0;
 
     LLGL::Buffer*           vertexBufferScene   = nullptr;
@@ -63,7 +56,7 @@ class Example_PostProcessing : public ExampleBase
     LLGL::RenderPass*       renderPassScene     = nullptr;
     #endif
 
-    struct SceneSettings
+    struct alignas(16) SceneSettings
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
@@ -74,14 +67,14 @@ class Example_PostProcessing : public ExampleBase
     }
     sceneSettings;
 
-    struct BlurSettings
+    struct alignas(16) BlurSettings
     {
         Gs::Vector2f        blurShift;
         float               _pad0[2];
     }
     blurSettings;
 
-    struct Animation
+    struct alignas(16) Animation
     {
         Gs::Matrix4f        rotation;
         float               innerModelRotation  = 0.0f;
@@ -118,16 +111,11 @@ public:
 
     void CreateBuffers()
     {
-        // Specify vertex format for scene
-        vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormatScene.SetStride(sizeof(TexturedVertex));
-
         // Create scene buffers
         auto sceneVertices = Load3DModel("WiredBox.obj");
         numSceneVertices = static_cast<std::uint32_t>(sceneVertices.size());
 
-        vertexBufferScene = CreateVertexBuffer(sceneVertices, vertexFormatScene);
+        vertexBufferScene = CreateVertexBuffer(sceneVertices, sizeof(TexturedVertex));
         constantBufferScene = CreateConstantBuffer(sceneSettings);
 
         // Create empty vertex buffer for post-processors,
@@ -145,62 +133,17 @@ public:
 
     void LoadShaders()
     {
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormatScene });
-            shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
+        // Load scene shader program
+        shaderPipelineScene.vs = LoadVertexShader  ("Example", "VScene", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        shaderPipelineScene.ps = LoadFragmentShader("Example", "PScene");
 
-            // Load blur shader program
-            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VPP",   "vs_5_0" });
-            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PBlur", "ps_5_0" });
+        // Load blur shader program
+        shaderPipelineBlur.vs  = LoadVertexShader  ("Example", "VPP",   nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+        shaderPipelineBlur.ps  = LoadFragmentShader("Example", "PBlur");
 
-            // Load final shader program
-            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
-            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PFinal", "ps_5_0" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            // Load scene shader program
-            shaderPipelineScene.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormatScene });
-            shaderPipelineScene.ps = LoadShader                      ({ LLGL::ShaderType::Fragment, "Scene.frag" });
-
-            // Load blur shader program
-            shaderPipelineBlur.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "PostProcess.vert" });
-            shaderPipelineBlur.ps = LoadShader                      ({ LLGL::ShaderType::Fragment, "Blur.frag"        });
-
-            // Load final shader program
-            shaderPipelineFinal.vs = LoadShader({ LLGL::ShaderType::Vertex,   "PostProcess.vert" });
-            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.frag"       });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormatScene });
-            shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
-
-            // Load blur shader program
-            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "PostProcess.450core.vert.spv" });
-            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Blur.450core.frag.spv"        });
-
-            // Load final shader program
-            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
-            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.450core.frag.spv" });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            // Load scene shader program
-            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormatScene });
-            shaderPipelineScene.ps = LoadShader( { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-
-            // Load blur shader program
-            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VPP",   "1.1" });
-            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PBlur", "1.1" });
-
-            // Load final shader program
-            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
-            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PFinal", "1.1" });
-        }
+        // Load final shader program
+        shaderPipelineFinal.vs = shaderPipelineBlur.vs;
+        shaderPipelineFinal.ps = LoadFragmentShader("Example", "PFinal");
     }
 
     void CreateSamplers()
@@ -322,7 +265,7 @@ public:
                 "  texture(glossMap@4):frag,"
                 "  sampler(glossMapSampler@6):frag,"
                 "},"
-                "sampler<glossMap, glossMapSampler>(glossMap@4)"
+                "sampler<glossMap, glossMapSampler>(s_glossMapglossMapSampler@4)"
             )
         );
 
@@ -334,17 +277,25 @@ public:
                 "  texture(colorMap@3,glossMap@4):frag,"
                 "  sampler(colorMapSampler@5,glossMapSampler@6):frag,"
                 "},"
-                "sampler<colorMap, colorMapSampler>(colorMap@3),"
-                "sampler<glossMap, glossMapSampler>(glossMap@4),"
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@3),"
+                "sampler<glossMap, glossMapSampler>(s_glossMapglossMapSampler@4),"
             )
         );
     }
 
     void CreatePipelines()
     {
+        // Specify vertex format for scene
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDescScene;
         {
+            pipelineDescScene.inputVertexAttribs            = vertexAttribs;
             pipelineDescScene.vertexShader                  = shaderPipelineScene.vs;
             pipelineDescScene.fragmentShader                = shaderPipelineScene.ps;
             pipelineDescScene.renderPass                    = renderTargetScene->GetRenderPass();
@@ -457,19 +408,14 @@ private:
         commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
     }
 
-    void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
+    void SetSceneSettingsOuterModel(const Gs::Quaternionf& outerModelRotation)
     {
         const float projZAxis = GetProjectionZAxis();
-
-        // Rotate model around X and Y axes
-        Gs::Matrix4f deltaRotation;
-        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, projZAxis * deltaPitch);
-        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, projZAxis * deltaYaw);
-        animation.rotation = deltaRotation * animation.rotation;
 
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
         Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 * projZAxis });
+        Gs::QuaternionToMatrix(animation.rotation, outerModelRotation);
         sceneSettings.wMatrix *= animation.rotation;
 
         // Set colors and matrix
@@ -493,28 +439,8 @@ private:
         UpdateScreenSize();
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        #ifdef DEBUG_FPS
-        // Show frame time
-        static std::unique_ptr<LLGL::Timer> frameTimer;
-        static std::chrono::time_point<std::chrono::system_clock> printTime;
-        if (!frameTimer)
-            frameTimer = LLGL::Timer::Create();
-
-        frameTimer->MeasureTime();
-
-        auto currentTime = std::chrono::system_clock::now();
-        auto elapsedTime = (currentTime - printTime);
-        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
-
-        if (elapsedMs > 250)
-        {
-            printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
-            printTime = currentTime;
-        }
-        #endif
-
         // Update rotation of inner model
         animation.innerModelRotation += 0.01f;
 
@@ -525,9 +451,9 @@ private:
             static_cast<float>(input.GetMouseMotion().y),
         };
 
-        Gs::Vector2f outerModelDeltaRotation;
+        static Gs::Quaternionf outerModelRotation;
         if (input.KeyPressed(LLGL::Key::LButton))
-            outerModelDeltaRotation = mouseMotion*0.005f;
+            TrackballRotation(outerModelRotation, input.KeyDown(LLGL::Key::LButton));
 
         // Update effect intensity animation
         if (input.KeyPressed(LLGL::Key::RButton))
@@ -590,7 +516,7 @@ private:
                 commands->SetResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
-                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
+                SetSceneSettingsOuterModel(outerModelRotation);
                 commands->Draw(numSceneVertices, 0);
 
                 // Draw inner scene model

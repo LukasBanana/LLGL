@@ -39,6 +39,8 @@ enum class VKExt
     KHR_imageless_framebuffer,
     KHR_multiview,              // Needed for EXT_mesh_shader
     KHR_fragment_shading_rate,  // Needed for EXT_mesh_shader
+    KHR_create_renderpass2,     // Needed for KHR_depth_stencil_resolve
+    KHR_depth_stencil_resolve,  // Resolving a multi-sampled depth attachment (core in Vulkan 1.2)
 
     /* Multivendor extensions */
     EXT_conditional_rendering,

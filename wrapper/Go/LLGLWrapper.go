@@ -62,6 +62,26 @@ const (
     StencilFaceBack
 )
 
+type ShadingRate int
+const (
+    ShadingRateSize1x1 ShadingRate = iota
+    ShadingRateSize1x2
+    ShadingRateSize2x1
+    ShadingRateSize2x2
+    ShadingRateSize2x4
+    ShadingRateSize4x2
+    ShadingRateSize4x4
+)
+
+type ShadingRateOp int
+const (
+    ShadingRateOpKeep ShadingRateOp = iota
+    ShadingRateOpReplace
+    ShadingRateOpMin
+    ShadingRateOpMax
+    ShadingRateOpSum
+)
+
 type Format int
 const (
     FormatUndefined Format = iota
@@ -592,6 +612,7 @@ const (
     WarningTypeImproperState
     WarningTypePointlessOperation
     WarningTypeVaryingBehavior
+    WarningTypeDeprecatedFeature
 )
 
 type AttachmentLoadOp int
@@ -796,6 +817,14 @@ const (
     TextureSwizzleAlpha
 )
 
+type VersionStatus int
+const (
+    VersionStatusUndefined VersionStatus = iota
+    VersionStatusAlpha
+    VersionStatusBeta
+    VersionStatusStable
+)
+
 
 /* ----- Flags ----- */
 
@@ -936,15 +965,16 @@ const (
 
 type ShaderCompileFlags int
 const (
-    ShaderCompileDebug               = (1 << 0)
-    ShaderCompileNoOptimization      = (1 << 1)
-    ShaderCompileOptimizationLevel1  = (1 << 2)
-    ShaderCompileOptimizationLevel2  = (1 << 3)
-    ShaderCompileOptimizationLevel3  = (1 << 4)
-    ShaderCompileWarningsAreErrors   = (1 << 5)
-    ShaderCompilePatchClippingOrigin = (1 << 6)
-    ShaderCompileSeparateShader      = (1 << 7)
-    ShaderCompileDefaultLibrary      = (1 << 8)
+    ShaderCompileDebug                  = (1 << 0)
+    ShaderCompileNoOptimization         = (1 << 1)
+    ShaderCompileOptimizationLevel1     = (1 << 2)
+    ShaderCompileOptimizationLevel2     = (1 << 3)
+    ShaderCompileOptimizationLevel3     = (1 << 4)
+    ShaderCompileWarningsAreErrors      = (1 << 5)
+    ShaderCompilePatchClippingOrigin    = (1 << 6)
+    ShaderCompileSeparateShader         = (1 << 7)
+    ShaderCompileDefaultLibrary         = (1 << 8)
+    ShaderCompileCaseInsensitiveAttribs = (1 << 9)
 )
 
 type StageFlags int
@@ -965,9 +995,10 @@ const (
 
 type ResizeBuffersFlags int
 const (
-    ResizeBuffersAdaptSurface   = (1 << 0)
-    ResizeBuffersFullscreenMode = (1 << 1)
-    ResizeBuffersWindowedMode   = (1 << 2)
+    ResizeBuffersAdaptSurface     = (1 << 0)
+    ResizeBuffersFullscreenMode   = (1 << 1)
+    ResizeBuffersWindowedMode     = (1 << 2)
+    ResizeBuffersStrictResolution = (1 << 3)
 )
 
 type WindowFlags int
@@ -983,6 +1014,12 @@ const (
 
 
 /* ----- Structures ----- */
+
+type VertexBufferView struct {
+    Buffer *Buffer /* = nil */
+    Stride uint32  /* = 0 */
+    Offset uint64  /* = 0 */
+}
 
 type CanvasDescriptor struct {
     Title string
@@ -1165,12 +1202,14 @@ type RenderingFeatures struct {
     HasIndirectDrawing           bool /* = false */
     HasViewportArrays            bool /* = false */
     HasMultiview                 bool /* = false */
+    HasDepthStencilResolve       bool /* = false */
     HasConservativeRasterization bool /* = false */
     HasStreamOutputs             bool /* = false */
     HasLogicOp                   bool /* = false */
     HasPipelineCaching           bool /* = false */
     HasPipelineStatistics        bool /* = false */
     HasRenderCondition           bool /* = false */
+    HasVariableRateShading       bool /* = false */
 }
 
 type RenderingLimits struct {
@@ -1190,6 +1229,7 @@ type RenderingLimits struct {
     MaxViews                      uint32     /* = 0 */
     MaxBufferSize                 uint64     /* = 0 */
     MaxConstantBufferSize         uint64     /* = 0 */
+    MaxVertexBufferInputs         uint32     /* = 0 */
     MaxStreamOutputs              uint32     /* = 0 */
     MaxTessFactor                 uint32     /* = 0 */
     MinConstantBufferAlignment    uint64     /* = 0 */
@@ -1343,6 +1383,7 @@ type RasterizerDescriptor struct {
     PolygonMode               PolygonMode         /* = PolygonModeFill */
     CullMode                  CullMode            /* = CullModeDisabled */
     DepthBias                 DepthBiasDescriptor
+    LineWidth                 float32             /* = 1.0 */
     FrontCCW                  bool                /* = false */
     DiscardEnabled            bool                /* = false */
     DepthClampEnabled         bool                /* = false */
@@ -1350,18 +1391,18 @@ type RasterizerDescriptor struct {
     MultiSampleEnabled        bool                /* = false */
     AntiAliasedLineEnabled    bool                /* = false */
     ConservativeRasterization bool                /* = false */
-    LineWidth                 float32             /* = 1.0 */
+    ShadingRateEnabled        bool                /* = false */
 }
 
 type BlendTargetDescriptor struct {
     BlendEnabled    bool            /* = false */
+    ColorMask       uint8           /* = ColorMaskAll */
     SrcColor        BlendOp         /* = BlendOpSrcAlpha */
     DstColor        BlendOp         /* = BlendOpInvSrcAlpha */
     ColorArithmetic BlendArithmetic /* = BlendArithmeticAdd */
     SrcAlpha        BlendOp         /* = BlendOpSrcAlpha */
     DstAlpha        BlendOp         /* = BlendOpInvSrcAlpha */
     AlphaArithmetic BlendArithmetic /* = BlendArithmeticAdd */
-    ColorMask       uint8           /* = ColorMaskAll */
 }
 
 type TessellationDescriptor struct {
@@ -1390,14 +1431,16 @@ type AttachmentFormatDescriptor struct {
 }
 
 type RenderSystemDescriptor struct {
-    ModuleName         string
-    Flags              uint               /* = 0 */
-    Profiler           unsafe.Pointer     /* = nil */
-    Debugger           *RenderingDebugger /* = nil */
-    RendererConfig     unsafe.Pointer     /* = nil */
-    RendererConfigSize uintptr            /* = 0 */
-    NativeHandle       unsafe.Pointer     /* = nil */
-    NativeHandleSize   uintptr            /* = 0 */
+    ModuleName          string
+    Flags               uint               /* = 0 */
+    Profiler            unsafe.Pointer     /* = nil */
+    Debugger            *RenderingDebugger /* = nil */
+    RendererConfig      unsafe.Pointer     /* = nil */
+    RendererConfigSize  uintptr            /* = 0 */
+    NativeHandle        unsafe.Pointer     /* = nil */
+    NativeHandleSize    uintptr            /* = 0 */
+    PlatformContext     unsafe.Pointer     /* = nil */
+    PlatformContextSize uintptr            /* = 0 */
 }
 
 type RenderingCapabilities struct {
@@ -1405,6 +1448,7 @@ type RenderingCapabilities struct {
     ClippingRange                ClippingRange     /* = ClippingRangeZeroToOne */
     ShadingLanguages             []ShadingLanguage /* = nil */
     TextureFormats               []Format          /* = nil */
+    VertexFormats                []Format          /* = nil */
     SwapChainColorFormats        []Format          /* = nil */
     SwapChainDepthStencilFormats []Format          /* = nil */
     Features                     RenderingFeatures
@@ -1487,6 +1531,13 @@ type TextureDescriptor struct {
     ClearValue     ClearValue
 }
 
+type VersionInfo struct {
+    Major    uint16        /* = 0 */
+    Minor    uint8         /* = 0 */
+    Status   VersionStatus /* = VersionStatusUndefined */
+    Revision uint32        /* = 0 */
+}
+
 type VertexAttribute struct {
     Name            string
     Format          Format      /* = FormatRGBA32Float */
@@ -1516,7 +1567,7 @@ type BufferDescriptor struct {
     BindFlags      uint              /* = 0 */
     CPUAccessFlags uint              /* = 0 */
     MiscFlags      uint              /* = 0 */
-    VertexAttribs  []VertexAttribute /* = nil */
+    VertexAttribs  []VertexAttribute /* BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead! */
 }
 
 type StaticSamplerDescriptor struct {
@@ -1536,10 +1587,10 @@ type StencilDescriptor struct {
 type BlendDescriptor struct {
     AlphaToCoverageEnabled  bool                     /* = false */
     IndependentBlendEnabled bool                     /* = false */
+    BlendFactorDynamic      bool                     /* = false */
     SampleMask              uint32                   /* = ~0u */
     LogicOp                 LogicOp                  /* = LogicOpDisabled */
     BlendFactor             [4]float32               /* = {0.0,0.0,0.0,0.0} */
-    BlendFactorDynamic      bool                     /* = false */
     Targets                 [8]BlendTargetDescriptor
 }
 
@@ -1553,14 +1604,15 @@ type RenderPassDescriptor struct {
 }
 
 type RenderTargetDescriptor struct {
-    DebugName              string                  /* = "" */
-    RenderPass             *RenderPass             /* = nil */
-    Resolution             Extent2D
-    Samples                uint32                  /* = 1 */
-    Views                  uint32                  /* = 1 */
-    ColorAttachments       [8]AttachmentDescriptor
-    ResolveAttachments     [8]AttachmentDescriptor
-    DepthStencilAttachment AttachmentDescriptor
+    DebugName                     string                  /* = "" */
+    RenderPass                    *RenderPass             /* = nil */
+    Resolution                    Extent2D
+    Samples                       uint32                  /* = 1 */
+    Views                         uint32                  /* = 1 */
+    ColorAttachments              [8]AttachmentDescriptor
+    ResolveAttachments            [8]AttachmentDescriptor
+    DepthStencilAttachment        AttachmentDescriptor
+    DepthStencilResolveAttachment AttachmentDescriptor
 }
 
 type VertexShaderAttributes struct {
@@ -1599,6 +1651,8 @@ type GraphicsPipelineDescriptor struct {
     DebugName            string                 /* = "" */
     PipelineLayout       *PipelineLayout        /* = nil */
     RenderPass           *RenderPass            /* = nil */
+    InputVertexAttribs   []VertexAttribute      /* = nil */
+    OutputVertexAttribs  []VertexAttribute      /* = nil */
     VertexShader         *Shader                /* = nil */
     TessControlShader    *Shader                /* = nil */
     TessEvaluationShader *Shader                /* = nil */
@@ -1639,18 +1693,19 @@ type ResourceViewDescriptor struct {
 }
 
 type ShaderDescriptor struct {
-    DebugName  string                   /* = "" */
-    Type       ShaderType               /* = ShaderTypeUndefined */
-    Source     string                   /* = "" */
-    SourceSize uintptr                  /* = 0 */
-    SourceType ShaderSourceType         /* = ShaderSourceTypeCodeFile */
-    EntryPoint string                   /* = "" */
-    Profile    string                   /* = "" */
-    Defines    *ShaderMacro             /* = nil */
-    Flags      uint                     /* = 0 */
-    Vertex     VertexShaderAttributes
-    Fragment   FragmentShaderAttributes
-    Compute    ComputeShaderAttributes
+    DebugName      string                   /* = "" */
+    Type           ShaderType               /* = ShaderTypeUndefined */
+    Source         string                   /* = "" */
+    SourceSize     uintptr                  /* = 0 */
+    SourceType     ShaderSourceType         /* = ShaderSourceTypeCodeFile */
+    EntryPoint     string                   /* = "" */
+    Profile        string                   /* = "" */
+    Defines        *ShaderMacro             /* = nil */
+    Flags          uint                     /* = 0 */
+    IncludeHandler *IncludeHandler          /* = nil */
+    Vertex         VertexShaderAttributes   /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
+    Fragment       FragmentShaderAttributes
+    Compute        ComputeShaderAttributes
 }
 
 type ShaderReflection struct {

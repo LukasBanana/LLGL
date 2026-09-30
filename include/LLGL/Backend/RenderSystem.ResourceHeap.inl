@@ -8,18 +8,18 @@
 /* ----- Resource Heaps ----- */
 
 virtual LLGL::ResourceHeap* CreateResourceHeap(
-    const LLGL::ResourceHeapDescriptor&                     resourceHeapDesc,
-    const LLGL::ArrayView<LLGL::ResourceViewDescriptor>&    initialResourceViews = {}
+    const LLGL::ResourceHeapDescriptor&             resourceHeapDesc,
+    LLGL::ArrayView<LLGL::ResourceViewDescriptor>   initialResourceViews = {}
 ) override final;
 
 virtual void Release(
-    LLGL::ResourceHeap&                                     resourceHeap
+    LLGL::ResourceHeap&                             resourceHeap
 ) override final;
 
 virtual std::uint32_t WriteResourceHeap(
-    LLGL::ResourceHeap&                                     resourceHeap,
-    std::uint32_t                                           firstDescriptor,
-    const LLGL::ArrayView<LLGL::ResourceViewDescriptor>&    resourceViews
+    LLGL::ResourceHeap&                             resourceHeap,
+    std::uint32_t                                   firstDescriptor,
+    LLGL::ArrayView<LLGL::ResourceViewDescriptor>   resourceViews
 ) override final;
 
 

@@ -179,11 +179,6 @@ void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESC
     CreateUnorderedAccessViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, DXTypes::ToDXGIFormat(bufferViewDesc.format));
 }
 
-void D3D12Buffer::UpdateVertexBufferStride(UINT stride)
-{
-    vertexBufferView_.StrideInBytes = stride;
-}
-
 //private
 //TODO: support counter resource
 void D3D12Buffer::CreateUnorderedAccessViewPrimary(
@@ -397,10 +392,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
 
     /* Determine actual resource size */
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-    {
         internalSize_   = bufferSize_ + g_soBufferFillSizeLen;
-        stride_         = (!desc.vertexAttribs.empty() ? desc.vertexAttribs[0].stride : 0);
-    }
     else
         internalSize_ = bufferSize_;
 
@@ -476,12 +468,16 @@ void D3D12Buffer::CreateIntermediateUAVBuffer()
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for buffer subresource UAV");
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)
 {
     vertexBufferView_.BufferLocation    = GetNative()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes       = static_cast<UINT>(GetBufferSize());
-    vertexBufferView_.StrideInBytes     = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
+    vertexBufferView_.StrideInBytes     = (desc.vertexAttribs.empty() ? desc.stride : desc.vertexAttribs.front().stride);
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 {

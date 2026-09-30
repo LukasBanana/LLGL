@@ -29,7 +29,6 @@ namespace LLGL
 class PipelineLayout;
 class PipelineCache;
 class GLStateManager;
-class GLShaderProgram;
 
 // GL uniform location with size and type information.
 struct GLUniformLocation
@@ -50,7 +49,9 @@ class GLPipelineState : public PipelineState
             bool                        isGraphicsPSO,
             const PipelineLayout*       pipelineLayout,
             PipelineCache*              pipelineCache,
-            const ArrayView<Shader*>&   shaders
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {}
         );
         ~GLPipelineState();
 

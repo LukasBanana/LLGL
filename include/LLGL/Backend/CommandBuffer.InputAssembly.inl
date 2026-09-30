@@ -13,8 +13,13 @@ virtual void SetVertexBuffer(
 
 virtual void SetVertexBuffer(
     LLGL::Buffer&                   buffer,
-    std::uint32_t                   numVertexAttribs,
-    const LLGL::VertexAttribute*    vertexAttribs
+    std::uint32_t                   stride,
+    std::uint64_t                   offset = 0
+) override final;
+
+virtual void SetVertexBuffers(
+    std::uint32_t                   numBufferViews,
+    const LLGL::VertexBufferView*   bufferViews
 ) override final;
 
 virtual void SetVertexBufferArray(

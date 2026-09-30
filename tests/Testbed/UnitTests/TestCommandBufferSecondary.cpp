@@ -44,6 +44,7 @@ DEF_TEST( CommandBufferSecondary )
     {
         psoDesc.pipelineLayout      = layouts[PipelineSolid];
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader        = shaders[VSSolid];
         psoDesc.fragmentShader      = shaders[PSSolid];
         psoDesc.depth.testEnabled   = true;
@@ -90,11 +91,11 @@ DEF_TEST( CommandBufferSecondary )
 
         /*
         FIXME:
-        This is a Vulkan workaround because secondary command buffers don't inherit any state as opposed to D3D12's bundles.
+        This is a Vulkan/OpenGL workaround because secondary command buffers don't inherit any state as opposed to D3D12's bundles.
         Vulkan backend likely needs a second command buffer implementation like D3D11SecondaryCommandBuffer
         to determine at the end of command recording whether it can be encoded as a native secondary command buffer or an emulated one.
         */
-        if (renderer->GetRendererID() == LLGL::RendererID::Vulkan)
+        if (renderer->GetRendererID() == LLGL::RendererID::Vulkan || renderer->GetRendererID() == LLGL::RendererID::OpenGL)
         {
             innerCmdBuffer->SetViewport(swapChain->GetResolution());
             innerCmdBuffer->SetVertexBuffer(*meshBuffer);

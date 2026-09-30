@@ -9,7 +9,7 @@
 #define LLGL_VK_COMMAND_BUFFER_REGISTRY_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include <cstdint>
 
 

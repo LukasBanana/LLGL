@@ -64,8 +64,13 @@ static const char* g_VKOptionalExtensions[] =
     VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
     #endif
     #if VK_KHR_create_renderpass2
-    // Required by VK_KHR_fragment_shading_rate
+    // Required by VK_KHR_fragment_shading_rate and VK_KHR_depth_stencil_resolve
     VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+    #endif
+    #if VK_KHR_depth_stencil_resolve
+    // Resolving a multi-sampled depth attachment; core in Vulkan 1.2, but the OpenXR path
+    // creates a 1.1 device, so it is taken as an extension there.
+    VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
     #endif
     #if VK_KHR_multiview
     VK_KHR_MULTIVIEW_EXTENSION_NAME,
@@ -84,6 +89,9 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_GOOGLE_hlsl_functionality1
     // Adds support for reflection in HLSL shaders cross-compiled to SPIR-V
     VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME,
+    #endif
+    #if VK_GOOGLE_user_type
+    VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
     #endif
     #if VK_EXT_shader_viewport_index_layer
     // For enhanced shader control over viewport and layer selection in multiview and array rendering

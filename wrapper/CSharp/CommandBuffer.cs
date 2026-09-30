@@ -146,22 +146,29 @@ namespace LLGL
             NativeLLGL.SetVertexBuffer(buffer.Native);
         }
 
+        public void SetVertexBuffer(Buffer buffer, int stride, long offset = 0)
+        {
+            NativeLLGL.SetVertexBufferExt(buffer.Native, stride, offset);
+        }
+
+        [Obsolete("`SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)` function is deprecated since 0.05b; Use `SetVertexBuffer(Buffer buffer, int stride, long offset)` function and GraphicsPipelineDescriptor.InputVertexAttribs instead")]
         public void SetVertexBuffer(Buffer buffer, VertexAttribute[] vertexAttribs)
         {
-            if (vertexAttribs.Length > 0)
+            SetVertexBuffer(buffer, (vertexAttribs.Length > 0 ? vertexAttribs[0].Stride : 0));
+        }
+
+        public void SetVertexBuffers(VertexBufferView[] bufferViews)
+        {
+            unsafe
             {
-                var nativeVertexAttribs = new NativeLLGL.VertexAttribute[vertexAttribs.Length];
-                for (int i = 0; i < vertexAttribs.Length; ++i)
+                var nativeBufferViews = stackalloc NativeLLGL.VertexBufferView[bufferViews.Length];
+                for (int i = 0; i < bufferViews.Length; ++i)
                 {
-                    nativeVertexAttribs[i] = vertexAttribs[i].Native;
+                    nativeBufferViews[i].buffer = bufferViews[i].Buffer.Native;
+                    nativeBufferViews[i].stride = bufferViews[i].Stride;
+                    nativeBufferViews[i].offset = bufferViews[i].Offset;
                 }
-                unsafe
-                {
-                    fixed (NativeLLGL.VertexAttribute* nativeVertexAttribsPtr = nativeVertexAttribs)
-                    {
-                        NativeLLGL.SetVertexBufferExt(buffer.Native, nativeVertexAttribs.Length, nativeVertexAttribsPtr);
-                    }
-                }
+                NativeLLGL.SetVertexBuffers(bufferViews.Length, nativeBufferViews);
             }
         }
 
@@ -460,6 +467,16 @@ namespace LLGL
         }
 
         /* ----- CommandBufferTier1 ----- */
+
+        public void SetShadingRate(ShadingRate shadingRate)
+        {
+            NativeLLGL.SetShadingRate(shadingRate);
+        }
+
+        public void SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+        {
+            NativeLLGL.SetShadingRateExt(shadingRate, combinerOpX, combinerOpY);
+        }
 
         public void DrawMesh(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ)
         {

@@ -8,11 +8,20 @@
 #include <ExampleBase.h>
 #include <wchar.h>
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 #if defined(ANDROID) || defined(__ANDROID__)
 #   include "Android/AppUtils.h"
@@ -144,8 +153,9 @@ static void example_config(const ExampleArgs* args)
 #if defined(ANDROID) || defined(__ANDROID__)
     g_androidApp = args->androidApp;
 
-    g_config.rendererDesc.moduleName    = "OpenGLES3";
-    g_config.rendererDesc.androidApp    = g_androidApp;
+    g_config.rendererDesc.moduleName            = "OpenGLES3";
+    g_config.rendererDesc.platformContext       = g_androidApp;
+    g_config.rendererDesc.platformContextSize   = sizeof(*g_androidApp);
 
     // Store pointer to asset manager so we can load assets from the APK bundle
     if (g_androidApp->activity != NULL)
@@ -322,7 +332,7 @@ int example_main(int (*pfnInit)(), void (*pfnLoop)(double dt), const ExampleArgs
 
             #if __ANDROID__
             if (key_pressed(LLGLKeyBrowserBack))
-                ANativeActivity_finish(g_config.rendererDesc.androidApp->activity);
+                ANativeActivity_finish(g_androidApp->activity);
             #endif
 
             // Tick main loop callback

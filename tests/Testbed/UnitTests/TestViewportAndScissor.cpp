@@ -44,13 +44,14 @@ DEF_TEST( ViewportAndScissor )
     // Create graphics PSOs with and without scissor tests
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout                  = layouts[PipelineSolid];
-        psoDesc.renderPass                      = swapChain->GetRenderPass();
-        psoDesc.vertexShader                    = shaders[VSSolid];
-        psoDesc.fragmentShader                  = shaders[PSSolid];
-        psoDesc.depth.testEnabled               = true;
-        psoDesc.depth.writeEnabled              = true;
-        psoDesc.rasterizer.cullMode             = CullMode::Back;
+        psoDesc.pipelineLayout      = layouts[PipelineSolid];
+        psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
+        psoDesc.vertexShader        = shaders[VSSolid];
+        psoDesc.fragmentShader      = shaders[PSSolid];
+        psoDesc.depth.testEnabled   = true;
+        psoDesc.depth.writeEnabled  = true;
+        psoDesc.rasterizer.cullMode = CullMode::Back;
     }
     CREATE_GRAPHICS_PSO(psoNoScissor, psoDesc, "psoNoScissor");
     {

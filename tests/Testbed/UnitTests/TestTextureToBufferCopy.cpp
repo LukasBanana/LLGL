@@ -194,7 +194,7 @@ DEF_TEST( TextureToBufferCopy )
                 renderer->ReadTexture(*dstTex, dstRegion, dstTexImageView);
 
                 // Match source texture against immediate buffer first, to diagnose what step might have failed
-                const std::size_t bufAndTexMinSize = std::min<std::size_t>(subBufSize, bufDesc.size);
+                const std::size_t bufAndTexMinSize = std::min<std::size_t>(subBufSize, static_cast<std::size_t>(bufDesc.size));
                 intermediateBuf.resize(bufAndTexMinSize, 0);
                 renderer->ReadBuffer(*buf, 0, intermediateBuf.data(), bufAndTexMinSize);
 

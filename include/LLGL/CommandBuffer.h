@@ -398,29 +398,54 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
+        \see SetVertexBuffers
         \see SetVertexBufferArray
         */
         virtual void SetVertexBuffer(Buffer& buffer) = 0;
 
         /**
-        \brief Sets the specified vertex buffer for subsequent drawing operations and re-formats its vertex attributes.
+        \brief Sets the specified vertex buffer for subsequent drawing operations with a new stride and optional base offset.
+
         \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
-        \param[in] numVertexAttribs Specifies the number of new vertex attributes to associate this buffer with. This \b must be greater than zero.
-        \param[in] vertexAttribs Pointer to an array of new vertex attributes to associate this buffer with. This \b must point to an array of at least \c numVertexAttribs elements.
-        \remarks Note that this function changes the vertex format of the specified buffer as opposed to binding it as a temporary re-interpretation.
-        The extended SetIndexBuffer(Buffer&, const Format, std::uint64_t) function on the other hand does not modify the buffer and only binds it with a temporary re-interpretation of its index format.
-        Subsequent calls to the primary version of SetVertexBuffer(Buffer&) will use the new format.
-        \remarks Also note that this does \e not effect any BufferArray that has been created with the specified buffer.
-        Buffer arrays must be re-formatted independently of their sub-buffers (which is not supported yet) or must be re-created.
-        \see SetIndexBuffer(Buffer&, const Format, std::uint64_t)
+        \param[in] stride Specifies the stride (in bytes) between vertices. This \b must either be zero or equal to the stride of all vertex attributes that reference this buffer slot (0)
+        described in the graphics PSO that is used in subsequent draw commands.
+        If this is zero, the stride is implied by the stride this buffer was created with, which in turn <b>must not</b> be zero and is also subject to the same constraint of the PSO's input layout.
+        \param[in] offset Specifies an optional base offset (in bytes) where to start reading the vertex buffer. By default 0.
+
+        \remarks Use this function either when the specified vertex buffer was not created with a default stride
+        or the graphics PSO for subsequent draw commands has a vertex input layout with a stride different from the buffer's default stride.
+        \remarks Having to specify the same stride as used in the graphics PSO seems redundant, but it's a compromise of keeping the API lightweight and backend agnostic.
+
+        D3D defines the strides with their vertex buffers while Vulkan and Metal tie them to the graphics PSO. Letting LLGL track those states adds costs that can be avoided.
+        \see BufferDescriptor::stride
         */
-        virtual void SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs) = 0;
+        virtual void SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset = 0) = 0;
+
+        #ifndef DOXYGEN_SHOULD_SKIP_THIS
+        //! \deprecated Since 0.05b; Use primary SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t) function and GraphicsPipelineDescriptor::inputVertexAttribs instead!
+        LLGL_DEPRECATED("`SetVertexBuffer(Buffer&, std::uint32_t, const VertexAttribute*)` function is deprecated since 0.05b; Use `SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)` function and GraphicsPipelineDescriptor::inputVertexAttribs instead")
+        inline void SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+        {
+            SetVertexBuffer(buffer, (numVertexAttribs > 0 && vertexAttribs != nullptr ? vertexAttribs[0].stride : 0));
+        }
+        #endif
+
+        /**
+        \brief Sets the specified number of vertex buffers for subsequent drawing operations with optional strides and base offsets.
+        \param[in] numBufferViews Specifies the number of vertex buffers to bind. This <b>must not</b> exceed the limit of vertex buffers the render system supports.
+        \param[in] bufferViews Pointer to an array of vertex buffer views. This <b>must not</b> be null and must point to an array with at least \c numBufferViews elements.
+        \remarks This is a more convenient alternative to binding multiple vertex buffer slots 'on the fly' compared to binding via a BufferArray that needs to be pre-allocated.
+        \see RenderingLimits::maxVertexBufferInputs
+        */
+        virtual void SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews) = 0;
 
         /**
         \brief Sets the specified array of vertex buffers for subsequent drawing operations.
         \param[in] bufferArray Specifies the vertex buffer array to set.
+        \remarks This serves as minor performance optimization over SetVertexBuffers
+        since the BufferArray interface allows backends to pre-allocate their internal representation for their native resources, strides, and offsets.
         \see RenderSystem::CreateBufferArray
-        \see SetVertexBuffer
+        \see SetVertexBuffers
         */
         virtual void SetVertexBufferArray(BufferArray& bufferArray) = 0;
 
@@ -657,7 +682,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \remarks A <b>graphics pipeline state</b> will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline state must always be set before any drawing operation can be performed,
-        and a graphics pipeline state \b can be set \b inside and \b outside a render pass section.
+        and a graphics pipeline state \e can be set \b inside and \b outside a render pass section.
 
         \remarks A <b>compute pipeline state</b> will set shader states for dispatch compute commands.
         A valid compute pipeline state must always be set before any dispatch compute operation cam ne performed,
@@ -955,14 +980,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
 
         /**
-        \brief Performs an automatic draw command whose number of primitives is provided by a stream-output buffer that is bound to the input assembler stage.
+        \brief Performs an automatic draw command whose number of primitives is provided by a stream-output buffer that is bound as vertex buffer.
 
         \remarks This command only supports a single vertex buffer in the input assembler stage
         and it must have been created with the BindFlags::VertexBuffer and BindFlags::StreamOutputBuffer binding flags.
 
-        \remarks This can be used to pre-transform vertices and render the output later one or multiple times.
+        \remarks This can be used to pre-transform vertices and render the output later on or multiple times.
 
         \see RenderingFeatures::hasStreamOutputs
+        \see SetVertexBuffer
         */
         virtual void DrawStreamOutput() = 0;
 

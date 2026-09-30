@@ -128,6 +128,10 @@ macro(ADD_PROJECT_DEFINE TARGET_NAME IDENT)
     target_compile_definitions(${TARGET_NAME} PRIVATE "-D${IDENT}")
 endmacro()
 
+macro(ADD_PROJECT_DEFINE_VALUE TARGET_NAME IDENT VALUE)
+    target_compile_definitions(${TARGET_NAME} PRIVATE "-D${IDENT}=${VALUE}")
+endmacro()
+
 macro(ADD_DEBUG_DEFINE IDENT)
     # Requires CMake 3.12
     add_compile_definitions("$<$<CONFIG:Debug>:${IDENT}>")
@@ -211,6 +215,13 @@ if(NOT LLGL_BUILD_WRAPPER_C99)
     endif()
 endif()
 
+# === Optional Dependencies ===
+
+find_package(Python3 COMPONENTS Interpreter)
+
+# Check if DXC is available; Don't cache it here, the Python scripts have their own handling of finding this executable.
+find_program(TOOL_DXC_EXECUTABLE dxc DOC "Optional path to the DirectX Shader Compiler (dxc) executable")
+
 
 # === Functions ===
 
@@ -226,7 +237,7 @@ function(find_source_files OUTPUT_LIST FILTERS)
     elseif("${FILTERS}" STREQUAL "OBJC")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
     elseif("${FILTERS}" STREQUAL "RES")
-        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag;*.tesc;*.tese")
+        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag;*.tesc;*.tese;*.spv")
     elseif("${FILTERS}" STREQUAL "INC")
         set(FILTERS "*.h;*.hpp;*.inl")
     endif()
@@ -291,9 +302,9 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     else()
         # Find all source files for project
         if(APPLE)
-            find_source_files(ProjectFiles RES ${SRC_FILES})
+            find_source_files(ProjectFiles RES "${SRC_FILES}" "${SRC_FILES}/.autogen")
         else()
-            find_source_files(ProjectFiles CXX ${SRC_FILES})
+            find_source_files(ProjectFiles CXX "${SRC_FILES}")
         endif()
     endif()
 
@@ -426,11 +437,36 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
 
         # Filter shader files into "Shaders" folder
         set(SHADER_FILES "${SRC_FILES}")
-        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag|tesc|tese)")
+        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag|tesc|tese|spv)")
         source_group("Shaders" FILES ${SHADER_FILES})
 
-        # Set app icon for macOS and iOS
+        # Put resoure and shader files into MacOS bundle.
+        # Exclude Metal shaders to let Xcode generate the default.metallib library.
         set(BundleResourceFiles "${RES_FILES};${SHADER_FILES}")
+        set(ProjectDir "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_BUNDLE_NAME}")
+        foreach(ResourceFile ${BundleResourceFiles})
+            get_filename_component(ResourceFileExt "${ResourceFile}" LAST_EXT)
+            get_filename_component(ResourceDir "${ResourceFile}" DIRECTORY)
+            if("${ResourceDir}" MATCHES "^${ProjectDir}" AND NOT "${ResourceFileExt}" STREQUAL ".metal")
+                # Preserve folder structure in MacOS bundle for resource files that are located in subfolders of the project directory
+                file(RELATIVE_PATH ResourceRelativeFilename "${ProjectDir}" "${ResourceFile}")
+                get_filename_component(ResourceRelativeDir "${ResourceRelativeFilename}" DIRECTORY)
+                if("${ResourceRelativeDir}" STREQUAL "")
+                    set(ResourceOutputDir "Resources")
+                else()
+                    set(ResourceOutputDir "Resources/${ResourceRelativeDir}")
+                endif()
+            else()
+                set(ResourceOutputDir "Resources")
+            endif()
+
+            set_source_files_properties(
+                "${ResourceFile}" PROPERTIES
+                MACOSX_PACKAGE_LOCATION "${ResourceOutputDir}"
+            )
+        endforeach()
+
+        # Set app icon for macOS and iOS
         if(LLGL_IOS_PLATFORM)
             set(BundleInfoPlistFile "${SHARED_PLATFORM_DIR}/iOS/IOSBundleInfo.plist.in")
             set(BundleIconFile "AppIcon.png")
@@ -451,7 +487,6 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
             MACOSX_BUNDLE_ICON_FILE             "${BundleIconFile}"
             MACOSX_BUNDLE                       ON
             MACOSX_BUNDLE_INFO_PLIST            "${BundleInfoPlistFile}"
-            RESOURCE                            "${BundleResourceFiles}"
         )
     elseif(LLGL_ANDROID_PLATFORM)
         # Android project configurations
@@ -508,6 +543,49 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         set_project_working_dir(${PROJECT_NAME} "${TEST_PROJECTS_DIR}/Testbed")
         set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
     endif()
+endfunction()
+
+set_property(GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS "")
+
+# Registers a root directory for the unified COMPILE_SHADERS target.
+function(add_shader_compile_target SHADER_ROOT_DIR)
+    get_property(ShaderCompileRoots GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS)
+    list(APPEND ShaderCompileRoots "${SHADER_ROOT_DIR}")
+    set_property(GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS "${ShaderCompileRoots}")
+endfunction()
+
+# Creates one IDE-visible target with one translation command per registered root.
+function(create_compile_shaders_target)
+    if(Python3_FOUND AND TOOL_DXC_EXECUTABLE)
+        get_property(ShaderCompileRoots GLOBAL PROPERTY LLGL_SHADER_COMPILE_ROOTS)
+
+        # Only compile to DXBC for UWP platform
+        if(LLGL_UWP_PLATFORM)
+            set(SHADER_COMPILE_TARGET_ARGS "--targets" "dxbc")
+        else()
+            set(SHADER_COMPILE_TARGET_ARGS "--not-targets" "dxbc")
+        endif()
+
+        foreach(ShaderRootDir ${ShaderCompileRoots})
+            # Run `Python -u` in unbuffered mode so that stdout is immediately flushed
+            list(APPEND ShaderCompileCommands
+                COMMAND "${CMAKE_COMMAND}" -E chdir "${ShaderRootDir}"
+                    "${Python3_EXECUTABLE}" -u "${CMAKE_SOURCE_DIR}/scripts/TranslateShaders.py"
+                    --input "."
+                    --dxc-path "${TOOL_DXC_EXECUTABLE}"                     # Explicit path to DXC, to ensure SPIR-V output is supported
+                    -I "${CMAKE_SOURCE_DIR}/examples/Shared/Assets/Shaders" # Include directory for shared example shaders
+                    ${SHADER_COMPILE_TARGET_ARGS}
+            )
+        endforeach()
+
+        if(ShaderCompileCommands)
+            add_custom_target(COMPILE_SHADERS
+                ${ShaderCompileCommands}
+                VERBATIM
+            )
+            set_target_properties(COMPILE_SHADERS PROPERTIES FOLDER "Build")
+        endif()
+    endif() # Python3_FOUND
 endfunction()
 
 
@@ -607,13 +685,14 @@ if(EMSCRIPTEN)
     endif()
 
     # TODO: Emscripten file system pulls in a large amount of code. Consider limiting file system support to examples and tests.
-    add_link_options("SHELL:-s FORCE_FILESYSTEM") # for examples
+    add_link_options("SHELL:-s FORCE_FILESYSTEM") # For examples
 
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
-    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # required for explicit swap control
+    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # Required for explicit swap control
     add_link_options("SHELL:-s ASSERTIONS")
+    add_link_options("SHELL:-s ALLOW_MEMORY_GROWTH") # Allow memory to grow as graphics apps can be quite demanding
 endif()
 
 
@@ -963,6 +1042,9 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
     list(APPEND LLGL_ALL_TARGETS LLGL_DXCommon)
 endif()
 
+# Add build target for compiling shaders to project solution
+create_compile_shaders_target()
+
 # Use explicit destinations for RUNTIME, LIBRARY, and ARCHIVE to support older CMake versions (such as 3.13)
 install(
     TARGETS ${LLGL_ALL_TARGETS}
@@ -994,7 +1076,11 @@ if(LLGL_BUILD_RENDERER_NULL)
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
-    message(STATUS "Build Renderer: OpenGL")
+    if(DEFINED LLGL_GL_PROFILES)
+        message(STATUS "Build Renderer: ${LLGL_GL_PROFILES}")
+    else()
+        message(STATUS "Build Renderer: OpenGL")
+    endif()
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
@@ -1051,6 +1137,11 @@ endif()
 
 if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
     message(STATUS "Options: ${SUMMARY_FLAGS}")
+endif()
+
+# Warnings about problematic configurations
+if (LLGL_BUILD_TESTS AND LLGL_BUILD_RENDERER_VULKAN AND NOT LLGL_VK_ENABLE_SPIRV_REFLECT)
+    message(WARNING "Vulkan shader reflection is disabled (LLGL_VK_ENABLE_SPIRV_REFLECT), but is required for Vulkan tests (LLGL_BUILD_TESTS).")
 endif()
 
 message(STATUS "~~~~~~~~~~~~~~~~~~~~~")

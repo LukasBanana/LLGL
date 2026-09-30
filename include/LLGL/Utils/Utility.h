@@ -19,6 +19,8 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/ShaderReflection.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -93,25 +95,32 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 \brief Returns a BufferDescriptor structure for a vertex buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat& vertexFormat, long cpuAccessFlags = 0);
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, std::uint32_t stride = 0, long cpuAccessFlags = 0);
+
+//! \deprecated Since 0.05b; Use new version without `vertexFormat` parameter.
+LLGL_DEPRECATED("This version of `VertexBufferDesc()` is deprecated since 0.05b; Use the version with `stride` parameter instead of `vertexFormat`!")
+inline BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFormat& vertexFormat, long cpuAccessFlags = 0)
+{
+    return VertexBufferDesc(size, vertexFormat.GetStride(), cpuAccessFlags);
+}
 
 /**
 \brief Returns a BufferDescriptor structure for an index buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const Format format, long cpuAccessFlags = 0);
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const Format format, long cpuAccessFlags = 0);
 
 /**
 \brief Returns a BufferDescriptor structure for a constant buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long cpuAccessFlags = 0);
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(std::uint64_t size, long cpuAccessFlags = 0);
 
 /**
 \brief Returns a BufferDescriptor structure for a storage buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long cpuAccessFlags = CPUAccessFlags::ReadWrite);
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long cpuAccessFlags = CPUAccessFlags::ReadWrite);
 
 /* ----- ShaderDescriptor utility functions ----- */
 

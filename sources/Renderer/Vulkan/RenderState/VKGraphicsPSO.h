@@ -10,6 +10,7 @@
 
 
 #include "VKPipelineState.h"
+#include "VKVertexInputLayout.h"
 
 
 namespace LLGL
@@ -19,8 +20,9 @@ namespace LLGL
 // Vulkan graphics pipeline limitations structure.
 struct VKGraphicsPipelineLimits
 {
-    float lineWidthRange[2];
-    float lineWidthGranularity;
+    float   lineWidthRange[2];
+    float   lineWidthGranularity;
+    bool    hasFragmentShadingRate;
 };
 
 struct GraphicsPipelineDescriptor;
@@ -49,6 +51,8 @@ class VKGraphicsPSO final : public VKPipelineState
             PipelineCache*                      pipelineCache       = nullptr
         );
 
+        static void BuildInputLayout(LLGL::ArrayView<VertexAttribute> attributes, VKVertexInputLayout& inputLayout);
+
         // Returns true if scissors are enabled.
         inline bool IsScissorEnabled() const
         {
@@ -62,6 +66,8 @@ class VKGraphicsPSO final : public VKPipelineState
         }
 
     private:
+
+        static void FillVertexInputStateCreateInfo(const VKVertexInputLayout& inputLayout, VkPipelineVertexInputStateCreateInfo& createInfo);
 
         void FillAndAppendShaderStageCreateInfo(
             Shader*                                             shader,

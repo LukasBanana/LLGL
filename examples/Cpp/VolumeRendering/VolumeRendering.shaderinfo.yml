@@ -1,0 +1,19 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+      - entry: "VScene"
+        profile: "vs_4_0"
+        targets: [spirv, metal, glsl140core, glsl300es]
+      - entry: "PScene"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
+
+sources:
+  - source: "Example.hlsl"
+    permutation:
+      macros:
+        NDC_SPACE_UNIT_CUBE: 1
+    entries:
+      - entry: "PScene"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es]

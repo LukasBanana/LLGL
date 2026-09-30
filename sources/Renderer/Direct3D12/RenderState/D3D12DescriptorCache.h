@@ -11,6 +11,8 @@
 
 #include "D3D12DescriptorHeap.h"
 
+#include <vector>
+
 
 namespace LLGL
 {
@@ -65,20 +67,32 @@ class D3D12DescriptorCache
 
     private:
 
-        bool EmplaceBufferDescriptor(D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
-        bool EmplaceTextureDescriptor(D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
-        bool EmplaceSamplerDescriptor(D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        struct BoundDescriptor
+        {
+            const Resource*               resource = nullptr;
+            D3D12_DESCRIPTOR_RANGE_TYPE   type     = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        };
 
     private:
 
-        ID3D12Device*       device_             = nullptr;
-        D3D12DescriptorHeap descriptorHeaps_[2];
-        UINT                currentStrides_[2]  = {};
+        bool EmplaceCached(UINT heapIndex, Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceBufferDescriptor(D3D12Buffer& bufferD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceTextureDescriptor(D3D12Texture& textureD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+        bool EmplaceSamplerDescriptor(D3D12Sampler& samplerD3D, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
+
+    private:
+
+        ID3D12Device*                   device_                 = nullptr;
+        D3D12DescriptorHeap             descriptorHeaps_[2];
+        UINT                            currentStrides_[2]      = {};
+
+        // Last descriptor emplaced at each location, so a re-bind of an unchanged resource view skips the device call.
+        std::vector<BoundDescriptor>    boundDescriptors_[2];
 
         struct
         {
-            UINT            descHeapCbvSrvUav   : 1;
-            UINT            descHeapSampler     : 1;
+            UINT                        descHeapCbvSrvUav   : 1;
+            UINT                        descHeapSampler     : 1;
         }
         dirtyBits_;
 

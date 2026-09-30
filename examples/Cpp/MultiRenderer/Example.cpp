@@ -143,15 +143,9 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
         info.deviceName.c_str()
     );
 
-    // Vertex format
-    LLGL::VertexFormat vertexFormat;
-    vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
     // Create vertex buffer
     vertexBuffer = renderer->CreateBuffer(
-        LLGL::VertexBufferDesc(sizeof(TexturedVertex) * vertices.size(), vertexFormat),
+        LLGL::VertexBufferDesc(sizeof(TexturedVertex) * vertices.size(), sizeof(TexturedVertex)),
         vertices.data()
     );
 
@@ -166,7 +160,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
 
     // Create textures
     const std::string rendererName = GetRendererModuleName(renderer->GetName());
-    texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererName + ".png");
+    texture = LoadTextureWithRenderer(*renderer, "Logos/Logo_" + rendererName + ".png");
 
     // Create samplers
     LLGL::SamplerDescriptor samplerDesc;
@@ -177,33 +171,35 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
 
     // Create shaders
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+    auto Supported = [&languages](LLGL::ShadingLanguage lang) -> bool
+    {
+        return (std::find(languages.begin(), languages.end(), lang) != languages.end());
+    };
 
     LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
 
-    if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+    if (Supported(LLGL::ShadingLanguage::HLSL))
     {
         vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0");
         fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0");
     }
-    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
+    else if (Supported(LLGL::ShadingLanguage::GLSL))
     {
-        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.vert");
-        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.frag");
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   ".autogen/Example.VS.140core.vert");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, ".autogen/Example.PS.140core.frag");
     }
-    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+    else if (Supported(LLGL::ShadingLanguage::SPIRV))
     {
-        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
-        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   ".autogen/Example.VS.450core.vert.spv");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, ".autogen/Example.PS.450core.frag.spv");
     }
-    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
+    else if (Supported(LLGL::ShadingLanguage::Metal))
     {
-        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1");
-        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1");
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   ".autogen/Example.VS.metal", "VS", "1.1");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, ".autogen/Example.PS.metal", "PS", "1.1");
     }
     else
         LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
-
-    vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 
     vertShader = renderer->CreateShader(vertShaderDesc);
     fragShader = renderer->CreateShader(fragShaderDesc);
@@ -232,6 +228,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     {
+        pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
         pipelineDesc.vertexShader                   = vertShader;
         pipelineDesc.fragmentShader                 = fragShader;
         pipelineDesc.pipelineLayout                 = layout;
@@ -325,171 +322,160 @@ static LLGL::RenderSystemPtr LoadRenderer(const char* moduleName, long flags = 0
 
 int main(int argc, char* argv[])
 {
-    try
+    LLGL::Log::RegisterCallbackStd();
+
+    // Create main window
+    const LLGL::Extent2D resolution{ 800, 600 };
+
+    LLGL::WindowDescriptor mainWindowDesc;
     {
-        LLGL::Log::RegisterCallbackStd();
+        mainWindowDesc.title    = "LLGL Example: Multi Renderer";
+        mainWindowDesc.size     = resolution;
+        mainWindowDesc.flags    = LLGL::WindowFlags::Centered;
+    }
+    std::unique_ptr<LLGL::Window> mainWindow = LLGL::Window::Create(mainWindowDesc);
 
-        // Create main window
-        const LLGL::Extent2D resolution{ 800, 600 };
+    // Create renderers
+    const LLGL::Extent2D subWindowSize{ resolution.width/2, resolution.height/2 };
 
-        LLGL::WindowDescriptor mainWindowDesc;
-        {
-            mainWindowDesc.title    = "LLGL Example: Multi Renderer";
-            mainWindowDesc.size     = resolution;
-            mainWindowDesc.flags    = LLGL::WindowFlags::Centered;
-        }
-        std::unique_ptr<LLGL::Window> mainWindow = LLGL::Window::Create(mainWindowDesc);
+    const int halfWidth     = static_cast<int>(subWindowSize.width);
+    const int halfHeight    = static_cast<int>(subWindowSize.height);
 
-        // Create renderers
-        const LLGL::Extent2D subWindowSize{ resolution.width/2, resolution.height/2 };
+    #define COLOR_BLUE      { 0.1f, 0.1f, 0.4f, 1.0f }
+    #define COLOR_RED       { 0.4f, 0.1f, 0.1f, 1.0f }
+    #define COLOR_GREEN     { 0.1f, 0.4f, 0.1f, 1.0f }
+    #define COLOR_YELLOW    { 0.4f, 0.4f, 0.1f, 1.0f }
 
-        const int halfWidth     = static_cast<int>(subWindowSize.width);
-        const int halfHeight    = static_cast<int>(subWindowSize.height);
-
-        #define COLOR_BLUE      { 0.1f, 0.1f, 0.4f, 1.0f }
-        #define COLOR_RED       { 0.4f, 0.1f, 0.1f, 1.0f }
-        #define COLOR_GREEN     { 0.1f, 0.4f, 0.1f, 1.0f }
-        #define COLOR_YELLOW    { 0.4f, 0.4f, 0.1f, 1.0f }
-
-        const float bgColors[4][4] =
-        {
-            #if MIXED_BG_COLORS
-            COLOR_BLUE, COLOR_RED, COLOR_GREEN, COLOR_YELLOW,
-            #else
-            COLOR_BLUE, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE,
-            #endif
-        };
-
-        // Load render system module
-        #if defined _WIN32
-        LLGL::RenderSystemPtr renderers[4] =
-        {
-            #if USE_MULTI_GPUS
-            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferNVIDIA),
-            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferAMD),
-            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferIntel),
-            LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::SoftwareDevice),
-            #else
-            LoadRenderer("OpenGL"),
-            LoadRenderer("Vulkan"),
-            LoadRenderer("Direct3D11"),
-            LoadRenderer("Direct3D12"),
-            #endif
-        };
-        LLGL::RenderSystem* rendererRefs[4] =
-        {
-            renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[3].get()
-        };
-        #elif defined __APPLE__
-        LLGL::RenderSystemPtr renderers[3] =
-        {
-            LoadRenderer("OpenGL"),
-            LoadRenderer("Metal"),
-            LoadRenderer("Vulkan"),
-        };
-        LLGL::RenderSystem* rendererRefs[4] =
-        {
-            renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[0].get()
-        };
-        #elif defined __linux__
-        LLGL::RenderSystemPtr renderers[2] =
-        {
-            LoadRenderer("OpenGL"),
-            LoadRenderer("Vulkan"),
-        };
-        LLGL::RenderSystem* rendererRefs[4] =
-        {
-            renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
-        };
+    const float bgColors[4][4] =
+    {
+        #if MIXED_BG_COLORS
+        COLOR_BLUE, COLOR_RED, COLOR_GREEN, COLOR_YELLOW,
         #else
-        LLGL::RenderSystemPtr renderers[1] =
-        {
-            LoadRenderer("Null"),
-        };
-        LLGL::RenderSystem* rendererRefs[4] =
-        {
-            renderers[0].get(), renderers[0].get(), renderers[0].get(), renderers[0].get()
-        };
+        COLOR_BLUE, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE,
         #endif
+    };
 
-        MyRenderer myRenderers[4] =
-        {
-            { rendererRefs[0], *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
-            { rendererRefs[1], *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
-            { rendererRefs[2], *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
-            { rendererRefs[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
-        };
-
-        // Set window title with all renderer names
-        std::string rendererNames;
-        for (LLGL::RenderSystem* sys : rendererRefs)
-        {
-            if (!rendererNames.empty())
-                rendererNames += ", ";
-            rendererNames += sys->GetName();
-        }
-
-        mainWindow->SetTitle(std::string(mainWindowDesc.title) + " ( " + rendererNames + " )");
-        mainWindow->Show();
-
-        // Create resources
-        auto cubeVertices = GenerateTexturedCubeVertices();
-        auto cubeIndices = GenerateTexturedCubeTriangleIndices();
-
-        for (MyRenderer& renderer : myRenderers)
-            renderer.CreateResources(cubeVertices, cubeIndices);
-
-        LLGL::Input input{ *mainWindow };
-
-        // Initialize matrices (OpenGL needs a unit-cube NDC-space)
-        const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
-        const float nearPlane   = 0.1f;
-        const float farPlane    = 100.0f;
-        const float fieldOfView = 45.0f;
-
-        Gs::Matrix4f projMatrices[4];
-        for (int i = 0; i < 4; ++i)
-        {
-            projMatrices[i] = myRenderers[i].BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
-            input.Listen(myRenderers[i].GetSubWindow());
-        }
-
-        Gs::Matrix4f viewMatrix, worldMatrix;
-        Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
-
-        // Enter main loop
-        while (LLGL::Surface::ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
-        {
-            // Update scene transformation
-            if (input.KeyPressed(LLGL::Key::LButton))
-            {
-                const auto mouseMotion = Gs::Vector2f
-                {
-                    static_cast<float>(input.GetMouseMotion().x),
-                    static_cast<float>(input.GetMouseMotion().y),
-                } * 0.005f;
-
-                // Rotate model around X and Y axes
-                Gs::Matrix4f deltaRotation;
-                Gs::RotateFree(deltaRotation, { 1, 0, 0 }, mouseMotion.y);
-                Gs::RotateFree(deltaRotation, { 0, 1, 0 }, mouseMotion.x);
-                worldMatrix = deltaRotation * worldMatrix;
-            }
-
-            // Draw scene for all renderers
-            for (int i = 0; i < 4; ++i)
-                myRenderers[i].Render(projMatrices[i] * viewMatrix, worldMatrix);
-
-            input.Reset();
-        }
-    }
-    catch (const std::exception& e)
+    // Load render system module
+    #if defined _WIN32
+    LLGL::RenderSystemPtr renderers[4] =
     {
-        LLGL::Log::Errorf("%s\n", e.what());
-        #ifdef _WIN32
-        system("pause");
+        #if USE_MULTI_GPUS
+        LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferNVIDIA),
+        LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferAMD),
+        LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::PreferIntel),
+        LoadRenderer("Direct3D12", LLGL::RenderSystemFlags::SoftwareDevice),
+        #else
+        LoadRenderer("OpenGL"),
+        LoadRenderer("Vulkan"),
+        LoadRenderer("Direct3D11"),
+        LoadRenderer("Direct3D12"),
         #endif
+    };
+    LLGL::RenderSystem* rendererRefs[4] =
+    {
+        renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[3].get()
+    };
+    #elif defined __APPLE__
+    LLGL::RenderSystemPtr renderers[3] =
+    {
+        LoadRenderer("OpenGL"),
+        LoadRenderer("Metal"),
+        LoadRenderer("Vulkan"),
+    };
+    LLGL::RenderSystem* rendererRefs[4] =
+    {
+        renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[0].get()
+    };
+    #elif defined __linux__
+    LLGL::RenderSystemPtr renderers[2] =
+    {
+        LoadRenderer("OpenGL"),
+        LoadRenderer("Vulkan"),
+    };
+    LLGL::RenderSystem* rendererRefs[4] =
+    {
+        renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
+    };
+    #else
+    LLGL::RenderSystemPtr renderers[1] =
+    {
+        LoadRenderer("Null"),
+    };
+    LLGL::RenderSystem* rendererRefs[4] =
+    {
+        renderers[0].get(), renderers[0].get(), renderers[0].get(), renderers[0].get()
+    };
+    #endif
+
+    MyRenderer myRenderers[4] =
+    {
+        { rendererRefs[0], *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
+        { rendererRefs[1], *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
+        { rendererRefs[2], *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
+        { rendererRefs[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
+    };
+
+    // Set window title with all renderer names
+    std::string rendererNames;
+    for (LLGL::RenderSystem* sys : rendererRefs)
+    {
+        if (!rendererNames.empty())
+            rendererNames += ", ";
+        rendererNames += sys->GetName();
     }
+
+    mainWindow->SetTitle(std::string(mainWindowDesc.title) + " ( " + rendererNames + " )");
+    mainWindow->Show();
+
+    // Create resources
+    auto cubeVertices = GenerateTexturedCubeVertices();
+    auto cubeIndices = GenerateTexturedCubeTriangleIndices();
+
+    for (MyRenderer& renderer : myRenderers)
+        renderer.CreateResources(cubeVertices, cubeIndices);
+
+    LLGL::Input input{ *mainWindow };
+
+    // Initialize matrices (OpenGL needs a unit-cube NDC-space)
+    const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
+    const float nearPlane   = 0.1f;
+    const float farPlane    = 100.0f;
+    const float fieldOfView = 45.0f;
+
+    Gs::Matrix4f projMatrices[4];
+    for (int i = 0; i < 4; ++i)
+    {
+        projMatrices[i] = myRenderers[i].BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+        input.Listen(myRenderers[i].GetSubWindow());
+    }
+
+    Gs::Matrix4f viewMatrix, worldMatrix;
+    Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
+
+    // Rotation data
+    Gs::Quaternionf modelRotation;
+    TrackballRotationModel trackballRotation;
+    const LLGL::Viewport fullViewport{ mainWindow->GetContentSize() };
+
+    // Enter main loop
+    while (LLGL::Surface::ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
+    {
+        // Update scene transformation
+        if (input.KeyPressed(LLGL::Key::LButton))
+        {
+            // Rotate model around X and Y axes
+            const LLGL::Offset2D cursorPositionRelativeToMainWindow = LLGL::Display::GetCursorPosition() - mainWindow->GetPosition();
+            trackballRotation.Rotate(modelRotation, fullViewport, cursorPositionRelativeToMainWindow, input.KeyDown(LLGL::Key::LButton));
+            Gs::QuaternionToMatrix(worldMatrix, modelRotation);
+        }
+
+        // Draw scene for all renderers
+        for (int i = 0; i < 4; ++i)
+            myRenderers[i].Render(projMatrices[i] * viewMatrix, worldMatrix);
+
+        input.Reset();
+    }
+
     return 0;
 }
 

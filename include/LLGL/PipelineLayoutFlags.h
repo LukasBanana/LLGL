@@ -344,7 +344,17 @@ struct UniformDescriptor
 
     /**
     \brief Specifies the name of an individual shader uniform. This <b>must not</b> be empty.
-    \remarks This describes the name of the constant itself and not its enclosing constant buffer.
+    \remarks This describes the name of the uniform declaration itself and not its enclosing constant buffer if used inside a \c cbuffer (HLSL) or UBO (GLSL).
+    That being said, chained identifiers are allowed if the unfiorm is wrapped inside a struct like in the following example:
+    \code{glsl}
+    struct Scene_t {
+        mat4 projection;
+    };
+    uniform Scene_t scene;
+    \endcode
+    Here, the unfiorm needs to be addressed as \c "scene.projection".
+    The ParseContext syntax even allows this to be written as \c "scene . projection" or any other whitespaces separating the identifiers.
+    \see ParseContext::AsPipelineLayoutDesc
     */
     StringLiteral   name;
 

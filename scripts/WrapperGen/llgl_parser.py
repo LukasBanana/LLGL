@@ -10,10 +10,6 @@ import sys
 import re
 from llgl_module import *
 
-def fatal(msg):
-    print(sys.argv[0] + ': ' + msg)
-    sys.exit(1)
-
 class DebugContext:
     record = ''
     func = ''
@@ -478,6 +474,10 @@ class Parser:
                 name = self.scanner.accept()
                 if name.startswith('LLGL'):
                     name = name[len('LLGL'):]
+
+                # Ignore forward declarations
+                if self.scanner.acceptIf(';'):
+                    continue
 
                 # Parse optional inheritance
                 inheritedFields = []

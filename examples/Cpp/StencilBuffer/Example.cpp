@@ -12,7 +12,6 @@ class Example_StencilBuffer : public ExampleBase
 {
 
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
-    LLGL::ResourceHeap*         resourceHeap            = {};
 
     LLGL::Shader*               vsScene                 = nullptr;
     LLGL::Shader*               fsScene                 = nullptr;
@@ -23,7 +22,7 @@ class Example_StencilBuffer : public ExampleBase
     LLGL::PipelineState*        pipelineStencilRead     = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
-    LLGL::Buffer*               constantBuffer          = nullptr;
+    LLGL::Buffer*               viewCbuffer             = nullptr;
 
     TriangleMesh                meshScene;
     TriangleMesh                meshPortal;
@@ -37,8 +36,8 @@ class Example_StencilBuffer : public ExampleBase
     {
         alignas(16) Gs::Matrix4f        wMatrix;
         alignas(16) Gs::Matrix4f        vpMatrix;
-        alignas(16) Gs::Vector3f        lightDir        = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
-        alignas(16) LLGL::ColorRGBAf    diffuse         = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alignas(16) Gs::Vector3f        lightDir    = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        alignas(16) LLGL::ColorRGBAf    diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
     settings;
 
@@ -48,35 +47,18 @@ public:
         ExampleBase { "LLGL Example: StencilBuffer" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
-        CreatePipelineLayouts();
+        CreateBuffers();
+        LoadShaders();
         CreatePipelines();
-        CreateResourceHeaps();
 
         // Update vectors for projection
         settings.lightDir.z *= GetProjectionZAxis();
-
-        #if 0
-        // Show some information
-        LLGL::Log::Printf(
-            "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube\n"
-            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube\n"
-            "press RETURN KEY to save the render target texture to a PNG file\n"
-        );
-        #endif
     }
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Load 3D models
         std::vector<TexturedVertex> vertices;
         meshScene   = Load3DModel(vertices, "Portal-Scene.obj");
@@ -88,59 +70,37 @@ private:
         meshObject2.color = { 0.9f, 0.1f, 0.2f };
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
-        constantBuffer = CreateConstantBuffer(settings);
-
-        return vertexFormat;
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
+        viewCbuffer = CreateConstantBuffer(settings);
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    void LoadShaders()
     {
         // Load shader program
-        if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VStencil", "vs_5_0" }, { vertexFormat });
-        }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Stencil.vert" }, { vertexFormat });
-        }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Stencil.450core.vert.spv" }, { vertexFormat });
-        }
-        else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
-            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
-
-            vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VStencil", "1.1" }, { vertexFormat });
-        }
-        else
-            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
-    }
-
-    void CreatePipelineLayouts()
-    {
-        // Create pipeline layouts for shadow-map and scene rendering
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{ cbuffer(Settings@1):frag:vert }"));
+        vsScene = LoadVertexShader("Example", "VScene");
+        fsScene = LoadFragmentShader("Example", "PScene");
+        vsStencil = LoadVertexShader("Example", "VStencil");
     }
 
     void CreatePipelines()
     {
+        // Create pipeline layouts for shadow-map and scene rendering
+        pipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse( "cbuffer(Settings@1):frag:vert" )
+        );
+
+        // Specify vertex format
+        const LLGL::VertexAttribute vertexAttribs[] =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, 0, offsetof(TexturedVertex, position), sizeof(TexturedVertex) },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
+        };
+
         // Create graphics pipeline for scene rendering
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
@@ -158,6 +118,7 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsStencil;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
@@ -181,6 +142,7 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.inputVertexAttribs             = vertexAttribs;
                 pipelineDesc.vertexShader                   = vsScene;
                 pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
@@ -198,12 +160,6 @@ private:
             pipelineStencilRead = renderer->CreatePipelineState(pipelineDesc);
             ReportPSOErrors(pipelineStencilRead);
         }
-    }
-
-    void CreateResourceHeaps()
-    {
-        // Create resource heap for scene rendering
-        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
     }
 
     void UpdateScene()
@@ -252,7 +208,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.diffuse = mesh.color;
-        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+        commands->UpdateBuffer(*viewCbuffer, 0, &settings, sizeof(settings));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
@@ -263,7 +219,7 @@ private:
 
         // Render scene background
         commands->SetPipelineState(*pipelineScene);
-        commands->SetResourceHeap(*resourceHeap);
+        commands->SetResource(0, *viewCbuffer);
         RenderMesh(meshScene);
     }
 
@@ -287,7 +243,7 @@ private:
         RenderMesh(meshObject2);
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene by user input
         UpdateScene();

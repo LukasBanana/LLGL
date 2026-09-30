@@ -15,6 +15,7 @@ namespace LLGL
 
 // D3D11Command.h
 LLGL_ASSERT_POD_TYPE( D3D11CmdSetVertexBuffer );
+LLGL_ASSERT_POD_TYPE( D3D11CmdSetVertexBuffers );
 LLGL_ASSERT_POD_TYPE( D3D11CmdSetVertexBufferArray );
 LLGL_ASSERT_POD_TYPE( D3D11CmdSetIndexBuffer );
 LLGL_ASSERT_POD_TYPE( D3D11CmdSetResourceHeap );

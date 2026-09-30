@@ -7,6 +7,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using static LLGL.NativeLLGL;
 
 namespace LLGL
 {
@@ -223,6 +224,21 @@ namespace LLGL
                     nativeBuffers[i] = buffers[i].Native;
                 }
                 return new BufferArray(NativeLLGL.CreateBufferArray(buffers.Length, nativeBuffers));
+            }
+        }
+
+        public BufferArray CreateBufferArray(VertexBufferView[] bufferViews)
+        {
+            unsafe
+            {
+                var nativeBufferViews = stackalloc NativeLLGL.VertexBufferView[bufferViews.Length];
+                for (int i = 0; i < bufferViews.Length; ++i)
+                {
+                    nativeBufferViews[i].buffer = bufferViews[i].Buffer.Native;
+                    nativeBufferViews[i].stride = bufferViews[i].Stride;
+                    nativeBufferViews[i].offset = bufferViews[i].Offset;
+                }
+                return new BufferArray(NativeLLGL.CreateBufferArrayExt(bufferViews.Length, nativeBufferViews));
             }
         }
 

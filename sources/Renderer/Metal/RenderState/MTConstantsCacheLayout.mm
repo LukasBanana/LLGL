@@ -166,8 +166,11 @@ void MTConstantsCacheLayout::AppendUniformByDesc(
     std::size_t                         uniformIndex,
     std::vector<MTShaderBuffer>&        shaderBuffers)
 {
-    NSString* uniformName = [NSString stringWithCString:uniformDesc.name.c_str() encoding:NSASCIIStringEncoding];
-    AppendUniformByName(reflection, uniformDesc, uniformIndex, uniformName, shaderBuffers);
+    const std::string uniformName = uniformDesc.name.c_str();
+    const std::size_t fieldSeparatorPos = uniformName.find_last_of(".");
+    const std::string fieldName = (fieldSeparatorPos != std::string::npos ? uniformName.substr(fieldSeparatorPos + 1) : uniformName);
+    NSString* uniformNameNS = [NSString stringWithCString:fieldName.c_str() encoding:NSASCIIStringEncoding];
+    AppendUniformByName(reflection, uniformDesc, uniformIndex, uniformNameNS, shaderBuffers);
 }
 
 

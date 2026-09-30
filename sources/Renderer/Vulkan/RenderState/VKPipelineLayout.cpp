@@ -341,6 +341,10 @@ static VkShaderStageFlags GetVkShaderStageFlags(long flags)
     if ((flags & StageFlags::GeometryStage      ) != 0) { bitmask |= VK_SHADER_STAGE_GEOMETRY_BIT;                }
     if ((flags & StageFlags::FragmentStage      ) != 0) { bitmask |= VK_SHADER_STAGE_FRAGMENT_BIT;                }
     if ((flags & StageFlags::ComputeStage       ) != 0) { bitmask |= VK_SHADER_STAGE_COMPUTE_BIT;                 }
+    #if VK_EXT_mesh_shader
+    if ((flags & StageFlags::TaskStage          ) != 0) { bitmask |= VK_SHADER_STAGE_TASK_BIT_EXT;                }
+    if ((flags & StageFlags::MeshStage          ) != 0) { bitmask |= VK_SHADER_STAGE_MESH_BIT_EXT;                }
+    #endif
 
     return bitmask;
 }
@@ -380,7 +384,7 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
         default:
             break;
     }
-    VKTypes::MapFailed("ResourceType", "VkDescriptorType");
+    LLGL_TRAP_VK_MAP(ResourceType, desc.type, VkDescriptorType);
 }
 
 static void ConvertBindingDesc(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)

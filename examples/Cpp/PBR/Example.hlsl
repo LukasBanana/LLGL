@@ -2,7 +2,7 @@
 
 #define M_PI 3.141592654
 
-cbuffer Settings : register(b1)
+cbuffer SceneView : register(b1)
 {
     float4x4    cMatrix;
     float4x4    vpMatrix;
@@ -11,9 +11,6 @@ cbuffer Settings : register(b1)
     float       mipCount;
     float       _pad0;
     float4      lightDir;
-    uint        skyboxLayer;
-    uint        materialLayer;
-    uint2       _pad1;
 };
 
 // SKYBOX SHADER
@@ -61,13 +58,13 @@ void VSky(uint id : SV_VertexID, out VSkyOut outp)
 }
 
 SamplerState smpl : register(s2);
-TextureCubeArray skyBox : register(t3);
+TextureCube skyBox : register(t3);
 
 float4 PSky(VSkyOut inp, bool isFrontFace : SV_IsFrontFace) : SV_Target
 {
     float4 viewRay = float4(inp.viewRay.xy, (isFrontFace ? -1.0 : +1.0), 0.0);
     float3 texCoord = normalize(mul(cMatrix, viewRay)).xyz;
-    return skyBox.Sample(smpl, float4(texCoord, (float)skyboxLayer));
+    return skyBox.Sample(smpl, texCoord);
 }
 
 // MESH SHADER
@@ -101,10 +98,10 @@ void VMesh(VMeshIn inp, out VMeshOut outp)
     outp.texCoord   = inp.texCoord;
 }
 
-Texture2DArray<float4>  colorMaps       : register(t4);
-Texture2DArray<float3>  normalMaps      : register(t5);
-Texture2DArray<float>   roughnessMaps   : register(t6);
-Texture2DArray<float>   metallicMaps    : register(t7);
+Texture2D<float4>  colorMap     : register(t4);
+Texture2D<float3>  normalMap    : register(t5);
+Texture2D<float>   roughnessMap : register(t6);
+Texture2D<float>   metallicMap  : register(t7);
 
 // Schlick's approximation of the fresnel term
 float3 SchlickFresnel(float3 f0, float cosT)
@@ -129,7 +126,7 @@ float NormalDistribution(float a, float NdotH)
 float3 SampleEnvironment(float roughness, float3 reflection)
 {
     float lod = roughness * mipCount;
-    return skyBox.SampleLevel(smpl, float4(reflection, (float)skyboxLayer), lod).rgb;
+    return skyBox.SampleLevel(smpl, reflection, lod).rgb;
 }
 
 float3 BRDF(float3 albedo, float3 normal, float3 viewVec, float3 lightVec, float roughness, float metallic)
@@ -164,15 +161,19 @@ float3 BRDF(float3 albedo, float3 normal, float3 viewVec, float3 lightVec, float
     return (albedo * (NdotL + lighting * 0.2) + specular * metallic);
 }
 
+// Maps RGB color in range [0, 1] to normal vector in range [-1, 1].
+float3 ColorToNormal(float3 color)
+{
+    return color * 2.0 - 1.0;
+}
+
 float4 PMesh(VMeshOut inp) : SV_Target
 {
-    float3 texCoord = float3(inp.texCoord, (float)materialLayer);
-
     // Sample textures
-    float4 albedo = colorMaps.Sample(smpl, texCoord);
-    float3 normal = normalMaps.Sample(smpl, texCoord) * 2.0 - 1.0;
-    float roughness = roughnessMaps.Sample(smpl, texCoord);
-    float metallic = metallicMaps.Sample(smpl, texCoord);
+    float4 albedo = colorMap.Sample(smpl, inp.texCoord);
+    float3 normal = ColorToNormal(normalMap.Sample(smpl, inp.texCoord));
+    float roughness = roughnessMap.Sample(smpl, inp.texCoord);
+    float metallic = metallicMap.Sample(smpl, inp.texCoord);
 
     // Compute final normal
     float3x3 tangentSpace = float3x3(

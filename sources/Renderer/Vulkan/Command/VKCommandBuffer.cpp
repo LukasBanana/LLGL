@@ -538,10 +538,10 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 /* ----- Input Assembly ------ */
 
 //private
-void VKCommandBuffer::BindVertexBuffer(VKBuffer& bufferVK)
+void VKCommandBuffer::BindVertexBuffer(VKBuffer& bufferVK, VkDeviceSize offset)
 {
     VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
-    VkDeviceSize offsets[] = { 0 };
+    VkDeviceSize offsets[] = { offset };
 
     vkCmdBindVertexBuffers(commandBuffer_, 0, 1, buffers, offsets);
 
@@ -560,13 +560,38 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
     BindVertexBuffer(bufferVK);
 }
 
-void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+// Vulkan does not support setting vertex stride per buffer, it is tied to the graphics PSO
+void VKCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t /*stride*/, std::uint64_t offset)
 {
-    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    BindVertexBuffer(bufferVK, offset);
+}
+
+void VKCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    SmallVector<VkBuffer> buffers{ numBufferViews, UninitializeTag{} };
+    SmallVector<VkDeviceSize> offsets{ numBufferViews, UninitializeTag{} };
+
+    for_range(i, numBufferViews)
     {
-        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-        bufferVK.SetStride(vertexAttribs[0].stride);
-        BindVertexBuffer(bufferVK);
+        Buffer* buffer = bufferViews[i].buffer;
+        if (buffer == nullptr)
+            return; // Invalid argument
+
+        auto* bufferVK = LLGL_CAST(VKBuffer*, buffer);
+        buffers[i] = bufferVK->GetVkBuffer();
+        offsets[i] = static_cast<VkDeviceSize>(bufferViews[i].offset);
+    }
+
+    vkCmdBindVertexBuffers(commandBuffer_, 0, numBufferViews, buffers.data(), offsets.data());
+
+    /* Store input-assembly state for slot 0 in case it's used for stream-output */
+    if (numBufferViews > 0 && (bufferViews[0].buffer->GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+    {
+        auto* bufferVK = LLGL_CAST(VKBuffer*, bufferViews[0].buffer);
+        iaState_.ia0VertexStride            = bufferVK->GetStride();
+        iaState_.ia0XfbCounterBuffer        = bufferVK->GetVkBuffer();
+        iaState_.ia0XfbCounterBufferOffset  = bufferVK->GetXfbCounterOffset();
     }
 }
 
@@ -1351,6 +1376,55 @@ bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
         return true;
     }
     return false;
+}
+
+/* ----- Variable Rate Shading (VRS) ----- */
+
+void VKCommandBuffer::SetShadingRate(ShadingRate shadingRate)
+{
+    #if VK_KHR_fragment_shading_rate
+    if (HasExtension(VKExt::KHR_fragment_shading_rate))
+    {
+        const VkExtent2D fragmentSize = VKTypes::ToVkExtent(GetShadingRateSize(shadingRate));
+        const VkFragmentShadingRateCombinerOpKHR combinerOps[2] =
+        {
+            VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR,
+            VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR,
+        };
+        vkCmdSetFragmentShadingRateKHR(commandBuffer_, &fragmentSize, combinerOps);
+    }
+    #endif
+}
+
+#if VK_KHR_fragment_shading_rate
+static VkFragmentShadingRateCombinerOpKHR ToVkShadingRateOp(ShadingRateOp shadingRateOp)
+{
+    switch (shadingRateOp)
+    {
+        case ShadingRateOp::Keep:       return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+        case ShadingRateOp::Replace:    return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+        case ShadingRateOp::Min:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MIN_KHR;
+        case ShadingRateOp::Max:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MAX_KHR;
+        case ShadingRateOp::Sum:        return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR;
+    }
+    LLGL_TRAP_VK_MAP(ShadingRateOp, shadingRateOp, VkFragmentShadingRateCombinerOpKHR);
+}
+#endif
+
+void VKCommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+{
+    #if VK_KHR_fragment_shading_rate
+    if (HasExtension(VKExt::KHR_fragment_shading_rate))
+    {
+        const VkExtent2D fragmentSize = VKTypes::ToVkExtent(GetShadingRateSize(shadingRate));
+        const VkFragmentShadingRateCombinerOpKHR combinerOps[2] =
+        {
+            ToVkShadingRateOp(combinerOpX),
+            ToVkShadingRateOp(combinerOpY),
+        };
+        vkCmdSetFragmentShadingRateKHR(commandBuffer_, &fragmentSize, combinerOps);
+    }
+    #endif
 }
 
 /* ----- Mesh pipeline ----- */

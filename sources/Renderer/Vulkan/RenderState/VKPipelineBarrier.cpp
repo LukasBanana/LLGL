@@ -45,16 +45,20 @@ void VKPipelineBarrier::Submit(VkCommandBuffer commandBuffer)
 
 std::uint32_t VKPipelineBarrier::AllocateBufferBarrier(VkPipelineStageFlags stageFlags)
 {
-    const std::uint32_t index = static_cast<std::uint32_t>(bufferBarriers_.size());
-    InsertBufferMemoryBarrier(stageFlags, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_NULL_HANDLE);
-    return index;
+    const std::uint32_t nextIndex = static_cast<std::uint32_t>(bufferBarriers_.size());
+    bufferBarriers_.resize(bufferBarriers_.size() + 1);
+    InitializeBufferMemoryBarrier(bufferBarriers_.back(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+    MarkStageFlags(stageFlags);
+    return nextIndex;
 }
 
 std::uint32_t VKPipelineBarrier::AllocateImageBarrier(VkPipelineStageFlags stageFlags)
 {
-    const std::uint32_t index = static_cast<std::uint32_t>(imageBarriers_.size());
-    InsertImageMemoryBarrier(stageFlags, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_NULL_HANDLE);
-    return index;
+    const std::uint32_t nextIndex = static_cast<std::uint32_t>(imageBarriers_.size());
+    imageBarriers_.resize(imageBarriers_.size() + 1);
+    InitializeImageMemoryBarrier(imageBarriers_.back(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+    MarkStageFlags(stageFlags);
+    return nextIndex;
 }
 
 void VKPipelineBarrier::SetBufferBarrier(std::uint32_t index, VkBuffer buffer)
@@ -66,15 +70,19 @@ void VKPipelineBarrier::SetBufferBarrier(std::uint32_t index, VkBuffer buffer)
 void VKPipelineBarrier::SetImageBarrier(std::uint32_t index, VkImage image)
 {
     if (index < imageBarriers_.size())
-    {
         imageBarriers_[index].image = image;
-    }
 }
 
 
 /*
  * ======= Private: =======
  */
+
+void VKPipelineBarrier::MarkStageFlags(VkPipelineStageFlags stageFlags)
+{
+    srcStageMask_ |= stageFlags;
+    dstStageMask_ |= stageFlags;
+}
 
 #if 0 //UNUSED
 void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
@@ -101,48 +109,37 @@ void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkA
 }
 #endif
 
-void VKPipelineBarrier::InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkBuffer buffer)
+void VKPipelineBarrier::InitializeBufferMemoryBarrier(VkBufferMemoryBarrier& outBarrier, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
 {
-    srcStageMask_ |= stageFlags;
-    dstStageMask_ |= stageFlags;
-
-    VkBufferMemoryBarrier barrier;
-    {
-        barrier.sType                   = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-        barrier.pNext                   = nullptr;
-        barrier.srcAccessMask           = srcAccess;
-        barrier.dstAccessMask           = dstAccess;
-        barrier.srcQueueFamilyIndex     = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex     = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer                  = buffer;
-        barrier.offset                  = 0;
-        barrier.size                    = VK_WHOLE_SIZE;
-    }
-    bufferBarriers_.push_back(barrier);
+    outBarrier.sType                = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    outBarrier.pNext                = nullptr;
+    outBarrier.srcAccessMask        = srcAccess;
+    outBarrier.dstAccessMask        = dstAccess;
+    outBarrier.srcQueueFamilyIndex  = VK_QUEUE_FAMILY_IGNORED;
+    outBarrier.dstQueueFamilyIndex  = VK_QUEUE_FAMILY_IGNORED;
+    outBarrier.buffer               = VK_NULL_HANDLE;
+    outBarrier.offset               = 0;
+    outBarrier.size                 = VK_WHOLE_SIZE;
 }
 
 //TODO: this is incomplete!
-void VKPipelineBarrier::InsertImageMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkImage image)
+void VKPipelineBarrier::InitializeImageMemoryBarrier(VkImageMemoryBarrier& outBarrier, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
 {
-    VkImageMemoryBarrier barrier;
-    {
-        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.pNext                           = nullptr;
-        barrier.srcAccessMask                   = srcAccess;
-        barrier.dstAccessMask                   = dstAccess;
-        barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED; // ???
-        barrier.newLayout                       = VK_IMAGE_LAYOUT_UNDEFINED; // ???
-        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image                           = image;
-        barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = 1;
-    }
-    imageBarriers_.push_back(barrier);
+    outBarrier.sType                            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    outBarrier.pNext                            = nullptr;
+    outBarrier.srcAccessMask                    = srcAccess;
+    outBarrier.dstAccessMask                    = dstAccess;
+    outBarrier.oldLayout                        = VK_IMAGE_LAYOUT_UNDEFINED; // ???
+    outBarrier.newLayout                        = VK_IMAGE_LAYOUT_UNDEFINED; // ???
+    outBarrier.srcQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
+    outBarrier.dstQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
+    outBarrier.image                            = VK_NULL_HANDLE;
+    outBarrier.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+    outBarrier.subresourceRange.baseArrayLayer  = 0;
+    outBarrier.subresourceRange.baseMipLevel    = 0;
+    outBarrier.subresourceRange.levelCount      = VK_REMAINING_MIP_LEVELS;
+    outBarrier.subresourceRange.baseArrayLayer  = 0;
+    outBarrier.subresourceRange.layerCount      = VK_REMAINING_ARRAY_LAYERS;
 }
 
 

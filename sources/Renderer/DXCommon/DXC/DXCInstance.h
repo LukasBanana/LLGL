@@ -10,6 +10,7 @@
 
 
 #include "../ComPtr.h"
+#include <LLGL/IncludeHandler.h>
 #include <d3d12shader.h>
 #include <vector>
 
@@ -26,12 +27,14 @@ std::vector<LPCWSTR> DXGetDxcCompilerArgs(int flags);
 
 // Compiles the specified shader source to DXIL byte code with the DirectXShaderCompiler (DXC).
 HRESULT DXCompileShaderToDxil(
-    const char* source,
-    std::size_t sourceLength,
-    LPCWSTR*    args,
-    std::size_t numArgs,
-    ID3DBlob**  outByteCode,
-    ID3DBlob**  outErrors
+    const char*         source,
+    std::size_t         sourceLength,
+    LPCWSTR*            args,
+    std::size_t         numArgs,
+    ID3DBlob**          outByteCode,
+    ID3DBlob**          outErrors,
+    IncludeHandler*     includeHandler          = nullptr,
+    Report*             includeHandlerReport    = nullptr
 );
 
 // Reflects the specified DXIL shader byte code.

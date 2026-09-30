@@ -28,7 +28,7 @@ class Example_ResourceBinding : public ExampleBase
 
     LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
-    struct Scene
+    struct alignas(16) Scene
     {
         Gs::Matrix4f            vpMatrix;
     }
@@ -56,16 +56,12 @@ public:
     {
         // Create all graphics objects
         LoadModels();
-        auto vertexFormat = CreateBuffers();
+        CreateBuffers();
         CreateTextures();
-        CreatePipelines(vertexFormat);
-        const auto caps = renderer->GetRenderingCaps();
+        CreatePipelines();
 
         // Update vectors for projection
         lightVec.z *= GetProjectionZAxis();
-
-        // Show info
-        //LLGL::Log::Printf("press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n");
     }
 
 private:
@@ -92,22 +88,15 @@ private:
         LoadModel("UVSphere.obj", Gs::Vector3f{ +1.5f, 0.0f, 5.0f }, 2, /*scale:*/ 0.5f);
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float, /*location:*/ 0 });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float, /*location:*/ 1 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 2 });
-        vertexFormat.SetStride(sizeof(TexturedVertex));
-
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.debugName      = "Vertices";
-            vertexBufferDesc.size           = sizeof(TexturedVertex) * vertices.size();
-            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexAttribs  = vertexFormat.attributes;
+            vertexBufferDesc.debugName  = "Vertices";
+            vertexBufferDesc.size       = sizeof(TexturedVertex) * vertices.size();
+            vertexBufferDesc.stride     = sizeof(TexturedVertex);
+            vertexBufferDesc.bindFlags  = LLGL::BindFlags::VertexBuffer;
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
 
@@ -129,8 +118,6 @@ private:
             transformBufferDesc.bindFlags   = LLGL::BindFlags::Sampled;
         }
         transformBuffer = renderer->CreateBuffer(transformBufferDesc);
-
-        return vertexFormat;
     }
 
     void CreateTextures()
@@ -140,11 +127,11 @@ private:
         colorMaps[2] = LoadTexture("TilesBlue512.jpg");
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VSMain", { vertexFormat });
-        fragmentShader  = LoadStandardFragmentShader("PSMain");
+        vertexShader    = LoadStandardVertexShader();
+        fragmentShader  = LoadStandardFragmentShader();
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -160,10 +147,10 @@ private:
                 "texture(colorMap@4):frag,"                         // Dynamic resource binding for a texture
                 "sampler(colorMapSampler@5){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
 
-                "sampler<colorMap, colorMapSampler>(colorMap@3),"
+                "sampler<colorMap, colorMapSampler>(s_colorMapcolorMapSampler@3),"
 
-                "uint(instance),"                                   // Uniform for a uint type
-                "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
+                "uint(model.instance),"                             // Uniform for a uint type
+                "float3(model.lightVec),"                           // Uniform for a float3/ vec3 type
             );
 
             #else
@@ -193,12 +180,12 @@ private:
             };
             layoutDesc.combinedTextureSamplers =
             {
-                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "colorMapSampler", 4 }
+                LLGL::CombinedTextureSamplerDescriptor{ "s_colorMapcolorMapSampler", "colorMap", "colorMapSampler", 4 }
             };
             layoutDesc.uniforms =
             {
-                LLGL::UniformDescriptor{ "instance", LLGL::UniformType::UInt1  }, // instanceUniform = 0
-                LLGL::UniformDescriptor{ "lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
+                LLGL::UniformDescriptor{ "model.instance", LLGL::UniformType::UInt1  }, // instanceUniform = 0
+                LLGL::UniformDescriptor{ "model.lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
             };
 
             #endif // /PSO_LAYOUT_FROM_STRING
@@ -217,6 +204,7 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "PSO";
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = vertexShader;
             pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
@@ -226,6 +214,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
+        ReportPSOErrors(pipeline);
     }
 
     void DrawModel(const Model& mdl)
@@ -250,7 +239,7 @@ private:
         }
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         scene.vpMatrix = projection;
 

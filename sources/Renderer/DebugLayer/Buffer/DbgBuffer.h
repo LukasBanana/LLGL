@@ -21,8 +21,7 @@ namespace LLGL
 class DbgBuffer final : public Buffer
 {
 
-        std::vector<VertexAttribute>    vertexAttribs_;
-        BufferDescriptor                debugDesc_;
+        BufferDescriptor debugDesc_;
 
     public:
 
@@ -41,8 +40,6 @@ class DbgBuffer final : public Buffer
 
         // Returns true if this buffer is currently mapped into CPU memory space.
         bool IsMappedForCPUAccess() const;
-
-        void SetDebugVertexAttribs(const ArrayView<VertexAttribute>& vertexAttribs);
 
     public:
 

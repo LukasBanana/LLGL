@@ -45,7 +45,7 @@ class CsharpTranslator(Translator):
         }
         nativeBaseTypes = [
             'Resource',
-            'Surface'
+            'Surface',
         ]
         saveStructs = {
             'BindingSlot': CsharpProperties(fullCtor = True),
@@ -111,6 +111,7 @@ class CsharpTranslator(Translator):
             'TextureViewDescriptor': CsharpProperties(getter = True),
             'UniformDescriptor': CsharpProperties(getter = True, setter = True),
             'VertexAttribute': CsharpProperties(getter = True, setter = True, fullCtor = True),
+            'VertexBufferView': CsharpProperties(getter = True, fullCtor = True),
             'VertexShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
         }
 
@@ -518,8 +519,6 @@ class CsharpTranslator(Translator):
                         else:
                             originalSubType = f'NativeLLGL.{decl.originalType[:-1]}'
 
-                            self.statement(f'private {decl.type} {decl.originalName};')
-                            self.statement(f'private {originalSubType + "[]"} {decl.originalName}Native;')
                             self.statement(f'public {decl.type} {decl.name}')
                             self.openScope()
 
@@ -550,6 +549,10 @@ class CsharpTranslator(Translator):
                             self.closeScope()
 
                             self.closeScope()
+
+                            # Write private backing fields for the property afterwards, so that a potential [Obsolete(...)] attribute is applied to the public property
+                            self.statement(f'private {decl.type} {decl.originalName};')
+                            self.statement(f'private {originalSubType + "[]"} {decl.originalName}Native;')
 
                     else:
                         if decl.type == CsharpTranslator.WrapperClasses.STRING:
@@ -657,7 +660,7 @@ class CsharpTranslator(Translator):
                                 self.statement(assignStmt + ';')
 
                     for decl in declList.decls:
-                        if decl.type and not decl.deprecated:
+                        if decl.type:
                             if decl.fixedArray > 0:
                                 for i in range(decl.fixedArray):
                                     writeGetterAssignment(decl, subscript = f'[{i}]')
@@ -707,7 +710,7 @@ class CsharpTranslator(Translator):
                             self.statement(assignStmt + ';')
 
                     for decl in declList.decls:
-                        if decl.type and not decl.deprecated:
+                        if decl.type:
                             if decl.fixedArray > 0:
                                 for i in range(decl.fixedArray):
                                     writeSetterAssignment(decl, subscript = f'[{i}]')
@@ -726,6 +729,8 @@ class CsharpTranslator(Translator):
 
         if len(commonStructs) > 0:
             # Write all trivial structures
+            self.statement('#pragma warning disable 0618 // Disable warning about obsolete fields')
+            self.statement()
             self.statement('/* ----- Structures ----- */')
             self.statement()
             for struct in commonStructs:
@@ -739,6 +744,9 @@ class CsharpTranslator(Translator):
                 property = trivialClasses.get(struct.name)
                 if property:
                     writeStruct(struct, managedTypeProperties = trivialClasses.get(struct.name), fieldsAsProperties = True)
+
+            self.statement('#pragma warning restore 0618 // Restore warning about obsolete fields')
+            self.statement()
 
         # Write native LLGL interface
         self.statement('#region NativeLLGL - native interface to LLGL using P/Invoke')

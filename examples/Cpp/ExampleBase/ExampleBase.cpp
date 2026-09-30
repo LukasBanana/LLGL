@@ -12,12 +12,22 @@
 #include "FileUtils.h"
 #include <stdio.h>
 #include <thread>
+#include <cmath>
+
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262)
+#endif
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
 Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
@@ -63,7 +73,7 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
     while (rendererModule.empty())
     {
         /* Print list of available modules */
-        LLGL::Log::Printf("select renderer:\n");
+        LLGL::Log::Printf("Select renderer:\n");
 
         int i = 0;
         for (const std::string& mod : modules)
@@ -83,10 +93,10 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
             if (selectionIndex < modules.size())
                 rendererModule = modules[selectionIndex];
             else
-                LLGL::Log::Errorf("invalid input: %d is out of range\n", selection);
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Invalid input: %d is out of range\n", selection);
         }
         else
-            LLGL::Log::Errorf("invalid input: %s is not a number\n", selectionBuffer);
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Invalid input: %s is not a number\n", selectionBuffer);
     }
 
     return rendererModule;
@@ -141,7 +151,7 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
             }
         }
     }
-    LLGL::Log::Printf("selected renderer: %s\n", rendererModule.c_str());
+    LLGL::Log::Printf("Selected renderer: %s\n", rendererModule.c_str());
 }
 
 /*static bool IsModuleAvailable(const char* name)
@@ -264,24 +274,98 @@ static bool ParseSwapChain(std::uint32_t& samples, int argc, char* argv[])
 
 
 /*
+ * TrackballRotationModel struct
+ */
+
+// Returns a 3D unit vector from a 2D coordinate that is centered around the speified viewport.
+static Gs::Vector3f Unit3DVectorFrom2DPosition(const LLGL::Viewport& viewport, LLGL::Offset2D coord, float projZAxis, float sphereRadius = 1.0f)
+{
+    /* Convert 2D coordinate into NDC space */
+    Gs::Vector2f ndc
+    {
+          (static_cast<float>(coord.x) - viewport.x) / viewport.width  * 2.0f - 1.0f,
+        -((static_cast<float>(coord.y) - viewport.y) / viewport.height * 2.0f - 1.0f),
+    };
+
+    if (viewport.width > viewport.height)
+    {
+        const float aspectRatio = viewport.width / viewport.height;
+        ndc.x *= aspectRatio;
+    }
+    else
+    {
+        const float aspectRatio = viewport.height / viewport.width;
+        ndc.y *= aspectRatio;
+    }
+
+    /* Check if NDC coordinate is inside or outside the sphere projection */
+    Gs::Vector3f vec{ ndc.x, ndc.y, 0.0f };
+
+    const float lenSq = Gs::LengthSq(ndc);
+    const float radiusSq = sphereRadius*sphereRadius;
+    if (lenSq > radiusSq*0.5f)
+    {
+        vec.z = -projZAxis * radiusSq / (2.0f * std::sqrt(lenSq)); // Outside
+    }
+    else
+    {
+        vec.z = -projZAxis * std::sqrt(radiusSq - lenSq); // Inside
+    }
+
+    vec.Normalize();
+    return vec;
+}
+
+void TrackballRotationModel::Rotate(
+    Gs::Quaternionf&        rotation,
+    const LLGL::Viewport&   viewport,
+    const LLGL::Offset2D&   cursorPosition,
+    bool                    isStartPosition,
+    float                   projZAxis)
+{
+    if (isStartPosition)
+    {
+        cursorStartPosition_    = cursorPosition;
+        cursorStartVector_      = Unit3DVectorFrom2DPosition(viewport, cursorPosition, projZAxis);
+        modelStartRotation_     = rotation;
+    }
+
+    if (cursorStartPosition_ != cursorPosition)
+    {
+        const Gs::Vector3f cursorTargetVector = Unit3DVectorFrom2DPosition(viewport, cursorPosition, projZAxis);
+        const Gs::Vector3f rotationAxis = Gs::Cross(cursorStartVector_, cursorTargetVector);
+
+        // see https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+        Gs::Quaternionf rodriguesRotation
+        {
+            rotationAxis.x,
+            rotationAxis.y,
+            rotationAxis.z,
+            1.0f + Gs::Dot(cursorStartVector_, cursorTargetVector)
+        };
+        rodriguesRotation.Normalize();
+
+        rotation = modelStartRotation_ * Gs::Quaternionf{ rodriguesRotation };
+    }
+    else
+    {
+        /* Reset rotation if cursor has not moved (or moved back to its original position) */
+        rotation = modelStartRotation_;
+    }
+}
+
+
+/*
  * ShaderDescWrapper struct
  */
 
-ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
-    LLGL::ShaderType    type,
-    const std::string&  filename)
-:
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(LLGL::ShaderType type, const char* filename) :
     type     { type     },
     filename { filename }
 {
 }
 
-ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
-    LLGL::ShaderType    type,
-    const std::string&  filename,
-    const std::string&  entryPoint,
-    const std::string&  profile)
-:
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(LLGL::ShaderType type, const char* filename, const char* entryPoint, const char* profile) :
     type       { type       },
     filename   { filename   },
     entryPoint { entryPoint },
@@ -316,8 +400,7 @@ void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL:
 void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
 {
     // Re-draw frame
-    if (app_.IsLoadingDone())
-        app_.DrawFrame();
+    app_.DrawFrame();
 }
 
 /*
@@ -350,6 +433,46 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
 
 
 /*
+ * ShaderIncludeHandler class
+ */
+
+static std::string GetFilePath(const std::string& filename)
+{
+    std::size_t lastSeparatorPos = filename.find_last_of("/\\");
+    return (lastSeparatorPos != std::string::npos ? filename.substr(0, lastSeparatorPos + 1) : "");
+}
+
+void ExampleBase::ShaderIncludeHandler::Source(const char* sourceFilename)
+{
+    sourceFileDir_ = (sourceFilename != nullptr && *sourceFilename != '\0' ? GetFilePath(sourceFilename) : "");
+}
+
+bool ExampleBase::ShaderIncludeHandler::Include(const LLGL::UTF8String& inFilename, LLGL::Blob& outFileContent, LLGL::Report& outReport)
+{
+    // Search in same directory as input file first
+    if (LLGL::Blob content = LLGL::Blob::CreateFromFile(sourceFileDir_ + inFilename.c_str()))
+    {
+        outFileContent = std::move(content);
+        return true;
+    }
+
+    // Now search in specified search paths
+    for (const std::string& path : searchPaths)
+    {
+        if (LLGL::Blob content = LLGL::Blob::CreateFromFile(path + '/' + inFilename.c_str()))
+        {
+            outFileContent = std::move(content);
+            return true;
+        }
+    }
+
+    // File not found
+    outReport.Errorf("Could not find include file '%s' in search paths\n", inFilename.c_str());
+    return false;
+}
+
+
+/*
  * ExampleBase class
  */
 
@@ -370,6 +493,7 @@ struct ExampleConfig
     long            flags           = 0;
     bool            immediateSubmit = false;
     bool            rightHandedProj = false;
+    bool            verbose         = false;
 };
 
 static ExampleConfig g_Config;
@@ -394,6 +518,8 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.rightHandedProj = true;
     if (HasArgument("-b", argc, argv) || HasArgument("--break", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::DebugBreakOnError;
+    if (HasArgument("-v", argc, argv) || HasArgument("--verbose", argc, argv))
+        g_Config.verbose = true;
     if (HasArgument("--nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
     if (HasArgument("--amd", argc, argv))
@@ -429,7 +555,7 @@ void ExampleBase::MainLoopWrapper(void* args)
     exampleBase->MainLoop();
 }
 
-void ExampleBase::Run()
+int ExampleBase::Run()
 {
     initialResolution_ = swapChain->GetResolution();
 
@@ -468,14 +594,22 @@ void ExampleBase::Run()
     }
 
     #endif // /LLGL_OS_WASM
+
+    return returnCode_;
 }
 
 void ExampleBase::DrawFrame()
 {
+    // Measure time since last frame
+    const std::uint64_t newFrameTick =  LLGL::Timer::Tick();
+    const std::uint64_t elapsedTicks = (lastFrameTick_ > 0 ? newFrameTick - lastFrameTick_ : 0ull);
+    const double deltaTime = static_cast<double>(elapsedTicks) / static_cast<double>(LLGL::Timer::Frequency());
+    lastFrameTick_ = newFrameTick;
+
     if (IsDrawable())
     {
         // Draw frame in respective example project
-        OnDrawFrame();
+        OnDrawFrame(static_cast<float>(deltaTime));
 
         #ifndef LLGL_OS_IOS
         // Present the result on the screen - cannot be explicitly invoked on mobile platforms
@@ -494,17 +628,14 @@ void ExampleBase::Resize(const LLGL::Extent2D& clientAreaSize)
         swapChain->ResizeBuffers(drawableSize_);
 
         // Re-draw frame
-        if (IsLoadingDone())
-        {
-            OnResize(drawableSize_);
-            DrawFrame();
-        }
+        OnResize(drawableSize_);
+        DrawFrame();
     }
 }
 
 bool ExampleBase::IsDrawable() const
 {
-    return (drawableSize_.width >= 4 && drawableSize_.height >= 4);
+    return (swapChain != nullptr && drawableSize_.width >= 4 && drawableSize_.height >= 4);
 }
 
 static LLGL::Extent2D ScaleResolution(const LLGL::Extent2D& res, float scale)
@@ -539,7 +670,10 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::RendererConfigurationOpenGL cfgGL;
 
     if (android_app* app = ExampleBase::androidApp_)
-        rendererDesc.androidApp = app;
+    {
+        rendererDesc.platformContext     = app;
+        rendererDesc.platformContextSize = sizeof(*app);
+    }
     else
         LLGL_THROW_INVALID_ARGUMENT("'android_app' state was not specified");
 
@@ -569,12 +703,12 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     // Fallback to null device if selected renderer cannot be loaded
     if (!renderer)
     {
-        LLGL::Log::Errorf("failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
-        LLGL::Log::Errorf("reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdAnnotation, "Reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
         renderer = LLGL::RenderSystem::Load("Null");
         if (!renderer)
         {
-            LLGL::Log::Errorf("failed to load \"Null\" module. Exiting.\n");
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load \"Null\" module. Exiting.\n");
             exit(1);
         }
     }
@@ -608,6 +742,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
             cmdBufferDesc.flags = LLGL::CommandBufferFlags::ImmediateSubmit;
     }
     commands = renderer->CreateCommandBuffer(cmdBufferDesc);
+    commandsTier1 = LLGL::CastTo<LLGL::CommandBufferTier1>(commands);
 
     // Get command queue
     commandQueue = renderer->GetCommandQueue();
@@ -617,23 +752,26 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     const LLGL::Extent2D swapChainRes = swapChain->GetResolution();
 
     LLGL::Log::Printf(
-        "render system:\n"
-        "  renderer:           %s\n"
-        "  device:             %s\n"
-        "  vendor:             %s\n"
-        "  shading language:   %s\n"
+        "LLGL Version %s\n"
         "\n"
-        "swap-chain:\n"
-        "  resolution:         %u x %u\n"
-        "  samples:            %u\n"
-        "  swapBuffers:        %u\n"
-        "  colorFormat:        %s\n"
-        "  depthStencilFormat: %s\n"
+        "Render system:\n"
+        "  Renderer:             %s\n"
+        "  Device:               %s\n"
+        "  Vendor:               %s\n"
+        "  Shading language:     %s\n"
         "\n"
-        "options:\n"
-        "  command buffer:     %s\n"
-        "  coordinate system:  %s\n"
+        "Swap-chain:\n"
+        "  Resolution:           %u x %u\n"
+        "  Samples:              %u\n"
+        "  Swap-buffers:         %u\n"
+        "  Color format:         %s\n"
+        "  Depth-stencil format: %s\n"
+        "\n"
+        "Options:\n"
+        "  Command buffer:       %s\n"
+        "  Coordinate system:    %s\n"
         "\n",
+        ToString(LLGL::GetLLGLVersion()),
         info.rendererName.c_str(),
         info.deviceName.c_str(),
         info.vendorName.c_str(),
@@ -644,17 +782,20 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         swapChain->GetNumSwapBuffers(),
         LLGL::ToString(swapChain->GetColorFormat()),
         LLGL::ToString(swapChain->GetDepthStencilFormat()),
-        g_Config.immediateSubmit ? "immediate" : "deferred",
-        g_Config.rightHandedProj ? "right-handed" : "left-handed"
+        g_Config.immediateSubmit ? "Immediate" : "Deferred",
+        g_Config.rightHandedProj ? "Right-handed" : "Left-handed"
     );
 
-    if (!info.extensionNames.empty())
+    if (g_Config.verbose && !info.extensionNames.empty())
     {
-        LLGL::Log::Printf("extensions:\n");
+        LLGL::Log::Printf("Extensions:\n");
         for (const LLGL::UTF8String& name : info.extensionNames)
             LLGL::Log::Printf("  %s\n", name.c_str());
         LLGL::Log::Printf("\n");
     }
+
+    // Initialize default projection matrix
+    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
     #ifdef LLGL_MOBILE_PLATFORM
 
@@ -685,11 +826,8 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     // Listen for window/canvas events
     input.Listen(swapChain->GetSurface());
 
-    // Initialize default projection matrix
-    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
-    // Store information that loading is done
-    loadingDone_ = true;
+    // Initialize shader include search paths
+    shaderIncludeHandler_.searchPaths.push_back("../../Shared/Assets/Shaders");
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
@@ -751,38 +889,29 @@ void ExampleBase::MainLoop()
 
 //private
 LLGL::Shader* ExampleBase::LoadShaderInternal(
-    const ShaderDescWrapper&                    shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-    const LLGL::VertexFormat&                   streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines,
-    bool                                        patchClippingOrigin)
+    const ShaderDescWrapper&    shaderDesc,
+    const LLGL::ShaderMacro*    defines,
+    long                        compileFlags)
 {
-    LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
+    LLGL::Log::Printf("Load shader: %s\n", shaderDesc.filename);
 
     #ifdef LLGL_OS_WASM
-    const std::string filename = "assets/" + shaderDesc.filename;
+    const std::string filename = std::string("assets/") + shaderDesc.filename;
     #else
     const std::string filename = shaderDesc.filename;
     #endif
 
-    std::vector<LLGL::Shader*>          shaders;
-    std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
+    std::vector<LLGL::Shader*> shaders;
 
-    // Store vertex input attributes
-    for (const auto& vtxFmt : vertexFormats)
-    {
-        vertexInputAttribs.insert(
-            vertexInputAttribs.end(),
-            vtxFmt.attributes.begin(),
-            vtxFmt.attributes.end()
-        );
-    }
+    const bool isPatchClippingOrigin = ((compileFlags & LLGL::ShaderCompileFlags::PatchClippingOrigin) != 0);
+    const long filteredCompileFlags = (compileFlags & (~LLGL::ShaderCompileFlags::PatchClippingOrigin));
 
-    // Create shader
-    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
+    // Set up shader descriptor and update include handler
+    shaderIncludeHandler_.Source(filename.c_str());
+
+    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint, shaderDesc.profile);
     {
-        deviceShaderDesc.debugName = shaderDesc.entryPoint.c_str();
+        deviceShaderDesc.debugName = shaderDesc.entryPoint;
 
         // Forward macro definitions
         deviceShaderDesc.defines = defines;
@@ -792,23 +921,14 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif
 
-        // Forward vertex and fragment attributes
-        switch (shaderDesc.type)
-        {
-            case LLGL::ShaderType::Vertex:
-            case LLGL::ShaderType::Geometry:
-                deviceShaderDesc.vertex.inputAttribs  = vertexInputAttribs;
-                deviceShaderDesc.vertex.outputAttribs = streamOutputFormat.attributes;
-                break;
-            case LLGL::ShaderType::Fragment:
-                deviceShaderDesc.fragment.outputAttribs = fragmentAttribs;
-                break;
-            default:
-                break;
-        }
+        // Always make shader attributes case insensitive, to simplify vertex declaration within the cross-compilation toolchain used for the examples
+        deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::CaseInsensitiveAttribs;
+
+        // Append extra compile flags
+        deviceShaderDesc.flags |= filteredCompileFlags;
 
         // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
-        if (patchClippingOrigin && IsScreenOriginLowerLeft())
+        if (isPatchClippingOrigin && IsScreenOriginLowerLeft())
         {
             // Determine what shader stages needs to patch the clipping origin
             if (shaderDesc.type == LLGL::ShaderType::Vertex           ||
@@ -822,6 +942,9 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         // Override version number for ESSL
         if (Supported(LLGL::ShadingLanguage::ESSL) && (deviceShaderDesc.profile == nullptr || *deviceShaderDesc.profile == '\0'))
             deviceShaderDesc.profile = "300 es";
+
+        // Use custom include handler to support search paths
+        deviceShaderDesc.includeHandler = &shaderIncludeHandler_;
     }
     LLGL::Shader* shader = renderer->CreateShader(deviceShaderDesc);
 
@@ -831,7 +954,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         if (*report->GetText() != '\0')
         {
             if (report->HasErrors())
-                LLGL::Log::Errorf("%s", report->GetText());
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "%s", report->GetText());
             else
                 LLGL::Log::Printf("%s", report->GetText());
         }
@@ -840,86 +963,337 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     return shader;
 }
 
-LLGL::Shader* ExampleBase::LoadShader(
-    const ShaderDescWrapper&                        shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const LLGL::ShaderMacro*                        defines)
+static LLGL::ShadingLanguage MajorMinorShaderModelToEnum(LLGL::ShadingLanguage language, const char* shaderModel)
 {
-    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ false);
+    if (shaderModel != nullptr && *shaderModel != '\0')
+    {
+        std::string ver = shaderModel;
+        if (ver.size() == 3 && ver[1] == '.')
+        {
+            unsigned verNo = static_cast<unsigned>(ver[0] - '0')*100 + static_cast<unsigned>(ver[2] - '0')*10;
+            return static_cast<LLGL::ShadingLanguage>(
+                static_cast<unsigned>(language) |
+                (verNo & static_cast<unsigned>(LLGL::ShadingLanguage::VersionBitmask))
+            );
+        }
+    }
+    return LLGL::ShadingLanguage::VersionBitmask;
 }
 
-LLGL::Shader* ExampleBase::LoadShader(
-    const ShaderDescWrapper&                    shaderDesc,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines)
+static LLGL::ShadingLanguage ShaderVersionNoToEnum(LLGL::ShadingLanguage language, const char* shaderModel)
 {
-    return LoadShaderInternal(shaderDesc, {}, {}, fragmentAttribs, defines, /*patchClippingOrigin:*/ false);
+    if (shaderModel != nullptr && *shaderModel != '\0')
+    {
+        std::string ver = shaderModel;
+        unsigned verNo = 0;
+        for (const char* s = shaderModel; *s != '\0'; ++s)
+        {
+            verNo *= 10;
+            if (!(*s >= '0' && *s <= '9'))
+                return LLGL::ShadingLanguage::VersionBitmask;
+            verNo += static_cast<unsigned>(*s - '0');
+        }
+        return static_cast<LLGL::ShadingLanguage>(
+            static_cast<unsigned>(language) |
+            (verNo & static_cast<unsigned>(LLGL::ShadingLanguage::VersionBitmask))
+        );
+    }
+    return LLGL::ShadingLanguage::VersionBitmask;
 }
 
-LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(
-    const ShaderDescWrapper&                        shaderDesc,
-    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const LLGL::ShaderMacro*                        defines)
+bool ExampleBase::MinimumShaderModel(const char* hlslVersion, const char* glslVersion, const char* esslVersion, const char* metalVersion)
 {
-    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ true);
+    if (Supported(LLGL::ShadingLanguage::HLSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage hlslLanguage = MajorMinorShaderModelToEnum(LLGL::ShadingLanguage::HLSL, hlslVersion);
+        LLGL_VERIFY(hlslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(hlslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required HLSL shader model %s is not supported\n", hlslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Store minimum required HLSL shader model and convert from '5.1' format to '5_0' format to be used with shader profiles, e.g. 'vs_5_1' */
+        shaderModelInfo_.minHLSLShaderModel = hlslVersion;
+        if (shaderModelInfo_.minHLSLShaderModel.size() == 3)
+            shaderModelInfo_.minHLSLShaderModel[1] = '_';
+    }
+    else if (Supported(LLGL::ShadingLanguage::GLSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage glslLanguage = ShaderVersionNoToEnum(LLGL::ShadingLanguage::GLSL, glslVersion);
+        LLGL_VERIFY(glslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(glslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required GLSL version %s is not supported\n", glslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Nothing to store for GLSL */
+    }
+    else if (Supported(LLGL::ShadingLanguage::ESSL))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage esslLanguage = ShaderVersionNoToEnum(LLGL::ShadingLanguage::ESSL, esslVersion);
+        LLGL_VERIFY(esslLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(esslLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required ESSL version %s is not supported\n", esslVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Nothing to store for ESSL */
+    }
+    else if (Supported(LLGL::ShadingLanguage::Metal))
+    {
+        /* Extract version number and check if it's supported */
+        LLGL::ShadingLanguage metalLanguage = MajorMinorShaderModelToEnum(LLGL::ShadingLanguage::Metal, metalVersion);
+        LLGL_VERIFY(metalLanguage != LLGL::ShadingLanguage::VersionBitmask);
+        if (!Supported(metalLanguage))
+        {
+            LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Minimum required Metal shader model %s is not supported\n", metalVersion);
+            Quit(1);
+            return false;
+        }
+
+        /* Store minimum required Metal shader model as-is, e.g. '1.1' */
+        shaderModelInfo_.minMetalShaderModel = metalVersion;
+    }
+    return true;
 }
 
-LLGL::Shader* ExampleBase::LoadStandardVertexShader(
+LLGL::Shader* ExampleBase::LoadShader(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
+{
+    return LoadShaderInternal(shaderDesc, defines, 0);
+}
+
+LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(const ShaderDescWrapper& shaderDesc, const LLGL::ShaderMacro* defines)
+{
+    return LoadShaderInternal(shaderDesc, defines, LLGL::ShaderCompileFlags::PatchClippingOrigin);
+}
+
+static std::string FindShader(
+    const char*                                 basename,
     const char*                                 entryPoint,
-    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
-    const LLGL::ShaderMacro*                    defines)
+    const std::initializer_list<const char*>&   searchPaths,
+    const std::initializer_list<const char*>&   suffixes)
 {
-    // Load shader program
-    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, vertexFormats, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, vertexFormats, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, vertexFormats, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, vertexFormats, {}, defines);
+    // Try to find the shader in the current project directory and in an optional .autogen/ directory for auto-generated shaders
+    std::string shaderBaseFilename, shaderFilename;
+
+    for (const char* relativePath : searchPaths)
+    {
+        for (const char* suffix : suffixes)
+        {
+            // Construct current filename to test against
+            shaderBaseFilename.clear();
+            if (relativePath != nullptr && *relativePath != '\0')
+            {
+                shaderBaseFilename.append(relativePath);
+                shaderBaseFilename.append("/");
+            }
+
+            shaderBaseFilename.append(basename);
+
+            // Check if file exists with and without '.ENRTYPOINT' appendix.
+            // If so, return relative path, not the resolved path as it will be resolved again inside ExampleBase::LoadShaderInternal().
+            for (const char* appendix : { "", entryPoint })
+            {
+                shaderFilename = shaderBaseFilename;
+                if (appendix != nullptr && *appendix != '\0')
+                {
+                    shaderFilename.append(".");
+                    shaderFilename.append(appendix);
+                }
+                shaderFilename.append(".");
+                shaderFilename.append(suffix);
+
+                if (FindAsset(shaderFilename))
+                    return shaderFilename;
+            }
+        }
+    }
+
+    return "";
+}
+
+LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
+    LLGL::ShaderType                                type,
+    const char*                                     basename,
+    const char*                                     entryPoint,
+    const LLGL::ShaderMacro*                        defines,
+    long                                            compileFlags,
+    const std::initializer_list<ShaderTargetInfo>&  targetInfos)
+{
+    for (const ShaderTargetInfo& info : targetInfos)
+    {
+        if (Supported(info.targetLanguage))
+        {
+            // Metal shaders are loaded from default.metallib
+            if (info.targetLanguage == LLGL::ShadingLanguage::Metal)
+                return LoadShaderInternal({ type, "default.metallib", entryPoint, info.profile }, defines, compileFlags);
+
+            // Try to find shader file for current target language
+            std::string source = FindShader(basename, entryPoint, { "", ".autogen" }, info.suffixes);
+            if (source.empty())
+            {
+                // If the source was not found and the basename contains a permutation suffix (e.g. "Example.RWTextures"),
+                // Search again in current directory without the suffix, i.e. only for the input shader,
+                // not for the auto-generatd ones as they need to contain the suffix.
+                if (const char* basenameSuffix = std::strchr(basename, '.'))
+                {
+                    const std::string basenameNoSuffix = std::string(basename).substr(0, basenameSuffix - basename);
+                    source = FindShader(basenameNoSuffix.c_str(), entryPoint, { "" }, info.suffixes);
+                }
+            }
+
+            if (source.empty())
+            {
+                // Print error that no shader could be found
+                std::string suffixesPattern;
+                for (const char* suffix : info.suffixes)
+                {
+                    if (!suffixesPattern.empty())
+                        suffixesPattern.append("|");
+                    suffixesPattern.append(suffix);
+                }
+                LLGL::Log::Errorf(
+                    LLGL::Log::ColorFlags::StdError,
+                    "Could not find shader '%s.(%s)'\n",
+                    basename, suffixesPattern.c_str()
+                );
+                Quit(1);
+                return nullptr;
+            }
+
+            //TODO:
+            // Once all examples have transitioned to the auto-generated shaders, change this to retain the original entry point.
+            // Right now, the TranslateShaders.py script emits SPIR-V with the "main" entry point for the same reason.
+            if (info.targetLanguage == LLGL::ShadingLanguage::SPIRV)
+                entryPoint = "main";
+
+            return LoadShaderInternal({ type, source.c_str(), entryPoint, info.profile }, defines, compileFlags);
+        }
+    }
+
+    // Error: shader not found
+    LLGL::Log::Errorf(
+        LLGL::Log::ColorFlags::StdError,
+        "%s shader '%s' (%s) not available for selected renderer\n",
+        LLGL::ToString(type), basename, entryPoint != nullptr ? entryPoint : "<default>"
+    );
+    Quit(1);
+
     return nullptr;
 }
 
-LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
-    const char*                                 entryPoint,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
-    const LLGL::ShaderMacro*                    defines)
+// @param shaderModel Must be the suffix for the profile describing the shader model version, e.g. SM 5.1 must be "5_0".
+static const char* GetHLSLShaderProfile(const char* profileBase, const std::string& shaderModel, std::string& outProfile)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, fragmentAttribs, defines);
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, fragmentAttribs, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, fragmentAttribs, defines);
-    if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, fragmentAttribs, defines);
-    return nullptr;
+    outProfile = (profileBase + std::string("_") + shaderModel);
+    return outProfile.c_str();
 }
 
-LLGL::Shader* ExampleBase::LoadStandardComputeShader(
-    const char*                 entryPoint,
-    const LLGL::ShaderMacro*    defines)
+#define HLSL_PROFILE(PROFILE) \
+    GetHLSLShaderProfile(PROFILE, shaderModelInfo_.minHLSLShaderModel, shaderModelInfo_.intermediateHLSLProfile)
+
+#define METAL_PROFILE() \
+    shaderModelInfo_.minMetalShaderModel.c_str()
+
+LLGL::Shader* ExampleBase::LoadVertexShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::SPIRV))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::HLSL))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, {}, defines);
-    if (Supported(LLGL::ShadingLanguage::Metal))
-        return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, {}, defines);
-    return nullptr;
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Vertex, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "vert", "140core.vert", "150core.vert", "330core.vert", "400core.vert", "420core.vert", "430core.vert", "450core.vert" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.vert", "vert" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.vert.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("vs"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
 }
 
-ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats)
+LLGL::Shader* ExampleBase::LoadTessControlShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Tessellation shaders in GLSL require at least `#version 400 core`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::TessControl, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tesc", "400core.tesc", "420core.tesc", "430core.tesc", "450core.tesc" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tesc.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("hs"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadTessEvaluationShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Tessellation shaders in GLSL require at least `#version 400 core`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::TessEvaluation, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "tese", "400core.tese", "420core.tese", "430core.tese", "450core.tese" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.tese.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ds"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadGeometryShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    // Geometry shaders in GLSL require at least `#version 150`
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Geometry, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "geom", "150core.geom", "330core.geom", "400core.geom", "420core.geom", "430core.geom", "450core.geom" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.geom.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("gs"), { "hlsl" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadFragmentShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Fragment, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "frag", "140core.frag", "150core.frag", "330core.frag", "400core.frag", "420core.frag", "430core.frag", "450core.frag" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "300es.frag", "frag" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.frag.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("ps"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
+}
+
+LLGL::Shader* ExampleBase::LoadComputeShader(const char* basename, const char* entryPoint, const LLGL::ShaderMacro* defines, long compileFlags)
+{
+    return LoadShaderForTargetLanguage(
+        LLGL::ShaderType::Compute, basename, entryPoint, defines, compileFlags,
+        {
+            ShaderTargetInfo{ LLGL::ShadingLanguage::GLSL,  nullptr,            { "comp", "430core.comp", "450core.comp" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::ESSL,  nullptr,            { "320es.comp", "comp" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::SPIRV, nullptr,            { "450core.comp.spv" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::HLSL,  HLSL_PROFILE("cs"), { "hlsl" } },
+            ShaderTargetInfo{ LLGL::ShadingLanguage::Metal, METAL_PROFILE(),    { "metal" } },
+        }
+    );
+}
+
+#undef HLSL_PROFILE
+#undef METAL_PROFILE
+
+ShaderPipeline ExampleBase::LoadStandardShaderPipeline()
 {
     ShaderPipeline shaderPipeline;
     {
-        shaderPipeline.vs = LoadStandardVertexShader("VS", vertexFormats);
-        shaderPipeline.ps = LoadStandardFragmentShader("PS");
+        shaderPipeline.vs = LoadStandardVertexShader();
+        shaderPipeline.ps = LoadStandardFragmentShader();
     }
     return shaderPipeline;
 }
@@ -932,14 +1306,16 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
         {
             if (report->HasErrors())
             {
-                LLGL::Log::Errorf("%s", report->GetText());
+                LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "%s", report->GetText());
+                Quit(1);
                 return true;
             }
         }
     }
     else
     {
-        LLGL::Log::Errorf("null pointer passed to ReportPSOErrors()");
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Null pointer passed to ReportPSOErrors()");
+        Quit(1);
         return true;
     }
     return false;
@@ -947,7 +1323,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
 {
-    LLGL::Log::Printf("load texture: %s\n", filename.c_str());
+    LLGL::Log::Printf("Load texture: %s\n", filename.c_str());
 
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     ImageReader reader;
@@ -966,7 +1342,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
-    LLGL::Log::Printf("save texture: %s\n", filename.c_str());
+    LLGL::Log::Printf("Save texture: %s\n", filename.c_str());
 
     // Get texture dimension
     const LLGL::Extent3D texSize = texture.GetMipExtent(mipLevel);
@@ -1002,7 +1378,7 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
 
     if (!result)
     {
-        LLGL::Log::Errorf("failed to write texture to file: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to write texture to file: \"%s\"\n", filename.c_str());
         return false;
     }
 
@@ -1048,28 +1424,34 @@ static bool HasObjFileExtension(const std::string& filename)
     return (filename.size() > 4 && filename.compare(filename.size() - 4, 4, ".obj") == 0);
 }
 
-TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
+TriangleMesh ExampleBase::Load3DModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace, long flags)
 {
+    LLGL::Log::Printf("Load mesh: %s\n", filename.c_str());
+
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(vertices, filename, verticesPerFace, HasRightHandedProjection());
+        if (HasRightHandedProjection())
+            flags |= MeshFlags_KeepRightHandedCoordinates;
+        return LoadObjModel(vertices, filename, verticesPerFace, flags);
     }
     else
     {
-        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Unknown file format for 3D model: \"%s\"\n", filename.c_str());
         return {};
     }
 }
 
-std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace)
+std::vector<TexturedVertex> ExampleBase::Load3DModel(const std::string& filename, unsigned verticesPerFace, long flags)
 {
     if (HasObjFileExtension(filename))
     {
-        return LoadObjModel(filename, verticesPerFace, HasRightHandedProjection());
+        if (HasRightHandedProjection())
+            flags |= MeshFlags_KeepRightHandedCoordinates;
+        return LoadObjModel(filename, verticesPerFace, flags);
     }
     else
     {
-        LLGL::Log::Errorf("unknown file format for 3D model: \"%s\"\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Unknown file format for 3D model: \"%s\"\n", filename.c_str());
         return {};
     }
 }
@@ -1124,11 +1506,6 @@ bool ExampleBase::IsMetal() const
     return (renderer->GetRendererID() == LLGL::RendererID::Metal);
 }
 
-bool ExampleBase::IsLoadingDone() const
-{
-    return loadingDone_;
-}
-
 bool ExampleBase::IsScreenOriginLowerLeft() const
 {
     return (renderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft);
@@ -1156,29 +1533,42 @@ Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float 
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
 }
 
-Gs::Quaternionf ExampleBase::Rotation(float x, float y) const
+Gs::Quaternionf ExampleBase::Rotation(float pitch, float yaw) const
 {
     Gs::Matrix3f mat;
-    Gs::RotateFree(mat, Gs::Vector3f{ 1, 0, 0 }, y);
-    Gs::RotateFree(mat, Gs::Vector3f{ 0, 1, 0 }, x);
+    Gs::RotateFree(mat, Gs::Vector3f{ 1, 0, 0 }, yaw);
+    Gs::RotateFree(mat, Gs::Vector3f{ 0, 1, 0 }, pitch);
     Gs::Quaternionf rotation;
     Gs::MatrixToQuaternion(rotation, mat);
     return rotation;
 }
 
-Gs::Matrix4f ExampleBase::RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const
+void ExampleBase::TrackballRotation(Gs::Quaternionf& rotation, bool isStartPosition, const LLGL::Offset2D* cursorPosition)
 {
-    // Generate absolute matrix
-    rotation *= Rotation(dx, dy);
-    Gs::Matrix4f mat;
-    Gs::QuaternionToMatrix(mat, rotation);
-    return mat;
+    const float displayScaling = LLGL::Display::GetPrimary()->GetScale();
+
+    LLGL::Viewport fullViewport{ swapChain->GetResolution() };
+    fullViewport.x      /= displayScaling;
+    fullViewport.y      /= displayScaling;
+    fullViewport.width  /= displayScaling;
+    fullViewport.height /= displayScaling;
+
+    const LLGL::Offset2D targetCursorPosition = (cursorPosition != nullptr ? *cursorPosition : input.GetMousePosition());
+
+    trackballRotation_.Rotate(rotation, fullViewport, targetCursorPosition, isStartPosition, GetProjectionZAxis());
 }
 
 bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
 {
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
     return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
+}
+
+void ExampleBase::Quit(int returnCode)
+{
+    if (LLGL::Window* window = LLGL::CastTo<LLGL::Window>(&(swapChain->GetSurface())))
+        window->PostQuit();
+    returnCode_ = returnCode;
 }
 
 const std::string& ExampleBase::GetModuleName()

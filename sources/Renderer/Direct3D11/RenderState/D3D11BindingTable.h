@@ -42,6 +42,7 @@ class D3D11BindingTable
 
         D3D11BindingTable(const ComPtr<ID3D11DeviceContext>& context);
 
+        // Note that this function must set all subsequent vertex buffers in ascending order as it overrides the counter of vertex buffers to `startSlot + 1`.
         void SetVertexBuffer(
             UINT                    startSlot,
             ID3D11Buffer*           buffer,
@@ -50,6 +51,7 @@ class D3D11BindingTable
             D3D11BindingLocator*    locator
         );
 
+        // `locators` can be null if none of the buffers are used as UAVs to speed up this call.
         void SetVertexBuffers(
             UINT                            startSlot,
             UINT                            count,

@@ -26,6 +26,7 @@ DEF_TEST( PipelineCaching )
     {
         psoDesc.pipelineLayout      = layouts[PipelineTextured];
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader        = shaders[VSTextured];
         psoDesc.fragmentShader      = shaders[PSTextured];
         psoDesc.depth.testEnabled   = true;

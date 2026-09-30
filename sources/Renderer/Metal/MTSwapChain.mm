@@ -239,11 +239,11 @@ MTKView* MTSwapChain::AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surfa
     return mtkView;
 }
 
-bool MTSwapChain::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
+Extent2D MTSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Invoke a redraw to force an update on the resized multisampled framebuffer */
     [view_ draw];
-    return true;
+    return resolution;
 }
 
 

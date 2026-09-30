@@ -5,11 +5,20 @@ cbuffer Scene : register(b3)
 	float4x4 vpMatrix;
 }
 
-cbuffer Model : register(b2)
+struct ModelData
 {
 	float3   lightVec;
 	uint     instance;
+};
+
+#if __spirv__
+[[vk::push_constant]] ModelData model;
+#else
+cbuffer Model : register(b2)
+{
+	ModelData model;
 }
+#endif
 
 struct VSInput
 {
@@ -36,9 +45,9 @@ struct Transform
 
 StructuredBuffer<Transform> transforms : register(t1);
 
-void VSMain(VSInput inp, out VSOutput outp)
+void VS(VSInput inp, out VSOutput outp)
 {
-	Transform transform = transforms[instance];
+	Transform transform = transforms[model.instance];
 	outp.worldPos = mul(transform.wMatrix, float4(inp.position, 1));
 	outp.position = mul(vpMatrix, outp.worldPos);
 	outp.normal   = mul(transform.wMatrix, float4(inp.normal, 0)).xyz;
@@ -51,14 +60,14 @@ void VSMain(VSInput inp, out VSOutput outp)
 Texture2D colorMap : register(t4);
 SamplerState colorMapSampler : register(s5);
 
-float4 PSMain(VSOutput inp) : SV_Target
+float4 PS(VSOutput inp) : SV_Target
 {
 	// Sample color map
 	float4 color = colorMap.Sample(colorMapSampler, inp.texCoord);
 
 	// Compute lighting
 	float3 normal = normalize(inp.normal);
-	float NdotL = max(0.2, dot(normal, lightVec));
+	float NdotL = max(0.2, dot(normal, model.lightVec));
 	
 	return float4(color.rgb * NdotL, color.a);
 };

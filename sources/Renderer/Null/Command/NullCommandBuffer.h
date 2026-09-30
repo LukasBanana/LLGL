@@ -50,6 +50,8 @@ class NullCommandBuffer final : public CommandBuffer
             SmallVector<Viewport>           viewports;
             SmallVector<Scissor>            scissors;
             SmallVector<const NullBuffer*>  vertexBuffers;
+            SmallVector<std::uint32_t>      vertexBufferStrides;
+            SmallVector<std::uint64_t>      vertexBufferOffsets;
             const NullBuffer*               indexBuffer         = nullptr;
             Format                          indexBufferFormat   = Format::Undefined;
             std::uint64_t                   indexBufferOffset   = 0;

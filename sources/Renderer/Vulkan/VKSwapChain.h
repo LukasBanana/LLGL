@@ -96,7 +96,7 @@ class VKSwapChain final : public SwapChain
 
     private:
 
-        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
+        Extent2D ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreateGpuFence(VKPtr<VkFence>& fence);

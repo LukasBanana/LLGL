@@ -46,7 +46,15 @@ static std::vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescrip
 }
 
 GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits, PipelineCache* pipelineCache) :
-    GLPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, pipelineCache, GetShaderArrayFromDesc(desc) }
+    GLPipelineState
+    {
+        /*isGraphicsPSO:*/ true,
+        desc.pipelineLayout,
+        pipelineCache,
+        GetShaderArrayFromDesc(desc),
+        desc.inputVertexAttribs,
+        desc.outputVertexAttribs
+    }
 {
     /* Convert input-assembler state */
     drawMode_       = GLTypes::ToDrawMode(desc.primitiveTopology);
@@ -69,6 +77,16 @@ GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const Rende
     }
     else
         patchVertices_ = 0;
+
+    /* Create vertex input layout */
+    if (desc.inputVertexAttribs.empty() && desc.vertexShader != nullptr)
+    {
+        //DEPRECATED
+        GLShader* vertexShaderGL = LLGL_CAST(GLShader*, desc.vertexShader);
+        vertexInputLayout_.SetAttribs(vertexShaderGL->GetGLVertexAttributes());
+    }
+    else
+        vertexInputLayout_.SetAttribs(desc.inputVertexAttribs);
 
     /* Create depth-stencil state */
     depthStencilState_ = GLStatePool::Get().CreateDepthStencilState(desc.depth, desc.stencil);

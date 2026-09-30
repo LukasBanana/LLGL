@@ -23,6 +23,10 @@
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
+#include <LLGL/Utils/ForRange.h>
+
+#include <algorithm> // std::transform
+#include <iterator> // std::back_inserter
 
 
 namespace LLGL
@@ -275,20 +279,57 @@ void NullCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sc
 void NullCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    renderState_.vertexBuffers = { &bufferNull };
+    renderState_.vertexBuffers          = { &bufferNull };
+    renderState_.vertexBufferStrides    = { bufferNull.desc.stride };
+    renderState_.vertexBufferOffsets    = { 0 };
 }
 
-void NullCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+void NullCommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    //TODO: update format
-    renderState_.vertexBuffers = { &bufferNull };
+    renderState_.vertexBuffers          = { &bufferNull };
+    renderState_.vertexBufferStrides    = { stride };
+    renderState_.vertexBufferOffsets    = { offset };
+}
+
+void NullCommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    renderState_.vertexBuffers.resize(numBufferViews);
+    renderState_.vertexBufferStrides.resize(numBufferViews);
+    renderState_.vertexBufferOffsets.resize(numBufferViews);
+
+    for_range(i, numBufferViews)
+    {
+        auto* bufferNull = LLGL_CAST(NullBuffer*, bufferViews[i].buffer);
+        if (bufferNull != nullptr)
+        {
+            renderState_.vertexBuffers[i]       = bufferNull;
+            renderState_.vertexBufferStrides[i] = bufferNull->desc.stride;
+        }
+        else
+        {
+            renderState_.vertexBuffers[i]       = nullptr;
+            renderState_.vertexBufferStrides[i] = 0;
+        }
+        renderState_.vertexBufferOffsets[i] = 0; // dummy - Null device doesn't need offsets yet
+    }
 }
 
 void NullCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayNull = LLGL_CAST(NullBufferArray&, bufferArray);
-    renderState_.vertexBuffers = SmallVector<const NullBuffer*>(bufferArrayNull.buffers.begin(), bufferArrayNull.buffers.end());
+    const std::size_t numBuffers = bufferArrayNull.buffers.size();
+
+    renderState_.vertexBuffers.resize(numBuffers);
+    renderState_.vertexBufferStrides.resize(numBuffers);
+    renderState_.vertexBufferOffsets.resize(numBuffers);
+
+    for_range(i, numBuffers)
+    {
+        renderState_.vertexBuffers[i]       = bufferArrayNull.buffers[i];
+        renderState_.vertexBufferStrides[i] = bufferArrayNull.buffers[i]->desc.stride;
+        renderState_.vertexBufferOffsets[i] = 0; // dummy - Null device doesn't need offsets yet
+    }
 }
 
 void NullCommandBuffer::SetIndexBuffer(Buffer& buffer)

@@ -10,6 +10,8 @@
 
 
 #include <LLGL/ShaderReflection.h>
+#include <LLGL/VertexAttribute.h>
+#include <LLGL/Container/ArrayView.h>
 #include "GLShaderPipeline.h"
 #include "GLShaderUniform.h"
 #include <string>
@@ -37,11 +39,22 @@ class GLShaderProgram final : public GLShaderPipeline
     public:
 
         GLShaderProgram(
-            std::size_t             numShaders,
-            const Shader* const*    shaders,
-            GLShader::Permutation   permutation     = GLShader::PermutationDefault,
-            GLPipelineCache*        pipelineCache   = nullptr
+            ArrayView<const Shader*>    shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {},
+            GLShader::Permutation       permutation         = GLShader::PermutationDefault,
+            GLPipelineCache*            pipelineCache       = nullptr
         );
+
+        // Wrapper for mutable shaders array view.
+        GLShaderProgram(
+            ArrayView<Shader*>          shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs  = {},
+            ArrayView<VertexAttribute>  outputVertexAttribs = {},
+            GLShader::Permutation       permutation         = GLShader::PermutationDefault,
+            GLPipelineCache*            pipelineCache       = nullptr
+        );
+
         ~GLShaderProgram();
 
     public:
@@ -53,13 +66,13 @@ class GLShaderProgram final : public GLShaderPipeline
         static std::string GetGLProgramLog(GLuint program);
 
         // Invokes glBindAttribLocation on the specified program for all vertex attributes.
-        static void BindAttribLocations(GLuint program, std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
+        static void BindAttribLocations(GLuint program, ArrayView<GLShaderAttribute> vertexAttribs, bool isCaseInsensitive);
 
         // Invokes glBindFragDataLocation on the specified program for all fragment attributes.
-        static void BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs);
+        static void BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs);
 
         // Links the specified GL program and binds the transform feedback varyings.
-        static void LinkProgramWithTransformFeedbackVaryings(GLuint program, std::size_t numVaryings, const char* const* varyings);
+        static void LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings);
 
         // Simply links the GL program.
         static void LinkProgram(GLuint program);
@@ -74,9 +87,10 @@ class GLShaderProgram final : public GLShaderPipeline
 
         // Main function for constructor to attach shaders, build attributes, and link program.
         void BuildProgramBinary(
-            std::size_t             numShaders,
-            const Shader* const*    shaders,
-            GLShader::Permutation   permutation
+            ArrayView<const Shader*>    shaders,
+            ArrayView<VertexAttribute>  inputVertexAttribs,
+            ArrayView<VertexAttribute>  outputVertexAttribs,
+            GLShader::Permutation       permutation
         );
 
     private:

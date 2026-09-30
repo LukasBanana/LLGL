@@ -228,6 +228,7 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
 
 /**
 \brief Decompresses the specified image buffer to RGBA format with 8-bit unsigned normalized integers.
+\param[in] compressedFormat Specifies the compressed hardware format that is meant to be decompressed.
 \param[in] srcImageView Specifies the source image image.
 \param[in] extent Specifies the image extent. This is required as most compression formats work in block sizes.
 \param[in] threadCount Specifies the number of threads to use for decompression.

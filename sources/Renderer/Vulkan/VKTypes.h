@@ -9,7 +9,7 @@
 #define LLGL_VK_TYPES_H
 
 
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -19,6 +19,11 @@
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/QueryHeapFlags.h>
+#include "../../Core/Assertion.h"
+
+
+#define LLGL_TRAP_VK_MAP(TYPE, VALUE, VKTYPE) \
+    LLGL_TRAP("failed to map LLGL::%s(%d) to %s Vulkan parameter", #TYPE, static_cast<int>(VALUE), #VKTYPE)
 
 
 namespace LLGL
@@ -29,9 +34,6 @@ namespace VKTypes
 
 
 /* ----- Map functions ----- */
-
-[[noreturn]]
-void MapFailed(const char* typeName, const char* vknTypeName);
 
 VkShaderStageFlagBits   Map( const ShaderType           shaderType        );
 VkFormat                Map( const Format               format            );
@@ -52,8 +54,6 @@ VkStencilFaceFlags      Map( const StencilFace          stencilFace       );
 
 VkIndexType             ToVkIndexType(const Format format);
 VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
-VkOffset3D              ToVkOffset(const Offset3D& offset);
-VkExtent3D              ToVkExtent(const Extent3D& extent);
 VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
 VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
 VkPipelineStageFlags    ToVkStageFlags(long stageFlags);
@@ -65,6 +65,21 @@ bool IsVkFormatStencil(const VkFormat format);
 bool IsVkFormatColor(const VkFormat format);
 
 std::uint32_t GetMaxVkSampleCounts(VkSampleCountFlags flags);
+
+inline VkOffset3D ToVkOffset(const Offset3D& offset)
+{
+    return VkOffset3D{ offset.x, offset.y, offset.z };
+}
+
+inline VkExtent3D ToVkExtent(const Extent3D& extent)
+{
+    return VkExtent3D{ extent.width, extent.height, extent.depth };
+}
+
+inline VkExtent2D ToVkExtent(const Extent2D& extent)
+{
+    return VkExtent2D{ extent.width, extent.height };
+}
 
 
 /* ----- Convert functions ----- */

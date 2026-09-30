@@ -33,6 +33,7 @@ type CommandBuffer interface {
 	SetScissor(scissor Scissor)
 	SetScissors(scissors []Scissor)
 	SetVertexBuffer(buffer Buffer)
+	SetVertexBufferExt(buffer Buffer, stride uint32, offset uint64)
 	SetVertexBufferArray(bufferArray BufferArray)
 	SetIndexBuffer(buffer Buffer)
 	SetIndexBufferExt(buffer Buffer, format Format, offset uint64)
@@ -159,6 +160,10 @@ func (self commandBufferImpl) SetScissors(scissors []Scissor) {
 
 func (self commandBufferImpl) SetVertexBuffer(buffer Buffer) {
 	C.llglSetVertexBuffer(buffer.(bufferImpl).native)
+}
+
+func (self commandBufferImpl) SetVertexBufferExt(buffer Buffer, stride uint32, offset uint64) {
+	C.llglSetVertexBufferExt(buffer.(bufferImpl).native, C.uint32_t(stride), C.uint64_t(offset))
 }
 
 func (self commandBufferImpl) SetVertexBufferArray(bufferArray BufferArray) {

@@ -104,12 +104,10 @@ DEF_TEST( StreamOutput )
             const std::string vertBufName = "SOVertexBuffer[" + std::to_string(i) + "]";
             BufferDescriptor vertBufDesc;
             {
-                vertBufDesc.debugName       = vertBufName.c_str();
-                vertBufDesc.size            = sizeof(ColoredVertex) * maxSOVertices;
-                vertBufDesc.bindFlags       = BindFlags::VertexBuffer | BindFlags::StreamOutputBuffer;
-
-                // IA stage uses "position" attribute instead of SystemValue::Position, so use VertFmtColored instead of VertFmtColoredSO
-                vertBufDesc.vertexAttribs   = vertexFormats[VertFmtColored].attributes;
+                vertBufDesc.debugName   = vertBufName.c_str();
+                vertBufDesc.size        = sizeof(ColoredVertex) * maxSOVertices;
+                vertBufDesc.bindFlags   = BindFlags::VertexBuffer | BindFlags::StreamOutputBuffer;
+                vertBufDesc.stride      = sizeof(ColoredVertex);
             }
             result = CreateBuffer(vertBufDesc, vertBufDesc.debugName, &soVertexBuffers[i]);
             if (result != TestResult::Passed)
@@ -143,6 +141,8 @@ DEF_TEST( StreamOutput )
         queryHeaps[1] = renderer->CreateQueryHeap(queryHeapDesc1);
 
         // Create graphics PSOs
+        // Note that IA stage uses "position" attribute instead of SystemValue::Position,
+        // so use VertFmtColored instead of VertFmtColoredSO for all input attributes
         psoLayoutVert = renderer->CreatePipelineLayout(Parse("cbuffer(SOScene@1):vert"));
         psoLayoutTess = renderer->CreatePipelineLayout(Parse("cbuffer(SOScene@1):vert:tesc:tese"));
         psoLayoutGeom = renderer->CreatePipelineLayout(Parse("cbuffer(SOScene@1):vert:tesc:tese:geom"));
@@ -153,6 +153,8 @@ DEF_TEST( StreamOutput )
             psoVertDesc.debugName                       = "SO.VERT.PSO";
             psoVertDesc.pipelineLayout                  = psoLayoutVert;
             psoVertDesc.renderPass                      = swapChain->GetRenderPass();
+            psoVertDesc.inputVertexAttribs              = vertexFormats[VertFmtColored].attributes;
+            psoVertDesc.outputVertexAttribs             = vertexFormats[VertFmtColoredSO].attributes;
             psoVertDesc.vertexShader                    = shaders[VSStreamOutputXfb];
             psoVertDesc.primitiveTopology               = PrimitiveTopology::TriangleList;
             psoVertDesc.rasterizer.discardEnabled       = true;
@@ -164,6 +166,8 @@ DEF_TEST( StreamOutput )
             psoTessDesc.debugName                       = "SO.TESS.PSO";
             psoTessDesc.pipelineLayout                  = psoLayoutTess;
             psoTessDesc.renderPass                      = swapChain->GetRenderPass();
+            psoTessDesc.inputVertexAttribs              = vertexFormats[VertFmtColored].attributes;
+            psoTessDesc.outputVertexAttribs             = vertexFormats[VertFmtColoredSO].attributes;
             psoTessDesc.vertexShader                    = shaders[VSStreamOutput];
             psoTessDesc.tessControlShader               = shaders[HSStreamOutput];
             psoTessDesc.tessEvaluationShader            = shaders[DSStreamOutputXfb];
@@ -177,6 +181,8 @@ DEF_TEST( StreamOutput )
             psoGeomDesc.debugName                       = "SO.GEOM.PSO";
             psoGeomDesc.pipelineLayout                  = psoLayoutGeom;
             psoGeomDesc.renderPass                      = swapChain->GetRenderPass();
+            psoGeomDesc.inputVertexAttribs              = vertexFormats[VertFmtColored].attributes;
+            psoGeomDesc.outputVertexAttribs             = vertexFormats[VertFmtColoredSO].attributes;
             psoGeomDesc.vertexShader                    = shaders[VSStreamOutput];
             psoGeomDesc.tessControlShader               = shaders[HSStreamOutput];
             psoGeomDesc.tessEvaluationShader            = shaders[DSStreamOutput];
@@ -191,6 +197,8 @@ DEF_TEST( StreamOutput )
             psoFragDesc.debugName                       = "SO.FRAG.PSO";
             psoFragDesc.pipelineLayout                  = psoLayoutFrag;
             psoFragDesc.renderPass                      = swapChain->GetRenderPass();
+            psoFragDesc.inputVertexAttribs              = vertexFormats[VertFmtColored].attributes;
+            psoFragDesc.outputVertexAttribs             = vertexFormats[VertFmtColoredSO].attributes;
             psoFragDesc.vertexShader                    = shaders[VSStreamOutputXfb];
             psoFragDesc.fragmentShader                  = shaders[PSStreamOutput];
             psoFragDesc.primitiveTopology               = PrimitiveTopology::TriangleList;
@@ -256,7 +264,7 @@ DEF_TEST( StreamOutput )
                     cmdBuffer->BeginStreamOutput(1, &(soVertexBuffers[(currentSOSwapBuffer + 1) % 2]));
                     {
                         if (i == 0)
-                            cmdBuffer->Draw(numInitialVertices, 0); //TODO: use non-indexed mesh
+                            cmdBuffer->Draw(numInitialVertices, 0);
                         else
                             cmdBuffer->DrawStreamOutput();
                     }

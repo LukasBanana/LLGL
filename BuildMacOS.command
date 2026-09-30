@@ -205,6 +205,7 @@ if [ $LEGACY -ne 0 ]; then
     # Compile in legacy mode with specific Clang compiler.
     # GNU 4 from Xcode 3 will not work, so choose Clang from MacPorts.
     # Also build for GL 2.x only and CoreVideo turned off.
+    # These options must be expanded with double quotes to preserve the LLGL_GL_ROFILES argument.
     LEGACY_OPTIONS=(
         -E
         env
@@ -212,20 +213,20 @@ if [ $LEGACY -ne 0 ]; then
         CC=$LEGACY_CC
         cmake
         -DLLGL_MACOS_ENABLE_COREVIDEO=OFF
-        -DLLGL_GL_ENABLE_OPENGL2X=ON
+        -DLLGL_GL_PROFILES="OpenGL Compatibility"
     )
     if [ $PROJECT_ONLY -eq 0 ]; then
         if [ -z "$GENERATOR" ]; then
-            cmake ${LEGACY_OPTIONS[@]} -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} # CMake default generator
+            cmake "${LEGACY_OPTIONS[@]}" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} # CMake default generator
         else
-            cmake ${LEGACY_OPTIONS[@]} -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} -G "$GENERATOR"
+            cmake "${LEGACY_OPTIONS[@]}" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} -G "$GENERATOR"
         fi
         cmake --build "$OUTPUT_DIR"
     else
         if [ -z "$GENERATOR" ]; then
             GENERATOR="Xcode" # Default to Xcode for project solution
         fi
-        cmake ${LEGACY_OPTIONS[@]} ${OPTIONS[@]} -G "$GENERATOR"
+        cmake "${LEGACY_OPTIONS[@]}" ${OPTIONS[@]} -G "$GENERATOR"
     fi
 else
     if [ $PROJECT_ONLY -eq 0 ]; then

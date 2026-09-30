@@ -10,7 +10,11 @@
 
 
 #if LLGL_OPENGL
-#   include "Profile/GLCore/OpenGLCore.h"
+#   if LLGL_GL_ENABLE_OPENGL2X
+#       include "Profile/GLCompat/OpenGLCompat.h"
+#   else
+#       include "Profile/GLCore/OpenGLCore.h"
+#   endif
 #elif LLGL_OPENGLES3
 #   include "Profile/GLES/OpenGLES.h"
 #elif LLGL_WEBGL
@@ -21,6 +25,13 @@
 
 
 #if LLGL_WEBGL
+
+/*
+This enables buffer-write hazard tracking for WebGL.
+The Metal backend of the WebGL implementation "ANGLE" does not correctly track mid-frame buffer updates in `glBufferSubData()`.
+This option enables LLGL's own hazard tracking using staging buffer pools for dynamic buffer updates in the GL backend.
+*/
+#define LLGL_GL_BUFFER_HAZARD_TRACKING 1
 
 #define LLGL_GLEXT_DRAW_INSTANCED 1
 #define LLGL_GLEXT_UNIFORM_BUFFER_OBJECT 1

@@ -132,6 +132,7 @@ class TestbedContext
             VertFmtColored,
             VertFmtColoredSO,
             VertFmtUnprojected,
+            VertFmtUnprojectedBGRA,
             VertFmtEmpty,
             VertFmtLayout0,
             VertFmtLayout1,
@@ -153,10 +154,14 @@ class TestbedContext
         enum Shaders
         {
             VSSolid = 0,
+            VSSolidInstanced,
             PSSolid,
 
             VSTextured,
             PSTextured,
+
+            VSTextured8,
+            PSTextured8,
 
             VSDynamic,
             PSDynamic,
@@ -201,10 +206,8 @@ class TestbedContext
 
             CSReadAfterWrite,
 
-            VSVertexFormat0,
-            VSVertexFormat1,
-            VSVertexFormat2,
-            VSVertexFormat3,
+            VSVertexFormatA,
+            VSVertexFormatB,
             PSVertexFormat,
 
             MSMeshlet,
@@ -255,6 +258,7 @@ class TestbedContext
             bool                        sanityCheck = false; // This is 'very verbose' and dumps out all intermediate data on successful tests
             bool                        showTiming  = false;
             bool                        fastTest    = false; // Skip slow buffer/texture creations to speed up test run
+            bool                        updateRefs  = false; // Generate new reference images, this outputs images with the `.Ref.png` suffix instead of `.Result.png`.
             LLGL::Extent2D              resolution;
             std::vector<std::string>    selectedTests;
 
@@ -390,6 +394,10 @@ class TestbedContext
 
     private:
 
+        #define LLGL_STANDALONE_UNIT_TEST(NAME)     static TestResult Test##NAME(const Options& opt)
+        #define LLGL_UNIT_TEST(NAME)                TestResult Test##NAME(unsigned frame)
+        #define LLGL_CUSTOM_PRESENT_UNIT_TEST(NAME) LLGL_UNIT_TEST(NAME)
+
         #include "UnitTests/DeclTests.inl"
 
     private:
@@ -430,9 +438,7 @@ class TestbedContext
             LLGL::ShaderType            type,
             const char*                 entry       = nullptr,
             const char*                 profile     = nullptr,
-            const LLGL::ShaderMacro*    defines     = nullptr,
-            VertFmt                     vertFmt     = VertFmtStd,
-            VertFmt                     vertOutFmt  = VertFmtCount
+            const LLGL::ShaderMacro*    defines     = nullptr
         );
 
         void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
@@ -455,6 +461,9 @@ class TestbedContext
             void*               data,
             std::size_t         dataSize
         );
+
+        const char* GetResultFileSuffix() const;
+        std::string GetResultPath() const;
 
     private:
 

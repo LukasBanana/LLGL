@@ -39,7 +39,7 @@ void GLLegacyShader::SetDebugName(const char* name)
 bool GLLegacyShader::Reflect(ShaderReflection& reflection) const
 {
     const Shader* shaders[] = { this };
-    GLShaderProgram intermediateProgram{ 1, shaders };
+    GLShaderProgram intermediateProgram{ shaders };
     GLShaderProgram::QueryReflection(intermediateProgram.GetID(), GetGLType(), reflection);
     return true;
 }

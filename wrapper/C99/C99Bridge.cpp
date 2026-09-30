@@ -26,8 +26,12 @@ void ConvertRenderSystemDesc(RenderSystemDescriptor& dst, const LLGLRenderSystem
     dst.debugger            = LLGL_PTR(RenderingDebugger, src.debugger);
     dst.rendererConfig      = src.rendererConfig;
     dst.rendererConfigSize  = src.rendererConfigSize;
+    dst.platformContext     = src.platformContext;
+    dst.platformContextSize = src.platformContextSize;
     #ifdef LLGL_OS_ANDROID
+    LLGL_DEPRECATED_IGNORE_PUSH()
     dst.androidApp          = src.androidApp;
+    LLGL_DEPRECATED_IGNORE_POP()
     #endif
 }
 
@@ -53,6 +57,9 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     wrapper.textureFormats.resize(src.textureFormats.size());
     ::memcpy(wrapper.textureFormats.data(), src.textureFormats.data(), sizeof(LLGLFormat) * src.textureFormats.size());
 
+    wrapper.vertexFormats.resize(src.vertexFormats.size());
+    ::memcpy(wrapper.vertexFormats.data(), src.vertexFormats.data(), sizeof(LLGLFormat) * src.vertexFormats.size());
+
     wrapper.swapChainColorFormats.resize(src.swapChainColorFormats.size());
     ::memcpy(wrapper.swapChainColorFormats.data(), src.swapChainColorFormats.data(), sizeof(LLGLFormat) * src.swapChainColorFormats.size());
 
@@ -65,6 +72,8 @@ void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderin
     dst.shadingLanguages                    = wrapper.shadingLanguages.data();
     dst.numTextureFormats                   = wrapper.textureFormats.size();
     dst.textureFormats                      = wrapper.textureFormats.data();
+    dst.numVertexFormats                    = wrapper.vertexFormats.size();
+    dst.vertexFormats                       = wrapper.vertexFormats.data();
     dst.numSwapChainColorFormats            = wrapper.swapChainColorFormats.size();
     dst.swapChainColorFormats               = wrapper.swapChainColorFormats.data();
     dst.numSwapChainDepthStencilFormats     = wrapper.swapChainDepthStencilFormats.size();
@@ -88,10 +97,6 @@ void ConvertVertexAttrib(VertexAttribute& dst, const LLGLVertexAttribute& src)
 
 void ConvertBufferDesc(BufferDescriptor& dst, SmallVector<VertexAttribute>& dstVertexAttribs, const LLGLBufferDescriptor& src)
 {
-    dstVertexAttribs.resize(src.numVertexAttribs);
-    for_range(i, src.numVertexAttribs)
-        ConvertVertexAttrib(dstVertexAttribs[i], src.vertexAttribs[i]);
-
     dst.debugName       = src.debugName;
     dst.size            = src.size;
     dst.stride          = src.stride;
@@ -99,7 +104,13 @@ void ConvertBufferDesc(BufferDescriptor& dst, SmallVector<VertexAttribute>& dstV
     dst.bindFlags       = src.bindFlags;
     dst.cpuAccessFlags  = src.cpuAccessFlags;
     dst.miscFlags       = src.miscFlags;
+
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    dstVertexAttribs.resize(src.numVertexAttribs);
+    for_range(i, src.numVertexAttribs)
+        ConvertVertexAttrib(dstVertexAttribs[i], src.vertexAttribs[i]);
     dst.vertexAttribs   = dstVertexAttribs;
+    LLGL_DEPRECATED_IGNORE_POP()
 }
 
 void ConvertVertexShaderAttribs(VertexShaderAttributes& dst, const LLGLVertexShaderAttributes& src)
@@ -144,7 +155,10 @@ void ConvertShaderDesc(ShaderDescriptor& dst, const LLGLShaderDescriptor& src)
     dst.defines     = reinterpret_cast<const ShaderMacro*>(src.defines);
     dst.flags       = src.flags;
 
+    LLGL_DEPRECATED_IGNORE_PUSH()
     ConvertVertexShaderAttribs(dst.vertex, src.vertex);
+    LLGL_DEPRECATED_IGNORE_POP()
+
     ConvertFragmentShaderAttribs(dst.fragment, src.fragment);
     ConvertComputeShaderAttribs(dst.compute, src.compute);
 }
@@ -221,6 +235,14 @@ void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const LLGLGrap
     dst.fragmentShader          = LLGL_PTR(Shader, src.fragmentShader);
     dst.indexFormat             = static_cast<Format>(src.indexFormat);
     dst.primitiveTopology       = static_cast<PrimitiveTopology>(src.primitiveTopology);
+
+    dst.inputVertexAttribs.resize(src.numInputVertexAttribs);
+    for_range(i, src.numInputVertexAttribs)
+        ConvertVertexAttrib(dst.inputVertexAttribs[i], src.inputVertexAttribs[i]);
+
+    dst.outputVertexAttribs.resize(src.numOutputVertexAttribs);
+    for_range(i, src.numOutputVertexAttribs)
+        ConvertVertexAttrib(dst.outputVertexAttribs[i], src.outputVertexAttribs[i]);
 
     dst.viewports.resize(src.numViewports);
     ::memcpy(dst.viewports.data(), src.viewports, src.numViewports * sizeof(LLGLViewport));

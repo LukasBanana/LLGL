@@ -44,8 +44,9 @@ find_project_source_files( FilesExample_ClothPhysics        "${EXAMPLE_CPP_PROJE
 find_project_source_files( FilesExample_Fonts               "${EXAMPLE_CPP_PROJECTS_DIR}/Fonts"            )
 find_project_source_files( FilesExample_HelloGame           "${EXAMPLE_CPP_PROJECTS_DIR}/HelloGame"        )
 find_project_source_files( FilesExample_HelloTriangle       "${EXAMPLE_CPP_PROJECTS_DIR}/HelloTriangle"    )
-find_project_source_files( FilesExample_Instancing          "${EXAMPLE_CPP_PROJECTS_DIR}/Instancing"       )
 find_project_source_files( FilesExample_IndirectDraw        "${EXAMPLE_CPP_PROJECTS_DIR}/IndirectDraw"     )
+find_project_source_files( FilesExample_Instancing          "${EXAMPLE_CPP_PROJECTS_DIR}/Instancing"       )
+find_project_source_files( FilesExample_MorphTargets        "${EXAMPLE_CPP_PROJECTS_DIR}/MorphTargets"     )
 find_project_source_files( FilesExample_MultiContext        "${EXAMPLE_CPP_PROJECTS_DIR}/MultiContext"     )
 find_project_source_files( FilesExample_MultiRenderer       "${EXAMPLE_CPP_PROJECTS_DIR}/MultiRenderer"    )
 find_project_source_files( FilesExample_MultiThreading      "${EXAMPLE_CPP_PROJECTS_DIR}/MultiThreading"   )
@@ -65,6 +66,8 @@ find_project_source_files( FilesExample_HelloUWP            "${EXAMPLE_CPP_PROJE
 if(LLGL_BUILD_XR_OPENXR)
     find_project_source_files( FilesExample_HelloOpenXR     "${EXAMPLE_CPP_PROJECTS_DIR}/HelloOpenXR"      )
 endif()
+
+add_shader_compile_target("${EXAMPLE_CPP_PROJECTS_DIR}")
 
 
 # === Source group folders ===
@@ -119,11 +122,12 @@ if(LLGL_BUILD_EXAMPLES)
     else()
         add_llgl_example_project(Example_Animation          CXX "${FilesExample_Animation}"         "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_ClothPhysics       CXX "${FilesExample_ClothPhysics}"      "${EXAMPLE_PROJECT_LIBS}")
-        add_llgl_example_project(Example_IndirectDraw       CXX "${FilesExample_IndirectDraw}"      "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_Fonts              CXX "${FilesExample_Fonts}"             "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_HelloGame          CXX "${FilesExample_HelloGame}"         "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_HelloTriangle      CXX "${FilesExample_HelloTriangle}"     "${EXAMPLE_PROJECT_LIBS}")
+        add_llgl_example_project(Example_IndirectDraw       CXX "${FilesExample_IndirectDraw}"      "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_Instancing         CXX "${FilesExample_Instancing}"        "${EXAMPLE_PROJECT_LIBS}")
+        add_llgl_example_project(Example_MorphTargets       CXX "${FilesExample_MorphTargets}"      "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_MultiThreading     CXX "${FilesExample_MultiThreading}"    "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_PBR                CXX "${FilesExample_PBR}"               "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_PostProcessing     CXX "${FilesExample_PostProcessing}"    "${EXAMPLE_PROJECT_LIBS}")

@@ -234,13 +234,16 @@ XRSwapChain* OpenXRSession::CreateSwapChain(const XRSwapChainDescriptor& swapCha
         bool depthReady = false;
 
         /*
-        Depth cannot be submitted while multi-sampling: the swap-chain renders into its own multi-sampled depth
-        attachment, and resolving that into the runtime's single-sampled depth image needs depth-stencil resolve,
-        which is not implemented here. Creating the companion anyway would hand the compositor an image nothing
-        ever writes to, and it would be used for reprojection - so fall through to the private depth texture,
-        which is honest about not being submitted.
+        While multi-sampling, the swap-chain renders into its own multi-sampled depth attachment, so submitting
+        depth means resolving that into the runtime's single-sampled depth image. That needs depth-stencil
+        resolve, which is core in Vulkan 1.2 but only an extension on the 1.1 device this path builds. Without
+        it, creating the companion would hand the compositor an image nothing ever writes to and it would still
+        be used for reprojection - so fall through to the private depth texture, which is honest about not being
+        submitted.
         */
-        const bool depthSubmissionPossible = (depthSubmissionEnabled_ && swapChainDesc.sampleCount <= 1);
+        const bool needsDepthResolve        = (swapChainDesc.sampleCount > 1);
+        const bool canResolveDepth          = renderSystem_.GetRenderingCaps().features.hasDepthStencilResolve;
+        const bool depthSubmissionPossible  = (depthSubmissionEnabled_ && (!needsDepthResolve || canResolveDepth));
 
         // Prefer a depth swap-chain submitted to the runtime for reprojection, if the runtime supports it.
         if (depthSubmissionPossible)

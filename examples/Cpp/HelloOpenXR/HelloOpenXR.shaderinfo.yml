@@ -1,0 +1,13 @@
+sources:
+  - source: "Example.hlsl"
+    entries:
+        # OpenXR not supported for OpenGL and Metal backends
+      - entry: "VS"
+        profile: "vs_6_1"
+        targets: [spirv]
+      - entry: "PS"
+        profile: "ps_6_1"
+        targets: [spirv]
+      - entry: "VSMultiview"
+        profile: "vs_6_1"
+        targets: [spirv]

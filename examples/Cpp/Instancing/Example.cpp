@@ -14,42 +14,57 @@ class Example_Instancing : public ExampleBase
 {
 
     // Static configuration for this demo
-    static const std::uint32_t  numPlantInstances   = 20000;
-    static const std::uint32_t  numPlantImages      = 10;
-    const float                 positionRange       = 40.0f;
+    static const std::uint32_t  numPlantInstances               = 20000;
+    static const std::uint32_t  numPlantImages                  = 10;
+    const float                 positionRange                   = 40.0f;
 
-    LLGL::Shader*               vertexShader        = nullptr;
-    LLGL::Shader*               fragmentShader      = nullptr;
+    LLGL::Shader*               vertexShader                    = nullptr;
+    LLGL::Shader*               fragmentShader                  = nullptr;
 
-    LLGL::PipelineState*        pipeline[2]         = {};
+    LLGL::PipelineState*        pipeline[2]                     = {};
 
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::ResourceHeap*         resourceHeap        = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout                  = nullptr;
+    LLGL::ResourceHeap*         resourceHeap                    = nullptr;
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
-    LLGL::Buffer*               perVertexDataBuf    = nullptr;
-    LLGL::Buffer*               perInstanceDataBuf  = nullptr;
-    LLGL::BufferArray*          vertexBufferArray   = nullptr;
+    LLGL::Buffer*               perVertexDataBuf                = nullptr;
+    LLGL::Buffer*               perInstanceDataBuf              = nullptr;
+    LLGL::BufferArray*          vertexBufferArray               = nullptr;
 
-    LLGL::Buffer*               constantBuffer      = nullptr;
+    // Vertex buffer array with offset to teh last instance if offset instancing is not supported (hasOffsetInstancing).
+    LLGL::BufferArray*          vertexBufferArrayLastInstance   = nullptr;
+
+    LLGL::Buffer*               constantBuffer                  = nullptr;
 
     // 2D-array texture for all plant images
-    LLGL::Texture*              arrayTexture        = nullptr;
+    LLGL::Texture*              arrayTexture                    = nullptr;
 
-    LLGL::Sampler*              samplers[2]         = {};
+    LLGL::Sampler*              samplers[2]                     = {};
 
-    float                       viewRotation        = 0.0f;
+    float                       viewRotation                    = 0.0f;
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f    vpMatrix;                           // View-projection matrix
         Gs::Vector4f    viewPos;                            // Camera view position (in world space)
         float           fogColor[3] = { 0.3f, 0.3f, 0.3f };
         float           fogDensity  = 0.04f;
         float           animVec[2]  = { 0.0f, 0.0f };       // Animation vector to make the plants wave in the wind
-        float           _pad0[2];
     }
     settings;
+
+    struct Vertex
+    {
+        float           position[3];
+        float           texCoord[2];
+    };
+
+    struct Instance
+    {
+        LLGL::ColorRGBf color;              // Instance color
+        float           arrayLayer  = 0.0f; // Array texture layer
+        Gs::Matrix4f    wMatrix;            // World matrix
+    };
 
 public:
 
@@ -59,11 +74,10 @@ public:
         UpdateAnimation();
 
         // Create all graphics objects
-        auto vertexFormats = CreateBuffers();
+        CreateBuffers();
         CreateTextures();
         CreateSamplers();
-        CreatePipelines(vertexFormats);
-        const auto caps = renderer->GetRenderingCaps();
+        CreatePipelines();
 
         // Set debugging names
         arrayTexture->SetDebugName("SceneTexture");
@@ -75,7 +89,6 @@ public:
         // Show info
         LLGL::Log::Printf(
             "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n"
-            "press R KEY to reload the shader program\n"
             "press SPACE KEY to switch between pipeline states with and without alpha-to-coverage\n"
         );
     }
@@ -88,7 +101,7 @@ private:
         return a + (b - a) * rnd;
     }
 
-    std::vector<LLGL::VertexFormat> CreateBuffers()
+    void CreateBuffers()
     {
         const float projZAxis = GetProjectionZAxis();
 
@@ -96,12 +109,7 @@ private:
         static const float grassSize    = 100.0f;
         static const float grassTexSize = 40.0f;
 
-        struct Vertex
-        {
-            float position[3];
-            float texCoord[2];
-        }
-        vertexData[] =
+        Vertex vertexData[] =
         {
             // Vertices for plants plane
             { { -1, 0, 0 }, { 0, 1 } },
@@ -117,13 +125,6 @@ private:
         };
 
         // Initialize per-instance data (use dynamic container to avoid a stack overflow)
-        struct Instance
-        {
-            LLGL::ColorRGBf color;      // Instance color
-            float           arrayLayer; // Array texture layer
-            Gs::Matrix4f    wMatrix;    // World matrix
-        };
-
         std::vector<Instance> instanceData(numPlantInstances + 1);
 
         for (std::size_t i = 0; i < numPlantInstances; ++i)
@@ -156,25 +157,6 @@ private:
             Gs::Scale(instance.wMatrix, Gs::Vector3f(Random(0.7f, 1.5f)));
         }
 
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormatPerVertex;
-        vertexFormatPerVertex.attributes =
-        {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ offsetof(Vertex, texCoord), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-        };
-
-        LLGL::VertexFormat vertexFormatPerInstance;
-        vertexFormatPerInstance.attributes =
-        {
-            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  offsetof(Instance, color),        /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 2, LLGL::Format::RGBA32Float, /*location:*/ 6, /*offset:*/  offsetof(Instance, wMatrix) + 32, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
-        };
-
         // Initialize last instance (for grass plane)
         auto& grassPlane = instanceData[numPlantInstances];
         grassPlane.arrayLayer = static_cast<float>(numPlantImages + 1);
@@ -182,43 +164,50 @@ private:
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor perVertexDataDesc;
         {
-            perVertexDataDesc.debugName     = "Vertices";
-            perVertexDataDesc.size          = sizeof(vertexData);
-            perVertexDataDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
-            perVertexDataDesc.vertexAttribs = vertexFormatPerVertex.attributes;
+            perVertexDataDesc.debugName = "Vertices";
+            perVertexDataDesc.size      = sizeof(vertexData);
+            perVertexDataDesc.stride    = sizeof(Vertex);
+            perVertexDataDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         perVertexDataBuf = renderer->CreateBuffer(perVertexDataDesc, vertexData);
 
         // Create buffer for per-instance data
         LLGL::BufferDescriptor perInstanceDataDesc;
         {
-            perInstanceDataDesc.debugName       = "Instances";
-            perInstanceDataDesc.size            = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
-            perInstanceDataDesc.bindFlags       = LLGL::BindFlags::VertexBuffer;
-            perInstanceDataDesc.vertexAttribs   = vertexFormatPerInstance.attributes;
+            perInstanceDataDesc.debugName   = "Instances";
+            perInstanceDataDesc.size        = sizeof(Instance) * instanceData.size();
+            perInstanceDataDesc.stride      = sizeof(Instance);
+            perInstanceDataDesc.bindFlags   = LLGL::BindFlags::VertexBuffer;
         }
         perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc, instanceData.data());
 
         // Create vertex buffer array
-        LLGL::Buffer* vertexBuffers[2] = { perVertexDataBuf, perInstanceDataBuf };
-        vertexBufferArray = renderer->CreateBufferArray(2, vertexBuffers);
+        vertexBufferArray = renderer->CreateBufferArray({ perVertexDataBuf, perInstanceDataBuf });
+
+        if (!renderer->GetRenderingCaps().features.hasOffsetInstancing)
+        {
+            // Create secondary vertex buffer array with offset to the last instance.
+            // This is used for WebGL 2.0, where offset instancing is not supported.
+            LLGL::VertexBufferView vbufViews[] =
+            {
+                LLGL::VertexBufferView{ perVertexDataBuf },
+                LLGL::VertexBufferView{ perInstanceDataBuf, 0, sizeof(Instance)*numPlantInstances },
+            };
+            vertexBufferArrayLastInstance = renderer->CreateBufferArray(vbufViews);
+        }
 
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(settings);
-
-        return { vertexFormatPerVertex, vertexFormatPerInstance };
     }
 
     void CreateTextures()
     {
         std::string filename;
 
-        std::vector<char> arrayImageBuffer;
+        std::vector<ImageReader> images;
 
         // Load all array images
         std::uint32_t width = 0, height = 0;
-
-        std::uint32_t numImages = 0;
 
         for (std::uint32_t i = 0; i <= numPlantImages; ++i)
         {
@@ -244,27 +233,34 @@ private:
             width   = imageExtent.width;
             height  = imageExtent.height;
 
-            reader.AppendImageDataTo(arrayImageBuffer);
+            images.push_back(std::move(reader));
 
             // Show info
             LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
-
-            ++numImages;
         }
 
         // Create array texture object with 'numImages' layers
-        LLGL::ImageView imageView;
-        {
-            imageView.format    = LLGL::ImageFormat::RGBA;
-            imageView.dataType  = LLGL::DataType::UInt8;
-            imageView.data      = arrayImageBuffer.data();
-            imageView.dataSize  = arrayImageBuffer.size();
-        };
+        const std::uint32_t numImages = numPlantImages + 1;
 
-        arrayTexture = renderer->CreateTexture(
-            LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages),
-            &imageView
-        );
+        arrayTexture = renderer->CreateTexture(LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages));
+
+        // Write image layers one by one. This is necessary for WebGL as the size of contiguous buffers is limited.
+        for (std::uint32_t arrayLayer = 0; arrayLayer < numImages; ++arrayLayer)
+        {
+            const LLGL::TextureRegion texRegion
+            {
+                LLGL::TextureSubresource{ arrayLayer, 1, 0, 1 },
+                LLGL::Offset3D{ 0, 0, 0 },
+                LLGL::Extent3D{ width, height, 1 }
+            };
+            renderer->WriteTexture(*arrayTexture, texRegion, images[arrayLayer].GetImageView());
+        }
+
+        // Generate MIP-maps after writing all image layers
+        commands->Begin();
+        commands->GenerateMips(*arrayTexture);
+        commands->End();
+        commandQueue->Submit(*commands);
     }
 
     void CreateSamplers()
@@ -287,11 +283,11 @@ private:
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreatePipelines(const std::vector<LLGL::VertexFormat>& vertexFormats)
+    void CreatePipelines()
     {
         // Create shaders
-        vertexShader    = LoadStandardVertexShader("VS", vertexFormats);
-        fragmentShader  = LoadStandardFragmentShader("PS");
+        vertexShader    = LoadStandardVertexShader();
+        fragmentShader  = LoadStandardFragmentShader();
 
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
@@ -301,7 +297,7 @@ private:
                 "  texture(tex@3):frag,"
                 "  sampler(texSampler@4):frag,"
                 "},"
-                "sampler<tex, texSampler>(tex@3)"
+                "sampler<tex, texSampler>(s_textexSampler@3)"
             )
         );
 
@@ -313,9 +309,26 @@ private:
         };
         resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
 
+        // Specify vertex formats
+        LLGL::VertexAttribute vertexAttribs[] =
+        {
+            // Per-vertex attributes
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ offsetof(Vertex, texCoord), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+
+            // Per-instance attributes
+            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  offsetof(Instance, color),        /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 2, LLGL::Format::RGBA32Float, /*location:*/ 6, /*offset:*/  offsetof(Instance, wMatrix) + 32, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+        };
+
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.inputVertexAttribs             = vertexAttribs;
             pipelineDesc.vertexShader                   = vertexShader;
             pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
@@ -364,7 +377,7 @@ private:
         settings.animVec[1] = std::cos(animationTime) * animationRadius;
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         // Update scene animation and user input
         UpdateAnimation();
@@ -381,9 +394,6 @@ private:
 
         commands->Begin();
         {
-            // Set buffer array, texture, and sampler
-            commands->SetVertexBufferArray(*vertexBufferArray);
-
             // Upload new data to the constant buffer on the GPU
             commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
@@ -399,14 +409,24 @@ private:
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
+                // Set vertex buffer array (vertices and instances)
+                commands->SetVertexBufferArray(*vertexBufferArray);
+
                 // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
                 commands->SetResourceHeap(*resourceHeap, 0);
                 commands->DrawInstanced(4, 0, numPlantInstances);
 
                 // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-                if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                commands->SetResourceHeap(*resourceHeap, 1);
+                if (vertexBufferArrayLastInstance != nullptr)
                 {
-                    commands->SetResourceHeap(*resourceHeap, 1);
+                    // Draw last instance with vertex buffer array that contains offsets to the last instance
+                    commands->SetVertexBufferArray(*vertexBufferArrayLastInstance);
+                    commands->Draw(4, 4);
+                }
+                else
+                {
+                    // Draw last instance with offset
                     commands->DrawInstanced(4, 4, 1, numPlantInstances);
                 }
             }

@@ -69,6 +69,28 @@ typedef enum LLGLStencilFace
 }
 LLGLStencilFace;
 
+typedef enum LLGLShadingRate
+{
+    LLGLShadingRateSize1x1,
+    LLGLShadingRateSize1x2,
+    LLGLShadingRateSize2x1,
+    LLGLShadingRateSize2x2,
+    LLGLShadingRateSize2x4,
+    LLGLShadingRateSize4x2,
+    LLGLShadingRateSize4x4,
+}
+LLGLShadingRate;
+
+typedef enum LLGLShadingRateOp
+{
+    LLGLShadingRateOpKeep,
+    LLGLShadingRateOpReplace,
+    LLGLShadingRateOpMin,
+    LLGLShadingRateOpMax,
+    LLGLShadingRateOpSum,
+}
+LLGLShadingRateOp;
+
 typedef enum LLGLFormat
 {
     LLGLFormatUndefined,
@@ -616,6 +638,7 @@ typedef enum LLGLWarningType
     LLGLWarningTypeImproperState,
     LLGLWarningTypePointlessOperation,
     LLGLWarningTypeVaryingBehavior,
+    LLGLWarningTypeDeprecatedFeature,
 }
 LLGLWarningType;
 
@@ -836,6 +859,15 @@ typedef enum LLGLTextureSwizzle
 }
 LLGLTextureSwizzle;
 
+typedef enum LLGLVersionStatus
+{
+    LLGLVersionStatusUndefined,
+    LLGLVersionStatusAlpha,
+    LLGLVersionStatusBeta,
+    LLGLVersionStatusStable,
+}
+LLGLVersionStatus;
+
 
 /* ----- Flags ----- */
 
@@ -988,15 +1020,16 @@ LLGLMiscFlags;
 
 typedef enum LLGLShaderCompileFlags
 {
-    LLGLShaderCompileDebug               = (1 << 0),
-    LLGLShaderCompileNoOptimization      = (1 << 1),
-    LLGLShaderCompileOptimizationLevel1  = (1 << 2),
-    LLGLShaderCompileOptimizationLevel2  = (1 << 3),
-    LLGLShaderCompileOptimizationLevel3  = (1 << 4),
-    LLGLShaderCompileWarningsAreErrors   = (1 << 5),
-    LLGLShaderCompilePatchClippingOrigin = (1 << 6),
-    LLGLShaderCompileSeparateShader      = (1 << 7),
-    LLGLShaderCompileDefaultLibrary      = (1 << 8),
+    LLGLShaderCompileDebug                  = (1 << 0),
+    LLGLShaderCompileNoOptimization         = (1 << 1),
+    LLGLShaderCompileOptimizationLevel1     = (1 << 2),
+    LLGLShaderCompileOptimizationLevel2     = (1 << 3),
+    LLGLShaderCompileOptimizationLevel3     = (1 << 4),
+    LLGLShaderCompileWarningsAreErrors      = (1 << 5),
+    LLGLShaderCompilePatchClippingOrigin    = (1 << 6),
+    LLGLShaderCompileSeparateShader         = (1 << 7),
+    LLGLShaderCompileDefaultLibrary         = (1 << 8),
+    LLGLShaderCompileCaseInsensitiveAttribs = (1 << 9),
 }
 LLGLShaderCompileFlags;
 
@@ -1019,9 +1052,10 @@ LLGLStageFlags;
 
 typedef enum LLGLResizeBuffersFlags
 {
-    LLGLResizeBuffersAdaptSurface   = (1 << 0),
-    LLGLResizeBuffersFullscreenMode = (1 << 1),
-    LLGLResizeBuffersWindowedMode   = (1 << 2),
+    LLGLResizeBuffersAdaptSurface     = (1 << 0),
+    LLGLResizeBuffersFullscreenMode   = (1 << 1),
+    LLGLResizeBuffersWindowedMode     = (1 << 2),
+    LLGLResizeBuffersStrictResolution = (1 << 3),
 }
 LLGLResizeBuffersFlags;
 
@@ -1039,6 +1073,14 @@ LLGLWindowFlags;
 
 
 /* ----- Structures ----- */
+
+typedef struct LLGLVertexBufferView
+{
+    LLGLBuffer buffer; /* = LLGL_NULL_OBJECT */
+    uint32_t   stride; /* = 0 */
+    uint64_t   offset; /* = 0 */
+}
+LLGLVertexBufferView;
 
 typedef struct LLGLCanvasDescriptor
 {
@@ -1262,12 +1304,14 @@ typedef struct LLGLRenderingFeatures
     bool hasIndirectDrawing;           /* = false */
     bool hasViewportArrays;            /* = false */
     bool hasMultiview;                 /* = false */
+    bool hasDepthStencilResolve;       /* = false */
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */
     bool hasPipelineCaching;           /* = false */
     bool hasPipelineStatistics;        /* = false */
     bool hasRenderCondition;           /* = false */
+    bool hasVariableRateShading;       /* = false */
 }
 LLGLRenderingFeatures;
 
@@ -1289,6 +1333,7 @@ typedef struct LLGLRenderingLimits
     uint32_t maxViews;                         /* = 0 */
     uint64_t maxBufferSize;                    /* = 0 */
     uint64_t maxConstantBufferSize;            /* = 0 */
+    uint32_t maxVertexBufferInputs;            /* = 0 */
     uint32_t maxStreamOutputs;                 /* = 0 */
     uint32_t maxTessFactor;                    /* = 0 */
     uint64_t minConstantBufferAlignment;       /* = 0 */
@@ -1484,6 +1529,7 @@ typedef struct LLGLRasterizerDescriptor
     LLGLPolygonMode         polygonMode;               /* = LLGLPolygonModeFill */
     LLGLCullMode            cullMode;                  /* = LLGLCullModeDisabled */
     LLGLDepthBiasDescriptor depthBias;
+    float                   lineWidth;                 /* = 1.0f */
     bool                    frontCCW;                  /* = false */
     bool                    discardEnabled;            /* = false */
     bool                    depthClampEnabled;         /* = false */
@@ -1491,20 +1537,20 @@ typedef struct LLGLRasterizerDescriptor
     bool                    multiSampleEnabled;        /* = false */
     bool                    antiAliasedLineEnabled;    /* = false */
     bool                    conservativeRasterization; /* = false */
-    float                   lineWidth;                 /* = 1.0f */
+    bool                    shadingRateEnabled;        /* = false */
 }
 LLGLRasterizerDescriptor;
 
 typedef struct LLGLBlendTargetDescriptor
 {
     bool                blendEnabled;    /* = false */
+    uint8_t             colorMask;       /* = LLGLColorMaskAll */
     LLGLBlendOp         srcColor;        /* = LLGLBlendOpSrcAlpha */
     LLGLBlendOp         dstColor;        /* = LLGLBlendOpInvSrcAlpha */
     LLGLBlendArithmetic colorArithmetic; /* = LLGLBlendArithmeticAdd */
     LLGLBlendOp         srcAlpha;        /* = LLGLBlendOpSrcAlpha */
     LLGLBlendOp         dstAlpha;        /* = LLGLBlendOpInvSrcAlpha */
     LLGLBlendArithmetic alphaArithmetic; /* = LLGLBlendArithmeticAdd */
-    uint8_t             colorMask;       /* = LLGLColorMaskAll */
 }
 LLGLBlendTargetDescriptor;
 
@@ -1545,15 +1591,17 @@ LLGLAttachmentFormatDescriptor;
 typedef struct LLGLRenderSystemDescriptor
 {
     const char*           moduleName;
-    long                  flags;              /* = 0 */
-    void*                 profiler;           /* = NULL */
-    LLGLRenderingDebugger debugger;           /* = LLGL_NULL_OBJECT */
-    const void*           rendererConfig;     /* = NULL */
-    size_t                rendererConfigSize; /* = 0 */
-    const void*           nativeHandle;       /* = NULL */
-    size_t                nativeHandleSize;   /* = 0 */
+    long                  flags;               /* = 0 */
+    void*                 profiler;            /* = NULL */
+    LLGLRenderingDebugger debugger;            /* = LLGL_NULL_OBJECT */
+    const void*           rendererConfig;      /* = NULL */
+    size_t                rendererConfigSize;  /* = 0 */
+    const void*           nativeHandle;        /* = NULL */
+    size_t                nativeHandleSize;    /* = 0 */
+    void*                 platformContext;     /* = NULL */
+    size_t                platformContextSize; /* = 0 */
 #if __ANDROID__
-    struct android_app*   androidApp;         /* = NULL */
+    struct android_app*   androidApp;          /* Identifier `androidApp` is deprecated since 0.05b; Use `platformContext` instead! */
 #endif /* __ANDROID__ */
 }
 LLGLRenderSystemDescriptor;
@@ -1566,6 +1614,8 @@ typedef struct LLGLRenderingCapabilities
     const LLGLShadingLanguage* shadingLanguages;                /* = NULL */
     size_t                     numTextureFormats;               /* = 0 */
     const LLGLFormat*          textureFormats;                  /* = NULL */
+    size_t                     numVertexFormats;                /* = 0 */
+    const LLGLFormat*          vertexFormats;                   /* = NULL */
     size_t                     numSwapChainColorFormats;        /* = 0 */
     const LLGLFormat*          swapChainColorFormats;           /* = NULL */
     size_t                     numSwapChainDepthStencilFormats; /* = 0 */
@@ -1667,6 +1717,15 @@ typedef struct LLGLTextureDescriptor
 }
 LLGLTextureDescriptor;
 
+typedef struct LLGLVersionInfo
+{
+    uint16_t          major;      /* = 0 */
+    uint8_t           minor;      /* = 0 */
+    LLGLVersionStatus status : 8; /* = LLGLVersionStatusUndefined */
+    uint32_t          revision;   /* = 0 */
+}
+LLGLVersionInfo;
+
 typedef struct LLGLVertexAttribute
 {
     const char*     name;
@@ -1702,7 +1761,7 @@ typedef struct LLGLBufferDescriptor
     long                       cpuAccessFlags;   /* = 0 */
     long                       miscFlags;        /* = 0 */
     size_t                     numVertexAttribs; /* = 0 */
-    const LLGLVertexAttribute* vertexAttribs;    /* = NULL */
+    const LLGLVertexAttribute* vertexAttribs;    /* BufferDescriptor.vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor.inputVertexAttribs instead! */
 }
 LLGLBufferDescriptor;
 
@@ -1728,10 +1787,10 @@ typedef struct LLGLBlendDescriptor
 {
     bool                      alphaToCoverageEnabled;  /* = false */
     bool                      independentBlendEnabled; /* = false */
+    bool                      blendFactorDynamic;      /* = false */
     uint32_t                  sampleMask;              /* = ~0u */
     LLGLLogicOp               logicOp;                 /* = LLGLLogicOpDisabled */
     float                     blendFactor[4];          /* = {0.0f,0.0f,0.0f,0.0f} */
-    bool                      blendFactorDynamic;      /* = false */
     LLGLBlendTargetDescriptor targets[8];
 }
 LLGLBlendDescriptor;
@@ -1749,14 +1808,15 @@ LLGLRenderPassDescriptor;
 
 typedef struct LLGLRenderTargetDescriptor
 {
-    const char*              debugName;              /* = NULL */
-    LLGLRenderPass           renderPass;             /* = LLGL_NULL_OBJECT */
+    const char*              debugName;                     /* = NULL */
+    LLGLRenderPass           renderPass;                    /* = LLGL_NULL_OBJECT */
     LLGLExtent2D             resolution;
-    uint32_t                 samples;                /* = 1 */
-    uint32_t                 views;                  /* = 1 */
+    uint32_t                 samples;                       /* = 1 */
+    uint32_t                 views;                         /* = 1 */
     LLGLAttachmentDescriptor colorAttachments[8];
     LLGLAttachmentDescriptor resolveAttachments[8];
     LLGLAttachmentDescriptor depthStencilAttachment;
+    LLGLAttachmentDescriptor depthStencilResolveAttachment;
 }
 LLGLRenderTargetDescriptor;
 
@@ -1812,20 +1872,24 @@ LLGLPipelineLayoutDescriptor;
 
 typedef struct LLGLGraphicsPipelineDescriptor
 {
-    const char*                debugName;            /* = NULL */
-    LLGLPipelineLayout         pipelineLayout;       /* = LLGL_NULL_OBJECT */
-    LLGLRenderPass             renderPass;           /* = LLGL_NULL_OBJECT */
-    LLGLShader                 vertexShader;         /* = LLGL_NULL_OBJECT */
-    LLGLShader                 tessControlShader;    /* = LLGL_NULL_OBJECT */
-    LLGLShader                 tessEvaluationShader; /* = LLGL_NULL_OBJECT */
-    LLGLShader                 geometryShader;       /* = LLGL_NULL_OBJECT */
-    LLGLShader                 fragmentShader;       /* = LLGL_NULL_OBJECT */
-    LLGLFormat                 indexFormat;          /* = LLGLFormatUndefined */
-    LLGLPrimitiveTopology      primitiveTopology;    /* = LLGLPrimitiveTopologyTriangleList */
-    size_t                     numViewports;         /* = 0 */
-    const LLGLViewport*        viewports;            /* = NULL */
-    size_t                     numScissors;          /* = 0 */
-    const LLGLScissor*         scissors;             /* = NULL */
+    const char*                debugName;              /* = NULL */
+    LLGLPipelineLayout         pipelineLayout;         /* = LLGL_NULL_OBJECT */
+    LLGLRenderPass             renderPass;             /* = LLGL_NULL_OBJECT */
+    size_t                     numInputVertexAttribs;  /* = 0 */
+    const LLGLVertexAttribute* inputVertexAttribs;     /* = NULL */
+    size_t                     numOutputVertexAttribs; /* = 0 */
+    const LLGLVertexAttribute* outputVertexAttribs;    /* = NULL */
+    LLGLShader                 vertexShader;           /* = LLGL_NULL_OBJECT */
+    LLGLShader                 tessControlShader;      /* = LLGL_NULL_OBJECT */
+    LLGLShader                 tessEvaluationShader;   /* = LLGL_NULL_OBJECT */
+    LLGLShader                 geometryShader;         /* = LLGL_NULL_OBJECT */
+    LLGLShader                 fragmentShader;         /* = LLGL_NULL_OBJECT */
+    LLGLFormat                 indexFormat;            /* = LLGLFormatUndefined */
+    LLGLPrimitiveTopology      primitiveTopology;      /* = LLGLPrimitiveTopologyTriangleList */
+    size_t                     numViewports;           /* = 0 */
+    const LLGLViewport*        viewports;              /* = NULL */
+    size_t                     numScissors;            /* = 0 */
+    const LLGLScissor*         scissors;               /* = NULL */
     LLGLDepthDescriptor        depth;
     LLGLStencilDescriptor      stencil;
     LLGLRasterizerDescriptor   rasterizer;
@@ -1865,16 +1929,17 @@ LLGLResourceViewDescriptor;
 
 typedef struct LLGLShaderDescriptor
 {
-    const char*                  debugName;  /* = NULL */
-    LLGLShaderType               type;       /* = LLGLShaderTypeUndefined */
-    const char*                  source;     /* = NULL */
-    size_t                       sourceSize; /* = 0 */
-    LLGLShaderSourceType         sourceType; /* = LLGLShaderSourceTypeCodeFile */
-    const char*                  entryPoint; /* = NULL */
-    const char*                  profile;    /* = NULL */
-    const LLGLShaderMacro*       defines;    /* = NULL */
-    long                         flags;      /* = 0 */
-    LLGLVertexShaderAttributes   vertex;
+    const char*                  debugName;      /* = NULL */
+    LLGLShaderType               type;           /* = LLGLShaderTypeUndefined */
+    const char*                  source;         /* = NULL */
+    size_t                       sourceSize;     /* = 0 */
+    LLGLShaderSourceType         sourceType;     /* = LLGLShaderSourceTypeCodeFile */
+    const char*                  entryPoint;     /* = NULL */
+    const char*                  profile;        /* = NULL */
+    const LLGLShaderMacro*       defines;        /* = NULL */
+    long                         flags;          /* = 0 */
+    LLGLIncludeHandler           includeHandler; /* = LLGL_NULL_OBJECT */
+    LLGLVertexShaderAttributes   vertex;         /* LLGLShaderDescriptor.vertex is deprecated since 0.05b; Use the `inputVertexAttribs` and `outputVertexAttribs` fields in LLGLGraphicsPipelineDescriptor instead */
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;
 }

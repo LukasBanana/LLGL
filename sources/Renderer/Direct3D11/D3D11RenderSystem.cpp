@@ -193,10 +193,9 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, cons
         return buffers_.emplace<D3D11Buffer>(device_.Get(), bufferDesc, initialData);
 }
 
-BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* D3D11RenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
-    return bufferArrays_.emplace<D3D11BufferArray>(numBuffers, bufferArray);
+    return bufferArrays_.emplace<D3D11BufferArray>(bufferViews);
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
@@ -398,7 +397,7 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     return resourceHeaps_.emplace<D3D11ResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
@@ -408,7 +407,7 @@ void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
     resourceHeaps_.erase(&resourceHeap);
 }
 
-std::uint32_t D3D11RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t D3D11RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
     return resourceHeapD3D.WriteResourceViews(firstDescriptor, resourceViews);
@@ -834,9 +833,11 @@ void D3D11RenderSystem::QueryDXDeviceVersion()
 {
     LLGL_ASSERT_PTR(device_);
 
+    HRESULT hr = S_OK;
+
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-    HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
+    hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
     if (FAILED(hr))
     #endif
     {
@@ -923,12 +924,7 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
 static std::vector<Format> GetDefaultSupportedDXTextureFormats(D3D_FEATURE_LEVEL featureLevel)
 {
     std::vector<Format> formats;
-
-    std::size_t numFormats = 0;
-    DXGetDefaultSupportedTextureFormats(nullptr, &numFormats);
-
-    formats.resize(numFormats, Format::Undefined);
-    DXGetDefaultSupportedTextureFormats(formats.data(), nullptr);
+    DXGetDefaultSupportedTextureFormats(formats);
 
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0)
     {
@@ -1011,6 +1007,7 @@ void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = DXGetHLSLVersions(featureLevel);
     caps.textureFormats                             = GetDefaultSupportedDXTextureFormats(featureLevel);
+    caps.vertexFormats                              = GetSupportedDXVertexFormats();
     caps.swapChainColorFormats                      = GetSupportedDXSwapChainColorFormats();
     caps.swapChainDepthStencilFormats               = GetSupportedDXSwapChainDepthStencilFormats(featureLevel);
 
@@ -1062,6 +1059,7 @@ void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[1]                  = D3D11_VIEWPORT_BOUNDS_MAX;
     caps.limits.maxBufferSize                       = UINT_MAX;
     caps.limits.maxConstantBufferSize               = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+    caps.limits.maxVertexBufferInputs               = (featureLevel >= D3D_FEATURE_LEVEL_10_1 ? D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT : 16);
     caps.limits.maxStreamOutputs                    = 4u;
     caps.limits.maxTessFactor                       = 64u;
     caps.limits.minConstantBufferAlignment          = 256u;

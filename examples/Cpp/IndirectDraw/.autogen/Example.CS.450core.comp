@@ -1,0 +1,44 @@
+#version 450
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 2, std140) uniform SceneState
+{
+    float time;
+    uint numSceneObjects;
+    float aspectRatio;
+};
+
+layout(binding = 3, rgba32f) uniform writeonly imageBuffer sceneObjects;
+layout(binding = 4, rgba32ui) uniform writeonly uimageBuffer drawArgs;
+
+void main()
+{
+    if (gl_GlobalInvocationID.x == 0u)
+    {
+        float _48 = fract(time * 0.100000001490116119384765625);
+        if (_48 < 0.5)
+        {
+            uint _58 = uint(mix(0.0, float(numSceneObjects), _48 * 2.0));
+            imageStore(drawArgs, int(0u), uvec4(3u, _58, 0u, 0u));
+            imageStore(drawArgs, int(1u), uvec4(4u, numSceneObjects - _58, 3u, _58));
+        }
+        else
+        {
+            uint _70 = uint(mix(0.0, float(numSceneObjects), (_48 - 0.5) * 2.0));
+            imageStore(drawArgs, int(1u), uvec4(4u, _70, 3u, 0u));
+            imageStore(drawArgs, int(0u), uvec4(3u, numSceneObjects - _70, 0u, _70));
+        }
+    }
+    float _85 = fract((time * 0.100000001490116119384765625) + (float(gl_GlobalInvocationID.x) / float(numSceneObjects)));
+    float _86 = _85 * 6.283185482025146484375;
+    float _90 = (cos(_85 * 31.415927886962890625) * 0.5) + 0.5;
+    float _91 = mix(0.5, 0.5, _90);
+    float _92 = mix(0.100000001490116119384765625, 0.100000001490116119384765625, _90);
+    float _93 = _85 * 12.56637096405029296875;
+    float _94 = sin(_93);
+    uint _96 = gl_GlobalInvocationID.x * 2u;
+    float _97 = cos(_93) * _92;
+    imageStore(sceneObjects, int(_96), vec4(_97, _94 * _92, (-_94) * _92, _97));
+    imageStore(sceneObjects, int(_96 + 1u), vec4(sin(_86) * _91, cos(_86) * _91, 0.0, 0.0));
+}
+

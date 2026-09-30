@@ -47,9 +47,9 @@ class Example_Fonts : public ExampleBase
     // Font dataset and glyph texture map
     struct Font
     {
-        const char*     fontName;
+        const char*     fontName            = nullptr;
         int             fontHeight          = 16;
-        Glyph           glyphs[128];
+        Glyph           glyphs[128]         = {};
         LLGL::Texture*  atlasTexture        = nullptr;
         LLGL::Extent3D  atlasSize;
     };
@@ -98,8 +98,8 @@ public:
         ExampleBase { "LLGL Example: Fonts" }
     {
         // Create all graphics objects
-        const LLGL::VertexFormat vertexFormat = CreateBuffers();
-        CreatePipelines(vertexFormat);
+        CreateBuffers();
+        CreatePipelines();
         swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
 
         // Create all fonts atlases
@@ -111,40 +111,33 @@ public:
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG16SInt   });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG16SInt   });
-        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
-
         // Allocate CPU local array for glyph batch (2 triangles with 3 vertices each = 6 vertices per glyph)
         vertexBatch.resize(maxGlyphsPerBatch*6);
 
         // Create vertex buffer for a batch of glyphs
         LLGL::BufferDescriptor bufferDesc;
         {
-            bufferDesc.size             = vertexBatch.size() * sizeof(Vertex);
-            bufferDesc.bindFlags        = LLGL::BindFlags::VertexBuffer;
-            bufferDesc.vertexAttribs    = vertexFormat.attributes;
+            bufferDesc.size         = vertexBatch.size() * sizeof(Vertex);
+            bufferDesc.bindFlags    = LLGL::BindFlags::VertexBuffer;
+            bufferDesc.stride       = sizeof(Vertex);
         }
         vertexBuffer = renderer->CreateBuffer(bufferDesc);
-
-        return vertexFormat;
     }
 
-    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
+    void CreatePipelines()
     {
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "sampler(linearSampler@%d):frag,"
-                "texture(glyphTexture@%d):frag,"
-                "float4x4(projection),"
-                "float2(glyphAtlasInvSize),",
-                IsVulkan() ? 3 : 0,
-                IsVulkan() ? 2 : 0
+                "sampler(linearSampler@3):frag,"
+                "texture(glyphTexture@2):frag,"
+
+                "float4x4( scene.projection        ),"
+                "float2  ( scene.glyphAtlasInvSize ),"
+
+                "sampler<glyphTexture,linearSampler>(s_glyphTexturelinearSampler@2)"
             )
         );
 
@@ -152,7 +145,8 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rg16i(position),rg16i(texCoord),rgba8unorm(color)");
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader();
             pipelineDesc.fragmentShader                 = LoadStandardFragmentShader();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
@@ -160,13 +154,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
-
-        // Check for PSO compilation errors
-        if (const LLGL::Report* report = pipeline->GetReport())
-        {
-            if (report->HasErrors())
-                LLGL::Log::Errorf("%s", report->GetText());
-        }
+        ReportPSOErrors(pipeline);
     }
 
     void CreateFontAtlas(const char* fontName, int fontSize)
@@ -398,14 +386,16 @@ private:
         return DrawFont(font, text.c_str(), x, y, color, flags);
     }
 
-    void ProcessInput()
+    void ProcessInput(float dt)
     {
         // Check on user input
+        #ifndef LLGL_OS_WASM
         if (input.KeyDown(LLGL::Key::Space))
         {
             config.vsync = !config.vsync;
             swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
         }
+        #endif
         if (input.KeyDown(LLGL::Key::S))
             config.shadow = !config.shadow;
 
@@ -416,12 +406,15 @@ private:
         displayNumbers.frameCounter++;
 
         // Update average FPS every 500 milliseconds
-        const double fps = 1.0 / timer.GetDeltaTime();
-
-        if (!std::isinf(fps))
+        if (dt > 0.0f)
         {
-            avgFPS.samples++;
-            avgFPS.sum += fps;
+            const double fps = 1.0 / dt;
+
+            if (!std::isinf(fps))
+            {
+                avgFPS.samples++;
+                avgFPS.sum += fps;
+            }
         }
 
         auto currentTimePoint = std::chrono::system_clock::now();
@@ -443,6 +436,7 @@ private:
         const auto& res = swapChain->GetResolution();
 
         const LLGL::ColorRGBAub colorWhite  { 255, 255, 255, 255 };
+        const LLGL::ColorRGBAub colorGray   { 180, 180, 180, 255 };
         const LLGL::ColorRGBAub colorYellow { 240, 192,  32, 255 };
         const LLGL::ColorRGBAub colorRed    { 240,  32,  32, 255 };
 
@@ -451,7 +445,8 @@ private:
         if (config.shadow)
             fontFlags |= DrawShadow;
 
-        const Font& fntA = fonts[selectedFontProfile];
+        const Font& fntASmall = fonts[0];
+        const Font& fntA = fonts[1];
         const Font& fntB = fonts[2 + selectedFontProfile];
 
         // Draw headline
@@ -470,7 +465,13 @@ private:
 
         // Draw swap-chain configuration
         DrawFont(
-            fntA, std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
+            fntA,
+            std::string("Vsync (Space bar): ") +
+            #ifdef LLGL_OS_WASM
+            "N/A",
+            #else
+            (config.vsync ? "Enabled" : "Disabled"),
+            #endif
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
         paragraphPosY += fntA.fontHeight + textMargin;
@@ -495,6 +496,18 @@ private:
             fntA, "FPS = " + std::to_string(displayNumbers.averageFPS),
             screenWidth - paragraphMargin, paragraphPosY, colorRed,
             fontFlags | DrawRightAligned
+        );
+
+        // Draw mouse position
+        const LLGL::Offset2D mousePosToWindow = input.GetMousePosition();
+        const LLGL::Offset2D mousePosToDisplay = LLGL::Display::GetCursorPosition();
+
+        DrawFont(
+            fntASmall,
+            "Mouse to window (" + std::to_string(mousePosToWindow.x) + ", " + std::to_string(mousePosToWindow.y) + "), "
+            "mouse to display (" + std::to_string(mousePosToDisplay.x) + ", " + std::to_string(mousePosToDisplay.y) + "), "
+            "viewport dimension " + std::to_string(res.width) + " x " + std::to_string(res.height),
+            15, 15, colorGray
         );
 
         // Draw paragraph word by word
@@ -538,11 +551,9 @@ private:
 
 private:
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
-        timer.MeasureTime();
-
-        ProcessInput();
+        ProcessInput(dt);
 
         // Initial atlas texture must always be bound when start a new frame, so reset this state
         currentAtlasTexture = nullptr;

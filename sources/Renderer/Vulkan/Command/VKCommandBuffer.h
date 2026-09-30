@@ -120,7 +120,7 @@ class VKCommandBuffer final : public CommandBufferTier1
         void ResetRecordStatesBegin();
         void ResetRecordStatesEnd();
 
-        void BindVertexBuffer(VKBuffer& bufferVK);
+        void BindVertexBuffer(VKBuffer& bufferVK, VkDeviceSize offset = 0);
 
         // Enqueues a command to reset a query pool in a separate command buffer.
         void CmdResetQueryPool(VkQueryPool queryPool, std::uint32_t firstQuery, std::uint32_t queryCount);

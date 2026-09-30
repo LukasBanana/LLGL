@@ -130,24 +130,58 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
     return bufferDbg;
 }
 
-BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+BufferArray* DbgRenderSystem::CreateBufferArray(ArrayView<VertexBufferView> bufferViews)
 {
-    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
+    const bool isDebuggerEnabled = LLGL_DBG_SOURCE();
 
     /* Create temporary buffer array with buffer instances */
-    std::vector<Buffer*>    bufferInstanceArray(numBuffers);
-    std::vector<DbgBuffer*> bufferDbgArray(numBuffers);
+    std::vector<VertexBufferView> bufferInstanceLocations(bufferViews.size());
+    DbgVertexBufferSlotVector bufferDbgArray(bufferViews.size());
 
-    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    if (isDebuggerEnabled)
     {
-        auto* bufferDbg         = LLGL_CAST(DbgBuffer*, bufferArray[i]);
-        bufferInstanceArray[i]  = &(bufferDbg->instance);
-        bufferDbgArray[i]       = bufferDbg;
+        const RenderingLimits& limits = GetRenderingCaps().limits;
+        if (bufferViews.size() > limits.maxVertexBufferInputs)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "number of vertex buffer inputs (%zu) for buffer array exceeded limit (%u)",
+                bufferViews.size(), limits.maxVertexBufferInputs
+            );
+        }
+    }
+
+    for_range(i, bufferViews.size())
+    {
+        const VertexBufferView& view    = bufferViews[i];
+        auto* bufferDbg                 = LLGL_CAST(DbgBuffer*, view.buffer);
+        bufferInstanceLocations[i]      = VertexBufferView{ &(bufferDbg->instance), view.stride, view.offset };
+        bufferDbgArray[i]               = DbgVertexBufferSlot{ bufferDbg, view.stride, view.offset };
+
+        if (isDebuggerEnabled)
+        {
+            if (view.stride == 0 && bufferDbg->desc.stride == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot create buffer array with buffer [%u] missing a default stride; they are fixed once created",
+                    i
+                );
+            }
+            if (view.offset >= bufferDbg->desc.size)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "offset (%" PRIu64 ") cannot create buffer array with buffer [%u] exceeing upper bound of buffer size (%" PRIu64 ")",
+                    view.offset, i, bufferDbg->desc.size
+                );
+            }
+        }
     }
 
     /* Create native buffer and debug buffer */
-    auto* bufferArrayInstance = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    return bufferArrays_.emplace<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(numBuffers, bufferArray), std::move(bufferDbgArray));
+    auto* bufferArrayInstance = instance_->CreateBufferArray(bufferInstanceLocations);
+    return bufferArrays_.emplace<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(bufferViews), std::move(bufferDbgArray));
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)
@@ -367,7 +401,7 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
     return instanceResourceViews;
 }
 
-ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, ArrayView<ResourceViewDescriptor> initialResourceViews)
 {
     if (LLGL_DBG_SOURCE())
         ValidateResourceHeapDesc(resourceHeapDesc, initialResourceViews);
@@ -392,7 +426,7 @@ void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
     ReleaseDbg(resourceHeaps_, resourceHeap);
 }
 
-std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, ArrayView<ResourceViewDescriptor> resourceViews)
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
 
@@ -455,6 +489,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
             TransferDbgAttachment(instanceDesc.resolveAttachments[colorTarget], colorTarget, /*isResolveAttachment:*/ true, /*isDepthStencilAttachment:*/ false);
         }
         TransferDbgAttachment(instanceDesc.depthStencilAttachment, 0, /*isResolveAttachment:*/ false, /*isDepthStencilAttachment:*/ true);
+        TransferDbgAttachment(instanceDesc.depthStencilResolveAttachment, 0, /*isResolveAttachment:*/ true, /*isDepthStencilAttachment:*/ true);
     }
     return renderTargets_.emplace<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), renderTargetDesc);
 }
@@ -600,6 +635,8 @@ bool DbgRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
  * ======= Private: =======
  */
 
+static constexpr long k_bufferBindFlagsToIgnore = LLGL::BindFlags::TexelBuffer;
+
 bool DbgRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
     if (outInfo != nullptr)
@@ -617,7 +654,8 @@ void DbgRenderSystem::ValidateBindFlags(long flags, Format format, ResourceType 
         BindFlags::IndexBuffer          |
         BindFlags::ConstantBuffer       |
         BindFlags::StreamOutputBuffer   |
-        BindFlags::IndirectBuffer
+        BindFlags::IndirectBuffer       |
+        k_bufferBindFlagsToIgnore
     );
 
     constexpr long textureOnlyFlags =
@@ -660,6 +698,14 @@ void DbgRenderSystem::ValidateBindFlags(long flags, Format format, ResourceType 
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "cannot use buffer-only bind flags for %s source type",
+                    ToString(resourceType)
+                );
+            }
+            else if ((flags & LLGL::BindFlags::TexelBuffer) != 0)
+            {
+                LLGL_DBG_WARN(
+                    WarningType::ImproperArgument,
+                    "LLGL::BindFlags::TexelBuffer is only relevant for pipeline layouts in conjunction with resource heaps",
                     ToString(resourceType)
                 );
             }
@@ -825,7 +871,9 @@ void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& c
     }
 }
 
-void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut)
+LLGL_DEPRECATED_IGNORE_PUSH()
+
+void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* outFormatSize)
 {
     /* Validate flags */
     ValidateBindFlags(bufferDesc.bindFlags, bufferDesc.format, ResourceType::Buffer);
@@ -840,20 +888,49 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
 
     std::uint32_t formatSize = 0;
 
-    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0 && !bufferDesc.vertexAttribs.empty())
+    const std::string bufferLabel = (bufferDesc.debugName != nullptr && *bufferDesc.debugName != '\0' ? " '" + std::string(bufferDesc.debugName) + '\'' : "");
+
+    // Deprecated {
+    if (!bufferDesc.vertexAttribs.empty())
     {
-        /* Validate all vertex attributes have the same binding slot */
-        if (bufferDesc.vertexAttribs.size() >= 2)
+        LLGL_DBG_WARN(
+            WarningType::DeprecatedFeature,
+            "`LLGL::BufferDescriptor::vertexAttribs` used for buffer%s, but is deprecated since 0.05b; Use `LLGL::BufferDescriptor::stride` and `LLGL::GraphicsPipelineDescriptor::inputVertexAttribs` instead!",
+            bufferLabel.c_str()
+        );
+        if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) == 0)
         {
-            for (std::size_t i = 0; i + 1 < bufferDesc.vertexAttribs.size(); ++i)
-                ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "`LLGL::BufferDescriptor::vertexAttribs` used for buffer%s that is *not* declared as a vertex buffer (i.e. LLGL::BindFlags::VertexBuffer)`",
+                bufferLabel.c_str()
+            );
+        }
+    }
+
+    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
+    {
+        if (!bufferDesc.vertexAttribs.empty())
+        {
+            /* Validate all vertex attributes have the same binding slot */
+            if (bufferDesc.vertexAttribs.size() >= 2)
+            {
+                for (std::size_t i = 0; i + 1 < bufferDesc.vertexAttribs.size(); ++i)
+                    ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
+            }
+            formatSize = bufferDesc.vertexAttribs.front().stride;
+        }
+        else
+        {
+            /* Take format size from stride */
+            formatSize = bufferDesc.stride;
         }
 
         /* Validate buffer size for specified vertex format, unless it's also used for as index buffer */
-        formatSize = bufferDesc.vertexAttribs.front().stride;
         if (formatSize > 0 && bufferDesc.size % formatSize != 0 && (bufferDesc.bindFlags & BindFlags::IndexBuffer) == 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of %u %s", formatSize, ToByteLabel(formatSize));
     }
+    // } Deprecated
 
     if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
     {
@@ -895,16 +972,18 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
     /* Validate buffer stride */
     if (bufferDesc.stride > 0 && bufferDesc.size % bufferDesc.stride != 0)
     {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "buffer stride (%u) is non-zero, but buffer size (%" PRIu64 ") is not a multiple of stride",
-            bufferDesc.stride, bufferDesc.size
+        LLGL_DBG_WARN(
+            WarningType::ImproperArgument,
+            "buffer%s stride (%u) is non-zero, but size (%" PRIu64 ") is not a multiple of stride",
+            bufferLabel.c_str(), bufferDesc.stride, bufferDesc.size
         );
     }
 
-    if (formatSizeOut)
-        *formatSizeOut = formatSize;
+    if (outFormatSize)
+        *outFormatSize = formatSize;
 }
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 void DbgRenderSystem::ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs)
 {
@@ -1539,7 +1618,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         }
         else
         {
-            if (isResolveAttachment)
+            if (isResolveAttachment && !isDepthStencilAttachment)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
@@ -1637,11 +1716,150 @@ static bool IsStreamOutputCompatibleFormat(const Format format)
     }
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 {
+    if (!shaderDesc.vertex.outputAttribs.empty())
+    {
+        const std::string shaderLabel =
+        (
+            shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
+                ? " '" + std::string(shaderDesc.debugName) + "'"
+                : ""
+        );
+
+        LLGL_DBG_WARN(
+            WarningType::DeprecatedFeature,
+            "`LLGL::ShaderDescriptor::vertex` used for shader%s output attributes, but is deprecated since 0.05b; Use `LLGL::GraphicsPipelineDescriptor::outputVertexAttribs` instead!",
+            shaderLabel.c_str()
+        );
+        ValidateVertexOutputAttribs(shaderDesc.vertex.outputAttribs, "shader", shaderDesc.debugName);
+    }
+}
+
+LLGL_DEPRECATED_IGNORE_POP()
+
+struct DbgRenderSystem::VertexAttributeValidationContext
+{
+    using VertexSemantic = std::pair<std::string, std::uint32_t>;
+
+    std::unordered_map<VertexSemantic, std::size_t, PairHasher<VertexSemantic>> attribNameToIndexMap;
+    std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>>       attribSVToIndexMap;
+    std::string                                                                 attribLabel;
+};
+
+void DbgRenderSystem::ValidateVertexAttributeIdentifier(VertexAttributeValidationContext& context, const VertexAttribute& attrib, std::size_t index, const std::string& labelPrefix)
+{
+    /* Construct label for each attribute */;
+    context.attribLabel = labelPrefix + " attribute [" + std::to_string(index) + "]";
+    if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
+        context.attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+
+    /* Validate attribute name and system-value */
+    if (attrib.systemValue != SystemValue::Undefined)
+    {
+        if (const char* systemValueIdent = ToString(attrib.systemValue))
+        {
+            auto systemValueIt = context.attribSVToIndexMap.find(attrib.systemValue);
+            if (systemValueIt != context.attribSVToIndexMap.end())
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s uses duplicate system-value '%s' that is already defined for attribute [%zu]",
+                    context.attribLabel.c_str(), systemValueIdent, systemValueIt->second
+                );
+            }
+            else
+                context.attribSVToIndexMap[attrib.systemValue] = index;
+        }
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s uses unknown system-value (0x%08X)",
+                context.attribLabel.c_str(), static_cast<unsigned>(attrib.systemValue)
+            );
+        }
+    }
+    else if (!attrib.name.empty())
+    {
+        const VertexAttributeValidationContext::VertexSemantic attribIdent{ attrib.name.c_str(), attrib.semanticIndex };
+        auto nameIt = context.attribNameToIndexMap.find(attribIdent);
+        if (nameIt != context.attribNameToIndexMap.end())
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s uses duplicate name '%s' (semanticIndex=%u) that is already defined for attribute [%zu]",
+                context.attribLabel.c_str(), attrib.semanticIndex, attrib.name.c_str(), nameIt->second
+            );
+        }
+        else
+            context.attribNameToIndexMap.insert({ attribIdent, index });
+    }
+    else
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "%s defines neither name nor system-value",
+            context.attribLabel.c_str()
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateVertexInputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
+{
+    const std::string labelPrefix =
+    (
+        inputName != nullptr && *inputName != '\0' &&
+        debugName != nullptr && *debugName != '\0'
+            ? std::string(inputName) + " '" + std::string(debugName) + "': "
+            : ""
+    );
+
     /* Validate shader output-stream attributes */
-    std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
-    std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>> attribSVToIndexMap;
+    VertexAttributeValidationContext validationContext;
+    std::unordered_map<std::uint32_t, std::uint32_t> inputSlotToInstanceDivisorMap;
+
+    for_range(i, vertexAttribs.size())
+    {
+        const VertexAttribute& attrib = vertexAttribs[i];
+
+        ValidateVertexAttributeIdentifier(validationContext, attrib, i, labelPrefix + "vertex input");
+
+        auto it = inputSlotToInstanceDivisorMap.find(attrib.slot);
+        if (it == inputSlotToInstanceDivisorMap.end())
+        {
+            /* Make first entry for instance divisor at this input slot */
+            inputSlotToInstanceDivisorMap.insert({ attrib.slot, attrib.instanceDivisor });
+        }
+        else
+        {
+            /* Ensure vertex attribute uses the same instance divisor as the existing entry at this input slot */
+            if (it->second != attrib.instanceDivisor)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s instanceDivisor=%u does not match existing entry (%u) at input slot [%u]",
+                    validationContext.attribLabel.c_str(), attrib.instanceDivisor, it->second, attrib.slot
+                );
+            }
+        }
+    }
+}
+
+void DbgRenderSystem::ValidateVertexOutputAttribs(ArrayView<VertexAttribute> vertexAttribs, const char* inputName, const char* debugName)
+{
+    const std::string labelPrefix =
+    (
+        inputName != nullptr && *inputName != '\0' &&
+        debugName != nullptr && *debugName != '\0'
+            ? std::string(inputName) + " '" + std::string(debugName) + "': "
+            : ""
+    );
+
+    /* Validate shader output-stream attributes */
+    VertexAttributeValidationContext validationContext;
 
     struct BufferStrideRef
     {
@@ -1650,22 +1868,11 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
     };
     BufferStrideRef bufferStridesRefs[LLGL_MAX_NUM_SO_BUFFERS];
 
-    const std::string shaderLabelPrefix =
-    (
-        shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
-            ? "shader '" + std::string(shaderDesc.debugName) + "': "
-            : ""
-    );
-    std::string attribLabel;
-
-    for_range(i, shaderDesc.vertex.outputAttribs.size())
+    for_range(i, vertexAttribs.size())
     {
-        const VertexAttribute& attrib = shaderDesc.vertex.outputAttribs[i];
+        const VertexAttribute& attrib = vertexAttribs[i];
 
-        /* Construct label for each attribute */;
-        attribLabel = shaderLabelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
-        if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
-            attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+        ValidateVertexAttributeIdentifier(validationContext, attrib, i, labelPrefix + "stream-output");
 
         /* Validate attribute format */
         if (const char* formatIdent = ToString(attrib.format))
@@ -1675,7 +1882,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "%s format 'LLGL::Format::%s' is not supported in this context",
-                    attribLabel.c_str(), formatIdent
+                    validationContext.attribLabel.c_str(), formatIdent
                 );
             }
         }
@@ -1684,7 +1891,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "%s format is invalid (%0x08X)",
-                attribLabel.c_str(), static_cast<int>(attrib.format)
+                validationContext.attribLabel.c_str(), static_cast<int>(attrib.format)
             );
         }
 
@@ -1703,7 +1910,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "%s stride mismatch for slot [%u]: %u specified but attribute [%zu] defined it as %u",
-                    attribLabel.c_str(), attrib.slot, attrib.stride, strideRef.firstAttribIndex, strideRef.stride
+                    validationContext.attribLabel.c_str(), attrib.slot, attrib.stride, strideRef.firstAttribIndex, strideRef.stride
                 );
             }
         }
@@ -1712,56 +1919,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "%s slot index out of bounds: %u specified but upper bound is %u",
-                attribLabel.c_str(), attrib.slot, LLGL_MAX_NUM_SO_BUFFERS
-            );
-        }
-
-        /* Validate attribute name and system-value */
-        if (attrib.systemValue != SystemValue::Undefined)
-        {
-            if (const char* systemValueIdent = ToString(attrib.systemValue))
-            {
-                auto systemValueIt = attribSVToIndexMap.find(attrib.systemValue);
-                if (systemValueIt != attribSVToIndexMap.end())
-                {
-                    LLGL_DBG_ERROR(
-                        ErrorType::InvalidArgument,
-                        "%s uses duplicate system-value '%s' that is already defined for attribute [%zu]",
-                        attribLabel.c_str(), systemValueIdent, systemValueIt->second
-                    );
-                }
-                else
-                    attribSVToIndexMap[attrib.systemValue] = i;
-            }
-            else
-            {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "%s uses unknown system-value (0x%08X)",
-                    attribLabel.c_str(), static_cast<unsigned>(attrib.systemValue)
-                );
-            }
-        }
-        else if (!attrib.name.empty())
-        {
-            auto nameIt = attribNameToIndexMap.find(attrib.name.c_str());
-            if (nameIt != attribNameToIndexMap.end())
-            {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "%s uses duplicate name '%s' that is already defined for attribute [%zu]",
-                    attribLabel.c_str(), attrib.name.c_str(), nameIt->second
-                );
-            }
-            else
-                attribNameToIndexMap[attrib.name.c_str()] = i;
-        }
-        else
-        {
-            LLGL_DBG_ERROR(
-                ErrorType::InvalidArgument,
-                "%s defines neither name nor system-value",
-                attribLabel.c_str()
+                validationContext.attribLabel.c_str(), attrib.slot, LLGL_MAX_NUM_SO_BUFFERS
             );
         }
     }
@@ -1883,7 +2041,7 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stages are specified for binding descriptor");
 
     /* Validate resource binding flags */
-    if (auto resource = rvDesc.resource)
+    if (auto* resource = rvDesc.resource)
     {
         switch (resource->GetResourceType())
         {
@@ -1915,7 +2073,7 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
 
 void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc)
 {
-    if ((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
+    if (((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) | k_bufferBindFlagsToIgnore) != (bindingDesc.bindFlags | k_bufferBindFlagsToIgnore))
     {
         const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
@@ -2179,6 +2337,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
+    ValidateVertexInputAttribs(pipelineStateDesc.inputVertexAttribs, "PSO", pipelineStateDesc.debugName);
+    ValidateVertexOutputAttribs(pipelineStateDesc.outputVertexAttribs, "PSO", pipelineStateDesc.debugName);
 
     if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
     {
@@ -2629,6 +2789,36 @@ void DbgRenderSystem::ValidateRenderTargetDesc(const RenderTargetDescriptor &ren
                 ErrorType::InvalidArgument,
                 "maximum number of supported views is %u, but render-target specified %u views",
                 GetRenderingCaps().limits.maxViews, numViews);
+        }
+    }
+
+    /* Validate depth-stencil resolve feature support and its prerequisites */
+    if (IsAttachmentEnabled(renderTargetDesc.depthStencilResolveAttachment))
+    {
+        if (!GetRenderingCaps().features.hasDepthStencilResolve)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::UnsupportedFeature,
+                "depth-stencil resolve not supported, but render-target specified a depth-stencil resolve attachment");
+        }
+        else if (!IsAttachmentEnabled(renderTargetDesc.depthStencilAttachment))
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target with a depth-stencil resolve attachment must also have a depth-stencil attachment");
+        }
+        else if (renderTargetDesc.samples <= 1)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target with a depth-stencil resolve attachment must be multi-sampled, but only %u sample(s) were specified",
+                renderTargetDesc.samples);
+        }
+        else if (renderTargetDesc.depthStencilResolveAttachment.texture == nullptr)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "depth-stencil resolve attachment must reference a texture; there is nothing to resolve into otherwise");
         }
     }
 }

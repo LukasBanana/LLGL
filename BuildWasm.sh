@@ -131,7 +131,6 @@ fi
 OPTIONS=(
     -DCMAKE_TOOLCHAIN_FILE="$EMSCRIPTEN_CMAKE_TOOLCHAIN"
     -DLLGL_BUILD_RENDERER_WEBGL=ON
-    -DLLGL_GL_ENABLE_OPENGL2X=OFF
     -DLLGL_BUILD_RENDERER_NULL=OFF
     -DLLGL_BUILD_RENDERER_VULKAN=OFF
     -DLLGL_BUILD_RENDERER_DIRECT3D11=OFF
@@ -147,10 +146,10 @@ OPTIONS=(
 )
 
 if [ $PROJECT_ONLY -eq 0 ]; then
-    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE "${OPTIONS[@]}"
     cmake --build "$OUTPUT_DIR" -- -j 20
 else
-    cmake ${OPTIONS[@]} -G "$GENERATOR"
+    cmake "${OPTIONS[@]}" -G "$GENERATOR"
 fi
 
 # Copies the input file to the output and removes '\r' EOL characters from text files.
@@ -176,9 +175,17 @@ copy_file_preserve_linux_eol()
 
 # Generate HTML pages
 if [ $PROJECT_ONLY -eq 0 ] && [ $ENABLE_EXAMPLES == "ON" ]; then
-    scripts/GenerateHTML5Examples.sh                    \
-        "${SOURCE_DIR}"                                 \
-        "${OUTPUT_DIR}"                                 \
-        $([ $BUILD_TYPE = "Debug" ] && echo "--debug")  \
+    GEN_HTML5_ARGS=(
+        "${SOURCE_DIR}"
+        "${OUTPUT_DIR}"
+        $([ $BUILD_TYPE = "Debug" ] && echo "--debug")
         $([ $VERBOSE -ne 0 ] && echo "--verbose")
+    )
+
+    # If this is run in WSL2 on Windows, remove carriage return characters (Windows EOL) from the script before executing it
+    if grep -q $'\r$' scripts/GenerateHTML5Examples.sh; then
+        tr -d '\r' < scripts/GenerateHTML5Examples.sh | bash -s -- "${GEN_HTML5_ARGS[@]}"
+    else
+        scripts/GenerateHTML5Examples.sh "${GEN_HTML5_ARGS[@]}"
+    fi
 fi

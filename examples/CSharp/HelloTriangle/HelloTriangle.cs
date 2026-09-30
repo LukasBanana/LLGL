@@ -53,20 +53,14 @@ namespace LLGLExamples
 
             unsafe
             {
-                VertexAttribs = new LLGL.VertexAttribute[2]
-                {
-                    new LLGL.VertexAttribute("position", format: LLGL.Format.RG32Float,  location: 0, offset: 0,               stride: sizeof(Vertex)),
-                    new LLGL.VertexAttribute("color",    format: LLGL.Format.RGBA8UNorm, location: 1, offset: sizeof(float)*2, stride: sizeof(Vertex)),
-                };
-
                 fixed (Vertex* verticesPtr = vertices)
                 {
                     var bufferDesc = new LLGL.BufferDescriptor()
                     {
                         DebugName = "MyVertexBuffer",
                         Size = sizeof(Vertex) * vertices.Length,
-                        BindFlags = LLGL.BindFlags.VertexBuffer,
-                        VertexAttribs = VertexAttribs
+                        Stride = sizeof(Vertex),
+                        BindFlags = LLGL.BindFlags.VertexBuffer
                     };
                     VertexBuffer = Renderer.CreateBufferUnsafe(bufferDesc, verticesPtr);
                 }
@@ -102,8 +96,7 @@ namespace LLGLExamples
                 sourceType: LLGL.ShaderSourceType.CodeString,
                 entryPoint: "VSMain",
                 profile: "vs_5_0",
-                name: "MyVertexShader",
-                vertex: new LLGL.VertexShaderAttributes(inputAttribs: VertexAttribs)
+                name: "MyVertexShader"
             );
 
             VS = Renderer.CreateShader(vsDesc);
@@ -135,10 +128,20 @@ namespace LLGLExamples
 
         private void CreatePipeline()
         {
+            unsafe
+            {
+                VertexAttribs = new LLGL.VertexAttribute[2]
+                {
+                    new LLGL.VertexAttribute("position", format: LLGL.Format.RG32Float,  location: 0, offset: 0,               stride: sizeof(Vertex)),
+                    new LLGL.VertexAttribute("color",    format: LLGL.Format.RGBA8UNorm, location: 1, offset: sizeof(float)*2, stride: sizeof(Vertex)),
+                };
+            }
+
             var psoDesc = new LLGL.GraphicsPipelineDescriptor()
             {
                 DebugName = "MyGraphicsPSO",
                 RenderPass = SwapChain.RenderPass,
+                InputVertexAttribs = VertexAttribs,
                 VertexShader = VS,
                 FragmentShader = FS,
             };

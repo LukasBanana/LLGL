@@ -48,7 +48,7 @@ class MyXRRenderer
 
     LLGL::XRSystemPtr               xrSystem;
     LLGL::RenderSystemPtr           renderer;
-#if defined(_DEBUG)
+#if defined(LLGL_DEBUG)
     LLGL::RenderingDebugger         renderDebugger;
 #endif
     LLGL::XRSession*                session         = nullptr;
@@ -113,7 +113,7 @@ public:
 private:
 
     void CreateSwapChains();
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat);
+    void LoadShaders();
     LLGL::Shader* LoadShader(LLGL::ShaderDescriptor shaderDesc, const std::string& assetName);
 
     // Renders the scene once per eye into its own swap-chain (conventional path).
@@ -138,7 +138,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     sampleCount = (requestSampleCount > 0 ? requestSampleCount : 1);
 
     std::int32_t xrSystemDescFlags = 0;
-#if defined(_DEBUG)
+#if defined(LLGL_DEBUG)
     xrSystemDescFlags = LLGL::XRSystemFlags::DebugDevice;
 #endif
 
@@ -151,9 +151,13 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     xrDesc.formFactor                       = LLGL::XRFormFactor::HeadMountedDisplay;
     xrDesc.viewConfiguration                = LLGL::XRViewConfiguration::Stereo;
     xrDesc.flags                            = xrSystemDescFlags;
-    #if defined LLGL_OS_ANDROID
-    xrDesc.androidApp = ExampleBase::GetAndroidApp();
-    #endif
+#if defined LLGL_OS_ANDROID
+    // The XR system needs the JavaVM and Activity; LLGL pulls both out of the app state a
+    // NativeActivity application was handed, identified by its size.
+    android_app* androidApp = ExampleBase::GetAndroidApp();
+    xrDesc.platformContext     = androidApp;
+    xrDesc.platformContextSize = sizeof(*androidApp);
+#endif
 
     LLGL::Report report;
     xrSystem = LLGL::XRSystem::Load(xrDesc, &report);
@@ -162,7 +166,7 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::Log::Printf("OpenXR runtime: %s\n", xrSystem->GetRuntimeName());
 
     std::int32_t renderDescFlags = 0;
-#if defined(_DEBUG)
+#if defined(LLGL_DEBUG)
     renderDescFlags = LLGL::RenderSystemFlags::DebugDevice | LLGL::RenderSystemFlags::DebugBreakOnError;
 #endif
 
@@ -170,8 +174,15 @@ MyXRRenderer::MyXRRenderer(const char* rendererModule, bool requestMultiview, st
     LLGL::RenderSystemDescriptor renderSystemDesc;
     renderSystemDesc.moduleName = rendererModule;
     renderSystemDesc.flags = renderDescFlags;
-#if defined(_DEBUG)
+#if defined(LLGL_DEBUG)
     renderSystemDesc.debugger = &renderDebugger;
+#endif
+#if defined LLGL_OS_ANDROID
+    // A native_app_glue application must hand over its app state: RenderSystem::Load pumps the
+    // glue event loop until the native window and content are ready.  Without that the activity
+    // never reaches the state the XR runtime waits for in xrCreateSession.
+    renderSystemDesc.platformContext     = androidApp;
+    renderSystemDesc.platformContextSize = sizeof(*androidApp);
 #endif
 
     renderer = xrSystem->CreateRenderSystem(renderSystemDesc, &report);
@@ -267,13 +278,16 @@ void MyXRRenderer::CreateSwapChains()
     LLGL::Log::Printf("Multi-sampling: %ux\n", sampleCount);
 
     // Reported after the sample count is known, because it is not decided by the runtime alone: submitting depth
-    // needs XR_KHR_composition_layer_depth AND no multi-sampling (a multi-sampled depth attachment cannot be
-    // resolved into the runtime's single-sampled depth image), so with MSAA the swap-chain keeps depth private.
+    // needs XR_KHR_composition_layer_depth, and while multi-sampling it additionally needs depth-stencil resolve
+    // to get the multi-sampled depth into the runtime's single-sampled image. Without that the swap-chain keeps
+    // depth private and reprojection is unavailable.
+    const bool canResolveDepth = renderer->GetRenderingCaps().features.hasDepthStencilResolve;
     LLGL::Log::Printf(
         "Depth submission: %s\n",
-        depthFormats.empty()  ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
-        sampleCount > 1       ? "disabled (not available with multi-sampling)" :
-                                "enabled"
+        depthFormats.empty()                    ? "disabled (runtime does not support XR_KHR_composition_layer_depth)" :
+        sampleCount > 1 && !canResolveDepth     ? "disabled (multi-sampling requires depth-stencil resolve)" :
+        sampleCount > 1                         ? "enabled (multi-sampled depth resolved for reprojection)" :
+                                                  "enabled"
     );
 
     // Requesting a depth-stencil format makes the swap-chain provision and manage the depth buffer and per-image
@@ -315,12 +329,6 @@ void MyXRRenderer::CreateSwapChains()
 
 void MyXRRenderer::CreateResources()
 {
-    // Vertex format: position + per-vertex color.
-    LLGL::VertexFormat vertexFormat;
-    vertexFormat.AppendAttribute({ "POSITION", LLGL::Format::RGB32Float });
-    vertexFormat.AppendAttribute({ "COLOR",    LLGL::Format::RGB32Float });
-    vertexFormat.SetStride(sizeof(ColoredVertex));
-
     // Axis-coloured unit cube from the shared geometry utilities (+X red, -X cyan, +Y green,
     // -Y magenta, +Z blue, -Z yellow).
     const std::vector<ColoredVertex>    vertices = GenerateColoredCubeVertices();
@@ -328,7 +336,7 @@ void MyXRRenderer::CreateResources()
     numIndices = static_cast<std::uint32_t>(indices.size());
 
     vertexBuffer = renderer->CreateBuffer(
-        LLGL::VertexBufferDesc(vertices.size() * sizeof(ColoredVertex), vertexFormat),
+        LLGL::VertexBufferDesc(vertices.size() * sizeof(ColoredVertex), sizeof(ColoredVertex)),
         vertices.data()
     );
     indexBuffer = renderer->CreateBuffer(
@@ -350,11 +358,19 @@ void MyXRRenderer::CreateResources()
     resourceHeap = renderer->CreateResourceHeap(layout, { viewProjBuffer });
 
     // Shaders.
-    LoadShaders(vertexFormat);
+    LoadShaders();
+
+    // Vertex format: position + per-vertex color.
+    const LLGL::VertexAttribute vertexAttribs[] =
+    {
+        LLGL::VertexAttribute{ "POSITION", LLGL::Format::RGB32Float, 0, offsetof(ColoredVertex, position), sizeof(ColoredVertex) },
+        LLGL::VertexAttribute{ "COLOR",    LLGL::Format::RGB32Float, 1, offsetof(ColoredVertex, color   ), sizeof(ColoredVertex) },
+    };
 
     // Graphics pipeline.
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     pipelineDesc.pipelineLayout         = layout;
+    pipelineDesc.inputVertexAttribs     = vertexAttribs;
     pipelineDesc.vertexShader           = vertShader;
     pipelineDesc.fragmentShader         = fragShader;
     pipelineDesc.depth.testEnabled      = true;
@@ -408,7 +424,7 @@ LLGL::Shader* MyXRRenderer::LoadShader(LLGL::ShaderDescriptor shaderDesc, const 
     return shader;
 }
 
-void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
+void MyXRRenderer::LoadShaders()
 {
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
     const auto HasLanguage = [&languages](LLGL::ShadingLanguage lang) -> bool
@@ -423,13 +439,12 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
         LLGL::ShaderDescriptor vsDesc;
         vsDesc.type                 = LLGL::ShaderType::Vertex;
         vsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
-        vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
-        vertShader = LoadShader(vsDesc, useMultiview ? "Example.multiview.450core.vert.spv" : "Example.450core.vert.spv");
+        vertShader = LoadShader(vsDesc, useMultiview ? ".autogen/Example.VSMultiview.450core.vert.spv" : ".autogen/Example.VS.450core.vert.spv");
 
         LLGL::ShaderDescriptor fsDesc;
         fsDesc.type                 = LLGL::ShaderType::Fragment;
         fsDesc.sourceType           = LLGL::ShaderSourceType::BinaryBuffer;
-        fragShader = LoadShader(fsDesc, "Example.450core.frag.spv");
+        fragShader = LoadShader(fsDesc, ".autogen/Example.PS.450core.frag.spv");
     }
     else if (HasLanguage(LLGL::ShadingLanguage::HLSL))
     {
@@ -440,7 +455,6 @@ void MyXRRenderer::LoadShaders(const LLGL::VertexFormat& vertexFormat)
         vsDesc.sourceType           = LLGL::ShaderSourceType::CodeString;
         vsDesc.entryPoint           = (useMultiview ? "VSMultiview" : "VS");
         vsDesc.profile              = (useMultiview ? "vs_6_1" : "vs_5_0");
-        vsDesc.vertex.inputAttribs  = vertexFormat.attributes;
         vertShader = LoadShader(vsDesc, "Example.hlsl");
 
         // The pixel shader must use the same shader model tier as the vertex shader within one PSO: D3D12 rejects

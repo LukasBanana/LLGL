@@ -14,7 +14,10 @@
 
 
 // Enables/disables the use of two secondary command buffers
-#define ENABLE_SECONDARY_COMMAND_BUFFERS 1
+// NOTE:
+//  This does not work correclty with D3D12 and is also disabled in the Testbed (see CommandBufferMultiThreading)
+//  This example will be removed soon until the unit test runs correclty and a nicer looking example can be crafted.
+#define ENABLE_SECONDARY_COMMAND_BUFFERS 0
 
 class Measure
 {
@@ -35,14 +38,15 @@ class Measure
         void Start()
         {
             // Start timer
-            timer_.Start();
+            startTick_ = LLGL::Timer::Tick();
         }
 
         void Stop()
         {
             // Take sample
-            elapsed_ += timer_.Stop();
-            ++samples_;
+            const std::uint64_t elapsedTicks = LLGL::Timer::Tick() - startTick_;
+            elapsedTicks_ += elapsedTicks;
+            ++numSamples_;
 
             // Check if average elapsed time can be printed again
             auto end = Clock::now();
@@ -59,28 +63,28 @@ class Measure
 
         void Print()
         {
-            if (samples_ > 0)
+            if (numSamples_ > 0)
             {
-                double averageTime = static_cast<double>(elapsed_);
-                averageTime /= static_cast<double>(timer_.GetFrequency());
+                double averageTime = static_cast<double>(elapsedTicks_);
+                averageTime /= static_cast<double>(LLGL::Timer::Frequency());
                 averageTime *= 1000000.0;
-                averageTime /= static_cast<double>(samples_);
+                averageTime /= static_cast<double>(numSamples_);
 
                 printf("%s: %.6f  microseconds         \r", title_.c_str(), averageTime);
                 fflush(stdout);
 
-                samples_ = 0;
-                elapsed_ = 0;
+                numSamples_ = 0;
+                elapsedTicks_ = 0;
             }
         }
 
     private:
 
-        Stopwatch       timer_;
+        std::uint64_t   startTick_          = 0;
+        std::uint64_t   numSamples_         = 0;
+        std::uint64_t   elapsedTicks_       = 0;
         std::uint64_t   interval_           = 0;
         TimePoint       intervalStartTime_;
-        std::uint64_t   samples_            = 0;
-        std::uint64_t   elapsed_            = 0;
         std::string     title_;
 
 };
@@ -123,22 +127,15 @@ public:
     Example_MultiThreading() :
         ExampleBase { "LLGL Example: MultiThreading" }
     {
-        auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat);
+        CreateBuffers();
         CreatePipelines();
         CreateCommandBuffers();
     }
 
 private:
 
-    LLGL::VertexFormat CreateBuffers()
+    void CreateBuffers()
     {
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
-
         // Generate data for mesh buffers
         const bool isRightHanded = HasRightHandedProjection();
         auto indices = GenerateTexturedCubeTriangleIndices();
@@ -146,19 +143,11 @@ private:
         numIndices = static_cast<std::uint32_t>(indices.size());
 
         // Create buffers for a simple 3D cube model
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
         indexBuffer = CreateIndexBuffer(indices, LLGL::Format::R32UInt);
 
-        for (auto& bdl : bundle)
+        for (Bundle& bdl : bundle)
             bdl.constantBuffer = CreateConstantBuffer(bdl.scene);
-
-        return vertexFormat;
-    }
-
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
-    {
-        // Load shader program
-        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
     }
 
     void CreatePipelines()
@@ -167,13 +156,16 @@ private:
         pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Scene@1):vert:frag}"));
 
         // Create resource view heap
-        for (auto& bdl : bundle)
+        for (Bundle& bdl : bundle)
             bdl.resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { bdl.constantBuffer });
 
         // Setup graphics pipeline descriptors
+        shaderPipeline = LoadStandardShaderPipeline();
+
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set references to shader program, and pipeline layout
+            pipelineDesc.inputVertexAttribs             = LLGL::Parse("rgb32f(position),rgb32f(normal),rg32f(texCoord)");
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
@@ -402,7 +394,7 @@ private:
             EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i);
     }
 
-    void OnDrawFrame() override
+    void OnDrawFrame(float dt) override
     {
         UpdateScene();
         DrawScene();

@@ -40,8 +40,7 @@ class GLSwapChain final : public SwapChain
         GLSwapChain(
             GLRenderSystem&                 renderSystem,
             const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface,
-            GLContextManager&               contextMngr
+            const std::shared_ptr<Surface>& surface
         );
 
         // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.
@@ -55,7 +54,7 @@ class GLSwapChain final : public SwapChain
 
     private:
 
-        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
+        Extent2D ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetSwapInterval(int swapInterval);
 

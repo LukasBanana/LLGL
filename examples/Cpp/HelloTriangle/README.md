@@ -38,7 +38,7 @@ Most objects in LLGL are created with descriptors (similar to Direct3D and Vulka
 
 ## Vertex Buffer
 
-Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and vertex shader:
+Next we create our vertex data for our triangle we want to render which will be passed to the vertex buffer and vertex shader:
 ```cpp
 struct MyVertex {
     float   position[2]; // 2D vector for X and Y coordinates
@@ -53,28 +53,12 @@ MyVertex myVertices[3] = {
     MyVertex{ { -0.5f, -0.5f }, {   0,   0, 255, 255 } }, // Blue
 };
 ```
-The `VertexFormat` structure has a couple of member functions to simplify the description of a vertex format, but we could also use the member variables directly. The `AppendAttribute` function determines the data offset for each vertex attribute automatically:
-```cpp
-LLGL::VertexFormat myVertexFormat;
-myVertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  });
-myVertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
-```
-Since `VertexFormat` is a utility structure that is optional in LLGL, we have to include it explicitly via `#include <LLGL/Misc/VertexFormat.h>`. The alternative is to declare an array of `LLGL::VertexAttribute` entries that explicitly specify the attribute's register location, byte offset, and stride (i.e. byte offset between vertices) of each member:
-```cpp
-LLGL::VertexAttribute myVertexFormatAttributes[2] = {
-    LLGL::VertexAttribute{ "position", LLGL::Format::RG32Float,  0, offsetof(MyVertex, position), sizeof(MyVertex) },
-    LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, 1, offsetof(MyVertex, color   ), sizeof(MyVertex) },
-};
-```
-
-The strings "position" and "color" must match the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because RGB formats are only supported by OpenGL and Vulkan. The identifier `UNorm` denotes an 'unsigned integer normalized' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
-
-Now we can create the GPU vertex buffer:
+Now we create the GPU vertex buffer:
 ```cpp
 LLGL::BufferDescriptor myVBufferDesc;
-myVBufferDesc.size          = sizeof(myVertices);            // Size (in bytes) of the buffer
-myVBufferDesc.bindFlags     = LLGL::BindFlags::VertexBuffer; // Use for vertex buffer binding
-myVBufferDesc.vertexAttribs = myVertexFormat.attributes;     // Vertex buffer attributes
+myVBufferDesc.size      = sizeof(myVertices);            // Size (in bytes) of the buffer => 3*sizeof(MyVertex)
+myVBufferDesc.stride    = sizeof(MyVertex);              // Stride (in bytes) between each vertex
+myVBufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer; // Use for vertex buffer binding
 LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVBufferDesc, myVertices);
 ```
 The parameter `bindFlags` takes a bitwise OR combination of the enumeration entries of `LLG::BindFlags`, to tell the render system for which purposes the buffer will be used. In this case, we will only bind it as a vertex buffer.
@@ -101,7 +85,6 @@ if (IsSupported(LLGL::ShadingLanguage::HLSL)) {
 } else {
     /* Error: shading language not supported ... */
 }
-myVSDesc.vertex.inputAttribs = myVertexFormat.attributes;
 
 LLGL::Shader* myVertexShader   = myRenderer->CreateShader(myVSDesc);
 LLGL::Shader* myFragmentShader = myRenderer->CreateShader(myFSDesc);
@@ -118,7 +101,6 @@ myShaderDesc.sourceSize          = 0;                                  // Ignore
 myShaderDesc.sourceType          = LLGL::ShaderSourceType::CodeString; // Source is provided as string in high-level language
 myShaderDesc.entryPoint          = "";                                 // Only required for HLSL/Metal (can be null)
 myShaderDesc.profile             = "";                                 // Only required for HLSL/Metal (can be null)
-myShaderDesc.vertex.inputAttribs = myVertexFormat.attributes;          // Vertex input attribnutes (vertex shaders only)
 LLGL::Shader* myExampleShader = myRenderer->CreateShader(myShaderDesc);
 ```
 The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPoint="main"` and `profile="vs_4_0"`) and Metal (e.g. `entryPoint="main"` and `profile="1.1"`). The member `source` is of type `const char*` and is either a NUL-terminated string or a raw byte buffer (for shader byte code). If the source type is either `CodeFile` or `BinaryFile`, the source code is read from file.
@@ -139,9 +121,21 @@ for (LLGL::Shader* shader : { myVertexShader, myFragmentShader }) {
 
 ## Graphics Pipeline & Command Buffer
 
-Before we enter our render loop we need a pipeline state object (PSO) and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline descriptor, but we always need to set the shaders:
+Before we enter our render loop we need a pipeline state object (PSO) and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline descriptor, but we always need to set at least a vertex shader. Since our vertex shader needs vertex input data (some shaders can generate vertices out of thin air), we also need to specify the input layout how the PSO is meant to interpret the input vertex buffers.
+For this we declare an array of `LLGL::VertexAttribute` entries that specify the vertex attribute's register location, relative byte offset (within a vertex), and stride (i.e. byte offset between vertices) of each member:
+```cpp
+LLGL::VertexAttribute myVertexFormatAttributes[2] = {
+    LLGL::VertexAttribute{ "position", LLGL::Format::RG32Float,  0, offsetof(MyVertex, position), sizeof(MyVertex) },
+    LLGL::VertexAttribute{ "color",    LLGL::Format::RGBA8UNorm, 1, offsetof(MyVertex, color   ), sizeof(MyVertex) },
+};
+```
+The strings "position" and "color" must match the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because 24-bit RGB formats are not widely supported. The identifier `UNorm` denotes an 'unsigned integer normalized' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
+The attentive reader may have noticed that we now specified the vertex stride several times: once in the vertex buffer and twince in this array alone. The declaration in the vertex buffer is optional, but if we omit it there, we'll have to specify it every time we bind the vertex buffer to the graphics pipeline (this is due to differences in the graphics APIs). Each vertex has its own value for the stride since each attribute can potentially reference different vertex buffer slots, but for this example we only once a single one. Hence, each vertex attribute has the same stride.
+
+Now it's time to create the PSO:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
+myPipelineDesc.inputVertexAttribs            = myVertexFormatAttributes;
 myPipelineDesc.vertexShader                  = myVertexShader;
 myPipelineDesc.fragmentShader                = myFragmentShader;
 myPipelineDesc.rasterizer.multiSampleEnabled = (mySwapChainDesc.samples > 1);

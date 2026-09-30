@@ -49,6 +49,7 @@ DEF_TEST( TextureViews )
     {
         psoDesc.pipelineLayout                  = psoLayout;
         psoDesc.renderPass                      = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs              = vertexFormats[VertFmtStd].attributes;
         psoDesc.vertexShader                    = shaders[VSTextured];
         psoDesc.fragmentShader                  = shaders[PSTextured];
         psoDesc.blend.targets[0].blendEnabled   = true;

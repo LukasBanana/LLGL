@@ -11,7 +11,9 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/Report.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../OpenGL.h"
+#include "../Buffer/GLVertexAttribute.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <functional>
 
@@ -50,12 +52,10 @@ class GLShader : public Shader
     public:
 
         // Returns the vertex input attributes:
-        const GLShaderAttribute* GetVertexAttribs() const;
-        std::size_t GetNumVertexAttribs() const;
+        ArrayView<GLShaderAttribute> GetVertexAttribs() const;
 
         // Returns the vertex input attributes:
-        const GLShaderAttribute* GetFragmentAttribs() const;
-        std::size_t GetNumFragmentAttribs() const;
+        ArrayView<GLShaderAttribute> GetFragmentAttribs() const;
 
         // Returns the GLenum for this shader type, e.g. GL_VERTEX_SHADER.
         GLenum GetGLType() const;
@@ -84,6 +84,18 @@ class GLShader : public Shader
             return isSeparable_;
         }
 
+        // Returns true if this shader was created with the ShaderCompileFlags::CaseInsensitiveAttribs.
+        inline bool HasCaseInsensitiveAttribs() const
+        {
+            return hasCaseInvensitiveAttribs_;
+        }
+
+        // For backwards compatibility only.
+        inline const std::vector<GLVertexAttribute>& GetGLVertexAttributes() const
+        {
+            return vertexAttribs_;
+        }
+
     public:
 
         // Returns true if the specified shader descriptor requires the permutation with flipped Y-position; See PermutationFlippedYPosition.
@@ -110,6 +122,24 @@ class GLShader : public Shader
             const char*                 versionOverride     = nullptr
         );
 
+        static void BuildVertexInputLayout(
+            ArrayView<VertexAttribute>      inVertexAttribs,
+            std::vector<GLShaderAttribute>& outGLVertexAttribs,
+            LinearStringContainer&          outGLAttribNames
+        );
+
+        static void BuildFragmentOutputLayout(
+            ArrayView<FragmentAttribute>    inFragmentAttribs,
+            std::vector<GLShaderAttribute>& outGLFragmentAttribs,
+            LinearStringContainer&          outGLAttribNames
+        );
+
+        static void BuildTransformFeedbackVaryings(
+            ArrayView<VertexAttribute>      inVaryings,
+            std::vector<const char*>&       outGLTransformFeedbackVaryings,
+            LinearStringContainer&          outGLAttribNames
+        );
+
     protected:
 
         GLShader(const bool isSeparable, const ShaderDescriptor& desc);
@@ -126,19 +156,22 @@ class GLShader : public Shader
     private:
 
         void ReserveAttribs(const ShaderDescriptor& desc);
-        bool BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
-        void BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs);
-        void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
 
     private:
 
         const bool                      isSeparable_;
+        const bool                      hasCaseInvensitiveAttribs_;
+
         GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
+        Report                          report_;
+
+        //DEPRECATED {
         LinearStringContainer           shaderAttribNames_;
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
-        Report                          report_;
+        std::vector<GLVertexAttribute>  vertexAttribs_; // Needed for backwards compatibility to build vertex input layout as fallback
+        // }
 
 };
 

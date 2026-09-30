@@ -9,6 +9,7 @@
 #include "D3D12CommandQueue.h"
 #include "../D3D12Device.h"
 #include "../D3D12Resource.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Texture.h"
 #include "../RenderState/D3D12Fence.h"
@@ -90,7 +91,8 @@ void D3D12CommandContext::Create(
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Check if newer version of command list is available */
-    commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+    if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList5_))))
+        commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
     #endif
 
     /* Clear cache alongside device object initialization */
@@ -573,6 +575,34 @@ void D3D12CommandContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBuf
     stateCache_.stateBits.is16BitIndexFormat = (indexBufferView.Format == DXGI_FORMAT_R16_UINT ? 1 : 0);
 }
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+LLGL_MAYBE_UNUSED
+static bool IsD3DPassthroughCombiners(const D3D12_SHADING_RATE_COMBINER* combiners)
+{
+    return (combiners == nullptr || (combiners[0] == D3D12_SHADING_RATE_COMBINER_PASSTHROUGH && combiners[1] == D3D12_SHADING_RATE_COMBINER_PASSTHROUGH));
+}
+
+void D3D12CommandContext::SetShadingRate(D3D12_SHADING_RATE baseShadingRate, const D3D12_SHADING_RATE_COMBINER* combiners)
+{
+    if (commandList5_)
+    {
+        commandList5_->RSSetShadingRate(baseShadingRate, combiners);
+        stateCache_.dirtyBits.shadingRate1x1 = (baseShadingRate != D3D12_SHADING_RATE_1X1 || !IsD3DPassthroughCombiners(combiners) ? 1 : 0);
+    }
+}
+
+void D3D12CommandContext::ResetShadingRate()
+{
+    if (commandList5_ && stateCache_.dirtyBits.shadingRate1x1)
+    {
+        stateCache_.dirtyBits.shadingRate1x1 = 0;
+        commandList5_->RSSetShadingRate(D3D12_SHADING_RATE_1X1, nullptr);
+    }
+}
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const
 {
     /* Get current descriptor heap pool via allocator- and type index */
@@ -588,7 +618,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     D3D12_DESCRIPTOR_HEAP_TYPE  type,
     D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
     UINT                        firstDescriptor,
-    UINT                        numDescriptors)
+    UINT                        numDescriptors,
+    bool*                       outIsDescriptorHeapDirty)
 {
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
@@ -596,7 +627,17 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     D3D12StagingDescriptorHeapPool& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Copy descriptors into shader-visible descriptor heap */
-    return descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
+    ID3D12DescriptorHeap* oldDescriptorHeap = descriptorHeapPool.GetDescriptorHeap();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
+
+    /* Return whether the copy descriptors operation created a new chunk and invalidated the bound D3D12 descriptor heap */
+    if (outIsDescriptorHeapDirty != nullptr)
+    {
+        if (oldDescriptorHeap != descriptorHeapPool.GetDescriptorHeap())
+            *outIsDescriptorHeapDirty = true;
+    }
+
+    return gpuDescHandle;
 }
 
 void D3D12CommandContext::EmplaceDescriptorForStaging(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation)
@@ -621,6 +662,11 @@ void D3D12CommandContext::ResetUAVBarriers(UINT numUAVBarriers)
 
 void D3D12CommandContext::SetResourceUAVBarrier(ID3D12Resource* resource, UINT uavBarrierSlot)
 {
+    LLGL_ASSERT(
+        uavBarrierSlot < uavBarriers_.size(),
+        "UAV barrier slot (%u) for resource '%s' is out of bounds",
+        uavBarrierSlot, D3D12GetObjectName(resource, "<unnamed>").c_str()
+    );
     uavBarriers_[uavBarrierSlot].UAV.pResource = resource;
 }
 
@@ -752,6 +798,7 @@ void D3D12CommandContext::ClearCache()
     stateCache_.dirtyBits.graphicsRootSignature = 1;
     stateCache_.dirtyBits.computeRootSignature  = 1;
     stateCache_.dirtyBits.descriptorHeaps       = 1;
+    stateCache_.dirtyBits.shadingRate1x1        = 0;
 
     /* Clear state bits */
     stateCache_.stateBits.isDeferredPSO         = 0;

@@ -134,7 +134,8 @@ class D3D12PipelineLayout final : public PipelineLayout
         */
         ComPtr<ID3D12RootSignature> CreateRootSignatureWith32BitConstants(
             const ArrayView<D3D12Shader*>&          shaders,
-            std::vector<D3D12RootConstantLocation>& outRootConstantMap
+            std::vector<D3D12RootConstantLocation>& outRootConstantMap,
+            Report&                                 outReport
         ) const;
 
         // Returns the layout of the set of descriptor heaps.

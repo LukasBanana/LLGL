@@ -30,7 +30,7 @@ struct RenderSystemNativeHandle;
 
 class GLStateManager;
 
-// Helper class to reuse GL contexts for suitable pixel formats.
+// Singleton to create GL contexts for suitable pixel formats.
 class GLContextManager
 {
 
@@ -44,13 +44,25 @@ class GLContextManager
         GLContextManager(const GLContextManager&) = delete;
         GLContextManager& operator = (const GLContextManager&) = delete;
 
+        // Returns the instance of this singleton.
+        static GLContextManager& Get();
+
         // Initializes the context manager and creates the primary GL context.
-        GLContextManager(
+        void Initialize(
             const RendererConfigurationOpenGL&  profile,
             const NewGLContextCallback&         newContextCallback      = nullptr,
             const void*                         customNativeHandle      = nullptr,
             std::size_t                         customNativeHandleSize  = 0
         );
+
+        // Tears down this singleton. Resets the initialization bit.
+        void Clear();
+
+        // Returns true if this singleton has been initialized.
+        inline bool IsInitialized() const
+        {
+            return isInitialized_;
+        }
 
     public:
 
@@ -60,6 +72,9 @@ class GLContextManager
             bool                    acceptCompatibleFormat  = false,
             Surface*                surface                 = nullptr
         );
+
+        // Returns the GLContext by the specified global index; starts with 1. Returns null if index is 0 or out of bounds.
+        GLContext* FindContextByGlobalIndex(unsigned contextIndex) const;
 
     public:
 
@@ -80,6 +95,8 @@ class GLContextManager
 
     private:
 
+        GLContextManager() = default;
+
         // Creates an invisible surface as placeholder for a GL context.
         std::unique_ptr<Surface> CreatePlaceholderSurface();
 
@@ -97,11 +114,35 @@ class GLContextManager
 
     private:
 
+        bool                                    isInitialized_      = false;
         RendererConfigurationOpenGL             profile_;
         std::vector<GLPixelFormatWithContext>   pixelFormats_;
         DynamicByteArray                        customNativeHandle_;
         NewGLContextCallback                    newContextCallback_;
 
+};
+
+// Helper class to initialize and tear down GLContextManager singleton within a specific scope, i.e. the one of GLRenderSystem lifetime.
+struct GLContextManagerScope
+{
+    inline GLContextManagerScope(
+        const RendererConfigurationOpenGL&              profile,
+        const GLContextManager::NewGLContextCallback&   newContextCallback      = nullptr,
+        const void*                                     customNativeHandle      = nullptr,
+        std::size_t                                     customNativeHandleSize  = 0)
+    {
+        GLContextManager::Get().Initialize(
+            profile,
+            newContextCallback,
+            customNativeHandle,
+            customNativeHandleSize
+        );
+    }
+
+    inline ~GLContextManagerScope()
+    {
+        GLContextManager::Get().Clear();
+    }
 };
 
 

@@ -34,9 +34,9 @@ DEF_TEST( TriangleStripCutOff )
 
     BufferDescriptor vertexBufDesc;
     {
-        vertexBufDesc.size          = sizeof(vertices);
-        vertexBufDesc.bindFlags     = BindFlags::VertexBuffer;
-        vertexBufDesc.vertexAttribs = vertexFormats[VertFmtUnprojected].attributes;
+        vertexBufDesc.size      = sizeof(vertices);
+        vertexBufDesc.stride    = sizeof(UnprojectedVertex);
+        vertexBufDesc.bindFlags = BindFlags::VertexBuffer;
     }
     CREATE_BUFFER(vertexBuf, vertexBufDesc, "vertices2D", vertices);
 
@@ -64,6 +64,7 @@ DEF_TEST( TriangleStripCutOff )
     {
         psoDesc.pipelineLayout      = nullptr; // No resource bindings, therefore no pipeline layout
         psoDesc.renderPass          = swapChain->GetRenderPass();
+        psoDesc.inputVertexAttribs  = vertexFormats[VertFmtUnprojected].attributes;
         psoDesc.vertexShader        = shaders[VSUnprojected];
         psoDesc.fragmentShader      = shaders[PSUnprojected];
         psoDesc.primitiveTopology   = PrimitiveTopology::TriangleStrip;

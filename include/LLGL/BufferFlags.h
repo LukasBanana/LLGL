@@ -15,6 +15,8 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/ForwardDecls.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 
 
@@ -30,6 +32,17 @@ namespace LLGL
 */
 struct BufferDescriptor
 {
+    //TODO: remove these delcaration once deprecation has ended {
+    LLGL_DEPRECATED_IGNORE_PUSH()
+    BufferDescriptor() = default;
+    BufferDescriptor(const BufferDescriptor&) = default;
+    BufferDescriptor(BufferDescriptor&&) = default;
+    BufferDescriptor& operator = (const BufferDescriptor&) = default;
+    BufferDescriptor& operator = (BufferDescriptor&&) = default;
+    ~BufferDescriptor() = default;
+    LLGL_DEPRECATED_IGNORE_POP()
+    // }
+
     /**
     \brief Optional name for debugging purposes. By default null.
     \remarks The final name of the native hardware resource is implementation defined.
@@ -46,13 +59,17 @@ struct BufferDescriptor
     std::uint64_t               size            = 0;
 
     /**
-    \brief Optional stride for structured buffers. By default 0.
-    \remarks This is only used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
+    \brief Optional stride for vertex and structured buffers. By default 0.
+    \remarks This \e can be used for vertex buffers to describe the stride (in bytes) between vertices. If this is zero, the stride \b must be set via the extended \c SetVertexBuffer function.
+    \remarks This is also used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
     \remarks If this is non-zero, the \c format attribute is ignored for sampled and storage buffers, i.e. buffers with the binding flags BindFlags::Sampled or BindFlags::Storage.
+    \remarks To create a typed-buffer, this must be zero unless \c bindFlags also contains BindFlags::VertexBuffer since vertex buffers and structured buffers are mutually exclusive in D3D.
     \note If the buffer has the binding flag BindFlags::IndirectBuffer, this \b must be 0.
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
     \see MiscFlags::Append
     \see MiscFlags::Counter
+    \see IsTypedBuffer
+    \see IsStructuredBuffer
     */
     std::uint32_t               stride          = 0;
 
@@ -94,11 +111,10 @@ struct BufferDescriptor
     long                        miscFlags       = 0;
 
     /**
-    \brief Specifies the list of vertex attributes.
-    \remarks This is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
-    \see BindFlags::VertexBuffer
-    \see VertexShaderAttributes::inputAttribs
+    \deprecated Since 0.05b; Use `BufferDescriptor::stride` and `GraphicsPipelineDescriptor::inputVertexAttribs` instead.
+    \see GraphicsPipelineDescriptor::inputVertexAttribs
     */
+    LLGL_DEPRECATED("BufferDescriptor::vertexAttribs is deprecated since 0.05b; Use GraphicsPipelineDescriptor::inputVertexAttribs instead!", "stride")
     ArrayView<VertexAttribute>  vertexAttribs;
 };
 
@@ -153,6 +169,50 @@ struct BufferViewDescriptor
     std::uint64_t   size    = LLGL_WHOLE_SIZE;
 };
 
+/**
+\brief Vertex buffer view structure for buffer array initialization.
+\see RenderSystem::CreateBufferArray
+\see CommandBuffer::SetVertexBuffers
+*/
+struct VertexBufferView
+{
+    VertexBufferView() = default;
+
+    /**
+    \brief Initializes all fields of this structure.
+    \param[in] buffer Pointer to the vertex buffer resource.
+    \param[in] stride Optional stride (in bytes) between vertices. If this is 0, the buffer resource must have been created with a default stride.
+    \param[in] offset Optional offset (in bytes) to the first vertex in the buffer view.
+    */
+    inline VertexBufferView(Buffer* buffer, std::uint32_t stride = 0, std::uint64_t offset = 0) :
+        buffer { buffer },
+        stride { stride },
+        offset { offset }
+    {
+    }
+
+    /**
+    \brief Specifies the buffer resource for this vertex buffer view.
+    \remarks This buffer must not be null and must have been created with the binding flag BindFlags::VertexBuffer.
+    */
+    Buffer*         buffer  = nullptr;
+
+    /**
+    \brief Specifies the stride (in bytes) between vertices.
+    \remarks If this is zero, the buffer resource must have been created with a default stride.
+    \remarks If this is non-zero, this value must match the stride of the vertex attribute referencing this buffer slot in the active graphics PSO.
+    \see BufferDescriptor::stride
+    */
+    std::uint32_t   stride  = 0;
+
+    /**
+    \brief Specifies the base offset (in bytes) relative to the beginning of the buffer.
+    \remarks This will be added to each vertex attribute offset.
+    \see SetVertexBuffer(Buffer&, std::uint32_t, std::uint64_t)
+    */
+    std::uint64_t   offset  = 0;
+};
+
 
 /* ----- Functions ----- */
 
@@ -162,12 +222,17 @@ struct BufferViewDescriptor
 @{
 */
 
-//! Returns true if the buffer descriptor denotes a typed buffer, i.e. \c Buffer or \c RWBuffer in HLSL.
+/**
+\brief Returns true if the buffer descriptor denotes a typed buffer, i.e. \c Buffer or \c RWBuffer in HLSL.
+\remarks This requires that the stride is zero, unless the bind flags contain BindFlags::VertexBuffer,
+since it cam no longer be considered a structured buffer as those are mutually exclusive in D3D.
+*/
 LLGL_EXPORT bool IsTypedBuffer(const BufferDescriptor& desc);
 
 /**
 \brief Returns true if the buffer descriptor denotes a structured buffer,
 i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, or \c ConsumeStructuredBuffer in HLSL.
+\remarks If the bind flags contain BindFlags::VertexBuffer, it is not considered a structured buffer since those are mutually exclusive in D3D.
 */
 LLGL_EXPORT bool IsStructuredBuffer(const BufferDescriptor& desc);
 

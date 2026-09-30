@@ -20,22 +20,22 @@ namespace Metal
 
 
 /**
- * \brief Enumeration of all native commands the Metal backend can execute.
- * \see NativeCommand::type
- */
+\brief Enumeration of all native commands the Metal backend can execute.
+\see NativeCommand::type
+*/
 enum class NativeCommandType
 {
     /**
-     * \brief Clears the internal command buffer cache.
-     * \remarks This should be used when a native command buffer handle is retrieved
-     * and LLGL is supposed to continue dispatching graphics and compute commands after the native command buffer has been modified.
-     */
+    \brief Clears the internal command buffer cache.
+    \remarks This should be used when a native command buffer handle is retrieved
+    and LLGL is supposed to continue dispatching graphics and compute commands after the native command buffer has been modified.
+    */
     ClearCache = 1u,
 
     /**
-     * \brief Sets the binding slot for internal tessellation factor buffer.
-     * \see NativeCommand::tessFactorBuffer
-     */
+    \brief Sets the binding slot for internal tessellation factor buffer.
+    \see NativeCommand::tessFactorBuffer
+    */
     TessFactorBuffer,
 };
 

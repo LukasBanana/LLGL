@@ -17,29 +17,30 @@ see https://sourceforge.net/p/predef/wiki/OperatingSystems/
 #if defined _WIN32
 #   include <winapifamily.h>
 #   if WINAPI_FAMILY == WINAPI_FAMILY_APP
-#       define LLGL_OS_UWP
+#       define LLGL_OS_UWP      1
 #   else
-#       define LLGL_OS_WIN32
+#       define LLGL_OS_WIN32    1
 #   endif
 #elif defined __APPLE__
 #   include <TargetConditionals.h>
 #   if TARGET_OS_IPHONE != 0
-#       define LLGL_OS_IOS
+#       define LLGL_OS_IOS      1
 #   else
-#       define LLGL_OS_MACOS
+#       define LLGL_OS_MACOS    1
 #   endif
 #elif defined __ANDROID__ || defined ANDROID
-#   define LLGL_OS_ANDROID
+#   define LLGL_OS_ANDROID      1
 #elif defined __EMSCRIPTEN__
-#   define LLGL_OS_WASM
+#   define LLGL_OS_WASM         1
 #elif defined __linux__
-#   define LLGL_OS_LINUX
+#   define LLGL_OS_LINUX        1
 #endif
 
 
 /*
 Macros for CPU architecture
 see https://sourceforge.net/p/predef/wiki/Architectures/
+TODO: deprecate these macros, they were only ever used in the long removed runtime assembler!
 */
 
 #if defined _M_ARM64 || defined __aarch64__

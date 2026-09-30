@@ -545,10 +545,10 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 /* ----- Buffers ------ */
 
 //private
-void D3D12CommandBuffer::SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D)
+void D3D12CommandBuffer::SetVertexBufferAndTransitionResource(D3D12Buffer& bufferD3D, const D3D12_VERTEX_BUFFER_VIEW& bufferView)
 {
     SubmitTransitionResource(bufferD3D.GetResource(), bufferD3D.GetResource().usageState);
-    GetNative()->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
+    GetNative()->IASetVertexBuffers(0, 1, &bufferView);
 
     if ((bufferD3D.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
         soBufferIASlot0_ = &bufferD3D;
@@ -557,17 +557,51 @@ void D3D12CommandBuffer::SetVertexBufferAndTransitionResource(D3D12Buffer& buffe
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    SetVertexBufferAndTransitionResource(bufferD3D);
+    SetVertexBufferAndTransitionResource(bufferD3D, bufferD3D.GetVertexBufferView());
 }
 
-void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer, std::uint32_t stride, std::uint64_t offset)
 {
-    if (numVertexAttribs > 0 && vertexAttribs != nullptr)
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView = bufferD3D.GetVertexBufferView();
+    if (vertexBufferView.SizeInBytes > offset)
     {
-        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-        bufferD3D.UpdateVertexBufferStride(vertexAttribs[0].stride);
-        SetVertexBufferAndTransitionResource(bufferD3D);
+        vertexBufferView.BufferLocation += offset;
+        vertexBufferView.SizeInBytes    -= static_cast<UINT>(offset);
+        if (stride > 0)
+            vertexBufferView.StrideInBytes = stride;
+        SetVertexBufferAndTransitionResource(bufferD3D, vertexBufferView);
     }
+}
+
+void D3D12CommandBuffer::SetVertexBuffers(std::uint32_t numBufferViews, const VertexBufferView* bufferViews)
+{
+    if (numBufferViews > D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT)
+        return /*E_BOUNDS*/;
+
+    D3D12_VERTEX_BUFFER_VIEW bufferViewsD3D[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+
+    for_range(i, numBufferViews)
+    {
+        auto* bufferD3D = LLGL_CAST(D3D12Buffer*, bufferViews[i].buffer);
+        if (bufferD3D == nullptr)
+            return /*E_POINTER*/;
+
+        bufferViewsD3D[i] = bufferD3D->GetVertexBufferView();
+
+        if (!(bufferViewsD3D[i].SizeInBytes > bufferViews[i].offset))
+            return /*E_INVALIDARG*/;
+
+        bufferViewsD3D[i].BufferLocation += bufferViews[i].offset;
+        bufferViewsD3D[i].SizeInBytes    -= static_cast<UINT>(bufferViews[i].offset);
+
+        if (bufferViews[i].stride > 0)
+            bufferViewsD3D[i].StrideInBytes = bufferViews[i].stride;
+
+        SubmitTransitionResource(bufferD3D->GetResource(), bufferD3D->GetResource().usageState);
+    }
+
+    GetNative()->IASetVertexBuffers(0, numBufferViews, bufferViewsD3D);
 }
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
@@ -617,7 +651,9 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
     /* Copy descriptors before binding the active heaps */
+    bool isDescriptorHeapDirty = false;
     D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandles[2] = {};
+
     for_range(i, 2)
     {
         const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
@@ -628,16 +664,20 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
                 heapType,
                 resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
                 0,
-                resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
+                resourceHeapD3D.GetNumDescriptorsPerSet(heapType),
+                &isDescriptorHeapDirty
             );
         }
     }
 
-    /* Rebind in case copying descriptors advanced either pool to a new chunk */
-    commandContext_.SetStagingDescriptorHeaps(
-        boundPipelineLayout_->GetDescriptorHeapSetLayout(),
-        boundPipelineLayout_->GetRootParameterIndices()
-    );
+    /* Rebind descriptor heaps when copying descriptors advanced either pool to a new chunk */
+    if (isDescriptorHeapDirty)
+    {
+        commandContext_.SetStagingDescriptorHeaps(
+            boundPipelineLayout_->GetDescriptorHeapSetLayout(),
+            boundPipelineLayout_->GetRootParameterIndices()
+        );
+    }
 
     for_range(i, 2)
     {
@@ -1179,6 +1219,57 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
         return true;
     }
     return false;
+}
+
+/* ----- Variable Rate Shading (VRS) ----- */
+
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+static D3D12_SHADING_RATE ToD3DShadingRate(ShadingRate shadingRate)
+{
+    switch (shadingRate)
+    {
+        case ShadingRate::Size1x1: return D3D12_SHADING_RATE_1X1;
+        case ShadingRate::Size1x2: return D3D12_SHADING_RATE_1X2;
+        case ShadingRate::Size2x1: return D3D12_SHADING_RATE_2X1;
+        case ShadingRate::Size2x2: return D3D12_SHADING_RATE_2X2;
+        case ShadingRate::Size2x4: return D3D12_SHADING_RATE_2X4;
+        case ShadingRate::Size4x2: return D3D12_SHADING_RATE_4X2;
+        case ShadingRate::Size4x4: return D3D12_SHADING_RATE_4X4;
+    }
+    LLGL_TRAP_DX_MAP(ShadingRate, shadingRate, D3D12_SHADING_RATE);
+}
+
+static D3D12_SHADING_RATE_COMBINER ToD3DShadingRateCombiner(ShadingRateOp shadingRateOp)
+{
+    switch (shadingRateOp)
+    {
+        case ShadingRateOp::Keep:       return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH;
+        case ShadingRateOp::Replace:    return D3D12_SHADING_RATE_COMBINER_OVERRIDE;
+        case ShadingRateOp::Min:        return D3D12_SHADING_RATE_COMBINER_MIN;
+        case ShadingRateOp::Max:        return D3D12_SHADING_RATE_COMBINER_MAX;
+        case ShadingRateOp::Sum:        return D3D12_SHADING_RATE_COMBINER_SUM;
+    }
+    LLGL_TRAP_DX_MAP(ShadingRateOp, shadingRateOp, D3D12_SHADING_RATE_COMBINER);
+}
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
+
+void D3D12CommandBuffer::SetShadingRate(ShadingRate shadingRate)
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    D3D12_SHADING_RATE shadingRateD3D = ToD3DShadingRate(shadingRate);
+    commandContext_.SetShadingRate(shadingRateD3D, nullptr);
+    #endif
+}
+
+void D3D12CommandBuffer::SetShadingRate(ShadingRate shadingRate, ShadingRateOp combinerOpX, ShadingRateOp combinerOpY)
+{
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    D3D12_SHADING_RATE shadingRateD3D = ToD3DShadingRate(shadingRate);
+    const D3D12_SHADING_RATE_COMBINER combinersD3D[2] = { ToD3DShadingRateCombiner(combinerOpX), ToD3DShadingRateCombiner(combinerOpY) };
+    commandContext_.SetShadingRate(shadingRateD3D, combinersD3D);
+    #endif
 }
 
 /* ----- Mesh pipeline ----- */
