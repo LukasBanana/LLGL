@@ -1187,12 +1187,27 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
     #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
-    /* Only bind framebuffer if the framebuffer has changed */
-    auto targetIdx = static_cast<std::size_t>(target);
-    if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
+    if (target == GLFramebufferTarget::Framebuffer)
     {
-        contextState_.boundFramebuffers[targetIdx] = framebuffer;
-        glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
+        /* GL_FRAMEBUFFER binds both draw and read framebuffers */
+        GLuint& boundDrawFramebuffer = contextState_.boundFramebuffers[static_cast<std::size_t>(GLFramebufferTarget::DrawFramebuffer)];
+        GLuint& boundReadFramebuffer = contextState_.boundFramebuffers[static_cast<std::size_t>(GLFramebufferTarget::ReadFramebuffer)];
+        if (boundDrawFramebuffer != framebuffer || boundReadFramebuffer != framebuffer)
+        {
+            boundDrawFramebuffer = framebuffer;
+            boundReadFramebuffer = framebuffer;
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        }
+    }
+    else
+    {
+        /* Only bind framebuffer if the framebuffer has changed */
+        auto targetIdx = static_cast<std::size_t>(target);
+        if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
+        {
+            contextState_.boundFramebuffers[targetIdx] = framebuffer;
+            glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
+        }
     }
     #endif
 }
@@ -1219,8 +1234,12 @@ void GLStateManager::PopBoundFramebuffer()
 
 void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
+    /* Deleting a bound framebuffer reverts its binding to the default framebuffer (0), so track that instead of an invalid ID */
     for (GLuint& boundFramebuffer : contextState_.boundFramebuffers)
-        InvalidateBoundGLObject(boundFramebuffer, framebuffer);
+    {
+        if (boundFramebuffer == framebuffer)
+            boundFramebuffer = 0;
+    }
 }
 
 void GLStateManager::NotifyGLRenderTargetRelease(GLRenderTarget* renderTarget)
