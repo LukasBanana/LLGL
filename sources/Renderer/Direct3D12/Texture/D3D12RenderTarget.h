@@ -137,14 +137,13 @@ class D3D12RenderTarget final : public RenderTarget
             DXGI_FORMAT     format;
         };
 
-        // Depth and stencil planes are resolved separately
+        // Only the depth plane is resolved, since NVIDIA drivers leave the stencil plane untouched
         struct DepthStencilResolveTarget
         {
-            D3D12Resource*  resolveDstTexture               = nullptr;
-            UINT            resolveDstSubresources[2]       = {};
-            UINT            multiSampledSrcSubresources[2]  = {};
-            UINT            numPlanes                       = 0;
-            DXGI_FORMAT     format                          = DXGI_FORMAT_UNKNOWN;
+            D3D12Resource*  resolveDstTexture           = nullptr;
+            UINT            resolveDstSubresource       = 0;
+            UINT            multiSampledSrcSubresource  = 0;
+            DXGI_FORMAT     format                      = DXGI_FORMAT_UNKNOWN;
         };
 
     private:

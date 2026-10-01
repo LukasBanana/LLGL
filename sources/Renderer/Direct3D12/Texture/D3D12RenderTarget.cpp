@@ -124,14 +124,14 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
         }
 
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        /* Resolve depth-stencil planes; D3D12 has no resolve mode that takes a single sample, so take the minimum */
-        for_range(plane, depthStencilResolveTarget_.numPlanes)
+        /* Resolve depth plane; D3D12 has no resolve mode that takes a single sample, so take the minimum */
+        if (depthStencilResolveTarget_.resolveDstTexture != nullptr)
         {
             commandContext.ResolveSubresourceRegion(
                 *depthStencilResolveTarget_.resolveDstTexture,
-                depthStencilResolveTarget_.resolveDstSubresources[plane],
+                depthStencilResolveTarget_.resolveDstSubresource,
                 *depthStencil_,
-                depthStencilResolveTarget_.multiSampledSrcSubresources[plane],
+                depthStencilResolveTarget_.multiSampledSrcSubresource,
                 depthStencilResolveTarget_.format,
                 D3D12_RESOLVE_MODE_MIN
             );
@@ -582,25 +582,18 @@ void D3D12RenderTarget::CreateDepthStencilResolveTarget(
     ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
     auto& resolveTextureD3D = LLGL_CAST(D3D12Texture&, *resolveAttachment.texture);
 
-    depthStencilResolveTarget_.resolveDstTexture    = &(resolveTextureD3D.GetResource());
-    depthStencilResolveTarget_.numPlanes            = (DXTypes::HasStencilComponent(depthStencilFormat_) ? 2 : 1);
+    depthStencilResolveTarget_.resolveDstTexture        = &(resolveTextureD3D.GetResource());
+    depthStencilResolveTarget_.resolveDstSubresource    = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer);
+
+    /* Internal depth-stencil buffers have a single MIP-map and array layer */
+    if (Texture* texture = depthStencilAttachment.texture)
+    {
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
+        depthStencilResolveTarget_.multiSampledSrcSubresource = textureD3D.CalcSubresource(depthStencilAttachment.mipLevel, depthStencilAttachment.arrayLayer);
+    }
 
     /* WARP removes the device when resolving with DXGI_FORMAT_D32_FLOAT, so resolve the depth plane as DXGI_FORMAT_R32_FLOAT */
-    depthStencilResolveTarget_.format               = (depthStencilFormat_ == DXGI_FORMAT_D32_FLOAT ? DXGI_FORMAT_R32_FLOAT : depthStencilFormat_);
-
-    for_range(plane, depthStencilResolveTarget_.numPlanes)
-    {
-        depthStencilResolveTarget_.resolveDstSubresources[plane] = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, plane);
-
-        /* Internal depth-stencil buffers have a single MIP-map and array layer, so the subresource is the plane index */
-        if (Texture* texture = depthStencilAttachment.texture)
-        {
-            auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
-            depthStencilResolveTarget_.multiSampledSrcSubresources[plane] = textureD3D.CalcSubresource(depthStencilAttachment.mipLevel, depthStencilAttachment.arrayLayer, plane);
-        }
-        else
-            depthStencilResolveTarget_.multiSampledSrcSubresources[plane] = plane;
-    }
+    depthStencilResolveTarget_.format = (depthStencilFormat_ == DXGI_FORMAT_D32_FLOAT ? DXGI_FORMAT_R32_FLOAT : depthStencilFormat_);
 }
 
 
