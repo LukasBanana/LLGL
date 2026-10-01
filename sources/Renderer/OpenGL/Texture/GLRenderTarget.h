@@ -75,6 +75,7 @@ class GLRenderTarget final : public RenderTarget
 
         void BuildColorAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget);
         void BuildResolveAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isAttachmentListSeparated = false);
+        void BuildDepthStencilResolveAttachment(const AttachmentDescriptor& attachmentDesc);
         void BuildDepthStencilAttachment(const AttachmentDescriptor& attachmentDesc);
 
         void BuildAttachmentWithTexture(GLenum binding, const AttachmentDescriptor& attachmentDesc, GLFramebufferAttachment* outAttachmentGL = nullptr);
@@ -112,6 +113,7 @@ class GLRenderTarget final : public RenderTarget
         SmallVector<GLenum, 2>                  drawBuffersResolve_;                // Values for glDrawBuffers for the resolve FBO
 
         GLint                                   samples_                = 1;
+        GLbitfield                              resolveDepthStencilMask_ = 0;      // Bitmask for glBlitFramebuffer to resolve depth-stencil
         GLenum                                  depthStencilBinding_    = 0;        // Equivalent of drawBuffers but for depth-stencil
 
         const RenderPass*                       renderPass_             = nullptr;

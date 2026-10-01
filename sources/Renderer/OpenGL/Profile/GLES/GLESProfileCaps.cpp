@@ -160,6 +160,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = (version >= 300); // GLES 3.0
     features.hasLogicOp                     = false;
+    features.hasDepthStencilResolve         = (version >= 300); // GLES 3.0
     features.hasPipelineCaching             = (version >= 300); // GLES 3.0
     features.hasPipelineStatistics          = false;
     features.hasRenderCondition             = false;

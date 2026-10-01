@@ -1455,7 +1455,7 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
 
             #if !LLGL_GL_ENABLE_OPENGL2X
             if (samples != nullptr)
-                glGetRenderbufferParameteriv(id_, GL_RENDERBUFFER_SAMPLES, samples);
+                glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, samples);
             #endif
         }
         GLStateManager::Get().PopBoundRenderbuffer();
