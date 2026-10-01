@@ -190,7 +190,7 @@ struct RenderTargetDescriptor
     \remarks Unlike a color resolve, which averages the samples, a depth-stencil resolve takes sample 0 unmodified:
     averaging depth is not meaningful, and taking a single sample is the only mode every implementation supports.
     Direct3D 12.1 has no resolve mode that takes a single sample, so it takes the minimum of all samples instead.
-    It also only resolves the depth plane, since NVIDIA drivers leave the stencil plane untouched.
+    It also only resolves the depth plane, since NVIDIA drivers leave the stencil plane untouched, so the stencil plane of the resolve target is undefined.
     \remarks Requires RenderingFeatures::hasDepthStencilResolve. Leave this attachment disabled if the multi-sampled
     depth buffer is only used for depth testing within the pass, which lets the backend keep it in tile memory.
     \note Only supported with: Vulkan, OpenGL, Metal, Direct3D 12.1.
