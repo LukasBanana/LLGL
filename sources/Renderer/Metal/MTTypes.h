@@ -32,7 +32,9 @@ namespace MTTypes
 
 
 MTLDataType         	                ToMTLDataType               ( const DataType                dataType          );
+MTLPixelFormat                          ToMTLPixelFormatOrDefault   ( const Format                  format            );
 MTLPixelFormat      	                ToMTLPixelFormat            ( const Format                  format            );
+MTLVertexFormat                         ToMTLVertexFormatOrDefault  ( const Format                  format            );
 MTLVertexFormat     	                ToMTLVertexFormat           ( const Format                  format            );
 MTLTessellationControlPointIndexType    ToMTLPatchIndexType         ( const Format                  format            );
 MTLTessellationPartitionMode            ToMTLPartitionMode          ( const TessellationPartition   partitionMode     );

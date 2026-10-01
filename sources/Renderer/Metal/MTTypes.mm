@@ -45,7 +45,7 @@ MTLDataType ToMTLDataType(const DataType dataType)
     LLGL_TRAP_MT_MAP(DataType, dataType, MTLDataType);
 }
 
-MTLPixelFormat ToMTLPixelFormat(const Format format)
+MTLPixelFormat ToMTLPixelFormatOrDefault(const Format format)
 {
     switch (format)
     {
@@ -140,18 +140,28 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RGB10A2UInt:       return MTLPixelFormatRGB10A2Uint;
         case Format::RG11B10Float:      return MTLPixelFormatRG11B10Float;
         case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
-        case Format::BGR5A1UNorm:       break; //return MTLPixelFormatBGR5A1Unorm;
-        case Format::B5G6R5UNorm:       return MTLPixelFormatB5G6R5Unorm;
+        case Format::BGR5A1UNorm:
+            #if LLGL_OS_IOS || (defined(__MAC_11_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_11_0)
+            if (@available(macOS 11.0, iOS 8.0, *))
+                return MTLPixelFormatBGR5A1Unorm;
+            #endif
+            break;
+        case Format::B5G6R5UNorm:
+            #if LLGL_OS_IOS || (defined(__MAC_11_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_11_0)
+            if (@available(macOS 11.0, iOS 8.0, *))
+                return MTLPixelFormatB5G6R5Unorm;
+            #endif
+            break;
         case Format::BGRA4UNorm:        break; // MTLPixelFormatABGR4Unorm has a different component order
 
         /* --- Depth-stencil formats --- */
-        #ifdef LLGL_OS_IOS
+        #if LLGL_OS_IOS
         case Format::D16UNorm:          return MTLPixelFormatDepth32Float;
         #else
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
         #endif
         case Format::D32Float:          return MTLPixelFormatDepth32Float;
-        #ifdef LLGL_OS_IOS
+        #if LLGL_OS_IOS
         case Format::D24UNormS8UInt:    return MTLPixelFormatDepth32Float_Stencil8;
         #else
         case Format::D24UNormS8UInt:    return (MTFormatCapabilities::Get().hasD24S8UIntFormat ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8);
@@ -159,7 +169,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
         /* --- Block compression (BC) formats --- */
-        #ifndef LLGL_OS_IOS
+        #if !LLGL_OS_IOS
         case Format::BC1UNorm:          return MTLPixelFormatBC1_RGBA;
         case Format::BC1UNorm_sRGB:     return MTLPixelFormatBC1_RGBA_sRGB;
         case Format::BC2UNorm:          return MTLPixelFormatBC2_RGBA;
@@ -177,7 +187,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         #endif
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
-        #ifdef LLGL_OS_IOS //TODO: available in macOS 11
+        #if LLGL_OS_IOS || (defined(__MAC_11_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_11_0)
         case Format::ASTC4x4:           return MTLPixelFormatASTC_4x4_LDR;
         case Format::ASTC4x4_sRGB:      return MTLPixelFormatASTC_4x4_sRGB;
         case Format::ASTC5x4:           return MTLPixelFormatASTC_5x4_LDR;
@@ -215,10 +225,27 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 
         default:                        break;
     }
-    LLGL_TRAP_MT_MAP(Format, format, MTLPixelFormat);
+    return MTLPixelFormatInvalid;
 }
 
-MTLVertexFormat ToMTLVertexFormat(const Format format)
+MTLPixelFormat ToMTLPixelFormat(const Format format)
+{
+    if (format == Format::Undefined)
+    {
+        /* Return explicitly requested invalid format */
+        return MTLPixelFormatInvalid;
+    }
+    else
+    {
+        /* Trap format that cannot be mapped */
+        MTLPixelFormat outFormat = ToMTLPixelFormatOrDefault(format);
+        if (outFormat != MTLPixelFormatInvalid)
+            return outFormat;
+        LLGL_TRAP_MT_MAP(Format, format, MTLPixelFormat);
+    }
+}
+
+MTLVertexFormat ToMTLVertexFormatOrDefault(const Format format)
 {
     switch (format)
     {
@@ -288,6 +315,14 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
 
         default:                    break;
     }
+    return MTLVertexFormatInvalid;
+}
+
+MTLVertexFormat ToMTLVertexFormat(const Format format)
+{
+    MTLVertexFormat outFormat = ToMTLVertexFormatOrDefault(format);
+    if (outFormat != MTLVertexFormatInvalid)
+        return outFormat;
     LLGL_TRAP_MT_MAP(Format, format, MTLVertexFormat);
 }
 
@@ -329,7 +364,7 @@ MTLTextureType ToMTLTextureType(const TextureType textureType)
         case TextureType::TextureCubeArray: return MTLTextureTypeCubeArray;
         case TextureType::Texture2DMS:      return MTLTextureType2DMultisample;
         case TextureType::Texture2DMSArray:
-            #ifndef LLGL_OS_IOS
+            #if !LLGL_OS_IOS
             if (@available(macOS 10.14, *))
                 return MTLTextureType2DMultisampleArray;
             #endif
@@ -406,7 +441,7 @@ MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMo
         case SamplerAddressMode::Repeat:        return MTLSamplerAddressModeRepeat;
         case SamplerAddressMode::Mirror:        return MTLSamplerAddressModeMirrorRepeat;
         case SamplerAddressMode::Clamp:         return MTLSamplerAddressModeClampToEdge;
-        #ifndef LLGL_OS_IOS
+        #if !LLGL_OS_IOS
         case SamplerAddressMode::Border:        return MTLSamplerAddressModeClampToBorderColor;
         case SamplerAddressMode::MirrorOnce:    return MTLSamplerAddressModeMirrorClampToEdge;
         #else
@@ -614,21 +649,23 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatRGB10A2Uint:             return Format::RGB10A2UInt;
         case MTLPixelFormatRG11B10Float:            return Format::RG11B10Float;
         case MTLPixelFormatRGB9E5Float:             return Format::RGB9E5Float;
+        #if LLGL_OS_IOS || (defined(__MAC_11_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_11_0)
+        case MTLPixelFormatBGR5A1Unorm:             return Format::BGR5A1UNorm;
         case MTLPixelFormatB5G6R5Unorm:             return Format::B5G6R5UNorm;
-        //case MTLPixelFormatBGR5A1Unorm:             return Format::BGR5A1UNorm;
+        #endif
 
         /* --- Depth-stencil formats --- */
-        #ifndef LLGL_OS_IOS
+        #if !LLGL_OS_IOS
         case MTLPixelFormatDepth16Unorm:            return Format::D16UNorm;
         #endif // /LLGL_OS_IOS
         case MTLPixelFormatDepth32Float:            return Format::D32Float;
-        #ifndef LLGL_OS_IOS
+        #if !LLGL_OS_IOS
         case MTLPixelFormatDepth24Unorm_Stencil8:   return Format::D24UNormS8UInt;
         #endif // /LLGL_OS_IOS
         case MTLPixelFormatDepth32Float_Stencil8:   return Format::D32FloatS8X24UInt;
 
         /* --- Compressed color formats --- */
-        #ifndef LLGL_OS_IOS
+        #if !LLGL_OS_IOS
         case MTLPixelFormatBC1_RGBA:                return Format::BC1UNorm;
         case MTLPixelFormatBC1_RGBA_sRGB:           return Format::BC1UNorm_sRGB;
         case MTLPixelFormatBC2_RGBA:                return Format::BC2UNorm;
@@ -646,7 +683,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         #endif // /LLGL_OS_IOS
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
-        #ifdef LLGL_OS_IOS //TODO: available in macOS 11
+        #if LLGL_OS_IOS || (defined(__MAC_11_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_11_0)
         case MTLPixelFormatASTC_4x4_LDR:            return Format::ASTC4x4;
         case MTLPixelFormatASTC_4x4_sRGB:           return Format::ASTC4x4_sRGB;
         case MTLPixelFormatASTC_5x4_LDR:            return Format::ASTC5x4;

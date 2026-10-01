@@ -7,6 +7,8 @@
 
 #include "MTFeatureSet.h"
 #include "MTDevice.h"
+#include "../../Core/CoreUtils.h"
+#include "MTTypes.h"
 #include "OSXAvailability.h"
 #include "Command/MTCommandContext.h"
 #include <LLGL/ShaderFlags.h>
@@ -51,6 +53,30 @@ static int FeatureSetToVersion(MTLFeatureSet fset)
         return 101; // 1.1
     #endif
     return 100; // 1.0
+}
+
+// Removes all MTLPixelFormat entries that don't deliver a valid mapping from MTTypes.
+static void MTFilterPixelFormats(std::vector<Format>& formats)
+{
+    RemoveAllFromListIf(
+        formats,
+        [](Format format) -> bool
+        {
+            return (MTTypes::ToMTLPixelFormatOrDefault(format) == MTLPixelFormatInvalid);
+        }
+    );
+}
+
+// Removes all MTLVertexFormat entries that don't deliver a valid mapping from MTTypes.
+static void MTFilterVertexFormats(std::vector<Format>& formats)
+{
+    RemoveAllFromListIf(
+        formats,
+        [](Format format) -> bool
+        {
+            return (MTTypes::ToMTLVertexFormatOrDefault(format) == MTLVertexFormatInvalid);
+        }
+    );
 }
 
 static void GetDefaultSupportedMTBaseFormats(std::vector<Format>& formats)
@@ -109,6 +135,7 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
         Format::ETC2UNorm,          Format::ETC2UNorm_sRGB,
     };
     GetDefaultSupportedMTBaseFormats(textureFormats);
+    MTFilterPixelFormats(textureFormats);
     return textureFormats;
 }
 
@@ -116,6 +143,7 @@ static std::vector<Format> MTGetSupportedVertexFormats()
 {
     std::vector<Format> vertexFormats;
     GetDefaultSupportedMTBaseFormats(vertexFormats);
+    MTFilterVertexFormats(vertexFormats);
     return vertexFormats;
 }
 
