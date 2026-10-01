@@ -156,7 +156,7 @@ private:
         shaderPipeline.vs = LoadVertexShader("Example", "VS", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
 
         #if ENABLE_MULTISAMPLING && ENABLE_CUSTOM_MULTISAMPLING
-        shaderPipeline.ps = LoadFragmentShader("Example.MSAA", "PS", psDefines);
+        shaderPipeline.ps = LoadFragmentShader("Example.MSAA", "PS_MSAA", psDefines);
         #else
         shaderPipeline.ps = LoadFragmentShader("Example", "PS", psDefines);
         #endif

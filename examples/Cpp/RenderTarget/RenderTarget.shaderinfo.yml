@@ -14,7 +14,7 @@ sources:
       macros:
         ENABLE_CUSTOM_MULTISAMPLING: 1
     entries:
-      - entry: "PS"
+      - entry: "PS_MSAA"
         profile: "ps_5_0"
         targets: [glsl450core, spirv, metal]
 

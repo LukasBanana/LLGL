@@ -39,7 +39,7 @@ struct VS_in
     float2 in_var_TEXCOORD [[attribute(2)]];
 };
 
-vertex VS_out VS(VS_in in [[stage_in]], constant type_PushConstant_ModelData& model [[buffer(0)]], const device type_StructuredBuffer_Transform& transforms [[buffer(1)]], constant type_Scene& Scene [[buffer(3)]])
+vertex VS_out VS(VS_in in [[stage_in]], constant type_PushConstant_ModelData& model [[buffer(2)]], const device type_StructuredBuffer_Transform& transforms [[buffer(1)]], constant type_Scene& Scene [[buffer(3)]])
 {
     VS_out out = {};
     float4 _54 = transforms._m0[model.instance].wMatrix * float4(in.in_var_POSITION, 1.0);

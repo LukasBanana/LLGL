@@ -36,7 +36,7 @@ struct VStaticMesh_in
     float2 in_var_TEXCOORD [[attribute(2)]];
 };
 
-vertex VStaticMesh_out VStaticMesh(VStaticMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(0)]], constant type_SceneView& SceneView [[buffer(3)]])
+vertex VStaticMesh_out VStaticMesh(VStaticMesh_in in [[stage_in]], constant type_PushConstant_DynamicState_t& dynamicState [[buffer(4)]], constant type_SceneView& SceneView [[buffer(3)]])
 {
     VStaticMesh_out out = {};
     out.gl_Position = SceneView.wvpMatrix * float4(in.in_var_POSITION, 1.0);

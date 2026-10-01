@@ -11,20 +11,20 @@ struct type_Settings
     int useTexture2DMS;
 };
 
-struct PS_out
+struct PS_MSAA_out
 {
     float4 out_var_SV_Target [[color(0)]];
 };
 
-struct PS_in
+struct PS_MSAA_in
 {
     float3 in_var_NORMAL [[user(locn0)]];
     float2 in_var_TEXCOORD [[user(locn1)]];
 };
 
-fragment PS_out PS(PS_in in [[stage_in]], constant type_Settings& Settings [[buffer(3)]], texture2d<float> colorMap [[texture(2)]], texture2d_ms<float> colorMapMS [[texture(4)]], sampler samplerState [[sampler(1)]])
+fragment PS_MSAA_out PS_MSAA(PS_MSAA_in in [[stage_in]], constant type_Settings& Settings [[buffer(3)]], texture2d<float> colorMap [[texture(2)]], texture2d_ms<float> colorMapMS [[texture(4)]], sampler samplerState [[sampler(1)]])
 {
-    PS_out out = {};
+    PS_MSAA_out out = {};
     float4 _87;
     do
     {

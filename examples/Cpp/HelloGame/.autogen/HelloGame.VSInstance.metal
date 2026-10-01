@@ -57,7 +57,7 @@ struct VSInstance_in
     float2 in_var_TEXCOORD [[attribute(2)]];
 };
 
-vertex VSInstance_out VSInstance(VSInstance_in in [[stage_in]], constant type_PushConstant_Globals& globals [[buffer(0)]], constant type_Scene& Scene [[buffer(1)]], const device type_StructuredBuffer_Instance& instances [[buffer(2)]], uint gl_InstanceIndex [[instance_id]])
+vertex VSInstance_out VSInstance(VSInstance_in in [[stage_in]], constant type_PushConstant_Globals& globals [[buffer(3)]], constant type_Scene& Scene [[buffer(1)]], const device type_StructuredBuffer_Instance& instances [[buffer(2)]], uint gl_InstanceIndex [[instance_id]])
 {
     VSInstance_out out = {};
     uint _62 = gl_InstanceIndex + globals.firstInstance;

@@ -1,2 +1,2 @@
 Textures/Grass.jpg
-Textures/Plants_*.png
+Textures/Plants/Plants_*.png
