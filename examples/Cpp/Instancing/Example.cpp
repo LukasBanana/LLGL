@@ -205,6 +205,7 @@ private:
         std::string filename;
 
         std::vector<ImageReader> images;
+        images.resize(numPlantImages + 1);
 
         // Load all array images
         std::uint32_t width = 0, height = 0;
@@ -233,7 +234,7 @@ private:
             width   = imageExtent.width;
             height  = imageExtent.height;
 
-            images.push_back(std::move(reader));
+            images[i] = std::move(reader);
 
             // Show info
             LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
