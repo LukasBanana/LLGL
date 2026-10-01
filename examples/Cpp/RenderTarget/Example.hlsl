@@ -80,6 +80,11 @@ float4 SampleColorMap(float2 texCoord)
     }
 }
 
+// The MSAA permutation needs its own entry point, since all Metal shaders of an app are linked into a single library
+#if ENABLE_CUSTOM_MULTISAMPLING
+#define PS PS_MSAA
+#endif
+
 float4 PS(OutputVS inp) : SV_Target
 {
     float4 color = SampleColorMap(inp.texCoord);
