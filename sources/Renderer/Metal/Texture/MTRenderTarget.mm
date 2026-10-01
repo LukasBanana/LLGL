@@ -42,9 +42,6 @@ static void SetDepthStencilResolveFilters(MTLRenderPassDescriptor* renderPass)
     {
         if (renderPass.depthAttachment.resolveTexture != nil)
             renderPass.depthAttachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
-    }
-    if (@available(macOS 10.14, iOS 12.0, *))
-    {
         if (renderPass.stencilAttachment.resolveTexture != nil)
             renderPass.stencilAttachment.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
     }

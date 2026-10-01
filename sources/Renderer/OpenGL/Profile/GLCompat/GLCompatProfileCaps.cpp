@@ -213,6 +213,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasLogicOp                     = true;
+    features.hasDepthStencilResolve         = HasExtension(GLExt::ARB_framebuffer_object);
     features.hasPipelineStatistics          = false;
     features.hasRenderCondition             = true;
 }
