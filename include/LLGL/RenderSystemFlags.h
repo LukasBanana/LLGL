@@ -677,7 +677,7 @@ struct RenderingFeatures
     averaging them. Without this, a multi-sampled depth attachment's contents cannot be transferred to a
     single-sampled texture, which matters when the single-sampled image is owned by something else - an XR
     runtime submitting depth for reprojection, for instance.
-    \note Only supported with: Vulkan, OpenGL, Metal.
+    \note Only supported with: Vulkan, OpenGL, Metal, Direct3D 12.
     \see RenderTargetDescriptor::resolveAttachments
     */
     bool hasDepthStencilResolve         = false;

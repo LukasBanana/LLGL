@@ -121,6 +121,11 @@ class D3D12RenderTarget final : public RenderTarget
             D3D12Resource*              multiSampledSrcTexture
         );
 
+        void CreateDepthStencilResolveTarget(
+            const AttachmentDescriptor& depthStencilAttachment,
+            const AttachmentDescriptor& resolveAttachment
+        );
+
     private:
 
         // Members for multi-sampled render-targets
@@ -130,6 +135,15 @@ class D3D12RenderTarget final : public RenderTarget
             UINT            resolveDstSubresource;
             D3D12Resource*  multiSampledSrcTexture;
             DXGI_FORMAT     format;
+        };
+
+        // Depth and stencil planes are resolved separately
+        struct DepthStencilResolveTarget
+        {
+            D3D12Resource*  resolveDstTexture               = nullptr;
+            UINT            resolveDstSubresources[2]       = {};
+            UINT            multiSampledSrcSubresources[2]  = {};
+            UINT            numPlanes                       = 0;
         };
 
     private:
@@ -147,6 +161,7 @@ class D3D12RenderTarget final : public RenderTarget
         std::vector<D3D12Resource>      internalTextures_;
         std::vector<D3D12Resource*>     colorBuffers_;
         std::vector<ResolveTarget>      resolveTargets_;
+        DepthStencilResolveTarget       depthStencilResolveTarget_;
         D3D12Resource*                  depthStencil_       = nullptr;
 
 };

@@ -855,6 +855,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
     deviceCaps_.viewInstancingTier = options3.ViewInstancingTier;
 
+    /* Check ResolveSubresourceRegion support, which is required for depth-stencil resolves */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2));
+    deviceCaps_.programmableSamplePositionsTier = options2.ProgrammableSamplePositionsTier;
+
     /* Check variable rate shading support */
     D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6));
@@ -911,6 +916,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasPipelineStatistics             = true;
     caps.features.hasRenderCondition                = true;
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+    caps.features.hasDepthStencilResolve            = (deviceCaps_.programmableSamplePositionsTier != D3D12_PROGRAMMABLE_SAMPLE_POSITIONS_TIER_NOT_SUPPORTED);
     caps.features.hasVariableRateShading            = (deviceCaps_.variableShadingRateTier != D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED);
     #else
     caps.features.hasMeshShaders                    = false;

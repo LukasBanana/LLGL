@@ -114,6 +114,18 @@ class D3D12CommandContext
             DXGI_FORMAT     format
         );
 
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        // Resolves the entire subresource with the specified mode. Requires ID3D12GraphicsCommandList1.
+        void ResolveSubresourceRegion(
+            D3D12Resource&      dstResource,
+            UINT                dstSubresource,
+            D3D12Resource&      srcResource,
+            UINT                srcSubresource,
+            DXGI_FORMAT         format,
+            D3D12_RESOLVE_MODE  resolveMode
+        );
+        #endif
+
         void CopyTextureRegion(
             D3D12Resource&      dstResource,
             UINT                dstSubresource,
@@ -338,6 +350,7 @@ class D3D12CommandContext
 
         ComPtr<ID3D12GraphicsCommandList>       commandList_;
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        ComPtr<ID3D12GraphicsCommandList1>      commandList1_; // Resolve subresource region
       //ComPtr<ID3D12GraphicsCommandList4>      commandList4_; // Ray-Tracing (DXR)
         ComPtr<ID3D12GraphicsCommandList5>      commandList5_; // Variable Rate Shading (VRS)
         ComPtr<ID3D12GraphicsCommandList6>      commandList6_; // Mesh Pipeline

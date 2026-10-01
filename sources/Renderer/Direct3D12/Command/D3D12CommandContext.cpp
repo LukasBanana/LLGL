@@ -91,6 +91,7 @@ void D3D12CommandContext::Create(
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Check if newer version of command list is available */
+    commandList_->QueryInterface(IID_PPV_ARGS(&commandList1_));
     if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList5_))))
         commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
     #endif
@@ -365,6 +366,46 @@ void D3D12CommandContext::ResolveSubresource(
     TransitionResource(dstResource, dstResourceOldState);
     TransitionResource(srcResource, srcResourceOldState);
 }
+
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+
+void D3D12CommandContext::ResolveSubresourceRegion(
+    D3D12Resource&      dstResource,
+    UINT                dstSubresource,
+    D3D12Resource&      srcResource,
+    UINT                srcSubresource,
+    DXGI_FORMAT         format,
+    D3D12_RESOLVE_MODE  resolveMode)
+{
+    if (!commandList1_)
+        return;
+
+    /* Transition both resources */
+    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.currentState;
+    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.currentState;
+
+    TransitionResource(dstResource, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+    TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, true);
+
+    /* Resolve entire subresource */
+    commandList1_->ResolveSubresourceRegion(
+        dstResource.native.Get(),
+        dstSubresource,
+        0,
+        0,
+        srcResource.native.Get(),
+        srcSubresource,
+        nullptr,
+        format,
+        resolveMode
+    );
+
+    /* Transition both resources */
+    TransitionResource(dstResource, dstResourceOldState);
+    TransitionResource(srcResource, srcResourceOldState);
+}
+
+#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
 void D3D12CommandContext::CopyTextureRegion(
     D3D12Resource&      dstResource,

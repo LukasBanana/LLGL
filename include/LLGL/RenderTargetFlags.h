@@ -189,9 +189,10 @@ struct RenderTargetDescriptor
     and must have been created with the binding flag BindFlags::DepthStencilAttachment.
     \remarks Unlike a color resolve, which averages the samples, a depth-stencil resolve takes sample 0 unmodified:
     averaging depth is not meaningful, and taking a single sample is the only mode every implementation supports.
+    Direct3D 12 has no resolve mode that takes a single sample, so it takes the minimum of all samples instead.
     \remarks Requires RenderingFeatures::hasDepthStencilResolve. Leave this attachment disabled if the multi-sampled
     depth buffer is only used for depth testing within the pass, which lets the backend keep it in tile memory.
-    \note Only supported with: Vulkan, OpenGL, Metal.
+    \note Only supported with: Vulkan, OpenGL, Metal, Direct3D 12.
     \see RenderingFeatures::hasDepthStencilResolve
     */
     AttachmentDescriptor    depthStencilResolveAttachment;
