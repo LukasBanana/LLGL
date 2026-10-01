@@ -921,7 +921,7 @@ bool VKRenderSystem::AppendUserInstanceExtensions(const RendererConfigurationVul
             AppendExtension(extension);
         else
         {
-            GetMutableReport().Errorf("required Vulkan instance extension not supported: %s", name);
+            GetMutableReport().Errorf("required Vulkan instance extension not supported: %s\n", name);
             return false;
         }
     }
@@ -1202,9 +1202,9 @@ bool VKRenderSystem::PickPhysicalDevice(const RendererConfigurationVulkan* confi
     )
     {
         if (config != nullptr && !config->requiredDeviceExtensions.empty())
-            GetMutableReport().Errorf("failed to find suitable Vulkan device that supports all required device extensions");
+            GetMutableReport().Errorf("failed to find suitable Vulkan device that supports all required device extensions\n");
         else
-            GetMutableReport().Errorf("failed to find suitable Vulkan device");
+            GetMutableReport().Errorf("failed to find suitable Vulkan device\n");
         return false;
     }
 
