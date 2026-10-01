@@ -111,7 +111,8 @@ class MTGraphicsPSO final : public MTPipelineState
 
         void CreateDepthStencilState(
             id<MTLDevice>                       device,
-            const GraphicsPipelineDescriptor&   desc
+            const GraphicsPipelineDescriptor&   desc,
+            const MTRenderPass*                 defaultRenderPass
         );
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);

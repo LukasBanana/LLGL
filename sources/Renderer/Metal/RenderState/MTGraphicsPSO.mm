@@ -80,7 +80,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     /* Create render pipeline and depth-stencil states */
     if (CreateRenderPipelineState(device, desc, defaultRenderPass))
     {
-        CreateDepthStencilState(device, desc);
+        CreateDepthStencilState(device, desc, defaultRenderPass);
         BuildStaticStateBuffer(desc);
     }
 }
@@ -398,19 +398,28 @@ id<MTLRenderPipelineState> MTGraphicsPSO::CreateNativeRenderPipelineState(
 
 void MTGraphicsPSO::CreateDepthStencilState(
     id<MTLDevice>                       device,
-    const GraphicsPipelineDescriptor&   desc)
+    const GraphicsPipelineDescriptor&   desc,
+    const MTRenderPass*                 defaultRenderPass)
 {
+    /*
+    Metal does not allow depth or stencil tests without the respective attachment,
+    so disable them like the other backends do implicitly when there is nothing to test against.
+    */
+    const MTRenderPass* renderPassMT = (desc.renderPass != nullptr ? LLGL_CAST(const MTRenderPass*, desc.renderPass) : defaultRenderPass);
+    const bool hasDepthAttachment   = (renderPassMT == nullptr || renderPassMT->GetDepthAttachment().pixelFormat != MTLPixelFormatInvalid);
+    const bool hasStencilAttachment = (renderPassMT == nullptr || renderPassMT->GetStencilAttachment().pixelFormat != MTLPixelFormatInvalid);
+
     MTLDepthStencilDescriptor* depthStencilDesc = [[MTLDepthStencilDescriptor alloc] init];
     {
         /* Convert depth descriptor */
-        depthStencilDesc.depthWriteEnabled          = MTBoolean(desc.depth.writeEnabled);
-        if (desc.depth.testEnabled)
+        depthStencilDesc.depthWriteEnabled          = MTBoolean(desc.depth.writeEnabled && hasDepthAttachment);
+        if (desc.depth.testEnabled && hasDepthAttachment)
             depthStencilDesc.depthCompareFunction   = MTTypes::ToMTLCompareFunction(desc.depth.compareOp);
         else
             depthStencilDesc.depthCompareFunction   = MTLCompareFunctionAlways;
 
         /* Convert stencil descriptor */
-        if (desc.stencil.testEnabled)
+        if (desc.stencil.testEnabled && hasStencilAttachment)
         {
             Convert(depthStencilDesc.frontFaceStencil, desc.stencil.front);
             Convert(depthStencilDesc.backFaceStencil, desc.stencil.back);
