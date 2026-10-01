@@ -89,12 +89,17 @@ static bool IsPreferredDeviceVendor(DeviceVendor vendor, long preferredDeviceFla
     }
 }
 
-bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions, long preferredDeviceFlags)
+bool VKPhysicalDevice::PickPhysicalDevice(
+    VkInstance                      instance,
+    const ArrayView<const char*>&   supportedInstanceExtensions,
+    long                            preferredDeviceFlags,
+    const ArrayView<const char*>&   requiredUserExtensions,
+    const ArrayView<const char*>&   optionalUserExtensions)
 {
     /* Query all physical devices and pick suitable */
     std::vector<VkPhysicalDevice> physicalDevices = VKQueryPhysicalDevices(instance);
 
-    auto TryPickPhysicalDevice = [this, &supportedInstanceExtensions](VkPhysicalDevice device) -> bool
+    auto TryPickPhysicalDevice = [this, &supportedInstanceExtensions, &requiredUserExtensions, &optionalUserExtensions](VkPhysicalDevice device) -> bool
     {
         if (!IsPhysicalDeviceSuitable(device, supportedExtensions_))
         {
@@ -106,7 +111,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<c
         for (const VkExtensionProperties& extension : supportedExtensions_)
             supportedExtensionNames_.insert(extension.extensionName);
 
-        if (!EnableExtensions(VKGetRequiredDeviceExtensions(), true))
+        if (!EnableExtensions(VKGetRequiredDeviceExtensions(), true) || !EnableExtensions(requiredUserExtensions, true))
         {
             /* Stop considering this physical device, because some required extensions are not supported */
             supportedExtensionNames_.clear();
@@ -116,6 +121,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<c
         /* Store device and store properties */
         physicalDevice_ = device;
         EnableExtensions(GetOptionalExtensions());
+        EnableExtensions(optionalUserExtensions);
         QueryDeviceInfo();
 
         return true;
@@ -529,17 +535,38 @@ bool VKPhysicalDevice::SupportsExtension(const char* extension) const
  * ======= Private: =======
  */
 
+bool VKPhysicalDevice::EnableExtension(const char* name)
+{
+    auto it = supportedExtensionNames_.find(name);
+    if (it == supportedExtensionNames_.end())
+        return false;
+
+    /* Add name to enabled Vulkan extensions; use the stored name so we don't depend on the lifetime of the input string */
+    if (std::find(enabledExtensionNames_.begin(), enabledExtensionNames_.end(), *it) == enabledExtensionNames_.end())
+        enabledExtensionNames_.push_back(*it);
+
+    return true;
+}
+
 bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
 {
     for (; *extensions != nullptr; ++extensions)
     {
-        const char* name = *extensions;
-        if (supportedExtensionNames_.find(name) != supportedExtensionNames_.end())
+        if (!EnableExtension(*extensions) && required)
         {
-            /* Add name to enabled Vulkan extensions */
-            enabledExtensionNames_.push_back(name);
+            /* Cancel search and return with error */
+            enabledExtensionNames_.clear();
+            return false;
         }
-        else if (required)
+    }
+    return true;
+}
+
+bool VKPhysicalDevice::EnableExtensions(const ArrayView<const char*>& extensions, bool required)
+{
+    for (const char* name : extensions)
+    {
+        if (!EnableExtension(name) && required)
         {
             /* Cancel search and return with error */
             enabledExtensionNames_.clear();

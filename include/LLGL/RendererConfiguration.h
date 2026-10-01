@@ -113,6 +113,26 @@ struct RendererConfigurationVulkan
     \todo Remove this as soon as Vulkan memory manage has been improved.
     */
     bool                        reduceDeviceMemoryFragmentation = false;
+
+    /**
+    \brief List of additional Vulkan instance extensions that must be supported.
+    \remarks If any of them is not supported, the render system fails to load.
+    LLGL already enables the instance extensions it needs, e.g. for surfaces and the debug layer.
+    */
+    ArrayView<const char*>      requiredInstanceExtensions;
+
+    //! List of additional Vulkan instance extensions to enable. The ones that are not supported, will be ignored.
+    ArrayView<const char*>      optionalInstanceExtensions;
+
+    /**
+    \brief List of additional Vulkan device extensions that must be supported.
+    \remarks Physical devices that don't support all of them are not considered.
+    If no physical device supports all of them, the render system fails to load.
+    */
+    ArrayView<const char*>      requiredDeviceExtensions;
+
+    //! List of additional Vulkan device extensions to enable. The ones that are not supported, will be ignored.
+    ArrayView<const char*>      optionalDeviceExtensions;
 };
 
 /**
