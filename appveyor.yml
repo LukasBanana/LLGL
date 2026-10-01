@@ -11,6 +11,8 @@ configuration:
   - Debug
   - Release
 
+# Reduce permutations of compile configurations since AppVeyor CI jobs take a long time.
+# Also switch to always unity builds to further reduce CI job duration.
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
@@ -18,25 +20,25 @@ environment:
       ARCH: "Win32"
       STATIC_LIB: OFF
     
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "Win32"
-      STATIC_LIB: ON
+    #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    #  GENERATOR: "Visual Studio 14 2015"
+    #  ARCH: "Win32"
+    #  STATIC_LIB: ON
     
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "x64"
-      STATIC_LIB: OFF
+    #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    #  GENERATOR: "Visual Studio 14 2015"
+    #  ARCH: "x64"
+    #  STATIC_LIB: OFF
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 14 2015"
       ARCH: "x64"
       STATIC_LIB: ON
 
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "Win32"
-      STATIC_LIB: OFF
+    #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    #  GENERATOR: "Visual Studio 15 2017"
+    #  ARCH: "Win32"
+    #  STATIC_LIB: OFF
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
@@ -48,15 +50,15 @@ environment:
       ARCH: "x64"
       STATIC_LIB: OFF
     
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "x64"
-      STATIC_LIB: ON
+    #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    #  GENERATOR: "Visual Studio 15 2017"
+    #  ARCH: "x64"
+    #  STATIC_LIB: ON
 
 for:
   -
     build_script:
       - git clone https://github.com/LukasBanana/GaussianLib.git
-      - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_STATIC_LIB=%STATIC_LIB% -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
+      - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_STATIC_LIB=%STATIC_LIB% -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DLLGL_UNITY_BUILD=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
       - cmake --build builds --config "%CONFIGURATION%"
     
