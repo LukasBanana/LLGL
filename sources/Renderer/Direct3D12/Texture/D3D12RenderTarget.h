@@ -144,6 +144,7 @@ class D3D12RenderTarget final : public RenderTarget
             UINT            resolveDstSubresources[2]       = {};
             UINT            multiSampledSrcSubresources[2]  = {};
             UINT            numPlanes                       = 0;
+            DXGI_FORMAT     format                          = DXGI_FORMAT_UNKNOWN;
         };
 
     private:

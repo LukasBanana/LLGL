@@ -132,7 +132,7 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
                 depthStencilResolveTarget_.resolveDstSubresources[plane],
                 *depthStencil_,
                 depthStencilResolveTarget_.multiSampledSrcSubresources[plane],
-                depthStencilFormat_,
+                depthStencilResolveTarget_.format,
                 D3D12_RESOLVE_MODE_MIN
             );
         }
@@ -584,6 +584,9 @@ void D3D12RenderTarget::CreateDepthStencilResolveTarget(
 
     depthStencilResolveTarget_.resolveDstTexture    = &(resolveTextureD3D.GetResource());
     depthStencilResolveTarget_.numPlanes            = (DXTypes::HasStencilComponent(depthStencilFormat_) ? 2 : 1);
+
+    /* WARP removes the device when resolving with DXGI_FORMAT_D32_FLOAT, so resolve the depth plane as DXGI_FORMAT_R32_FLOAT */
+    depthStencilResolveTarget_.format               = (depthStencilFormat_ == DXGI_FORMAT_D32_FLOAT ? DXGI_FORMAT_R32_FLOAT : depthStencilFormat_);
 
     for_range(plane, depthStencilResolveTarget_.numPlanes)
     {
