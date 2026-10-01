@@ -91,9 +91,11 @@ void D3D12CommandContext::Create(
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
     /* Check if newer version of command list is available */
-    commandList_->QueryInterface(IID_PPV_ARGS(&commandList1_));
-    if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList5_))))
-        commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+    if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList1_))))
+    {
+        if (SUCCEEDED(commandList_->QueryInterface(IID_PPV_ARGS(&commandList5_))))
+            commandList_->QueryInterface(IID_PPV_ARGS(&commandList6_));
+    }
     #endif
 
     /* Clear cache alongside device object initialization */
