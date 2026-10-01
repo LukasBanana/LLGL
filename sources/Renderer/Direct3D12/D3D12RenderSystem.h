@@ -62,6 +62,7 @@ struct D3D12DeviceCaps
     D3D12_VIEW_INSTANCING_TIER          viewInstancingTier      = D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED;
     D3D12_VARIABLE_SHADING_RATE_TIER    variableShadingRateTier = D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED;
     D3D12_MESH_SHADER_TIER              meshShaderTier          = D3D12_MESH_SHADER_TIER_NOT_SUPPORTED;
+    D3D12_PROGRAMMABLE_SAMPLE_POSITIONS_TIER programmableSamplePositionsTier = D3D12_PROGRAMMABLE_SAMPLE_POSITIONS_TIER_NOT_SUPPORTED;
     #endif
     bool                                isTearingSupported      = false;
 };

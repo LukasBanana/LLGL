@@ -33,7 +33,8 @@ The multi-sampled attachments deliberately carry a color attachment and its colo
 attachment layout matches the real (XR) use case: the depth resolve descriptor is indexed after all color resolve
 targets, and an off-by-one there would bind the wrong image.
 
-Skipped on backends/devices without RenderingFeatures::hasDepthStencilResolve. Only Vulkan, OpenGL and Metal report it.
+Skipped on backends/devices without RenderingFeatures::hasDepthStencilResolve. Only Vulkan, OpenGL, Metal and Direct3D 12.1 report it.
+Direct3D 12.1 takes the minimum of all samples instead of sample 0, which is equally close to the reference on the interior.
 */
 DEF_TEST( DepthStencilResolve )
 {

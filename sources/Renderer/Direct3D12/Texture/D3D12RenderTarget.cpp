@@ -122,6 +122,21 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
                 target.format
             );
         }
+
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        /* Resolve depth plane; D3D12 has no resolve mode that takes a single sample, so take the minimum */
+        if (depthStencilResolveTarget_.resolveDstTexture != nullptr)
+        {
+            commandContext.ResolveSubresourceRegion(
+                *depthStencilResolveTarget_.resolveDstTexture,
+                depthStencilResolveTarget_.resolveDstSubresource,
+                *depthStencil_,
+                depthStencilResolveTarget_.multiSampledSrcSubresource,
+                depthStencilResolveTarget_.format,
+                D3D12_RESOLVE_MODE_MIN
+            );
+        }
+        #endif
     }
     else
     {
@@ -270,6 +285,8 @@ void D3D12RenderTarget::CreateAttachments(
         auto* renderPassD3D = GetD3DRenderPass(desc.renderPass);
         const D3D12_DSV_FLAGS dsvFlags = (renderPassD3D != nullptr ? renderPassD3D->GetAttachmentFlagsDSV() : D3D12_DSV_FLAG_NONE);
         CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart(), dsvFlags, numViews);
+        if (HasMultiSampling() && desc.depthStencilResolveAttachment.texture != nullptr)
+            CreateDepthStencilResolveTarget(desc.depthStencilAttachment, desc.depthStencilResolveAttachment);
     }
 }
 
@@ -553,6 +570,30 @@ void D3D12RenderTarget::CreateResolveTarget(
         resolveTarget.format                    = format;
     }
     resolveTargets_.push_back(resolveTarget);
+}
+
+void D3D12RenderTarget::CreateDepthStencilResolveTarget(
+    const AttachmentDescriptor& depthStencilAttachment,
+    const AttachmentDescriptor& resolveAttachment)
+{
+    LLGL_ASSERT_PTR(resolveAttachment.texture);
+    LLGL_ASSERT_PTR(depthStencil_);
+
+    ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
+    auto& resolveTextureD3D = LLGL_CAST(D3D12Texture&, *resolveAttachment.texture);
+
+    depthStencilResolveTarget_.resolveDstTexture        = &(resolveTextureD3D.GetResource());
+    depthStencilResolveTarget_.resolveDstSubresource    = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer);
+
+    /* Internal depth-stencil buffers have a single MIP-map and array layer */
+    if (Texture* texture = depthStencilAttachment.texture)
+    {
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
+        depthStencilResolveTarget_.multiSampledSrcSubresource = textureD3D.CalcSubresource(depthStencilAttachment.mipLevel, depthStencilAttachment.arrayLayer);
+    }
+
+    /* WARP removes the device when resolving with DXGI_FORMAT_D32_FLOAT, so resolve the depth plane as DXGI_FORMAT_R32_FLOAT */
+    depthStencilResolveTarget_.format = (depthStencilFormat_ == DXGI_FORMAT_D32_FLOAT ? DXGI_FORMAT_R32_FLOAT : depthStencilFormat_);
 }
 
 
