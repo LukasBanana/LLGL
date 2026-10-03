@@ -34,15 +34,6 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    static constexpr bool           isMultiSamplingEnabled          =
-    (
-        #if LLGL_OS_WASM
-        false // Disable multi-sampling on WebGL, since multi-sampled textures are not supported
-        #else
-        true
-        #endif
-    );
-
     static constexpr bool           useCameraAcceleration           = true;
     static constexpr float          cameraTurnSpeed                 = 0.25f;
     static constexpr float          cameraMoveSpeed                 = 25.0f;
@@ -510,7 +501,7 @@ class Example_BrickPlay : public ExampleBase
 public:
 
     Example_BrickPlay() :
-        ExampleBase{ "LLGL Example: BrickPlay", /*overrideSwapChainSamples"*/ (isMultiSamplingEnabled ? 0 : 1) }
+        ExampleBase{ "LLGL Example: BrickPlay" }
     {
         // Initialize kd-Tree vounding volume and camera projection parameters
         InitAppConfig();

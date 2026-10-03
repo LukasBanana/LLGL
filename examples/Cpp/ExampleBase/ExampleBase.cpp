@@ -188,7 +188,7 @@ static std::string GetPreferredRendererModule()
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
     // Set report callback to standard output
-    LLGL::Log::RegisterCallbackStd();
+    LLGL::Log::RegisterCallbackStd(LLGL::Log::StdOutFlags::Colored);
     std::string rendererModule = GetPreferredRendererModule();
     GetSelectedRendererModuleOrDefault(rendererModule, argc, argv);
     return rendererModule;
@@ -384,10 +384,16 @@ bool ExampleBase::ShaderIncludeHandler::Include(const LLGL::UTF8String& inFilena
  * ExampleBase class
  */
 
-#ifdef LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 #   define LLGL_EXAMPLE_MULTISAMPLING ( 1 )
 #else
 #   define LLGL_EXAMPLE_MULTISAMPLING ( 8 )
+#endif
+
+#if LLGL_OS_WASM
+#   define LLGL_EXAMPLE_IMMEDIATECONTEXT ( true )
+#else
+#   define LLGL_EXAMPLE_IMMEDIATECONTEXT ( false )
 #endif
 
 struct ExampleConfig
@@ -400,7 +406,7 @@ struct ExampleConfig
     bool                vsync           = true;
     bool                debugger        = false;
     long                flags           = 0;
-    bool                immediateSubmit = false;
+    bool                immediateSubmit = LLGL_EXAMPLE_IMMEDIATECONTEXT;
     bool                rightHandedProj = false;
     bool                verbose         = false;
 };
@@ -675,7 +681,7 @@ static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const
 ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamles)
 {
     // Set report callback to standard output if not already done
-    LLGL::Log::RegisterCallbackStd();
+    LLGL::Log::RegisterCallbackStd(LLGL::Log::StdOutFlags::Colored);
 
     // Set up renderer descriptor
     LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
@@ -1361,9 +1367,13 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
         return renderSys.CreateTexture(LLGL::Texture2DDesc(format, 1, 1));
     }
 
+    // Copy texture descriptor to override bind flags
+    LLGL::TextureDescriptor texDesc = reader.GetTextureDesc();
+    texDesc.bindFlags = bindFlags;
+
     // Create texture and upload image data onto hardware texture
     LLGL::ImageView imageView = reader.GetImageView();
-    LLGL::Texture* tex = renderSys.CreateTexture(reader.GetTextureDesc(), &imageView);
+    LLGL::Texture* tex = renderSys.CreateTexture(texDesc, &imageView);
 
     return tex;
 }

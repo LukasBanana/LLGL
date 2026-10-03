@@ -142,7 +142,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.hasCubeTextures                = true;             // GLES 2.0
     features.hasArrayTextures               = true;             // GLES 2.0
     features.hasCubeArrayTextures           = false;
-    features.hasMultiSampleTextures         = false;
+    features.hasMultiSampleTextures         = (version >= 300); // GLES 3.0 (only for multi-sampled *renderbuffers*)
     features.hasTextureViews                = false;
     features.hasTextureViewSwizzle          = false;
     features.hasBufferViews                 = (version >= 300); // GLES 3.0

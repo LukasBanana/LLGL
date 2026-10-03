@@ -529,6 +529,9 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether multi-sample textures are supported.
+    \note WebGL reports this as supported, but it only supports it for depth-stencil attachments, not for color attachments.
+    The WebGL backend can still render into multi-sampled render-targets, but only the resolve targets can be custom textures.
+    The multi-sampled render-target can only write into so called 'renderbuffers', which are internal GL objects that are not exposed directly.
     \see TextureType::Texture2DMS
     */
     bool hasMultiSampleTextures         = false;
