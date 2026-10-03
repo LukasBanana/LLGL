@@ -15,6 +15,9 @@
 #include "../Shader/GLLegacyShader.h"
 #include "../Shader/GLShaderProgram.h"
 
+#include "../Platform/GLContext.h"
+#include "../Platform/GLDriverBugMitigation.h"
+
 #ifdef LLGL_OPENGL
 #   include "../Shader/GLSeparableShader.h"
 #   include "../Shader/GLProgramPipeline.h"
@@ -238,6 +241,19 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
 
 void GLStatePool::ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline)
 {
+    #if LLGL_GL_DRIVER_BUG_NVIDIA_glDeleteProgram == LLGL_OPTION_ENABLED
+
+    /* If the GPU vendor cannot be reliably determined, always enable this path */
+    return;
+
+    #elif LLGL_GL_DRIVER_BUG_NVIDIA_glDeleteProgram == LLGL_OPTION_ENABLED_FOR_SPECIFIC_GPU_ONLY
+
+    /* Keep all GL shader programs alive. They are pooled anyway, so this shouldn't terribly increase the GL object count. */
+    if (GLContext::GetCurrentDeviceVendor() == DeviceVendor::NVIDIA)
+        return;
+
+    #endif
+
     ReleaseRenderStateObject<GLShaderPipeline>(
         shaderPipelines_,
         nullptr,

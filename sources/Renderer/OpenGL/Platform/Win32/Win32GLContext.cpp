@@ -147,6 +147,7 @@ Win32GLContext::Win32GLContext(
         /* Create default WGL context */
         CreateWGLContext(surface);
     }
+    DetermineDeviceVendor();
 }
 
 Win32GLContext::~Win32GLContext()

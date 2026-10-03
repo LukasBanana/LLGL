@@ -16,6 +16,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../Buffer/GLVertexArrayPool.h"
 #include "../Buffer/GLStagingBufferPool.h"
+#include "../../../Core/Vendor.h"
 
 
 namespace LLGL
@@ -96,6 +97,14 @@ class GLContext
         }
         #endif
 
+        // Returns the 'potential' device vendor this GL context was created on.
+        // Since there is no standardized way to determine this, this is only an estimate using `glGetString()`.
+        // This also does not consider software renderers such as "llvmpipe".
+        inline DeviceVendor GetDeviceVendor() const
+        {
+            return deviceVendor_;
+        }
+
         // Returns the global index of this GL context. This is assigned when the context is created. The first index starts with 1. The invalid index is 0.
         inline unsigned GetGlobalIndex() const
         {
@@ -122,6 +131,9 @@ class GLContext
         // Returns the global index of the current GL context. 0 denotes an invalid index.
         static unsigned GetCurrentGlobalIndex();
 
+        // Returns the 'potential' device vendor the current GL context was created on. See GetDeviceVendor().
+        static DeviceVendor GetCurrentDeviceVendor();
+
         // Sets the swap interval for the current GL context.
         static bool SetCurrentSwapInterval(int interval);
 
@@ -147,6 +159,9 @@ class GLContext
         // Sets the depth-stencil format to D24UNormS8UInt;
         void SetDefaultDepthStencilFormat();
 
+        // Tries to estimate what device vendor this GL context was created on. This uses `glGetString()` as an indicator.
+        void DetermineDeviceVendor();
+
     private:
 
         GLStateManager      stateMngr_;
@@ -158,6 +173,7 @@ class GLContext
 
         Format              colorFormat_        = Format::Undefined;
         Format              depthStencilFormat_ = Format::Undefined;
+        DeviceVendor        deviceVendor_       = DeviceVendor::Undefined;
         unsigned            globalIndex_        = 0;
 
 };

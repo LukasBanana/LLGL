@@ -54,6 +54,7 @@ MacOSGLContext::MacOSGLContext(
         LLGL_TRAP("failed to find suitable OpenGL pixel format");
 
     CreateNSGLContext(sharedContext);
+    DetermineDeviceVendor();
 }
 
 MacOSGLContext::~MacOSGLContext()

@@ -6,6 +6,8 @@
  */
 
 #include "GLContext.h"
+#include <string>
+#include <algorithm>
 
 
 namespace LLGL
@@ -36,6 +38,11 @@ bool operator != (const GLPixelFormat& lhs, const GLPixelFormat& rhs)
 static GLContext*   g_currentContext;
 static unsigned     g_currentGlobalIndex;
 static unsigned     g_globalIndexCounter;
+
+DeviceVendor GLContext::GetCurrentDeviceVendor()
+{
+    return (g_currentContext != nullptr ? g_currentContext->GetDeviceVendor() : DeviceVendor::Undefined);
+}
 
 bool GLContext::SetCurrentSwapInterval(int interval)
 {
@@ -124,6 +131,35 @@ void GLContext::SetDefaultColorFormat()
 void GLContext::SetDefaultDepthStencilFormat()
 {
     depthStencilFormat_ = Format::D24UNormS8UInt;
+}
+
+static DeviceVendor GLDetermineDeviceVendor()
+{
+    const char* vendorStr  = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    const char* rendererStr = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    if (vendorStr != nullptr && rendererStr != nullptr)
+    {
+        std::string vendor{ vendorStr };
+        std::string renderer{ rendererStr };
+
+        std::transform(vendor.begin(), vendor.end(), vendor.begin(), ::tolower);
+        std::transform(renderer.begin(), renderer.end(), renderer.begin(), ::tolower);
+
+        if (vendor.find("nvidia") != std::string::npos || renderer.find("geforce") != std::string::npos)
+            return DeviceVendor::NVIDIA;
+        if (vendor.find("ati") != std::string::npos || vendor.find("amd") != std::string::npos || renderer.find("radeon") != std::string::npos)
+            return DeviceVendor::AMD;
+        if (vendor.find("intel") != std::string::npos || renderer.find("intel") != std::string::npos)
+            return DeviceVendor::Intel;
+        if (vendor.find("apple") != std::string::npos || renderer.find("apple") != std::string::npos)
+            return DeviceVendor::Apple;
+    }
+    return DeviceVendor::Undefined;
+}
+
+void GLContext::DetermineDeviceVendor()
+{
+    deviceVendor_ = GLDetermineDeviceVendor();
 }
 
 bool GLContext::IsSharableForSurface(const Surface *surface) const

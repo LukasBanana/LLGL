@@ -59,6 +59,8 @@ LinuxGLContextX11::LinuxGLContextX11(
         CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
 
     surface_ = &surface;
+    
+    DetermineDeviceVendor();
 }
 
 LinuxGLContextX11::~LinuxGLContextX11()

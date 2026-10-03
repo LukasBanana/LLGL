@@ -233,6 +233,7 @@ LinuxGLContextWayland::LinuxGLContextWayland(
     {
         CreateEGLContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
     }
+    DetermineDeviceVendor();
 }
 
 LinuxGLContextWayland::~LinuxGLContextWayland()
