@@ -1321,8 +1321,19 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     if (!IsMultiSampleTexture(textureDesc.type))
     {
         GLenum target = GLTypes::Map(textureDesc.type);
+
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetInitialGlTextureMinFilter(textureDesc));
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GetInitialGlTextureMagFilter(textureDesc));
+
+        if (textureDesc.mipLevels == 1)
+        {
+            /*
+            Explicitly disable all MIP-map filtering texture parameters if the texture is created without MIP-maps.
+            This marks textures with a single MIP-map as complete and WebGL implementations can be very pedantic about this.
+            */
+            glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
+            glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, 0);
+        }
     }
 
     /* Configure texture swizzling if format is not supported */

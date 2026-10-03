@@ -25,7 +25,11 @@ DEF_TEST( AlphaOnlyTexture )
 
     // Create PSO for alpha-only texture rendering
     PipelineLayout* psoLayout = renderer->CreatePipelineLayout(
-        Parse("texture(colorMap@1):frag,sampler(texSampler@2):frag")
+        Parse(
+            "texture(colorMap@1):frag,"
+            "sampler(texSampler@2):frag,"
+            "sampler<colorMap, texSampler>(colorMap@1),"
+        )
     );
 
     GraphicsPipelineDescriptor psoDesc;
