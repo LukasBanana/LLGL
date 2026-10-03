@@ -260,11 +260,11 @@ class LLGL_EXPORT ParseContext
         \brief Generates a texture swizzle descriptor from this parse context.
         \remarks This conversion always requires 4 characters from the parse string and the characters are interpreted as follows:
         - \c '1' translates to TextureSwizzle::One
-        - \c '0' translates to TextureSwizzle::One
-        - \c 'r' or 'R' translates to TextureSwizzle::Red
-        - \c 'g' or 'G' translates to TextureSwizzle::Green
-        - \c 'b' or 'B' translates to TextureSwizzle::Blue
-        - \c 'a' or 'A' translates to TextureSwizzle::Alpha
+        - \c '0' translates to TextureSwizzle::Zero
+        - \c 'r' or \c 'R' translates to TextureSwizzle::Red
+        - \c 'g' or \c 'G' translates to TextureSwizzle::Green
+        - \c 'b' or \c 'B' translates to TextureSwizzle::Blue
+        - \c 'a' or \c 'A' translates to TextureSwizzle::Alpha
         */
         TextureSwizzleRGBA AsTextureSwizzleRGBA() const;
 
@@ -375,8 +375,8 @@ class LLGL_EXPORT ParseContext
 /**
 \brief Returns a parse context for the input source code.
 \param[in] format Specifies the input string. This is treated just like a \c ::printf input string
-and each token preceded with a \c '%' character will be substituted with the next variadic argument.
-If no \c '%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
+and each token preceded with a \c '%%' character will be substituted with the next variadic argument.
+If no \c '%%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */

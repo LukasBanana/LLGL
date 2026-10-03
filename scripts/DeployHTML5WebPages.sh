@@ -3,9 +3,10 @@
 # Validate input arguments
 SRC=$1
 DST=$2
+FILTERS=("${@:3}")
 
 if [ -z "$SRC" ]; then
-    echo "Usage: $0 <source> [<destination>]"
+    echo "Usage: $0 <source> [<destination> [<example>...]]"
     exit 1
 fi
 
@@ -47,18 +48,38 @@ else
 fi
 
 # Copy HTML5 examples to the target web page directory
-copy_example_to_target "Example_BrickPlay"
-copy_example_to_target "Example_Fonts"
-copy_example_to_target "Example_HelloGame"
-copy_example_to_target "Example_Instancing"
-copy_example_to_target "Example_MorphTargets"
-copy_example_to_target "Example_Orthogonal"
-copy_example_to_target "Example_PBR"
-copy_example_to_target "Example_PostProcessing"
-copy_example_to_target "Example_RenderTarget"
-copy_example_to_target "Example_ShadowMapping"
-copy_example_to_target "Example_StencilBuffer"
-copy_example_to_target "Example_Texturing"
-copy_example_to_target "Example_VolumeRendering"
+declare -a EXAMPLES
+EXAMPLES=(
+    "Example_BrickPlay"
+    "Example_Fonts"
+    "Example_HelloGame"
+    "Example_Instancing"
+    "Example_MorphTargets"
+    "Example_Orthogonal"
+    "Example_PBR"
+    "Example_PostProcessing"
+    "Example_RenderTarget"
+    "Example_ShadowMapping"
+    "Example_StencilBuffer"
+    "Example_Texturing"
+    "Example_VolumeRendering"
+)
+
+for EXAMPLE in "${EXAMPLES[@]}"; do
+    if [ ${#FILTERS[@]} -gt 0 ]; then
+        SELECTED=0
+        for FILTER in "${FILTERS[@]}"; do
+            # Accept filters with or without "Example_" prefix
+            if [ "$EXAMPLE" == "$FILTER" ] || [ "$EXAMPLE" == "Example_$FILTER" ]; then
+                SELECTED=1
+                break
+            fi
+        done
+        if [ $SELECTED -eq 0 ]; then
+            continue
+        fi
+    fi
+    copy_example_to_target "$EXAMPLE"
+done
 
 popd

@@ -656,6 +656,11 @@ LLGL_STATIC_ASSERT_ENUM(ErrorType, InvalidState);
 LLGL_STATIC_ASSERT_ENUM(ErrorType, UnsupportedFeature);
 LLGL_STATIC_ASSERT_ENUM(ErrorType, UndefinedBehavior);
 
+LLGL_STATIC_ASSERT_ENUM(VersionStatus, Undefined);
+LLGL_STATIC_ASSERT_ENUM(VersionStatus, Alpha);
+LLGL_STATIC_ASSERT_ENUM(VersionStatus, Beta);
+LLGL_STATIC_ASSERT_ENUM(VersionStatus, Stable);
+
 LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperArgument);
 LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperState);
 LLGL_STATIC_ASSERT_ENUM(WarningType, PointlessOperation);

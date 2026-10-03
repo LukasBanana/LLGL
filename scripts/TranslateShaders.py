@@ -151,6 +151,7 @@ class CompileContext:
                 input_spirv,
                 "--msl",
                 "--msl-decoration-binding", # LLGL examples maintain the same binding locations for all languages
+                "--msl-no-readwrite-texture-fences",
                 "--output", output_file
             ],
             shaderinfo.input_directory,

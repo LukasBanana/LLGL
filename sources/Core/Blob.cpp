@@ -289,6 +289,7 @@ static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outConten
 
 #endif // /LLGL_OS_ANDROID
 
+// Consolidates combined newline characters consisting of carriage return '\r' and newline '\n' which are common on Windows systems.
 static Blob::Pimpl* MakeInternalBlobAndSanitizeNewlineChars(DynamicByteArray&& buffer)
 {
     /* If there are no carriage return characters, just return the input buffer as blob container */
