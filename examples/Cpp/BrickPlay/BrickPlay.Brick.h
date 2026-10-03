@@ -79,6 +79,7 @@ struct BrickInfo
     std::string             label;
     GridVec3i               extent;
     std::vector<GridVec3i>  excludedCells;
+    std::uint32_t           numGroups                       = 0;
     BrickMesh               meshes[BrickGroup_Num];
     InstanceGroup           instanceGroups[BrickGroup_Num];
 };

@@ -10,6 +10,7 @@
 #include "BrickPlay.Utils.h"
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
+#include <FileUtils.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Platform/Platform.h>
 #include <algorithm>
@@ -557,15 +558,33 @@ public:
 
 private:
 
+    // Wrapper to resolve filename to full path (some platforms don't allow read directly from storage, like Android).
+    bool ReadFile(const char* filename, std::stringstream& outStream)
+    {
+        std::string filePath;
+        if (!FindAsset(filename, &filePath))
+        {
+            LLGL::Log::Errorf("Failed to find file: %s\n", filename);
+            return false;
+        }
+
+        LLGL::Blob fileContent = LLGL::Blob::CreateFromFile(filePath, true);
+        if (!fileContent)
+        {
+            LLGL::Log::Errorf("Failed to read file: %s\n", filePath.c_str());
+            return false;
+        }
+
+        outStream = std::stringstream(std::string(static_cast<const char*>(fileContent.GetData())));
+        return true;
+    }
+
     // Loads the configuration file and imports its color palette and brick models
     bool ImportConfigs(const char* filename)
     {
-        std::ifstream file{ filename };
-        if (!file.good())
-        {
-            LLGL::Log::Errorf("Failed to import configuration file: %s\n", filename);
+        std::stringstream file;
+        if (!ReadFile(filename, file))
             return false;
-        }
 
         const bool success = BrickUtils::ParseTextFile(
             file,
@@ -614,7 +633,7 @@ private:
                     std::string modelFilename, groupName;
                     stream >> modelFilename >> groupName;
 
-                    BrickGroup brickGroup = BrickDictionary::Get().GroupFromString(groupName.c_str());
+                    BrickGroup brickGroup = (groupName.empty() ? BrickGroup_Default : BrickDictionary::Get().GroupFromString(groupName.c_str()));
                     if (brickGroup >= BrickGroup_Num)
                     {
                         LLGL::Log::Errorf("Invalid brick group '%s' in %s:%d\n", groupName.c_str(), filename, lineNo);
@@ -627,6 +646,9 @@ private:
                             brickInfo.label.c_str(), groupName.c_str(), filename, lineNo
                         );
                     }
+
+                    // Expand upper bound of how many groups are used for this brick type
+                    brickInfo.numGroups = std::max(brickInfo.numGroups, static_cast<std::uint32_t>(brickGroup) + 1);
 
                     if (!LoadBrickModelFile(brickInfo.meshes[brickGroup], modelFilename.c_str()))
                     {
@@ -877,11 +899,12 @@ private:
         LLGL::Texture* cubeFaceTextures[6] = {};
         int cubeFaceIndex = 0;
         LLGL::Extent3D cubeFace0Extent;
+        constexpr long cubeFaceBindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopySrc);
 
         for (const char* cubeFaceName : cubeFaces)
         {
             // Load cube face texture
-            cubeFaceTextures[cubeFaceIndex] = LoadTexture(basename + cubeFaceName);
+            cubeFaceTextures[cubeFaceIndex] = LoadTexture(basename + cubeFaceName, cubeFaceBindFlags);
 
             // Validate all cube faces have the same size and are square in size
             const LLGL::Extent3D cubeFaceExtent = cubeFaceTextures[cubeFaceIndex]->GetMipExtent(0);
@@ -919,6 +942,7 @@ private:
         {
             cubeTexDesc.debugName       = debugName.c_str();
             cubeTexDesc.type            = LLGL::TextureType::TextureCube;
+            cubeTexDesc.bindFlags       = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopyDst;
             cubeTexDesc.extent          = cubeFace0Extent;
             cubeTexDesc.arrayLayers     = 6;
             cubeTexDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
@@ -937,7 +961,8 @@ private:
                 for (std::uint32_t cubeFaceIndex = 0; cubeFaceIndex < 6u; ++cubeFaceIndex)
                 {
                     dstLocation.arrayLayer = cubeFaceIndex;
-                    commands->CopyTexture(*cubeTex, dstLocation, *cubeFaceTextures[cubeFaceIndex], srcLocation, cubeFace0Extent);
+                    if (LLGL::Texture* cubeFaceTex = cubeFaceTextures[cubeFaceIndex])
+                        commands->CopyTexture(*cubeTex, dstLocation, *cubeFaceTex, srcLocation, cubeFace0Extent);
                 }
 
                 commands->GenerateMips(*cubeTex);
@@ -1049,6 +1074,7 @@ private:
             renderTargetDesc.renderPass             = transparency.renderPass;
             renderTargetDesc.resolution             = resolution;
             renderTargetDesc.samples                = GetSampleCount();
+            renderTargetDesc.depthStencilAttachment = opacity.depthStencil;
 
             if (renderTargetDesc.samples > 1)
             {
@@ -1062,8 +1088,6 @@ private:
                 renderTargetDesc.colorAttachments[0]        = transparency.accumTexture;
                 renderTargetDesc.colorAttachments[1]        = transparency.revealTexture;
             }
-
-            renderTargetDesc.depthStencilAttachment         = opacity.depthStencil;
         }
         transparency.renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
     }
@@ -1237,19 +1261,19 @@ private:
             LLGL::ShaderMacro{},
         };
 
-        // Create shaders
-        vsBrick                 = LoadVertexShader  ("BrickPlay", "VSBrick");
+        // Load shaders. Apply clipping-origin patch to ESSL since glClipControl() is not supported in WebGL.
+        vsBrick                 = LoadVertexShader  ("BrickPlay", "VSBrick", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsBrick                 = LoadFragmentShader("BrickPlay", "PSBrick");
         fsBrickTransparent      = LoadFragmentShader("BrickPlay", "PSBrickTransparent", fsTransparentMacros);
-        vsBrickPreview          = LoadVertexShader  ("BrickPlay", "VSBrickPreview");
+        vsBrickPreview          = LoadVertexShader  ("BrickPlay", "VSBrickPreview", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsBrickPreview          = LoadFragmentShader("BrickPlay", "PSBrickPreview");
         vsTransparentComposite  = LoadVertexShader  ("BrickPlay", "VSTransparentComposite");
         fsTransparentComposite  = LoadFragmentShader("BrickPlay", "PSTransparentComposite");
         vsOverlay               = LoadVertexShader  ("BrickPlay", "VSOverlay");
         fsOverlay               = LoadFragmentShader("BrickPlay", "PSOverlay");
-        vsPlane                 = LoadVertexShader  ("BrickPlay", "VSPlane");
+        vsPlane                 = LoadVertexShader  ("BrickPlay", "VSPlane", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsPlane                 = LoadFragmentShader("BrickPlay", "PSPlane", fsPlaneMacros);
-        vsSkybox                = LoadVertexShader  ("BrickPlay", "VSSkybox");
+        vsSkybox                = LoadVertexShader  ("BrickPlay", "VSSkybox", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsSkybox                = LoadFragmentShader("BrickPlay", "PSSkybox");
 
         // Create pipeline layout for instanced scene rendering
@@ -1586,20 +1610,19 @@ private:
         std::map<std::uint32_t, int> colorToPaletteIndex;
 
         std::size_t numTotalInstances = 0;
-        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
-        {
-            for_range(groupType, BrickGroup_Num)
+        scene.ForEachInstanceGroup(
+            [&](BrickId brickId, BrickGroup groupType, const InstanceGroup& group)
             {
                 // Write new brick type
-                const InstanceGroup& group = scene.GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 for_range(i, group.numInstances)
                 {
                     const Instance& instance = scene.GetInstanceByIndex(group.firstInstance + i);
                     colorToPaletteIndex.insert(std::make_pair(ColorPalette::Get().IndexToPacked(instance.colorIndex), 0));
                 }
                 numTotalInstances += group.numInstances;
-            }
-        }
+            },
+            /*includeAllGroups:*/ true
+        );
 
         const bool useColorPalette = (colorToPaletteIndex.size() < numTotalInstances/2);
         if (useColorPalette)
@@ -1634,12 +1657,10 @@ private:
             return BrickUtils::ColorToString(color);
         };
 
-        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
-        {
-            for_range(groupType, BrickGroup_Num)
+        scene.ForEachInstanceGroup(
+            [&](BrickId brickId, BrickGroup groupType, const InstanceGroup& group)
             {
                 // Write new brick type
-                const InstanceGroup& group = scene.GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 if (group.numInstances > 0)
                 {
                     if (lastWrittenBrickType != brickId)
@@ -1662,8 +1683,9 @@ private:
                         << ' ' << ColorToStringOrPaletteIndex(ColorPalette::Get().IndexToColor(instance.colorIndex))
                         << std::endl;
                 }
-            }
-        }
+            },
+            /*includeAllGroups:*/ true
+        );
 
         // Mark file as saved after scaing completed successful
         scene.MarkSaved();
@@ -1674,12 +1696,9 @@ private:
 
     bool LoadScene(BrickScene& scene, const char* filename)
     {
-        std::ifstream file{ filename };
-        if (!file.good())
-        {
-            LLGL::Log::Errorf("Failed to load scene from file: %s\n", filename);
+        std::stringstream file;
+        if (!ReadFile(filename, file))
             return false;
-        }
 
         BrickId currentBrickType = INVALID_BRICK_ID;
         GridVec3i currentOffset;
@@ -1851,8 +1870,8 @@ private:
                 int yField = static_cast<int>(field[z][x] * heightFieldUpperBound);
                 if (yField > yMaxChunk)
                 {
-                    const BrickId brickId1x1 = (yField > yMaxChunk + 1 ? brickId1x1 : brickId1x1Tile);
-                    if (brickId1x1 != INVALID_BRICK_ID)
+                    const BrickId brickId = (yField > yMaxChunk + 1 ? brickId1x1 : brickId1x1Tile);
+                    if (brickId != INVALID_BRICK_ID)
                     {
                         const GridVec3i gridPos
                         {
@@ -1860,7 +1879,7 @@ private:
                             KDTreeNode::rootAABB.bbMin.y + yRange[0] + yMaxChunk,
                             KDTreeNode::rootAABB.bbMin.z + zOffset + z
                         };
-                        scene.NewBrick(brickId1x1, gridPos, GridRotation_0, BrickPainter(brickId1x1, gridPos));
+                        scene.NewBrick(brickId, gridPos, GridRotation_0, BrickPainter(brickId, gridPos));
                     }
                 }
             }
@@ -2381,10 +2400,20 @@ private:
                 rtDesc.debugName                        = rtLabel.c_str();
                 rtDesc.resolution                       = { uiBrickThumbnailSize, uiBrickThumbnailSize };
                 rtDesc.samples                          = GetSampleCount();
-                rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
-                rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
-                rtDesc.resolveAttachments[0].arrayLayer = brickId;                            // Render into array layer designated for current brick type
                 rtDesc.depthStencilAttachment.format    = swapChain->GetDepthStencilFormat();   // Use same depth format for thumbnails as for swap-chain (to make PSOs happy)
+
+                // Render into array layer designated for current brick type
+                if (rtDesc.samples > 1)
+                {
+                    rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
+                    rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
+                    rtDesc.resolveAttachments[0].arrayLayer = brickId;
+                }
+                else
+                {
+                    rtDesc.colorAttachments[0].texture      = uiBrickThumbnailTexture;
+                    rtDesc.colorAttachments[0].arrayLayer   = brickId;
+                }
             }
             renderTargets[brickId] = renderer->CreateRenderTarget(rtDesc);
         }
@@ -2423,6 +2452,9 @@ private:
         // Delete all intermediate render-targets, we only need the texture for UI rendering
         for (LLGL::RenderTarget* renderTarget : renderTargets)
             renderer->Release(*renderTarget);
+
+        // Reset preview instance
+        previewInstance = {};
     }
 
     void FlushUIVertexBuffer()
@@ -2810,20 +2842,14 @@ private:
                     gridPos -= brickOffset;
             };
 
-            if (contact.normal.x != 0)
+            for (int axis = 0; axis < 3; ++axis)
             {
-                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
-                ApplyNormalOffset(newPreviewGridPos.x, contact.normal.x, brickDim.offset.x, brickDim.extent.x);
-            }
-            else if (contact.normal.y != 0)
-            {
-                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
-                ApplyNormalOffset(newPreviewGridPos.y, contact.normal.y, brickDim.offset.y, brickDim.extent.y);
-            }
-            else if (contact.normal.z != 0)
-            {
-                newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
-                ApplyNormalOffset(newPreviewGridPos.z, contact.normal.z, brickDim.offset.z, brickDim.extent.z);
+                if (contact.normal[axis] != 0)
+                {
+                    newPreviewGridPos = WorldPosToGridPos(contact.point, contact.normal, brickDim);
+                    ApplyNormalOffset(newPreviewGridPos[axis], contact.normal[axis], brickDim.offset[axis], brickDim.extent[axis]);
+                    break;
+                }
             }
 
             // Offset by user input to allow placing bricks on ledges

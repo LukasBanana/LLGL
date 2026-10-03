@@ -17,7 +17,7 @@
 
 
 // Enable log output to debug kd-Tree construction. 0 (Disabled), 1 (Minimal output), 2 (Maximal output)
-#define KDTREE_DEBUG_LEVEL      1
+#define KDTREE_DEBUG_LEVEL      0
 
 // Subdivide kd-Tree uniformly. This is only used for performance testing.
 #define UNIFORM_TREE_SUBDIVIDE  0

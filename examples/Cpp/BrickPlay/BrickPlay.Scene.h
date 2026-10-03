@@ -20,6 +20,9 @@
 #include <set>
 
 
+#define DEBUG_INSTANCES 1
+
+
 // Owns the scene with its bricks, instance buffer, and the grid (kd-Tree) representation.
 class BrickScene
 {
@@ -31,6 +34,9 @@ public:
 
     // Function callback to paint the color of a brick for auto-generated chunks.
     using OnBrickPaint = std::function<int(BrickId brickId, const GridVec3i& gridPos)>;
+
+    using InstanceGroupIterator = std::function<void(BrickId brickId, BrickGroup groupType, InstanceGroup& group)>;
+    using InstanceGroupConstIterator = std::function<void(BrickId brickId, BrickGroup groupType, const InstanceGroup& group)>;
 
     // Brick instance structure. Stores the position, rotation, and color.
     struct Instance
@@ -123,12 +129,40 @@ public:
 
     const InstanceGroup& GetInstanceGroup(BrickId id, BrickGroup group = BrickGroup_Default) const
     {
+        LLGL_VERIFY(group < BrickGroup_Num);
         return BrickDictionary::Get().GetInfo(id).instanceGroups[group];
     }
 
     InstanceGroup& GetInstanceGroup(BrickId id, BrickGroup group = BrickGroup_Default)
     {
+        LLGL_VERIFY(group < BrickGroup_Num);
         return BrickDictionary::Get().GetInfo(id).instanceGroups[group];
+    }
+
+    void ForEachInstanceGroup(const InstanceGroupIterator& iterator, bool includeAllGroups = false)
+    {
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
+        {
+            BrickInfo& brickInfo = BrickDictionary::Get().GetInfo(brickId);
+            const std::uint32_t numGroups = (includeAllGroups ? BrickGroup_Num : brickInfo.numGroups);
+            for_range(groupType, numGroups)
+            {
+                iterator(brickId, static_cast<BrickGroup>(groupType), brickInfo.instanceGroups[groupType]);
+            }
+        }
+    }
+
+    void ForEachInstanceGroup(const InstanceGroupConstIterator& iterator, bool includeAllGroups = false) const
+    {
+        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
+        {
+            const BrickInfo& brickInfo = BrickDictionary::Get().GetInfo(brickId);
+            const std::uint32_t numGroups = (includeAllGroups ? BrickGroup_Num : brickInfo.numGroups);
+            for_range(groupType, numGroups)
+            {
+                iterator(brickId, static_cast<BrickGroup>(groupType), brickInfo.instanceGroups[groupType]);
+            }
+        }
     }
 
     void MarkInstanceDirty(std::size_t first, std::size_t count = 1)
@@ -276,16 +310,14 @@ public:
         instances.clear();
 
         // Reset instance range of all instance groups (not the vertex range)
-        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
-        {
-            for_range(groupType, BrickGroup_Num)
+        ForEachInstanceGroup(
+            [](BrickId /*brickId*/, BrickGroup /*groupType*/, InstanceGroup& group)
             {
-                InstanceGroup& group = BrickDictionary::Get().GetInfo(brickId).instanceGroups[groupType];
                 group.numInstances      = 0;
                 group.firstInstance     = 0;
                 group.instanceCapacity  = 0;
             }
-        }
+        );
 
         // Destroy the entire kd-Tree
         grid.Reset();
@@ -436,11 +468,12 @@ public:
     std::size_t NumTotalInstances() const
     {
         std::size_t n = 0;
-        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
-        {
-            for_range(groupType, BrickGroup_Num)
-                n += BrickDictionary::Get().GetInfo(brickId).instanceGroups[groupType].numInstances;
-        }
+        ForEachInstanceGroup(
+            [&n](BrickId /*brickId*/, BrickGroup /*groupType*/, const InstanceGroup& group)
+            {
+                n += group.numInstances;
+            }
+        );
         return n;
     }
 
@@ -465,12 +498,10 @@ private:
     void InitInstanceGroupDebugNames()
     {
         // Initialize debug group names for all instance groups
-        for_range(brickId, BrickDictionary::Get().NumBrickTypes())
-        {
-            for_range(groupType, BrickGroup_Num)
+        ForEachInstanceGroup(
+            [](BrickId brickId, BrickGroup groupType, InstanceGroup& group)
             {
                 // Write new brick type
-                InstanceGroup& group = GetInstanceGroup(brickId, static_cast<BrickGroup>(groupType));
                 group.debugName =
                 (
                     std::string("InstanceGroup_") +
@@ -478,7 +509,7 @@ private:
                     BrickDictionary::Get().TypeToString(brickId)
                 );
             }
-        }
+        );
     }
 
     void ReleaseInstanceBuffer()
@@ -505,6 +536,10 @@ private:
     {
         if (instanceBufferSize < newSize)
         {
+            #if DEBUG_INSTANCES
+            LLGL::Log::Printf("DEBUG: ResizeInstanceBuffer(newSize=%zu)\n", static_cast<std::size_t>(newSize));
+            #endif
+
             // Resize buffer if new required size is larger than the current instance buffer
             ReleaseInstanceBuffer();
 
@@ -529,6 +564,8 @@ private:
     Instance* AllocateInstancesInGroup(std::uint32_t groupId, std::uint32_t count = 1)
     {
         InstanceGroup& group = GetInstanceGroupById(groupId);
+        const std::uint32_t instanceOffset = group.firstInstance + group.numInstances;
+
         if (group.numInstances + count > group.instanceCapacity)
         {
             const std::uint32_t numMinCount = group.numInstances + count;
@@ -536,13 +573,22 @@ private:
 
             // Insert new instances into global container
             const std::uint32_t instanceGrowth = numCapacity - group.instanceCapacity;
-            instances.insert(instances.begin() + group.firstInstance + group.numInstances, instanceGrowth, Instance{});
+            instances.insert(instances.begin() + instanceOffset, instanceGrowth, Instance{});
 
-            // Resize GPU buffer and mark all instances as dirty
+            // Resize GPU buffer and mark all instances as dirty if the buffer was re-created
             if (ResizeInstanceBuffer(instances.size() * sizeof(Instance)))
                 MarkInstanceDirty(0, instances.size());
+            else
+                MarkInstanceDirty(instanceOffset, instances.size() - instanceOffset);
 
             // Update instance offsets in subsequent groups
+            #if DEBUG_INSTANCES
+            LLGL::Log::Printf(
+                "DEBUG: Move instance groups [%u, %u): instanceGrowth=%u\n",
+                groupId + 1, BrickDictionary::Get().NumBrickTypes() * BrickGroup_Num, instanceGrowth
+            );
+            #endif
+
             for (std::uint32_t nextGroupId = groupId + 1; nextGroupId < BrickDictionary::Get().NumBrickTypes() * BrickGroup_Num; ++nextGroupId)
                 GetInstanceGroupById(nextGroupId).firstInstance += instanceGrowth;
 
@@ -551,8 +597,8 @@ private:
         }
 
         // Return pointer to first new instance
-        Instance* firstInstancePtr = &(instances[group.firstInstance + group.numInstances]);
-        MarkInstanceDirty(group.firstInstance + group.numInstances, count);
+        Instance* firstInstancePtr = &(instances[instanceOffset]);
+        MarkInstanceDirty(instanceOffset, count);
         group.numInstances += count;
 
         return firstInstancePtr;
@@ -732,7 +778,7 @@ private:
                 {
                     // Brick is no longer fully blocked and must become visible again. Determine whether it was an opque or transparent brick
                     const bool isBrickTransparent = BrickUtils::ColorPalette::Get().IsTransparent(instance->colorIndex);
-                    if (!isBrickTransparent && !isChangeFromTopAndBottom)
+                    if (!isBrickTransparent && !isChangeFromTopAndBottom && IsBrickTypeOptimized(brick.GetId()))
                     {
                         // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering
                         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brick.GetId(), instance->gridRotation);
@@ -804,23 +850,29 @@ private:
     // This is used for a few select bricks that don't cover a full bounding box, like the roof tile.
     bool IsBrickCellExcluded(BrickId brickId, GridRotation brickRotation, const GridVec3i& cellPos)
     {
-#if 0 //TODO: use user configured excluded cells
-        if (brickId == BrickType_2x3x3_Roof)
+        const BrickInfo& brickInfo = BrickDictionary::Get().GetInfo(brickId);
+        if (!brickInfo.excludedCells.empty())
         {
-            // This is hardcoded but if more bricks are added, this should be generalized.
-            // The 2x3x3 roof tile has two cells that can be excluded, but the coordinate depends on its rotation.
-            if (cellPos.y == 2)
+            auto IsCellExcluded = [&brickInfo](int x, int y, int z) -> bool
             {
-                if ((brickRotation == GridRotation_0   && cellPos.z == 2) ||
-                    (brickRotation == GridRotation_90  && cellPos.x == 0) ||
-                    (brickRotation == GridRotation_180 && cellPos.z == 0) ||
-                    (brickRotation == GridRotation_270 && cellPos.x == 2))
-                {
-                    return true;
-                }
+                return (std::find(brickInfo.excludedCells.begin(), brickInfo.excludedCells.end(), GridVec3i{ x, y, z }) != brickInfo.excludedCells.end());
+            };
+
+            /* Only rotate input cell position since local cell positions are not offset */
+            switch (brickRotation)
+            {
+                case GridRotation_0:
+                    return IsCellExcluded(cellPos.x, cellPos.y, cellPos.z);
+                case GridRotation_90:
+                    return IsCellExcluded(cellPos.z, cellPos.y, brickInfo.extent.z - cellPos.x - 1);
+                case GridRotation_180:
+                    return IsCellExcluded(brickInfo.extent.x - cellPos.x - 1, cellPos.y, brickInfo.extent.z - cellPos.z - 1);
+                case GridRotation_270:
+                    return IsCellExcluded(brickInfo.extent.x - cellPos.z - 1, cellPos.y, cellPos.x);
+                default:
+                    break;
             }
         }
-#endif
         return false;
     }
 
