@@ -79,11 +79,7 @@ GLPipelineState::GLPipelineState(
         }
 
         /* Build uniform table */
-        for_range(permutationIndex, GLShader::PermutationCount)
-        {
-            const GLShader::Permutation permutation = static_cast<GLShader::Permutation>(permutationIndex);
-            BuildUniformMap(permutation, pipelineLayout_->GetUniforms());
-        }
+        BuildUniformMap(pipelineLayout_->GetUniforms());
 
         /* Cache barriers bitfield */
         barriers_ = pipelineLayout_->GetBarriersBitfield();
@@ -104,26 +100,28 @@ const Report* GLPipelineState::GetReport() const
 
 void GLPipelineState::Bind(GLStateManager& stateMngr)
 {
-    /* Select shader pipeline permutation depending on what is needed for the current framebuffer */
-    const GLShader::Permutation shaderPipelinePermutation =
-    (
-        stateMngr.GetBoundRenderTarget() != nullptr && shaderPipelines_[GLShader::PermutationFlippedYPosition].get() != nullptr
-            ? GLShader::PermutationFlippedYPosition
-            : GLShader::PermutationDefault
-    );
-    GLShaderPipeline* shaderPipeline = shaderPipelines_[shaderPipelinePermutation].get();
+    /*
+    If this PSO has multiple permutations, then it must be bound with an indirection,
+    so the state manager can decide when to switch between permutations depending on whether a swap-chain or render-target is bound.
+    */
+    stateMngr.BindDeferredShaderPipeline(*this);
+
+    /* Bind static samplers */
+    if (pipelineLayout_ != nullptr)
+        pipelineLayout_->BindStaticSamplers(stateMngr);
+}
+
+void GLPipelineState::BindShaderPipeline(GLStateManager& stateMngr, GLShader::Permutation permutation)
+{
+    GLShaderPipeline* shaderPipeline = shaderPipelines_[permutation].get();
 
     /* Bind shader program and discard rasterizer if there is no fragment shader */
-    LLGL_ASSERT(shaderPipeline != nullptr, "GL shader permutation [%d] not compiled", static_cast<int>(shaderPipelinePermutation));
+    LLGL_ASSERT(shaderPipeline != nullptr, "GL shader permutation [%d] not compiled", static_cast<int>(permutation));
     shaderPipeline->Bind(stateMngr);
 
     /* Update resource slots in shader program (if necessary) */
     if (shaderBindingLayout_)
         shaderPipeline->BindResourceSlots(*shaderBindingLayout_, &bufferInterfaceMap_);
-
-    /* Bind static samplers */
-    if (pipelineLayout_ != nullptr)
-        pipelineLayout_->BindStaticSamplers(stateMngr);
 }
 
 
@@ -132,11 +130,12 @@ void GLPipelineState::Bind(GLStateManager& stateMngr)
  */
 
 //TODO: support separate shaders; each separable shader needs its own set of uniform locations
-void GLPipelineState::BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms)
+void GLPipelineState::BuildUniformMap(const std::vector<UniformDescriptor>& uniforms)
 {
-    if (shaderPipelines_[permutation].get() != nullptr && !uniforms.empty())
+    const GLShaderPipeline* shaderPipeline = GetShaderPipeline();
+    if (shaderPipeline != nullptr && !uniforms.empty())
     {
-        const GLuint program = shaderPipelines_[permutation]->GetID();
+        const GLuint program = shaderPipeline->GetID();
 
         /* Build name-to-index map of all active uniforms, since glGetUniformLocation() does *not* map to the active uniform index */
         GLNameToUniformMap nameToUniformMap;

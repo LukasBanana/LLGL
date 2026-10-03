@@ -231,6 +231,7 @@ This option enables LLGL's own hazard tracking using staging buffer pools for dy
 #   define LLGL_USE_NULL_FRAGMENT_SHADER 1
 #endif
 
+
 #endif
 
 

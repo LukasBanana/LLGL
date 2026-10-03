@@ -79,6 +79,9 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         void FlushMemoryBarriers();
         void FlushBindVertexArray();
+        void FlushDeferredShaderPipeline();
+        void FlushDrawCommandStates();
+        void FlushComputeCommandStates();
 
         // Allocates only an opcode for empty commands.
         void AllocOpcode(const GLOpcode opcode);

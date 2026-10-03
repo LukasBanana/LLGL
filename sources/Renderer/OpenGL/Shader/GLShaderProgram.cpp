@@ -128,8 +128,7 @@ GLShaderProgram::GLShaderProgram(
 
 GLShaderProgram::~GLShaderProgram()
 {
-    glDeleteProgram(GetID());
-    GLStateManager::Get().NotifyShaderProgramRelease(this);
+    GLStateManager::Get().DeleteShaderProgram(GetID());
     #if LLGL_USE_NULL_FRAGMENT_SHADER
     if (hasNullFragmentShader_)
         g_nullFragmentShader.Release();
@@ -1096,7 +1095,7 @@ struct GLOrderedShaders
                 ? GLShader::PermutationFlippedYPosition
                 : GLShader::PermutationDefault
         );
-        return shader->GetID(permutation);
+        return shader->GetIDOrDefault(permutation);
     }
 };
 

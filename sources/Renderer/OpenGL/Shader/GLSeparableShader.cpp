@@ -9,6 +9,7 @@
 #include "GLLegacyShader.h"
 #include "GLShaderProgram.h"
 #include "GLShaderBindingLayout.h"
+#include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
@@ -38,17 +39,20 @@ GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
 
 GLSeparableShader::~GLSeparableShader()
 {
-    glDeleteProgram(GetID());
+    for_range(permutation, PermutationCount)
+        GLStateManager::Get().DeleteShaderProgram(GetID(static_cast<Permutation>(permutation)));
 }
 
 void GLSeparableShader::SetDebugName(const char* name)
 {
-    GLSetObjectLabel(GL_PROGRAM, GetID(), name);
+    GLSetObjectLabel(GL_PROGRAM, GetID(GLShader::PermutationDefault), name);
+    if (GLuint id = GetID(GLShader::PermutationFlippedYPosition))
+        GLSetObjectLabelSubscript(GL_PROGRAM, id, name, "FlippedYPosition");
 }
 
 bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
 {
-    GLShaderProgram::QueryReflection(GetID(), GetGLType(), reflection);
+    GLShaderProgram::QueryReflection(GetID(GLShader::PermutationDefault), GetGLType(), reflection);
     return true;
 }
 
@@ -56,7 +60,7 @@ void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLa
 {
     if (bindingLayout_ != &bindingLayout)
     {
-        bindingLayout.UniformAndBlockBinding(GetID(), bufferInterfaceMap);
+        bindingLayout.UniformAndBlockBinding(GetID(PermutationDefault), bufferInterfaceMap);
         if (GLuint id = GetID(PermutationFlippedYPosition))
             bindingLayout.UniformAndBlockBinding(id, bufferInterfaceMap);
         bindingLayout_ = &bindingLayout;
@@ -65,9 +69,9 @@ void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLa
 
 void GLSeparableShader::QueryInfoLog(std::string& text, bool& hasErrors)
 {
-    if (!GLShaderProgram::GetLinkStatus(GetID()))
+    if (!GLShaderProgram::GetLinkStatus(GetID(PermutationDefault)))
         hasErrors = true;
-    text += GLShaderProgram::GetGLProgramLog(GetID());
+    text += GLShaderProgram::GetGLProgramLog(GetID(PermutationDefault));
 }
 
 
@@ -92,7 +96,7 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     SetID(program, permutation);
 
     /* Compile and attach intermediate GL shader object */
-    const GLuint shader = intermediateShader.GetID(permutation);
+    const GLuint shader = intermediateShader.GetIDOrDefault(permutation);
     glAttachShader(program, shader);
 
     switch (intermediateShader.GetType())

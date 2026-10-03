@@ -67,13 +67,13 @@ class GLShader : public Shader
         }
 
         // Returns the native shader ID. Can be either from glCreateShader or glCreateShaderProgramv.
-        inline GLuint GetID() const
+        inline GLuint GetID(Permutation permutation) const
         {
-            return id_[PermutationDefault];
+            return id_[permutation];
         }
 
         // Returns the native shader ID for the specified permutation or the default permutation if the specified one is not available.
-        inline GLuint GetID(Permutation permutation) const
+        inline GLuint GetIDOrDefault(Permutation permutation) const
         {
             return (id_[permutation] != 0 ? id_[permutation] : id_[PermutationDefault]);
         }

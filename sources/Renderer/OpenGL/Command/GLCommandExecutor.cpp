@@ -283,6 +283,11 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             cmd->pipelineState->Bind(*stateMngr);
             return sizeof(*cmd);
         }
+        case GLOpcodeFlushDeferredShaderPipeline:
+        {
+            stateMngr->FlushDeferredShaderPipeline();
+            return 0;
+        }
         case GLOpcodeSetBlendColor:
         {
             auto cmd = static_cast<const GLCmdSetBlendColor*>(pc);

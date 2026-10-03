@@ -10,10 +10,12 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
+#include "GLPipelineState.h"
 #include "../Shader/GLShaderProgram.h"
 #include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Buffer/GLBufferWithXFB.h"
+#include "../Buffer/GLVertexArrayCache.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLEmulatedSampler.h"
@@ -229,6 +231,13 @@ static const GLenum g_textureLayersEnum[] =
  * Internal functions
  */
 
+/*
+The following constant acts as special value for GLStateManager's context state cache. The actual GL state will never have this value.
+When objects get deleted, GLStateManager sets cache entries that reference the deleted object to this invalid ID.
+Alternatively, the deleted objects would have to be explicitly unbound, but GLStateManager avoids extra GL calls and simply resets its cache entries to this special value.
+This value ensures that stale cache entries are flushed regardless of whether a previously deleted ID has been recycled by the GL implementation.
+This value must be considered when comparing current GL state against GLStateManager's cache via GLGetContextState().
+*/
 static constexpr GLuint k_invalidGLID = UINT_MAX;
 
 static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
@@ -327,6 +336,7 @@ void GLStateManager::ClearCache()
     boundRasterizerState_       = nullptr;
     boundBlendState_            = nullptr;
     frontFacingDirtyBit_        = false;
+    deferredShaderPipeline_     = {};
 }
 
 void GLStateManager::Set(GLState state, bool value)
@@ -1410,6 +1420,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     }
 }
 
+#if 0 //UNUSED
 void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
 {
     #if LLGL_GLEXT_MULTI_BIND
@@ -1440,6 +1451,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         }
     }
 }
+#endif
 
 void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture)
 {
@@ -1480,6 +1492,7 @@ void GLStateManager::BindImageTextures(GLuint first, GLsizei count, const GLenum
     }
 }
 
+#if 0 //UNUSED
 void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
 {
     #if LLGL_GLEXT_MULTI_BIND
@@ -1496,6 +1509,7 @@ void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
             BindImageTexture(first + static_cast<GLuint>(i), 0, 0, 0);
     }
 }
+#endif
 
 void GLStateManager::PushBoundTexture(GLuint layer, GLTextureTarget target)
 {
@@ -1694,15 +1708,14 @@ void GLStateManager::PopBoundShaderProgram()
     shaderProgramStack_.pop();
 }
 
-void GLStateManager::NotifyShaderProgramRelease(GLShaderProgram* shaderProgram)
+void GLStateManager::DeleteShaderProgram(GLuint program)
 {
-    if (shaderProgram != nullptr)
-        InvalidateBoundGLObject(contextState_.boundProgram, shaderProgram->GetID());
-}
-
-GLuint GLStateManager::GetBoundShaderProgram() const
-{
-    return contextState_.boundProgram;
+    LLGL_ASSERT(shaderProgramStack_.empty(), "GL shader program must not be deleted while there are pending stacked programs");
+    if (program != 0)
+    {
+        glDeleteProgram(program);
+        InvalidateBoundGLObject(contextState_.boundProgram, program);
+    }
 }
 
 /* ----- Program pipeline ----- */
@@ -1728,11 +1741,6 @@ void GLStateManager::NotifyProgramPipelineRelease(GLProgramPipeline* programPipe
     #endif
 }
 
-GLuint GLStateManager::GetBoundProgramPipeline() const
-{
-    return contextState_.boundProgramPipeline;
-}
-
 #else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 void GLStateManager::BindProgramPipeline(GLuint pipeline)
@@ -1745,12 +1753,46 @@ void GLStateManager::NotifyProgramPipelineRelease(GLProgramPipeline* programPipe
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_separate_shader_objects");
 }
 
-GLuint GLStateManager::GetBoundProgramPipeline() const
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+
+/* ----- Deferred shader pipeline */
+
+void GLStateManager::BindDeferredShaderPipeline(GLPipelineState& pipelineState)
 {
-    return 0; // dummy
+    if (pipelineState.HasPermutation(GLShader::PermutationFlippedYPosition))
+    {
+        /* Store pipeline state and bind the shader pipeline at the beginning of a render pass */
+        deferredShaderPipeline_.pipelineState = &pipelineState;
+        deferredShaderPipeline_.currentPermutation = GLShader::PermutationCount;
+    }
+    else
+    {
+        /* If no special permutation exists, bind the shader pipeline immediately and reset the deferred state */
+        pipelineState.BindShaderPipeline(*this, GLShader::PermutationDefault);
+        deferredShaderPipeline_.pipelineState = nullptr;
+    }
 }
 
-#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+//private
+void GLStateManager::FlushDeferredShaderPipelinePermutation(GLShader::Permutation permutation)
+{
+    if (deferredShaderPipeline_.currentPermutation != permutation)
+    {
+        deferredShaderPipeline_.currentPermutation = permutation;
+        deferredShaderPipeline_.pipelineState->BindShaderPipeline(*this, permutation);
+    }
+}
+
+void GLStateManager::FlushDeferredShaderPipeline()
+{
+    if (deferredShaderPipeline_.pipelineState != nullptr)
+    {
+        if (GetBoundRenderTarget() != nullptr)
+            FlushDeferredShaderPipelinePermutation(GLShader::PermutationFlippedYPosition);
+        else
+            FlushDeferredShaderPipelinePermutation(GLShader::PermutationDefault);
+    }
+}
 
 /* ----- Render pass ----- */
 
@@ -1786,9 +1828,6 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
     }
 }
 
-//TODO:
-// `GL_RASTERIZER_DISCARD` must also be taken into account! From OpenGL man pages:
-// "GL_RASTERIZER_DISCARD [...] when enabled, glClear, glClearBufferData, glClearBufferSubData, glClearTexImage, and glClearTexSubImage are ignored."
 void GLStateManager::Clear(long flags)
 {
     GLFramebufferClearState clearState;

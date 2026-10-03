@@ -53,7 +53,7 @@ static GLuint SortShaderArray(ArrayView<const Shader*> shaders, GLShader::Permut
                     ? GLShader::PermutationFlippedYPosition
                     : GLShader::PermutationDefault
             );
-            outShaderIDs[outIndex++] = shadersOrderedByType[i]->GetID(permutationForShader);
+            outShaderIDs[outIndex++] = shadersOrderedByType[i]->GetIDOrDefault(permutationForShader);
         }
     }
 

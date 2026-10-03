@@ -15,8 +15,6 @@
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
-#include <LLGL/Log.h> //TEST
-
 
 namespace LLGL
 {

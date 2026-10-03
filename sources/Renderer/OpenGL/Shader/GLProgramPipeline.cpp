@@ -105,7 +105,7 @@ void GLProgramPipeline::QueryTexBufferNames(std::set<std::string>& outSamplerBuf
     outSamplerBufferNames.clear();
     outImageBufferNames.clear();
     for_range(i, GetSignature().GetNumShaders())
-        GLShaderProgram::QueryTexBufferNames(separableShaders_[i]->GetID(), outSamplerBufferNames, outImageBufferNames);
+        GLShaderProgram::QueryTexBufferNames(separableShaders_[i]->GetID(GLShader::PermutationDefault), outSamplerBufferNames, outImageBufferNames);
 }
 
 
@@ -132,7 +132,7 @@ void GLProgramPipeline::UseProgramStages(ArrayView<Shader*> shaders, GLShader::P
                     ? GLShader::PermutationFlippedYPosition
                     : GLShader::PermutationDefault
             );
-            glUseProgramStages(GetID(), stage, separableShader->GetID(permutationForShader));
+            glUseProgramStages(GetID(), stage, separableShader->GetIDOrDefault(permutationForShader));
             separableShaders_[i] = separableShader;
         }
     }

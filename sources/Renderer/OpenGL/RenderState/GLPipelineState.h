@@ -60,6 +60,9 @@ class GLPipelineState : public PipelineState
         // Binds this pipeline state with the specified GL state manager.
         virtual void Bind(GLStateManager& stateMngr);
 
+        // Binds only the shader pipeline for the specified permutation. This must only be called with a valid permutation for this PSO.
+        void BindShaderPipeline(GLStateManager& stateMngr, GLShader::Permutation permutation);
+
         // Returns true if this is a graphics PSO.
         inline bool IsGraphicsPSO() const
         {
@@ -72,7 +75,7 @@ class GLPipelineState : public PipelineState
             return pipelineLayout_;
         }
 
-        // Returns the shader pipeline used for this PSO.
+        // Returns the shader pipeline used for this PSO. This only returns the default permutation.
         inline const GLShaderPipeline* GetShaderPipeline() const
         {
             return shaderPipelines_[GLShader::PermutationDefault].get();
@@ -94,6 +97,12 @@ class GLPipelineState : public PipelineState
         inline GLbitfield GetBarriersBitfield() const
         {
             return barriers_;
+        }
+
+        // Returns true if this PSO has the specified shader permutation.
+        inline bool HasPermutation(GLShader::Permutation permutation) const
+        {
+            return (shaderPipelines_[permutation].get() != nullptr);
         }
 
     protected:
@@ -118,7 +127,7 @@ class GLPipelineState : public PipelineState
     private:
 
         // Builds the index-to-uniform map.
-        void BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms);
+        void BuildUniformMap(const std::vector<UniformDescriptor>& uniforms);
 
         // Builds the container that maps a name to the index of its active GL uniform.
         void BuildNameToActiveUniformMap(GLuint program, GLNameToUniformMap& outNameToUniformMap);

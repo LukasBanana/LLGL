@@ -11,6 +11,7 @@
 
 #include "GLState.h"
 #include "GLContextState.h"
+#include "../Shader/GLShader.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
@@ -37,6 +38,7 @@ class GLRasterizerState;
 class GLBlendState;
 class GLRenderPass;
 class GLProgramPipeline;
+class GLPipelineState;
 class GLShaderProgram;
 class GLEmulatedSampler;
 
@@ -234,11 +236,11 @@ class GLStateManager
         void BindTexture(GLTextureTarget target, GLuint texture);
         void BindTexture(GLuint layer, GLTextureTarget target, GLuint texture);
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
-        void UnbindTextures(GLuint first, GLsizei count);
+        //void UnbindTextures(GLuint first, GLsizei count);
 
         void BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture);
         void BindImageTextures(GLuint first, GLsizei count, const GLenum* formats, const GLuint* textures);
-        void UnbindImageTextures(GLuint first, GLsizei count);
+        //void UnbindImageTextures(GLuint first, GLsizei count);
 
         void PushBoundTexture(GLuint layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
@@ -266,9 +268,7 @@ class GLStateManager
         void PushBoundShaderProgram();
         void PopBoundShaderProgram();
 
-        void NotifyShaderProgramRelease(GLShaderProgram* shaderProgram);
-
-        GLuint GetBoundShaderProgram() const;
+        void DeleteShaderProgram(GLuint program);
 
         /* ----- Program pipeline ----- */
 
@@ -276,7 +276,10 @@ class GLStateManager
 
         void NotifyProgramPipelineRelease(GLProgramPipeline* programPipeline);
 
-        GLuint GetBoundProgramPipeline() const;
+        /* ----- Deferred shader pipeline */
+
+        void BindDeferredShaderPipeline(GLPipelineState& pipelineState);
+        void FlushDeferredShaderPipeline();
 
         /* ----- Render pass ----- */
 
@@ -344,6 +347,8 @@ class GLStateManager
         void DetermineVendorSpecificExtensions();
         #endif
 
+        void FlushDeferredShaderPipelinePermutation(GLShader::Permutation permutation);
+
         /* ----- Stacks ----- */
 
         void PrepareRasterizerStateForClear(GLFramebufferClearState& clearState);
@@ -399,6 +404,12 @@ class GLStateManager
             GLuint program;
         };
 
+        struct DeferredShaderPipeline
+        {
+            GLPipelineState*        pipelineState       = nullptr;
+            GLShader::Permutation   currentPermutation  = GLShader::PermutationCount;
+        };
+
     private:
 
         static GLStateManager*  current_;
@@ -433,6 +444,8 @@ class GLStateManager
         GLBlendState*                       boundBlendState_            = nullptr;
 
         bool                                frontFacingDirtyBit_        = false;
+
+        DeferredShaderPipeline              deferredShaderPipeline_;
 
         std::stack<CapabilityStackEntry>    capabilitiesStack_;
         std::stack<BufferStackEntry>        bufferStack_;

@@ -29,12 +29,16 @@ GLLegacyShader::GLLegacyShader(const ShaderDescriptor& desc) :
 
 GLLegacyShader::~GLLegacyShader()
 {
-    glDeleteShader(GetID());
+    glDeleteShader(GetID(PermutationDefault));
+    if (GLuint id = GetID(PermutationFlippedYPosition))
+        glDeleteShader(id);
 }
 
 void GLLegacyShader::SetDebugName(const char* name)
 {
-    GLSetObjectLabel(GL_SHADER, GetID(), name);
+    GLSetObjectLabel(GL_SHADER, GetID(PermutationDefault), name);
+    if (GLuint id = GetID(GLShader::PermutationFlippedYPosition))
+        GLSetObjectLabelSubscript(GL_SHADER, id, name, "FlippedYPosition");
 }
 
 bool GLLegacyShader::Reflect(ShaderReflection& reflection) const
@@ -97,8 +101,8 @@ GLuint GLLegacyShader::CreateShaderPermutation(Permutation permutation)
 bool GLLegacyShader::FinalizeShaderPermutation(Permutation permutation)
 {
     /* Query compile status and log */
-    const bool status = GLLegacyShader::GetCompileStatus(GetID());
-    ReportStatusAndLog(status, GLLegacyShader::GetGLShaderLog(GetID()));
+    const bool status = GLLegacyShader::GetCompileStatus(GetID(permutation));
+    ReportStatusAndLog(status, GLLegacyShader::GetGLShaderLog(GetID(permutation)));
     return status;
 }
 
