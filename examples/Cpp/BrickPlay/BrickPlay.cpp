@@ -8,6 +8,7 @@
 #include "BrickPlay.Brick.h"
 #include "BrickPlay.Scene.h"
 #include "BrickPlay.Utils.h"
+#include "BrickPlay.UIRenderer.h"
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
 #include <FileUtils.h>
@@ -46,7 +47,6 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr std::uint32_t  maxUIVertexBatchSize            = 128 * 3;  // Maxmimum number of UI vertices before batch is flushed and send to the GPU.
     static constexpr int            uiColorPickerSize               = 26;       // Size (in pixels) of each color picker button
     static constexpr int            uiColorPickerOffset[2]          = { 15, 15 };
     static constexpr int            uiButtonFrameSize               = 3;
@@ -76,7 +76,7 @@ class Example_BrickPlay : public ExampleBase
 
     struct Options
     {
-        std::string                 sceneFilename                   = "Bricks.scene.txt";
+        std::string                 sceneFilename                   = "Scenes/Bricks.scene.txt";
         std::string                 configFilename                  = "BrickPlay.config.txt";
         int                         scenePresetNo                   = -1; // Auto-generate preset scene
         int                         sceneBoundingVolume[3]          = { 100, 60, 100 };
@@ -121,9 +121,6 @@ class Example_BrickPlay : public ExampleBase
     LLGL::PipelineLayout*           psoOutlineWriteColorLayout      = nullptr;
     LLGL::PipelineState*            psoOutlineWriteColor            = nullptr;
 
-    LLGL::PipelineLayout*           psoUILayout                     = nullptr;
-    LLGL::PipelineState*            psoUI                           = nullptr;
-
     LLGL::PipelineLayout*           psoPlaneLayout                  = nullptr;
     LLGL::PipelineState*            psoPlane[2]                     = {};
 
@@ -138,9 +135,6 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Buffer*                   vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
     std::uint64_t                   previewInstanceBufferOffset     = 0;
 
-    LLGL::Buffer*                   uiVertexBuffer                  = nullptr;
-    LLGL::Buffer*                   uiViewCbuffer                   = nullptr;
-    LLGL::Texture*                  uiBlankTexture                  = nullptr;
     LLGL::Texture*                  uiBrickThumbnailTexture         = nullptr;
 
     LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
@@ -152,6 +146,8 @@ class Example_BrickPlay : public ExampleBase
     bool                            canCombineVertexAndIndexBuffers = false; // WebGL 2 cannot combine vertex and index buffers
 
     std::unique_ptr<BrickScene>     currentScene;
+
+    UIRenderer                      uiRenderer;
 
     using ColorPalette      = BrickUtils::ColorPalette;
 
@@ -214,12 +210,6 @@ class Example_BrickPlay : public ExampleBase
         float               skyboxDiffuseFactor     = 0.2f;
     }
     sceneView;
-
-    struct alignas(16) UIView
-    {
-        Gs::Matrix4f    pMatrix;
-    }
-    uiView;
 
     struct PreviewBrick
     {
@@ -300,59 +290,6 @@ class Example_BrickPlay : public ExampleBase
     };
 
     std::vector<BrickVertex> brickVertices;
-
-    // Encode mode how to render UI elements within each vertex to simplify batched draw calls.
-    // This reduces the number of times vertex data has to be uploaded to the GPU.
-    enum UIRenderMode
-    {
-        UIRenderMode_Solid = 0,
-        UIRenderMode_Dithered,
-        UIRenderMode_Textured,
-    };
-
-    // UI element vertex structure. Pixel-based coordinates are stored as 16-bit integers since the screen won't be larger than 2^15-1 pixels.
-    struct UIVertex
-    {
-        std::int16_t        position[2];
-        std::uint8_t        texCoord[3];
-        std::uint8_t        mode;
-        LLGL::ColorRGBAub   color;
-
-        void Set(int x, int y, LLGL::ColorRGBAub col, UIRenderMode render = UIRenderMode_Solid)
-        {
-            position[0] = static_cast<std::int16_t>(x);
-            position[1] = static_cast<std::int16_t>(y);
-            texCoord[0] = 0;
-            texCoord[1] = 0;
-            texCoord[2] = 0;
-            mode        = render;
-            color       = col;
-        }
-
-        void Set(int x, int y, int tx, int ty, int tz, LLGL::ColorRGBAub col)
-        {
-            position[0] = static_cast<std::int16_t>(x);
-            position[1] = static_cast<std::int16_t>(y);
-            texCoord[0] = static_cast<std::uint8_t>(tx);
-            texCoord[1] = static_cast<std::uint8_t>(ty);
-            texCoord[2] = static_cast<std::uint8_t>(tz);
-            mode        = UIRenderMode_Textured;
-            color       = col;
-        }
-    };
-
-    static_assert(std::is_standard_layout<UIVertex>::value, "UIVertex must have standard layout in order to be passed as C-pointer to the GPU buffer");
-
-    // Structure for UI vertex data and its vertex buffer.
-    struct UIVertexBatch
-    {
-        std::unique_ptr<UIVertex[]> vertices;
-        std::uint32_t               numBatchedVertices  = 0;
-
-        // Last bound texture. When this changes, Draw2DImage() needs to flush the vertex buffer in order to bind a new texture for all subsequent UI vertices.
-        LLGL::Texture*              cachedTexture       = nullptr;
-    }
-    uiVertexBatch;
 
     enum class CameraMode
     {
@@ -1113,32 +1050,6 @@ private:
         colorPaletteCbuffer = renderer->CreateBuffer(colorCbufferDesc);
         renderer->WriteBuffer(*colorPaletteCbuffer, 0, ColorPalette::Get().Data(), ColorPalette::Get().DataSize());
 
-        // Create UI buffers
-        uiViewCbuffer = CreateConstantBuffer(uiView);
-        uiVertexBatch.vertices = std::unique_ptr<UIVertex[]>(new UIVertex[maxUIVertexBatchSize]);
-
-        LLGL::BufferDescriptor uiVertexBufferDesc;
-        {
-            uiVertexBufferDesc.debugName    = "UIVertexBuffer";
-            uiVertexBufferDesc.size         = sizeof(UIVertex) * maxUIVertexBatchSize;
-            uiVertexBufferDesc.stride       = sizeof(UIVertex);
-            uiVertexBufferDesc.bindFlags    = LLGL::BindFlags::VertexBuffer;
-            uiVertexBufferDesc.miscFlags    = LLGL::MiscFlags::DynamicUsage; // Hint to the renderer that this buffer is updated every frame
-        }
-        uiVertexBuffer = renderer->CreateBuffer(uiVertexBufferDesc);
-
-        // Create dummy texture for UI PSO
-        LLGL::TextureDescriptor uiBlankTexDesc;
-        {
-            uiBlankTexDesc.debugName            = "BlankUITexture";
-            uiBlankTexDesc.type                 = LLGL::TextureType::Texture2DArray;
-            uiBlankTexDesc.clearValue.color[0]  = 1.0f;
-            uiBlankTexDesc.clearValue.color[1]  = 1.0f;
-            uiBlankTexDesc.clearValue.color[2]  = 1.0f;
-            uiBlankTexDesc.clearValue.color[3]  = 1.0f;
-        }
-        uiBlankTexture = renderer->CreateTexture(uiBlankTexDesc);
-
         // Initialize plane model
         if (canCombineVertexAndIndexBuffers)
         {
@@ -1267,6 +1178,13 @@ private:
         vsSkybox                = LoadVertexShader  ("BrickPlay", "VSSkybox", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsSkybox                = LoadFragmentShader("BrickPlay", "PSSkybox");
 
+        // Initialize UI renderer
+        if (!uiRenderer.Initialize(*renderer, *swapChain, vsOverlay, fsOverlay))
+        {
+            Quit(1);
+            return false;
+        }
+
         // Create pipeline layout for instanced scene rendering
         psoLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
@@ -1366,38 +1284,6 @@ private:
         }
         pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoPreviewDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Preview]);
-
-        // Create PSO to render an overlay with simple UI elements
-        psoUILayout = renderer->CreatePipelineLayout(
-            LLGL::Parse(
-                "cbuffer(UIView@1):vert,"
-                "texture(uiTexture@2):frag,"
-
-                "sampler(uiTextureSampler@3){filter=nearest}:frag,"                     // Static sampler with nearest filtering
-                "sampler<uiTexture, uiTextureSampler>(s_uiTextureuiTextureSampler@2),"  // Combined texture-sampler for OpenGL backends
-            )
-        );
-
-        const LLGL::VertexAttribute uiVertexAttribs[] =
-        {
-            LLGL::VertexAttribute{ "position",        LLGL::Format::RG16SInt,   /*location:*/ 0, /*offset:*/ offsetof(UIVertex, position), /*stride:*/ sizeof(UIVertex) },
-            LLGL::VertexAttribute{ "texCoordAndMode", LLGL::Format::RGBA8UInt,  /*location:*/ 1, /*offset:*/ offsetof(UIVertex, texCoord), /*stride:*/ sizeof(UIVertex) },
-            LLGL::VertexAttribute{ "color",           LLGL::Format::RGBA8UNorm, /*location:*/ 2, /*offset:*/ offsetof(UIVertex, color   ), /*stride:*/ sizeof(UIVertex) },
-        };
-
-        LLGL::GraphicsPipelineDescriptor psoUIDesc;
-        {
-            psoUIDesc.debugName                     = "Overlay.PSO";
-            psoUIDesc.renderPass                    = swapChain->GetRenderPass();
-            psoUIDesc.pipelineLayout                = psoUILayout;
-            psoUIDesc.inputVertexAttribs            = uiVertexAttribs;
-            psoUIDesc.vertexShader                  = vsOverlay;
-            psoUIDesc.fragmentShader                = fsOverlay;
-            psoUIDesc.rasterizer.multiSampleEnabled = (swapChain->GetSamples() > 1);
-            psoUIDesc.blend.targets[0].blendEnabled = true; // Enable default alpha blending for UI elements
-        }
-        psoUI = renderer->CreatePipelineState(psoUIDesc);
-        REPORT_PSO_ERRORS(psoUI);
 
         if (selectionRenderMode != SelectionRenderMode::Simplified)
         {
@@ -2448,82 +2334,6 @@ private:
         previewInstance = {};
     }
 
-    void FlushUIVertexBuffer()
-    {
-        if (uiVertexBatch.numBatchedVertices > 0)
-        {
-            /*
-            This can be improved by encoding the buffer update command in a separate command buffer
-            and submit that command buffer before the primary render commands.
-            Updating the buffer right before we draw with it has performance implications for Vulkan and Metal,
-            but we keep this example simple for now since we only do this a few times with the small number of UI elements.
-            */
-            commands->UpdateBuffer(*uiVertexBuffer, 0, uiVertexBatch.vertices.get(), sizeof(UIVertex) * uiVertexBatch.numBatchedVertices);
-            commands->Draw(uiVertexBatch.numBatchedVertices, 0);
-            uiVertexBatch.numBatchedVertices = 0;
-        }
-    }
-
-    // Allocates new UI vertices and flushes its vertex buffer if necessary.
-    UIVertex* NewUIVertices(std::uint32_t count)
-    {
-        if (uiVertexBatch.numBatchedVertices + count > maxUIVertexBatchSize)
-            FlushUIVertexBuffer();
-
-        UIVertex* outVertices = &(uiVertexBatch.vertices[uiVertexBatch.numBatchedVertices]);
-        uiVertexBatch.numBatchedVertices += count;
-        return outVertices;
-    }
-
-    void SetUITexture(LLGL::Texture* tex)
-    {
-        // Flush UI vertex buffer since the texture has to change for all
-        if (uiVertexBatch.cachedTexture != tex)
-        {
-            FlushUIVertexBuffer();
-
-            // Bind new texture
-            uiVertexBatch.cachedTexture = tex;
-            commands->SetResource(1, *tex);
-        }
-    }
-
-    void Draw2DRect(int x, int y, int w, int h, LLGL::ColorRGBAub color, UIRenderMode render = UIRenderMode_Solid)
-    {
-        SetUITexture(uiBlankTexture);
-
-        // Allocate 6 vertices to draw 2 triangles
-        UIVertex* verts = NewUIVertices(6);
-
-        verts[0].Set(x    , y    , color, render);
-        verts[1].Set(x + w, y    , color, render);
-        verts[2].Set(x    , y + h, color, render);
-
-        verts[3].Set(x    , y + h, color, render);
-        verts[4].Set(x + w, y    , color, render);
-        verts[5].Set(x + w, y + h, color, render);
-    }
-
-    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {})
-    {
-        SetUITexture(tex);
-
-        const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
-        const int w = static_cast<int>(texExtent.width);
-        const int h = static_cast<int>(texExtent.height);
-
-        // Allocate 6 vertices to draw 2 triangles
-        UIVertex* verts = NewUIVertices(6);
-
-        verts[0].Set(x    , y    , 0, 0, texLayer, color);
-        verts[1].Set(x + w, y    , 1, 0, texLayer, color);
-        verts[2].Set(x    , y + h, 0, 1, texLayer, color);
-
-        verts[3].Set(x    , y + h, 0, 1, texLayer, color);
-        verts[4].Set(x + w, y    , 1, 0, texLayer, color);
-        verts[5].Set(x + w, y + h, 1, 1, texLayer, color);
-    }
-
     bool IsMouseInRect(int x, int y, int w, int h)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
@@ -2547,13 +2357,13 @@ private:
         if (isSelected || isHighlighted)
         {
             // Only draw color button when selected
-            Draw2DRect(x, y, w, h, color, render);
+            uiRenderer.Draw2DRect(x, y, w, h, color, render);
         }
         else
         {
             // Draw background frame and then the foreground color
-            Draw2DRect(x, y, w, h, uiButtonFrameColor);
-            Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, uiColorPickerSize, uiColorPickerSize, color, render);
+            uiRenderer.Draw2DRect(x, y, w, h, uiButtonFrameColor);
+            uiRenderer.Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, uiColorPickerSize, uiColorPickerSize, color, render);
         }
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
@@ -2570,11 +2380,11 @@ private:
         if (isSelected || isHighlighted)
         {
             // Draw button background to highlight selection
-            Draw2DRect(x, y, w, h, uiBrickThumbnailBgColor);
+            uiRenderer.Draw2DRect(x, y, w, h, uiBrickThumbnailBgColor);
         }
 
         // Draw thumbnail texture layer
-        Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnailTexture, brickType, brickColor);
+        uiRenderer.Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnailTexture, brickType, brickColor);
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
     }
@@ -2587,8 +2397,8 @@ private:
         const int scrH = static_cast<int>(resolution.height);
 
         // Draw mouse dead zone as transparent background for the UI
-        Draw2DRect(0, 0, uiState.menuBarLeft, scrH, uiMenuBgColor);
-        Draw2DRect(uiState.menuBarRight, 0, scrW - uiState.menuBarRight, scrH, uiMenuBgColor);
+        uiRenderer.Draw2DRect(0, 0, uiState.menuBarLeft, scrH, uiMenuBgColor);
+        uiRenderer.Draw2DRect(uiState.menuBarRight, 0, scrW - uiState.menuBarRight, scrH, uiMenuBgColor);
 
         ResetMenuBar(swapChain->GetResolution());
 
@@ -2650,19 +2460,11 @@ private:
 
     void RenderUIElements()
     {
-        // Reset UI vertex batch states
-        uiVertexBatch.cachedTexture         = nullptr;
-        uiVertexBatch.numBatchedVertices    = 0;
-
-        commands->SetVertexBuffer(*uiVertexBuffer);
-
-        commands->SetPipelineState(*psoUI);
-        commands->SetResource(0, *uiViewCbuffer);
-
-        DrawUIImmediateMode();
-
-        // Final flush if this hasn't happened already
-        FlushUIVertexBuffer();
+        uiRenderer.Begin2DRendering(*commands);
+        {
+            DrawUIImmediateMode();
+        }
+        uiRenderer.End2DRendering();
     }
 
     //////////////////// USER INPUT HANDLING ////////////////////
@@ -2961,7 +2763,7 @@ private:
         #endif
     }
 
-    void UpdateSceneAndUIView()
+    void UpdateSceneView()
     {
         camera.UpdateTransform();
 
@@ -2985,10 +2787,6 @@ private:
         // Update inverse view-projection matrix to displace depth values for parallax occlusion displacement
         sceneView.vpMatrixInv           = sceneView.vpMatrix.Inverse();
         sceneView.vpMatrixInvNoViewPos  = (projection * camera.vMatrixNoPosition).Inverse();
-
-        // Update planar projection for UI elements
-        const LLGL::Extent2D resolution = swapChain->GetResolution();
-        uiView.pMatrix = Gs::ProjectionMatrix4f::Planar(static_cast<float>(resolution.width), static_cast<float>(resolution.height));
     }
 
     void ResetMenuBar(const LLGL::Extent2D& resolution)
@@ -3007,7 +2805,7 @@ private:
         #endif
 
         ProcessUserInput(dt);
-        UpdateSceneAndUIView();
+        UpdateSceneView();
 
         const bool isPreviewBrickVisible = (controller.cameraMode == CameraMode::None && (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move));
 
@@ -3018,7 +2816,8 @@ private:
                 commands->UpdateBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
 
             commands->UpdateBuffer(*sceneViewCbuffer, 0, &sceneView, sizeof(sceneView));
-            commands->UpdateBuffer(*uiViewCbuffer, 0, &uiView, sizeof(uiView));
+
+            uiRenderer.UpdateUIView(*commands, swapChain->GetResolution());
 
             UpdatePlaneGeometryForViewFrustum();
 

@@ -1,0 +1,5 @@
+# Don't check in user generated content, only the default scene file
+*.txt
+
+# Include the default scene file
+!Bricks.scene.txt

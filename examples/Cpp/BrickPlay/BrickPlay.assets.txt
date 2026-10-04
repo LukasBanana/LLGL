@@ -2,4 +2,4 @@ Models/Bricks/*.obj
 Textures/Bricks/*.png
 Textures/Skybox/sky_74_cubemap_2k/*.png
 BrickPlay.config.txt
-Bricks.scene.txt
+Scenes/Bricks.scene.txt
