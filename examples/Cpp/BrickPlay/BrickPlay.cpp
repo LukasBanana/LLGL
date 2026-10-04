@@ -13,7 +13,6 @@
 #include <PerlinNoise.h>
 #include <FileUtils.h>
 #include <LLGL/Utils/ForRange.h>
-#include <LLGL/Platform/Platform.h>
 #include <algorithm>
 #include <set>
 #include <map>
@@ -23,7 +22,6 @@
 // File and string streams for simple scene file writer/reader
 #include <fstream>
 #include <sstream>
-
 
 // Enables parallax occlusion displacement for rendering the plane studs.
 #define ENABLE_PARALLAX_OCCLUSION 1
@@ -57,9 +55,15 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            uiScrollIndicatorSize           = 15;
     const LLGL::ColorRGBAub         uiButtonFrameColor              = { 0, 0, 0, 255 };
 
+    static constexpr int            uiMainMenuItemSize              = 32;
+    static constexpr int            uiMainMenuSeparatorSize         = 16;
+    static constexpr int            uiMainMenuSize                  = uiMainMenuItemSize + 16;
+    const LLGL::ColorRGBAub         uiMainMenuColor[2]              = { { 80, 80, 80 },     // Top color
+                                                                        { 20, 20, 20 } };   // Bottom color
+
     static constexpr int            uiBrickThumbnailSize            = 48;
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
-    const LLGL::ColorRGBAub         uiMenuBgColor                   = { 0, 0, 0, 180 };
+    const LLGL::ColorRGBAub         uiSideMenuColor                 = { 0, 0, 0, 180 };
 
     static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;     // Minimum size for a bounding volume of brick thumbnails.
 
@@ -142,6 +146,7 @@ class Example_BrickPlay : public ExampleBase
     std::uint64_t                   previewInstanceBufferOffset     = 0;
 
     LLGL::Texture*                  uiBrickThumbnailTexture         = nullptr;
+    LLGL::Texture*                  uiMenuTexture                   = nullptr;
 
     LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
 
@@ -155,13 +160,48 @@ class Example_BrickPlay : public ExampleBase
 
     UIRenderer                      uiRenderer;
 
-    using ColorPalette      = BrickUtils::ColorPalette;
-
     using Instance          = BrickScene::Instance;
     using RayIntersection   = BrickScene::RayIntersection;
 
     Instance                        previewInstance                 = {};
 
+    enum UIMenuItem
+    {
+        UIMenuItem_Download = 0,    // Download current scene to local machine
+        UIMenuItem_Upload,          // Upload current scene to public database
+        UIMenuItem_Undo,            // Undo previous operation
+        UIMenuItem_Redo,            // Redo previously reverted operation
+        UIMenuItem_TurnCW,          // Turns the currently selected brick clock-wise (CW)
+        UIMenuItem_TurnCCW,         // Turns the currently selected brick counter-clock-wise (CCW)
+        UIMenuItem_Add,             // Puts editor into 'add' mode to allow user to add new bricks.
+        UIMenuItem_Move,            // Puts editor into 'select' mode and then immediately into 'move' mode to drag bricks around
+        UIMenuItem_Delete,          // Puts the editor into 'select' mode and deletes the first select element immediately.
+
+        UIMenuItem_Num,
+    };
+
+    struct UIMenuInfo
+    {
+        int     layer;              // Texture array layer
+        int     flags;              // UIRenderFlags
+        bool    endsWithSeparator;  // If true, add `uiMainMenuSeparatorSize` to the next position
+    };
+
+    const UIMenuInfo menuInfos[UIMenuItem_Num] =
+    {
+        UIMenuInfo{ 0, 0, false },                  // UIMenuItem_Download 
+        UIMenuInfo{ 1, 0, true },                   // UIMenuItem_Upload
+        UIMenuInfo{ 2, 0, false },                  // UIMenuItem_Undo
+        UIMenuInfo{ 2, UIRenderFlags_FlipX, true }, // UIMenuItem_Redo
+        UIMenuInfo{ 3, 0, false },                  // UIMenuItem_TurnCW
+        UIMenuInfo{ 3, UIRenderFlags_FlipX, true }, // UIMenuItem_TurnCCW
+        UIMenuInfo{ 4, 0, false },                  // UIMenuItem_Add
+        UIMenuInfo{ 5, 0, false },                  // UIMenuItem_Select
+        UIMenuInfo{ 6, 0, false },                  // UIMenuItem_Delete
+    };
+
+    // State tracker for UI rendering.
+    // This is handled primarily in an intermediate mode, but batched draw commands are generated separately from vertex buffer updates to keep them outside render-passes.
     struct UIState
     {
         struct MenuBar
@@ -172,10 +212,10 @@ class Example_BrickPlay : public ExampleBase
                 scroll.SetMass(uiScrollBarMass);
             }
 
-            int                             width           = 0;
-            int                             height          = 0;
-            bool                            isRightAligned  = false;
-            BrickUtils::RigidBody<float>    scroll;
+            int                 width           = 0;
+            int                 height          = 0;
+            bool                isRightAligned  = false;
+            RigidBody<float>    scroll;
 
             void UpdateScrolling(float dt, int scrH)
             {
@@ -216,7 +256,7 @@ class Example_BrickPlay : public ExampleBase
             advance = uiElementSize + uiButtonFrameSize*2 + uiButtonMargin;
 
             x = (currentMenuBar->isRightAligned ? scrW - (uiButtonOffset[0] + uiElementSize + uiButtonFrameSize*2) : uiButtonOffset[0]);
-            y = (isScrollEnabled ? uiButtonOffset[1] - static_cast<int>(menuBar.scroll.position) : uiButtonOffset[1]);
+            y = uiMainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - static_cast<int>(menuBar.scroll.position) : uiButtonOffset[1]);
 
             columns = 1;
         }
@@ -229,7 +269,7 @@ class Example_BrickPlay : public ExampleBase
                 const int maxNumElementsPerPage = (numElements / maxColumns + (numElements % maxColumns > 0 ? 1 : 0));
 
                 currentMenuBar->width   = uiButtonOffset[0]*2 - uiButtonMargin + maxColumns * advance;
-                currentMenuBar->height  = advance * maxNumElementsPerPage + uiButtonOffset[1]*2 - uiButtonMargin;
+                currentMenuBar->height  = advance * maxNumElementsPerPage + uiMainMenuSize + uiButtonOffset[1]*2 - uiButtonMargin;
             }
             else
             {
@@ -245,7 +285,7 @@ class Example_BrickPlay : public ExampleBase
             {
                 // Move to next color picker column
                 x += (currentMenuBar->isRightAligned ? -advance : advance);
-                y = (isScrollEnabled ? uiButtonOffset[1] - yScroll : uiButtonOffset[1]);
+                y = uiMainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - yScroll : uiButtonOffset[1]);
                 ++columns;
             }
         }
@@ -397,10 +437,11 @@ class Example_BrickPlay : public ExampleBase
 
     enum class EditMode
     {
-        None,
+        None,   // Desktop only
         Add,
         Move,
-        Remove,
+        Select, // Desktop only
+        Delete, // Deletes the next selected brick
     };
 
     // Determines what mode to use to render the highlighting of a selected scene object.
@@ -426,7 +467,7 @@ class Example_BrickPlay : public ExampleBase
     struct Controller
     {
         CameraMode          cameraMode                  = CameraMode::None;
-        EditMode            editMode                    = EditMode::Add;//None;
+        EditMode            editMode                    = EditMode::Add; // Start in 'add' mode
 
         LLGL::Offset2D      lastCursorPos;
 
@@ -434,10 +475,12 @@ class Example_BrickPlay : public ExampleBase
         int                 pickedInstanceColorIndex    = 0; // Color palette index of lasted picked brick
 
         int                 pickedColorPaletteIndex     = 0;
+
+        bool                isMouseInDeadZone           = false;
     }
     controller;
 
-    struct Camera : BrickUtils::RigidBody<Gs::Vector3f, useCameraAcceleration>
+    struct Camera : RigidBody<Gs::Vector3f, useCameraAcceleration>
     {
         float           pitch       = 0.0f;
         float           yaw         = 0.0f;
@@ -557,7 +600,8 @@ public:
             "Keyboard controls:\n"
             "  1 .............. Default mode\n"
             "  2 .............. Add brick mode\n"
-            "  3/Delete ....... Move/Delete brick mode\n"
+            "  3 .............. Move brick mode\n"
+            "  4 .............. Delete brick mode\n"
             "  Right mouse .... Turn camera\n"
             "  Middle mouse ... Move camera left/right & up/down\n"
             "  W/A/S/D ........ Move camera left/right & forwards/backwards\n"
@@ -596,7 +640,7 @@ private:
         if (!ReadFile(filename, file))
             return false;
 
-        const bool success = BrickUtils::ParseTextFile(
+        const bool success = ParseTextFile(
             file,
             [&](std::stringstream& stream, int lineNo) -> bool
             {
@@ -700,7 +744,7 @@ private:
                     // Parse entry for intermediate color palette that's exclusive to this scene
                     std::string colorStr;
                     stream >> colorStr;
-                    ColorPalette::Get().Insert(BrickUtils::ColorFromString(colorStr));
+                    ColorPalette::Get().Insert(ColorFromString(colorStr));
                 }
                 else
                 {
@@ -881,14 +925,21 @@ private:
 
         // Explicitly disable combined vertex/index buffers for WebGL backend
         canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
+
+        // Reduce the number of columns for the menu bars to a minum on mobile devices, due to reduced screen size.
+        if (IsRunningOnMobileDevice())
+        {
+            options.uiMaxLeftColumns = 1;
+            options.uiMaxRightColumns = 1;
+        }
     }
 
-    LLGL::Texture* CreateDummyCubeTexture()
+    LLGL::Texture* CreateDummyArrayTexture(LLGL::TextureType texType)
     {
         LLGL::TextureDescriptor cubeTexDesc;
         {
-            cubeTexDesc.debugName           = "DummyCubeTexture";
-            cubeTexDesc.type                = LLGL::TextureType::TextureCube;
+            cubeTexDesc.debugName           = "DummyArrayTexture";
+            cubeTexDesc.type                = texType;
             cubeTexDesc.extent.width        = 1;
             cubeTexDesc.extent.height       = 1;
             cubeTexDesc.arrayLayers         = 6;
@@ -901,65 +952,73 @@ private:
     }
 
     // Load textures and bakes them into a cube texture via `CopyTexture()` command.
-    LLGL::Texture* LoadCubeTexture(const std::string& basename, std::initializer_list<const char*> cubeFaces)
+    LLGL::Texture* LoadCubeOrArrayTexture(LLGL::TextureType texType, const std::string& basename, std::initializer_list<const char*> layerNames)
     {
-        LLGL_VERIFY(cubeFaces.size() == 6);
+        LLGL_VERIFY(texType == LLGL::TextureType::Texture2DArray || (texType == LLGL::TextureType::TextureCube && layerNames.size() == 6));
 
         // Load individual cube faces
-        LLGL::Texture* cubeFaceTextures[6] = {};
-        int cubeFaceIndex = 0;
-        LLGL::Extent3D cubeFace0Extent;
-        constexpr long cubeFaceBindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopySrc);
+        std::vector<LLGL::Texture*> layerTextures;
+        layerTextures.resize(layerNames.size());
 
-        for (const char* cubeFaceName : cubeFaces)
+        int layerIndex = 0;
+        LLGL::Extent3D layer0Extent;
+        constexpr long layerBindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopySrc);
+
+        for (const char* layerName : layerNames)
         {
             // Load cube face texture
-            cubeFaceTextures[cubeFaceIndex] = LoadTexture(basename + cubeFaceName, cubeFaceBindFlags);
+            layerTextures[layerIndex] = LoadTexture(basename + layerName, layerBindFlags);
 
-            // Validate all cube faces have the same size and are square in size
-            const LLGL::Extent3D cubeFaceExtent = cubeFaceTextures[cubeFaceIndex]->GetMipExtent(0);
-            if (cubeFaceIndex > 0)
+            // Validate all layer textures have the same size
+            const LLGL::Extent3D layerExtent = layerTextures[layerIndex]->GetMipExtent(0);
+            if (layerIndex > 0)
             {
-                if (cubeFaceExtent != cubeFace0Extent)
+                if (layerExtent != layer0Extent)
                 {
                     LLGL::Log::Errorf(
-                        "Incompatible cube map sizes: face %d (size=%ux%ux%u)\n does not match face 0 (size=%ux%ux%u)\n",
-                        cubeFaceIndex,
-                        cubeFaceExtent.width, cubeFaceExtent.height, cubeFaceExtent.depth,
-                        cubeFace0Extent.width, cubeFace0Extent.height, cubeFace0Extent.depth
+                        "Incompatible array texture sizes: layer %d (size=%ux%ux%u)\n does not match layer 0 (size=%ux%ux%u)\n",
+                        layerIndex,
+                        layerExtent.width, layerExtent.height, layerExtent.depth,
+                        layer0Extent.width, layer0Extent.height, layer0Extent.depth
                     );
-                    return CreateDummyCubeTexture();
+                    return CreateDummyArrayTexture(texType);
                 }
             }
             else
             {
-                if (cubeFaceExtent.width != cubeFaceExtent.height || cubeFaceExtent.depth != 1)
+                // Also validate layer sizes are square for cube textures
+                if (texType == LLGL::TextureType::TextureCube)
                 {
-                    LLGL::Log::Errorf(
-                        "Incompatible cube map size: face 0 (size=%ux%ux%u) does not have a square size\n",
-                        cubeFaceExtent.width, cubeFaceExtent.height, cubeFaceExtent.depth
-                    );
-                    return CreateDummyCubeTexture();
+                    if (layerExtent.width != layerExtent.height || layerExtent.depth != 1)
+                    {
+                        LLGL::Log::Errorf(
+                            "Incompatible cube map size: face 0 (size=%ux%ux%u) does not have a square size\n",
+                            layerExtent.width, layerExtent.height, layerExtent.depth
+                        );
+                        return CreateDummyArrayTexture(texType);
+                    }
                 }
-                cubeFace0Extent = cubeFaceExtent;
+                layer0Extent = layerExtent;
             }
-            ++cubeFaceIndex;
+            ++layerIndex;
         }
 
-        // Create cube texture with no initial data
-        const std::string debugName = "CubeTexture[" + basename + "]";
-        LLGL::TextureDescriptor cubeTexDesc;
+        // Create array or cube texture with no initial data
+        const std::uint32_t numLayers = static_cast<std::uint32_t>(layerTextures.size());
+
+        const std::string debugName = "CubeOrArrayTexture[" + basename + "]";
+        LLGL::TextureDescriptor outTexDesc;
         {
-            cubeTexDesc.debugName       = debugName.c_str();
-            cubeTexDesc.type            = LLGL::TextureType::TextureCube;
-            cubeTexDesc.bindFlags       = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopyDst;
-            cubeTexDesc.extent          = cubeFace0Extent;
-            cubeTexDesc.arrayLayers     = 6;
-            cubeTexDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+            outTexDesc.debugName    = debugName.c_str();
+            outTexDesc.type         = texType;
+            outTexDesc.bindFlags    = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopyDst;
+            outTexDesc.extent       = layer0Extent;
+            outTexDesc.arrayLayers  = numLayers;
+            outTexDesc.miscFlags    = LLGL::MiscFlags::NoInitialData;
         }
-        LLGL::Texture* cubeTex = renderer->CreateTexture(cubeTexDesc);
+        LLGL::Texture* outTex = renderer->CreateTexture(outTexDesc);
 
-        // Copy all cube faces into cube texture on the GPU and generate MIP-maps
+        // Copy all array layers into output texture on the GPU and generate MIP-maps
         commands->Begin();
         {
             const std::string debugLabel = "BakeCubemap[" + basename + "]";
@@ -968,21 +1027,21 @@ private:
                 LLGL::TextureLocation dstLocation;
                 const LLGL::TextureLocation srcLocation;
 
-                for (std::uint32_t cubeFaceIndex = 0; cubeFaceIndex < 6u; ++cubeFaceIndex)
+                for_range(layer, numLayers)
                 {
-                    dstLocation.arrayLayer = cubeFaceIndex;
-                    if (LLGL::Texture* cubeFaceTex = cubeFaceTextures[cubeFaceIndex])
-                        commands->CopyTexture(*cubeTex, dstLocation, *cubeFaceTex, srcLocation, cubeFace0Extent);
+                    dstLocation.arrayLayer = layer;
+                    if (LLGL::Texture* layerTex = layerTextures[layer])
+                        commands->CopyTexture(*outTex, dstLocation, *layerTex, srcLocation, layer0Extent);
                 }
 
-                commands->GenerateMips(*cubeTex);
+                commands->GenerateMips(*outTex);
             }
             commands->PopDebugGroup();
         }
         commands->End();
         commandQueue->Submit(*commands);
 
-        return cubeTex;
+        return outTex;
     }
 
     // Creates all resources that depend on the swap-chain resolution.
@@ -1183,7 +1242,10 @@ private:
         uvWrapSampler = renderer->CreateSampler(samplerDesc);
 
         // Load skybox textures
-        skyboxCubemap = LoadCubeTexture("Skybox/sky_74_cubemap_2k/", { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" });
+        skyboxCubemap = LoadCubeOrArrayTexture(LLGL::TextureType::TextureCube, "Skybox/sky_74_cubemap_2k/", { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" });
+
+        // Load all UI element textures
+        uiMenuTexture = LoadCubeOrArrayTexture(LLGL::TextureType::Texture2DArray, "UIElements/", { "download32.png", "upload32.png", "arrow32.png", "rotate32.png" });
 
         // Create render pass for opacity scene rendering.
         LLGL::RenderPassDescriptor opacityPassDesc;
@@ -1590,7 +1652,7 @@ private:
             int colorPaletteIndex = 0;
             for (auto& it : colorToPaletteIndex)
             {
-                file << "p " << BrickUtils::ColorToString(BrickUtils::Uint32ToColor(it.first)) << std::endl;
+                file << "p " << ColorToString(Uint32ToColor(it.first)) << std::endl;
                 it.second = colorPaletteIndex++;
             }
         }
@@ -1604,7 +1666,7 @@ private:
             // Try to find color in palette first
             if (useColorPalette)
             {
-                auto it = colorToPaletteIndex.find(BrickUtils::ColorToUint32(color));
+                auto it = colorToPaletteIndex.find(ColorToUint32(color));
                 if (it != colorToPaletteIndex.end())
                 {
                     ::snprintf(colorStr, sizeof(colorStr), "p%d", it->second);
@@ -1613,7 +1675,7 @@ private:
             }
 
             // Otherwise, write individual color
-            return BrickUtils::ColorToString(color);
+            return ColorToString(color);
         };
 
         scene.ForEachInstanceGroup(
@@ -1678,11 +1740,11 @@ private:
             }
 
             // Otherwise, parse individual color value
-            return BrickUtils::ColorFromString(s);
+            return ColorFromString(s);
         };
 
         // Parse every line and interpret it
-        const bool success = BrickUtils::ParseTextFile(
+        const bool success = ParseTextFile(
             file,
             [&](std::stringstream& stream, int lineNo) -> bool
             {
@@ -1751,7 +1813,7 @@ private:
                     // Parse entry for intermediate color palette that's exclusive to this scene
                     std::string colorStr;
                     stream >> colorStr;
-                    intermediateColors.push_back(BrickUtils::ColorFromString(colorStr));
+                    intermediateColors.push_back(ColorFromString(colorStr));
                 }
                 else
                 {
@@ -2416,22 +2478,22 @@ private:
         previewInstance = {};
     }
 
-    bool IsMouseInRect(int x, int y, int w, int h)
+    bool IsMouseInRect(int x, int y, int w, int h, bool ignoreMainMenu = false)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
-        return (mousePos.x >= x && mousePos.x <= x + w && mousePos.y >= y && mousePos.y <= y + h);
+        return (mousePos.x >= x && mousePos.x <= x + w && mousePos.y >= y && mousePos.y <= y + h && (!ignoreMainMenu || mousePos.y > uiMainMenuSize));
     }
 
-    bool IsSelectedByMouse(int x, int y, int w, int h)
+    bool IsSelectedByMouse(int x, int y, int w, int h, bool ignoreMainMenu = false)
     {
-        return (controller.cameraMode == CameraMode::None && IsMouseInRect(x, y, w, h));
+        return (controller.cameraMode == CameraMode::None && IsMouseInRect(x, y, w, h, ignoreMainMenu));
     }
 
     bool DrawUIColorPicker(int x, int y, int paletteIndex, bool isHighlighted = false)
     {
         int w = uiColorPickerSize + uiButtonFrameSize*2;
         int h = uiColorPickerSize + uiButtonFrameSize*2;
-        const bool isSelected = IsSelectedByMouse(x, y, w, h);
+        const bool isSelected = IsSelectedByMouse(x, y, w, h, true);
 
         LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
         const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
@@ -2455,7 +2517,7 @@ private:
     {
         int w = uiBrickThumbnailSize + uiButtonFrameSize*2;
         int h = uiBrickThumbnailSize + uiButtonFrameSize*2;
-        const bool isSelected = IsSelectedByMouse(x, y, w, h);
+        const bool isSelected = IsSelectedByMouse(x, y, w, h, true);
 
         const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[controller.pickedColorPaletteIndex];
 
@@ -2467,6 +2529,30 @@ private:
 
         // Draw thumbnail texture layer
         uiRenderer.Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnailTexture, brickType, brickColor);
+
+        return (isSelected && input.KeyDown(LLGL::Key::LButton));
+    }
+
+    bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false)
+    {
+        int w = uiMainMenuItemSize + uiButtonFrameSize*2;
+        int h = uiMainMenuItemSize + uiButtonFrameSize*2;
+        const bool isSelected = IsSelectedByMouse(uiState.x, uiState.y, w, h);
+
+        if (isSelected || isHighlighted)
+        {
+            // Draw button background to highlight selection
+            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, uiBrickThumbnailBgColor);
+        }
+
+        // Draw menu icon
+        const UIMenuInfo& menuInfo = menuInfos[menuItem];
+        uiRenderer.Draw2DImage(uiState.x + uiButtonFrameSize, uiState.y + uiButtonFrameSize, uiMenuTexture, menuInfo.layer, LLGL::ColorRGBAub{}, menuInfo.flags);
+
+        // Advance menu item position
+        uiState.x += uiState.advance;
+        if (menuInfo.endsWithSeparator)
+            uiState.x += uiMainMenuSeparatorSize;
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
     }
@@ -2502,13 +2588,13 @@ private:
 
         // Update scrolling
         const float scrollDir = static_cast<float>(-input.GetWheelMotion()) * uiScrollSpeed;
-        if (IsMouseInRect(0, 0, uiState.menuBarLeft.width, uiState.scrH))
+        if (IsMouseInRect(0, uiMainMenuSize, uiState.menuBarLeft.width, uiState.scrH - uiMainMenuSize))
         {
             uiState.menuBarLeft.scroll.AddForces(scrollDir);
         }
         uiState.menuBarLeft.UpdateScrolling(dt, uiState.scrH);
 
-        if (IsMouseInRect(uiState.scrW - uiState.menuBarRight.width, 0, uiState.menuBarRight.width, uiState.scrH))
+        if (IsMouseInRect(uiState.scrW - uiState.menuBarRight.width, uiMainMenuSize, uiState.menuBarRight.width, uiState.scrH - uiMainMenuSize))
         {
             uiState.menuBarRight.scroll.AddForces(scrollDir);
         }
@@ -2518,25 +2604,25 @@ private:
     void DrawScrollIndicator(const UIState::MenuBar& menuBar)
     {
         const int xOffset = (menuBar.isRightAligned ? uiState.scrW - menuBar.width : 0);
+        const int yOffset = uiMainMenuSize;
 
         const int yScroll = static_cast<int>(menuBar.scroll.position);
         const int yScrollMax = menuBar.height - uiState.scrH;
 
-        const LLGL::ColorRGBAub uiScrollIndicatorColor{ 255, 255, 255, 128 };
-        const LLGL::ColorRGBAub uiScrollIndicatorColorTransparent{ uiScrollIndicatorColor.r, uiScrollIndicatorColor.g, uiScrollIndicatorColor.b, 0 };
+        const LLGL::ColorRGBAub fadeColor{ uiMainMenuColor[1].r, uiMainMenuColor[1].g, uiMainMenuColor[1].b, 0 };
 
         if (yScroll > 0)
         {
             uiRenderer.Draw2DRectGradient(
-                xOffset, 0, menuBar.width, uiScrollIndicatorSize,
-                uiScrollIndicatorColor, uiScrollIndicatorColorTransparent
+                xOffset, yOffset, menuBar.width, uiScrollIndicatorSize,
+                uiMainMenuColor[1], fadeColor
             );
         }
         if (yScroll < yScrollMax)
         {
             uiRenderer.Draw2DRectGradient(
                 xOffset, uiState.scrH - uiScrollIndicatorSize, menuBar.width, uiScrollIndicatorSize,
-                uiScrollIndicatorColorTransparent, uiScrollIndicatorColor
+                fadeColor, uiMainMenuColor[1]
             );
         }
     }
@@ -2545,8 +2631,14 @@ private:
     void DrawUIImmediateMode()
     {
         // Draw mouse dead zone as transparent background for the UI
-        uiRenderer.Draw2DRect(0, 0, uiState.menuBarLeft.width, uiState.scrH, uiMenuBgColor);
-        uiRenderer.Draw2DRect(uiState.scrW - uiState.menuBarRight.width, 0, uiState.menuBarRight.width, uiState.scrH, uiMenuBgColor);
+        uiRenderer.Draw2DRect(
+            /*position:*/   0, uiMainMenuSize,
+            /*size:*/       uiState.menuBarLeft.width, uiState.scrH - uiMainMenuSize,
+            /*color:*/      uiSideMenuColor);
+        uiRenderer.Draw2DRect(
+            /*position:*/   uiState.scrW - uiState.menuBarRight.width, uiMainMenuSize,
+            /*size:*/       uiState.menuBarRight.width, uiState.scrH - uiMainMenuSize,
+            /*color:*/      uiSideMenuColor);
 
         // Draw entire color palette for the user to choose from on the left of the overlay
         uiState.ResetToMenuBar(uiState.menuBarLeft, uiColorPickerSize, true);
@@ -2592,6 +2684,36 @@ private:
         }
 
         DrawScrollIndicator(uiState.menuBarRight);
+
+        // Draw main menu bar
+        uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiMainMenuSize, uiMainMenuColor[0], uiMainMenuColor[1]);
+
+        uiState.x = uiButtonMargin;
+        uiState.y = (uiMainMenuSize - uiMainMenuItemSize - uiButtonMargin)/2;
+
+        uiState.advance = uiMainMenuItemSize + uiButtonMargin;
+
+        DrawUIMenuItem(UIMenuItem_Download);
+        DrawUIMenuItem(UIMenuItem_Upload);
+
+        DrawUIMenuItem(UIMenuItem_Undo);
+        DrawUIMenuItem(UIMenuItem_Redo);
+
+        DrawUIMenuItem(UIMenuItem_TurnCW);
+        DrawUIMenuItem(UIMenuItem_TurnCCW);
+
+        if (DrawUIMenuItem(UIMenuItem_Add, (controller.editMode == EditMode::Add)))
+        {
+            controller.editMode = EditMode::Add;
+        }
+        if (DrawUIMenuItem(UIMenuItem_Move, (controller.editMode == EditMode::Move || controller.editMode == EditMode::Select)))
+        {
+            controller.editMode = EditMode::Select;
+        }
+        if (DrawUIMenuItem(UIMenuItem_Delete, (controller.editMode == EditMode::Delete)))
+        {
+            controller.editMode = EditMode::Delete;
+        }
     }
 
     void PrepareUIDrawCommands()
@@ -2743,7 +2865,12 @@ private:
         // Allow user to turn and change type of preview brick while picking the scene
         GridRotation newPreviewRotation = previewInstance.gridRotation;
         if (input.KeyDown(LLGL::Key::Space))
-            newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
+        {
+            if (input.KeyPressed(LLGL::Key::Shift))
+                newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
+            else
+                newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation - 1, GridRotation_Num));
+        }
 
         BrickId newBrickId = previewBrick.id;
         if (input.KeyDown(LLGL::Key::PageUp))
@@ -2823,11 +2950,11 @@ private:
 
             // Reset edit mode if it was only temporarily adding a new brick
             if (controller.editMode == EditMode::Move)
-                controller.editMode = EditMode::Remove;
+                controller.editMode = EditMode::Select;
         }
     }
 
-    void ProcessEditModeRemove()
+    void ProcessEditModeSelect()
     {
         if (Brick selectedBrick = SelectBrickFromScene())
         {
@@ -2860,10 +2987,21 @@ private:
         }
     }
 
+    void ProcessEditModeDelete()
+    {
+        if (input.KeyDown(LLGL::Key::LButton))
+        {
+            if (Brick selectedBrick = SelectBrickFromScene())
+            {
+                currentScene->DestroyBrick(selectedBrick);
+            }
+        }
+    }
+
     void ProcessUserInput(float dt)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
-        const bool isMouseInDeadZone = (mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width);
+        controller.isMouseInDeadZone = (mousePos.y > uiMainMenuSize && (mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width));
 
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
@@ -2874,18 +3012,22 @@ private:
             controller.editMode = EditMode::None;
         else if (input.KeyDown(LLGL::Key::D2))
             controller.editMode = EditMode::Add;
-        else if (input.KeyDown(LLGL::Key::D3) || input.KeyDown(LLGL::Key::Delete))
-            controller.editMode = EditMode::Remove;
+        else if (input.KeyDown(LLGL::Key::D3))
+            controller.editMode = EditMode::Select;
+        else if (input.KeyDown(LLGL::Key::D4))
+            controller.editMode = EditMode::Delete;
 
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
         // Only use mouse editing if the mouse isn't in the dead zone, i.e. covered by UI elements
-        if (controller.cameraMode == CameraMode::None && !isMouseInDeadZone)
+        if (controller.cameraMode == CameraMode::None && !controller.isMouseInDeadZone)
         {
             if (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
                 ProcessEditModeAddOrMove();
-            else if (controller.editMode == EditMode::Remove)
-                ProcessEditModeRemove();
+            else if (controller.editMode == EditMode::Select)
+                ProcessEditModeSelect();
+            else if (controller.editMode == EditMode::Delete)
+                ProcessEditModeDelete();
         }
 
         camera.ApplyForces(dt, currentScene.get());
@@ -2939,7 +3081,11 @@ private:
         ProcessUserInput(dt);
         UpdateSceneView();
 
-        const bool isPreviewBrickVisible = (controller.cameraMode == CameraMode::None && (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move));
+        const bool isPreviewBrickVisible =
+        (
+            !controller.isMouseInDeadZone && controller.cameraMode == CameraMode::None &&
+            (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
+        );
 
         commands->Begin();
         {
@@ -3011,7 +3157,7 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (controller.editMode == EditMode::Remove)
+                if (controller.editMode == EditMode::Select)
                 {
                     commands->PushDebugGroup("RenderSilhouette");
                     {

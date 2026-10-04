@@ -20,7 +20,7 @@
 #include <set>
 
 
-#define DEBUG_INSTANCES 1
+#define DEBUG_INSTANCES 0
 
 
 // Owns the scene with its bricks, instance buffer, and the grid (kd-Tree) representation.
@@ -224,7 +224,7 @@ public:
 
         hasUnsavedChanges = true;
 
-        const bool isTransparent = BrickUtils::ColorPalette::Get().IsTransparent(colorIndex);
+        const bool isTransparent = ColorPalette::Get().IsTransparent(colorIndex);
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, gridRotation);
 
         const BrickGroup group = [this, &isTransparent, &brickDim, &gridPos, brickId]() -> BrickGroup
@@ -486,10 +486,10 @@ public:
             "  - kd-Tree nodes: %s\n"
             "  - kd-Tree leaves: %s\n"
             ,
-            BrickUtils::NumToStr_enUS(NumTotalInstances()).c_str(),
-            BrickUtils::NumToBytes_enUS(instanceBufferSize).c_str(),
-            BrickUtils::NumToStr_enUS(grid.NumNodes()).c_str(),
-            BrickUtils::NumToStr_enUS(grid.NumLeaves()).c_str()
+            NumToStr_enUS(NumTotalInstances()).c_str(),
+            NumToBytes_enUS(instanceBufferSize).c_str(),
+            NumToStr_enUS(grid.NumNodes()).c_str(),
+            NumToStr_enUS(grid.NumLeaves()).c_str()
         );
     }
 
@@ -667,7 +667,7 @@ private:
     {
         if (const Instance* brickInstance = GetBrickInstance(brick))
         {
-            const bool isTransparent = BrickUtils::ColorPalette::Get().IsTransparent(brickInstance->colorIndex);
+            const bool isTransparent = ColorPalette::Get().IsTransparent(brickInstance->colorIndex);
             return !isTransparent;
         }
         return false;
@@ -778,7 +778,7 @@ private:
                 if (group == BrickGroup_Invisible)
                 {
                     // Brick is no longer fully blocked and must become visible again. Determine whether it was an opque or transparent brick
-                    const bool isBrickTransparent = BrickUtils::ColorPalette::Get().IsTransparent(instance->colorIndex);
+                    const bool isBrickTransparent = ColorPalette::Get().IsTransparent(instance->colorIndex);
                     if (!isBrickTransparent && !isChangeFromTopAndBottom && IsBrickTypeOptimized(brick.GetId()))
                     {
                         // Re-evalute if brick is still blocked top and bottom, to try putting it back into the group for optimized rendering

@@ -22,6 +22,13 @@ enum UIRenderMode
     UIRenderMode_Textured,
 };
 
+// Bit flags for 2D rendering. See UIRenderer::Draw2DImage().
+enum UIRenderFlags
+{
+    UIRenderFlags_FlipX = (1 << 0),
+    UIRenderFlags_FlipY = (1 << 1),
+};
+
 // Simple user interface (UI) renderer for BrickPlay example.
 class UIRenderer
 {
@@ -364,7 +371,8 @@ public:
         verts[5].Set(x + w, y + h, colorBottom, render);
     }
 
-    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {})
+    // @param Optional flags for UV mapping. Use bitwise OR combination of UIRenderFlags.
+    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {}, int flags = 0)
     {
         SetUITexture(tex);
 
@@ -372,16 +380,38 @@ public:
         const int w = static_cast<int>(texExtent.width);
         const int h = static_cast<int>(texExtent.height);
 
+        // Generate UV coordinates
+        int uv[4][2] =
+        {
+            { 0, 0 },
+            { 1, 0 },
+            { 1, 1 },
+            { 0, 1 },
+        };
+
+        if ((flags & UIRenderFlags_FlipX) != 0)
+        {
+            // Swap X coordinates between 0/1 and 2/3 vertices
+            std::swap(uv[0][0], uv[1][0]);
+            std::swap(uv[2][0], uv[3][0]);
+        }
+        if ((flags & UIRenderFlags_FlipY) != 0)
+        {
+            // Swap Y coordinates between 0/3 and 1/2 vertices
+            std::swap(uv[0][1], uv[3][1]);
+            std::swap(uv[1][1], uv[2][1]);
+        }
+
         // Allocate 6 vertices to draw 2 triangles
         UIVertex* verts = NewUIVertices(6);
 
-        verts[0].Set(x    , y    , 0, 0, texLayer, color);
-        verts[1].Set(x + w, y    , 1, 0, texLayer, color);
-        verts[2].Set(x    , y + h, 0, 1, texLayer, color);
+        verts[0].Set(x    , y    , uv[0][0], uv[0][1], texLayer, color);
+        verts[1].Set(x + w, y    , uv[1][0], uv[1][1], texLayer, color);
+        verts[2].Set(x    , y + h, uv[3][0], uv[3][1], texLayer, color);
 
-        verts[3].Set(x    , y + h, 0, 1, texLayer, color);
-        verts[4].Set(x + w, y    , 1, 0, texLayer, color);
-        verts[5].Set(x + w, y + h, 1, 1, texLayer, color);
+        verts[3].Set(x    , y + h, uv[3][0], uv[3][1], texLayer, color);
+        verts[4].Set(x + w, y    , uv[1][0], uv[1][1], texLayer, color);
+        verts[5].Set(x + w, y + h, uv[2][0], uv[2][1], texLayer, color);
     }
 
 };
