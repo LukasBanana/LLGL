@@ -508,7 +508,8 @@ private:
                     BrickDictionary::Get().GroupToString(static_cast<BrickGroup>(groupType)) + '_' +
                     BrickDictionary::Get().TypeToString(brickId)
                 );
-            }
+            },
+            true
         );
     }
 

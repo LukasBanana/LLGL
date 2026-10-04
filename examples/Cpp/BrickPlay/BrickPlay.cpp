@@ -1179,7 +1179,7 @@ private:
         fsSkybox                = LoadFragmentShader("BrickPlay", "PSSkybox");
 
         // Initialize UI renderer
-        if (!uiRenderer.Initialize(*renderer, *swapChain, vsOverlay, fsOverlay))
+        if (!uiRenderer.Initialize(renderer.get(), *swapChain, vsOverlay, fsOverlay))
         {
             Quit(1);
             return false;
@@ -2458,13 +2458,15 @@ private:
         }
     }
 
-    void RenderUIElements()
+    void PrepareUIDrawCommands()
     {
-        uiRenderer.Begin2DRendering(*commands);
+        uiRenderer.UpdateUIView(*commands, swapChain->GetResolution());
+
+        uiRenderer.BeginBatched2DRendering(*commands);
         {
             DrawUIImmediateMode();
         }
-        uiRenderer.End2DRendering();
+        uiRenderer.EndBatched2DRendering();
     }
 
     //////////////////// USER INPUT HANDLING ////////////////////
@@ -2817,8 +2819,14 @@ private:
 
             commands->UpdateBuffer(*sceneViewCbuffer, 0, &sceneView, sizeof(sceneView));
 
-            uiRenderer.UpdateUIView(*commands, swapChain->GetResolution());
+            // Prepare UI draw commands by generating vertex data and uploading them to the GPU. Draw commands are batched and flushed in the final render-pass.
+            commands->PushDebugGroup("PrepareUIDrawCommands");
+            {
+                PrepareUIDrawCommands();
+            }
+            commands->PopDebugGroup();
 
+            // Update dynamic scene data
             UpdatePlaneGeometryForViewFrustum();
 
             currentScene->FlushInstanceDirtyRange(*commands);
@@ -2886,7 +2894,7 @@ private:
                 {
                     commands->PushDebugGroup("RenderUIElements");
                     {
-                        RenderUIElements();
+                        uiRenderer.FlushDrawCommands(*commands);
                     }
                     commands->PopDebugGroup();
                 }
