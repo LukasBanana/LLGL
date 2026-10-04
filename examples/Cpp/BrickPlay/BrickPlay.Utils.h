@@ -18,6 +18,53 @@
 namespace BrickUtils
 {
 
+    // Generic struct for simple physics integration. Used for camera movement and smooth menu bar scrolling.
+    template <typename T, bool UseAcceleration = true>
+    struct RigidBody
+    {
+        T       forces      = {};
+        T       velocity    = {};
+        T       position    = {};
+        float   invMass     = 1.0f;
+
+        void SetMass(float mass)
+        {
+            invMass = 1.0f / mass;
+        }
+
+        void SetInfiniteMass()
+        {
+            invMass = 0.0f;
+        }
+
+        void AddForces(const T& inForces)
+        {
+            forces += inForces * invMass;
+        }
+
+        // Helper function for simple physics integration.
+        T IntegrateForces(float dt, float dampingCoeff = 0.99f)
+        {
+            if (UseAcceleration)
+            {
+                // Apply forces to velocity
+                const T damping = -velocity * dampingCoeff;
+                const T acceleration = (forces + damping) * invMass;
+                velocity += acceleration * dt;
+            }
+            else
+            {
+                // Without physics integration, simply set velocity to input forces
+                velocity = forces;
+            }
+
+            // Reset forces
+            forces = {};
+
+            return velocity * dt;
+        }
+    };
+
     inline std::uint32_t ColorToUint32(LLGL::ColorRGBAub col)
     {
         return

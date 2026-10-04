@@ -345,18 +345,23 @@ public:
 
     void Draw2DRect(int x, int y, int w, int h, LLGL::ColorRGBAub color, UIRenderMode render = UIRenderMode_Solid)
     {
+        Draw2DRectGradient(x, y, w, h, color, color, render);
+    }
+
+    void Draw2DRectGradient(int x, int y, int w, int h, LLGL::ColorRGBAub colorTop, LLGL::ColorRGBAub colorBottom, UIRenderMode render = UIRenderMode_Solid)
+    {
         SetUITexture(uiBlankTexture);
 
         // Allocate 6 vertices to draw 2 triangles
         UIVertex* verts = NewUIVertices(6);
 
-        verts[0].Set(x    , y    , color, render);
-        verts[1].Set(x + w, y    , color, render);
-        verts[2].Set(x    , y + h, color, render);
+        verts[0].Set(x    , y    , colorTop,    render);
+        verts[1].Set(x + w, y    , colorTop,    render);
+        verts[2].Set(x    , y + h, colorBottom, render);
 
-        verts[3].Set(x    , y + h, color, render);
-        verts[4].Set(x + w, y    , color, render);
-        verts[5].Set(x + w, y + h, color, render);
+        verts[3].Set(x    , y + h, colorBottom, render);
+        verts[4].Set(x + w, y    , colorTop,    render);
+        verts[5].Set(x + w, y + h, colorBottom, render);
     }
 
     void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {})
