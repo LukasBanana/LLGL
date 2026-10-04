@@ -2,21 +2,13 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>LLGL - LLGL_EXAMPLE_NAME</title>
-    <style>
-        canvas { 
-            display: block;
-            padding-left: 0;
-            padding-right: 0;
-            margin-left: auto;
-            margin-right: auto;
-            width: min(100%, 98vh * 4 / 3);
-            aspect-ratio: 4 / 3;
-        }
-        html, body {
-            overscroll-behavior-y: none;
-        }
-    </style>
+    <link rel="stylesheet" href="../style.webapp.css">
+    <script>
+        // iOS Safari ignores user-scalable=no, so block its proprietary pinch gestures explicitly
+        ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+    </script>
 </head>
 <body>
     <!-- Create canvas that C++ code will draw into -->
