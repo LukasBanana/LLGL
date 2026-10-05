@@ -87,11 +87,35 @@ class LLGL_EXPORT Input : public Interface
         */
         bool KeyDoubleClick(Key keyCode) const;
 
+        /**
+        \brief Returns the local position (relative to the client area of the Window or Canvas) of the specified input pointer.
+        \param index Specifies the pointer index. Index 0 is the default for mouse input. Other values are used exclusively for touch input.
+        The maximum value index is <code>LLGL_MAX_NUM_INPUT_POINTERS - 1</code>
+        \see LLGL_MAX_NUM_INPUT_POINTERS
+        \see GetNumPointers
+        */
+        Offset2D GetPointerPosition(unsigned index) const;
+
+        /**
+        \brief Returns the 2D motion vector of the specified input pointer.
+        \param index Specifies the pointer index. Index 0 is the default for mouse input. Other values are used exclusively for touch input.
+        The maximum value index is <code>LLGL_MAX_NUM_INPUT_POINTERS - 1</code>
+        \see LLGL_MAX_NUM_INPUT_POINTERS
+        \see GetNumPointers
+        */
+        Offset2D GetPointerMotion(unsigned index) const;
+
         //! Returns the local mouse position.
-        Offset2D GetMousePosition() const;
+        inline Offset2D GetMousePosition() const
+        {
+            return GetPointerPosition(0);
+        }
 
         //! Returns the global mouse motion.
-        Offset2D GetMouseMotion() const;
+        inline Offset2D GetMouseMotion() const
+        {
+            return GetPointerMotion(0);
+        }
 
         //! Returns the mouse wheel motion.
         int GetWheelMotion() const;
@@ -101,6 +125,13 @@ class LLGL_EXPORT Input : public Interface
 
         //! Returns the number of any keys being pressed.
         unsigned GetAnyKeyCount() const;
+
+        /**
+        \brief Returns the number of input pointers.
+        \see GetPointerPosition
+        \see GetPointerMotion
+        */
+        unsigned GetNumPointers() const;
 
     private:
 

@@ -63,16 +63,24 @@ class LLGL_EXPORT Canvas : public Surface
                 virtual void OnResize(Canvas& sender, const Extent2D& clientAreaSize);
 
                 //! Sent when a tap gesture has been recognized only including the location within the canvas.
-                virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
+                virtual void OnTapGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches);
 
                 //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
-                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
+                virtual void OnPanGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
                 //! Sent when a key (from device button) has been pushed.
                 virtual void OnKeyDown(Canvas& sender, Key keyCode);
 
                 //! Sent when a key (from device button) has been released.
                 virtual void OnKeyUp(Canvas& sender, Key keyCode);
+
+                //! \deprecated Since 0.05b; Use the new version with \c touchIndex parameter.
+                LLGL_DEPRECATED("This version of `OnTapGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter instead!")
+                virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
+
+                //! \deprecated Since 0.05b; Use the new version with \c touchIndex parameter.
+                LLGL_DEPRECATED("This version of `OnPanGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter instead!")
+                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
         };
 
@@ -158,13 +166,13 @@ class LLGL_EXPORT Canvas : public Surface
         \brief Posts a tap gesture event to all event listeners.
         \see EventListener::OnTapGesture
         */
-        void PostTapGesture(const Offset2D& position, std::uint32_t numTouches);
+        void PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches);
 
         /**
         \brief Posts a pan gesture event to all event listeners.
         \see EventListener::OnPanGesture
         */
-        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
+        void PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
         /**
         \brief Posts a keycode event from a device button that has been pushed down.
@@ -177,6 +185,26 @@ class LLGL_EXPORT Canvas : public Surface
         \see EventListener::OnKeyUp
         */
         void PostKeyUp(Key keyCode);
+
+        /**
+        \deprecated Since 0.05b; Use new version with `touchIndex` parameter.
+        \see PostTapGesture(const Offset2D&, std::uint32_t, std::uint32_t)
+        */
+        LLGL_DEPRECATED("This version of `PostTapGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter!")
+        inline void PostTapGesture(const Offset2D& position, std::uint32_t numTouches)
+        {
+            PostTapGesture(position, 0, numTouches);
+        }
+
+        /**
+        \deprecated Since 0.05b; Use new version with `touchIndex` parameter.
+        \see PostPanGesture(const Offset2D&, std::uint32_t, std::uint32_t, float, float, EventAction)
+        */
+        LLGL_DEPRECATED("This version of `PostPanGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter!")
+        inline void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+        {
+            PostPanGesture(position, 0, numTouches, dx, dy, action);
+        }
 
     protected:
 

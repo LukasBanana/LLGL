@@ -84,7 +84,7 @@ Offset2D WasmDisplay::GetOffset() const
 
 float WasmDisplay::GetScale() const
 {
-    return 1.0f; // dummy
+    return static_cast<float>(emscripten_get_device_pixel_ratio());
 }
 
 bool WasmDisplay::ResetDisplayMode()

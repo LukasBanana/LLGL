@@ -28,6 +28,14 @@
 #define LLGL_MAX_NUM_SO_BUFFERS             ( 4u )
 
 /**
+\brief Maximum number of input pointers.
+\remarks This could simply be 10 as the maximum number of fingers humans usually have,
+but since some devices might support way more and Emscripten also sets this to 32, LLGL adopts that same number.
+\see LLGL::Input::GetPointerPosition
+*/
+#define LLGL_MAX_NUM_INPUT_POINTERS         ( 32u )
+
+/**
 \brief Indicates to use the maximum number of threads the host system supports.
 \remarks This value does not itself specify the maximum number, but tells the associated functions to use the maximum number.
 \see ConvertImageBuffer

@@ -13,7 +13,10 @@
 <body>
     <!-- Create canvas that C++ code will draw into -->
     <div style="text-align: center;">
-        <canvas id="canvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
+        <div class="canvas-container">
+            <canvas id="canvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
+            <div class="watermark">Brought to you by LLGL</div>
+        </div>
     </div>
 
     <!-- Define module to allow C++ code to access the canvas element -->

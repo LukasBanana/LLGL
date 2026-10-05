@@ -116,20 +116,25 @@ std::int32_t AndroidInputEventHandler::BroadcastInputEvent(android_app* app, AIn
 
         case AINPUT_EVENT_TYPE_MOTION:
         {
-            const float posX = AMotionEvent_getX(event, 0);
-            const float posY = AMotionEvent_getY(event, 0);
+            std::int32_t action = AMotionEvent_getAction(event);
+            std::int32_t maskedAction = (action & AMOTION_EVENT_ACTION_MASK);
+            std::size_t pointerIndex = static_cast<std::size_t>((action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+
+            const float posX = AMotionEvent_getX(event, pointerIndex);
+            const float posY = AMotionEvent_getY(event, pointerIndex);
 
             const LLGL::Offset2D position{ static_cast<std::int32_t>(posX), static_cast<std::int32_t>(posY) };
             const std::uint32_t numTouches = static_cast<std::uint32_t>(AMotionEvent_getPointerCount(event));
+            const std::uint32_t touchIndex = static_cast<std::uint32_t>(pointerIndex);
 
-            switch (AMotionEvent_getAction(event))
+            switch (maskedAction)
             {
                 case AMOTION_EVENT_ACTION_DOWN:
                 {
                     /* Initialize previous position with current position when first touch down is detected */
                     prevMotionPos_[0] = posX;
                     prevMotionPos_[1] = posY;
-                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, 0.0f, 0.0f, EventAction::Began));
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, touchIndex, numTouches, 0.0f, 0.0f, EventAction::Began));
                 }
                 break;
 
@@ -142,13 +147,13 @@ std::int32_t AndroidInputEventHandler::BroadcastInputEvent(android_app* app, AIn
                     const float dy = (posY - prevMotionPos_[1]) / posYPrec;
                     prevMotionPos_[0] = posX;
                     prevMotionPos_[1] = posY;
-                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, dx, dy, EventAction::Changed));
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, touchIndex, numTouches, dx, dy, EventAction::Changed));
                 }
                 break;
 
                 case AMOTION_EVENT_ACTION_UP:
                 {
-                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, 0.0f, 0.0f, EventAction::Ended));
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, touchIndex, numTouches, 0.0f, 0.0f, EventAction::Ended));
                 }
                 break;
             }

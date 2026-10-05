@@ -53,14 +53,16 @@ void Canvas::EventListener::OnResize(Canvas& sender, const Extent2D& clientAreaS
     // dummy
 }
 
-void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches)
+LLGL_DEPRECATED_IGNORE_PUSH()
+
+void Canvas::EventListener::OnTapGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches)
 {
-    // dummy
+    OnTapGesture(sender, position, numTouches);
 }
 
-void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+void Canvas::EventListener::OnPanGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action)
 {
-    // dummy
+    OnPanGesture(sender, position, numTouches, dx, dy, action);
 }
 
 void Canvas::EventListener::OnKeyDown(Canvas& sender, Key keyCode)
@@ -72,6 +74,20 @@ void Canvas::EventListener::OnKeyUp(Canvas& sender, Key keyCode)
 {
     // dummy
 }
+
+// DEPRECATED
+void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+{
+    // dummy
+}
+// /DEPRECATED
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 
 /* ----- Window class ----- */
@@ -140,14 +156,14 @@ void Canvas::PostResize(const Extent2D& clientAreaSize)
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }
 
-void Canvas::PostTapGesture(const Offset2D& position, std::uint32_t numTouches)
+void Canvas::PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches)
 {
-    FOREACH_LISTENER_CALL( OnTapGesture(*this, position, numTouches) );
+    FOREACH_LISTENER_CALL( OnTapGesture(*this, position, touchIndex, numTouches) );
 }
 
-void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+void Canvas::PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action)
 {
-    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, numTouches, dx, dy, action) );
+    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, touchIndex, numTouches, dx, dy, action) );
 }
 
 void Canvas::PostKeyDown(Key keyCode)

@@ -9,7 +9,9 @@
 #include "WasmKeyCodes.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Display.h>
+#include <LLGL/Utils/ForRange.h>
 #include "../../Core/CoreUtils.h"
+#include <cmath>
 
 
 namespace LLGL
@@ -59,7 +61,7 @@ bool WasmCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSiz
 Extent2D WasmCanvas::GetContentSize() const
 {
     int width = 0, height = 0;
-    emscripten_get_canvas_element_size("#canvas", &width, &height);
+    emscripten_get_canvas_element_size(canvasSelector_.c_str(), &width, &height);
     return Extent2D
     {
         static_cast<std::uint32_t>(width),
@@ -118,22 +120,51 @@ const char* WasmCanvas::OnBeforeUnloadCallback(int eventType, const void* /*rese
 	return nullptr; // no string to be displayed to the user
 }
 
+void WasmCanvas::PostResizeFromDOMCanvas()
+{
+    /* Get canvas size from CSS layout (already reflects the current orientation) */
+    double cssWidth = 0.0, cssHeight = 0.0;
+    emscripten_get_element_css_size(canvasSelector_.c_str(), &cssWidth, &cssHeight);
+
+    /* Convert CSS pixels to physical pixels for high-DPI displays */
+    pixelRatio_ = std::min(emscripten_get_device_pixel_ratio(), maxPixelRatio_);
+    const int w = static_cast<int>(std::round(cssWidth * pixelRatio_));
+    const int h = static_cast<int>(std::round(cssHeight * pixelRatio_));
+
+    if (w <= 0 || h <= 0 || (w == canvasSize_[0] && h == canvasSize_[1]))
+        return;
+
+    canvasSize_[0] = w;
+    canvasSize_[1] = h;
+
+    emscripten_set_canvas_element_size(canvasSelector_.c_str(), w, h);
+
+    /* Send resize event to event listeners */
+    const Extent2D clientAreaSize
+    {
+        static_cast<std::uint32_t>(w),
+        static_cast<std::uint32_t>(h)
+    };
+    PostResize(clientAreaSize);
+}
+
+EM_BOOL WasmCanvas::OnOrientationChangeCallback(int eventType, const EmscriptenOrientationChangeEvent* event, void* userData)
+{
+    if (eventType == EMSCRIPTEN_EVENT_ORIENTATIONCHANGE)
+    {
+        /* Layout may not be updated yet at this point; the subsequent 'resize' event catches the final size */
+        if (WasmCanvas* canvas = static_cast<WasmCanvas*>(userData))
+            canvas->PostResizeFromDOMCanvas();
+    }
+    return EM_FALSE;
+}
+
 EM_BOOL WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void* userData)
 {
     if (eventType == EMSCRIPTEN_EVENT_RESIZE)
     {
-        /* Get canvas size from DOM */
-        int w = 0, h = 0;
-        emscripten_get_canvas_element_size("#canvas", &w, &h);
-
-        /* Send resize event to event listeners */
-        WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
-        const Extent2D clientAreaSize
-        {
-            static_cast<std::uint32_t>(w),
-            static_cast<std::uint32_t>(h)
-        };
-        canvas->PostResize(clientAreaSize);
+        if (WasmCanvas* canvas = static_cast<WasmCanvas*>(userData))
+            canvas->PostResizeFromDOMCanvas();
         return EM_TRUE;
     }
     return EM_FALSE;
@@ -196,12 +227,10 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
         case EMSCRIPTEN_EVENT_CLICK:
         case EMSCRIPTEN_EVENT_DBLCLICK:
         {
-            const Offset2D position
-            {
-                static_cast<std::int32_t>(event->clientX),
-                static_cast<std::int32_t>(event->clientY)
-            };
-            canvas->PostTapGesture(position, 1);
+            CanvasRect canvasRect;
+            canvas->GetCanvasBoundingClientRect(canvasRect);
+            const Offset2D position = canvas->ClientToCanvasPosition(canvasRect, event->clientX, event->clientY);
+            canvas->PostTapGesture(position, 0, 1);
         }
         return EM_TRUE;
 
@@ -209,14 +238,12 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
         case EMSCRIPTEN_EVENT_MOUSEMOVE:
         case EMSCRIPTEN_EVENT_MOUSELEAVE:
         {
-            const Offset2D position
-            {
-                static_cast<std::int32_t>(event->clientX),
-                static_cast<std::int32_t>(event->clientY)
-            };
-            const float motionX = static_cast<float>(event->movementX);
-            const float motionY = static_cast<float>(event->movementY);
-            canvas->PostPanGesture(position, 1, motionX, motionY, EmscriptenMouseEventToAction(eventType));
+            CanvasRect canvasRect;
+            canvas->GetCanvasBoundingClientRect(canvasRect);
+            const Offset2D position = canvas->ClientToCanvasPosition(canvasRect, event->clientX, event->clientY);
+            const float motionX = static_cast<float>(event->movementX * canvas->pixelRatio_);
+            const float motionY = static_cast<float>(event->movementY * canvas->pixelRatio_);
+            canvas->PostPanGesture(position, 0, 1, motionX, motionY, EmscriptenMouseEventToAction(eventType));
         }
         return EM_TRUE;
 
@@ -248,30 +275,41 @@ EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* e
 {
     WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
 
-    const Offset2D position
+    CanvasRect canvasRect;
+    canvas->GetCanvasBoundingClientRect(canvasRect);
+
+    const std::uint32_t numTouches = static_cast<std::uint32_t>(event->numTouches);
+
+    auto TranslateTouchPosition = [canvas, &canvasRect, event](std::uint32_t touchIndex) -> Offset2D
     {
-        static_cast<std::int32_t>(event->touches[0].clientX),
-        static_cast<std::int32_t>(event->touches[0].clientY)
+        return canvas->ClientToCanvasPosition(canvasRect, event->touches[touchIndex].clientX, event->touches[touchIndex].clientY);
     };
 
     switch (eventType)
     {
         case EMSCRIPTEN_EVENT_TOUCHSTART:
         {
-            canvas->prevTouchPoint_[0] = event->touches[0].clientX;
-            canvas->prevTouchPoint_[1] = event->touches[0].clientY;
-            canvas->PostPanGesture(position, static_cast<std::uint32_t>(event->numTouches), 0.0f, 0.0f, EventAction::Began);
+            for_range(touchIndex, numTouches)
+            {
+                const Offset2D position = TranslateTouchPosition(touchIndex);
+                canvas->prevTouchPoint_[touchIndex] = position;
+                canvas->PostPanGesture(position, touchIndex, numTouches, 0.0f, 0.0f, EventAction::Began);
+            }
         }
         return EM_TRUE;
 
         case EMSCRIPTEN_EVENT_TOUCHEND:
         case EMSCRIPTEN_EVENT_TOUCHMOVE:
         {
-            const float motionX = static_cast<float>(event->touches[0].clientX - canvas->prevTouchPoint_[0]);
-            const float motionY = static_cast<float>(event->touches[0].clientY - canvas->prevTouchPoint_[1]);
-            canvas->prevTouchPoint_[0] = event->touches[0].clientX;
-            canvas->prevTouchPoint_[1] = event->touches[0].clientY;
-            canvas->PostPanGesture(position, static_cast<std::uint32_t>(event->numTouches), motionX, motionY, EmscriptenTouchEventToAction(eventType));
+            const EventAction action = EmscriptenTouchEventToAction(eventType);
+            for_range(touchIndex, numTouches)
+            {
+                const Offset2D position = TranslateTouchPosition(touchIndex);
+                const float motionX = static_cast<float>(position.x - canvas->prevTouchPoint_[touchIndex].x);
+                const float motionY = static_cast<float>(position.y - canvas->prevTouchPoint_[touchIndex].y);
+                canvas->prevTouchPoint_[touchIndex] = position;
+                canvas->PostPanGesture(position, touchIndex, numTouches, motionX, motionY, action);
+            }
         }
         return EM_TRUE;
 
@@ -294,8 +332,8 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     //if (!config.hasOwnProperty("canvas_selector"))
     //    return;
     
-    std::string canvasSelector = "#canvas";//config["canvas_selector"].as<std::string>();
-    canvas_ = document["body"].call<emscripten::val>("querySelector", canvasSelector);
+    canvasSelector_ = "#canvas";//config["canvas_selector"].as<std::string>();
+    canvas_ = document["body"].call<emscripten::val>("querySelector", canvasSelector_);
 
     EM_ASM({
         console.log(Emval.toValue($0));
@@ -310,26 +348,53 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     /* Set callbacks */
     EMSCRIPTEN_RESULT ret;
     ret = emscripten_set_beforeunload_callback(this, WasmCanvas::OnBeforeUnloadCallback);
+    ret = emscripten_set_orientationchange_callback(this, EM_TRUE, WasmCanvas::OnOrientationChangeCallback);
     ret = emscripten_set_resize_callback    (EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnCanvasResizeCallback);
-	ret = emscripten_set_keydown_callback   (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnKeyCallback);
-	ret = emscripten_set_keyup_callback     (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnKeyCallback);
-    ret = emscripten_set_click_callback     (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_dblclick_callback  (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_mousedown_callback (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_mouseup_callback   (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_mousemove_callback (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_mouseenter_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_mouseleave_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
-    ret = emscripten_set_wheel_callback     (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnWheelCallback);
-    ret = emscripten_set_touchstart_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
-    ret = emscripten_set_touchend_callback  (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
-    ret = emscripten_set_touchmove_callback (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
-    ret = emscripten_set_touchcancel_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+	ret = emscripten_set_keydown_callback   (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnKeyCallback);
+	ret = emscripten_set_keyup_callback     (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnKeyCallback);
+    ret = emscripten_set_click_callback     (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_dblclick_callback  (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mousedown_callback (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mouseup_callback   (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mousemove_callback (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mouseenter_callback(/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mouseleave_callback(/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_wheel_callback     (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnWheelCallback);
+    ret = emscripten_set_touchstart_callback(/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchend_callback  (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchmove_callback (/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchcancel_callback(/*canvasSelector_.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
 
     /* Resize canvas to initial CSS size */
-    double w = 0, h = 0;
-    emscripten_get_element_css_size(canvasSelector.c_str(), &w, &h);
-    emscripten_set_canvas_element_size(canvasSelector.c_str(), static_cast<int>(w), static_cast<int>(h));
+    PostResizeFromDOMCanvas();
+}
+
+void WasmCanvas::GetCanvasBoundingClientRect(CanvasRect& outRect) const
+{
+    EM_ASM(
+        {
+            var id = UTF8ToString($0);
+            var canvas = id ? document.querySelector(id) : Module['canvas'];
+            if (canvas) {
+                var r = canvas.getBoundingClientRect();
+                // Write directly back to C struct memory pointers
+                setValue($1, r.left,    'double');
+                setValue($2, r.top,     'double');
+                setValue($3, r.width,   'double');
+                setValue($4, r.height,  'double');
+            }
+        },
+        canvasSelector_.c_str(), &outRect.x, &outRect.y, &outRect.width, &outRect.height
+    );
+}
+
+Offset2D WasmCanvas::ClientToCanvasPosition(const CanvasRect& canvasRect, double clientX, double clientY) const
+{
+    return Offset2D
+    {
+        static_cast<std::int32_t>((clientX - canvasRect.x) * pixelRatio_),
+        static_cast<std::int32_t>((clientY - canvasRect.y) * pixelRatio_)
+    };
 }
 
 
