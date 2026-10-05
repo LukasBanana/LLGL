@@ -17,6 +17,7 @@
 #include <set>
 #include <map>
 #include <chrono>
+#include <list> // Linked list for undo/redo (ring buffer would be better, but simple enough)
 #include <float.h> // for FLT_MAX
 
 // File and string streams for simple scene file writer/reader
@@ -64,7 +65,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            uiBrickThumbnailSize            = 48;
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
     const LLGL::ColorRGBAub         uiSideMenuColor                 = { 0, 0, 0, 180 };
-
+    static constexpr GridRotation   uiThumbnailDefaultRotation      = GridRotation_270;
     static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;     // Minimum size for a bounding volume of brick thumbnails.
 
     static constexpr int            maxBrickExtent                  = 16;       // Limit how large bricks can be in X/Y/Z dimension
@@ -72,6 +73,8 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            planeSubdivisions               = 1;
 
     static constexpr int            heightFieldChunkSize            = 2;        // Build bricks from height field in 4x4 grid chunks so that the largest bricks can be utilized
+
+    static constexpr std::size_t    maxHistoryLength                = 50;       // Maxmimum number of steps to undo
 
     // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
     // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
@@ -145,7 +148,6 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Buffer*                   vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
     std::uint64_t                   previewInstanceBufferOffset     = 0;
 
-    LLGL::Texture*                  uiBrickThumbnailTexture         = nullptr;
     LLGL::Texture*                  uiMenuTexture                   = nullptr;
 
     LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
@@ -164,6 +166,79 @@ class Example_BrickPlay : public ExampleBase
     using RayIntersection   = BrickScene::RayIntersection;
 
     Instance                        previewInstance                 = {};
+
+    struct UIBrickThumbnails
+    {
+        LLGL::Texture*                      arrayTexture    = nullptr;
+        std::vector<LLGL::RenderTarget*>    renderTargets;
+
+        struct Cache
+        {
+            GridRotation                    gridRotation    = GridRotation_Num;
+            float                           viewRotation    = 0.0f;
+        }
+        cache;
+    }
+    uiBrickThumbnails;
+
+    // Semi-memento pattern to undo/redo changes.
+    struct History
+    {
+        struct Event
+        {
+            BrickId     addedBrickId;
+            Instance    addedInstance;
+            BrickId     destroyedBrickId;
+            Instance    destroyedInstance;
+        };
+
+        std::list<Event>            events;
+        std::list<Event>::iterator  eventIter;
+
+        History() :
+            eventIter { events.end() }
+        {
+        }
+
+        bool IsAtBegining() const
+        {
+            return eventIter == events.begin();
+        }
+
+        bool IsAtEnd() const
+        {
+            return eventIter == events.end();
+        }
+
+        void Register(Event&& event)
+        {
+            // If there are too many events in the queue, drop the oldest one
+            if (events.size() >= maxHistoryLength)
+                events.pop_front();
+
+            // When using 'undo' and then registering new events, all events after the current history iterator are dropped.
+            events.erase(eventIter, events.end());
+            events.push_back(std::move(event));
+            eventIter = events.end();
+        }
+
+        const Event* Undo()
+        {
+            if (!IsAtBegining())
+                return &(*(--eventIter));
+            else
+                return nullptr;
+        }
+
+        const Event* Redo()
+        {
+            if (!IsAtEnd())
+                return &(*eventIter++);
+            else
+                return nullptr;
+        }
+    }
+    history;
 
     enum UIMenuItem
     {
@@ -231,6 +306,8 @@ class Example_BrickPlay : public ExampleBase
             }
         };
 
+        static constexpr int mainMenuBaseAdvance = uiMainMenuItemSize + uiButtonMargin + uiButtonFrameSize*2;
+
         MenuBar     menuBarLeft  { false };
         MenuBar     menuBarRight { true  };
         MenuBar*    currentMenuBar  = nullptr;
@@ -240,6 +317,7 @@ class Example_BrickPlay : public ExampleBase
         int         y               = 0;
         int         advance         = 0;
         int         columns         = 0;
+        int         mainMenuWidth   = 0;
         bool        isScrollEnabled = false;
 
         void UpdateScreenSize(LLGL::Extent2D resolution)
@@ -350,14 +428,14 @@ class Example_BrickPlay : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickId         id          = static_cast<BrickId>(0); // Previews brick with instance index 0.
-        bool            isBlocked   = false;
-        std::int32_t    gridOffset  = 0;
+        BrickId         id              = static_cast<BrickId>(0); // Previews brick with instance index 0.
+        bool            isBlocked       = false;
+        std::int32_t    gridOffset      = 0;
     };
 
     struct ViewOptions
     {
-        bool            showWireframe               = false;
+        bool            showWireframe   = false;
         PreviewBrick    previewBrick;
     }
     viewOptions;
@@ -475,6 +553,7 @@ class Example_BrickPlay : public ExampleBase
         int                 pickedInstanceColorIndex    = 0; // Color palette index of lasted picked brick
 
         int                 pickedColorPaletteIndex     = 0;
+        GridRotation        menuGridRotation            = GridRotation_0;
 
         bool                isMouseInDeadZone           = false;
     }
@@ -575,7 +654,7 @@ public:
             return;
 
         // Render all bricks into thumbnail render-targets for the UI
-        RenderAllBrickThumbnails();
+        InitializeAllBrickThumbnails(uiThumbnailDefaultRotation);
 
         // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
@@ -932,6 +1011,15 @@ private:
             options.uiMaxLeftColumns = 1;
             options.uiMaxRightColumns = 1;
         }
+
+        // Cache width of main menu
+        uiState.mainMenuWidth = 0;
+        for_range(menuItem, UIMenuItem_Num)
+        {
+            uiState.mainMenuWidth += UIState::mainMenuBaseAdvance;
+            if (menuInfos[menuItem].endsWithSeparator)
+                uiState.mainMenuWidth += uiMainMenuSeparatorSize;
+        }
     }
 
     LLGL::Texture* CreateDummyArrayTexture(LLGL::TextureType texType)
@@ -1242,10 +1330,16 @@ private:
         uvWrapSampler = renderer->CreateSampler(samplerDesc);
 
         // Load skybox textures
-        skyboxCubemap = LoadCubeOrArrayTexture(LLGL::TextureType::TextureCube, "Skybox/sky_74_cubemap_2k/", { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" });
+        skyboxCubemap = LoadCubeOrArrayTexture(
+            LLGL::TextureType::TextureCube, "Skybox/sky_74_cubemap_2k/",
+            { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" }
+        );
 
         // Load all UI element textures
-        uiMenuTexture = LoadCubeOrArrayTexture(LLGL::TextureType::Texture2DArray, "UIElements/", { "download32.png", "upload32.png", "arrow32.png", "rotate32.png" });
+        uiMenuTexture = LoadCubeOrArrayTexture(
+            LLGL::TextureType::Texture2DArray, "UIElements/",
+            { "download.png", "upload.png", "arrow.png", "rotate.png", "add.png", "select.png", "trash.png" }
+        );
 
         // Create render pass for opacity scene rendering.
         LLGL::RenderPassDescriptor opacityPassDesc;
@@ -2333,7 +2427,7 @@ private:
         commands->PopDebugGroup();
     }
 
-    void TransformSceneViewForThumbnail(BrickId brickId, GridRotation gridRotation, SceneView& outView)
+    void TransformSceneViewForThumbnail(BrickId brickId, GridRotation gridRotation, float viewRotation, SceneView& outView)
     {
         const float dist = 25.0f;
 
@@ -2343,7 +2437,7 @@ private:
 
         Gs::Matrix4f vMatrix;
         Gs::Translate(vMatrix, unitOffset.Cast<float>() * KDTreeNode::gridScale * 0.5f);
-        Gs::RotateY(vMatrix, Gs::Deg2Rad(45.0f));
+        Gs::RotateY(vMatrix, Gs::Deg2Rad(viewRotation));
         Gs::RotateX(vMatrix, Gs::Deg2Rad(45.0f));
         Gs::Translate(vMatrix, Gs::Vector3f{ 0, 0, -dist });
 
@@ -2365,12 +2459,12 @@ private:
         outView.vpMatrix = thumbnailProjection * vMatrix;
     }
 
-    void RenderBrickThumnail(LLGL::RenderTarget& renderTarget, BrickId brickId, GridRotation gridRotation)
+    void RenderBrickThumnail(LLGL::RenderTarget& renderTarget, BrickId brickId, GridRotation gridRotation, float viewRotation)
     {
         SceneView thumbnailSceneView;
 
         // Move camera so that the thumbnail for the current brick type is clearly visible
-        TransformSceneViewForThumbnail(brickId, gridRotation, thumbnailSceneView);
+        TransformSceneViewForThumbnail(brickId, gridRotation, viewRotation, thumbnailSceneView);
         commands->UpdateBuffer(*sceneViewCbuffer, 0, &thumbnailSceneView, sizeof(thumbnailSceneView));
 
         commands->BeginRenderPass(renderTarget);
@@ -2386,15 +2480,18 @@ private:
         commands->EndRenderPass();
     }
 
-    void RenderAllBrickThumbnails()
+    void CreateAllBrickThumbnails()
     {
         const std::uint32_t numBrickTypes = BrickDictionary::Get().NumBrickTypes();
 
-        // In case thumbnails must be updated, delete previous texture
-        if (uiBrickThumbnailTexture != nullptr)
+        // In case porperties of thumbnails must be updated (such as size), delete previous texture
+        if (uiBrickThumbnails.arrayTexture != nullptr)
         {
-            renderer->Release(*uiBrickThumbnailTexture);
-            uiBrickThumbnailTexture = nullptr;
+            renderer->Release(*uiBrickThumbnails.arrayTexture);
+            uiBrickThumbnails.arrayTexture = nullptr;
+
+            for (LLGL::RenderTarget* renderTarget : uiBrickThumbnails.renderTargets)
+                renderer->Release(*renderTarget);
         }
 
         // Create thumbnail array texture
@@ -2407,11 +2504,10 @@ private:
             texArrayDesc.mipLevels      = 1;                                // No MIP-maps since this is used for UI elements
             texArrayDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;   // Don't initialize the texture since we render into it right below
         }
-        uiBrickThumbnailTexture = renderer->CreateTexture(texArrayDesc);
+        uiBrickThumbnails.arrayTexture = renderer->CreateTexture(texArrayDesc);
 
         // Create intermediate render-targets, one for each array layer
-        std::vector<LLGL::RenderTarget*> renderTargets;
-        renderTargets.resize(numBrickTypes);
+        uiBrickThumbnails.renderTargets.resize(numBrickTypes);
 
         for_range(brickId, numBrickTypes)
         {
@@ -2427,55 +2523,66 @@ private:
                 if (rtDesc.samples > 1)
                 {
                     rtDesc.colorAttachments[0].format       = LLGL::Format::RGBA8UNorm;
-                    rtDesc.resolveAttachments[0].texture    = uiBrickThumbnailTexture;
+                    rtDesc.resolveAttachments[0].texture    = uiBrickThumbnails.arrayTexture;
                     rtDesc.resolveAttachments[0].arrayLayer = brickId;
                 }
                 else
                 {
-                    rtDesc.colorAttachments[0].texture      = uiBrickThumbnailTexture;
+                    rtDesc.colorAttachments[0].texture      = uiBrickThumbnails.arrayTexture;
                     rtDesc.colorAttachments[0].arrayLayer   = brickId;
                 }
             }
-            renderTargets[brickId] = renderer->CreateRenderTarget(rtDesc);
+            uiBrickThumbnails.renderTargets[brickId] = renderer->CreateRenderTarget(rtDesc);
         }
+    }
 
+    void RenderAllBrickThumbnails(GridRotation thumbnailRotation, float viewRotation = 45.0f)
+    {
         // Reset preview instance to default
-        constexpr GridRotation thumbnailRotation = GridRotation_270;
-
-        previewInstance.SetPos({});
-        previewInstance.gridRotation    = thumbnailRotation;
-        previewInstance.colorIndex      = 0;
+        Instance thumbnailInstance = {};
+        thumbnailInstance.gridRotation = thumbnailRotation;
 
         // Render bricks as thumbnails into all offscreen render-targets
+        commands->UpdateBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &thumbnailInstance, sizeof(thumbnailInstance));
+
+        BindPreviewBrickPSOStates();
+
+        commands->PushDebugGroup("RenderBrickThumbnails");
+        {
+            for_range(brickId, BrickDictionary::Get().NumBrickTypes())
+            {
+                const std::string debugLabel = std::string("RenderThumbnail_") + BrickDictionary::Get().TypeToString(brickId);
+                commands->PushDebugGroup(debugLabel.c_str());
+                {
+                    RenderBrickThumnail(*uiBrickThumbnails.renderTargets[brickId], brickId, thumbnailRotation, viewRotation);
+                }
+                commands->PopDebugGroup();
+            }
+        }
+        commands->PopDebugGroup();
+    }
+
+    void RenderAllBrickThumbnailsIfChanged(GridRotation thumbnailRotation, float viewRotation = 45.0f)
+    {
+        if (uiBrickThumbnails.cache.gridRotation != thumbnailRotation ||
+            uiBrickThumbnails.cache.viewRotation != viewRotation)
+        {
+            RenderAllBrickThumbnails(thumbnailRotation, viewRotation);
+            uiBrickThumbnails.cache.gridRotation = thumbnailRotation;
+            uiBrickThumbnails.cache.viewRotation = viewRotation;
+        }
+    }
+
+    void InitializeAllBrickThumbnails(GridRotation thumbnailRotation)
+    {
+        CreateAllBrickThumbnails();
+
         commands->Begin();
         {
-            commands->UpdateBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
-
-            BindPreviewBrickPSOStates();
-
-            commands->PushDebugGroup("RenderBrickThumbnails");
-            {
-                for_range(brickId, numBrickTypes)
-                {
-                    const std::string debugLabel = std::string("RenderThumbnail_") + BrickDictionary::Get().TypeToString(brickId);
-                    commands->PushDebugGroup(debugLabel.c_str());
-                    {
-                        RenderBrickThumnail(*renderTargets[brickId], brickId, thumbnailRotation);
-                    }
-                    commands->PopDebugGroup();
-                }
-            }
-            commands->PopDebugGroup();
+            RenderAllBrickThumbnails(thumbnailRotation);
         }
         commands->End();
         commandQueue->Submit(*commands);
-
-        // Delete all intermediate render-targets, we only need the texture for UI rendering
-        for (LLGL::RenderTarget* renderTarget : renderTargets)
-            renderer->Release(*renderTarget);
-
-        // Reset preview instance
-        previewInstance = {};
     }
 
     bool IsMouseInRect(int x, int y, int w, int h, bool ignoreMainMenu = false)
@@ -2528,16 +2635,16 @@ private:
         }
 
         // Draw thumbnail texture layer
-        uiRenderer.Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnailTexture, brickType, brickColor);
+        uiRenderer.Draw2DImage(x + uiButtonFrameSize, y + uiButtonFrameSize, uiBrickThumbnails.arrayTexture, brickType, brickColor);
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
     }
 
-    bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false)
+    bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false, bool isDisabled = false)
     {
         int w = uiMainMenuItemSize + uiButtonFrameSize*2;
         int h = uiMainMenuItemSize + uiButtonFrameSize*2;
-        const bool isSelected = IsSelectedByMouse(uiState.x, uiState.y, w, h);
+        const bool isSelected = !isDisabled && IsSelectedByMouse(uiState.x, uiState.y, w, h);
 
         if (isSelected || isHighlighted)
         {
@@ -2548,6 +2655,12 @@ private:
         // Draw menu icon
         const UIMenuInfo& menuInfo = menuInfos[menuItem];
         uiRenderer.Draw2DImage(uiState.x + uiButtonFrameSize, uiState.y + uiButtonFrameSize, uiMenuTexture, menuInfo.layer, LLGL::ColorRGBAub{}, menuInfo.flags);
+
+        if (isDisabled)
+        {
+            // Draw dithered grid over the icon to visualize that it's disabled
+            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, uiBrickThumbnailBgColor, UIRenderMode_Dithered);
+        }
 
         // Advance menu item position
         uiState.x += uiState.advance;
@@ -2688,32 +2801,30 @@ private:
         // Draw main menu bar
         uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiMainMenuSize, uiMainMenuColor[0], uiMainMenuColor[1]);
 
-        uiState.x = uiButtonMargin;
+        uiState.x = (uiState.scrW - uiState.mainMenuWidth)/2;
         uiState.y = (uiMainMenuSize - uiMainMenuItemSize - uiButtonMargin)/2;
 
-        uiState.advance = uiMainMenuItemSize + uiButtonMargin;
+        uiState.advance = UIState::mainMenuBaseAdvance;
 
         DrawUIMenuItem(UIMenuItem_Download);
         DrawUIMenuItem(UIMenuItem_Upload);
 
-        DrawUIMenuItem(UIMenuItem_Undo);
-        DrawUIMenuItem(UIMenuItem_Redo);
+        if (DrawUIMenuItem(UIMenuItem_Undo, false, history.IsAtBegining()))
+            Undo();
+        if (DrawUIMenuItem(UIMenuItem_Redo, false, history.IsAtEnd()))
+            Redo();
 
-        DrawUIMenuItem(UIMenuItem_TurnCW);
-        DrawUIMenuItem(UIMenuItem_TurnCCW);
+        if (DrawUIMenuItem(UIMenuItem_TurnCW))
+            controller.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(controller.menuGridRotation + 1, GridRotation_Num));
+        if (DrawUIMenuItem(UIMenuItem_TurnCCW))
+            controller.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(controller.menuGridRotation - 1, GridRotation_Num));
 
         if (DrawUIMenuItem(UIMenuItem_Add, (controller.editMode == EditMode::Add)))
-        {
             controller.editMode = EditMode::Add;
-        }
         if (DrawUIMenuItem(UIMenuItem_Move, (controller.editMode == EditMode::Move || controller.editMode == EditMode::Select)))
-        {
             controller.editMode = EditMode::Select;
-        }
         if (DrawUIMenuItem(UIMenuItem_Delete, (controller.editMode == EditMode::Delete)))
-        {
             controller.editMode = EditMode::Delete;
-        }
     }
 
     void PrepareUIDrawCommands()
@@ -2728,6 +2839,44 @@ private:
     }
 
     //////////////////// USER INPUT HANDLING ////////////////////
+
+    void Undo()
+    {
+        if (const History::Event* event = history.Undo())
+        {
+            // First, delete previously added brick
+            if (event->addedBrickId != INVALID_BRICK_ID)
+            {
+                if (Brick addedBrick = currentScene->FindBrickAt(event->addedInstance.GetPos()))
+                    currentScene->DestroyBrick(addedBrick);
+            }
+
+            // Then re-add previously destroyed brick. If this order is mixed up, they could overlap and only the 'destroy' event takes place.
+            if (event->destroyedBrickId != INVALID_BRICK_ID)
+            {
+                currentScene->NewBrick(event->destroyedBrickId, event->destroyedInstance.GetPos(), event->destroyedInstance.gridRotation, event->destroyedInstance.colorIndex);
+            }
+        }
+    }
+
+    void Redo()
+    {
+        if (const History::Event* event = history.Redo())
+        {
+            // First, delete brick again
+            if (event->destroyedBrickId != INVALID_BRICK_ID)
+            {
+                if (Brick destroyedBrick = currentScene->FindBrickAt(event->destroyedInstance.GetPos()))
+                    currentScene->DestroyBrick(destroyedBrick);
+            }
+
+            // Then add new brick again. If this order is mixed up, they could overlap and only the 'destroy' event takes place.
+            if (event->addedBrickId != INVALID_BRICK_ID)
+            {
+                currentScene->NewBrick(event->addedBrickId, event->addedInstance.GetPos(), event->addedInstance.gridRotation, event->addedInstance.colorIndex);
+            }
+        }
+    }
 
     void StartCameraMode(CameraMode newMode)
     {
@@ -2863,19 +3012,18 @@ private:
         PreviewBrick& previewBrick = viewOptions.previewBrick;
 
         // Allow user to turn and change type of preview brick while picking the scene
-        GridRotation newPreviewRotation = previewInstance.gridRotation;
+        GridRotation newPreviewRotation = controller.menuGridRotation;
         if (input.KeyDown(LLGL::Key::Space))
         {
-            if (input.KeyPressed(LLGL::Key::Shift))
-                newPreviewRotation = static_cast<GridRotation>((newPreviewRotation + 1) % GridRotation_Num);
-            else
-                newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation - 1, GridRotation_Num));
+            const bool turnCW = input.KeyPressed(LLGL::Key::Shift);
+            newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation + (turnCW ? +1 : -1), GridRotation_Num));
         }
+        controller.menuGridRotation = newPreviewRotation;
 
         BrickId newBrickId = previewBrick.id;
-        if (input.KeyDown(LLGL::Key::PageUp))
+        if (input.KeyDownRepeated(LLGL::Key::PageUp))
             newBrickId = static_cast<BrickId>((newBrickId + 1) % BrickDictionary::Get().NumBrickTypes());
-        if (input.KeyDown(LLGL::Key::PageDown))
+        if (input.KeyDownRepeated(LLGL::Key::PageDown))
             newBrickId = static_cast<BrickId>(ModuloSignInt(newBrickId - 1, BrickDictionary::Get().NumBrickTypes()));
 
         previewBrick.gridOffset += input.GetWheelMotion();
@@ -2937,6 +3085,21 @@ private:
         }
     }
 
+    void NewBrickEvent()
+    {
+        history.Register(History::Event{ viewOptions.previewBrick.id, previewInstance, INVALID_BRICK_ID, {} });
+
+        currentScene->NewBrick(viewOptions.previewBrick.id, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
+    }
+
+    void DestroyBrickEvent(Brick brick)
+    {
+        if (const Instance* brickInstance = currentScene->GetBrickInstance(brick))
+            history.Register(History::Event{ INVALID_BRICK_ID, {}, brick.GetId(), *brickInstance });
+
+        currentScene->DestroyBrick(brick);
+    }
+
     void ProcessEditModeAddOrMove()
     {
         PickGridPosForPreviewBrick();
@@ -2945,7 +3108,7 @@ private:
         if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
         {
             // Place new brick and update pick position for preview
-            currentScene->NewBrick(previewBrick.id, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
+            NewBrickEvent();
             PickGridPosForPreviewBrick();
 
             // Reset edit mode if it was only temporarily adding a new brick
@@ -2968,6 +3131,7 @@ private:
                     viewOptions.previewBrick.id     = selectedBrick.GetId();
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
+                    controller.menuGridRotation     = selectedInstance->gridRotation;
 
                     // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
                     if (selectedInstance->colorIndex < ColorPalette::Get().Count())
@@ -2982,7 +3146,7 @@ private:
                 // Remove selected brick
                 if (controller.pickedBrick == selectedBrick)
                     ResetPreviouslySelectedBrick();
-                currentScene->DestroyBrick(selectedBrick);
+                DestroyBrickEvent(selectedBrick);
             }
         }
     }
@@ -2993,7 +3157,7 @@ private:
         {
             if (Brick selectedBrick = SelectBrickFromScene())
             {
-                currentScene->DestroyBrick(selectedBrick);
+                DestroyBrickEvent(selectedBrick);
             }
         }
     }
@@ -3001,7 +3165,7 @@ private:
     void ProcessUserInput(float dt)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
-        controller.isMouseInDeadZone = (mousePos.y > uiMainMenuSize && (mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width));
+        controller.isMouseInDeadZone = (mousePos.y <= uiMainMenuSize || mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width);
 
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
@@ -3089,6 +3253,15 @@ private:
 
         commands->Begin();
         {
+            // Update all brick thumbnails when the camera rotates on Y-axis or the preview rotation changed
+            if (controller.editMode != EditMode::None)
+            {
+                if (controller.editMode == EditMode::Add)
+                    RenderAllBrickThumbnailsIfChanged(controller.menuGridRotation, camera.yaw);
+                else
+                    RenderAllBrickThumbnailsIfChanged(uiThumbnailDefaultRotation);
+            }
+
             // Always update instance for preview brick if its visible
             if (isPreviewBrickVisible)
                 commands->UpdateBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));

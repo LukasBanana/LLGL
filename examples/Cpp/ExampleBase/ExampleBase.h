@@ -48,6 +48,9 @@ LLGL::Texture* LoadTextureWithRenderer(
 // Save texture image to a PNG file.
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
 
+// Reports an error if the PSO creation failed and returns true.
+bool ReportPSOErrors(const LLGL::PipelineState* pso);
+
 // Helper function to compute signed modulo operator for integers.
 inline int ModuloSignInt(int a, int b)
 {
@@ -337,7 +340,7 @@ protected:
     // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
     ShaderPipeline LoadStandardShaderPipeline();
 
-    // Throws an exception if the specified PSO creation failed.
+    // Reports an error if the specified PSO creation failed.
     bool ReportPSOErrors(const LLGL::PipelineState* pso);
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.

@@ -117,6 +117,11 @@ public:
         return instanceBuffer;
     }
 
+    Brick FindBrickAt(const GridVec3i& gridPos) const
+    {
+        return grid.GetLeaf(gridPos);
+    }
+
     const InstanceGroup& GetInstanceGroupById(std::uint32_t groupId) const
     {
         return GetInstanceGroup(GroupIdToBrickId(groupId), GroupIdToBrickGroup(groupId));
@@ -295,7 +300,7 @@ public:
         NewBricksYAxis(1);
 
         return count;
-    };
+    }
 
     void DestroyBrick(Brick brick)
     {

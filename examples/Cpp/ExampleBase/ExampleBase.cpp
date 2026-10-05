@@ -1332,7 +1332,7 @@ ShaderPipeline ExampleBase::LoadStandardShaderPipeline()
     return shaderPipeline;
 }
 
-bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
+bool ReportPSOErrors(const LLGL::PipelineState* pso)
 {
     if (pso != nullptr)
     {
@@ -1341,7 +1341,6 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
             if (report->HasErrors())
             {
                 LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "%s", report->GetText());
-                Quit(1);
                 return true;
             }
         }
@@ -1349,6 +1348,15 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
     else
     {
         LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Null pointer passed to ReportPSOErrors()");
+        return true;
+    }
+    return false;
+}
+
+bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
+{
+    if (::ReportPSOErrors(pso))
+    {
         Quit(1);
         return true;
     }
