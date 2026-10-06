@@ -846,6 +846,11 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 
     #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
+    /* Check ResolveSubresourceRegion support, which is required for depth-stencil resolves */
+    D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2 = {};
+    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2));
+    deviceCaps_.programmableSamplePositionsTier = options2.ProgrammableSamplePositionsTier;
+
     /*
     Multiview is implemented with D3D12 view instancing (SV_ViewID). The view-instanced PSO path uses the
     stream-based pipeline state API (ID3D12Device2, VIEW_INSTANCING subobject), which requires a newer Windows SDK
@@ -854,11 +859,6 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3 = {};
     device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
     deviceCaps_.viewInstancingTier = options3.ViewInstancingTier;
-
-    /* Check ResolveSubresourceRegion support, which is required for depth-stencil resolves */
-    D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2 = {};
-    device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2));
-    deviceCaps_.programmableSamplePositionsTier = options2.ProgrammableSamplePositionsTier;
 
     /* Check variable rate shading support */
     D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};

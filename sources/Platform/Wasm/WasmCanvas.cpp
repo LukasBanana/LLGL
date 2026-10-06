@@ -310,6 +310,8 @@ EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* e
                 canvas->prevTouchPoint_[touchIndex] = position;
                 canvas->PostPanGesture(position, touchIndex, numTouches, motionX, motionY, action);
             }
+            if (eventType == EMSCRIPTEN_EVENT_TOUCHEND)
+                return EM_FALSE; // Return false to indicate that the touchend event was not fully handled
         }
         return EM_TRUE;
 
@@ -326,21 +328,8 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     emscripten::val config = emscripten::val::module_property("config");
     emscripten::val document = emscripten::val::global("document");
     
-    //if (config.isUndefined() || config.isNull())
-    //    return;
-    
-    //if (!config.hasOwnProperty("canvas_selector"))
-    //    return;
-    
     canvasSelector_ = "#canvas";//config["canvas_selector"].as<std::string>();
     canvas_ = document["body"].call<emscripten::val>("querySelector", canvasSelector_);
-
-    EM_ASM({
-        console.log(Emval.toValue($0));
-    }, canvas_.as_handle());
-
-    //emscripten::val console = emscripten::val::global("console");
-    //console.call<void>("log", canvas);
 
     /* Set title and show canvas (if enabled) */
     SetTitle(desc.title);

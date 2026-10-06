@@ -117,7 +117,7 @@ int GLBlendState::CompareSWO(const GLBlendState& lhs, const GLBlendState& rhs)
 
     for_range(i, lhs.numDrawBuffers_)
     {
-        auto order = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
+        int order = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
         if (order != 0)
             return order;
     }
