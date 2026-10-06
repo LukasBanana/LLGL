@@ -46,7 +46,6 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr int            uiColorPickerSize               = 26;       // Size (in pixels) of each color picker button
     static constexpr int            uiButtonOffset[2]               = { 15, 15 };
     static constexpr int            uiButtonFrameSize               = 3;
     static constexpr int            uiButtonMargin                  = 5;
@@ -56,13 +55,9 @@ class Example_BrickPlay : public ExampleBase
     static constexpr int            uiScrollIndicatorSize           = 15;
     const LLGL::ColorRGBAub         uiButtonFrameColor              = { 0, 0, 0, 255 };
 
-    static constexpr int            uiMainMenuItemSize              = 32;
-    static constexpr int            uiMainMenuSeparatorSize         = 16;
-    static constexpr int            uiMainMenuSize                  = uiMainMenuItemSize + 16;
     const LLGL::ColorRGBAub         uiMainMenuColor[2]              = { { 80, 80, 80 },     // Top color
                                                                         { 20, 20, 20 } };   // Bottom color
 
-    static constexpr int            uiBrickThumbnailSize            = 48;
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
     const LLGL::ColorRGBAub         uiSideMenuColor                 = { 0, 0, 0, 180 };
     static constexpr GridRotation   uiThumbnailDefaultRotation      = GridRotation_270;
@@ -259,7 +254,7 @@ class Example_BrickPlay : public ExampleBase
     {
         int     layer;              // Texture array layer
         int     flags;              // UIRenderFlags
-        bool    endsWithSeparator;  // If true, add `uiMainMenuSeparatorSize` to the next position
+        bool    endsWithSeparator;  // If true, add `uiState.layout.mainMenuSeparatorSize` to the next position
     };
 
     const UIMenuInfo menuInfos[UIMenuItem_Num] =
@@ -273,6 +268,33 @@ class Example_BrickPlay : public ExampleBase
         UIMenuInfo{ 4, 0, false },                  // UIMenuItem_Add
         UIMenuInfo{ 5, 0, false },                  // UIMenuItem_Select
         UIMenuInfo{ 6, 0, false },                  // UIMenuItem_Delete
+    };
+
+    struct UILayout
+    {
+        static constexpr int defaultElementSize = 32;
+
+        int mainMenuItemSize        = 0;
+        int mainMenuSeparatorSize   = 0;
+        int mainMenuSize            = 0;
+        int mainMenuBaseAdvance     = 0;
+        int colorPickerSize         = 0;
+        int brickThumbnailSize      = 0;
+
+        UILayout()
+        {
+            InitForElementSize(defaultElementSize);
+        }
+
+        void InitForElementSize(int uiElementSize)
+        {
+            mainMenuItemSize        = uiElementSize;
+            mainMenuSeparatorSize   = uiElementSize/2;
+            mainMenuSize            = uiElementSize*3/2;
+            mainMenuBaseAdvance     = mainMenuItemSize + uiButtonMargin + uiButtonFrameSize*2;
+            colorPickerSize         = (uiElementSize + 1)*8/10; // Size (in pixels) of each color picker button
+            brickThumbnailSize      = uiElementSize*3/2;
+        }
     };
 
     // State tracker for UI rendering.
@@ -306,8 +328,7 @@ class Example_BrickPlay : public ExampleBase
             }
         };
 
-        static constexpr int mainMenuBaseAdvance = uiMainMenuItemSize + uiButtonMargin + uiButtonFrameSize*2;
-
+        UILayout    layout;
         MenuBar     menuBarLeft  { false };
         MenuBar     menuBarRight { true  };
         MenuBar*    currentMenuBar  = nullptr;
@@ -334,7 +355,7 @@ class Example_BrickPlay : public ExampleBase
             advance = uiElementSize + uiButtonFrameSize*2 + uiButtonMargin;
 
             x = (currentMenuBar->isRightAligned ? scrW - (uiButtonOffset[0] + uiElementSize + uiButtonFrameSize*2) : uiButtonOffset[0]);
-            y = uiMainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - static_cast<int>(menuBar.scroll.position) : uiButtonOffset[1]);
+            y = layout.mainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - static_cast<int>(menuBar.scroll.position) : uiButtonOffset[1]);
 
             columns = 1;
         }
@@ -347,7 +368,7 @@ class Example_BrickPlay : public ExampleBase
                 const int maxNumElementsPerPage = (numElements / maxColumns + (numElements % maxColumns > 0 ? 1 : 0));
 
                 currentMenuBar->width   = uiButtonOffset[0]*2 - uiButtonMargin + maxColumns * advance;
-                currentMenuBar->height  = advance * maxNumElementsPerPage + uiMainMenuSize + uiButtonOffset[1]*2 - uiButtonMargin;
+                currentMenuBar->height  = advance * maxNumElementsPerPage + layout.mainMenuSize + uiButtonOffset[1]*2 - uiButtonMargin;
             }
             else
             {
@@ -363,7 +384,7 @@ class Example_BrickPlay : public ExampleBase
             {
                 // Move to next color picker column
                 x += (currentMenuBar->isRightAligned ? -advance : advance);
-                y = uiMainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - yScroll : uiButtonOffset[1]);
+                y = layout.mainMenuSize + (isScrollEnabled ? uiButtonOffset[1] - yScroll : uiButtonOffset[1]);
                 ++columns;
             }
         }
@@ -660,7 +681,7 @@ public:
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
         if (options.scenePresetNo < 0)
         {
-            if (LoadScene(*currentScene, options.sceneFilename.c_str()))
+            if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
                 hasLoadedScene = true;
         }
         else
@@ -675,7 +696,7 @@ public:
         currentScene->ResolveCollision(camera.position, cameraCollisionRadius);
 
         // Print info
-        LLGL::Log::Printf(
+        LLGL_LOG(
             "Keyboard controls:\n"
             "  1 .............. Default mode\n"
             "  2 .............. Add brick mode\n"
@@ -697,14 +718,14 @@ private:
         std::string filePath;
         if (!FindAsset(filename, &filePath))
         {
-            LLGL::Log::Errorf("Failed to find file: %s\n", filename);
+            LLGL_ERROR("Failed to find file: %s\n", filename);
             return false;
         }
 
         LLGL::Blob fileContent = LLGL::Blob::CreateFromFile(filePath, true);
         if (!fileContent)
         {
-            LLGL::Log::Errorf("Failed to read file: %s\n", filePath.c_str());
+            LLGL_ERROR("Failed to read file: %s\n", filePath.c_str());
             return false;
         }
 
@@ -739,7 +760,7 @@ private:
 
                     if (brickInfo.extent != GridVec3i{} && brickInfo.extent != brickExtent)
                     {
-                        LLGL::Log::Errorf(
+                        LLGL_ERROR(
                             "Mismatch between initial brick '%s' extent (%d x %d x %d) and appendix group (%d x %d x %d) in %s:%d\n",
                             brickInfo.label.c_str(),
                             brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z,
@@ -755,7 +776,7 @@ private:
                         brickInfo.extent.y < 1 || brickInfo.extent.y > maxBrickExtent ||
                         brickInfo.extent.z < 1 || brickInfo.extent.z > maxBrickExtent)
                     {
-                        LLGL::Log::Errorf(
+                        LLGL_ERROR(
                             "Brick '%s' extent out of bounds [1, %d]: %d x %d x %d\n",
                             brickInfo.label.c_str(), maxBrickExtent, brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z
                         );
@@ -769,23 +790,23 @@ private:
                     BrickGroup brickGroup = (groupName.empty() ? BrickGroup_Default : BrickDictionary::Get().GroupFromString(groupName.c_str()));
                     if (brickGroup >= BrickGroup_Num)
                     {
-                        LLGL::Log::Errorf("Invalid brick group '%s' in %s:%d\n", groupName.c_str(), filename, lineNo);
+                        LLGL_ERROR("Invalid brick group '%s' in %s:%d\n", groupName.c_str(), filename, lineNo);
                         return false;
                     }
                     if (brickInfo.meshes[brickGroup].numVertices > 0)
                     {
-                        LLGL::Log::Errorf(
-                            "Warning: Brick '%s' overrides previous group model for '%s' in %s:%d\n",
+                        LLGL_WARN(
+                            "Brick '%s' overrides previous group model for '%s' in %s:%d\n",
                             brickInfo.label.c_str(), groupName.c_str(), filename, lineNo
                         );
                     }
 
                     // Expand upper bound of how many groups are used for this brick type
-                    brickInfo.numGroups = std::max(brickInfo.numGroups, static_cast<std::uint32_t>(brickGroup) + 1);
+                    brickInfo.ExpandGroups(brickGroup);
 
                     if (!LoadBrickModelFile(brickInfo.meshes[brickGroup], modelFilename.c_str()))
                     {
-                        LLGL::Log::Errorf("Failed to load brick model '%s' in %s:%d\n", modelFilename.c_str(), filename, lineNo);
+                        LLGL_ERROR("Failed to load brick model '%s' in %s:%d\n", modelFilename.c_str(), filename, lineNo);
                         return false;
                     }
                 }
@@ -810,7 +831,7 @@ private:
                     {
                         if (size < 1)
                         {
-                            LLGL::Log::Errorf(
+                            LLGL_ERROR(
                                 "Invalid scene bounding volume dimensions %dx%dx%d in %s:%d\n",
                                 options.sceneBoundingVolume[0], options.sceneBoundingVolume[1], options.sceneBoundingVolume[2], filename, lineNo
                             );
@@ -827,7 +848,7 @@ private:
                 }
                 else
                 {
-                    LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
+                    LLGL_ERROR("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
                     return false;
                 }
 
@@ -837,7 +858,7 @@ private:
         if (!success)
             return false;
 
-        LLGL::Log::Printf("Imported configuration file: %s\n", filename);
+        LLGL_LOG("Imported configuration file: %s\n", filename);
         return true;
     }
 
@@ -868,7 +889,7 @@ private:
 
     bool LoadBrickModelFile(BrickMesh& outMesh, const char* filename)
     {
-        LLGL::Log::Printf("Load brick model: %s\n", filename);
+        LLGL_LOG("Load brick model: %s\n", filename);
 
         const std::vector<TexturedVertex> intermediateVertices = Load3DModel(filename);
         if (intermediateVertices.empty())
@@ -891,9 +912,9 @@ private:
         return true;
     }
 
+    // If the configuration file fails to load, this is the last attempt to load some known hard-coded brick models.
     void LoadAllDefaultBrickModels()
     {
-#if 0
         enum ModelFlags
         {
             Model_IsWallOptimized       = (1 << 0), // Does the model has an optimized version that only renders its walls, with some potential but negligible holes?
@@ -901,11 +922,17 @@ private:
             Model_IsGlassOptimized      = (1 << 2), // Does the model has a specialized version for transparent materials?
         };
 
-        auto LoadBrickModelGroups = [this](const char* basename, BrickId brickId, int flags = 0) -> void
+        auto LoadBrickModelGroups = [this](const char* basename, const GridVec3i& extent, int flags = 0) -> void
         {
-            auto LoadBrickModel = [this, brickId](const char* name, BrickGroup brickGroup) -> void
+            BrickInfo& brickInfo = BrickDictionary::Get().FindOrInsert(basename);
+
+            brickInfo.extent = extent;
+
+            auto LoadBrickModel = [this, &brickInfo](const char* name, BrickGroup brickGroup) -> void
             {
-                BrickMesh& mesh = BrickDictionary::Get().GetMesh(brickId, brickGroup);
+                // Expand upper bound of how many groups are used for this brick type
+                brickInfo.ExpandGroups(brickGroup);
+                BrickMesh& mesh = brickInfo.meshes[brickGroup];
                 const std::string filename = std::string("Bricks/") + name + ".obj";
                 (void)LoadBrickModelFile(mesh, filename.c_str());
             };
@@ -931,19 +958,16 @@ private:
             }
         };
 
-        LoadBrickModelGroups("Brick1x1x1",  BrickType_1x1x1,        Model_IsWallOptimized);
-        LoadBrickModelGroups("Tile1x1",     BrickType_1x1x1_Tile);
-        LoadBrickModelGroups("Brick1x1x3",  BrickType_1x1x3,        Model_IsWallOptimized);
-        LoadBrickModelGroups("Brick1x2x1",  BrickType_1x2x1,        Model_IsWallOptimizedExt);
-        LoadBrickModelGroups("Brick1x2x3",  BrickType_1x2x3,        Model_IsWallOptimizedExt);
-        LoadBrickModelGroups("Brick2x2x1",  BrickType_2x2x1,        Model_IsWallOptimizedExt);
-        LoadBrickModelGroups("Tile2x2",     BrickType_2x2x1_Tile);
-        LoadBrickModelGroups("Brick2x2x3",  BrickType_2x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
-        LoadBrickModelGroups("Roof2x2x3",   BrickType_2x2x3_Roof);
-        LoadBrickModelGroups("Roof2x3x3",   BrickType_2x3x3_Roof);
-        LoadBrickModelGroups("Brick4x2x1",  BrickType_4x2x1,        Model_IsWallOptimizedExt);
-        LoadBrickModelGroups("Brick4x2x3",  BrickType_4x2x3,        Model_IsWallOptimizedExt | Model_IsGlassOptimized);
-#endif
+        LoadBrickModelGroups("Brick1x1x1", { 1,1,1 }, Model_IsWallOptimized);
+        LoadBrickModelGroups("Tile1x1",    { 1,1,1 });
+        LoadBrickModelGroups("Brick1x1x3", { 1,3,1 }, Model_IsWallOptimized);
+        LoadBrickModelGroups("Brick1x2x1", { 1,1,2 }, Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick1x2x3", { 1,3,2 }, Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick2x2x1", { 2,1,2 }, Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Tile2x2",    { 2,1,2 });
+        LoadBrickModelGroups("Brick2x2x3", { 2,3,2 }, Model_IsWallOptimizedExt | Model_IsGlassOptimized);
+        LoadBrickModelGroups("Brick4x2x1", { 4,1,2 }, Model_IsWallOptimizedExt);
+        LoadBrickModelGroups("Brick4x2x3", { 4,3,2 }, Model_IsWallOptimizedExt | Model_IsGlassOptimized);
     }
 
     void InitSceneBoundingVolume(const LLGL::ArrayView<int> boundingVolume)
@@ -957,7 +981,7 @@ private:
         sceneView.gridBounds[2] = -KDTreeNode::rootAABB.bbMax.x;
         sceneView.gridBounds[3] = -KDTreeNode::rootAABB.bbMax.z;
 
-        LLGL::Log::Printf(
+        LLGL_LOG(
             "Scene bounding volume extent: %d x %d x %d\n",
             boundingVolume[0], boundingVolume[1], boundingVolume[2]
         );
@@ -967,7 +991,7 @@ private:
     {
         // Allow user to override scene file
         if (ParseArgument("-preset", options.scenePresetNo))
-            options.sceneFilename = "Bricks.Preset" + std::to_string(options.scenePresetNo) + ".txt";
+            options.sceneFilename = "Scenes/Bricks.Preset" + std::to_string(options.scenePresetNo) + ".txt";
 
         ParseArgument("-file", options.sceneFilename);
 
@@ -1010,15 +1034,6 @@ private:
         {
             options.uiMaxLeftColumns = 1;
             options.uiMaxRightColumns = 1;
-        }
-
-        // Cache width of main menu
-        uiState.mainMenuWidth = 0;
-        for_range(menuItem, UIMenuItem_Num)
-        {
-            uiState.mainMenuWidth += UIState::mainMenuBaseAdvance;
-            if (menuInfos[menuItem].endsWithSeparator)
-                uiState.mainMenuWidth += uiMainMenuSeparatorSize;
         }
     }
 
@@ -1063,7 +1078,7 @@ private:
             {
                 if (layerExtent != layer0Extent)
                 {
-                    LLGL::Log::Errorf(
+                    LLGL_ERROR(
                         "Incompatible array texture sizes: layer %d (size=%ux%ux%u)\n does not match layer 0 (size=%ux%ux%u)\n",
                         layerIndex,
                         layerExtent.width, layerExtent.height, layerExtent.depth,
@@ -1079,7 +1094,7 @@ private:
                 {
                     if (layerExtent.width != layerExtent.height || layerExtent.depth != 1)
                     {
-                        LLGL::Log::Errorf(
+                        LLGL_ERROR(
                             "Incompatible cube map size: face 0 (size=%ux%ux%u) does not have a square size\n",
                             layerExtent.width, layerExtent.height, layerExtent.depth
                         );
@@ -1335,11 +1350,26 @@ private:
             { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" }
         );
 
-        // Load all UI element textures
-        uiMenuTexture = LoadCubeOrArrayTexture(
-            LLGL::TextureType::Texture2DArray, "UIElements/",
-            { "download.png", "upload.png", "arrow.png", "rotate.png", "add.png", "select.png", "trash.png" }
-        );
+        // Load all UI element textures. For high-resolution displays, load the larger 64px UI elements.
+        LLGL::Display* primaryDisplay = LLGL::Display::GetPrimary();
+        if (primaryDisplay != nullptr && primaryDisplay->GetScale() >= 2.0f)
+        {
+            uiMenuTexture = LoadCubeOrArrayTexture(
+                LLGL::TextureType::Texture2DArray, "UIElements/",
+                { "download64.png", "upload64.png", "arrow64.png", "rotate64.png", "add64.png", "select64.png", "trash64.png" }
+            );
+        }
+        else
+        {
+            uiMenuTexture = LoadCubeOrArrayTexture(
+                LLGL::TextureType::Texture2DArray, "UIElements/",
+                { "download32.png", "upload32.png", "arrow32.png", "rotate32.png", "add32.png", "select32.png", "trash32.png" }
+            );
+        }
+
+        LLGL_VERIFY(uiMenuTexture != nullptr);
+        const LLGL::Extent3D uiMenuTextureExtent = uiMenuTexture->GetMipExtent(0);
+        InitUILayoutForElementSize(static_cast<int>(uiMenuTextureExtent.width));
 
         // Create render pass for opacity scene rendering.
         LLGL::RenderPassDescriptor opacityPassDesc;
@@ -1694,16 +1724,8 @@ private:
         return true;
     }
 
-    bool SaveScene(BrickScene& scene, const char* filename)
+    bool SaveSceneToStream(BrickScene& scene, std::ostream& file)
     {
-        // Open file for writing
-        std::ofstream file{ filename };
-        if (!file.good())
-        {
-            LLGL::Log::Errorf("Failed to save scene to file: %s\n", filename);
-            return false;
-        }
-
         // Write header
         file << "# Scene file for LLGL's example 'BrickPlay'" << std::endl;
         file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
@@ -1805,11 +1827,27 @@ private:
         // Mark file as saved after scaing completed successful
         scene.MarkSaved();
 
-        LLGL::Log::Printf("Saved scene to file: %s\n", filename);
         return true;
     }
 
-    bool LoadScene(BrickScene& scene, const char* filename)
+    bool SaveSceneToFile(BrickScene& scene, const char* filename)
+    {
+        // Open file for writing
+        std::ofstream file{ filename };
+        if (!file.good())
+        {
+            LLGL_ERROR("Failed to save scene to file: %s\n", filename);
+            return false;
+        }
+        if (SaveSceneToStream(scene, file))
+        {
+            LLGL_LOG("Saved scene to file: %s\n", filename);
+            return true;
+        }
+        return false;
+    }
+
+    bool LoadSceneFromFile(BrickScene& scene, const char* filename)
     {
         std::stringstream file;
         if (!ReadFile(filename, file))
@@ -1817,6 +1855,9 @@ private:
 
         BrickId currentBrickType = INVALID_BRICK_ID;
         GridVec3i currentOffset;
+
+        std::size_t numSkippedBricks = 0;
+        std::size_t numBlockedBricks = 0;
 
         std::vector<LLGL::ColorRGBAub> intermediateColors;
 
@@ -1829,7 +1870,7 @@ private:
                 if (paletteIndex < intermediateColors.size())
                     return intermediateColors[paletteIndex];
 
-                LLGL::Log::Errorf("Color palette index %d out of bounds\n", paletteIndex);
+                LLGL_ERROR("Color palette index %d out of bounds\n", paletteIndex);
                 return {};
             }
 
@@ -1850,9 +1891,8 @@ private:
                 {
                     if (currentBrickType == INVALID_BRICK_ID)
                     {
-                        LLGL::Log::Errorf("Missing brick type 'b' before new instance 'i' in %s:%d\n", filename, lineNo);
-                        scene.ResetScene();
-                        return false;
+                        ++numSkippedBricks;
+                        return true;
                     }
 
                     // Parse instance data
@@ -1863,13 +1903,17 @@ private:
                     stream >> gridPos.x >> gridPos.y >> gridPos.z >> gridRotation >> colorStr;
 
                     if (gridRotation % 90 != 0)
-                        LLGL::Log::Errorf("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
+                        LLGL_ERROR("Ignored unknown brick rotation %d (must be a multiple of 90) in %s:%d\n", gridRotation, filename, lineNo);
 
                     // Find closest color from global palette
                     int colorIndex = ColorPalette::Get().FindClosestColorIndex(ColorOrPaletteIndexFromString(colorStr));
 
                     // Create new brick instance
-                    scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), colorIndex);
+                    if (!scene.NewBrick(currentBrickType, gridPos + currentOffset, static_cast<GridRotation>(gridRotation / 90), colorIndex))
+                    {
+                        // Count how many bricks were blocked to report it as warning
+                        ++numBlockedBricks;
+                    }
                 }
                 else if (cmd == 'b')
                 {
@@ -1880,9 +1924,17 @@ private:
 
                     if (currentBrickType == INVALID_BRICK_ID)
                     {
-                        LLGL::Log::Errorf("Unknown brick type '%s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
-                        scene.ResetScene();
-                        return false;
+                        currentBrickType = BrickDictionary::Get().FindClosestTypeFromString(brickTypeStr.c_str());
+                        if (currentBrickType != INVALID_BRICK_ID)
+                        {
+                            const std::string& altBrickLabel = BrickDictionary::Get().GetInfo(currentBrickType).label;
+                            LLGL_WARN(
+                                "Unknown brick type '%s' in %s:%d; Found alternative '%s'\n",
+                                brickTypeStr.c_str(), filename, lineNo, altBrickLabel.c_str()
+                            );
+                        }
+                        else
+                            LLGL_ERROR("Unknown brick type '%s' in %s:%d\n", brickTypeStr.c_str(), filename, lineNo);
                     }
                 }
                 else if (cmd == 'o')
@@ -1899,7 +1951,7 @@ private:
                 {
                     if (currentBrickType != INVALID_BRICK_ID)
                     {
-                        LLGL::Log::Errorf("Color palette entries must appear before brick types\n");
+                        LLGL_ERROR("Color palette entries must appear before brick types\n");
                         scene.ResetScene();
                         return false;
                     }
@@ -1911,7 +1963,7 @@ private:
                 }
                 else
                 {
-                    LLGL::Log::Errorf("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
+                    LLGL_ERROR("Unknown command '%c' in %s:%d\n", cmd, filename, lineNo);
                     scene.ResetScene();
                     return false;
                 }
@@ -1925,7 +1977,16 @@ private:
         // Mark scene as saved after loading, since no changes have been made that are not saved in the file we just loaded.
         scene.MarkSaved();
 
-        LLGL::Log::Printf("Loaded scene from file: %s\n", filename);
+        LLGL_LOG("Loaded scene from file: %s\n", filename);
+
+        if (numSkippedBricks > 0 || numBlockedBricks > 0)
+        {
+            LLGL_WARN(
+                "Missing bricks: %zu skipped, %zu blocked by other bricks\n",
+                numSkippedBricks, numBlockedBricks
+            );
+        }
+
         return true;
     }
 
@@ -2019,7 +2080,7 @@ private:
         auto endTime = std::chrono::system_clock::now();
         auto elapsedSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 
-        LLGL::Log::Printf("Generated height field scene in %.03fs\n", static_cast<double>(elapsedSeconds) / 1000.0);
+        LLGL_LOG("Generated height field scene in %.03fs\n", static_cast<double>(elapsedSeconds) / 1000.0);
     }
 
     void GenerateHeightFieldScene(BrickScene& scene, const HeightFieldParameters& heightFieldParams)
@@ -2469,7 +2530,8 @@ private:
 
         commands->BeginRenderPass(renderTarget);
         {
-            commands->SetViewport(LLGL::Extent2D{ uiBrickThumbnailSize, uiBrickThumbnailSize });
+            const std::uint32_t thumbnailSize = static_cast<std::uint32_t>(uiState.layout.brickThumbnailSize);
+            commands->SetViewport(LLGL::Extent2D{ thumbnailSize, thumbnailSize });
             commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{});
 
             // Draw current thumbnail brick from default group
@@ -2495,11 +2557,12 @@ private:
         }
 
         // Create thumbnail array texture
+        const std::uint32_t thumbnailSize = static_cast<std::uint32_t>(uiState.layout.brickThumbnailSize);
         LLGL::TextureDescriptor texArrayDesc;
         {
             texArrayDesc.debugName      = "BrickThumbnail.Texture2DArray";
             texArrayDesc.type           = LLGL::TextureType::Texture2DArray;
-            texArrayDesc.extent         = { uiBrickThumbnailSize, uiBrickThumbnailSize, 1 };
+            texArrayDesc.extent         = { thumbnailSize, thumbnailSize, 1 };
             texArrayDesc.arrayLayers    = numBrickTypes;                    // Each brick type gets its own slot in the array texture
             texArrayDesc.mipLevels      = 1;                                // No MIP-maps since this is used for UI elements
             texArrayDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;   // Don't initialize the texture since we render into it right below
@@ -2515,7 +2578,7 @@ private:
             LLGL::RenderTargetDescriptor rtDesc;
             {
                 rtDesc.debugName                        = rtLabel.c_str();
-                rtDesc.resolution                       = { uiBrickThumbnailSize, uiBrickThumbnailSize };
+                rtDesc.resolution                       = { thumbnailSize, thumbnailSize };
                 rtDesc.samples                          = GetSampleCount();
                 rtDesc.depthStencilAttachment.format    = swapChain->GetDepthStencilFormat();   // Use same depth format for thumbnails as for swap-chain (to make PSOs happy)
 
@@ -2588,7 +2651,11 @@ private:
     bool IsMouseInRect(int x, int y, int w, int h, bool ignoreMainMenu = false)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
-        return (mousePos.x >= x && mousePos.x <= x + w && mousePos.y >= y && mousePos.y <= y + h && (!ignoreMainMenu || mousePos.y > uiMainMenuSize));
+        return
+        (
+            mousePos.x >= x && mousePos.x <= x + w && mousePos.y >= y && mousePos.y <= y + h &&
+            (!ignoreMainMenu || mousePos.y > uiState.layout.mainMenuSize)
+        );
     }
 
     bool IsSelectedByMouse(int x, int y, int w, int h, bool ignoreMainMenu = false)
@@ -2598,8 +2665,9 @@ private:
 
     bool DrawUIColorPicker(int x, int y, int paletteIndex, bool isHighlighted = false)
     {
-        int w = uiColorPickerSize + uiButtonFrameSize*2;
-        int h = uiColorPickerSize + uiButtonFrameSize*2;
+        const int colorPickerSize = uiState.layout.colorPickerSize;
+        int w = colorPickerSize + uiButtonFrameSize*2;
+        int h = colorPickerSize + uiButtonFrameSize*2;
         const bool isSelected = IsSelectedByMouse(x, y, w, h, true);
 
         LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
@@ -2614,7 +2682,7 @@ private:
         {
             // Draw background frame and then the foreground color
             uiRenderer.Draw2DRect(x, y, w, h, uiButtonFrameColor);
-            uiRenderer.Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, uiColorPickerSize, uiColorPickerSize, color, render);
+            uiRenderer.Draw2DRect(x + uiButtonFrameSize, y + uiButtonFrameSize, colorPickerSize, colorPickerSize, color, render);
         }
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
@@ -2622,8 +2690,9 @@ private:
 
     bool DrawUIBrickThumbnail(int x, int y, int brickType, bool isHighlighted = false)
     {
-        int w = uiBrickThumbnailSize + uiButtonFrameSize*2;
-        int h = uiBrickThumbnailSize + uiButtonFrameSize*2;
+        const int thumbnailSize = uiState.layout.brickThumbnailSize;
+        int w = thumbnailSize + uiButtonFrameSize*2;
+        int h = thumbnailSize + uiButtonFrameSize*2;
         const bool isSelected = IsSelectedByMouse(x, y, w, h, true);
 
         const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[controller.pickedColorPaletteIndex];
@@ -2642,8 +2711,8 @@ private:
 
     bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false, bool isDisabled = false)
     {
-        int w = uiMainMenuItemSize + uiButtonFrameSize*2;
-        int h = uiMainMenuItemSize + uiButtonFrameSize*2;
+        int w = uiState.layout.mainMenuItemSize + uiButtonFrameSize*2;
+        int h = uiState.layout.mainMenuItemSize + uiButtonFrameSize*2;
         const bool isSelected = !isDisabled && IsSelectedByMouse(uiState.x, uiState.y, w, h);
 
         if (isSelected || isHighlighted)
@@ -2665,9 +2734,23 @@ private:
         // Advance menu item position
         uiState.x += uiState.advance;
         if (menuInfo.endsWithSeparator)
-            uiState.x += uiMainMenuSeparatorSize;
+            uiState.x += uiState.layout.mainMenuSeparatorSize;
 
         return (isSelected && input.KeyDown(LLGL::Key::LButton));
+    }
+
+    void InitUILayoutForElementSize(int uiElementSize)
+    {
+        uiState.layout.InitForElementSize(uiElementSize);
+
+        // Cache width of main menu
+        uiState.mainMenuWidth = 0;
+        for_range(menuItem, UIMenuItem_Num)
+        {
+            uiState.mainMenuWidth += uiState.layout.mainMenuBaseAdvance;
+            if (menuInfos[menuItem].endsWithSeparator)
+                uiState.mainMenuWidth += uiState.layout.mainMenuSeparatorSize;
+        }
     }
 
     void UpdateUILayout(float dt)
@@ -2675,7 +2758,7 @@ private:
         // Determine number of menu columns before drawing them, to allow scrolling
         uiState.UpdateScreenSize(swapChain->GetResolution());
 
-        uiState.ResetToMenuBar(uiState.menuBarLeft, uiColorPickerSize);
+        uiState.ResetToMenuBar(uiState.menuBarLeft, uiState.layout.colorPickerSize);
         {
             for_range(i, ColorPalette::Get().Count())
             {
@@ -2687,7 +2770,7 @@ private:
         }
         uiState.FinalizeMenuBar(ColorPalette::Get().Count(), options.uiMaxLeftColumns);
 
-        uiState.ResetToMenuBar(uiState.menuBarRight, uiBrickThumbnailSize);
+        uiState.ResetToMenuBar(uiState.menuBarRight, uiState.layout.brickThumbnailSize);
         {
             for_range(brickId, BrickDictionary::Get().NumBrickTypes())
             {
@@ -2701,13 +2784,13 @@ private:
 
         // Update scrolling
         const float scrollDir = static_cast<float>(-input.GetWheelMotion()) * uiScrollSpeed;
-        if (IsMouseInRect(0, uiMainMenuSize, uiState.menuBarLeft.width, uiState.scrH - uiMainMenuSize))
+        if (IsMouseInRect(0, uiState.layout.mainMenuSize, uiState.menuBarLeft.width, uiState.scrH - uiState.layout.mainMenuSize))
         {
             uiState.menuBarLeft.scroll.AddForces(scrollDir);
         }
         uiState.menuBarLeft.UpdateScrolling(dt, uiState.scrH);
 
-        if (IsMouseInRect(uiState.scrW - uiState.menuBarRight.width, uiMainMenuSize, uiState.menuBarRight.width, uiState.scrH - uiMainMenuSize))
+        if (IsMouseInRect(uiState.scrW - uiState.menuBarRight.width, uiState.layout.mainMenuSize, uiState.menuBarRight.width, uiState.scrH - uiState.layout.mainMenuSize))
         {
             uiState.menuBarRight.scroll.AddForces(scrollDir);
         }
@@ -2717,7 +2800,7 @@ private:
     void DrawScrollIndicator(const UIState::MenuBar& menuBar)
     {
         const int xOffset = (menuBar.isRightAligned ? uiState.scrW - menuBar.width : 0);
-        const int yOffset = uiMainMenuSize;
+        const int yOffset = uiState.layout.mainMenuSize;
 
         const int yScroll = static_cast<int>(menuBar.scroll.position);
         const int yScrollMax = menuBar.height - uiState.scrH;
@@ -2745,16 +2828,16 @@ private:
     {
         // Draw mouse dead zone as transparent background for the UI
         uiRenderer.Draw2DRect(
-            /*position:*/   0, uiMainMenuSize,
-            /*size:*/       uiState.menuBarLeft.width, uiState.scrH - uiMainMenuSize,
+            /*position:*/   0, uiState.layout.mainMenuSize,
+            /*size:*/       uiState.menuBarLeft.width, uiState.scrH - uiState.layout.mainMenuSize,
             /*color:*/      uiSideMenuColor);
         uiRenderer.Draw2DRect(
-            /*position:*/   uiState.scrW - uiState.menuBarRight.width, uiMainMenuSize,
-            /*size:*/       uiState.menuBarRight.width, uiState.scrH - uiMainMenuSize,
+            /*position:*/   uiState.scrW - uiState.menuBarRight.width, uiState.layout.mainMenuSize,
+            /*size:*/       uiState.menuBarRight.width, uiState.scrH - uiState.layout.mainMenuSize,
             /*color:*/      uiSideMenuColor);
 
         // Draw entire color palette for the user to choose from on the left of the overlay
-        uiState.ResetToMenuBar(uiState.menuBarLeft, uiColorPickerSize, true);
+        uiState.ResetToMenuBar(uiState.menuBarLeft, uiState.layout.colorPickerSize, true);
 
         for_range(i, ColorPalette::Get().Count())
         {
@@ -2777,7 +2860,7 @@ private:
         DrawScrollIndicator(uiState.menuBarLeft);
 
         // Draw brick thumbnails for the user to choose from on the right of the overlay
-        uiState.ResetToMenuBar(uiState.menuBarRight, uiBrickThumbnailSize, true);
+        uiState.ResetToMenuBar(uiState.menuBarRight, uiState.layout.brickThumbnailSize, true);
 
         for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
@@ -2799,14 +2882,25 @@ private:
         DrawScrollIndicator(uiState.menuBarRight);
 
         // Draw main menu bar
-        uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiMainMenuSize, uiMainMenuColor[0], uiMainMenuColor[1]);
+        uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiState.layout.mainMenuSize, uiMainMenuColor[0], uiMainMenuColor[1]);
 
         uiState.x = (uiState.scrW - uiState.mainMenuWidth)/2;
-        uiState.y = (uiMainMenuSize - uiMainMenuItemSize - uiButtonMargin)/2;
+        uiState.y = (uiState.layout.mainMenuSize - uiState.layout.mainMenuItemSize - uiButtonMargin)/2;
 
-        uiState.advance = UIState::mainMenuBaseAdvance;
+        uiState.advance = uiState.layout.mainMenuBaseAdvance;
 
-        DrawUIMenuItem(UIMenuItem_Download);
+        #if LLGL_OS_WASM
+        if (DrawUIMenuItem(UIMenuItem_Download))
+        {
+            const std::string timePointFormat = FormatTimePoint(std::chrono::system_clock::now());
+            std::stringstream sceneContentStream;
+            if (SaveSceneToStream(*currentScene, sceneContentStream))
+                OfferFileDownload(sceneContentStream.str(), "BrickPlay_" + timePointFormat + ".txt");
+        }
+        #else
+        (void)DrawUIMenuItem(UIMenuItem_Download, false, true);
+        #endif
+
         DrawUIMenuItem(UIMenuItem_Upload);
 
         if (DrawUIMenuItem(UIMenuItem_Undo, false, history.IsAtBegining()))
@@ -3165,7 +3259,7 @@ private:
     void ProcessUserInput(float dt)
     {
         const LLGL::Offset2D mousePos = input.GetMousePosition();
-        controller.isMouseInDeadZone = (mousePos.y <= uiMainMenuSize || mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width);
+        controller.isMouseInDeadZone = (mousePos.y <= uiState.layout.mainMenuSize || mousePos.x < uiState.menuBarLeft.width || mousePos.x > uiState.scrW - uiState.menuBarRight.width);
 
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
@@ -3199,7 +3293,7 @@ private:
         #if KDTREE_DEBUG_LEVEL >= 1
         if (currentScene->GetBrickInstance(controller.pickedBrick) != oldBrickInstance)
         {
-            LLGL::Log::Printf(
+            LLGL_LOG(
                 "Selected brick (type=%u, instance=%u): %u Ray/AABB tests\n",
                 controller.pickedBrick.groupId, controller.pickedBrick.groupInstance, KDTreeNode::numAABBTests
             );
@@ -3364,13 +3458,15 @@ private:
     {
         // Only save file if it was loaded successfully.
         // We don't want to override an existing file with an empty scene because something went wrong at startup.
+        #if !LLGL_OS_WASM
         if (hasLoadedScene)
         {
             // Ensure previoulsy selected brick retains its original color
             ResetPreviouslySelectedBrick();
             if (currentScene->HasUnsavedChanges())
-                SaveScene(*currentScene, options.sceneFilename.c_str());
+                SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
         }
+        #endif
         currentScene.reset();
     }
 

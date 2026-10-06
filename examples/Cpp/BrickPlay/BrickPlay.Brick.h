@@ -82,6 +82,12 @@ struct BrickInfo
     std::uint32_t           numGroups                       = 0;
     BrickMesh               meshes[BrickGroup_Num];
     InstanceGroup           instanceGroups[BrickGroup_Num];
+
+    // Expands upper bound of how many groups are used for this brick type.
+    void ExpandGroups(BrickGroup newGroup)
+    {
+        numGroups = std::max(numGroups, static_cast<std::uint32_t>(newGroup) + 1);
+    }
 };
 
 struct BrickDimensions
@@ -179,6 +185,16 @@ public:
     {
         auto it = labelToBrickId.find(s);
         return (it != labelToBrickId.end() ? it->second : INVALID_BRICK_ID);
+    }
+
+    BrickId FindClosestTypeFromString(const char* s) const
+    {
+        for (const auto& it : labelToBrickId)
+        {
+            if (it.first.find(s) != std::string::npos)
+                return it.second;
+        }
+        return INVALID_BRICK_ID;
     }
 
     BrickGroup GroupFromString(const char* s) const

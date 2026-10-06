@@ -16,6 +16,63 @@
 
 
 /*
+ * Global helper macros
+ */
+
+struct ExampleMacroUtils
+{
+    template <std::size_t N>
+    static constexpr char GetLastChar(const char (&str)[N])
+    {
+        return (N >= 2 ? str[N - 2] : '\0');
+    }
+
+    template <std::size_t N>
+    static constexpr bool EndsWithNewline(const char (&str)[N])
+    {
+        return (ExampleMacroUtils::GetLastChar(str) == '\n');
+    }
+};
+
+#define LLGL_OPTIONAL_VARGS(...) \
+    , ## __VA_ARGS__
+
+#define LLGL_LOG(FORMAT, ...)                                                       \
+    do                                                                              \
+    {                                                                               \
+        static_assert(                                                              \
+            ExampleMacroUtils::EndsWithNewline(FORMAT),                             \
+            "LLGL_LOG string must end with a newline character");                   \
+        LLGL::Log::Printf((FORMAT) LLGL_OPTIONAL_VARGS(__VA_ARGS__));               \
+    }                                                                               \
+    while (false)
+
+#define LLGL_WARN(FORMAT, ...)                                                      \
+    do                                                                              \
+    {                                                                               \
+        static_assert(                                                              \
+            ExampleMacroUtils::EndsWithNewline(FORMAT),                             \
+            "LLGL_WARN string must end with a newline character");                  \
+        LLGL::Log::Errorf(                                                          \
+            LLGL::Log::ColorFlags::StdWarning, ("Warning: " FORMAT)                 \
+            LLGL_OPTIONAL_VARGS(__VA_ARGS__));                                      \
+    }                                                                               \
+    while (false)
+
+#define LLGL_ERROR(FORMAT, ...)                                                     \
+    do                                                                              \
+    {                                                                               \
+        static_assert(                                                              \
+            ExampleMacroUtils::EndsWithNewline(FORMAT),                             \
+            "LLGL_ERROR string must end with a newline character");                 \
+        LLGL::Log::Errorf(                                                          \
+            LLGL::Log::ColorFlags::StdError, ("Error: " FORMAT)                     \
+            LLGL_OPTIONAL_VARGS(__VA_ARGS__));                                      \
+    }                                                                               \
+    while (false)
+
+
+/*
  * Global helper functions
  */
 
