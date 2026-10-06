@@ -1,0 +1,222 @@
+/*
+ * BrickPlay.UIMenu.h
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#ifndef LLGL_EXAMPLE_BRICKPLAY_UI_MENU_H
+#define LLGL_EXAMPLE_BRICKPLAY_UI_MENU_H
+
+
+#include "BrickPlay.UIRenderer.h"
+#include <LLGL/Utils/ColorRGBA.h>
+
+
+// To track what action captures mouse/touch input.
+enum class UIPointerAction
+{
+    None,
+    ScrollMenuLeft,     // Scroll right menu bar
+    ScrollMenuRight,    // Scroll left menu bar
+    MobileMoveCamera,   // Navigate mobile controller on the left (camera movement)
+    MobileTurnCamera,   // Navigate mobile controller on the right (camera rotation)
+    DesktopMoveCamera,  // Camera movement with cursor. Hide cursor at start, show again at end
+    DesktopTurnCamera,  // Camera rotation with cursor. Hide cursor at start, show again at end
+    DragNewBricks,      // Drag a series of new bricks over the scene
+    MoveSelectedBrick,  // Moves the selected brick until the pointer is released
+};
+
+// All main menu items for BrickPlay.
+enum UIMenuItem
+{
+    UIMenuItem_Download = 0,    // Download current scene to local machine
+    UIMenuItem_Upload,          // Upload current scene to public database
+    UIMenuItem_Undo,            // Undo previous operation
+    UIMenuItem_Redo,            // Redo previously reverted operation
+    UIMenuItem_TurnCW,          // Turns the currently selected brick clock-wise (CW)
+    UIMenuItem_TurnCCW,         // Turns the currently selected brick counter-clock-wise (CCW)
+    UIMenuItem_Add,             // Puts editor into 'add' mode to allow user to add new bricks.
+    UIMenuItem_Move,            // Puts editor into 'select' mode and then immediately into 'move' mode to drag bricks around
+    UIMenuItem_Delete,          // Puts the editor into 'select' mode and deletes the first select element immediately.
+
+    UIMenuItem_Num,
+};
+
+struct UIMenuInfo
+{
+    int     layer;              // Texture array layer
+    int     flags;              // UIRenderFlags
+    bool    endsWithSeparator;  // If true, add `uiState.layout.mainMenuSeparatorSize` to the next position
+};
+
+struct UILayout
+{
+    static constexpr int    defaultElementSize  = 32; // 32 for standard displays, 64 for high-resolution displays
+
+    static constexpr int    buttonOffset[2]     = { 15, 15 };
+    static constexpr int    buttonFrameSize     = 3;
+    static constexpr int    buttonMargin        = 5;
+
+    const LLGL::ColorRGBAub buttonFrameColor    = { 0, 0, 0, 255 };
+
+    const LLGL::ColorRGBAub mainMenuColor[2]    = { { 80, 80, 80 },     // Top color
+                                                    { 20, 20, 20 } };   // Bottom color
+
+    const UIMenuInfo menuInfos[UIMenuItem_Num] =
+    {
+        UIMenuInfo{ 0, 0, false },                  // UIMenuItem_Download 
+        UIMenuInfo{ 1, 0, true },                   // UIMenuItem_Upload
+        UIMenuInfo{ 2, 0, false },                  // UIMenuItem_Undo
+        UIMenuInfo{ 2, UIRenderFlags_FlipX, true }, // UIMenuItem_Redo
+        UIMenuInfo{ 3, 0, false },                  // UIMenuItem_TurnCW
+        UIMenuInfo{ 3, UIRenderFlags_FlipX, true }, // UIMenuItem_TurnCCW
+        UIMenuInfo{ 4, 0, false },                  // UIMenuItem_Add
+        UIMenuInfo{ 5, 0, false },                  // UIMenuItem_Select
+        UIMenuInfo{ 6, 0, false },                  // UIMenuItem_Delete
+    };
+
+    int mainMenuItemSize        = 0;
+    int mainMenuSeparatorSize   = 0;
+    int mainMenuSize            = 0;
+    int mainMenuBaseAdvance     = 0;
+    int colorPickerSize         = 0;
+    int brickThumbnailSize      = 0;
+
+    UILayout()
+    {
+        InitForElementSize(defaultElementSize);
+    }
+
+    void InitForElementSize(int uiElementSize)
+    {
+        mainMenuItemSize        = uiElementSize;
+        mainMenuSeparatorSize   = uiElementSize/2;
+        mainMenuSize            = uiElementSize*3/2;
+        mainMenuBaseAdvance     = mainMenuItemSize + UILayout::buttonMargin + UILayout::buttonFrameSize*2;
+        colorPickerSize         = (uiElementSize + 1)*8/10; // Size (in pixels) of each color picker button
+        brickThumbnailSize      = uiElementSize*3/2;
+    }
+};
+
+// State tracker for UI rendering.
+// This is handled primarily in an intermediate mode, but batched draw commands are generated separately from vertex buffer updates to keep them outside render-passes.
+struct UIState
+{
+    static constexpr float scrollBarMass = 0.05f;
+
+    struct MenuBar
+    {
+        MenuBar(bool isRightAligned) :
+            isRightAligned { isRightAligned }
+        {
+            scroll.SetMass(scrollBarMass);
+        }
+
+        int                 width           = 0;
+        int                 height          = 0;
+        bool                isRightAligned  = false;
+        RigidBody<float>    scroll;
+
+        void UpdateScrolling(float dt, int scrH)
+        {
+            const int scrollMax = height - scrH;
+            if (scrollMax > 0)
+            {
+                // Apply forces for smooth scrolling and clamp to screen height
+                scroll.position += scroll.IntegrateForces(dt);
+                scroll.position = Gs::Clamp(scroll.position, 0.0f, static_cast<float>(height - scrH));
+            }
+            else
+                scroll.position = 0.0;
+        }
+    };
+
+    struct InputPointer
+    {
+        UIPointerAction action      = UIPointerAction::None;
+        bool            isOverMenu  = false;
+
+        bool IsAvailableInScene() const
+        {
+            return (action == UIPointerAction::None && !isOverMenu);
+        }
+    };
+
+    MenuBar         menuBarLeft         = { false };
+    MenuBar         menuBarRight        = { true  };
+    MenuBar*        currentMenuBar      = nullptr;
+    InputPointer    inputPointer[2];
+    int             scrW                = 0;
+    int             scrH                = 0;
+    int             x                   = 0;
+    int             y                   = 0;
+    int             advance             = 0;
+    int             columns             = 0;
+    int             mainMenuWidth       = 0;
+    bool            isScrollEnabled     = false;
+
+    void UpdateScreenSize(LLGL::Extent2D resolution)
+    {
+        scrW = static_cast<int>(resolution.width);
+        scrH = static_cast<int>(resolution.height);
+    }
+
+    void ResetToMenuBar(const UILayout& layout, MenuBar& menuBar, int uiElementSize, bool enableScrolling = false)
+    {
+        isScrollEnabled = enableScrolling;
+        currentMenuBar = &menuBar;
+
+        advance = uiElementSize + UILayout::buttonFrameSize*2 + UILayout::buttonMargin;
+
+        x = (currentMenuBar->isRightAligned ? scrW - (UILayout::buttonOffset[0] + uiElementSize + UILayout::buttonFrameSize*2) : UILayout::buttonOffset[0]);
+        y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - static_cast<int>(menuBar.scroll.position) : UILayout::buttonOffset[1]);
+
+        columns = 1;
+    }
+
+    void FinalizeMenuBar(const UILayout& layout, int numElements, int maxColumns)
+    {
+        LLGL_VERIFY(currentMenuBar != nullptr);
+        if (columns > maxColumns)
+        {
+            const int maxNumElementsPerPage = (numElements / maxColumns + (numElements % maxColumns > 0 ? 1 : 0));
+
+            currentMenuBar->width   = UILayout::buttonOffset[0]*2 - UILayout::buttonMargin + maxColumns * advance;
+            currentMenuBar->height  = advance * maxNumElementsPerPage + layout.mainMenuSize + UILayout::buttonOffset[1]*2 - UILayout::buttonMargin;
+        }
+        else
+        {
+            currentMenuBar->width   = UILayout::buttonOffset[0]*2 - UILayout::buttonMargin + columns * advance;
+            currentMenuBar->height  = scrH;
+        }
+    }
+
+    void AdvanceColumn(const UILayout& layout)
+    {
+        const int yScroll = static_cast<int>(currentMenuBar->scroll.position);
+        if (y + yScroll + advance > (isScrollEnabled ? currentMenuBar->height : scrH))
+        {
+            // Move to next color picker column
+            x += (currentMenuBar->isRightAligned ? -advance : advance);
+            y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - yScroll : UILayout::buttonOffset[1]);
+            ++columns;
+        }
+    }
+
+    void AdvanceRow()
+    {
+        // Move to next UI element position
+        y += advance;
+    }
+
+    bool IsVisible() const
+    {
+        return y + advance > 0 && y < scrH;
+    }
+};
+
+
+#endif // /LLGL_EXAMPLE_BRICKPLAY_UI_RENDERER_H
+
+
