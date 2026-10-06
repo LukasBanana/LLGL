@@ -6,8 +6,9 @@
  */
 
 #include "GLStagingBufferPool.h"
+#include "../Platform/GLDriverBugMitigation.h"
 
-#if LLGL_GL_BUFFER_HAZARD_TRACKING
+#if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
 
 
 #include "GLBuffer.h"
@@ -121,7 +122,7 @@ GLStagingBufferPool::GLStagingBuffer* GLStagingBufferPool::GetOrCreateStagingBuf
 } // /namespace LLGL
 
 
-#endif // /LLGL_GL_BUFFER_HAZARD_TRACKING
+#endif // /LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
 
 
 

@@ -42,6 +42,17 @@ deleting them immediately.
 */
 #define LLGL_GL_DRIVER_BUG_NVIDIA_glDeleteProgram ( LLGL_OPTION_ENABLED_FOR_SPECIFIC_GPU_ONLY )
 
+/*
+This enables buffer-write hazard tracking for WebGL.
+The Metal backend of the WebGL implementation "ANGLE" does not correctly track mid-frame buffer updates in `glBufferSubData()`.
+This option enables LLGL's own hazard tracking using staging buffer pools for dynamic buffer updates in the GL backend.
+*/
+#if LLGL_WEBGL
+#   define LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData ( LLGL_OPTION_ENABLED )
+#else
+#   define LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData ( LLGL_OPTION_DISABLED )
+#endif
+
 
 #endif
 

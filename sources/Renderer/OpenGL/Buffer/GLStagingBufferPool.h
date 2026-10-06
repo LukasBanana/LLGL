@@ -10,8 +10,9 @@
 
 
 #include "../OpenGL.h"
+#include "../Platform/GLDriverBugMitigation.h"
 
-#if LLGL_GL_BUFFER_HAZARD_TRACKING
+#if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
 
 
 #include <vector>
@@ -26,7 +27,7 @@ class GLStateManager;
 
 /*
 Pool to allocate staging buffers.
-This is only used as a workaround for a bug in the WebGL implementation "ANGLE" (see LLGL_GL_BUFFER_HAZARD_TRACKING).
+This is only used as a workaround for a bug in the WebGL implementation "ANGLE" (see LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData).
 */
 class GLStagingBufferPool
 {
@@ -80,7 +81,7 @@ class GLStagingBufferPool
 } // /namespace LLGL
 
 
-#endif // /LLGL_GL_BUFFER_HAZARD_TRACKING
+#endif // /LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
 
 #endif
 

@@ -61,7 +61,7 @@ void GLContextManager::Clear()
         GLContext::SetCurrent(pixelFormat.context.get());
         pixelFormat.context->GetVertexArrayPool().Purge();
 
-        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        #if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
         pixelFormat.context->GetStagingBufferPool().Clear();
         #endif
 

@@ -11,6 +11,7 @@
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
 #include "GLPipelineState.h"
+#include "../Platform/GLDriverBugMitigation.h"
 #include "../Shader/GLShaderProgram.h"
 #include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
@@ -1798,7 +1799,7 @@ void GLStateManager::FlushDeferredShaderPipeline()
 
 void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager)
 {
-    #if LLGL_GL_BUFFER_HAZARD_TRACKING
+    #if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
     /*
     Reset staging buffer pool every time a render-target is bound.
     This should ensure that abstracted command encoders in WebGL for instance should be flushed.

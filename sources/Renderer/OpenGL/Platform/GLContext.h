@@ -13,6 +13,7 @@
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
+#include "GLDriverBugMitigation.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Buffer/GLVertexArrayPool.h"
 #include "../Buffer/GLStagingBufferPool.h"
@@ -89,7 +90,7 @@ class GLContext
             return vertexArrayPool_;
         }
 
-        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        #if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
         // Returns the staging buffer pool for environments that demand manual hazard tracking, like the Metal backend in ANGLE.
         inline GLStagingBufferPool& GetStagingBufferPool()
         {
@@ -167,7 +168,7 @@ class GLContext
         GLStateManager      stateMngr_;
         GLVertexArrayPool   vertexArrayPool_;
 
-        #if LLGL_GL_BUFFER_HAZARD_TRACKING
+        #if LLGL_GL_DRIVER_BUG_ANGLE_glBufferSubData
         GLStagingBufferPool stagingBufferPool_;
         #endif
 
