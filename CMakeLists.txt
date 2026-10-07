@@ -693,6 +693,10 @@ if(EMSCRIPTEN)
     add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # Required for explicit swap control
     add_link_options("SHELL:-s ASSERTIONS")
     add_link_options("SHELL:-s ALLOW_MEMORY_GROWTH") # Allow memory to grow as graphics apps can be quite demanding
+
+    # Add debug information for Emscripten debug builds
+    add_compile_options("$<$<CONFIG:Debug>:-g3>")
+    add_link_options("$<$<CONFIG:Debug>:-g3>")
 endif()
 
 

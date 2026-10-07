@@ -1,12 +1,21 @@
 #!/bin/bash
 
-# Validate input arguments
+# Parse input arguments
 SRC=$1
 DST=$2
-FILTERS=("${@:3}")
+shift 2
+
+DEBUG_BUILD=0
+
+for ARG in "$@"; do
+    if [ "$ARG" = "-d" ] || [ "$ARG" = "--debug" ]; then
+        DEBUG_BUILD=1
+    fi
+done
 
 if [ -z "$SRC" ]; then
-    echo "Usage: $0 <source> [<destination> [<example>...]]"
+    echo "Usage: $0 SOURCE [TARGET [...]]"
+    echo "Additional arguments are forwarded to BuildWasm.sh script"
     exit 1
 fi
 
@@ -26,9 +35,14 @@ fi
 
 copy_example_to_target()
 {
-    NAME=$1
+    BASENAME="$1"
+    if [ $DEBUG_BUILD -ne 0 ]; then
+        NAME="${BASENAME}D"
+    else
+        NAME="$BASENAME"
+    fi
     SOURCE_FOLDER="$DST/html5/$NAME"
-    TARGET_FOLDER="$SRC/docu/WebPage/$NAME"
+    TARGET_FOLDER="$SRC/docu/WebPage/$BASENAME"
     echo "Copy $NAME from '$(realpath --relative-to "$SRC" "$SOURCE_FOLDER")' to '$(realpath --relative-to "$SRC" "$TARGET_FOLDER")'"
     cp "$SOURCE_FOLDER/$NAME.data" "$TARGET_FOLDER/$NAME.data"
     cp "$SOURCE_FOLDER/$NAME.data.js" "$TARGET_FOLDER/$NAME.data.js"
@@ -42,9 +56,10 @@ pushd $SRC
 
 # If this is run in WSL2 on Windows, remove carriage return characters (Windows EOL) from the script before executing it
 if grep -q $'\r$' BuildWasm.sh; then
-    tr -d '\r' < BuildWasm.sh | bash -s -- -u "$DST"
+    tr -d '\r' < BuildWasm.sh | bash -s -- -u "$DST" "${@:1}"
 else
-    BuildWasm.sh -u "$DST"
+    # Forward additional arguments to the build script
+    BuildWasm.sh -u "$DST" "${@:1}"
 fi
 
 # Copy HTML5 examples to the target web page directory
@@ -66,19 +81,6 @@ EXAMPLES=(
 )
 
 for EXAMPLE in "${EXAMPLES[@]}"; do
-    if [ ${#FILTERS[@]} -gt 0 ]; then
-        SELECTED=0
-        for FILTER in "${FILTERS[@]}"; do
-            # Accept filters with or without "Example_" prefix
-            if [ "$EXAMPLE" == "$FILTER" ] || [ "$EXAMPLE" == "Example_$FILTER" ]; then
-                SELECTED=1
-                break
-            fi
-        done
-        if [ $SELECTED -eq 0 ]; then
-            continue
-        fi
-    fi
     copy_example_to_target "$EXAMPLE"
 done
 

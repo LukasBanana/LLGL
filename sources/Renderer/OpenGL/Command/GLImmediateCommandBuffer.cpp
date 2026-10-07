@@ -590,6 +590,11 @@ void GLImmediateCommandBuffer::SetStencilReference(std::uint32_t reference, cons
     stateMngr_->SetStencilRef(static_cast<GLint>(reference), GLTypes::Map(stencilFace));
 }
 
+//TODO:
+//  `GetUniformMap()` needs to point to the unfiorm map specifically for the respective permutation,
+//  as GL (and especially WebGL) could have completely different uniform locations even if the shaders are almost identical (and with identical uniform declarations).
+//  The deferred shader pipeline can also not be flushed here. If `SetUniforms()` is called outside a render pass, we won't have the correct shader pipeline yet.
+//  For deferred shader pipelines, uniforms needs to be deferred as well when the pipeline hasn't been flushed yet.
 void GLImmediateCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     /* Data size must be a multiple of 4 bytes */

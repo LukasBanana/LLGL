@@ -132,19 +132,28 @@ void GLPipelineState::BindShaderPipeline(GLStateManager& stateMngr, GLShader::Pe
 //TODO: support separate shaders; each separable shader needs its own set of uniform locations
 void GLPipelineState::BuildUniformMap(const std::vector<UniformDescriptor>& uniforms)
 {
-    const GLShaderPipeline* shaderPipeline = GetShaderPipeline();
-    if (shaderPipeline != nullptr && !uniforms.empty())
+    if (uniforms.empty())
+        return;
+
+    for_range(permutationIndex, GLShader::PermutationCount)
     {
-        const GLuint program = shaderPipeline->GetID();
+        if (const GLShaderPipeline* shaderPipeline = shaderPipelines_[permutationIndex].get())
+        {
+            const GLuint program = shaderPipeline->GetID();
 
-        /* Build name-to-index map of all active uniforms, since glGetUniformLocation() does *not* map to the active uniform index */
-        GLNameToUniformMap nameToUniformMap;
-        BuildNameToActiveUniformMap(program, nameToUniformMap);
+            /* Build name-to-index map of all active uniforms, since glGetUniformLocation() does *not* map to the active uniform index */
+            GLNameToUniformMap nameToUniformMap;
+            BuildNameToActiveUniformMap(program, nameToUniformMap);
 
-        /* Build uniform locations from input descriptors */
-        uniformMap_.resize(uniforms.size());
-        for_range(i, uniforms.size())
-            BuildUniformLocation(program, uniformMap_[i], uniforms[i], nameToUniformMap);
+            /* Build uniform locations from input descriptors */
+            const std::size_t uniformMapOffset = uniforms.size();
+            if (permutationIndex > 0)
+                permutationUniformMapOffset_[permutationIndex - 1] = static_cast<std::uint32_t>(uniformMapOffset);
+            uniformMap_.resize(uniformMapOffset + uniforms.size());
+
+            for_range(i, uniforms.size())
+                BuildUniformLocation(program, uniformMap_[uniformMapOffset + i], uniforms[i], nameToUniformMap);
+        }
     }
 }
 

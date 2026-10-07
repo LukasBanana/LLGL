@@ -1167,6 +1167,8 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
     NotifyBufferRelease(id, GLBufferTarget::CopyReadBuffer);
     NotifyBufferRelease(id, GLBufferTarget::CopyWriteBuffer);
     NotifyBufferRelease(id, buffer.GetTarget());
+
+    GLVertexArrayCache::Get().NotifyBufferRelease(buffer);
 }
 
 void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)

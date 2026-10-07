@@ -140,15 +140,25 @@ class GLPipelineState : public PipelineState
             const GLNameToUniformMap&   nameToUniformMap
         );
 
+#if 0 //TODO: integrate this into GetUniformMap() in both immediate and deferred GL command buffers
+        // Returns the offset into the uniform map for the specified shader permutation.
+        inline std::uint32_t GetPermutationUniformIndex(GLShader::Permutation permutation) const
+        {
+            const std::size_t permutationIndex = static_cast<std::size_t>(permutation);
+            return (permutationIndex > 0 ? permutationUniformMapOffset_[permutationIndex - 1] : 0);
+        }
+#endif
+
     private:
 
-        const bool                      isGraphicsPSO_                                  = false;
-        GLbitfield                      barriers_                                       = 0;
-        const GLPipelineLayout*         pipelineLayout_                                 = nullptr;
+        const bool                      isGraphicsPSO_                                                  = false;
+        GLbitfield                      barriers_                                                       = 0;
+        const GLPipelineLayout*         pipelineLayout_                                                 = nullptr;
         GLShaderPipelineSPtr            shaderPipelines_[GLShader::PermutationCount];
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
         GLShaderBufferInterfaceMap      bufferInterfaceMap_;
         std::vector<GLUniformLocation>  uniformMap_;
+        std::uint32_t                   permutationUniformMapOffset_[GLShader::PermutationCount - 1]    = {};
         Report                          report_;
 
 };
