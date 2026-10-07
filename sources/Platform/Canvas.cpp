@@ -75,6 +75,21 @@ void Canvas::EventListener::OnKeyUp(Canvas& sender, Key keyCode)
     // dummy
 }
 
+void Canvas::EventListener::OnDoubleClick(Canvas& sender, Key keyCode)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnWheelMotion(Canvas& sender, float dx, float dy)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnMouseMotion(Canvas& sender, Offset2D position, float dx, float dy)
+{
+    // dummy
+}
+
 // DEPRECATED
 void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches)
 {
@@ -175,6 +190,22 @@ void Canvas::PostKeyUp(Key keyCode)
 {
     FOREACH_LISTENER_CALL( OnKeyUp(*this, keyCode) );
 }
+
+void Canvas::PostDoubleClick(Key keyCode)
+{
+    FOREACH_LISTENER_CALL( OnDoubleClick(*this, keyCode) );
+}
+
+void Canvas::PostWheelMotion(float dx, float dy)
+{
+    FOREACH_LISTENER_CALL( OnWheelMotion(*this, dx, dy) );
+}
+
+void Canvas::PostMouseMotion(Offset2D position, float dx, float dy)
+{
+    FOREACH_LISTENER_CALL( OnMouseMotion(*this, position, dx, dy) );
+}
+
 
 #undef FOREACH_LISTENER_CALL
 

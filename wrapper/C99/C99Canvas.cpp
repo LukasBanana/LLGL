@@ -56,14 +56,14 @@ class InternalCanvasEventListener final : public Canvas::EventListener
             LLGL_CALLBACK_WRAPPER(onResize, (const LLGLExtent2D*)&clientAreaSize);
         }
 
-        void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches) override
+        void OnTapGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches) override
         {
-            LLGL_CALLBACK_WRAPPER(onTapGesture, (const LLGLOffset2D*)&position, numTouches);
+            LLGL_CALLBACK_WRAPPER(onTapGesture, LLGLOffset2D{ position.x, position.y }, touchIndex, numTouches);
         }
 
-        void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action) override
+        void OnPanGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action) override
         {
-            LLGL_CALLBACK_WRAPPER(onPanGesture, (const LLGLOffset2D*)&position, numTouches, dx, dy, (LLGLEventAction)action);
+            LLGL_CALLBACK_WRAPPER(onPanGesture, LLGLOffset2D{ position.x, position.y }, touchIndex, numTouches, dx, dy, (LLGLEventAction)action);
         }
 
         void OnKeyDown(Canvas& sender, Key keyCode) override
@@ -76,6 +76,20 @@ class InternalCanvasEventListener final : public Canvas::EventListener
             LLGL_CALLBACK_WRAPPER(onKeyUp, (LLGLKey)keyCode);
         }
 
+        void OnDoubleClick(Canvas& sender, Key keyCode) override
+        {
+            LLGL_CALLBACK_WRAPPER(onDoubleClick, (LLGLKey)keyCode);
+        }
+
+        void OnWheelMotion(Canvas& sender, float dX, float dY) override
+        {
+            LLGL_CALLBACK_WRAPPER(onWheelMotion, dX, dY);
+        }
+
+        void OnMouseMotion(Canvas& sender, Offset2D position, float dX, float dY) override
+        {
+            LLGL_CALLBACK_WRAPPER(onMouseMotion, LLGLOffset2D{ position.x, position.y }, dX, dY);
+        }
 
 };
 
@@ -188,14 +202,14 @@ LLGL_C_EXPORT void llglPostCanvasResize(LLGLCanvas sender, const LLGLExtent2D* c
     LLGL_PTR(Canvas, sender)->PostResize(*(const Extent2D*)clientAreaSize);
 }
 
-LLGL_C_EXPORT void llglPostCanvasTapGesture(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches)
+LLGL_C_EXPORT void llglPostCanvasTapGesture(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches)
 {
-    LLGL_PTR(Canvas, sender)->PostTapGesture(*(const Offset2D*)position, numTouches);
+    LLGL_PTR(Canvas, sender)->PostTapGesture(Offset2D{ position.x, position.y }, touchIndex, numTouches);
 }
 
-LLGL_C_EXPORT void llglPostCanvasPanGesture(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches, float dx, float dy, LLGLEventAction action)
+LLGL_C_EXPORT void llglPostCanvasPanGesture(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches, float dX, float dY, LLGLEventAction action)
 {
-    LLGL_PTR(Canvas, sender)->PostPanGesture(*(const Offset2D*)position, numTouches, dx, dy, (EventAction)action);
+    LLGL_PTR(Canvas, sender)->PostPanGesture(Offset2D{ position.x, position.y }, touchIndex, numTouches, dX, dY, (EventAction)action);
 }
 
 LLGL_C_EXPORT void llglPostCanvasKeyDown(LLGLCanvas sender, LLGLKey keyCode)
@@ -208,6 +222,20 @@ LLGL_C_EXPORT void llglPostCanvasKeyUp(LLGLCanvas sender, LLGLKey keyCode)
     LLGL_PTR(Canvas, sender)->PostKeyUp((Key)keyCode);
 }
 
+LLGL_C_EXPORT void llglPostDoubleClick(LLGLCanvas sender, LLGLKey keyCode)
+{
+    LLGL_PTR(Canvas, sender)->PostDoubleClick((Key)keyCode);
+}
+
+LLGL_C_EXPORT void llglPostWheelMotion(LLGLCanvas sender, float dX, float dY)
+{
+    LLGL_PTR(Canvas, sender)->PostWheelMotion(dX, dY);
+}
+
+LLGL_C_EXPORT void llglPostMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY)
+{
+    LLGL_PTR(Canvas, sender)->PostMouseMotion(Offset2D{ position.x, position.y }, dX, dY);
+}
 
 
 // } /namespace LLGL

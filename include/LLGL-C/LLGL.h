@@ -35,6 +35,11 @@
 #include <LLGL-C/QueryHeap.h>
 #include <LLGL-C/Log.h>
 
+// Re-enables deprecated functions that would otherwise break compatibility.
+#if LLGL_C99_DEPRECATED_FALLBACK
+#include <LLGL-C/DeprecatedFallback.h>
+#endif
+
 
 #endif
 

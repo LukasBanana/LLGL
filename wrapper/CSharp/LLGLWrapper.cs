@@ -4158,6 +4158,9 @@ namespace LLGL
             public IntPtr onPanGesture;
             public IntPtr onKeyDown;
             public IntPtr onKeyUp;
+            public IntPtr onDoubleClick;
+            public IntPtr onWheelMotion;
+            public IntPtr onMouseMotion;
         }
 
         public unsafe struct WindowEventListener
@@ -4709,16 +4712,25 @@ namespace LLGL
         public unsafe delegate void OnCanvasResizeDelegate(Canvas sender, ref Extent2D clientAreaSize);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public unsafe delegate void OnCanvasTapGestureDelegate(Canvas sender, ref Offset2D position, int numTouches);
+        public unsafe delegate void OnCanvasTapGestureDelegate(Canvas sender, Offset2D position, int touchIndex, int numTouches);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public unsafe delegate void OnCanvasPanGestureDelegate(Canvas sender, ref Offset2D position, int numTouches, float dx, float dy, EventAction action);
+        public unsafe delegate void OnCanvasPanGestureDelegate(Canvas sender, Offset2D position, int touchIndex, int numTouches, float dx, float dy, EventAction action);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasKeyDownDelegate(Canvas sender, Key keyCode);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnCanvasKeyUpDelegate(Canvas sender, Key keyCode);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnDoubleClickDelegate(Canvas sender, Key keyCode);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnWheelMotionDelegate(Canvas sender, float dX, float dY);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnMouseMotionDelegate(Canvas sender, Offset2D position, float dX, float dY);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void ReportCallbackDelegate(ReportType type, [MarshalAs(UnmanagedType.LPStr)] string text, void* userData);
@@ -4817,16 +4829,25 @@ namespace LLGL
         public static extern unsafe void PostCanvasResize(Canvas sender, ref Extent2D clientAreaSize);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasTapGesture", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostCanvasTapGesture(Canvas sender, ref Offset2D position, int numTouches);
+        public static extern unsafe void PostCanvasTapGesture(Canvas sender, Offset2D position, int touchIndex, int numTouches);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasPanGesture", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostCanvasPanGesture(Canvas sender, ref Offset2D position, int numTouches, float dx, float dy, EventAction action);
+        public static extern unsafe void PostCanvasPanGesture(Canvas sender, Offset2D position, int touchIndex, int numTouches, float dX, float dY, EventAction action);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasKeyDown", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasKeyDown(Canvas sender, Key keyCode);
 
         [DllImport(DllName, EntryPoint="llglPostCanvasKeyUp", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasKeyUp(Canvas sender, Key keyCode);
+
+        [DllImport(DllName, EntryPoint="llglPostDoubleClick", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostDoubleClick(Canvas sender, Key keyCode);
+
+        [DllImport(DllName, EntryPoint="llglPostWheelMotion", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostWheelMotion(Canvas sender, float dX, float dY);
+
+        [DllImport(DllName, EntryPoint="llglPostMouseMotion", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostMouseMotion(Canvas sender, Offset2D position, float dX, float dY);
 
         [DllImport(DllName, EntryPoint="llglBegin", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Begin(CommandBuffer commandBuffer);

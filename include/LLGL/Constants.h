@@ -31,7 +31,7 @@
 \brief Maximum number of input pointers.
 \remarks This could simply be 10 as the maximum number of fingers humans usually have,
 but since some devices might support way more and Emscripten also sets this to 32, LLGL adopts that same number.
-\see LLGL::Input::GetPointerPosition
+\see LLGL::Input::GetPointer
 */
 #define LLGL_MAX_NUM_INPUT_POINTERS         ( 32u )
 

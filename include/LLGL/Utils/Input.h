@@ -19,6 +19,57 @@ namespace LLGL
 
 
 /**
+\brief Enumeration for input pointer states.
+\remarks This is used to record the current state of touch inputs being pressed down and lifted up.
+\see InputState::state
+*/
+enum class InputState
+{
+    //! Input is currently inactive.
+    Inactive,
+
+    /**
+    \brief Input is being activated.
+    \remarks This is when a touch pointer is being pressed down.
+    After the next call to Surface::ProcessEvents, it will be either in the Active or Deactivate state.
+    */
+    Activate,
+
+    /**
+    \brief Input is currently active.
+    \remarks The mouse cursor on desktop devices is always considered active.
+    Use Input::KeyDown, Input::KeyPressed, and Input::KeyUp to determine the specific mouse button states.
+    */
+    Active,
+
+    /**
+    \brief Input is being deactivated.
+    \remarks This is when a touch pointer is being lifted up.
+    After the next call to Surface::ProcessEvents, it will be either in the Inactive or Activate state.
+    */
+    Deactivate,
+};
+
+/**
+\brief Input pointer (mouse or touch input) structure for generic event handling.
+\see Input::GetPointer
+*/
+struct InputPointer
+{
+    //! Local offset relative to the canvas.
+    Offset2D    position;
+
+    //! Motion vector X-axis.
+    float       dX          = 0.0f;
+
+    //! Motion vector Y-axis.
+    float       dY          = 0.0f;
+
+    //! Specifies whether this touch input is active, i.e. whether it's currently being pressed down.
+    InputState  state       = InputState::Inactive;
+};
+
+/**
 \brief Default window event listener to receive user input.
 \remarks This class stores all received user input for a simple evaluation.
 However, for efficient evaluation, write your own sub class and only respond to user input when the appropriate callback is invoked.
@@ -88,34 +139,18 @@ class LLGL_EXPORT Input : public Interface
         bool KeyDoubleClick(Key keyCode) const;
 
         /**
-        \brief Returns the local position (relative to the client area of the Window or Canvas) of the specified input pointer.
+        \brief Returns the local position (relative to the client area of the Window or Canvas) of the specified input pointer or null if it's not active.
         \param index Specifies the pointer index. Index 0 is the default for mouse input. Other values are used exclusively for touch input.
         The maximum value index is <code>LLGL_MAX_NUM_INPUT_POINTERS - 1</code>
         \see LLGL_MAX_NUM_INPUT_POINTERS
-        \see GetNumPointers
         */
-        Offset2D GetPointerPosition(unsigned index) const;
-
-        /**
-        \brief Returns the 2D motion vector of the specified input pointer.
-        \param index Specifies the pointer index. Index 0 is the default for mouse input. Other values are used exclusively for touch input.
-        The maximum value index is <code>LLGL_MAX_NUM_INPUT_POINTERS - 1</code>
-        \see LLGL_MAX_NUM_INPUT_POINTERS
-        \see GetNumPointers
-        */
-        Offset2D GetPointerMotion(unsigned index) const;
+        const InputPointer& GetPointer(unsigned index) const;
 
         //! Returns the local mouse position.
-        inline Offset2D GetMousePosition() const
-        {
-            return GetPointerPosition(0);
-        }
+        Offset2D GetMousePosition() const;
 
         //! Returns the global mouse motion.
-        inline Offset2D GetMouseMotion() const
-        {
-            return GetPointerMotion(0);
-        }
+        Offset2D GetMouseMotion() const;
 
         //! Returns the mouse wheel motion.
         int GetWheelMotion() const;
@@ -125,13 +160,6 @@ class LLGL_EXPORT Input : public Interface
 
         //! Returns the number of any keys being pressed.
         unsigned GetAnyKeyCount() const;
-
-        /**
-        \brief Returns the number of input pointers.
-        \see GetPointerPosition
-        \see GetPointerMotion
-        */
-        unsigned GetNumPointers() const;
 
     private:
 

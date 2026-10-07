@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <memory>
 #include <math.h>
+#include "../Platform/PlatformUtils.h"
 
 
 namespace LLGL
@@ -91,13 +92,6 @@ static float ZeroIntegralPart(float val)
 
 struct Input::Pimpl
 {
-    struct InputPointer
-    {
-        Offset2D    position;
-        float       motionVector[2]         = { 0.0f, 0.0f };
-        bool        isActive                = false; // Actively touched down (for touch input)
-    };
-
     KeyStateArray   keyPressed;
     KeyStateArray   keyDown;
     KeyStateArray   keyDownRepeated;
@@ -111,7 +105,7 @@ struct Input::Pimpl
     InputPointer    inputPointers[LLGL_MAX_NUM_INPUT_POINTERS];
     unsigned        numInputPointers        = 0;
 
-    int             wheelMotion             = 0;
+    float           wheelMotion[2]          = { 0.0f, 0.0f };
     unsigned        anyKeyCount             = 0;
     UTF8String      chars;
 
@@ -124,11 +118,18 @@ struct Input::Pimpl
     void Reset()
     {
         /* Reset all input states to make room for next recordings */
-        wheelMotion = 0;
+        ZeroIntegralPart(wheelMotion[0]);
+        ZeroIntegralPart(wheelMotion[1]);
+
         for_range(i, numInputPointers)
         {
-            inputPointers[i].motionVector[0] = ZeroIntegralPart(inputPointers[i].motionVector[0]);
-            inputPointers[i].motionVector[1] = ZeroIntegralPart(inputPointers[i].motionVector[1]);
+            inputPointers[i].dX = ZeroIntegralPart(inputPointers[i].dX);
+            inputPointers[i].dY = ZeroIntegralPart(inputPointers[i].dY);
+
+            if (inputPointers[i].state == InputState::Activate)
+                inputPointers[i].state = InputState::Active;
+            else if (inputPointers[i].state == InputState::Deactivate)
+                inputPointers[i].state = InputState::Inactive;
         }
         numInputPointers = 0;
 
@@ -139,6 +140,10 @@ struct Input::Pimpl
         ResetDoubleClickArray(doubleClick);
 
         chars.clear();
+
+        /* Always mark the first input pointer as active for desktop platforms */
+        if (!IsRunningOnMobileDevice())
+            inputPointers[0].state = InputState::Active;
     }
 
     void OnKeyDown(Key keyCode)
@@ -202,14 +207,20 @@ struct Input::Pimpl
         }
     }
 
-    void SetPointerMotionVector(unsigned pointerIndex, float dx, float dy)
+    void SetPointerMotionVector(unsigned pointerIndex, float dX, float dY)
     {
         if (pointerIndex < LLGL_MAX_NUM_INPUT_POINTERS)
         {
-            inputPointers[pointerIndex].motionVector[0] += dx;
-            inputPointers[pointerIndex].motionVector[1] += dy;
+            inputPointers[pointerIndex].dX += dX;
+            inputPointers[pointerIndex].dY += dY;
             RegisterTouchInput(pointerIndex);
         }
+    }
+
+    void SetTouch(unsigned pointerIndex, InputState state)
+    {
+        inputPointers[pointerIndex].state = state;
+        RegisterTouchInput(pointerIndex);
     }
 
     void RegisterTouchInput(unsigned pointerIndex)
@@ -270,7 +281,8 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnWheelMotion(Window& /*sender*/, int motion) override
         {
-            data_.wheelMotion += motion;
+            data_.wheelMotion[0] += static_cast<float>(motion);
+            data_.wheelMotion[1] += static_cast<float>(motion);
         }
 
         void OnLocalMotion(Window& /*sender*/, const Offset2D& position) override
@@ -317,7 +329,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             data_.SetPointerPosition(touchIndex, position);
         }
 
-        void OnPanGesture(Canvas& /*sender*/, Offset2D position, std::uint32_t touchIndex, std::uint32_t /*numTouches*/, float dx, float dy, EventAction action) override
+        void OnPanGesture(Canvas& /*sender*/, Offset2D position, std::uint32_t touchIndex, std::uint32_t /*numTouches*/, float dX, float dY, EventAction action) override
         {
             data_.SetPointerPosition(touchIndex, position);
 
@@ -328,13 +340,15 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             {
                 case EventAction::Began:
                     data_.OnKeyDown(keyCode);
+                    data_.SetTouch(touchIndex, InputState::Activate);
                     break;
 
                 case EventAction::Changed:
-                    data_.SetPointerMotionVector(touchIndex, dx, dy);
+                    data_.SetPointerMotionVector(touchIndex, dX, dY);
                     break;
 
                 case EventAction::Ended:
+                    data_.SetTouch(touchIndex, InputState::Deactivate);
                     data_.OnKeyUp(keyCode);
                     break;
             }
@@ -348,6 +362,36 @@ class Input::CanvasEventListener final : public Canvas::EventListener
         void OnKeyUp(Canvas& /*sender*/, Key keyCode) override
         {
             data_.OnKeyUp(keyCode);
+        }
+
+        void OnDoubleClick(Canvas& /*sender*/, Key keyCode) override
+        {
+            switch (keyCode)
+            {
+                case Key::LButton:
+                    data_.doubleClick[0] = true;
+                    break;
+                case Key::RButton:
+                    data_.doubleClick[1] = true;
+                    break;
+                case Key::MButton:
+                    data_.doubleClick[2] = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void OnWheelMotion(Canvas& /*sender*/, float dX, float dY) override
+        {
+            data_.wheelMotion[0] += dX;
+            data_.wheelMotion[1] += dY;
+        }
+
+        void OnMouseMotion(Canvas& /*sender*/, Offset2D position, float dX, float dY) override
+        {
+            data_.SetPointerPosition(0, position);
+            data_.SetPointerMotionVector(0, dX, dY);
         }
 
     private:
@@ -491,27 +535,30 @@ bool Input::KeyDoubleClick(Key keyCode) const
     return false;
 }
 
-Offset2D Input::GetPointerPosition(unsigned index) const
+const InputPointer& Input::GetPointer(unsigned index) const
 {
-    return (index < LLGL_MAX_NUM_INPUT_POINTERS ? pimpl_->inputPointers[index].position : Offset2D{});
+    static const InputPointer nullInputPointers;
+    return (index < LLGL_MAX_NUM_INPUT_POINTERS ? pimpl_->inputPointers[index] : nullInputPointers);
 }
 
-Offset2D Input::GetPointerMotion(unsigned index) const
+Offset2D Input::GetMousePosition() const
 {
-    if (index < LLGL_MAX_NUM_INPUT_POINTERS)
+    return pimpl_->inputPointers[0].position;
+}
+
+Offset2D Input::GetMouseMotion() const
+{
+    return Offset2D
     {
-        return Offset2D
-        {
-            static_cast<std::int32_t>(pimpl_->inputPointers[index].motionVector[0]),
-            static_cast<std::int32_t>(pimpl_->inputPointers[index].motionVector[1])
-        };
-    }
-    return Offset2D{};
+        static_cast<std::int32_t>(pimpl_->inputPointers[0].dX),
+        static_cast<std::int32_t>(pimpl_->inputPointers[0].dY)
+    };
 }
 
+//TODO: refactor this interface to support both Dx and Dy
 int Input::GetWheelMotion() const
 {
-    return pimpl_->wheelMotion;
+    return static_cast<int>(pimpl_->wheelMotion[1]);
 }
 
 const UTF8String& Input::GetEnteredChars() const
@@ -522,11 +569,6 @@ const UTF8String& Input::GetEnteredChars() const
 unsigned Input::GetAnyKeyCount() const
 {
     return pimpl_->anyKeyCount;
-}
-
-unsigned Input::GetNumPointers() const
-{
-    return pimpl_->numInputPointers;
 }
 
 #undef KEY_IDX

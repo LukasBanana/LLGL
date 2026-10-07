@@ -13,6 +13,8 @@
 #include "../../Core/CoreUtils.h"
 #include <cmath>
 
+#include <LLGL/Log.h> //TEST
+
 
 namespace LLGL
 {
@@ -195,17 +197,6 @@ static Key EmscriptenMouseButtonToKeyCode(unsigned short button)
     }
 }
 
-static EventAction EmscriptenMouseEventToAction(int eventType)
-{
-    switch (eventType)
-    {
-        case EMSCRIPTEN_EVENT_MOUSEENTER:   return EventAction::Began;
-        case EMSCRIPTEN_EVENT_MOUSEMOVE:    return EventAction::Changed;
-        case EMSCRIPTEN_EVENT_MOUSELEAVE:   return EventAction::Ended;
-        default:                            return EventAction::Ended; // fallback
-    }
-}
-
 EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* event, void* userData)
 {
     WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
@@ -224,26 +215,20 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
         }
         return EM_TRUE;
 
-        case EMSCRIPTEN_EVENT_CLICK:
         case EMSCRIPTEN_EVENT_DBLCLICK:
         {
-            CanvasRect canvasRect;
-            canvas->GetCanvasBoundingClientRect(canvasRect);
-            const Offset2D position = canvas->ClientToCanvasPosition(canvasRect, event->clientX, event->clientY);
-            canvas->PostTapGesture(position, 0, 1);
+            canvas->PostDoubleClick(EmscriptenMouseButtonToKeyCode(event->button));
         }
         return EM_TRUE;
 
-        case EMSCRIPTEN_EVENT_MOUSEENTER:
         case EMSCRIPTEN_EVENT_MOUSEMOVE:
-        case EMSCRIPTEN_EVENT_MOUSELEAVE:
         {
             CanvasRect canvasRect;
             canvas->GetCanvasBoundingClientRect(canvasRect);
             const Offset2D position = canvas->ClientToCanvasPosition(canvasRect, event->clientX, event->clientY);
             const float motionX = static_cast<float>(event->movementX * canvas->pixelRatio_);
             const float motionY = static_cast<float>(event->movementY * canvas->pixelRatio_);
-            canvas->PostPanGesture(position, 0, 1, motionX, motionY, EmscriptenMouseEventToAction(eventType));
+            canvas->PostMouseMotion(position, motionX, motionY);
         }
         return EM_TRUE;
 
@@ -256,8 +241,20 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
 
 EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent* event, void* userData)
 {
-    //TODO
-    return EM_TRUE;
+    WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
+
+    switch (eventType)
+    {
+        case EMSCRIPTEN_EVENT_WHEEL:
+        {
+            const float motionX = static_cast<float>(event->deltaX);
+            const float motionY = static_cast<float>(event->deltaY);
+            canvas->PostWheelMotion(motionX, motionY);
+        }
+        return EM_TRUE;
+    }
+
+    return EM_FALSE;
 }
 
 static EventAction EmscriptenTouchEventToAction(int eventType)

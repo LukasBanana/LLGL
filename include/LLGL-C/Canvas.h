@@ -19,10 +19,13 @@ typedef void (*LLGL_PFN_OnCanvasInit)(LLGLCanvas sender);
 typedef void (*LLGL_PFN_OnCanvasDestroy)(LLGLCanvas sender);
 typedef void (*LLGL_PFN_OnCanvasDraw)(LLGLCanvas sender);
 typedef void (*LLGL_PFN_OnCanvasResize)(LLGLCanvas sender, const LLGLExtent2D* clientAreaSize);
-typedef void (*LLGL_PFN_OnCanvasTapGesture)(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches);
-typedef void (*LLGL_PFN_OnCanvasPanGesture)(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches, float dx, float dy, LLGLEventAction action);
+typedef void (*LLGL_PFN_OnCanvasTapGesture)(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches);
+typedef void (*LLGL_PFN_OnCanvasPanGesture)(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches, float dx, float dy, LLGLEventAction action);
 typedef void (*LLGL_PFN_OnCanvasKeyDown)(LLGLCanvas sender, LLGLKey keyCode);
 typedef void (*LLGL_PFN_OnCanvasKeyUp)(LLGLCanvas sender, LLGLKey keyCode);
+typedef void (*LLGL_PFN_OnDoubleClick)(LLGLCanvas sender, LLGLKey keyCode);
+typedef void (*LLGL_PFN_OnWheelMotion)(LLGLCanvas sender, float dX, float dY);
+typedef void (*LLGL_PFN_OnMouseMotion)(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY);
 
 typedef struct LLGLCanvasEventListener
 {
@@ -35,6 +38,9 @@ typedef struct LLGLCanvasEventListener
     LLGL_PFN_OnCanvasPanGesture     onPanGesture;
     LLGL_PFN_OnCanvasKeyDown        onKeyDown;
     LLGL_PFN_OnCanvasKeyUp          onKeyUp;
+    LLGL_PFN_OnDoubleClick          onDoubleClick;
+    LLGL_PFN_OnWheelMotion          onWheelMotion;
+    LLGL_PFN_OnMouseMotion          onMouseMotion;
 }
 LLGLCanvasEventListener;
 
@@ -52,10 +58,13 @@ LLGL_C_EXPORT void llglPostCanvasInit(LLGLCanvas sender);
 LLGL_C_EXPORT void llglPostCanvasDestroy(LLGLCanvas sender);
 LLGL_C_EXPORT void llglPostCanvasDraw(LLGLCanvas sender);
 LLGL_C_EXPORT void llglPostCanvasResize(LLGLCanvas sender, const LLGLExtent2D* clientAreaSize);
-LLGL_C_EXPORT void llglPostCanvasTapGesture(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches);
-LLGL_C_EXPORT void llglPostCanvasPanGesture(LLGLCanvas sender, const LLGLOffset2D* position, uint32_t numTouches, float dx, float dy, LLGLEventAction action);
+LLGL_C_EXPORT void llglPostCanvasTapGesture(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches);
+LLGL_C_EXPORT void llglPostCanvasPanGesture(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches, float dX, float dY, LLGLEventAction action);
 LLGL_C_EXPORT void llglPostCanvasKeyDown(LLGLCanvas sender, LLGLKey keyCode);
 LLGL_C_EXPORT void llglPostCanvasKeyUp(LLGLCanvas sender, LLGLKey keyCode);
+LLGL_C_EXPORT void llglPostDoubleClick(LLGLCanvas sender, LLGLKey keyCode);
+LLGL_C_EXPORT void llglPostWheelMotion(LLGLCanvas sender, float dX, float dY);
+LLGL_C_EXPORT void llglPostMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY);
 
 
 #endif

@@ -66,7 +66,7 @@ class LLGL_EXPORT Canvas : public Surface
                 virtual void OnTapGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches);
 
                 //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
-                virtual void OnPanGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action);
+                virtual void OnPanGesture(Canvas& sender, Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dX, float dY, EventAction action);
 
                 //! Sent when a key (from device button) has been pushed.
                 virtual void OnKeyDown(Canvas& sender, Key keyCode);
@@ -74,13 +74,35 @@ class LLGL_EXPORT Canvas : public Surface
                 //! Sent when a key (from device button) has been released.
                 virtual void OnKeyUp(Canvas& sender, Key keyCode);
 
+                /**
+                \brief Sent when a mouse button has been double clicked.
+                \note Only supported on: WebAssembly.
+                */
+                virtual void OnDoubleClick(Canvas& sender, Key keyCode);
+
+                /**
+                \brief Sent when the mouse wheel has been moved on the sender window.
+                \note Only supported on: WebAssembly.
+                */
+                virtual void OnWheelMotion(Canvas& sender, float dX, float dY);
+
+                /**
+                \brief Sent when the mouse has been moved on the sender canvas.
+                \param[in] sender Canvas which sent this event.
+                \param[in] position Mouse position relative to the canvas' client area.
+                \param[in] dX Motion vector on X-axis.
+                \param[in] dY Motion vector on Y-axis.
+                \note Only supported on: WebAssembly.
+                */
+                virtual void OnMouseMotion(Canvas& sender, Offset2D position, float dX, float dY);
+
                 //! \deprecated Since 0.05b; Use the new version with \c touchIndex parameter.
                 LLGL_DEPRECATED("This version of `OnTapGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter instead!")
                 virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
 
                 //! \deprecated Since 0.05b; Use the new version with \c touchIndex parameter.
                 LLGL_DEPRECATED("This version of `OnPanGesture()` is deprecated since 0.05b; Use the new version with `touchIndex` parameter instead!")
-                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
+                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dX, float dY, EventAction action);
 
         };
 
@@ -185,6 +207,27 @@ class LLGL_EXPORT Canvas : public Surface
         \see EventListener::OnKeyUp
         */
         void PostKeyUp(Key keyCode);
+
+        /**
+        \brief Posts a double click event to this canvas.
+        \note Only supported on: WebAssembly.
+        \see EventListener::OnDoubleClick
+        */
+        void PostDoubleClick(Key keyCode);
+
+        /**
+        \brief Posts a mouse wheel motion event to this canvas.
+        \note Only supported on: WebAssembly.
+        \see EventListener::OnWheelMotion
+        */
+        void PostWheelMotion(float dx, float dy);
+
+        /**
+        \brief Posts a local mouse motion event to this canvas.
+        \note Only supported on: WebAssembly.
+        \see EventListener::OnMouseMotion
+        */
+        void PostMouseMotion(Offset2D position, float dx, float dy);
 
         /**
         \deprecated Since 0.05b; Use new version with `touchIndex` parameter.
