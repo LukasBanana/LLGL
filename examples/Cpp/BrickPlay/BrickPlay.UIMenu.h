@@ -103,7 +103,7 @@ struct UILayout
 // This is handled primarily in an intermediate mode, but batched draw commands are generated separately from vertex buffer updates to keep them outside render-passes.
 struct UIState
 {
-    static constexpr float scrollBarMass = 0.05f;
+    static constexpr float scrollBarMass = 0.1f;
 
     struct MenuBar
     {
@@ -125,14 +125,26 @@ struct UIState
             {
                 // Apply forces for smooth scrolling and clamp to screen height
                 scroll.position += scroll.IntegrateForces(dt);
-                scroll.position = Gs::Clamp(scroll.position, 0.0f, static_cast<float>(height - scrH));
+                if (scroll.position < 0.0f)
+                {
+                    scroll.position = 0.0f;
+                    scroll.velocity = 0.0f;
+                }
+                else if (scroll.position > static_cast<float>(scrollMax))
+                {
+                    scroll.position = static_cast<float>(scrollMax);
+                    scroll.velocity = 0.0f;
+                }
             }
             else
-                scroll.position = 0.0;
+            {
+                scroll.position = 0.0f;
+                scroll.velocity = 0.0f;
+            }
         }
     };
 
-    struct InputPointer
+    struct InputPointerState
     {
         UIPointerAction action      = UIPointerAction::None;
         bool            isOverMenu  = false;
@@ -143,18 +155,18 @@ struct UIState
         }
     };
 
-    MenuBar         menuBarLeft         = { false };
-    MenuBar         menuBarRight        = { true  };
-    MenuBar*        currentMenuBar      = nullptr;
-    InputPointer    inputPointer[2];
-    int             scrW                = 0;
-    int             scrH                = 0;
-    int             x                   = 0;
-    int             y                   = 0;
-    int             advance             = 0;
-    int             columns             = 0;
-    int             mainMenuWidth       = 0;
-    bool            isScrollEnabled     = false;
+    MenuBar             menuBarLeft         = { false };
+    MenuBar             menuBarRight        = { true  };
+    MenuBar*            currentMenuBar      = nullptr;
+    InputPointerState   inputPointer[2];
+    int                 scrW                = 0;
+    int                 scrH                = 0;
+    int                 x                   = 0;
+    int                 y                   = 0;
+    int                 advance             = 0;
+    int                 columns             = 0;
+    int                 mainMenuWidth       = 0;
+    bool                isScrollEnabled     = false;
 
     void UpdateScreenSize(LLGL::Extent2D resolution)
     {

@@ -47,7 +47,7 @@ class Example_BrickPlay : public ExampleBase
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
-    static constexpr float          uiScrollSpeed                   = 100.0f;
+    static constexpr float          uiScrollSpeed                   = 50.0f;
     static constexpr int            uiScrollIndicatorSize           = 15;
 
     const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
@@ -69,14 +69,20 @@ class Example_BrickPlay : public ExampleBase
     // and the incurred performance cost of more almost invisible geometry can be avoided.
     static constexpr bool           useWaterTightBrickOptimization  = true;
 
+    #if 0//LLGL_OS_WASM
+    // WebGL cannot render into floating-point texture formats :-(
+    static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA32UInt;
+    #else
     // High precision format for transparency accumulation texture. Set this to either RGBA16Float or RGBA32Float.
     static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA16Float;
+    #endif
 
     struct Options
     {
         std::string                 sceneFilename                   = "Scenes/Bricks.scene.txt";
         std::string                 configFilename                  = "BrickPlay.config.txt";
-        int                         scenePresetNo                   = -1; // Auto-generate preset scene
+        bool                        discardEdits                    = false;    // Don't save edited scene
+        int                         scenePresetNo                   = -1;       // Auto-generate preset scene
         int                         sceneBoundingVolume[3]          = { 100, 60, 100 };
         int                         uiMaxLeftColumns                = 2;        // Maximum number of columns on the left side of the menu
         int                         uiMaxRightColumns               = 2;        // Maximum number of columns on the right side of the menu
@@ -359,7 +365,7 @@ class Example_BrickPlay : public ExampleBase
         None,   // Desktop only
         Add,
         Move,
-        Select, // Desktop only
+        Select,
         Delete, // Deletes the next selected brick
     };
 
@@ -385,12 +391,19 @@ class Example_BrickPlay : public ExampleBase
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct Controller
     {
+        Controller()
+        {
+            backupInstance.gridRotation = GridRotation_Num; // Mark as inactive backup instance with this invalid rotation value
+        }
+
         EditMode            editMode                    = EditMode::Add; // Start in 'add' mode
 
         LLGL::Offset2D      lastCursorPos;
 
         Brick               pickedBrick;
         int                 pickedInstanceColorIndex    = 0; // Color palette index of lasted picked brick
+
+        Instance            backupInstance              = {};
 
         int                 pickedColorPaletteIndex     = 0;
         GridRotation        menuGridRotation            = GridRotation_0;
@@ -811,6 +824,8 @@ private:
             options.sceneFilename = "Scenes/Bricks.Preset" + std::to_string(options.scenePresetNo) + ".txt";
 
         ParseArgument("-file", options.sceneFilename);
+
+        options.discardEdits = HasArgument("-discard");
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -2289,6 +2304,7 @@ private:
         // First render stencil reference to mask out pixels inside the silhouette. This is the regular brick model.
         commands->PushDebugGroup("RenderSilhouetteStencil");
         {
+            LLGL_VERIFY(psoOutlineWriteStencil != nullptr);
             commands->SetPipelineState(*psoOutlineWriteStencil);
             commands->SetResource(0, *sceneViewCbuffer);
             commands->Draw(visibleMesh.numVertices, visibleMesh.firstVertex);
@@ -2298,6 +2314,7 @@ private:
         // Now render silhouette by rendering with a wireframe model with thick lines
         commands->PushDebugGroup("RenderSilhouetteColor");
         {
+            LLGL_VERIFY(psoOutlineWriteColor != nullptr);
             commands->SetPipelineState(*psoOutlineWriteColor);
             commands->SetResource(0, *sceneViewCbuffer);
             commands->Draw(visibleMesh.numVertices, visibleMesh.firstVertex);
@@ -2467,44 +2484,40 @@ private:
 
     unsigned NumInputPointers() const
     {
-        if (IsRunningOnMobileDevice())
-            return std::min(2u, input.GetNumPointers()); // 0 to 2 touch inputs on mobile
-        else
-            return 1; // Always 1 mouse input for desktop
+        // This app recognizes up to 2 touch inputs on mobile. Only 1 mouse input for desktop.
+        return IsRunningOnMobileDevice() ? 2 : 1;
     }
 
     unsigned FindInputPointerInRect(int x, int y, int w, int h, bool ignoreMainMenu = false) const
     {
-        auto IsPointInRect = [this, x, y, w, h, ignoreMainMenu](unsigned pointerIndex, LLGL::Offset2D point) -> bool
+        auto IsPointInRect = [x, y, w, h](LLGL::Offset2D point) -> bool
         {
+            return (point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h);
+        };
+
+        auto IsInputPointerActiveInRect = [this, ignoreMainMenu, &IsPointInRect](unsigned pointerIndex) -> bool
+        {
+            const LLGL::InputPointer& inputPointer = input.GetPointer(pointerIndex);
             return
             (
+                inputPointer.state != LLGL::InputState::Inactive &&
                 uiState.inputPointer[pointerIndex].action == UIPointerAction::None &&
-                point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h &&
-                (!ignoreMainMenu || point.y > uiLayout.mainMenuSize)
+                (!ignoreMainMenu || inputPointer.position.y > uiLayout.mainMenuSize) &&
+                IsPointInRect(inputPointer.position)
             );
         };
 
         for_range(pointerIndex, NumInputPointers())
         {
-            if (IsPointInRect(pointerIndex, input.GetPointerPosition(pointerIndex)))
+            if (IsInputPointerActiveInRect(pointerIndex))
                 return pointerIndex + 1;
         }
         return 0;
     }
 
-    unsigned MapInputPointerSelection(unsigned pointerIndex)
+    unsigned MapInputPointerSelection(unsigned pointerId)
     {
-        if (IsRunningOnMobileDevice())
-        {
-            // Canvas events only occur when the screen is touched, which also counts as button pressed
-            return pointerIndex;
-        }
-        else
-        {
-            // Only return pointer index if the primary mouse button is pressed on desktop platforms
-            return input.KeyDown(LLGL::Key::LButton) ? pointerIndex : 0;
-        }
+        return pointerId > 0 && IsInputUp(input.GetPointer(pointerId - 1)) ? pointerId : 0;
     }
 
     unsigned DrawUIColorPicker(int x, int y, int paletteIndex, bool isHighlighted = false)
@@ -2512,12 +2525,12 @@ private:
         const int colorPickerSize = uiLayout.colorPickerSize;
         int w = colorPickerSize + UILayout::buttonFrameSize*2;
         int h = colorPickerSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerIndex = FindInputPointerInRect(x, y, w, h, true);
+        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, true);
 
         LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
         const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
 
-        if (pointerIndex != 0 || isHighlighted)
+        if (pointerId != 0 || isHighlighted)
         {
             // Only draw color button when selected
             uiRenderer.Draw2DRect(x, y, w, h, color, render);
@@ -2529,7 +2542,7 @@ private:
             uiRenderer.Draw2DRect(x + UILayout::buttonFrameSize, y + UILayout::buttonFrameSize, colorPickerSize, colorPickerSize, color, render);
         }
 
-        return MapInputPointerSelection(pointerIndex);
+        return MapInputPointerSelection(pointerId);
     }
 
     bool DrawUIBrickThumbnail(int x, int y, int brickType, bool isHighlighted = false)
@@ -2537,11 +2550,11 @@ private:
         const int thumbnailSize = uiLayout.brickThumbnailSize;
         int w = thumbnailSize + UILayout::buttonFrameSize*2;
         int h = thumbnailSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerIndex = FindInputPointerInRect(x, y, w, h, true);
+        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, true);
 
         const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[controller.pickedColorPaletteIndex];
 
-        if (pointerIndex != 0 || isHighlighted)
+        if (pointerId != 0 || isHighlighted)
         {
             // Draw button background to highlight selection
             uiRenderer.Draw2DRect(x, y, w, h, uiBrickThumbnailBgColor);
@@ -2550,16 +2563,16 @@ private:
         // Draw thumbnail texture layer
         uiRenderer.Draw2DImage(x + UILayout::buttonFrameSize, y + UILayout::buttonFrameSize, uiBrickThumbnails.arrayTexture, brickType, brickColor);
 
-        return MapInputPointerSelection(pointerIndex);
+        return MapInputPointerSelection(pointerId);
     }
 
     bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false, bool isDisabled = false)
     {
         int w = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
         int h = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerIndex = (isDisabled ? 0 : FindInputPointerInRect(uiState.x, uiState.y, w, h));
+        const unsigned pointerId = (isDisabled ? 0 : FindInputPointerInRect(uiState.x, uiState.y, w, h));
 
-        if (pointerIndex != 0 || isHighlighted)
+        if (pointerId != 0 || isHighlighted)
         {
             // Draw button background to highlight selection
             uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, uiBrickThumbnailBgColor);
@@ -2580,7 +2593,7 @@ private:
         if (menuInfo.endsWithSeparator)
             uiState.x += uiLayout.mainMenuSeparatorSize;
 
-        return MapInputPointerSelection(pointerIndex);
+        return MapInputPointerSelection(pointerId);
     }
 
     void InitUILayoutForElementSize(int uiElementSize)
@@ -2834,15 +2847,18 @@ private:
 
     void DesktopCameraControls(float dt)
     {
-        if (input.KeyDown(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::None)
-            StartDesktopCameraMode(UIPointerAction::DesktopTurnCamera);
-        else if (input.KeyUp(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopTurnCamera)
-            StopDesktopCameraMode();
+        if (controller.editMode != EditMode::Move)
+        {
+            if (input.KeyDown(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::None)
+                StartDesktopCameraMode(UIPointerAction::DesktopTurnCamera);
+            else if (input.KeyUp(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopTurnCamera)
+                StopDesktopCameraMode();
 
-        if (input.KeyDown(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::None)
-            StartDesktopCameraMode(UIPointerAction::DesktopMoveCamera);
-        else if (input.KeyUp(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopMoveCamera)
-            StopDesktopCameraMode();
+            if (input.KeyDown(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::None)
+                StartDesktopCameraMode(UIPointerAction::DesktopMoveCamera);
+            else if (input.KeyUp(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopMoveCamera)
+                StopDesktopCameraMode();
+        }
 
         if (uiState.inputPointer[0].action == UIPointerAction::DesktopTurnCamera)
         {
@@ -2934,10 +2950,10 @@ private:
         return nullptr;
     }
 
-    Brick SelectBrickFromScene(unsigned pointerIndex)
+    Brick SelectBrickFromScene(const LLGL::InputPointer& inputPointer)
     {
         // Pick scene objects with the mouse pointer
-        const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetPointerPosition(pointerIndex));
+        const Ray3f pickerRay = ProjectScreenPosToViewRay(inputPointer.position);
 
         RayIntersection contact;
         if (currentScene->PickScene(pickerRay, contact))
@@ -2969,7 +2985,7 @@ private:
             offset = 0;
     }
 
-    void PickGridPosForPreviewBrick(unsigned pointerIndex)
+    void PickGridPosForPreviewBrick(const LLGL::InputPointer& inputPointer)
     {
         PreviewBrick& previewBrick = viewOptions.previewBrick;
 
@@ -2993,7 +3009,7 @@ private:
         ClampBrickGridOffset(newBrickId, previewBrick.gridOffset);
 
         // Pick scene objects with the mouse pointer
-        const Ray3f pickerRay = ProjectScreenPosToViewRay(input.GetPointerPosition(pointerIndex));
+        const Ray3f pickerRay = ProjectScreenPosToViewRay(inputPointer.position);
         GridVec3i newPreviewGridPos = previewInstance.GetPos();
 
         RayIntersection contact;
@@ -3047,11 +3063,31 @@ private:
         }
     }
 
+    bool NewBrickAndRegister(BrickId brickId, Instance brickInstance)
+    {
+        if (currentScene->NewBrick(brickId, brickInstance.GetPos(), brickInstance.gridRotation, brickInstance.colorIndex))
+        {
+            history.Register(History::Event{ brickId, brickInstance, INVALID_BRICK_ID, {} });
+            return true;
+        }
+        return false;
+    }
+
+    // Event when the brick movement is canceled and the selected brick is set back to its previous location.
+    void CancelBrickMoveEvent()
+    {
+        if (controller.backupInstance.gridRotation != GridRotation_Num)
+        {
+            (void)NewBrickAndRegister(viewOptions.previewBrick.id, controller.backupInstance);
+            controller.backupInstance.gridRotation = GridRotation_Num;
+        }
+    }
+
+    // Event when the user adds a new brick. This is recorded in the event history so the user can revert it via undo/redo.
     void NewBrickEvent()
     {
-        history.Register(History::Event{ viewOptions.previewBrick.id, previewInstance, INVALID_BRICK_ID, {} });
-
-        currentScene->NewBrick(viewOptions.previewBrick.id, previewInstance.GetPos(), previewInstance.gridRotation, previewInstance.colorIndex);
+        if (!NewBrickAndRegister(viewOptions.previewBrick.id, previewInstance))
+            CancelBrickMoveEvent();
     }
 
     void DestroyBrickEvent(Brick brick)
@@ -3062,38 +3098,74 @@ private:
         currentScene->DestroyBrick(brick);
     }
 
-    void ProcessEditModeAddOrMove(unsigned pointerIndex)
+    bool IsInputDown(const LLGL::InputPointer& inputPointer) const
     {
-        PickGridPosForPreviewBrick(pointerIndex);
+        return
+        (
+            (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::LButton)) ||
+            (IsRunningOnMobileDevice() && inputPointer.state == LLGL::InputState::Activate)
+        );
+    }
 
-        const PreviewBrick& previewBrick = viewOptions.previewBrick;
-        if (!previewBrick.isBlocked && input.KeyDown(LLGL::Key::LButton))
+    bool IsInputUp(const LLGL::InputPointer& inputPointer) const
+    {
+        return
+        (
+            (!IsRunningOnMobileDevice() && input.KeyUp(LLGL::Key::LButton)) ||
+            (IsRunningOnMobileDevice() && inputPointer.state == LLGL::InputState::Deactivate)
+        );
+    }
+
+    void ProcessEditModeAddOrMove(const LLGL::InputPointer& inputPointer, bool triggerOnPush)
+    {
+        PickGridPosForPreviewBrick(inputPointer);
+
+        auto UpdatePickPositionAndTransition = [this, &inputPointer]() -> void
         {
-            // Place new brick and update pick position for preview
-            NewBrickEvent();
-            PickGridPosForPreviewBrick(pointerIndex);
+            // Update pick position for preview
+            PickGridPosForPreviewBrick(inputPointer);
 
             // Reset edit mode if it was only temporarily adding a new brick
             if (controller.editMode == EditMode::Move)
                 controller.editMode = EditMode::Select;
+        };
+
+        if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
+        {
+            // Place brick back to its previous location and transition back to 'select' mode
+            CancelBrickMoveEvent();
+            UpdatePickPositionAndTransition();
+        }
+        else
+        {
+            if ((triggerOnPush && IsInputDown(inputPointer)) || (!triggerOnPush && IsInputUp(inputPointer)))
+            {
+                // Place brick at new location and transition back to 'select' mode
+                NewBrickEvent();
+                UpdatePickPositionAndTransition();
+            }
         }
     }
 
-    void ProcessEditModeSelect(unsigned pointerIndex)
+    void ProcessEditModeSelect(const LLGL::InputPointer& inputPointer)
     {
-        if (Brick selectedBrick = SelectBrickFromScene(pointerIndex))
+        if (Brick selectedBrick = SelectBrickFromScene(inputPointer))
         {
-            if (input.KeyDown(LLGL::Key::LButton))
+            if (IsInputDown(inputPointer))
             {
                 // Pick up brick for editing so the user can place it somewhere else
                 if (const Instance* selectedInstance = currentScene->GetBrickInstance(selectedBrick))
                 {
                     ResetPreviouslySelectedBrick();
 
+                    // Prepare new preview brick
                     viewOptions.previewBrick.id     = selectedBrick.GetId();
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
                     controller.menuGridRotation     = selectedInstance->gridRotation;
+
+                    // Also save current brick information in case the newly placed location is blocked and this brick is set back to its previous position
+                    controller.backupInstance = *selectedInstance;
 
                     // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
                     if (selectedInstance->colorIndex < ColorPalette::Get().Count())
@@ -3102,7 +3174,7 @@ private:
                     // Change to edit mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
                     controller.editMode = EditMode::Move;
-                    PickGridPosForPreviewBrick(pointerIndex);
+                    PickGridPosForPreviewBrick(inputPointer);
                 }
 
                 // Remove selected brick
@@ -3113,21 +3185,46 @@ private:
         }
     }
 
-    void ProcessEditModeDelete(unsigned pointerIndex)
+    void ProcessEditModeDelete(const LLGL::InputPointer& inputPointer)
     {
         if (input.KeyDown(LLGL::Key::LButton))
         {
-            if (Brick selectedBrick = SelectBrickFromScene(pointerIndex))
+            if (Brick selectedBrick = SelectBrickFromScene(inputPointer))
             {
                 DestroyBrickEvent(selectedBrick);
             }
         }
     }
 
-    bool IsPointerOverMenu(unsigned pointerIndex) const
+    bool IsPointerOverMenu(const LLGL::InputPointer& inputPointer) const
     {
-        const LLGL::Offset2D pointerPos = input.GetMousePosition();
-        return (pointerPos.y <= uiLayout.mainMenuSize || pointerPos.x < uiState.menuBarLeft.width || pointerPos.x > uiState.scrW - uiState.menuBarRight.width);
+        return
+        (
+            inputPointer.position.y <= uiLayout.mainMenuSize ||
+            inputPointer.position.x < uiState.menuBarLeft.width ||
+            inputPointer.position.x > uiState.scrW - uiState.menuBarRight.width
+        );
+    }
+
+    void ProcessInputPointer(unsigned pointerIndex, const LLGL::InputPointer& inputPointer)
+    {
+        if (inputPointer.state != LLGL::InputState::Inactive)
+        {
+            uiState.inputPointer[pointerIndex].isOverMenu = IsPointerOverMenu(inputPointer);
+
+            // Ingore input pointer if its hovering over the menu
+            if (uiState.inputPointer[pointerIndex].IsAvailableInScene())
+            {
+                if (controller.editMode == EditMode::Add)
+                    ProcessEditModeAddOrMove(inputPointer, true);
+                else if (controller.editMode == EditMode::Move)
+                    ProcessEditModeAddOrMove(inputPointer, false);
+                else if (controller.editMode == EditMode::Select)
+                    ProcessEditModeSelect(inputPointer);
+                else if (controller.editMode == EditMode::Delete)
+                    ProcessEditModeDelete(inputPointer);
+            }
+        }
     }
 
     void ProcessUserInput(float dt)
@@ -3139,21 +3236,8 @@ private:
 
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
-        // Only use mouse editing if the mouse isn't in the dead zone, i.e. covered by UI elements
         for_range(pointerIndex, NumInputPointers())
-        {
-            uiState.inputPointer[pointerIndex].isOverMenu = IsPointerOverMenu(0);
-
-            if (uiState.inputPointer[pointerIndex].IsAvailableInScene())
-            {
-                if (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
-                    ProcessEditModeAddOrMove(pointerIndex);
-                else if (controller.editMode == EditMode::Select)
-                    ProcessEditModeSelect(pointerIndex);
-                else if (controller.editMode == EditMode::Delete)
-                    ProcessEditModeDelete(pointerIndex);
-            }
-        }
+            ProcessInputPointer(pointerIndex, input.GetPointer(pointerIndex));
 
         camera.ApplyForces(dt, currentScene.get());
 
@@ -3196,7 +3280,9 @@ private:
 
     bool IsPreviewBrickVisible() const
     {
-        if (controller.editMode == EditMode::Add || controller.editMode == EditMode::Move)
+        // Only desktop, the preview brick is visible when the mouse is moved.
+        // But on mobile, new bricks are placed with every touch input, they are not dragged over the screen as in 'move' mode.
+        if ((controller.editMode == EditMode::Add && !IsRunningOnMobileDevice()) || controller.editMode == EditMode::Move)
         {
             for_range(pointerIndex, NumInputPointers())
             {
@@ -3300,7 +3386,7 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (controller.editMode == EditMode::Select)
+                if (controller.editMode == EditMode::Select && selectionRenderMode != SelectionRenderMode::Simplified)
                 {
                     commands->PushDebugGroup("RenderSilhouette");
                     {
@@ -3339,7 +3425,7 @@ private:
         {
             // Ensure previoulsy selected brick retains its original color
             ResetPreviouslySelectedBrick();
-            if (currentScene->HasUnsavedChanges())
+            if (currentScene->HasUnsavedChanges() && !options.discardEdits)
                 SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
         }
         #endif

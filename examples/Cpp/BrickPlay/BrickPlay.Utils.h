@@ -14,6 +14,8 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+#include <chrono>
+#include <ctime> // to format std::chrono::time_point
 
 #if LLGL_OS_WASM
 #include <emscripten.h>
@@ -22,30 +24,60 @@
 
 #if LLGL_OS_WASM
 
-// Returns true if the web app is running on a mobile device.
-inline bool IsRunningOnMobileDevice()
+static void OfferFileDownload(LLGL::StringView content, LLGL::StringView filename)
 {
-    return EM_ASM_INT({
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        return (isMobileUA || hasTouch) ? 1 : 0;
-    }) != 0;
-}
+    EM_ASM(
+        {
+            // Convert C++ string pointers to JS strings/typed arrays
+            var contentStr = UTF8ToString($0, $1);
+            var filenameStr = UTF8ToString($2, $3);
 
-#else // LLGL_OS_WASM
-
-inline bool IsRunningOnMobileDevice()
-{
-    #if LLGL_OS_ANDROID || LLGL_OS_IOS
-    return true;
-    #else
-    return false;
-    #endif
+            // Create a blob containing the text data
+            var blob = new Blob([contentStr], { type: 'text/plain;charset=utf-8' });
+        
+            // Create an invisible anchor element to trigger the download
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filenameStr;
+        
+            // Append, trigger click, and cleanup
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        
+            // Revoke the object URL to free memory
+            setTimeout(function() {
+                URL.revokeObjectURL(link.href);
+            }, 1000);
+        },
+        content.data(), content.size(), filename.data(), filename.size()
+    );
 }
 
 #endif // /LLGL_OS_WASM
 
+// Formats std::time_point to string with strict C++11 code (no std::format).
+template <typename TClock = std::chrono::system_clock>
+inline std::string FormatTimePoint(const std::chrono::time_point<TClock>& timePoint, const char* format = "%Y-%m-%d_%H-%M-%S")
+{
+    // Convert time_point to std::time_t
+    std::time_t time = TClock::to_time_t(timePoint);
+
+    // Convert to local time structure
+    std::tm tmBuf;
+    #if _WIN32
+    localtime_s(&tmBuf, &time);   // Thread-safe MSVC
+    #else
+    localtime_r(&time, &tmBuf);   // Thread-safe POSIX / GCC / Clang
+    #endif
+
+    // Format into C string
+    char buffer[128] = {};
+    if (std::strftime(buffer, sizeof(buffer), format, &tmBuf))
+        return std::string(buffer);
+
+    return "";
+}
 
 // Generic struct for simple physics integration. Used for camera movement and smooth menu bar scrolling.
 template <typename T, bool UseAcceleration = true>

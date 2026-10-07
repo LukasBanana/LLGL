@@ -251,6 +251,7 @@ public:
 
 };
 
+// Returns true if the specified brick ID has a mesh that only renders its walls.
 inline bool IsBrickTypeOptimized(BrickId id)
 {
     return (BrickDictionary::Get().GetInfo(id).meshes[BrickGroup_WallsOnly].numVertices > 0);

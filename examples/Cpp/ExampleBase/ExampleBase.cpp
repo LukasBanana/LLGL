@@ -194,6 +194,32 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     return rendererModule;
 }
 
+#if LLGL_OS_WASM
+
+// Returns true if the web app is running on a mobile device.
+static bool IsRunningOnMobileDevice()
+{
+    return EM_ASM_INT({
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        return (isMobileUA || hasTouch) ? 1 : 0;
+    }) != 0;
+}
+
+#else // LLGL_OS_WASM
+
+static bool IsRunningOnMobileDevice()
+{
+    #if LLGL_MOBILE_PLATFORM
+    return true;
+    #else
+    return false;
+    #endif
+}
+
+#endif // /LLGL_OS_WASM
+
 
 /*
  * TrackballRotationModel struct
@@ -856,6 +882,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
 
     // Initialize shader include search paths
     shaderIncludeHandler_.searchPaths.push_back("../../Shared/Assets/Shaders");
+
+    // Cache whether the process is running on a mobile device
+    isMobileDevice_ = ::IsRunningOnMobileDevice();
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
