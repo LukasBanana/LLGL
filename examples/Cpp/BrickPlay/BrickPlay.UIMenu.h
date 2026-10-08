@@ -13,20 +13,6 @@
 #include <LLGL/Utils/ColorRGBA.h>
 
 
-// To track what action captures mouse/touch input.
-enum class UIPointerAction
-{
-    None,
-    ScrollMenuLeft,     // Scroll right menu bar
-    ScrollMenuRight,    // Scroll left menu bar
-    MobileMoveCamera,   // Navigate mobile controller on the left (camera movement)
-    MobileTurnCamera,   // Navigate mobile controller on the right (camera rotation)
-    DesktopMoveCamera,  // Camera movement with cursor. Hide cursor at start, show again at end
-    DesktopTurnCamera,  // Camera rotation with cursor. Hide cursor at start, show again at end
-    DragNewBricks,      // Drag a series of new bricks over the scene
-    MoveSelectedBrick,  // Moves the selected brick until the pointer is released
-};
-
 // All main menu items for BrickPlay.
 enum UIMenuItem
 {
@@ -144,29 +130,17 @@ struct UIState
         }
     };
 
-    struct InputPointerState
-    {
-        UIPointerAction action      = UIPointerAction::None;
-        bool            isOverMenu  = false;
-
-        bool IsAvailableInScene() const
-        {
-            return (action == UIPointerAction::None && !isOverMenu);
-        }
-    };
-
-    MenuBar             menuBarLeft         = { false };
-    MenuBar             menuBarRight        = { true  };
-    MenuBar*            currentMenuBar      = nullptr;
-    InputPointerState   inputPointer[2];
-    int                 scrW                = 0;
-    int                 scrH                = 0;
-    int                 x                   = 0;
-    int                 y                   = 0;
-    int                 advance             = 0;
-    int                 columns             = 0;
-    int                 mainMenuWidth       = 0;
-    bool                isScrollEnabled     = false;
+    MenuBar     menuBarLeft     = { false };
+    MenuBar     menuBarRight    = { true  };
+    MenuBar*    currentMenuBar  = nullptr;
+    int         scrW            = 0;
+    int         scrH            = 0;
+    int         x               = 0;
+    int         y               = 0;
+    int         advance         = 0;
+    int         columns         = 0;
+    int         mainMenuWidth   = 0;
+    bool        isScrollEnabled = false;
 
     void UpdateScreenSize(LLGL::Extent2D resolution)
     {

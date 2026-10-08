@@ -9,6 +9,7 @@
 #define LLGL_EXAMPLE_BRICKPLAY_UTILS_H
 
 
+#include "BrickPlay.Const.h"
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/Platform/Platform.h>
 #include <string>

@@ -10,6 +10,7 @@
 #include "BrickPlay.Utils.h"
 #include "BrickPlay.UIRenderer.h"
 #include "BrickPlay.UIMenu.h"
+#include "BrickPlay.Const.h"
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
 #include <FileUtils.h>
@@ -18,7 +19,6 @@
 #include <set>
 #include <map>
 #include <chrono>
-#include <list> // Linked list for undo/redo (ring buffer would be better, but simple enough)
 #include <float.h> // for FLT_MAX
 
 // File and string streams for simple scene file writer/reader
@@ -34,40 +34,6 @@ class Example_BrickPlay : public ExampleBase
 
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
-
-    static constexpr bool           useCameraAcceleration           = true;
-    static constexpr float          cameraTurnSpeed                 = 0.25f;
-    static constexpr float          cameraMoveSpeed                 = 2.5f;
-    static constexpr float          cameraMass                      = 0.1f;     // Camera mass for physics based movement.
-    static constexpr float          cameraDampingCeofficient        = 0.99f;
-    static constexpr float          cameraCollisionRadius           = 1.5f;
-
-    static constexpr float          previewBlockOffsetY             = 0.075f;   // Y-axis world position offset for the preview block before putting it into place
-
-    static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
-    static constexpr float          silhouetteWidth                 = 5.0f;
-
-    static constexpr float          uiScrollSpeed                   = 50.0f;
-    static constexpr int            uiScrollIndicatorSize           = 15;
-
-    const LLGL::ColorRGBAub         uiBrickThumbnailBgColor         = { 180, 180, 180, 255 };
-    const LLGL::ColorRGBAub         uiSideMenuColor                 = { 0, 0, 0, 180 };
-    static constexpr GridRotation   uiThumbnailDefaultRotation      = GridRotation_270;
-    static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;     // Minimum size for a bounding volume of brick thumbnails.
-
-    static constexpr int            maxBrickExtent                  = 16;       // Limit how large bricks can be in X/Y/Z dimension
-
-    static constexpr int            planeSubdivisions               = 1;
-
-    static constexpr int            heightFieldChunkSize            = 2;        // Build bricks from height field in 4x4 grid chunks so that the largest bricks can be utilized
-
-    static constexpr std::size_t    maxHistoryLength                = 50;       // Maxmimum number of steps to undo
-
-    // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
-    // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
-    // This can be turned off for mobile platforms where this flaw is virtually invisible
-    // and the incurred performance cost of more almost invisible geometry can be avoided.
-    static constexpr bool           useWaterTightBrickOptimization  = true;
 
     #if 0//LLGL_OS_WASM
     // WebGL cannot render into floating-point texture formats :-(
@@ -153,14 +119,13 @@ class Example_BrickPlay : public ExampleBase
 
     std::unique_ptr<BrickScene>     currentScene;
 
+    Camera                          camera;
+    History                         history;
+    Instance                        previewInstance                 = {};
+
     UIRenderer                      uiRenderer;
     UILayout                        uiLayout;
     UIState                         uiState;
-
-    using Instance          = BrickScene::Instance;
-    using RayIntersection   = BrickScene::RayIntersection;
-
-    Instance                        previewInstance                 = {};
 
     struct UIBrickThumbnails
     {
@@ -175,65 +140,6 @@ class Example_BrickPlay : public ExampleBase
         cache;
     }
     uiBrickThumbnails;
-
-    // Semi-memento pattern to undo/redo changes.
-    struct History
-    {
-        struct Event
-        {
-            BrickId     addedBrickId;
-            Instance    addedInstance;
-            BrickId     destroyedBrickId;
-            Instance    destroyedInstance;
-        };
-
-        std::list<Event>            events;
-        std::list<Event>::iterator  eventIter;
-
-        History() :
-            eventIter { events.end() }
-        {
-        }
-
-        bool IsAtBegining() const
-        {
-            return eventIter == events.begin();
-        }
-
-        bool IsAtEnd() const
-        {
-            return eventIter == events.end();
-        }
-
-        void Register(Event&& event)
-        {
-            // If there are too many events in the queue, drop the oldest one
-            if (events.size() >= maxHistoryLength)
-                events.pop_front();
-
-            // When using 'undo' and then registering new events, all events after the current history iterator are dropped.
-            events.erase(eventIter, events.end());
-            events.push_back(std::move(event));
-            eventIter = events.end();
-        }
-
-        const Event* Undo()
-        {
-            if (!IsAtBegining())
-                return &(*(--eventIter));
-            else
-                return nullptr;
-        }
-
-        const Event* Redo()
-        {
-            if (!IsAtEnd())
-                return &(*eventIter++);
-            else
-                return nullptr;
-        }
-    }
-    history;
 
     struct alignas(16) SceneView
     {
@@ -267,8 +173,8 @@ class Example_BrickPlay : public ExampleBase
 
         // Outline shaders only
         float               viewportSize[2]         = {};
-        float               outlineColor[3]         = { silhouetteColor[0], silhouetteColor[1], silhouetteColor[2] };
-        float               outlineWidth            = silhouetteWidth;
+        float               outlineColor[3]         = { Cfg::silhouetteColor[0], Cfg::silhouetteColor[1], Cfg::silhouetteColor[2] };
+        float               outlineWidth            = Cfg::silhouetteWidth;
 
         // Plane shaders only
         std::int32_t        gridBounds[4]           = {};
@@ -301,7 +207,7 @@ class Example_BrickPlay : public ExampleBase
 
     struct PlaneModel
     {
-        static constexpr int            maxNumFaces             = planeSubdivisions * planeSubdivisions;
+        static constexpr int            maxNumFaces             = Cfg::planeSubdivisions * Cfg::planeSubdivisions;
         static constexpr int            maxNumVertices          = maxNumFaces * 5;
         static constexpr int            maxNumIndices           = maxNumFaces * 3 * 3;
         static constexpr std::uint64_t  meshBufferIndexOffset   = sizeof(PlaneVertex) * PlaneModel::maxNumVertices;
@@ -388,13 +294,41 @@ class Example_BrickPlay : public ExampleBase
         float           persistence = 0.5f;
     };
 
-    // State tracking for user controls such as picking scene objects with the mouse pointer.
-    struct Controller
+    // To track what action captures mouse/touch input, in other words, the user's hands that operate the app.
+    enum class HandAction
     {
-        Controller()
+        None,
+        ScrollMenuLeft,     // Scroll right menu bar
+        ScrollMenuRight,    // Scroll left menu bar
+        MobileMoveCamera,   // Navigate mobile controller on the left (camera movement)
+        MobileTurnCamera,   // Navigate mobile controller on the right (camera rotation)
+        DesktopMoveCamera,  // Camera movement with cursor. Hide cursor at start, show again at end
+        DesktopTurnCamera,  // Camera rotation with cursor. Hide cursor at start, show again at end
+        DragNewBricks,      // Drag a series of new bricks over the scene
+        MoveSelectedBrick,  // Moves the selected brick until the pointer is released
+    };
+
+    // Just another name for user input pointer :-)
+    struct UserHand
+    {
+        HandAction  action      = HandAction::None;
+        bool        isOverMenu  = false;
+
+        bool IsAvailableInScene() const
+        {
+            return (action == HandAction::None && !isOverMenu);
+        }
+    };
+
+    // State tracking for user controls such as picking scene objects with the mouse pointer.
+    struct User
+    {
+        User()
         {
             backupInstance.gridRotation = GridRotation_Num; // Mark as inactive backup instance with this invalid rotation value
         }
+
+        UserHand            hand[2];
 
         EditMode            editMode                    = EditMode::Add; // Start in 'add' mode
 
@@ -408,92 +342,18 @@ class Example_BrickPlay : public ExampleBase
         int                 pickedColorPaletteIndex     = 0;
         GridRotation        menuGridRotation            = GridRotation_0;
     }
-    controller;
+    user;
 
-    struct Camera : RigidBody<Gs::Vector3f, useCameraAcceleration>
+    static std::uint32_t GetOverrideSwapChainSamples()
     {
-        float           pitch       = 0.0f;
-        float           yaw         = 0.0f;
-
-        Gs::Matrix4f    wMatrix;
-        Gs::Matrix4f    vMatrix;
-        Gs::Matrix4f    vMatrixNoPosition;
-
-        Camera()
-        {
-            SetMass(cameraMass);
-        }
-
-        void Turn(float pitch, float yaw)
-        {
-            this->pitch = Gs::Clamp(this->pitch + pitch, -90.0f, +90.0f);
-            this->yaw   = this->yaw + yaw;
-        }
-
-        void Move(const Gs::Vector3f& direction)
-        {
-            // Move camera into the direction, taking camera rotation into account
-            Gs::Matrix3f rotation;
-            Gs::RotateY(rotation, Gs::Deg2Rad(yaw));
-            Gs::RotateX(rotation, Gs::Deg2Rad(pitch));
-            AddForces(rotation * direction);
-        }
-
-        void ApplyForces(float dt, const BrickScene* collisionScene = nullptr)
-        {
-            // Apply velocity to position and resolve collisions
-            const Gs::Vector3f velocityDelta = IntegrateForces(dt, cameraDampingCeofficient);
-            const float velocityDeltaLen = velocityDelta.Length();
-
-            if (velocityDeltaLen > GS_EPSILON_F32)
-            {
-                // Resolve collisions in iterations by maximum velocity length
-                if (collisionScene != nullptr)
-                {
-                    const float travelStep = cameraCollisionRadius * 0.9f;
-                    const Gs::Vector3f moveDir = velocityDelta.Normalized();
-
-                    float travelDist = 0.0f;
-                    while (travelDist + travelStep < velocityDeltaLen)
-                    {
-                        position += moveDir * travelStep;
-                        collisionScene->ResolveCollision(position, cameraCollisionRadius);
-                        travelDist += travelStep;
-                    }
-                    position += moveDir * (velocityDeltaLen - travelDist);
-                    collisionScene->ResolveCollision(position, cameraCollisionRadius);
-                }
-                else
-                {
-                    position += velocityDelta;
-                }
-            }
-        }
-
-        void UpdateTransform()
-        {
-            wMatrix.LoadIdentity();
-            Gs::Translate(wMatrix, position);
-            Gs::RotateY(wMatrix, Gs::Deg2Rad(yaw));
-            Gs::RotateX(wMatrix, Gs::Deg2Rad(pitch));
-
-            vMatrix = wMatrix.Inverse();
-
-            vMatrixNoPosition = Gs::Matrix4f
-            {
-                vMatrix(0, 0), vMatrix(0, 1), vMatrix(0, 2), 0.0f,
-                vMatrix(1, 0), vMatrix(1, 1), vMatrix(1, 2), 0.0f,
-                vMatrix(2, 0), vMatrix(2, 1), vMatrix(2, 2), 0.0f,
-                         0.0f,          0.0f,          0.0f, 1.0f
-            };
-        }
+        // Don't use multi-sampled swap-chain on mobile devices, it's too slow for high-resolution phones and tablets.
+        return IsRunningOnMobileDevice() ? 1 : 0;
     }
-    camera;
 
 public:
 
     Example_BrickPlay() :
-        ExampleBase{ "LLGL Example: BrickPlay" }
+        ExampleBase{ "LLGL Example: BrickPlay", Example_BrickPlay::GetOverrideSwapChainSamples() }
     {
         // Initialize kd-Tree vounding volume and camera projection parameters
         InitAppConfig();
@@ -505,7 +365,7 @@ public:
             return;
 
         // Render all bricks into thumbnail render-targets for the UI
-        InitializeAllBrickThumbnails(uiThumbnailDefaultRotation);
+        InitializeAllBrickThumbnails(Cfg::uiThumbnailDefaultRotation);
 
         // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
@@ -523,7 +383,7 @@ public:
         currentScene->PrintInfo();
 
         // Resolve initial scene collision with camera
-        currentScene->ResolveCollision(camera.position, cameraCollisionRadius);
+        currentScene->ResolveCollision(camera.position, Cfg::cameraCollisionRadius);
 
         // Print info
         LLGL_LOG(
@@ -602,13 +462,13 @@ private:
                     brickInfo.extent = brickExtent;
 
                     // Sanity check
-                    if (brickInfo.extent.x < 1 || brickInfo.extent.x > maxBrickExtent ||
-                        brickInfo.extent.y < 1 || brickInfo.extent.y > maxBrickExtent ||
-                        brickInfo.extent.z < 1 || brickInfo.extent.z > maxBrickExtent)
+                    if (brickInfo.extent.x < 1 || brickInfo.extent.x > Cfg::maxBrickExtent ||
+                        brickInfo.extent.y < 1 || brickInfo.extent.y > Cfg::maxBrickExtent ||
+                        brickInfo.extent.z < 1 || brickInfo.extent.z > Cfg::maxBrickExtent)
                     {
                         LLGL_ERROR(
                             "Brick '%s' extent out of bounds [1, %d]: %d x %d x %d\n",
-                            brickInfo.label.c_str(), maxBrickExtent, brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z
+                            brickInfo.label.c_str(), Cfg::maxBrickExtent, brickInfo.extent.x, brickInfo.extent.y, brickInfo.extent.z
                         );
                         return false;
                     }
@@ -775,7 +635,7 @@ private:
                 // Load either standard or extended model specialization that only renders its walls.
                 // These are rendered when the brick is blocked above and below to improve performance by rendering less triangels and pixels.
                 std::string basenameWallsOnly = std::string(basename) + "_WallsOnly";
-                if (useWaterTightBrickOptimization && (flags & Model_IsWallOptimizedExt) != 0)
+                if (Cfg::useWaterTightBrickOptimization && (flags & Model_IsWallOptimizedExt) != 0)
                     basenameWallsOnly += "Ext";
                 LoadBrickModel(basenameWallsOnly.c_str(), BrickGroup_WallsOnly);
             }
@@ -1170,9 +1030,10 @@ private:
         // Create primary texture sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
-            #ifndef LLGL_MOBILE_PLATFORM
-            samplerDesc.maxAnisotropy = 8;
-            #endif
+            // Only use anisotropic filtering on desktop platforms.
+            // This is quite expensive on high-resolution mobile devices, so fall back to standard tri-linear filtering.
+            if (!IsRunningOnMobileDevice())
+                samplerDesc.maxAnisotropy = 8;
         }
         uvWrapSampler = renderer->CreateSampler(samplerDesc);
 
@@ -1426,7 +1287,7 @@ private:
                 psoOutlineWriteColorLayout = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(SceneView@2):vert:frag"));
 
                 psoOutlineDesc.pipelineLayout                   = psoOutlineWriteColorLayout;
-                psoOutlineDesc.rasterizer.lineWidth             = silhouetteWidth;
+                psoOutlineDesc.rasterizer.lineWidth             = Cfg::silhouetteWidth;
                 psoOutlineDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
             }
             else
@@ -1831,7 +1692,7 @@ private:
         // Gather height field values and min/max range
         float fieldMin = FLT_MAX;
         float fieldMax = 0.0f;
-        float field[heightFieldChunkSize][heightFieldChunkSize];
+        float field[Cfg::heightFieldChunkSize][Cfg::heightFieldChunkSize];
 
         for (int z = 0; z < zExtent; ++z)
         {
@@ -1929,12 +1790,12 @@ private:
         std::vector<float> noiseBuffer;
         PerlinNoise{}.GenerateBuffer(noiseBuffer, bbExtent.x, 1, bbExtent.z, heightFieldParams.frequency, heightFieldParams.octaves, heightFieldParams.persistence);
 
-        for (int z = 0; z + heightFieldChunkSize < bbExtent.z; z += heightFieldChunkSize)
+        for (int z = 0; z + Cfg::heightFieldChunkSize < bbExtent.z; z += Cfg::heightFieldChunkSize)
         {
-            for (int x = 0; x + heightFieldChunkSize < bbExtent.x; x += heightFieldChunkSize)
+            for (int x = 0; x + Cfg::heightFieldChunkSize < bbExtent.x; x += Cfg::heightFieldChunkSize)
             {
                 int yRange[2] = { (heightFieldParams.yRange[0] / 3) * 3, heightFieldParams.yRange[1] };
-                BuildBrickChunkFromHeightField(scene, x, z, heightFieldChunkSize, heightFieldChunkSize, yRange, noiseBuffer, bbExtent.x, brickId1x1, brickId1x1Tile);
+                BuildBrickChunkFromHeightField(scene, x, z, Cfg::heightFieldChunkSize, Cfg::heightFieldChunkSize, yRange, noiseBuffer, bbExtent.x, brickId1x1, brickId1x1Tile);
             }
         }
 
@@ -2066,20 +1927,20 @@ private:
         // Eye is the camera's world position; no need to unproject the clip-space origin for this
         const Gs::Vector3f eye = camera.position;
 
-        static_assert(planeSubdivisions > 0, "`planeSubdivisions` must be greater than 0");
-        static_assert(planeSubdivisions <= 16, "`planeSubdivisions` should not be too large; consider keeping it at or below 16!");
+        static_assert(Cfg::planeSubdivisions > 0, "`planeSubdivisions` must be greater than 0");
+        static_assert(Cfg::planeSubdivisions <= 16, "`planeSubdivisions` should not be too large; consider keeping it at or below 16!");
 
-        Gs::Vector3f segmentedVertices[planeSubdivisions + 1][planeSubdivisions + 1];
+        Gs::Vector3f segmentedVertices[Cfg::planeSubdivisions + 1][Cfg::planeSubdivisions + 1];
 
-        const float planeSubdivisionsInv = 1.0f / static_cast<float>(planeSubdivisions);
-        for (int x = 0; x <= planeSubdivisions; ++x)
+        const float planeSubdivisionsInv = 1.0f / static_cast<float>(Cfg::planeSubdivisions);
+        for (int x = 0; x <= Cfg::planeSubdivisions; ++x)
         {
             float u = static_cast<float>(x) * planeSubdivisionsInv;
 
             const Gs::Vector3f horizontalTop    = Gs::Lerp(frustumLeftTop,    frustumRightTop,    u);
             const Gs::Vector3f horizontalBottom = Gs::Lerp(frustumLeftBottom, frustumRightBottom, u);
 
-            for (int y = 0; y <= planeSubdivisions; ++y)
+            for (int y = 0; y <= Cfg::planeSubdivisions; ++y)
             {
                 float v = static_cast<float>(y) * planeSubdivisionsInv;
 
@@ -2100,9 +1961,9 @@ private:
         };
 
         // Now generate plane vertices by projecting them into the scene
-        for (int x = 0; x < planeSubdivisions; ++x)
+        for (int x = 0; x < Cfg::planeSubdivisions; ++x)
         {
-            for (int y = 0; y < planeSubdivisions; ++y)
+            for (int y = 0; y < Cfg::planeSubdivisions; ++y)
             {
                 Gs::Vector3f inVertices[4], outVertices[5];
 
@@ -2348,7 +2209,7 @@ private:
         // Use orthogonal projection for brick thumbnails
         const Gs::Vector3f brickExtentScaled = brickDim.extent.Cast<float>() * KDTreeNode::gridScale;
         const float maxBrickExtent = std::max(brickExtentScaled.x, std::max(brickExtentScaled.y, brickExtentScaled.z));
-        const float volumeSize = std::max(uiThumbnailMinVolumeSize, maxBrickExtent + 1.0f);
+        const float volumeSize = std::max(Cfg::uiThumbnailMinVolumeSize, maxBrickExtent + 1.0f);
 
         const Gs::Matrix4f thumbnailProjection = OrthogonalProjection(volumeSize, volumeSize, 0.1f, dist*2.0f);
         outView.vpMatrix = thumbnailProjection * vMatrix;
@@ -2501,7 +2362,7 @@ private:
             return
             (
                 inputPointer.state != LLGL::InputState::Inactive &&
-                uiState.inputPointer[pointerIndex].action == UIPointerAction::None &&
+                user.hand[pointerIndex].action == HandAction::None &&
                 (!ignoreMainMenu || inputPointer.position.y > uiLayout.mainMenuSize) &&
                 IsPointInRect(inputPointer.position)
             );
@@ -2552,12 +2413,12 @@ private:
         int h = thumbnailSize + UILayout::buttonFrameSize*2;
         const unsigned pointerId = FindInputPointerInRect(x, y, w, h, true);
 
-        const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[controller.pickedColorPaletteIndex];
+        const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[user.pickedColorPaletteIndex];
 
         if (pointerId != 0 || isHighlighted)
         {
             // Draw button background to highlight selection
-            uiRenderer.Draw2DRect(x, y, w, h, uiBrickThumbnailBgColor);
+            uiRenderer.Draw2DRect(x, y, w, h, Cfg::uiBrickThumbnailBgColor);
         }
 
         // Draw thumbnail texture layer
@@ -2575,7 +2436,7 @@ private:
         if (pointerId != 0 || isHighlighted)
         {
             // Draw button background to highlight selection
-            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, uiBrickThumbnailBgColor);
+            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, Cfg::uiBrickThumbnailBgColor);
         }
 
         // Draw menu icon
@@ -2585,7 +2446,7 @@ private:
         if (isDisabled)
         {
             // Draw dithered grid over the icon to visualize that it's disabled
-            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, uiBrickThumbnailBgColor, UIRenderMode_Dithered);
+            uiRenderer.Draw2DRect(uiState.x, uiState.y, w, h, Cfg::uiBrickThumbnailBgColor, UIRenderMode_Dithered);
         }
 
         // Advance menu item position
@@ -2640,7 +2501,7 @@ private:
         uiState.FinalizeMenuBar(uiLayout, BrickDictionary::Get().NumBrickTypes(), options.uiMaxRightColumns);
 
         // Update scrolling
-        const float scrollDir = static_cast<float>(-input.GetWheelMotion()) * uiScrollSpeed;
+        const float scrollDir = static_cast<float>(-input.GetWheelMotion()) * Cfg::uiScrollSpeed;
         if (unsigned pointerIndex = FindInputPointerInRect(0, uiLayout.mainMenuSize, uiState.menuBarLeft.width, uiState.scrH - uiLayout.mainMenuSize))
         {
             uiState.menuBarLeft.scroll.AddForces(scrollDir);
@@ -2667,14 +2528,14 @@ private:
         if (yScroll > 0)
         {
             uiRenderer.Draw2DRectGradient(
-                xOffset, yOffset, menuBar.width, uiScrollIndicatorSize,
+                xOffset, yOffset, menuBar.width, Cfg::uiScrollIndicatorSize,
                 uiLayout.mainMenuColor[1], fadeColor
             );
         }
         if (yScroll < yScrollMax)
         {
             uiRenderer.Draw2DRectGradient(
-                xOffset, uiState.scrH - uiScrollIndicatorSize, menuBar.width, uiScrollIndicatorSize,
+                xOffset, uiState.scrH - Cfg::uiScrollIndicatorSize, menuBar.width, Cfg::uiScrollIndicatorSize,
                 fadeColor, uiLayout.mainMenuColor[1]
             );
         }
@@ -2687,11 +2548,11 @@ private:
         uiRenderer.Draw2DRect(
             /*position:*/   0, uiLayout.mainMenuSize,
             /*size:*/       uiState.menuBarLeft.width, uiState.scrH - uiLayout.mainMenuSize,
-            /*color:*/      uiSideMenuColor);
+            /*color:*/      Cfg::uiSideMenuColor);
         uiRenderer.Draw2DRect(
             /*position:*/   uiState.scrW - uiState.menuBarRight.width, uiLayout.mainMenuSize,
             /*size:*/       uiState.menuBarRight.width, uiState.scrH - uiLayout.mainMenuSize,
-            /*color:*/      uiSideMenuColor);
+            /*color:*/      Cfg::uiSideMenuColor);
 
         // Draw entire color palette for the user to choose from on the left of the overlay
         uiState.ResetToMenuBar(uiLayout, uiState.menuBarLeft, uiLayout.colorPickerSize, true);
@@ -2702,12 +2563,12 @@ private:
             {
                 if (uiState.IsVisible())
                 {
-                    const bool isHighlighted = (controller.pickedColorPaletteIndex == i);
+                    const bool isHighlighted = (user.pickedColorPaletteIndex == i);
                     if (DrawUIColorPicker(uiState.x, uiState.y, i, isHighlighted))
                     {
                         // Set new color from palette to preview brick
                         previewInstance.colorIndex = i;
-                        controller.pickedColorPaletteIndex = i;
+                        user.pickedColorPaletteIndex = i;
                     }
                 }
             }
@@ -2766,16 +2627,16 @@ private:
             Redo();
 
         if (DrawUIMenuItem(UIMenuItem_TurnCW))
-            controller.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(controller.menuGridRotation + 1, GridRotation_Num));
+            user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation + 1, GridRotation_Num));
         if (DrawUIMenuItem(UIMenuItem_TurnCCW))
-            controller.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(controller.menuGridRotation - 1, GridRotation_Num));
+            user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation - 1, GridRotation_Num));
 
-        if (DrawUIMenuItem(UIMenuItem_Add, (controller.editMode == EditMode::Add)))
-            controller.editMode = EditMode::Add;
-        if (DrawUIMenuItem(UIMenuItem_Move, (controller.editMode == EditMode::Move || controller.editMode == EditMode::Select)))
-            controller.editMode = EditMode::Select;
-        if (DrawUIMenuItem(UIMenuItem_Delete, (controller.editMode == EditMode::Delete)))
-            controller.editMode = EditMode::Delete;
+        if (DrawUIMenuItem(UIMenuItem_Add, (user.editMode == EditMode::Add)))
+            user.editMode = EditMode::Add;
+        if (DrawUIMenuItem(UIMenuItem_Move, (user.editMode == EditMode::Move || user.editMode == EditMode::Select)))
+            user.editMode = EditMode::Select;
+        if (DrawUIMenuItem(UIMenuItem_Delete, (user.editMode == EditMode::Delete)))
+            user.editMode = EditMode::Delete;
     }
 
     void PrepareUIDrawCommands()
@@ -2829,57 +2690,57 @@ private:
         }
     }
 
-    void StartDesktopCameraMode(UIPointerAction newMode)
+    void StartDesktopCameraMode(HandAction newMode)
     {
         // Hide cursor and store its last position before starting camera movement mode
-        controller.lastCursorPos = LLGL::Display::GetCursorPosition();
+        user.lastCursorPos = LLGL::Display::GetCursorPosition();
         LLGL::Display::ShowCursor(false);
-        uiState.inputPointer[0].action = newMode;
+        user.hand[0].action = newMode;
     }
 
     void StopDesktopCameraMode()
     {
         // Show cursor and restore its last position when ending camera movement mode
-        uiState.inputPointer[0].action = UIPointerAction::None;
-        LLGL::Display::SetCursorPosition(controller.lastCursorPos);
+        user.hand[0].action = HandAction::None;
+        LLGL::Display::SetCursorPosition(user.lastCursorPos);
         LLGL::Display::ShowCursor(true);
     }
 
     void DesktopCameraControls(float dt)
     {
-        if (controller.editMode != EditMode::Move)
+        if (user.editMode != EditMode::Move)
         {
-            if (input.KeyDown(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::None)
-                StartDesktopCameraMode(UIPointerAction::DesktopTurnCamera);
-            else if (input.KeyUp(LLGL::Key::RButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopTurnCamera)
+            if (input.KeyDown(LLGL::Key::RButton) && user.hand[0].action == HandAction::None)
+                StartDesktopCameraMode(HandAction::DesktopTurnCamera);
+            else if (input.KeyUp(LLGL::Key::RButton) && user.hand[0].action == HandAction::DesktopTurnCamera)
                 StopDesktopCameraMode();
 
-            if (input.KeyDown(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::None)
-                StartDesktopCameraMode(UIPointerAction::DesktopMoveCamera);
-            else if (input.KeyUp(LLGL::Key::MButton) && uiState.inputPointer[0].action == UIPointerAction::DesktopMoveCamera)
+            if (input.KeyDown(LLGL::Key::MButton) && user.hand[0].action == HandAction::None)
+                StartDesktopCameraMode(HandAction::DesktopMoveCamera);
+            else if (input.KeyUp(LLGL::Key::MButton) && user.hand[0].action == HandAction::DesktopMoveCamera)
                 StopDesktopCameraMode();
         }
 
-        if (uiState.inputPointer[0].action == UIPointerAction::DesktopTurnCamera)
+        if (user.hand[0].action == HandAction::DesktopTurnCamera)
         {
             // Turn camera by mouse motion
             const LLGL::Offset2D motion = input.GetMouseMotion();
-            const float pitch = static_cast<float>(+motion.y) * cameraTurnSpeed;
-            const float yaw   = static_cast<float>(-motion.x) * cameraTurnSpeed;
+            const float pitch = static_cast<float>(+motion.y) * Cfg::cameraTurnSpeed;
+            const float yaw   = static_cast<float>(-motion.x) * Cfg::cameraTurnSpeed;
             camera.Turn(pitch, yaw);
         }
-        else if (uiState.inputPointer[0].action == UIPointerAction::DesktopMoveCamera)
+        else if (user.hand[0].action == HandAction::DesktopMoveCamera)
         {
             // Move camera by mouse motion
             const float cameraMoveCoefficient = (0.5f / 60.0f) / dt;
             const LLGL::Offset2D motion = input.GetMouseMotion();
-            const float xAxis = static_cast<float>(+motion.x) * cameraMoveSpeed * cameraMoveCoefficient;
-            const float yAxis = static_cast<float>(-motion.y) * cameraMoveSpeed * cameraMoveCoefficient;
+            const float xAxis = static_cast<float>(+motion.x) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
+            const float yAxis = static_cast<float>(-motion.y) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
             camera.Move({ xAxis, yAxis, 0 });
         }
 
         // Move camera by keyboard
-        const float moveSpeed = (input.KeyPressed(LLGL::Key::Shift) ? cameraMoveSpeed*3.0f : cameraMoveSpeed);
+        const float moveSpeed = (input.KeyPressed(LLGL::Key::Shift) ? Cfg::cameraMoveSpeed*3.0f : Cfg::cameraMoveSpeed);
         if (input.KeyPressed(LLGL::Key::A) || input.KeyPressed(LLGL::Key::Left))
             camera.Move({ -moveSpeed, 0, 0 });
         if (input.KeyPressed(LLGL::Key::D) || input.KeyPressed(LLGL::Key::Right))
@@ -2896,13 +2757,13 @@ private:
             viewOptions.showWireframe = !viewOptions.showWireframe;
 
         if (input.KeyDown(LLGL::Key::D1))
-            controller.editMode = EditMode::None;
+            user.editMode = EditMode::None;
         else if (input.KeyDown(LLGL::Key::D2))
-            controller.editMode = EditMode::Add;
+            user.editMode = EditMode::Add;
         else if (input.KeyDown(LLGL::Key::D3))
-            controller.editMode = EditMode::Select;
+            user.editMode = EditMode::Select;
         else if (input.KeyDown(LLGL::Key::D4))
-            controller.editMode = EditMode::Delete;
+            user.editMode = EditMode::Delete;
 
         DesktopCameraControls(dt);
     }
@@ -2941,10 +2802,10 @@ private:
     Instance* ResetPreviouslySelectedBrick()
     {
         // Reset previously picked brick
-        if (Instance* oldBrickInstance = currentScene->GetMutableBrickInstance(controller.pickedBrick))
+        if (Instance* oldBrickInstance = currentScene->GetMutableBrickInstance(user.pickedBrick))
         {
-            oldBrickInstance->colorIndex = controller.pickedInstanceColorIndex;
-            controller.pickedBrick = {};
+            oldBrickInstance->colorIndex = user.pickedInstanceColorIndex;
+            user.pickedBrick = {};
             return oldBrickInstance;
         }
         return nullptr;
@@ -2961,8 +2822,8 @@ private:
             // Highlight new picked brick
             if (Instance* newBrickInstance = currentScene->GetMutableBrickInstance(contact.brick))
             {
-                controller.pickedInstanceColorIndex = newBrickInstance->colorIndex;
-                controller.pickedBrick              = contact.brick;
+                user.pickedInstanceColorIndex   = newBrickInstance->colorIndex;
+                user.pickedBrick                = contact.brick;
 
                 newBrickInstance->colorIndex = ColorPalette::Get().HighlightColorIndex();
             }
@@ -2990,13 +2851,13 @@ private:
         PreviewBrick& previewBrick = viewOptions.previewBrick;
 
         // Allow user to turn and change type of preview brick while picking the scene
-        GridRotation newPreviewRotation = controller.menuGridRotation;
+        GridRotation newPreviewRotation = user.menuGridRotation;
         if (input.KeyDown(LLGL::Key::Space))
         {
             const bool turnCW = input.KeyPressed(LLGL::Key::Shift);
             newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation + (turnCW ? +1 : -1), GridRotation_Num));
         }
-        controller.menuGridRotation = newPreviewRotation;
+        user.menuGridRotation = newPreviewRotation;
 
         BrickId newBrickId = previewBrick.id;
         if (input.KeyDownRepeated(LLGL::Key::PageUp))
@@ -3076,10 +2937,10 @@ private:
     // Event when the brick movement is canceled and the selected brick is set back to its previous location.
     void CancelBrickMoveEvent()
     {
-        if (controller.backupInstance.gridRotation != GridRotation_Num)
+        if (user.backupInstance.gridRotation != GridRotation_Num)
         {
-            (void)NewBrickAndRegister(viewOptions.previewBrick.id, controller.backupInstance);
-            controller.backupInstance.gridRotation = GridRotation_Num;
+            (void)NewBrickAndRegister(viewOptions.previewBrick.id, user.backupInstance);
+            user.backupInstance.gridRotation = GridRotation_Num;
         }
     }
 
@@ -3126,8 +2987,8 @@ private:
             PickGridPosForPreviewBrick(inputPointer);
 
             // Reset edit mode if it was only temporarily adding a new brick
-            if (controller.editMode == EditMode::Move)
-                controller.editMode = EditMode::Select;
+            if (user.editMode == EditMode::Move)
+                user.editMode = EditMode::Select;
         };
 
         if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
@@ -3162,23 +3023,23 @@ private:
                     viewOptions.previewBrick.id     = selectedBrick.GetId();
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
-                    controller.menuGridRotation     = selectedInstance->gridRotation;
+                    user.menuGridRotation           = selectedInstance->gridRotation;
 
                     // Also save current brick information in case the newly placed location is blocked and this brick is set back to its previous position
-                    controller.backupInstance = *selectedInstance;
+                    user.backupInstance = *selectedInstance;
 
                     // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
                     if (selectedInstance->colorIndex < ColorPalette::Get().Count())
-                        controller.pickedColorPaletteIndex = selectedInstance->colorIndex;
+                        user.pickedColorPaletteIndex = selectedInstance->colorIndex;
 
                     // Change to edit mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
-                    controller.editMode = EditMode::Move;
+                    user.editMode = EditMode::Move;
                     PickGridPosForPreviewBrick(inputPointer);
                 }
 
                 // Remove selected brick
-                if (controller.pickedBrick == selectedBrick)
+                if (user.pickedBrick == selectedBrick)
                     ResetPreviouslySelectedBrick();
                 DestroyBrickEvent(selectedBrick);
             }
@@ -3210,18 +3071,18 @@ private:
     {
         if (inputPointer.state != LLGL::InputState::Inactive)
         {
-            uiState.inputPointer[pointerIndex].isOverMenu = IsPointerOverMenu(inputPointer);
+            user.hand[pointerIndex].isOverMenu = IsPointerOverMenu(inputPointer);
 
             // Ingore input pointer if its hovering over the menu
-            if (uiState.inputPointer[pointerIndex].IsAvailableInScene())
+            if (user.hand[pointerIndex].IsAvailableInScene())
             {
-                if (controller.editMode == EditMode::Add)
+                if (user.editMode == EditMode::Add)
                     ProcessEditModeAddOrMove(inputPointer, true);
-                else if (controller.editMode == EditMode::Move)
+                else if (user.editMode == EditMode::Move)
                     ProcessEditModeAddOrMove(inputPointer, false);
-                else if (controller.editMode == EditMode::Select)
+                else if (user.editMode == EditMode::Select)
                     ProcessEditModeSelect(inputPointer);
-                else if (controller.editMode == EditMode::Delete)
+                else if (user.editMode == EditMode::Delete)
                     ProcessEditModeDelete(inputPointer);
             }
         }
@@ -3242,11 +3103,11 @@ private:
         camera.ApplyForces(dt, currentScene.get());
 
         #if KDTREE_DEBUG_LEVEL >= 1
-        if (currentScene->GetBrickInstance(controller.pickedBrick) != oldBrickInstance)
+        if (currentScene->GetBrickInstance(user.pickedBrick) != oldBrickInstance)
         {
             LLGL_LOG(
                 "Selected brick (type=%u, instance=%u): %u Ray/AABB tests\n",
-                controller.pickedBrick.groupId, controller.pickedBrick.groupInstance, KDTreeNode::numAABBTests
+                user.pickedBrick.groupId, user.pickedBrick.groupInstance, KDTreeNode::numAABBTests
             );
         }
         #endif
@@ -3282,11 +3143,11 @@ private:
     {
         // Only desktop, the preview brick is visible when the mouse is moved.
         // But on mobile, new bricks are placed with every touch input, they are not dragged over the screen as in 'move' mode.
-        if ((controller.editMode == EditMode::Add && !IsRunningOnMobileDevice()) || controller.editMode == EditMode::Move)
+        if ((user.editMode == EditMode::Add && !IsRunningOnMobileDevice()) || user.editMode == EditMode::Move)
         {
             for_range(pointerIndex, NumInputPointers())
             {
-                if (uiState.inputPointer[pointerIndex].IsAvailableInScene())
+                if (user.hand[pointerIndex].IsAvailableInScene())
                     return true;
             }
         }
@@ -3310,12 +3171,12 @@ private:
         commands->Begin();
         {
             // Update all brick thumbnails when the camera rotates on Y-axis or the preview rotation changed
-            if (controller.editMode != EditMode::None)
+            if (user.editMode != EditMode::None)
             {
-                if (controller.editMode == EditMode::Add)
-                    RenderAllBrickThumbnailsIfChanged(controller.menuGridRotation, camera.yaw);
+                if (user.editMode == EditMode::Add)
+                    RenderAllBrickThumbnailsIfChanged(user.menuGridRotation, camera.yaw);
                 else
-                    RenderAllBrickThumbnailsIfChanged(uiThumbnailDefaultRotation);
+                    RenderAllBrickThumbnailsIfChanged(Cfg::uiThumbnailDefaultRotation);
             }
 
             // Always update instance for preview brick if its visible
@@ -3386,16 +3247,16 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (controller.editMode == EditMode::Select && selectionRenderMode != SelectionRenderMode::Simplified)
+                if (user.editMode == EditMode::Select && selectionRenderMode != SelectionRenderMode::Simplified)
                 {
                     commands->PushDebugGroup("RenderSilhouette");
                     {
-                        RenderSilhouette(*currentScene, controller.pickedBrick);
+                        RenderSilhouette(*currentScene, user.pickedBrick);
                     }
                     commands->PopDebugGroup();
                 }
 
-                if (controller.editMode != EditMode::None)
+                if (user.editMode != EditMode::None)
                 {
                     commands->PushDebugGroup("RenderUIElements");
                     {

@@ -61,43 +61,43 @@ sources:
     entries:
       - entry: "VSBrick"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSBrick"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSBrickTransparent"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core]
       - entry: "VSBrickPreview"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSBrickPreview"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "VSTransparentComposite"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSTransparentComposite"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core]
       - entry: "VSOverlay"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSOverlay"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "VSPlane"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSPlane"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core]
       - entry: "VSSkybox"
         profile: "vs_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "PSSkybox"
         profile: "ps_4_0"
-        targets: [glsl300es, glsl140core]
+        targets: [glsl140core, glsl300es]
 
         # Only translate outline shaders for Desktop OpenGL and Vulkan, where line width rendering is supported.
         # Other backends need to fallback to simplified highlighted rendering.
@@ -107,3 +107,21 @@ sources:
       - entry: "PSBrickOutline"
         profile: "ps_4_0"
         targets: [glsl140core]
+
+  - source: "BrickPlay.hlsl"
+    permutation:
+      macros:
+        ENABLE_PARALLAX_OCCLUSION: 1
+        COMPILE_FOR_GL: 1
+        EMULATE_RGBA32FLOAT_RTV: 0
+        MAX_NUM_PARALLAX_LAYERS: 6
+    entries:
+      - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [glsl300es]
+      - entry: "PSTransparentComposite"
+        profile: "ps_4_0"
+        targets: [glsl300es]
+      - entry: "PSPlane"
+        profile: "ps_4_0"
+        targets: [glsl300es]

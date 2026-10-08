@@ -18,10 +18,38 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <set>
+#include <list> // Linked list for undo/redo (ring buffer would be better, but simple enough)
 
 
 #define DEBUG_INSTANCES 0
 
+
+// Brick instance structure. Stores the position, rotation, and color.
+struct Instance
+{
+    std::int16_t    gridPos[3];
+    GridRotation    gridRotation;
+    std::uint8_t    colorIndex;
+
+    inline GridVec3i GetPos() const
+    {
+        return GridVec3i{ gridPos[0], gridPos[1], gridPos[2] };
+    }
+
+    inline void SetPos(const GridVec3i& pos)
+    {
+        gridPos[0] = pos[0];
+        gridPos[1] = pos[1];
+        gridPos[2] = pos[2];
+    }
+};
+
+struct RayIntersection
+{
+    Gs::Vector3f    point;
+    GridVec3i       normal;
+    Brick           brick;
+};
 
 // Owns the scene with its bricks, instance buffer, and the grid (kd-Tree) representation.
 class BrickScene
@@ -37,33 +65,6 @@ public:
 
     using InstanceGroupIterator = std::function<void(BrickId brickId, BrickGroup groupType, InstanceGroup& group)>;
     using InstanceGroupConstIterator = std::function<void(BrickId brickId, BrickGroup groupType, const InstanceGroup& group)>;
-
-    // Brick instance structure. Stores the position, rotation, and color.
-    struct Instance
-    {
-        std::int16_t    gridPos[3];
-        GridRotation    gridRotation;
-        std::uint8_t    colorIndex;
-
-        inline GridVec3i GetPos() const
-        {
-            return GridVec3i{ gridPos[0], gridPos[1], gridPos[2] };
-        }
-
-        inline void SetPos(const GridVec3i& pos)
-        {
-            gridPos[0] = pos[0];
-            gridPos[1] = pos[1];
-            gridPos[2] = pos[2];
-        }
-    };
-
-    struct RayIntersection
-    {
-        Gs::Vector3f    point;
-        GridVec3i       normal;
-        Brick           brick;
-    };
 
 private:
 
@@ -968,6 +969,144 @@ private:
         }
     }
 
+};
+
+// BrickPlay camera object.
+struct Camera : RigidBody<Gs::Vector3f, Cfg::useCameraAcceleration>
+{
+    float           pitch       = 0.0f;
+    float           yaw         = 0.0f;
+
+    Gs::Matrix4f    wMatrix;
+    Gs::Matrix4f    vMatrix;
+    Gs::Matrix4f    vMatrixNoPosition;
+
+    Camera()
+    {
+        SetMass(Cfg::cameraMass);
+    }
+
+    void Turn(float pitch, float yaw)
+    {
+        this->pitch = Gs::Clamp(this->pitch + pitch, -90.0f, +90.0f);
+        this->yaw   = this->yaw + yaw;
+    }
+
+    void Move(const Gs::Vector3f& direction)
+    {
+        // Move camera into the direction, taking camera rotation into account
+        Gs::Matrix3f rotation;
+        Gs::RotateY(rotation, Gs::Deg2Rad(yaw));
+        Gs::RotateX(rotation, Gs::Deg2Rad(pitch));
+        AddForces(rotation * direction);
+    }
+
+    void ApplyForces(float dt, const BrickScene* collisionScene = nullptr)
+    {
+        // Apply velocity to position and resolve collisions
+        const Gs::Vector3f velocityDelta = IntegrateForces(dt, Cfg::cameraDampingCeofficient);
+        const float velocityDeltaLen = velocityDelta.Length();
+
+        if (velocityDeltaLen > GS_EPSILON_F32)
+        {
+            // Resolve collisions in iterations by maximum velocity length
+            if (collisionScene != nullptr)
+            {
+                const float travelStep = Cfg::cameraCollisionRadius * 0.9f;
+                const Gs::Vector3f moveDir = velocityDelta.Normalized();
+
+                float travelDist = 0.0f;
+                while (travelDist + travelStep < velocityDeltaLen)
+                {
+                    position += moveDir * travelStep;
+                    collisionScene->ResolveCollision(position, Cfg::cameraCollisionRadius);
+                    travelDist += travelStep;
+                }
+                position += moveDir * (velocityDeltaLen - travelDist);
+                collisionScene->ResolveCollision(position, Cfg::cameraCollisionRadius);
+            }
+            else
+            {
+                position += velocityDelta;
+            }
+        }
+    }
+
+    void UpdateTransform()
+    {
+        wMatrix.LoadIdentity();
+        Gs::Translate(wMatrix, position);
+        Gs::RotateY(wMatrix, Gs::Deg2Rad(yaw));
+        Gs::RotateX(wMatrix, Gs::Deg2Rad(pitch));
+
+        vMatrix = wMatrix.Inverse();
+
+        vMatrixNoPosition = Gs::Matrix4f
+        {
+            vMatrix(0, 0), vMatrix(0, 1), vMatrix(0, 2), 0.0f,
+            vMatrix(1, 0), vMatrix(1, 1), vMatrix(1, 2), 0.0f,
+            vMatrix(2, 0), vMatrix(2, 1), vMatrix(2, 2), 0.0f,
+                     0.0f,          0.0f,          0.0f, 1.0f
+        };
+    }
+};
+
+// Semi-memento pattern to undo/redo changes.
+struct History
+{
+    struct Event
+    {
+        BrickId     addedBrickId;
+        Instance    addedInstance;
+        BrickId     destroyedBrickId;
+        Instance    destroyedInstance;
+    };
+
+    std::list<Event>            events;
+    std::list<Event>::iterator  eventIter;
+
+    History() :
+        eventIter { events.end() }
+    {
+    }
+
+    bool IsAtBegining() const
+    {
+        return eventIter == events.begin();
+    }
+
+    bool IsAtEnd() const
+    {
+        return eventIter == events.end();
+    }
+
+    void Register(Event&& event)
+    {
+        // If there are too many events in the queue, drop the oldest one
+        if (events.size() >= Cfg::maxHistoryLength)
+            events.pop_front();
+
+        // When using 'undo' and then registering new events, all events after the current history iterator are dropped.
+        events.erase(eventIter, events.end());
+        events.push_back(std::move(event));
+        eventIter = events.end();
+    }
+
+    const Event* Undo()
+    {
+        if (!IsAtBegining())
+            return &(*(--eventIter));
+        else
+            return nullptr;
+    }
+
+    const Event* Redo()
+    {
+        if (!IsAtEnd())
+            return &(*eventIter++);
+        else
+            return nullptr;
+    }
 };
 
 
