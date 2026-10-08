@@ -28,6 +28,8 @@ struct Cfg
     static constexpr float          silhouetteColor[3]              = { 1.0f, 1.0f, 0.0f }; // Color of the silhouette outline for selectin bricks
     static constexpr float          silhouetteWidth                 = 5.0f;
 
+    static constexpr float          uiMenuTriggerDistCoeff          = 1.0f; // Percentage to menu bar width of how many pixels the user has to drag the menu bar until it starts scrolling or pulling out bricks
+
     static constexpr float          uiScrollSpeed                   = 50.0f;
     static constexpr int            uiScrollIndicatorSize           = 15;
 

@@ -22,9 +22,6 @@ enum UIMenuItem
     UIMenuItem_Redo,            // Redo previously reverted operation
     UIMenuItem_TurnCW,          // Turns the currently selected brick clock-wise (CW)
     UIMenuItem_TurnCCW,         // Turns the currently selected brick counter-clock-wise (CCW)
-    UIMenuItem_Add,             // Puts editor into 'add' mode to allow user to add new bricks.
-    UIMenuItem_Move,            // Puts editor into 'select' mode and then immediately into 'move' mode to drag bricks around
-    UIMenuItem_Delete,          // Puts the editor into 'select' mode and deletes the first select element immediately.
 
     UIMenuItem_Num,
 };
@@ -56,18 +53,16 @@ struct UILayout
         UIMenuInfo{ 2, 0, false },                  // UIMenuItem_Undo
         UIMenuInfo{ 2, UIRenderFlags_FlipX, true }, // UIMenuItem_Redo
         UIMenuInfo{ 3, 0, false },                  // UIMenuItem_TurnCW
-        UIMenuInfo{ 3, UIRenderFlags_FlipX, true }, // UIMenuItem_TurnCCW
-        UIMenuInfo{ 4, 0, false },                  // UIMenuItem_Add
-        UIMenuInfo{ 5, 0, false },                  // UIMenuItem_Select
-        UIMenuInfo{ 6, 0, false },                  // UIMenuItem_Delete
+        UIMenuInfo{ 3, UIRenderFlags_FlipX },       // UIMenuItem_TurnCCW
     };
 
-    int mainMenuItemSize        = 0;
-    int mainMenuSeparatorSize   = 0;
-    int mainMenuSize            = 0;
-    int mainMenuBaseAdvance     = 0;
-    int colorPickerSize         = 0;
-    int brickThumbnailSize      = 0;
+    int     mainMenuItemSize        = 0;
+    int     mainMenuSeparatorSize   = 0;
+    int     mainMenuSize            = 0;
+    int     mainMenuBaseAdvance     = 0;
+    int     colorPickerSize         = 0;
+    int     brickThumbnailSize      = 0;
+    float   menuBarTriggerDist      = 0.0f;
 
     UILayout()
     {
@@ -82,6 +77,7 @@ struct UILayout
         mainMenuBaseAdvance     = mainMenuItemSize + UILayout::buttonMargin + UILayout::buttonFrameSize*2;
         colorPickerSize         = (uiElementSize + 1)*8/10; // Size (in pixels) of each color picker button
         brickThumbnailSize      = uiElementSize*3/2;
+        menuBarTriggerDist      = static_cast<float>(uiElementSize) * Cfg::uiMenuTriggerDistCoeff;
     }
 };
 
@@ -102,6 +98,7 @@ struct UIState
         int                 width           = 0;
         int                 height          = 0;
         bool                isRightAligned  = false;
+        float               scrollTarget    = -1.0f; // < 0 means inactive target
         RigidBody<float>    scroll;
 
         void UpdateScrolling(float dt, int scrH)
@@ -109,8 +106,17 @@ struct UIState
             const int scrollMax = height - scrH;
             if (scrollMax > 0)
             {
-                // Apply forces for smooth scrolling and clamp to screen height
-                scroll.position += scroll.IntegrateForces(dt);
+                if (scrollTarget >= 0.0f)
+                {
+                    // Apply target position
+                    scroll.position = Gs::Lerp(scroll.position, scrollTarget, 0.2f);
+                }
+                else
+                {
+                    // Apply forces for smooth scrolling and clamp to screen height
+                    scroll.position += scroll.IntegrateForces(dt);
+                }
+
                 if (scroll.position < 0.0f)
                 {
                     scroll.position = 0.0f;

@@ -196,6 +196,7 @@ class Example_BrickPlay : public ExampleBase
     struct ViewOptions
     {
         bool            showWireframe   = false;
+        bool            showMenu        = true;
         PreviewBrick    previewBrick;
     }
     viewOptions;
@@ -266,15 +267,6 @@ class Example_BrickPlay : public ExampleBase
 
     std::vector<BrickVertex> brickVertices;
 
-    enum class EditMode
-    {
-        None,   // Desktop only
-        Add,
-        Move,
-        Select,
-        Delete, // Deletes the next selected brick
-    };
-
     // Determines what mode to use to render the highlighting of a selected scene object.
     enum class SelectionRenderMode
     {
@@ -298,25 +290,35 @@ class Example_BrickPlay : public ExampleBase
     enum class HandAction
     {
         None,
-        ScrollMenuLeft,     // Scroll right menu bar
-        ScrollMenuRight,    // Scroll left menu bar
-        MobileMoveCamera,   // Navigate mobile controller on the left (camera movement)
-        MobileTurnCamera,   // Navigate mobile controller on the right (camera rotation)
-        DesktopMoveCamera,  // Camera movement with cursor. Hide cursor at start, show again at end
-        DesktopTurnCamera,  // Camera rotation with cursor. Hide cursor at start, show again at end
-        DragNewBricks,      // Drag a series of new bricks over the scene
-        MoveSelectedBrick,  // Moves the selected brick until the pointer is released
+
+        Mobile_MoveCamera,  // Navigate mobile controller on the left (camera movement)
+        Mobile_TurnCamera,  // Navigate mobile controller on the right (camera rotation)
+
+        Desktop_MoveCamera, // Camera movement with cursor. Hide cursor at start, show again at end
+        Desktop_TurnCamera, // Camera rotation with cursor. Hide cursor at start, show again at end
+
+        LeftMenu_Capture,   // Capture hand action in left menu, still has to decide whether to scroll or select color
+        LeftMenu_Scroll,    // Continue left menu interaction by scrolling up/down
+        LeftMenu_Select,    // Select color from left menu
+
+        RightMenu_Capture,  // Capture hand action in right menu, still has to decide whether to scroll or drag brick out of palette
+        RightMenu_Scroll,   // Continue right menu interaction by scrolling up/down
+
+        MoveBrick,          // Moves brick that was selected from scene or pulled out of the palette from the right menu
     };
 
     // Just another name for user input pointer :-)
     struct UserHand
     {
-        HandAction  action      = HandAction::None;
-        bool        isOverMenu  = false;
+        HandAction      action          = HandAction::None;
+        LLGL::Offset2D  capturePos;             // Input pointer position when the capture started
+        float           captureScroll   = 0.0f; // Captured menu bar scroll position
+        bool            isOverMenu      = false;
 
-        bool IsAvailableInScene() const
+        void Capture(HandAction newAction, LLGL::Offset2D pos)
         {
-            return (action == HandAction::None && !isOverMenu);
+            action = newAction;
+            capturePos = pos;
         }
     };
 
@@ -329,8 +331,6 @@ class Example_BrickPlay : public ExampleBase
         }
 
         UserHand            hand[2];
-
-        EditMode            editMode                    = EditMode::Add; // Start in 'add' mode
 
         LLGL::Offset2D      lastCursorPos;
 
@@ -721,8 +721,9 @@ private:
         // Explicitly disable combined vertex/index buffers for WebGL backend
         canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
 
+        //TEST
         // Reduce the number of columns for the menu bars to a minum on mobile devices, due to reduced screen size.
-        if (IsRunningOnMobileDevice())
+        //if (IsRunningOnMobileDevice())
         {
             options.uiMaxLeftColumns = 1;
             options.uiMaxRightColumns = 1;
@@ -2349,29 +2350,31 @@ private:
         return IsRunningOnMobileDevice() ? 2 : 1;
     }
 
-    unsigned FindInputPointerInRect(int x, int y, int w, int h, bool ignoreMainMenu = false) const
+    unsigned FindInputPointerInRect(int x, int y, int w, int h, bool canSelect = true, bool ignoreMainMenu = false) const
     {
-        auto IsPointInRect = [x, y, w, h](LLGL::Offset2D point) -> bool
+        auto IsPointInRect = [&](LLGL::Offset2D point) -> bool
         {
             return (point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h);
         };
 
-        auto IsInputPointerActiveInRect = [this, ignoreMainMenu, &IsPointInRect](unsigned pointerIndex) -> bool
+        auto IsInputPointerActiveInRect = [&](unsigned pointerIndex) -> bool
         {
             const LLGL::InputPointer& inputPointer = input.GetPointer(pointerIndex);
             return
             (
-                inputPointer.state != LLGL::InputState::Inactive &&
-                user.hand[pointerIndex].action == HandAction::None &&
+                canSelect && inputPointer.state != LLGL::InputState::Inactive &&
                 (!ignoreMainMenu || inputPointer.position.y > uiLayout.mainMenuSize) &&
                 IsPointInRect(inputPointer.position)
             );
         };
 
-        for_range(pointerIndex, NumInputPointers())
+        if (canSelect)
         {
-            if (IsInputPointerActiveInRect(pointerIndex))
-                return pointerIndex + 1;
+            for_range(pointerIndex, NumInputPointers())
+            {
+                if (IsInputPointerActiveInRect(pointerIndex))
+                    return pointerIndex + 1;
+            }
         }
         return 0;
     }
@@ -2381,12 +2384,12 @@ private:
         return pointerId > 0 && IsInputUp(input.GetPointer(pointerId - 1)) ? pointerId : 0;
     }
 
-    unsigned DrawUIColorPicker(int x, int y, int paletteIndex, bool isHighlighted = false)
+    unsigned DrawUIColorPicker(int x, int y, int paletteIndex, bool canSelect, bool isHighlighted = false)
     {
         const int colorPickerSize = uiLayout.colorPickerSize;
         int w = colorPickerSize + UILayout::buttonFrameSize*2;
         int h = colorPickerSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, true);
+        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, canSelect, true);
 
         LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
         const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
@@ -2406,12 +2409,12 @@ private:
         return MapInputPointerSelection(pointerId);
     }
 
-    bool DrawUIBrickThumbnail(int x, int y, int brickType, bool isHighlighted = false)
+    bool DrawUIBrickThumbnail(int x, int y, int brickType, bool canSelect, bool isHighlighted = false)
     {
         const int thumbnailSize = uiLayout.brickThumbnailSize;
         int w = thumbnailSize + UILayout::buttonFrameSize*2;
         int h = thumbnailSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, true);
+        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, canSelect, true);
 
         const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[user.pickedColorPaletteIndex];
 
@@ -2424,14 +2427,14 @@ private:
         // Draw thumbnail texture layer
         uiRenderer.Draw2DImage(x + UILayout::buttonFrameSize, y + UILayout::buttonFrameSize, uiBrickThumbnails.arrayTexture, brickType, brickColor);
 
-        return MapInputPointerSelection(pointerId);
+        return (pointerId != 0);
     }
 
-    bool DrawUIMenuItem(UIMenuItem menuItem, bool isHighlighted = false, bool isDisabled = false)
+    bool DrawUIMenuItem(UIMenuItem menuItem, bool canSelect, bool isHighlighted = false, bool isDisabled = false)
     {
         int w = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
         int h = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = (isDisabled ? 0 : FindInputPointerInRect(uiState.x, uiState.y, w, h));
+        const unsigned pointerId = (isDisabled ? 0 : FindInputPointerInRect(uiState.x, uiState.y, w, h, canSelect));
 
         if (pointerId != 0 || isHighlighted)
         {
@@ -2454,7 +2457,7 @@ private:
         if (menuInfo.endsWithSeparator)
             uiState.x += uiLayout.mainMenuSeparatorSize;
 
-        return MapInputPointerSelection(pointerId);
+        return (MapInputPointerSelection(pointerId) != 0);
     }
 
     void InitUILayoutForElementSize(int uiElementSize)
@@ -2544,6 +2547,17 @@ private:
     // Draws UI elements and also interacts with user input immediately.
     void DrawUIImmediateMode()
     {
+        // Returns true if either all hand actions are none or any of them is equal to the input action
+        auto AllHandAction = [this](HandAction action) -> bool
+        {
+            return (user.hand[0].action == action && user.hand[1].action == action);
+        };
+
+        auto AnyHandAction = [this](HandAction action) -> bool
+        {
+            return (user.hand[0].action == action || user.hand[1].action == action);
+        };
+
         // Draw mouse dead zone as transparent background for the UI
         uiRenderer.Draw2DRect(
             /*position:*/   0, uiLayout.mainMenuSize,
@@ -2557,6 +2571,8 @@ private:
         // Draw entire color palette for the user to choose from on the left of the overlay
         uiState.ResetToMenuBar(uiLayout, uiState.menuBarLeft, uiLayout.colorPickerSize, true);
 
+        const bool canSelectLeftMenu = AllHandAction(HandAction::None) || AnyHandAction(HandAction::LeftMenu_Capture) || AnyHandAction(HandAction::LeftMenu_Select);
+
         for_range(i, ColorPalette::Get().Count())
         {
             uiState.AdvanceColumn(uiLayout);
@@ -2564,11 +2580,14 @@ private:
                 if (uiState.IsVisible())
                 {
                     const bool isHighlighted = (user.pickedColorPaletteIndex == i);
-                    if (DrawUIColorPicker(uiState.x, uiState.y, i, isHighlighted))
+                    if (unsigned pointerId = DrawUIColorPicker(uiState.x, uiState.y, i, canSelectLeftMenu, isHighlighted))
                     {
-                        // Set new color from palette to preview brick
-                        previewInstance.colorIndex = i;
-                        user.pickedColorPaletteIndex = i;
+                        if (user.hand[pointerId - 1].action == HandAction::LeftMenu_Select)
+                        {
+                            // Set new color from palette to preview brick
+                            previewInstance.colorIndex = i;
+                            user.pickedColorPaletteIndex = i;
+                        }
                     }
                 }
             }
@@ -2580,14 +2599,15 @@ private:
         // Draw brick thumbnails for the user to choose from on the right of the overlay
         uiState.ResetToMenuBar(uiLayout, uiState.menuBarRight, uiLayout.brickThumbnailSize, true);
 
+        const bool canSelectRightMenu = AllHandAction(HandAction::None) || AnyHandAction(HandAction::RightMenu_Capture);
+
         for_range(brickId, BrickDictionary::Get().NumBrickTypes())
         {
             uiState.AdvanceColumn(uiLayout);
             {
                 if (uiState.IsVisible())
                 {
-                    const bool isHighlighted = (viewOptions.previewBrick.id == brickId);
-                    if (DrawUIBrickThumbnail(uiState.x, uiState.y, brickId, isHighlighted))
+                    if (DrawUIBrickThumbnail(uiState.x, uiState.y, brickId, canSelectRightMenu))
                     {
                         // Set new brick type to preview brick
                         viewOptions.previewBrick.id = brickId;
@@ -2600,6 +2620,8 @@ private:
         DrawScrollIndicator(uiState.menuBarRight);
 
         // Draw main menu bar
+        const bool canSelectMainMenu = (user.hand[0].action == HandAction::None && user.hand[1].action == HandAction::None);
+
         uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiLayout.mainMenuSize, uiLayout.mainMenuColor[0], uiLayout.mainMenuColor[1]);
 
         uiState.x = (uiState.scrW - uiState.mainMenuWidth)/2;
@@ -2608,7 +2630,7 @@ private:
         uiState.advance = uiLayout.mainMenuBaseAdvance;
 
         #if LLGL_OS_WASM
-        if (DrawUIMenuItem(UIMenuItem_Download))
+        if (DrawUIMenuItem(UIMenuItem_Download, canSelectMainMenu))
         {
             const std::string timePointFormat = FormatTimePoint(std::chrono::system_clock::now());
             std::stringstream sceneContentStream;
@@ -2616,27 +2638,20 @@ private:
                 OfferFileDownload(sceneContentStream.str(), "BrickPlay_" + timePointFormat + ".txt");
         }
         #else
-        (void)DrawUIMenuItem(UIMenuItem_Download, false, true);
+        (void)DrawUIMenuItem(UIMenuItem_Download, canSelectMainMenu, false, true);
         #endif
 
-        DrawUIMenuItem(UIMenuItem_Upload);
+        DrawUIMenuItem(UIMenuItem_Upload, canSelectMainMenu);
 
-        if (DrawUIMenuItem(UIMenuItem_Undo, false, history.IsAtBegining()))
+        if (DrawUIMenuItem(UIMenuItem_Undo, canSelectMainMenu, false, history.IsAtBegining()))
             Undo();
-        if (DrawUIMenuItem(UIMenuItem_Redo, false, history.IsAtEnd()))
+        if (DrawUIMenuItem(UIMenuItem_Redo, canSelectMainMenu, false, history.IsAtEnd()))
             Redo();
 
-        if (DrawUIMenuItem(UIMenuItem_TurnCW))
+        if (DrawUIMenuItem(UIMenuItem_TurnCW, canSelectMainMenu))
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation + 1, GridRotation_Num));
-        if (DrawUIMenuItem(UIMenuItem_TurnCCW))
+        if (DrawUIMenuItem(UIMenuItem_TurnCCW, canSelectMainMenu))
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation - 1, GridRotation_Num));
-
-        if (DrawUIMenuItem(UIMenuItem_Add, (user.editMode == EditMode::Add)))
-            user.editMode = EditMode::Add;
-        if (DrawUIMenuItem(UIMenuItem_Move, (user.editMode == EditMode::Move || user.editMode == EditMode::Select)))
-            user.editMode = EditMode::Select;
-        if (DrawUIMenuItem(UIMenuItem_Delete, (user.editMode == EditMode::Delete)))
-            user.editMode = EditMode::Delete;
     }
 
     void PrepareUIDrawCommands()
@@ -2708,35 +2723,46 @@ private:
 
     void DesktopCameraControls(float dt)
     {
-        if (user.editMode != EditMode::Move)
+        switch (user.hand[0].action)
         {
-            if (input.KeyDown(LLGL::Key::RButton) && user.hand[0].action == HandAction::None)
-                StartDesktopCameraMode(HandAction::DesktopTurnCamera);
-            else if (input.KeyUp(LLGL::Key::RButton) && user.hand[0].action == HandAction::DesktopTurnCamera)
-                StopDesktopCameraMode();
+            case HandAction::None:
+            {
+                if (input.KeyDown(LLGL::Key::RButton))
+                    StartDesktopCameraMode(HandAction::Desktop_TurnCamera);
+                else if (input.KeyDown(LLGL::Key::MButton))
+                    StartDesktopCameraMode(HandAction::Desktop_MoveCamera);
+            }
+            break;
 
-            if (input.KeyDown(LLGL::Key::MButton) && user.hand[0].action == HandAction::None)
-                StartDesktopCameraMode(HandAction::DesktopMoveCamera);
-            else if (input.KeyUp(LLGL::Key::MButton) && user.hand[0].action == HandAction::DesktopMoveCamera)
-                StopDesktopCameraMode();
-        }
+            case HandAction::Desktop_TurnCamera:
+            {
+                // Turn camera by mouse motion
+                const LLGL::Offset2D motion = input.GetMouseMotion();
+                const float pitch = static_cast<float>(+motion.y) * Cfg::cameraTurnSpeed;
+                const float yaw   = static_cast<float>(-motion.x) * Cfg::cameraTurnSpeed;
+                camera.Turn(pitch, yaw);
 
-        if (user.hand[0].action == HandAction::DesktopTurnCamera)
-        {
-            // Turn camera by mouse motion
-            const LLGL::Offset2D motion = input.GetMouseMotion();
-            const float pitch = static_cast<float>(+motion.y) * Cfg::cameraTurnSpeed;
-            const float yaw   = static_cast<float>(-motion.x) * Cfg::cameraTurnSpeed;
-            camera.Turn(pitch, yaw);
-        }
-        else if (user.hand[0].action == HandAction::DesktopMoveCamera)
-        {
-            // Move camera by mouse motion
-            const float cameraMoveCoefficient = (0.5f / 60.0f) / dt;
-            const LLGL::Offset2D motion = input.GetMouseMotion();
-            const float xAxis = static_cast<float>(+motion.x) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
-            const float yAxis = static_cast<float>(-motion.y) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
-            camera.Move({ xAxis, yAxis, 0 });
+                if (input.KeyUp(LLGL::Key::RButton))
+                    StopDesktopCameraMode();
+            }
+            break;
+
+            case HandAction::Desktop_MoveCamera:
+            {
+                // Move camera by mouse motion
+                const float cameraMoveCoefficient = (0.5f / 60.0f) / dt;
+                const LLGL::Offset2D motion = input.GetMouseMotion();
+                const float xAxis = static_cast<float>(+motion.x) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
+                const float yAxis = static_cast<float>(-motion.y) * Cfg::cameraMoveSpeed * cameraMoveCoefficient;
+                camera.Move({ xAxis, yAxis, 0 });
+
+                if (input.KeyUp(LLGL::Key::MButton))
+                    StopDesktopCameraMode();
+            }
+            break;
+
+            default:
+            break;
         }
 
         // Move camera by keyboard
@@ -2756,23 +2782,10 @@ private:
         if (input.KeyDown(LLGL::Key::Tab))
             viewOptions.showWireframe = !viewOptions.showWireframe;
 
-        if (input.KeyDown(LLGL::Key::D1))
-            user.editMode = EditMode::None;
-        else if (input.KeyDown(LLGL::Key::D2))
-            user.editMode = EditMode::Add;
-        else if (input.KeyDown(LLGL::Key::D3))
-            user.editMode = EditMode::Select;
-        else if (input.KeyDown(LLGL::Key::D4))
-            user.editMode = EditMode::Delete;
+        if (input.KeyDown(LLGL::Key::F1))
+            viewOptions.showMenu = !viewOptions.showMenu;
 
         DesktopCameraControls(dt);
-    }
-
-    void MobileInputControls(float dt)
-    {
-
-        //TODO
-
     }
 
     GridVec3i WorldPosToGridPos(const Gs::Vector3f& worldPos, const GridVec3i& contactNormal, const BrickDimensions& brickDim)
@@ -2977,38 +2990,25 @@ private:
         );
     }
 
-    void ProcessEditModeAddOrMove(const LLGL::InputPointer& inputPointer, bool triggerOnPush)
+    void ProcessInputPointerBrickMovement(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
         PickGridPosForPreviewBrick(inputPointer);
-
-        auto UpdatePickPositionAndTransition = [this, &inputPointer]() -> void
-        {
-            // Update pick position for preview
-            PickGridPosForPreviewBrick(inputPointer);
-
-            // Reset edit mode if it was only temporarily adding a new brick
-            if (user.editMode == EditMode::Move)
-                user.editMode = EditMode::Select;
-        };
 
         if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
         {
             // Place brick back to its previous location and transition back to 'select' mode
             CancelBrickMoveEvent();
-            UpdatePickPositionAndTransition();
+            hand.action = HandAction::None;
         }
-        else
+        else if (IsInputUp(inputPointer))
         {
-            if ((triggerOnPush && IsInputDown(inputPointer)) || (!triggerOnPush && IsInputUp(inputPointer)))
-            {
-                // Place brick at new location and transition back to 'select' mode
-                NewBrickEvent();
-                UpdatePickPositionAndTransition();
-            }
+            // Place brick at new location and transition back to 'select' mode
+            NewBrickEvent();
+            hand.action = HandAction::None;
         }
     }
 
-    void ProcessEditModeSelect(const LLGL::InputPointer& inputPointer)
+    void ProcessInputPointerBrickSelection(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
         if (Brick selectedBrick = SelectBrickFromScene(inputPointer))
         {
@@ -3034,7 +3034,7 @@ private:
 
                     // Change to edit mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
-                    user.editMode = EditMode::Move;
+                    hand.action = HandAction::MoveBrick;
                     PickGridPosForPreviewBrick(inputPointer);
                 }
 
@@ -3046,59 +3046,148 @@ private:
         }
     }
 
-    void ProcessEditModeDelete(const LLGL::InputPointer& inputPointer)
+    bool IsPointerOverMenu(const LLGL::InputPointer& inputPointer) const
     {
-        if (input.KeyDown(LLGL::Key::LButton))
+        return viewOptions.showMenu &&
+            ( inputPointer.position.y <= uiLayout.mainMenuSize      ||
+              inputPointer.position.x < uiState.menuBarLeft.width   ||
+              inputPointer.position.x > uiState.scrW - uiState.menuBarRight.width );
+    }
+
+    void ProcessInputPointerStartPhase(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    {
+        if (inputPointer.position.y > uiLayout.mainMenuSize)
         {
-            if (Brick selectedBrick = SelectBrickFromScene(inputPointer))
+            if (inputPointer.position.x <= uiState.menuBarLeft.width)
             {
-                DestroyBrickEvent(selectedBrick);
+                // Start input capture for left menu bar
+                if (IsInputDown(inputPointer))
+                    hand.Capture(HandAction::LeftMenu_Capture, inputPointer.position);
+            }
+            else if (inputPointer.position.x >= uiState.scrW - uiState.menuBarRight.width)
+            {
+                // Start input capture for right menu bar
+                if (IsInputDown(inputPointer))
+                    hand.Capture(HandAction::RightMenu_Capture, inputPointer.position);
+            }
+            else
+            {
+                // Select bricks from the scene
+                ProcessInputPointerBrickSelection(hand, inputPointer);
             }
         }
     }
 
-    bool IsPointerOverMenu(const LLGL::InputPointer& inputPointer) const
+    // Decides whether the user intends to scroll the menu bar or pick a color
+    void ProcessInputPointerDecideLeftMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
-        return
-        (
-            inputPointer.position.y <= uiLayout.mainMenuSize ||
-            inputPointer.position.x < uiState.menuBarLeft.width ||
-            inputPointer.position.x > uiState.scrW - uiState.menuBarRight.width
-        );
+        float moveVecY = static_cast<float>(inputPointer.position.y - hand.capturePos.y);
+
+        if (std::abs(moveVecY) >= uiLayout.menuBarTriggerDist)
+        {
+            hand.action = HandAction::LeftMenu_Scroll;
+            hand.captureScroll = uiState.menuBarLeft.scroll.position + static_cast<float>(hand.capturePos.y);
+        }
+        else if (IsInputUp(inputPointer))
+            hand.action = HandAction::LeftMenu_Select;
     }
 
-    void ProcessInputPointer(unsigned pointerIndex, const LLGL::InputPointer& inputPointer)
+    void ProcessInputPointerDecideRightMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    {
+        float moveVecX = static_cast<float>(inputPointer.position.x - hand.capturePos.x);
+        float moveVecY = static_cast<float>(inputPointer.position.y - hand.capturePos.y);
+
+        // Prioritize pulling bricks out of the palette, so make sure Y-axis is clearly loinger than X-axis in the motion vector
+        if (std::abs(moveVecY) >= uiLayout.menuBarTriggerDist && std::abs(moveVecY) > std::abs(moveVecX)*2.0f)
+        {
+            hand.action = HandAction::RightMenu_Scroll;
+            hand.captureScroll = uiState.menuBarRight.scroll.position + static_cast<float>(hand.capturePos.y);
+        }
+        else if (inputPointer.position.x < uiState.scrW - uiState.menuBarRight.width)
+        {
+            // Initialize grid position to move brick
+            hand.action = HandAction::MoveBrick;
+            PickGridPosForPreviewBrick(inputPointer);
+        }
+    }
+
+    void ProcessInputPointerMenuScroll(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::MenuBar& menuBar)
+    {
+        menuBar.scrollTarget = std::max(0.0f, hand.captureScroll - static_cast<float>(inputPointer.position.y));
+
+        if (IsInputUp(inputPointer))
+        {
+            // Release input capture and give scroll bar a last spin when it still has momentum
+            float remainingScrollDist = menuBar.scrollTarget - menuBar.scroll.position;
+            menuBar.scroll.AddForces(remainingScrollDist * 5.0f);
+            menuBar.scrollTarget = -1.0f;
+            hand.action = HandAction::None;
+        }
+    }
+
+    void ProcessInputPointerUpdatePhase(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    {
+        switch (hand.action)
+        {
+            case HandAction::None:
+                break; // dummy
+
+            case HandAction::Mobile_MoveCamera:
+                break;
+            case HandAction::Mobile_TurnCamera:
+                break;
+
+            case HandAction::Desktop_MoveCamera:
+                break; // ignore here
+            case HandAction::Desktop_TurnCamera:
+                break; // ignore here
+
+            case HandAction::LeftMenu_Capture:
+                ProcessInputPointerDecideLeftMenuAction(hand, inputPointer);
+                break;
+            case HandAction::LeftMenu_Scroll:
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarLeft);
+                break;
+            case HandAction::LeftMenu_Select:
+                hand.action = HandAction::None;
+                break;
+
+            case HandAction::RightMenu_Capture:
+                ProcessInputPointerDecideRightMenuAction(hand, inputPointer);
+                break;
+            case HandAction::RightMenu_Scroll:
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarRight);
+                break;
+
+            case HandAction::MoveBrick:
+                ProcessInputPointerBrickMovement(hand, inputPointer);
+                break;
+        }
+    }
+
+    void ProcessInputPointer(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
         if (inputPointer.state != LLGL::InputState::Inactive)
         {
-            user.hand[pointerIndex].isOverMenu = IsPointerOverMenu(inputPointer);
+            hand.isOverMenu = IsPointerOverMenu(inputPointer);
 
-            // Ingore input pointer if its hovering over the menu
-            if (user.hand[pointerIndex].IsAvailableInScene())
-            {
-                if (user.editMode == EditMode::Add)
-                    ProcessEditModeAddOrMove(inputPointer, true);
-                else if (user.editMode == EditMode::Move)
-                    ProcessEditModeAddOrMove(inputPointer, false);
-                else if (user.editMode == EditMode::Select)
-                    ProcessEditModeSelect(inputPointer);
-                else if (user.editMode == EditMode::Delete)
-                    ProcessEditModeDelete(inputPointer);
-            }
+            // If input pointer has not been captured yet, check whether it must be captured now
+            if (hand.action == HandAction::None)
+                ProcessInputPointerStartPhase(hand, inputPointer);
+            else
+                ProcessInputPointerUpdatePhase(hand, inputPointer);
         }
     }
 
     void ProcessUserInput(float dt)
     {
-        if (IsRunningOnMobileDevice())
-            MobileInputControls(dt);
-        else
+        if (!IsRunningOnMobileDevice())
             DesktopInputControls(dt);
 
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
         for_range(pointerIndex, NumInputPointers())
-            ProcessInputPointer(pointerIndex, input.GetPointer(pointerIndex));
+            ProcessInputPointer(user.hand[pointerIndex], input.GetPointer(pointerIndex));
 
         camera.ApplyForces(dt, currentScene.get());
 
@@ -3141,15 +3230,10 @@ private:
 
     bool IsPreviewBrickVisible() const
     {
-        // Only desktop, the preview brick is visible when the mouse is moved.
-        // But on mobile, new bricks are placed with every touch input, they are not dragged over the screen as in 'move' mode.
-        if ((user.editMode == EditMode::Add && !IsRunningOnMobileDevice()) || user.editMode == EditMode::Move)
+        for_range(pointerIndex, NumInputPointers())
         {
-            for_range(pointerIndex, NumInputPointers())
-            {
-                if (user.hand[pointerIndex].IsAvailableInScene())
-                    return true;
-            }
+            if (user.hand[pointerIndex].action == HandAction::MoveBrick && !user.hand[pointerIndex].isOverMenu)
+                return true;
         }
         return false;
     }
@@ -3171,13 +3255,8 @@ private:
         commands->Begin();
         {
             // Update all brick thumbnails when the camera rotates on Y-axis or the preview rotation changed
-            if (user.editMode != EditMode::None)
-            {
-                if (user.editMode == EditMode::Add)
-                    RenderAllBrickThumbnailsIfChanged(user.menuGridRotation, camera.yaw);
-                else
-                    RenderAllBrickThumbnailsIfChanged(Cfg::uiThumbnailDefaultRotation);
-            }
+            if (viewOptions.showMenu)
+                RenderAllBrickThumbnailsIfChanged(user.menuGridRotation, camera.yaw);
 
             // Always update instance for preview brick if its visible
             if (isPreviewBrickVisible)
@@ -3185,12 +3264,15 @@ private:
 
             commands->UpdateBuffer(*sceneViewCbuffer, 0, &sceneView, sizeof(sceneView));
 
-            // Prepare UI draw commands by generating vertex data and uploading them to the GPU. Draw commands are batched and flushed in the final render-pass.
-            commands->PushDebugGroup("PrepareUIDrawCommands");
+            if (viewOptions.showMenu)
             {
-                PrepareUIDrawCommands();
+                // Prepare UI draw commands by generating vertex data and uploading them to the GPU. Draw commands are batched and flushed in the final render-pass.
+                commands->PushDebugGroup("PrepareUIDrawCommands");
+                {
+                    PrepareUIDrawCommands();
+                }
+                commands->PopDebugGroup();
             }
-            commands->PopDebugGroup();
 
             // Update dynamic scene data
             UpdatePlaneGeometryForViewFrustum();
@@ -3247,7 +3329,7 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (user.editMode == EditMode::Select && selectionRenderMode != SelectionRenderMode::Simplified)
+                if (selectionRenderMode != SelectionRenderMode::Simplified && user.pickedBrick)
                 {
                     commands->PushDebugGroup("RenderSilhouette");
                     {
@@ -3256,7 +3338,7 @@ private:
                     commands->PopDebugGroup();
                 }
 
-                if (user.editMode != EditMode::None)
+                if (viewOptions.showMenu)
                 {
                     commands->PushDebugGroup("RenderUIElements");
                     {
