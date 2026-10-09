@@ -146,7 +146,7 @@ void GLPipelineState::BuildUniformMap(const std::vector<UniformDescriptor>& unif
             BuildNameToActiveUniformMap(program, nameToUniformMap);
 
             /* Build uniform locations from input descriptors */
-            const std::size_t uniformMapOffset = uniforms.size();
+            const std::size_t uniformMapOffset = uniformMap_.size();
             if (permutationIndex > 0)
                 permutationUniformMapOffset_[permutationIndex - 1] = static_cast<std::uint32_t>(uniformMapOffset);
             uniformMap_.resize(uniformMapOffset + uniforms.size());

@@ -29,7 +29,6 @@ void GLCommandBuffer::ResetRenderState()
     renderState_.boundBufferWithFxb     = nullptr;
 
     /* Reset vertex input state to ensure VAOs are bound correctly */
-    vertexInputState_.dirtyBit = false;
     vertexInputState_.vertexInputLayout.Reset();
     vertexInputState_.bufferInputLayout.Reset();
 }
