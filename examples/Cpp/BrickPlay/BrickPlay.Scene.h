@@ -322,7 +322,8 @@ public:
                 group.numInstances      = 0;
                 group.firstInstance     = 0;
                 group.instanceCapacity  = 0;
-            }
+            },
+            true
         );
 
         // Destroy the entire kd-Tree

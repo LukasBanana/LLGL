@@ -18,44 +18,6 @@
 #include <chrono>
 #include <ctime> // to format std::chrono::time_point
 
-#if LLGL_OS_WASM
-#include <emscripten.h>
-#endif
-
-
-#if LLGL_OS_WASM
-
-static void OfferFileDownload(LLGL::StringView content, LLGL::StringView filename)
-{
-    EM_ASM(
-        {
-            // Convert C++ string pointers to JS strings/typed arrays
-            var contentStr = UTF8ToString($0, $1);
-            var filenameStr = UTF8ToString($2, $3);
-
-            // Create a blob containing the text data
-            var blob = new Blob([contentStr], { type: 'text/plain;charset=utf-8' });
-        
-            // Create an invisible anchor element to trigger the download
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filenameStr;
-        
-            // Append, trigger click, and cleanup
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        
-            // Revoke the object URL to free memory
-            setTimeout(function() {
-                URL.revokeObjectURL(link.href);
-            }, 1000);
-        },
-        content.data(), content.size(), filename.data(), filename.size()
-    );
-}
-
-#endif // /LLGL_OS_WASM
 
 // Formats std::time_point to string with strict C++11 code (no std::format).
 template <typename TClock = std::chrono::system_clock>

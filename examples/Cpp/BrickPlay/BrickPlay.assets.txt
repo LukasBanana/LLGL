@@ -2,5 +2,10 @@ BrickPlay.config.txt
 Models/Bricks/*.obj
 Textures/Bricks/*.png
 Textures/Skybox/sky_74_cubemap_2k/*.png
-Textures/UIElements/*.png
+Textures/UIElements/arrow*.png
+Textures/UIElements/load*.png
+Textures/UIElements/rotate*.png
+Textures/UIElements/save*.png
+Textures/UIElements/share*.png
+Textures/UIElements/thumbstick*.png
 Scenes/Bricks.scene.txt

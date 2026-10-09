@@ -11,17 +11,22 @@
 
 #include "BrickPlay.UIRenderer.h"
 #include <LLGL/Utils/ColorRGBA.h>
+#include <LLGL/Platform/Platform.h>
 
 
 // All main menu items for BrickPlay.
 enum UIMenuItem
 {
-    UIMenuItem_Download = 0,    // Download current scene to local machine
-    UIMenuItem_Upload,          // Upload current scene to public database
+    UIMenuItem_Save = 0,        // Download current scene to local machine
+    UIMenuItem_Load,            // Upload current scene to public database
     UIMenuItem_Undo,            // Undo previous operation
     UIMenuItem_Redo,            // Redo previously reverted operation
     UIMenuItem_TurnCW,          // Turns the currently selected brick clock-wise (CW)
     UIMenuItem_TurnCCW,         // Turns the currently selected brick counter-clock-wise (CCW)
+
+    #if LLGL_OS_WASM
+    UIMenuItem_Share,           // Allow user to share their creation with the world
+    #endif
 
     UIMenuItem_Num,
 };
@@ -48,12 +53,18 @@ struct UILayout
 
     const UIMenuInfo menuInfos[UIMenuItem_Num] =
     {
-        UIMenuInfo{ 0, 0, false },                  // UIMenuItem_Download 
-        UIMenuInfo{ 1, 0, true },                   // UIMenuItem_Upload
-        UIMenuInfo{ 2, 0, false },                  // UIMenuItem_Undo
-        UIMenuInfo{ 2, UIRenderFlags_FlipX, true }, // UIMenuItem_Redo
-        UIMenuInfo{ 3, 0, false },                  // UIMenuItem_TurnCW
-        UIMenuInfo{ 3, UIRenderFlags_FlipX },       // UIMenuItem_TurnCCW
+        UIMenuInfo{ 0, 0, false },                      // UIMenuItem_Save
+        UIMenuInfo{ 1, 0, true },                       // UIMenuItem_Load
+        UIMenuInfo{ 2, 0, false },                      // UIMenuItem_Undo
+        UIMenuInfo{ 2, UIRenderFlags_FlipX, true },     // UIMenuItem_Redo
+        UIMenuInfo{ 3, 0, false },                      // UIMenuItem_TurnCW
+
+        #if LLGL_OS_WASM
+        UIMenuInfo{ 3, UIRenderFlags_FlipX, true },     // UIMenuItem_TurnCCW
+        UIMenuInfo{ 4, 0, false },                      // UIMenuItem_Share
+        #else
+        UIMenuInfo{ 3, UIRenderFlags_FlipX, false },    // UIMenuItem_TurnCCW
+        #endif
     };
 
     int     mainMenuItemSize        = 0;
@@ -62,14 +73,19 @@ struct UILayout
     int     mainMenuBaseAdvance     = 0;
     int     colorPickerSize         = 0;
     int     brickThumbnailSize      = 0;
+    int     scrollIndicatorSize     = 0;
     float   menuBarTriggerDist      = 0.0f;
+    int     thumbstickSize          = 0;
+    int     thumbstickBgSize        = 0;
+    int     thumbstickOffset        = 0;
+    float   thumbstickMaxDrift      = 0.0f;
 
     UILayout()
     {
-        InitForElementSize(defaultElementSize);
+        InitForElementSize(defaultElementSize, 0, 0);
     }
 
-    void InitForElementSize(int uiElementSize)
+    void InitForElementSize(int uiElementSize, int inThumbstickSize, int inThumbstickBgSize)
     {
         mainMenuItemSize        = uiElementSize;
         mainMenuSeparatorSize   = uiElementSize/2;
@@ -78,6 +94,12 @@ struct UILayout
         colorPickerSize         = (uiElementSize + 1)*8/10; // Size (in pixels) of each color picker button
         brickThumbnailSize      = uiElementSize*3/2;
         menuBarTriggerDist      = static_cast<float>(uiElementSize) * Cfg::uiMenuTriggerDistCoeff;
+        scrollIndicatorSize     = uiElementSize/2;
+
+        thumbstickSize          = inThumbstickSize;
+        thumbstickBgSize        = inThumbstickBgSize;
+        thumbstickOffset        = inThumbstickBgSize*2/3;
+        thumbstickMaxDrift      = static_cast<float>(inThumbstickBgSize/2);
     }
 };
 
@@ -109,7 +131,7 @@ struct UIState
                 if (scrollTarget >= 0.0f)
                 {
                     // Apply target position
-                    scroll.position = Gs::Lerp(scroll.position, scrollTarget, 0.2f);
+                    scroll.position = Gs::Lerp(scroll.position, scrollTarget, 0.2f * (dt * 60.0f));
                 }
                 else
                 {
@@ -136,9 +158,19 @@ struct UIState
         }
     };
 
+    struct Thumbstick
+    {
+        LLGL::Offset2D  center;
+        Gs::Vector2f    drift;
+    };
+
     MenuBar     menuBarLeft     = { false };
     MenuBar     menuBarRight    = { true  };
     MenuBar*    currentMenuBar  = nullptr;
+
+    Thumbstick  thumbstickLeft;
+    Thumbstick  thumbstickRight;
+
     int         scrW            = 0;
     int         scrH            = 0;
     int         x               = 0;

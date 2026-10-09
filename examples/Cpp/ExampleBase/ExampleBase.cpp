@@ -197,7 +197,7 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
 #if LLGL_OS_WASM
 
 // Returns true if the web app is running on a mobile device.
-static bool IsRunningOnMobileDevice()
+static bool QueryIsRunningOnMobileDevice()
 {
     return EM_ASM_INT({
         const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -209,7 +209,7 @@ static bool IsRunningOnMobileDevice()
 
 #else // LLGL_OS_WASM
 
-static bool IsRunningOnMobileDevice()
+static bool QueryIsRunningOnMobileDevice()
 {
     #if LLGL_MOBILE_PLATFORM
     return true;
@@ -219,6 +219,13 @@ static bool IsRunningOnMobileDevice()
 }
 
 #endif // /LLGL_OS_WASM
+
+bool IsRunningOnMobileDevice()
+{
+    // Cache whether the process is running on a mobile device
+    static const bool isMobileDevice = QueryIsRunningOnMobileDevice();
+    return isMobileDevice;
+}
 
 
 /*
@@ -882,9 +889,6 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
 
     // Initialize shader include search paths
     shaderIncludeHandler_.searchPaths.push_back("../../Shared/Assets/Shaders");
-
-    // Cache whether the process is running on a mobile device
-    isMobileDevice_ = ::IsRunningOnMobileDevice();
 }
 
 void ExampleBase::OnResize(const LLGL::Extent2D& resolution)

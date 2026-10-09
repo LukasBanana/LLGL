@@ -1,0 +1,131 @@
+/*
+ * BrickPlay.WebApp.h
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#ifndef LLGL_EXAMPLE_BRICKPLAY_WEBAPP_H
+#define LLGL_EXAMPLE_BRICKPLAY_WEBAPP_H
+
+
+#include <LLGL/LLGL.h>
+#include <functional>
+
+#if LLGL_OS_WASM
+#include <emscripten.h>
+#endif
+
+
+#if LLGL_OS_WASM
+
+// Prompts the user to download a text file to their device.
+static void PromptFileDownload(LLGL::StringView content, LLGL::StringView filename)
+{
+    EM_ASM(
+        {
+            // Convert C++ string pointers to JS strings/typed arrays
+            var contentStr = UTF8ArrayToString(HEAPU8, $0, $1);
+            var filenameStr = UTF8ArrayToString(HEAPU8, $2, $3);
+
+            // Create a blob containing the text data
+            var blob = new Blob([contentStr], { type: 'text/plain;charset=utf-8' });
+
+            // Create an invisible anchor element to trigger the download
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filenameStr;
+
+            // Append, trigger click, and cleanup
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Revoke the object URL to free memory
+            setTimeout(function() {
+                URL.revokeObjectURL(link.href);
+            }, 1000);
+        },
+        content.data(), content.size(), filename.data(), filename.size()
+    );
+}
+
+using FileUploadCallback = std::function<void(LLGL::StringView content, const char* filename)>;
+
+static FileUploadCallback g_fileUploadCallback = nullptr;
+
+// Extern "C" function that JavaScript can invoke once the file is read
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnFileLoadedFromJS(const char* contentPtr, int contentLength, const char* filenamePtr)
+{
+    if (g_fileUploadCallback)
+    {
+        g_fileUploadCallback(LLGL::StringView{ contentPtr, static_cast<std::size_t>(contentLength) }, filenamePtr);
+        g_fileUploadCallback = nullptr; // Reset callback
+    }
+}
+
+// Prompts the user to upload a text file from their device.
+static void PromptFileUpload(const FileUploadCallback& fileUploadCallback)
+{
+    g_fileUploadCallback = fileUploadCallback;
+
+    EM_ASM(
+        {
+            // Create an invisible file input element
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,text/plain'; // Adjust extension/MIME filters as needed
+
+            // iOS Fix: Must hide visually and append to document BODY
+            input.style.display = 'none';
+            document.body.appendChild(input);
+
+            // Handle file selection
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+
+                // Cleanup from DOM on change or cancel
+                if (input.parentNode)
+                    input.parentNode.removeChild(input);
+
+                if (!file)
+                    return;
+
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    var arrayBuffer = evt.target.result;
+                    var uint8Array = new Uint8Array(arrayBuffer);
+
+                    // Allocate temporary WebAssembly memory for the buffer
+                    var ptr = _malloc(uint8Array.length);
+                    HEAPU8.set(uint8Array, ptr);
+
+                    // Pass null-terminated filename
+                    var filenameLength = lengthBytesUTF8(file.name) + 1;
+                    var filenamePtr = _malloc(filenameLength);
+                    stringToUTF8(file.name, filenamePtr, filenameLength);
+
+                    // Call exported C++ function
+                    _OnFileLoadedFromJS(ptr, uint8Array.length, filenamePtr);
+
+                    // Free allocated C++ heap memory
+                    _free(ptr);
+                    _free(filenamePtr);
+                };
+
+                reader.readAsArrayBuffer(file);
+            };
+
+            // 3. Trigger file open dialog
+            input.click();
+        }
+    );
+}
+
+#endif // /LLGL_OS_WASM
+
+
+#endif // /LLGL_EXAMPLE_BRICKPLAY_WEBAPP_H
+
+

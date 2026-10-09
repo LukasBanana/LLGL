@@ -57,6 +57,10 @@ inline int ModuloSignInt(int a, int b)
     return (((a % b + b)) % b);
 }
 
+// Returns true if this example is running on a mobile device.
+// WebAssembly needs to determine this at runtime, since it can run either in a desktop or mobile browser.
+bool IsRunningOnMobileDevice();
+
 
 /*
  * Example base class
@@ -209,7 +213,6 @@ private:
     bool                        showTimeRecords_    = false;
     bool                        fullscreen_         = false;
     bool                        useRightHandedProj_ = false;
-    bool                        isMobileDevice_     = false;
     int                         returnCode_         = 0;
     std::uint64_t               lastFrameTick_      = 0;
 
@@ -414,13 +417,6 @@ protected:
     inline std::uint32_t GetSampleCount() const
     {
         return samples_;
-    }
-
-    // Returns true if this example is running on a mobile device.
-    // WebAssembly needs to determine this at runtime, since it can run either in a desktop or mobile browser.
-    inline bool IsRunningOnMobileDevice() const
-    {
-        return isMobileDevice_;
     }
 
 protected:

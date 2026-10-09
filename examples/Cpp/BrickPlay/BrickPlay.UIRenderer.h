@@ -25,8 +25,12 @@ enum UIRenderMode
 // Bit flags for 2D rendering. See UIRenderer::Draw2DImage().
 enum UIRenderFlags
 {
-    UIRenderFlags_FlipX = (1 << 0),
-    UIRenderFlags_FlipY = (1 << 1),
+    UIRenderFlags_FlipX             = (1 << 0),
+    UIRenderFlags_FlipY             = (1 << 1),
+    UIRenderFlags_CenterX           = (1 << 2),
+    UIRenderFlags_CenterY           = (1 << 3),
+    UIRenderFlags_Center            = (UIRenderFlags_CenterX | UIRenderFlags_CenterY),
+    UIRenderFlags_LinearSampling    = (1 << 4),
 };
 
 // Simple user interface (UI) renderer for BrickPlay example.
@@ -44,6 +48,8 @@ class UIRenderer
 
     LLGL::Buffer*                   uiViewCbuffer               = nullptr;
     LLGL::Texture*                  uiBlankTexture              = nullptr;
+    LLGL::Sampler*                  nearestClampSampler         = nullptr;  // Nearest sampler with UVW address clamp-to-border (default for UI elements)
+    LLGL::Sampler*                  linearClampSampler          = nullptr;  // Linear sampler with UVW address clamp-to-border (for scaled UI elements)
 
     struct alignas(16) UIView
     {
@@ -88,6 +94,7 @@ class UIRenderer
     {
         LLGL::Buffer*                   vertexBuffer        = nullptr;  // Current GPU vertex buffer for this batch; acquired via `uiVertexBuffers[currentVbufferIndex]`
         LLGL::Texture*                  textureAtlas        = nullptr;
+        LLGL::Sampler*                  textureSampler      = nullptr;
         std::uint32_t                   firstVertex         = 0;        // First vertex for this draw batch.
         std::uint32_t                   numVertices         = 0;        // Number of batched CPU vertices before they are uploaded to the GPU buffer
     };
@@ -185,12 +192,9 @@ class UIRenderer
         const std::uint32_t numBatchVertices = uiDrawBatch.currentDrawCmd.numVertices - uiDrawBatch.currentDrawCmd.firstVertex;
         if (numBatchVertices > 0)
         {
-            UIBatchedDrawCommand newBatchedDrawCmd;
+            UIBatchedDrawCommand newBatchedDrawCmd = uiDrawBatch.currentDrawCmd;
             {
-                newBatchedDrawCmd.vertexBuffer  = uiDrawBatch.currentDrawCmd.vertexBuffer;
-                newBatchedDrawCmd.textureAtlas  = uiDrawBatch.currentDrawCmd.textureAtlas;
-                newBatchedDrawCmd.firstVertex   = uiDrawBatch.currentDrawCmd.firstVertex;
-                newBatchedDrawCmd.numVertices   = numBatchVertices;
+                newBatchedDrawCmd.numVertices = numBatchVertices;
             }
             uiBatchedDrawCmds.push_back(newBatchedDrawCmd);
 
@@ -230,13 +234,16 @@ class UIRenderer
         return outVertices;
     }
 
-    void SetUITexture(LLGL::Texture* tex)
+    void SetUITexture(LLGL::Texture* tex, LLGL::Sampler* texSampler = nullptr)
     {
         // Flush UI vertex buffer since the texture has to change for all
-        if (uiDrawBatch.currentDrawCmd.textureAtlas != tex)
+        if (uiDrawBatch.currentDrawCmd.textureAtlas != tex ||
+            (texSampler != nullptr && uiDrawBatch.currentDrawCmd.textureSampler != texSampler))
         {
             FlushUIDrawBatch();
             uiDrawBatch.currentDrawCmd.textureAtlas = tex;
+            if (texSampler != nullptr)
+                uiDrawBatch.currentDrawCmd.textureSampler = texSampler;
         }
     }
 
@@ -268,13 +275,17 @@ public:
         }
         uiBlankTexture = renderer->CreateTexture(uiBlankTexDesc);
 
+        // Create sampler states for UI elements
+        nearestClampSampler = renderer->CreateSampler(LLGL::Parse("filter=nearest,address=clamp"));
+        linearClampSampler = renderer->CreateSampler(LLGL::Parse("filter=linear,address=clamp"));
+
         // Create PSO to render an overlay with simple UI elements
         psoUILayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(UIView@1):vert,"
                 "texture(uiTexture@2):frag,"
+                "sampler(uiTextureSampler@3):frag,"
 
-                "sampler(uiTextureSampler@3){filter=nearest}:frag,"                     // Static sampler with nearest filtering
                 "sampler<uiTexture, uiTextureSampler>(s_uiTextureuiTextureSampler@2),"  // Combined texture-sampler for OpenGL backends
             )
         );
@@ -328,10 +339,13 @@ public:
     void FlushDrawCommands(LLGL::CommandBuffer& drawCmdBuffer)
     {
         LLGL::Buffer* vertexBuffer = nullptr;
-        LLGL::Texture* textureAtlas = nullptr;
+        LLGL::Texture* textureAtlas = uiBlankTexture;
+        LLGL::Sampler* textureSampler = nearestClampSampler;
 
         drawCmdBuffer.SetPipelineState(*psoUI);
         drawCmdBuffer.SetResource(0, *uiViewCbuffer);
+        drawCmdBuffer.SetResource(1, *uiBlankTexture);
+        drawCmdBuffer.SetResource(2, *nearestClampSampler);
 
         for (const UIBatchedDrawCommand& cmd : uiBatchedDrawCmds)
         {
@@ -344,6 +358,11 @@ public:
             {
                 textureAtlas = cmd.textureAtlas;
                 drawCmdBuffer.SetResource(1, *cmd.textureAtlas);
+            }
+            if (textureSampler != cmd.textureSampler && cmd.textureSampler != nullptr)
+            {
+                textureSampler = cmd.textureSampler;
+                drawCmdBuffer.SetResource(2, *cmd.textureSampler);
             }
 
             drawCmdBuffer.Draw(cmd.numVertices, cmd.firstVertex);
@@ -372,13 +391,10 @@ public:
     }
 
     // @param Optional flags for UV mapping. Use bitwise OR combination of UIRenderFlags.
-    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {}, int flags = 0)
+    void Draw2DImage(int x, int y, int w, int h, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {}, int flags = 0)
     {
-        SetUITexture(tex);
-
-        const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
-        const int w = static_cast<int>(texExtent.width);
-        const int h = static_cast<int>(texExtent.height);
+        LLGL::Sampler* texSampler = ((flags & UIRenderFlags_LinearSampling) != 0 ? linearClampSampler : nearestClampSampler);
+        SetUITexture(tex, texSampler);
 
         // Generate UV coordinates
         int uv[4][2] =
@@ -388,6 +404,11 @@ public:
             { 1, 1 },
             { 0, 1 },
         };
+
+        if ((flags & UIRenderFlags_CenterX) != 0)
+            x -= w/2;
+        if ((flags & UIRenderFlags_CenterY) != 0)
+            y -= h/2;
 
         if ((flags & UIRenderFlags_FlipX) != 0)
         {
@@ -412,6 +433,18 @@ public:
         verts[3].Set(x    , y + h, uv[3][0], uv[3][1], texLayer, color);
         verts[4].Set(x + w, y    , uv[1][0], uv[1][1], texLayer, color);
         verts[5].Set(x + w, y + h, uv[2][0], uv[2][1], texLayer, color);
+    }
+
+    // @param Optional flags for UV mapping. Use bitwise OR combination of UIRenderFlags.
+    void Draw2DImage(int x, int y, LLGL::Texture* tex, int texLayer = 0, LLGL::ColorRGBAub color = {}, int flags = 0)
+    {
+        if (tex != nullptr)
+        {
+            const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
+            const int w = static_cast<int>(texExtent.width);
+            const int h = static_cast<int>(texExtent.height);
+            Draw2DImage(x, y, w, h, tex, texLayer, color, flags);
+        }
     }
 
 };

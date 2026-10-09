@@ -14,10 +14,12 @@
 #include <cstddef>
 
 
+// Global configurations for the BrickPlay example.
 struct Cfg
 {
     static constexpr bool           useCameraAcceleration           = true;
-    static constexpr float          cameraTurnSpeed                 = 0.25f;
+    static constexpr float          cameraMouseTurnSpeed            = 0.25f;
+    static constexpr float          cameraThumbstickTurnSpeed       = cameraMouseTurnSpeed * 5.0f;
     static constexpr float          cameraMoveSpeed                 = 2.5f;
     static constexpr float          cameraMass                      = 0.1f;     // Camera mass for physics based movement.
     static constexpr float          cameraDampingCeofficient        = 0.99f;
@@ -31,12 +33,14 @@ struct Cfg
     static constexpr float          uiMenuTriggerDistCoeff          = 1.0f; // Percentage to menu bar width of how many pixels the user has to drag the menu bar until it starts scrolling or pulling out bricks
 
     static constexpr float          uiScrollSpeed                   = 50.0f;
-    static constexpr int            uiScrollIndicatorSize           = 15;
 
     static const LLGL::ColorRGBAub  uiBrickThumbnailBgColor;
     static const LLGL::ColorRGBAub  uiSideMenuColor;
     static constexpr GridRotation   uiThumbnailDefaultRotation      = GridRotation_270;
     static constexpr float          uiThumbnailMinVolumeSize        = 3.0f;     // Minimum size for a bounding volume of brick thumbnails.
+
+    static constexpr std::uint8_t   uiThumbstickBgOpacity           = 180;
+    static constexpr int            uiThumbstickDeadZone            = 5;        // How many pixels thumbsticks have to move before they are triggered
 
     static constexpr int            maxBrickExtent                  = 16;       // Limit how large bricks can be in X/Y/Z dimension
 

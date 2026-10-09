@@ -11,6 +11,7 @@
 #include "BrickPlay.UIRenderer.h"
 #include "BrickPlay.UIMenu.h"
 #include "BrickPlay.Const.h"
+#include "BrickPlay.WebApp.h"
 #include <ExampleBase.h>
 #include <PerlinNoise.h>
 #include <FileUtils.h>
@@ -108,6 +109,8 @@ class Example_BrickPlay : public ExampleBase
     std::uint64_t                   previewInstanceBufferOffset     = 0;
 
     LLGL::Texture*                  uiMenuTexture                   = nullptr;
+    LLGL::Texture*                  uiThumbstickTexture             = nullptr;
+    LLGL::Texture*                  uiThumbstickBgTexture           = nullptr;
 
     LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
 
@@ -115,6 +118,8 @@ class Example_BrickPlay : public ExampleBase
 
     bool                            hasOffsetInstancing             = false;
     bool                            hasLoadedScene                  = false;
+
+    //TODO: make this a member of LLGL::RenderingFeatures or a bitmask in LLGL::RenderingLimits
     bool                            canCombineVertexAndIndexBuffers = false; // WebGL 2 cannot combine vertex and index buffers
 
     std::unique_ptr<BrickScene>     currentScene;
@@ -341,6 +346,10 @@ class Example_BrickPlay : public ExampleBase
 
         int                 pickedColorPaletteIndex     = 0;
         GridRotation        menuGridRotation            = GridRotation_0;
+
+        // When user opens a file from their device, this schedules the scene file content for the next frame, since we can't re-construct the scene mid-frame.
+        std::string         pendingSceneFilename;
+        std::string         pendingSceneFileContent;
     }
     user;
 
@@ -721,9 +730,8 @@ private:
         // Explicitly disable combined vertex/index buffers for WebGL backend
         canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
 
-        //TEST
         // Reduce the number of columns for the menu bars to a minum on mobile devices, due to reduced screen size.
-        //if (IsRunningOnMobileDevice())
+        if (IsRunningOnMobileDevice())
         {
             options.uiMaxLeftColumns = 1;
             options.uiMaxRightColumns = 1;
@@ -1046,24 +1054,56 @@ private:
 
         // Load all UI element textures. For high-resolution displays, load the larger 64px UI elements.
         LLGL::Display* primaryDisplay = LLGL::Display::GetPrimary();
-        if (primaryDisplay != nullptr && primaryDisplay->GetScale() >= 2.0f)
+        int uiScale = std::max(1, static_cast<int>(primaryDisplay->GetScale() + 0.001f));
+        {
+            // If resolution is too small, clamp UI scale at 2
+            LLGL::DisplayMode displayMode = primaryDisplay->GetDisplayMode();
+            if (std::min(displayMode.resolution.width, displayMode.resolution.height) < 1000)
+                uiScale = std::min(uiScale, 2);
+        }
+
+        if (primaryDisplay != nullptr && uiScale >= 2)
         {
             uiMenuTexture = LoadCubeOrArrayTexture(
                 LLGL::TextureType::Texture2DArray, "UIElements/",
-                { "download64.png", "upload64.png", "arrow64.png", "rotate64.png", "add64.png", "select64.png", "trash64.png" }
+                { "save64.png", "load64.png", "arrow64.png", "rotate64.png", "share64.png" }
             );
         }
         else
         {
             uiMenuTexture = LoadCubeOrArrayTexture(
                 LLGL::TextureType::Texture2DArray, "UIElements/",
-                { "download32.png", "upload32.png", "arrow32.png", "rotate32.png", "add32.png", "select32.png", "trash32.png" }
+                { "save32.png", "load32.png", "arrow32.png", "rotate32.png", "share32.png" }
             );
         }
 
-        LLGL_VERIFY(uiMenuTexture != nullptr);
-        const LLGL::Extent3D uiMenuTextureExtent = uiMenuTexture->GetMipExtent(0);
-        InitUILayoutForElementSize(static_cast<int>(uiMenuTextureExtent.width));
+        // Load textures for thumbthick controls
+        if (IsRunningOnMobileDevice())
+        {
+            auto Load2DTextureAs2DArray = [this](const char* filename) -> LLGL::Texture*
+            {
+                return LoadCubeOrArrayTexture(LLGL::TextureType::Texture2DArray, "", { filename });
+            };
+
+            uiThumbstickTexture = Load2DTextureAs2DArray("UIElements/thumbstick.png");
+            uiThumbstickBgTexture = Load2DTextureAs2DArray("UIElements/thumbstick-fixture.png");
+        }
+
+        auto GetTexMaxSizeOrDefault = [](LLGL::Texture* tex, int defaultSize = 0) -> int
+        {
+            if (tex != nullptr)
+            {
+                const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
+                return static_cast<int>(std::max(texExtent.width, texExtent.height));
+            }
+            return 0;
+        };
+
+        InitUILayoutForElementSize(
+            GetTexMaxSizeOrDefault(uiMenuTexture, 32),
+            GetTexMaxSizeOrDefault(uiThumbstickTexture) * uiScale,
+            GetTexMaxSizeOrDefault(uiThumbstickBgTexture) * uiScale
+        );
 
         // Create render pass for opacity scene rendering.
         LLGL::RenderPassDescriptor opacityPassDesc;
@@ -1192,12 +1232,15 @@ private:
         }
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
+
+        if (!IsRunningOnMobileDevice())
         {
             psoDesc.debugName               = "Scene.Opaque.Wireframe.PSO";
             psoDesc.rasterizer.polygonMode  = LLGL::PolygonMode::Wireframe;
+
+            pso[BrickPSO_Default_Wireframe] = renderer->CreatePipelineState(psoDesc);
+            REPORT_PSO_ERRORS(pso[BrickPSO_Default_Wireframe]);
         }
-        pso[BrickPSO_Default_Wireframe] = renderer->CreatePipelineState(psoDesc);
-        REPORT_PSO_ERRORS(pso[BrickPSO_Default_Wireframe]);
 
         // Create PSO for transparent bricks
         LLGL::GraphicsPipelineDescriptor psoTransparentDesc;
@@ -1227,12 +1270,15 @@ private:
         }
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
+
+        if (!IsRunningOnMobileDevice())
         {
             psoTransparentDesc.debugName                        = "Scene.Transparent.Wireframe.PSO";
             psoTransparentDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
+
+            pso[BrickPSO_Transparent_Wireframe] = renderer->CreatePipelineState(psoTransparentDesc);
+            REPORT_PSO_ERRORS(pso[BrickPSO_Transparent_Wireframe]);
         }
-        pso[BrickPSO_Transparent_Wireframe] = renderer->CreatePipelineState(psoTransparentDesc);
-        REPORT_PSO_ERRORS(pso[BrickPSO_Transparent_Wireframe]);
 
         // Create PSO for blocked preview object
         LLGL::GraphicsPipelineDescriptor psoPreviewDesc;
@@ -1541,11 +1587,9 @@ private:
         return false;
     }
 
-    bool LoadSceneFromFile(BrickScene& scene, const char* filename)
+    bool LoadSceneFromStream(BrickScene& scene, std::istream& file, const char* filename)
     {
-        std::stringstream file;
-        if (!ReadFile(filename, file))
-            return false;
+        scene.ResetScene();
 
         BrickId currentBrickType = INVALID_BRICK_ID;
         GridVec3i currentOffset;
@@ -1671,8 +1715,6 @@ private:
         // Mark scene as saved after loading, since no changes have been made that are not saved in the file we just loaded.
         scene.MarkSaved();
 
-        LLGL_LOG("Loaded scene from file: %s\n", filename);
-
         if (numSkippedBricks > 0 || numBlockedBricks > 0)
         {
             LLGL_WARN(
@@ -1682,6 +1724,20 @@ private:
         }
 
         return true;
+    }
+
+    bool LoadSceneFromFile(BrickScene& scene, const char* filename)
+    {
+        // Open file for reading
+        std::stringstream file;
+        if (!ReadFile(filename, file))
+            return false;
+        if (LoadSceneFromStream(scene, file, filename))
+        {
+            LLGL_LOG("Loaded scene from file: %s\n", filename);
+            return true;
+        }
+        return false;
     }
 
     void BuildBrickChunkFromHeightField(
@@ -1811,6 +1867,8 @@ private:
 
     void BindInstancePSO(BrickPSO psoType, LLGL::Buffer* instanceBuffer, LLGL::VertexBufferView (&vertexBufferViews)[2])
     {
+        LLGL_VERIFY(pso[psoType] != nullptr);
+
         // Set vertex buffers (vertices and instances)
         vertexBufferViews[0] = LLGL::VertexBufferView{ vertexAndPreviewInstanceBuffer };
         vertexBufferViews[1] = LLGL::VertexBufferView{ instanceBuffer };
@@ -2040,7 +2098,10 @@ private:
 
     void RenderPlane()
     {
-        commands->SetPipelineState(*psoPlane[viewOptions.showWireframe ? 1 : 0]);
+        LLGL::PipelineState* pso = psoPlane[viewOptions.showWireframe ? 1 : 0];
+        LLGL_VERIFY(pso != nullptr);
+
+        commands->SetPipelineState(*pso);
         commands->SetResource(0, *sceneViewCbuffer);
         commands->SetResource(1, *uvWrapSampler);
         commands->SetResource(2, *planeModel.colorMap);
@@ -2379,9 +2440,14 @@ private:
         return 0;
     }
 
-    unsigned MapInputPointerSelection(unsigned pointerId)
+    unsigned MaskPointerId_ForInputUp(unsigned pointerId)
     {
         return pointerId > 0 && IsInputUp(input.GetPointer(pointerId - 1)) ? pointerId : 0;
+    }
+
+    unsigned MaskPointerId_ForInputDown(unsigned pointerId)
+    {
+        return pointerId > 0 && IsInputDown(input.GetPointer(pointerId - 1)) ? pointerId : 0;
     }
 
     unsigned DrawUIColorPicker(int x, int y, int paletteIndex, bool canSelect, bool isHighlighted = false)
@@ -2406,10 +2472,10 @@ private:
             uiRenderer.Draw2DRect(x + UILayout::buttonFrameSize, y + UILayout::buttonFrameSize, colorPickerSize, colorPickerSize, color, render);
         }
 
-        return MapInputPointerSelection(pointerId);
+        return MaskPointerId_ForInputUp(pointerId);
     }
 
-    bool DrawUIBrickThumbnail(int x, int y, int brickType, bool canSelect, bool isHighlighted = false)
+    unsigned DrawUIBrickThumbnail(int x, int y, int brickType, bool canSelect, bool isHighlighted = false)
     {
         const int thumbnailSize = uiLayout.brickThumbnailSize;
         int w = thumbnailSize + UILayout::buttonFrameSize*2;
@@ -2427,7 +2493,7 @@ private:
         // Draw thumbnail texture layer
         uiRenderer.Draw2DImage(x + UILayout::buttonFrameSize, y + UILayout::buttonFrameSize, uiBrickThumbnails.arrayTexture, brickType, brickColor);
 
-        return (pointerId != 0);
+        return MaskPointerId_ForInputDown(pointerId);
     }
 
     bool DrawUIMenuItem(UIMenuItem menuItem, bool canSelect, bool isHighlighted = false, bool isDisabled = false)
@@ -2457,12 +2523,12 @@ private:
         if (menuInfo.endsWithSeparator)
             uiState.x += uiLayout.mainMenuSeparatorSize;
 
-        return (MapInputPointerSelection(pointerId) != 0);
+        return (MaskPointerId_ForInputUp(pointerId) != 0);
     }
 
-    void InitUILayoutForElementSize(int uiElementSize)
+    void InitUILayoutForElementSize(int uiElementSize, int thumbstickSize, int thumbstickBgSize)
     {
-        uiLayout.InitForElementSize(uiElementSize);
+        uiLayout.InitForElementSize(uiElementSize, thumbstickSize, thumbstickBgSize);
 
         // Cache width of main menu
         uiState.mainMenuWidth = 0;
@@ -2516,6 +2582,31 @@ private:
             uiState.menuBarRight.scroll.AddForces(scrollDir);
         }
         uiState.menuBarRight.UpdateScrolling(dt, uiState.scrH);
+
+        if (IsRunningOnMobileDevice())
+        {
+            // Update thumbthink positions
+            const int thumbstickCenterY = uiState.scrH - uiLayout.thumbstickOffset;
+
+            uiState.thumbstickLeft.center.x = uiLayout.thumbstickOffset + uiState.menuBarLeft.width;
+            uiState.thumbstickLeft.center.y = thumbstickCenterY;
+
+            uiState.thumbstickRight.center.x = uiState.scrW - uiLayout.thumbstickOffset - uiState.menuBarRight.width;
+            uiState.thumbstickRight.center.y = thumbstickCenterY;
+
+            // Make thumbsticks drift bounce back when inactive
+            auto BounceThumbstickBack = [dt](UIState::Thumbstick& thumbstick) -> void
+            {
+                float driftLenSq = thumbstick.drift.LengthSq();
+                if (driftLenSq > 0.0f)
+                    thumbstick.drift = Gs::Lerp(thumbstick.drift, {}, 0.2f * (dt * 60.0f));
+            };
+
+            if (!AnyHandAction(HandAction::Mobile_MoveCamera))
+                BounceThumbstickBack(uiState.thumbstickLeft);
+            if (!AnyHandAction(HandAction::Mobile_TurnCamera))
+                BounceThumbstickBack(uiState.thumbstickRight);
+        }
     }
 
     void DrawScrollIndicator(const UIState::MenuBar& menuBar)
@@ -2531,32 +2622,62 @@ private:
         if (yScroll > 0)
         {
             uiRenderer.Draw2DRectGradient(
-                xOffset, yOffset, menuBar.width, Cfg::uiScrollIndicatorSize,
+                xOffset, yOffset, menuBar.width, uiLayout.scrollIndicatorSize,
                 uiLayout.mainMenuColor[1], fadeColor
             );
         }
         if (yScroll < yScrollMax)
         {
             uiRenderer.Draw2DRectGradient(
-                xOffset, uiState.scrH - Cfg::uiScrollIndicatorSize, menuBar.width, Cfg::uiScrollIndicatorSize,
+                xOffset, uiState.scrH - uiLayout.scrollIndicatorSize, menuBar.width, uiLayout.scrollIndicatorSize,
                 fadeColor, uiLayout.mainMenuColor[1]
             );
         }
     }
 
+    void DrawUIThumbstick(const UIState::Thumbstick& thumbstick)
+    {
+        const LLGL::ColorRGBAub thumbstickBgColor{ 255, 255, 255, Cfg::uiThumbstickBgOpacity };
+
+        uiRenderer.Draw2DImage(
+            thumbstick.center.x, thumbstick.center.y,
+            uiLayout.thumbstickBgSize, uiLayout.thumbstickBgSize,
+            uiThumbstickBgTexture, 0, thumbstickBgColor,
+            UIRenderFlags_Center | UIRenderFlags_LinearSampling
+        );
+
+        uiRenderer.Draw2DImage(
+            thumbstick.center.x + static_cast<int>(thumbstick.drift.x),
+            thumbstick.center.y + static_cast<int>(thumbstick.drift.y),
+            uiLayout.thumbstickSize, uiLayout.thumbstickSize,
+            uiThumbstickTexture, 0, {},
+            UIRenderFlags_Center | UIRenderFlags_LinearSampling
+        );
+    }
+
+    // Returns true if either all hand actions are none or any of them is equal to the input action
+    bool AllHandAction(HandAction action) const
+    {
+        return (user.hand[0].action == action && user.hand[1].action == action);
+    }
+
+    bool AnyHandAction(HandAction action) const
+    {
+        return (user.hand[0].action == action || user.hand[1].action == action);
+    }
+
     // Draws UI elements and also interacts with user input immediately.
     void DrawUIImmediateMode()
     {
-        // Returns true if either all hand actions are none or any of them is equal to the input action
-        auto AllHandAction = [this](HandAction action) -> bool
+        // Draw thumbsticks on mobile devices
+        if (IsRunningOnMobileDevice())
         {
-            return (user.hand[0].action == action && user.hand[1].action == action);
-        };
-
-        auto AnyHandAction = [this](HandAction action) -> bool
-        {
-            return (user.hand[0].action == action || user.hand[1].action == action);
-        };
+            if (AllHandAction(HandAction::None) || AnyHandAction(HandAction::Mobile_MoveCamera) || AnyHandAction(HandAction::Mobile_TurnCamera))
+            {
+                DrawUIThumbstick(uiState.thumbstickLeft);
+                DrawUIThumbstick(uiState.thumbstickRight);
+            }
+        }
 
         // Draw mouse dead zone as transparent background for the UI
         uiRenderer.Draw2DRect(
@@ -2607,7 +2728,7 @@ private:
             {
                 if (uiState.IsVisible())
                 {
-                    if (DrawUIBrickThumbnail(uiState.x, uiState.y, brickId, canSelectRightMenu))
+                    if (DrawUIBrickThumbnail(uiState.x, uiState.y, brickId, canSelectRightMenu) != 0)
                     {
                         // Set new brick type to preview brick
                         viewOptions.previewBrick.id = brickId;
@@ -2630,18 +2751,28 @@ private:
         uiState.advance = uiLayout.mainMenuBaseAdvance;
 
         #if LLGL_OS_WASM
-        if (DrawUIMenuItem(UIMenuItem_Download, canSelectMainMenu))
+        if (DrawUIMenuItem(UIMenuItem_Save, canSelectMainMenu))
         {
             const std::string timePointFormat = FormatTimePoint(std::chrono::system_clock::now());
             std::stringstream sceneContentStream;
             if (SaveSceneToStream(*currentScene, sceneContentStream))
-                OfferFileDownload(sceneContentStream.str(), "BrickPlay_" + timePointFormat + ".txt");
+                PromptFileDownload(sceneContentStream.str(), "BrickPlay_" + timePointFormat + ".txt");
+        }
+
+        if (DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu))
+        {
+            PromptFileUpload(
+                [this](LLGL::StringView content, const char* filename)
+                {
+                    user.pendingSceneFilename       = filename;
+                    user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
+                }
+            );
         }
         #else
-        (void)DrawUIMenuItem(UIMenuItem_Download, canSelectMainMenu, false, true);
+        (void)DrawUIMenuItem(UIMenuItem_Save, canSelectMainMenu, false, true);
+        (void)DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu, false, true);
         #endif
-
-        DrawUIMenuItem(UIMenuItem_Upload, canSelectMainMenu);
 
         if (DrawUIMenuItem(UIMenuItem_Undo, canSelectMainMenu, false, history.IsAtBegining()))
             Undo();
@@ -2652,6 +2783,13 @@ private:
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation + 1, GridRotation_Num));
         if (DrawUIMenuItem(UIMenuItem_TurnCCW, canSelectMainMenu))
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation - 1, GridRotation_Num));
+
+        #if LLGL_OS_WASM
+        if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu))
+        {
+            //TODO
+        }
+        #endif
     }
 
     void PrepareUIDrawCommands()
@@ -2738,8 +2876,8 @@ private:
             {
                 // Turn camera by mouse motion
                 const LLGL::Offset2D motion = input.GetMouseMotion();
-                const float pitch = static_cast<float>(+motion.y) * Cfg::cameraTurnSpeed;
-                const float yaw   = static_cast<float>(-motion.x) * Cfg::cameraTurnSpeed;
+                const float pitch = static_cast<float>(+motion.y) * Cfg::cameraMouseTurnSpeed;
+                const float yaw   = static_cast<float>(-motion.x) * Cfg::cameraMouseTurnSpeed;
                 camera.Turn(pitch, yaw);
 
                 if (input.KeyUp(LLGL::Key::RButton))
@@ -3072,8 +3210,31 @@ private:
             }
             else
             {
-                // Select bricks from the scene
-                ProcessInputPointerBrickSelection(hand, inputPointer);
+                // Check if input pointer is on the left thumbstick
+                const Gs::Vector2f pointerPos{ static_cast<float>(inputPointer.position.x), static_cast<float>(inputPointer.position.y) };
+
+                auto IsPointOnThumbstick = [this, &pointerPos](const UIState::Thumbstick& thumbstick) -> bool
+                {
+                    const Gs::Vector2f thumbstickPos{ static_cast<float>(thumbstick.center.x), static_cast<float>(thumbstick.center.y) };
+                    const float thumbstickRadius = static_cast<float>(uiLayout.thumbstickBgSize/2);
+                    return (Gs::DistanceSq(pointerPos, thumbstickPos) < thumbstickRadius*thumbstickRadius);
+                };
+
+                if (IsPointOnThumbstick(uiState.thumbstickLeft))
+                {
+                    if (IsInputDown(inputPointer))
+                        hand.Capture(HandAction::Mobile_MoveCamera, inputPointer.position);
+                }
+                else if (IsPointOnThumbstick(uiState.thumbstickRight))
+                {
+                    if (IsInputDown(inputPointer))
+                        hand.Capture(HandAction::Mobile_TurnCamera, inputPointer.position);
+                }
+                else
+                {
+                    // Select bricks from the scene
+                    ProcessInputPointerBrickSelection(hand, inputPointer);
+                }
             }
         }
     }
@@ -3111,7 +3272,7 @@ private:
         }
     }
 
-    void ProcessInputPointerMenuScroll(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::MenuBar& menuBar)
+    void ProcessInputPointerMenuScroll(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::MenuBar& menuBar, float dt)
     {
         menuBar.scrollTarget = std::max(0.0f, hand.captureScroll - static_cast<float>(inputPointer.position.y));
 
@@ -3119,13 +3280,54 @@ private:
         {
             // Release input capture and give scroll bar a last spin when it still has momentum
             float remainingScrollDist = menuBar.scrollTarget - menuBar.scroll.position;
-            menuBar.scroll.AddForces(remainingScrollDist * 5.0f);
+            menuBar.scroll.AddForces(remainingScrollDist * 5.0f / (dt * 60.0f));
             menuBar.scrollTarget = -1.0f;
             hand.action = HandAction::None;
         }
     }
 
-    void ProcessInputPointerUpdatePhase(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    bool ProcessInputPointerThumbstickDrift(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::Thumbstick& thumbstick)
+    {
+        const LLGL::Offset2D motionVec = inputPointer.position - hand.capturePos;
+
+        thumbstick.drift.x = static_cast<float>(motionVec.x);
+        thumbstick.drift.y = static_cast<float>(motionVec.y);
+
+        float driftLen = thumbstick.drift.Length();
+        if (driftLen > uiLayout.thumbstickMaxDrift)
+            thumbstick.drift = thumbstick.drift.Normalized() * uiLayout.thumbstickMaxDrift;
+        else if (driftLen < static_cast<float>(Cfg::uiThumbstickDeadZone))
+            thumbstick.drift = {};
+
+        if (IsInputUp(inputPointer))
+        {
+            hand.action = HandAction::None;
+            return false;
+        }
+
+        return (driftLen > 0.1f);
+    }
+
+    void ProcessInputPointerMoveCamera(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::Thumbstick& thumbstick)
+    {
+        if (ProcessInputPointerThumbstickDrift(hand, inputPointer, thumbstick))
+        {
+            const float moveSpeed = Cfg::cameraMoveSpeed / uiLayout.thumbstickMaxDrift;
+            camera.Move({ +thumbstick.drift.x * moveSpeed, 0, -thumbstick.drift.y * moveSpeed });
+        }
+    }
+
+    void ProcessInputPointerTurnCamera(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::Thumbstick& thumbstick)
+    {
+        if (ProcessInputPointerThumbstickDrift(hand, inputPointer, thumbstick))
+        {
+            const float pitch = +thumbstick.drift.y / uiLayout.thumbstickMaxDrift * Cfg::cameraThumbstickTurnSpeed;
+            const float yaw   = -thumbstick.drift.x / uiLayout.thumbstickMaxDrift * Cfg::cameraThumbstickTurnSpeed;
+            camera.Turn(pitch, yaw);
+        }
+    }
+
+    void ProcessInputPointerUpdatePhase(UserHand& hand, const LLGL::InputPointer& inputPointer, float dt)
     {
         switch (hand.action)
         {
@@ -3133,8 +3335,10 @@ private:
                 break; // dummy
 
             case HandAction::Mobile_MoveCamera:
+                ProcessInputPointerMoveCamera(hand, inputPointer, uiState.thumbstickLeft);
                 break;
             case HandAction::Mobile_TurnCamera:
+                ProcessInputPointerTurnCamera(hand, inputPointer, uiState.thumbstickRight);
                 break;
 
             case HandAction::Desktop_MoveCamera:
@@ -3146,7 +3350,7 @@ private:
                 ProcessInputPointerDecideLeftMenuAction(hand, inputPointer);
                 break;
             case HandAction::LeftMenu_Scroll:
-                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarLeft);
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarLeft, dt);
                 break;
             case HandAction::LeftMenu_Select:
                 hand.action = HandAction::None;
@@ -3156,7 +3360,7 @@ private:
                 ProcessInputPointerDecideRightMenuAction(hand, inputPointer);
                 break;
             case HandAction::RightMenu_Scroll:
-                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarRight);
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarRight, dt);
                 break;
 
             case HandAction::MoveBrick:
@@ -3165,7 +3369,7 @@ private:
         }
     }
 
-    void ProcessInputPointer(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    void ProcessInputPointer(UserHand& hand, const LLGL::InputPointer& inputPointer, float dt)
     {
         if (inputPointer.state != LLGL::InputState::Inactive)
         {
@@ -3175,7 +3379,7 @@ private:
             if (hand.action == HandAction::None)
                 ProcessInputPointerStartPhase(hand, inputPointer);
             else
-                ProcessInputPointerUpdatePhase(hand, inputPointer);
+                ProcessInputPointerUpdatePhase(hand, inputPointer, dt);
         }
     }
 
@@ -3187,7 +3391,7 @@ private:
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
         for_range(pointerIndex, NumInputPointers())
-            ProcessInputPointer(user.hand[pointerIndex], input.GetPointer(pointerIndex));
+            ProcessInputPointer(user.hand[pointerIndex], input.GetPointer(pointerIndex), dt);
 
         camera.ApplyForces(dt, currentScene.get());
 
@@ -3238,10 +3442,25 @@ private:
         return false;
     }
 
+    void FlushPendingScene()
+    {
+        // Load scene if there is new file content scheduled
+        if (!user.pendingSceneFileContent.empty())
+        {
+            std::stringstream sceneContentStream{ user.pendingSceneFileContent };
+            LoadSceneFromStream(*currentScene, sceneContentStream, user.pendingSceneFilename.c_str());
+
+            user.pendingSceneFileContent.clear();
+            user.pendingSceneFilename.clear();
+        }
+    }
+
     //////////////////// MAIN CALLBACKS ////////////////////
 
     void OnDrawFrame(float dt) override
     {
+        FlushPendingScene();
+
         #if KDTREE_DEBUG_LEVEL
         KDTreeNode::numAABBTests = 0;
         #endif
