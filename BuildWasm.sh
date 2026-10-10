@@ -6,6 +6,7 @@ CLEAR_CACHE=0
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 ENABLE_PTHREADS="OFF"
+ENABLE_EXPLICIT_SWAP_CONTROL="OFF"
 BUILD_TYPE="Release"
 UNITY_BUILD="OFF"
 PROJECT_ONLY=0
@@ -27,6 +28,7 @@ print_help()
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
     echo "  --pthreads ................ Enable pthreads (limits browser availability)"
+    echo "  --explicit-swap-control ... Enable explicit swap control (requires offscreen framebuffer)"
     echo "NOTES:"
     echo "  Default output directory is '$OUTPUT_DIR'"
 }
@@ -62,6 +64,8 @@ for ARG in "$@"; do
         ENABLE_TESTS="OFF"
     elif [ "$ARG" = "--pthreads" ]; then
         ENABLE_PTHREADS="ON"
+    elif [ "$ARG" = "--explicit-swap-control" ]; then
+        ENABLE_EXPLICIT_SWAP_CONTROL="ON"
     else
         OUTPUT_DIR="$ARG"
     fi
@@ -139,6 +143,7 @@ OPTIONS=(
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=ON
     -DLLGL_ENABLE_EMSCRIPTEN_PTHREADS=$ENABLE_PTHREADS
+    -DLLGL_ENABLE_EXPLICIT_SWAP_CONTROL=$ENABLE_EXPLICIT_SWAP_CONTROL
     -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"

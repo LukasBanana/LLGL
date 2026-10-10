@@ -183,6 +183,10 @@ EM_BOOL WasmCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* 
     else if (eventType == 3)
         canvas->PostKeyUp(key);
 
+    /* Don't consume function key events as they are reserved by the browser */
+    if (key >= Key::F1 && key <= Key::F12)
+        return EM_FALSE;
+
 	return EM_TRUE;
 }
 

@@ -166,6 +166,7 @@ if(NOT LLGL_UWP_PLATFORM)
     if(EMSCRIPTEN)
         option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
         option(LLGL_ENABLE_EMSCRIPTEN_PTHREADS "Build for Wasm platform with pthreads (USE_PTHREADS). This limits browser availability!" OFF)
+        option(LLGL_ENABLE_EXPLICIT_SWAP_CONTROL "Enable explicit swap control for WebGL. This requires offscreen framebuffer support in the browser." OFF)
     elseif(LLGL_MOBILE_PLATFORM)
         option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
     else()
@@ -690,9 +691,13 @@ if(EMSCRIPTEN)
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
-    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # Required for explicit swap control
     add_link_options("SHELL:-s ASSERTIONS")
     add_link_options("SHELL:-s ALLOW_MEMORY_GROWTH") # Allow memory to grow as graphics apps can be quite demanding
+
+    if(LLGL_ENABLE_EXPLICIT_SWAP_CONTROL)
+        add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # Required for explicit swap control
+        ADD_DEFINE(LLGL_ENABLE_EXPLICIT_SWAP_CONTROL)
+    endif()
 
     # Add debug information for Emscripten debug builds
     add_compile_options("$<$<CONFIG:Debug>:-g3>")

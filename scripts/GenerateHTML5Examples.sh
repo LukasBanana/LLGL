@@ -140,9 +140,14 @@ BIN_FILE_BASE="${TARGET_DIR}/build/Example_"
 BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
 
 if [ $DEBUG_BUILD -ne 0 ]; then
+    # Only include debug build files (*D.wasm) in Debug build
     EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*D.wasm)
 else
-    EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.wasm)
+    # Exclude debug build files (*D.wasm) from Release build
+    EXAMPLE_BIN_FILES=()
+    for FILE in "${BIN_FILE_BASE}"*.wasm; do
+        [[ "$FILE" == *D.wasm ]] || EXAMPLE_BIN_FILES+=( "$FILE" )
+    done
 fi
 
 for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do

@@ -96,35 +96,17 @@ static void GetWebGLVersionFromConfig(EmscriptenWebGLContextAttributes& attrs, c
     }
 }
 
-// Run JavaScript code to detect Safari user agent. This is generally not advised because it's not future proof,
-// but there is currently no other way to detect whether WebGL 2 is properly supported or not. It is not on Safari sadly.
-EM_JS(int, EmscriptenIsSafariUserAgent, (void), {
-    return (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') ? 1 : 0);
-})
-
-// Hacky function to determine whether we can trust the browser engine to properly support the WebGL translation layer.
-static bool IsWebGLSwapControlWorkaroundRequired()
-{
-    return (EmscriptenIsSafariUserAgent() != 0);
-}
-
 void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile, WasmGLContext* sharedContext)
 {
-    /*
-    With WebGL, we assume that the maximum sample count is 4.
-    When the swap-control workaround is required, we enable anti-aliasing and swap-control.
-    Otherwise, synchronization issues with glBufferSubData() can be observed, likely caused by the translation layer (on both macOS and iOS Safari).
-    */
-    if (IsWebGLSwapControlWorkaroundRequired())
-    {
-        samples_ = 4;
-        hasExplicitSwapControl_ = true;
-    }
-    else
-    {
-        samples_ = Clamp(pixelFormat.samples, 1, 4);
-        hasExplicitSwapControl_ = false;
-    }
+    /* Clamp samples to the range [1, 4] on WebAssembly. */
+    samples_ = Clamp(pixelFormat.samples, 1, 4);
+
+    /* Make explicit swap-control flag based on compile-time option, since this requires the Emscripten build to include `-s OFFSCREEN_FRAMEBUFFER`. */
+    #if LLGL_ENABLE_EXPLICIT_SWAP_CONTROL
+    hasExplicitSwapControl_ = true;
+    #else
+    hasExplicitSwapControl_ = false;
+    #endif
 
     /* Initialize WebGL context attributes; Default to WebGL 2.0 */
 	EmscriptenWebGLContextAttributes attrs = {};
