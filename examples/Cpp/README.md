@@ -4,31 +4,48 @@ This repository contains several tutorials and examples which show how to use LL
 
 ## Tutorials
 
-### [Hello Triangle](HelloTriangle)
+### [Hello Triangle](HelloTriangle/README.md)
 
 Getting started tutorial where a single multi-colored triangle is rendered.
 
 <p align="center"><img src="HelloTriangle/Example.png" style="width:auto;height:225px;"/></p>
 
 
-### [Tessellation](Tessellation)
+### [Tessellation](Tessellation/README.md)
 
 Hardware tessellation for rendering highly detailed geometry.
 
 <p align="center"><img src="Tessellation/Example.png" style="width:auto;height:225px;"/></p>
 
 
-### [ImGui](../../docu/Tutorials/ImGui)
+### [ImGui](../../docu/Tutorials/ImGui/README.md)
 
 Tutorial how to integrate ImGui into an LLGL project for UI rendering and event handling.
 
 <p align="center"><img src="../../docu/Tutorials/ImGui/LLGL_ImGui_Thumbnail.png" style="width:auto;height:225px;"/></p>
 
 
+### [BrickPlay](BrickPlay/README.md)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_BrickPlay/index.html)
+
+Comprehensive tutorial to a concise example of a 3D toy that allows players to create worlds out of building blocks.
+This tutorial goes into depth how to render such a 3D presentation, how to make it cross-platform with LLGL,
+and illustrates how it can be used as a foundation for modifications or your own games.
+The following techniques are highlighted in this tutorial:
+- *Parallax Occlusion Mapping* for the infinite ground plane
+- *Weighted-Blended Order Independent Transparency* for glass bricks
+- *Hardware Instancing* with dynamically changing groups for optimized rendering
+- *Batched Draw Calls* for UI elements
+- *Silhouette Rendering* for object selection (uses Geometry Shaders in D3D)
+- *kd-Tree* construction and traversal for CPU-based ray casting, collision detection, and brick placement
+
+<p align="center"><img src="BrickPlay/BrickPlay.png" style="width:auto;height:225px;"/></p>
+
+
 ## Examples
 
 ### [Texturing](Texturing)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Texturing/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_Texturing/index.html)
 
 Simple texturing and sampler state example.
 
@@ -36,7 +53,7 @@ Simple texturing and sampler state example.
 
 
 ### [Render Target](RenderTarget)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_RenderTarget/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_RenderTarget/index.html)
 
 Simple render target example with optional multi-sample texture (Texture2DMS/ sampler2DMS).
 
@@ -44,7 +61,7 @@ Simple render target example with optional multi-sample texture (Texture2DMS/ sa
 
 
 ### [Post-Processing](PostProcessing)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_PostProcessing/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_PostProcessing/index.html)
 
 Practical example of a glow effect with post-processing and the usage of several shaders, render targets and graphics pipelines.
 
@@ -52,7 +69,7 @@ Practical example of a glow effect with post-processing and the usage of several
 
 
 ### [Shadow Mapping](ShadowMapping)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_ShadowMapping/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_ShadowMapping/index.html)
 
 Practical example of standard shadow-mapping technique.
 
@@ -60,7 +77,7 @@ Practical example of standard shadow-mapping technique.
 
 
 ### [Stencil Buffer](StencilBuffer)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_StencilBuffer/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_StencilBuffer/index.html)
 
 Rendering a portal using the stencil buffer.
 
@@ -68,7 +85,7 @@ Rendering a portal using the stencil buffer.
 
 
 ### [Physically Based Rendering (PBR)](PBR)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_PBR/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_PBR/index.html)
 
 Rendering a skybox and a PBR material with multiple texture maps for albedo (base color), normals, roughness, and metallic properties.
 
@@ -76,7 +93,7 @@ Rendering a skybox and a PBR material with multiple texture maps for albedo (bas
 
 
 ### [Fonts](Fonts)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Fonts/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_Fonts/index.html)
 
 Example how to render fonts efficiently in batched draw calls.
 
@@ -105,7 +122,7 @@ Small example with a compute shader and a storage buffer for the indirect draw c
 
 
 ### [Instancing](Instancing)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Instancing/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_Instancing/index.html)
 
 Practical example of hardware instancing by rendering tens of thousands of different textured plants instances.
 
@@ -113,7 +130,7 @@ Practical example of hardware instancing by rendering tens of thousands of diffe
 
 
 ### [Morph-Targets](MorphTargets)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_MorphTargets/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_MorphTargets/index.html)
 
 Practical example of morph-target animation by rendering a book that lets the user flick through its pages.
 
@@ -128,7 +145,7 @@ Experimental example of using multiple renderers at once (only supported on Win3
 
 
 ### [Orthogonal](Orthogonal)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_Orthogonal/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_Orthogonal/index.html)
 
 Small example with orthogonal projection.
 
@@ -136,7 +153,7 @@ Small example with orthogonal projection.
 
 
 ### [Volume Rendering](VolumeRendering)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_VolumeRendering/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_VolumeRendering/index.html)
 
 Example of generating perlin noise into 3D texture with a glitter effect and volume rendering.
 
@@ -151,7 +168,7 @@ Practical example of multiple compute shaders for position based dynamics.
 
 
 ### [HelloGame](HelloGame)
-##### Try it with [WebGL](https://lukasbanana.github.io/LLGL/docu/WebPage/Example_HelloGame/index.html)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_HelloGame/index.html)
 
 Example of a small puzzle game. Easy to add new levels via text files.
 
