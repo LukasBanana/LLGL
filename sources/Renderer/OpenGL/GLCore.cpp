@@ -190,8 +190,6 @@ void ErrUnsupportedGLProc(const char* name)
     #endif
 }
 
-#undef LLGL_CASE_TO_STR
-
 
 } // /namespace LLGL
 

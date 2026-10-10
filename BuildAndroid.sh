@@ -9,6 +9,7 @@ ENABLE_VULKAN="OFF"
 ENABLE_OPENXR="OFF"
 ENABLE_EXAMPLES="ON"
 BUILD_TYPE="Release"
+UNITY_BUILD="OFF"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
 ANDROID_CXX_LIB="c++_shared" # c++_shared/c++_static
@@ -30,6 +31,7 @@ print_help()
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
+    echo "  -u, --unity-build ......... Batches up to 32 source files in a unity build"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --abi=ABI ................. Set Android ABI (default is x86_64; accepts 'all')"
     echo "  --api-level=VERSION ....... Set Android API level (default is 21)"
@@ -62,6 +64,8 @@ for ARG in "$@"; do
     elif [ "$ARG" = "-s" ] || [ "$ARG" = "--static-lib" ]; then
         STATIC_LIB="ON"
         ANDROID_CXX_LIB="c++_static"
+    elif [ "$ARG" = "-u" ] || [ "$ARG" = "--unity-build" ]; then
+        UNITY_BUILD="ON"
     elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
         VERBOSE=1
     elif [[ "$ARG" == --abi=* ]]; then
@@ -189,6 +193,7 @@ BASE_OPTIONS=(
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=OFF
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
+    -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
 )
