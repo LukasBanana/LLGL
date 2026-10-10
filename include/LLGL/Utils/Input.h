@@ -22,6 +22,7 @@ namespace LLGL
 \brief Enumeration for input pointer states.
 \remarks This is used to record the current state of touch inputs being pressed down and lifted up.
 \see InputState::state
+\see Input::Reset
 */
 enum class InputState
 {
@@ -31,7 +32,7 @@ enum class InputState
     /**
     \brief Input is being activated.
     \remarks This is when a touch pointer is being pressed down.
-    After the next call to Surface::ProcessEvents, it will be either in the Active or Deactivate state.
+    After the next call to Input::Reset, it will be either in the Active or Deactivate state.
     */
     Activate,
 
@@ -45,7 +46,7 @@ enum class InputState
     /**
     \brief Input is being deactivated.
     \remarks This is when a touch pointer is being lifted up.
-    After the next call to Surface::ProcessEvents, it will be either in the Inactive or Activate state.
+    After the next call to Input::Reset, it will be either in the Inactive or Activate state.
     */
     Deactivate,
 };

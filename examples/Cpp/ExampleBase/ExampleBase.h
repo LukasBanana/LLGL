@@ -85,11 +85,11 @@ class TrackballRotationModel
 
 public:
     void Rotate(
-        Gs::Quaternionf&        rotation,
-        const LLGL::Viewport&   viewport,
-        const LLGL::Offset2D&   cursorPosition,
-        bool                    isStartPosition = false,
-        float                   projZAxis       = 1.0f
+        Gs::Quaternionf&    rotation,
+        LLGL::Viewport      viewport,
+        LLGL::Offset2D      cursorPosition,
+        bool                isStartPosition = false,
+        float               projZAxis       = 1.0f
     );
 
 };

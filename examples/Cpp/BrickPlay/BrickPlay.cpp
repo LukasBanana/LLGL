@@ -49,6 +49,7 @@ class Example_BrickPlay : public ExampleBase
         std::string                 sceneFilename                   = "Scenes/Bricks.scene.txt";
         std::string                 configFilename                  = "BrickPlay.config.txt";
         bool                        discardEdits                    = false;    // Don't save edited scene
+        bool                        useMobileView                   = false;    // Intended for mobile only, but can be enabled on desktop via `-mobile`
         int                         scenePresetNo                   = -1;       // Auto-generate preset scene
         int                         sceneBoundingVolume[3]          = { 100, 60, 100 };
         int                         uiMaxLeftColumns                = 2;        // Maximum number of columns on the left side of the menu
@@ -108,9 +109,10 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Buffer*                   vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
     std::uint64_t                   previewInstanceBufferOffset     = 0;
 
-    LLGL::Texture*                  uiMenuTexture                   = nullptr;
+    LLGL::Texture*                  uiMenuTextureAtlas              = nullptr; // Texture2DArray with UI elements in each layer. Simplier than generating 2D atlas maps.
     LLGL::Texture*                  uiThumbstickTexture             = nullptr;
     LLGL::Texture*                  uiThumbstickBgTexture           = nullptr;
+    LLGL::Texture*                  uiTrashTextureAtlas             = nullptr; // Texture2DArray with layers for the animation of the trash bin
 
     LLGL::Sampler*                  uvWrapSampler                   = nullptr; // UV address wrap sampler. Anisotropic for desktop platforms.
 
@@ -200,8 +202,8 @@ class Example_BrickPlay : public ExampleBase
 
     struct ViewOptions
     {
-        bool            showWireframe   = false;
-        bool            showMenu        = true;
+        bool            showWireframe       = false;
+        bool            showMenu            = true;
         PreviewBrick    previewBrick;
     }
     viewOptions;
@@ -345,7 +347,7 @@ class Example_BrickPlay : public ExampleBase
         Instance            backupInstance              = {};
 
         int                 pickedColorPaletteIndex     = 0;
-        GridRotation        menuGridRotation            = GridRotation_0;
+        GridRotation        menuGridRotation            = GridRotation_90;
 
         // When user opens a file from their device, this schedules the scene file content for the next frame, since we can't re-construct the scene mid-frame.
         std::string         pendingSceneFilename;
@@ -695,6 +697,7 @@ private:
         ParseArgument("-file", options.sceneFilename);
 
         options.discardEdits = HasArgument("-discard");
+        options.useMobileView = IsRunningOnMobileDevice() || HasArgument("-mobile");
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -731,11 +734,16 @@ private:
         canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
 
         // Reduce the number of columns for the menu bars to a minum on mobile devices, due to reduced screen size.
-        if (IsRunningOnMobileDevice())
+        if (options.useMobileView)
         {
             options.uiMaxLeftColumns = 1;
             options.uiMaxRightColumns = 1;
         }
+
+        // Position camera initialize towards the end (Z-axis) of the bounding volume and look downwards
+        camera.position = { 0, static_cast<float>(KDTreeNode::rootAABB.bbMax.y/2), static_cast<float>(KDTreeNode::rootAABB.bbMin.z) };
+        camera.pitch    = 35.0f;
+        camera.yaw      = 0.0f;
     }
 
     LLGL::Texture* CreateDummyArrayTexture(LLGL::TextureType texType)
@@ -967,6 +975,8 @@ private:
 
     void CreateResources()
     {
+        LoadUIElements();
+
         const float projZAxis = GetProjectionZAxis();
 
         // Create buffer for per-vertex data
@@ -1041,7 +1051,7 @@ private:
         {
             // Only use anisotropic filtering on desktop platforms.
             // This is quite expensive on high-resolution mobile devices, so fall back to standard tri-linear filtering.
-            if (!IsRunningOnMobileDevice())
+            if (!options.useMobileView)
                 samplerDesc.maxAnisotropy = 8;
         }
         uvWrapSampler = renderer->CreateSampler(samplerDesc);
@@ -1050,59 +1060,6 @@ private:
         skyboxCubemap = LoadCubeOrArrayTexture(
             LLGL::TextureType::TextureCube, "Skybox/sky_74_cubemap_2k/",
             { "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png" }
-        );
-
-        // Load all UI element textures. For high-resolution displays, load the larger 64px UI elements.
-        LLGL::Display* primaryDisplay = LLGL::Display::GetPrimary();
-        int uiScale = std::max(1, static_cast<int>(primaryDisplay->GetScale() + 0.001f));
-        {
-            // If resolution is too small, clamp UI scale at 2
-            LLGL::DisplayMode displayMode = primaryDisplay->GetDisplayMode();
-            if (std::min(displayMode.resolution.width, displayMode.resolution.height) < 1000)
-                uiScale = std::min(uiScale, 2);
-        }
-
-        if (primaryDisplay != nullptr && uiScale >= 2)
-        {
-            uiMenuTexture = LoadCubeOrArrayTexture(
-                LLGL::TextureType::Texture2DArray, "UIElements/",
-                { "save64.png", "load64.png", "arrow64.png", "rotate64.png", "share64.png" }
-            );
-        }
-        else
-        {
-            uiMenuTexture = LoadCubeOrArrayTexture(
-                LLGL::TextureType::Texture2DArray, "UIElements/",
-                { "save32.png", "load32.png", "arrow32.png", "rotate32.png", "share32.png" }
-            );
-        }
-
-        // Load textures for thumbthick controls
-        if (IsRunningOnMobileDevice())
-        {
-            auto Load2DTextureAs2DArray = [this](const char* filename) -> LLGL::Texture*
-            {
-                return LoadCubeOrArrayTexture(LLGL::TextureType::Texture2DArray, "", { filename });
-            };
-
-            uiThumbstickTexture = Load2DTextureAs2DArray("UIElements/thumbstick.png");
-            uiThumbstickBgTexture = Load2DTextureAs2DArray("UIElements/thumbstick-fixture.png");
-        }
-
-        auto GetTexMaxSizeOrDefault = [](LLGL::Texture* tex, int defaultSize = 0) -> int
-        {
-            if (tex != nullptr)
-            {
-                const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
-                return static_cast<int>(std::max(texExtent.width, texExtent.height));
-            }
-            return 0;
-        };
-
-        InitUILayoutForElementSize(
-            GetTexMaxSizeOrDefault(uiMenuTexture, 32),
-            GetTexMaxSizeOrDefault(uiThumbstickTexture) * uiScale,
-            GetTexMaxSizeOrDefault(uiThumbstickBgTexture) * uiScale
         );
 
         // Create render pass for opacity scene rendering.
@@ -1141,6 +1098,69 @@ private:
             transparencyPassDesc.depthAttachment.storeOp        = LLGL::AttachmentStoreOp::Undefined;
         }
         transparency.renderPass = renderer->CreateRenderPass(transparencyPassDesc);
+    }
+
+    // Loads UI textures and initializes UI layouts
+    void LoadUIElements()
+    {
+        // Load all UI element textures. For high-resolution displays, load the larger 64px UI elements.
+        LLGL::Display* primaryDisplay = LLGL::Display::GetPrimary();
+        int uiScale = std::max(1, static_cast<int>(primaryDisplay->GetScale() + 0.001f));
+        {
+            // If resolution is too small, clamp UI scale at 2
+            LLGL::DisplayMode displayMode = primaryDisplay->GetDisplayMode();
+            if (std::min(displayMode.resolution.width, displayMode.resolution.height) < 1000)
+                uiScale = std::min(uiScale, 2);
+        }
+
+        if (primaryDisplay != nullptr && uiScale >= 2)
+        {
+            uiMenuTextureAtlas = LoadCubeOrArrayTexture(
+                LLGL::TextureType::Texture2DArray, "UIElements/",
+                { "save64.png", "load64.png", "arrow64.png", "rotate64.png", "share64.png" }
+            );
+        }
+        else
+        {
+            uiMenuTextureAtlas = LoadCubeOrArrayTexture(
+                LLGL::TextureType::Texture2DArray, "UIElements/",
+                { "save32.png", "load32.png", "arrow32.png", "rotate32.png", "share32.png" }
+            );
+        }
+
+        // Load textures for thumbthick controls
+        if (options.useMobileView)
+        {
+            auto Load2DTextureAs2DArray = [this](const char* filename) -> LLGL::Texture*
+            {
+                return LoadCubeOrArrayTexture(LLGL::TextureType::Texture2DArray, "", { filename });
+            };
+
+            uiThumbstickTexture = Load2DTextureAs2DArray("UIElements/thumbstick.png");
+            uiThumbstickBgTexture = Load2DTextureAs2DArray("UIElements/thumbstick-fixture.png");
+        }
+
+        uiTrashTextureAtlas = LoadCubeOrArrayTexture(
+            LLGL::TextureType::Texture2DArray, "UIElements/",
+            { "trash.png", "trash-open.png" }
+        );
+
+        auto GetTexMaxSizeOrDefault = [](LLGL::Texture* tex, int defaultSize = 0) -> int
+        {
+            if (tex != nullptr)
+            {
+                const LLGL::Extent3D texExtent = tex->GetMipExtent(0);
+                return static_cast<int>(std::max(texExtent.width, texExtent.height));
+            }
+            return 0;
+        };
+
+        InitUILayoutForElementSize(
+            GetTexMaxSizeOrDefault(uiMenuTextureAtlas, 32),
+            GetTexMaxSizeOrDefault(uiThumbstickTexture) * uiScale,
+            GetTexMaxSizeOrDefault(uiThumbstickBgTexture) * uiScale,
+            GetTexMaxSizeOrDefault(uiTrashTextureAtlas) * uiScale
+        );
     }
 
     bool CreatePipelines()
@@ -1233,7 +1253,7 @@ private:
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
 
-        if (!IsRunningOnMobileDevice())
+        if (!options.useMobileView)
         {
             psoDesc.debugName               = "Scene.Opaque.Wireframe.PSO";
             psoDesc.rasterizer.polygonMode  = LLGL::PolygonMode::Wireframe;
@@ -1271,7 +1291,7 @@ private:
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
 
-        if (!IsRunningOnMobileDevice())
+        if (!options.useMobileView)
         {
             psoTransparentDesc.debugName                        = "Scene.Transparent.Wireframe.PSO";
             psoTransparentDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
@@ -2407,7 +2427,7 @@ private:
 
     unsigned NumInputPointers() const
     {
-        // This app recognizes up to 2 touch inputs on mobile. Only 1 mouse input for desktop.
+        // This app recognizes up to 2 touch inputs on mobile. Only 1 mouse input for desktop. Ignore `options.useMobileView` here!
         return IsRunningOnMobileDevice() ? 2 : 1;
     }
 
@@ -2434,6 +2454,24 @@ private:
             for_range(pointerIndex, NumInputPointers())
             {
                 if (IsInputPointerActiveInRect(pointerIndex))
+                    return pointerIndex + 1;
+            }
+        }
+        return 0;
+    }
+
+    unsigned FindInputPointerInCircle(int x, int y, int radius, bool canSelect = true) const
+    {
+        if (canSelect)
+        {
+            const Gs::Vector2f posA{ static_cast<float>(x), static_cast<float>(y) };
+            const float radiusSq = static_cast<float>(radius*radius);
+            for_range(pointerIndex, NumInputPointers())
+            {
+                const LLGL::InputPointer& inputPointer = input.GetPointer(pointerIndex);
+                const Gs::Vector2f posB{ static_cast<float>(inputPointer.position.x), static_cast<float>(inputPointer.position.y) };
+                float distSq = Gs::DistanceSq(posA, posB);
+                if (distSq < radiusSq)
                     return pointerIndex + 1;
             }
         }
@@ -2510,7 +2548,7 @@ private:
 
         // Draw menu icon
         const UIMenuInfo& menuInfo = uiLayout.menuInfos[menuItem];
-        uiRenderer.Draw2DImage(uiState.x + UILayout::buttonFrameSize, uiState.y + UILayout::buttonFrameSize, uiMenuTexture, menuInfo.layer, LLGL::ColorRGBAub{}, menuInfo.flags);
+        uiRenderer.Draw2DImage(uiState.x + UILayout::buttonFrameSize, uiState.y + UILayout::buttonFrameSize, uiMenuTextureAtlas, menuInfo.layer, LLGL::ColorRGBAub{}, menuInfo.flags);
 
         if (isDisabled)
         {
@@ -2526,9 +2564,9 @@ private:
         return (MaskPointerId_ForInputUp(pointerId) != 0);
     }
 
-    void InitUILayoutForElementSize(int uiElementSize, int thumbstickSize, int thumbstickBgSize)
+    void InitUILayoutForElementSize(int uiElementSize, int thumbstickSize, int thumbstickBgSize, int trashIconSize)
     {
-        uiLayout.InitForElementSize(uiElementSize, thumbstickSize, thumbstickBgSize);
+        uiLayout.InitForElementSize(uiElementSize, thumbstickSize, thumbstickBgSize, trashIconSize);
 
         // Cache width of main menu
         uiState.mainMenuWidth = 0;
@@ -2583,9 +2621,9 @@ private:
         }
         uiState.menuBarRight.UpdateScrolling(dt, uiState.scrH);
 
-        if (IsRunningOnMobileDevice())
+        if (options.useMobileView)
         {
-            // Update thumbthink positions
+            // Update thumbstick positions
             const int thumbstickCenterY = uiState.scrH - uiLayout.thumbstickOffset;
 
             uiState.thumbstickLeft.center.x = uiLayout.thumbstickOffset + uiState.menuBarLeft.width;
@@ -2655,6 +2693,21 @@ private:
         );
     }
 
+    unsigned DrawUITrashbin()
+    {
+        // Draw this at the same position as the left thumbstick. Either thumbsticks or the trash bin are visible, not both at the same time.
+        const int posX = uiState.thumbstickLeft.center.x;
+        const int posY = uiState.thumbstickLeft.center.y;
+
+        int radius = uiLayout.trashIconSize/2;
+        unsigned pointerId = FindInputPointerInCircle(posX, posY, radius);
+        bool isSelected = (pointerId > 0);
+
+        uiRenderer.Draw2DImage(posX, posY, uiTrashTextureAtlas, isSelected ? 1 : 0, {}, UIRenderFlags_Center | UIRenderFlags_LinearSampling);
+
+        return pointerId;
+    }
+
     // Returns true if either all hand actions are none or any of them is equal to the input action
     bool AllHandAction(HandAction action) const
     {
@@ -2670,7 +2723,7 @@ private:
     void DrawUIImmediateMode()
     {
         // Draw thumbsticks on mobile devices
-        if (IsRunningOnMobileDevice())
+        if (options.useMobileView)
         {
             if (AllHandAction(HandAction::None) || AnyHandAction(HandAction::Mobile_MoveCamera) || AnyHandAction(HandAction::Mobile_TurnCamera))
             {
@@ -2790,6 +2843,18 @@ private:
             //TODO
         }
         #endif
+
+        // Draw trash bin when bricks are being moved
+        if (AnyHandAction(HandAction::MoveBrick))
+        {
+            // Store which input pointer is actively hovering over the trash bin icon
+            uiState.trash.activePointerId = DrawUITrashbin();
+        }
+        else
+        {
+            // Reset input pointer ID for trash bin icon
+            uiState.trash.activePointerId = 0;
+        }
     }
 
     void PrepareUIDrawCommands()
@@ -3128,9 +3193,16 @@ private:
         );
     }
 
-    void ProcessInputPointerBrickMovement(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    void ProcessInputPointerBrickMovement(UserHand& hand, const LLGL::InputPointer& inputPointer, unsigned pointerIndex)
     {
+        // Reset blocked state of the preview brick, then update its grid position by pointing into the scene
+        viewOptions.previewBrick.isBlocked = false;
+
         PickGridPosForPreviewBrick(inputPointer);
+
+        const bool isBrickOverTrash = (uiState.trash.activePointerId == (pointerIndex + 1));
+        if (isBrickOverTrash)
+            viewOptions.previewBrick.isBlocked = true;
 
         if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
         {
@@ -3140,8 +3212,9 @@ private:
         }
         else if (IsInputUp(inputPointer))
         {
-            // Place brick at new location and transition back to 'select' mode
-            NewBrickEvent();
+            // Place brick at new location. If brick was moved to trash bin, simply transition back to default mode (this effectively deletes the brick).
+            if (!isBrickOverTrash)
+                NewBrickEvent();
             hand.action = HandAction::None;
         }
     }
@@ -3250,7 +3323,9 @@ private:
             hand.captureScroll = uiState.menuBarLeft.scroll.position + static_cast<float>(hand.capturePos.y);
         }
         else if (IsInputUp(inputPointer))
+        {
             hand.action = HandAction::LeftMenu_Select;
+        }
     }
 
     void ProcessInputPointerDecideRightMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
@@ -3327,7 +3402,7 @@ private:
         }
     }
 
-    void ProcessInputPointerUpdatePhase(UserHand& hand, const LLGL::InputPointer& inputPointer, float dt)
+    void ProcessInputPointerUpdatePhase(UserHand& hand, const LLGL::InputPointer& inputPointer, unsigned pointerIndex, float dt)
     {
         switch (hand.action)
         {
@@ -3364,23 +3439,26 @@ private:
                 break;
 
             case HandAction::MoveBrick:
-                ProcessInputPointerBrickMovement(hand, inputPointer);
+                ProcessInputPointerBrickMovement(hand, inputPointer, pointerIndex);
                 break;
         }
     }
 
-    void ProcessInputPointer(UserHand& hand, const LLGL::InputPointer& inputPointer, float dt)
+    void ProcessInputPointer(unsigned pointerIndex, float dt)
     {
-        if (inputPointer.state != LLGL::InputState::Inactive)
-        {
-            hand.isOverMenu = IsPointerOverMenu(inputPointer);
+        UserHand& hand = user.hand[pointerIndex];
+        const LLGL::InputPointer& inputPointer = input.GetPointer(pointerIndex);
 
-            // If input pointer has not been captured yet, check whether it must be captured now
-            if (hand.action == HandAction::None)
+        hand.isOverMenu = IsPointerOverMenu(inputPointer);
+
+        // If input pointer has not been captured yet, check whether it must be captured now
+        if (hand.action == HandAction::None)
+        {
+            if (inputPointer.state != LLGL::InputState::Inactive)
                 ProcessInputPointerStartPhase(hand, inputPointer);
-            else
-                ProcessInputPointerUpdatePhase(hand, inputPointer, dt);
         }
+        else
+            ProcessInputPointerUpdatePhase(hand, inputPointer, pointerIndex, dt);
     }
 
     void ProcessUserInput(float dt)
@@ -3391,7 +3469,7 @@ private:
         Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
 
         for_range(pointerIndex, NumInputPointers())
-            ProcessInputPointer(user.hand[pointerIndex], input.GetPointer(pointerIndex), dt);
+            ProcessInputPointer(pointerIndex, dt);
 
         camera.ApplyForces(dt, currentScene.get());
 

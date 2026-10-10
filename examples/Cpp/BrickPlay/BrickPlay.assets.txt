@@ -8,4 +8,5 @@ Textures/UIElements/rotate*.png
 Textures/UIElements/save*.png
 Textures/UIElements/share*.png
 Textures/UIElements/thumbstick*.png
+Textures/UIElements/trash*.png
 Scenes/Bricks.scene.txt

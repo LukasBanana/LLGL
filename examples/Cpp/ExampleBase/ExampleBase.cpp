@@ -272,12 +272,22 @@ static Gs::Vector3f Unit3DVectorFrom2DPosition(const LLGL::Viewport& viewport, L
 }
 
 void TrackballRotationModel::Rotate(
-    Gs::Quaternionf&        rotation,
-    const LLGL::Viewport&   viewport,
-    const LLGL::Offset2D&   cursorPosition,
-    bool                    isStartPosition,
-    float                   projZAxis)
+    Gs::Quaternionf&    rotation,
+    LLGL::Viewport      viewport,
+    LLGL::Offset2D      cursorPosition,
+    bool                isStartPosition,
+    float               projZAxis)
 {
+    // Adjust viewport by display scale for this calculation
+    if (LLGL::Display* primaryDisplay = LLGL::Display::GetPrimary())
+    {
+        const float scale = primaryDisplay->GetScale();
+        viewport.x      *= scale;
+        viewport.y      *= scale;
+        viewport.width  *= scale;
+        viewport.height *= scale;
+    }
+
     if (isStartPosition)
     {
         cursorStartPosition_    = cursorPosition;

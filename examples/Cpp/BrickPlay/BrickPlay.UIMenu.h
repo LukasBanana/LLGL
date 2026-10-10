@@ -75,17 +75,21 @@ struct UILayout
     int     brickThumbnailSize      = 0;
     int     scrollIndicatorSize     = 0;
     float   menuBarTriggerDist      = 0.0f;
+
     int     thumbstickSize          = 0;
     int     thumbstickBgSize        = 0;
     int     thumbstickOffset        = 0;
     float   thumbstickMaxDrift      = 0.0f;
 
+    int     trashIconSize           = 0;
+    int     trashIconOffset         = 0;
+
     UILayout()
     {
-        InitForElementSize(defaultElementSize, 0, 0);
+        InitForElementSize(defaultElementSize, 0, 0, 0);
     }
 
-    void InitForElementSize(int uiElementSize, int inThumbstickSize, int inThumbstickBgSize)
+    void InitForElementSize(int uiElementSize, int inThumbstickSize, int inThumbstickBgSize, int inTrashIconSize)
     {
         mainMenuItemSize        = uiElementSize;
         mainMenuSeparatorSize   = uiElementSize/2;
@@ -100,6 +104,9 @@ struct UILayout
         thumbstickBgSize        = inThumbstickBgSize;
         thumbstickOffset        = inThumbstickBgSize*2/3;
         thumbstickMaxDrift      = static_cast<float>(inThumbstickBgSize/2);
+
+        trashIconSize           = inTrashIconSize;
+        trashIconOffset         = inTrashIconSize*2/3;
     }
 };
 
@@ -164,9 +171,16 @@ struct UIState
         Gs::Vector2f    drift;
     };
 
+    struct Trash
+    {
+        LLGL::Offset2D  center;
+        unsigned        activePointerId  = 0;
+    };
+
     MenuBar     menuBarLeft     = { false };
     MenuBar     menuBarRight    = { true  };
     MenuBar*    currentMenuBar  = nullptr;
+    Trash       trash;
 
     Thumbstick  thumbstickLeft;
     Thumbstick  thumbstickRight;
