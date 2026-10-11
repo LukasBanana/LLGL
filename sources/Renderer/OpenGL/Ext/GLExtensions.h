@@ -17,7 +17,13 @@
 #   endif
 #elif LLGL_OPENGLES3
 #   include "../Profile/GLES/GLESExtensions.h"
+#elif LLGL_WEBGL
+#   include "../Profile/WebGL/WebGLExtensions.h"
 #endif
+
+// Includes constnats defined as `GL_*` macros if they are missing in the current environment.
+// MacOS and WebGL rely on this for both standard GL constants and extensions.
+#include "GLExtensionConstants.h"
 
 
 #endif

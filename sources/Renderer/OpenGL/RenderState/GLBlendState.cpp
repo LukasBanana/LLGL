@@ -34,7 +34,7 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
     sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
     sampleMask_             = desc.sampleMask;
 
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     if (desc.logicOp != LogicOp::Disabled)
     {
         logicOpEnabled_ = true;
@@ -68,7 +68,7 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
 
     stateMngr.Set(GLState::SampleAlphaToCoverage, sampleAlphaToCoverage_);
 
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
 
     if (logicOpEnabled_)
     {
@@ -109,7 +109,7 @@ int GLBlendState::CompareSWO(const GLBlendState& lhs, const GLBlendState& rhs)
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]         );
     LLGL_COMPARE_MEMBER_SWO     ( sampleAlphaToCoverage_ );
   //LLGL_COMPARE_MEMBER_SWO     ( sampleMask_            );
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_        );
     LLGL_COMPARE_MEMBER_SWO     ( logicOp_               );
     #endif
@@ -139,7 +139,7 @@ void GLBlendState::BindDrawBufferStates(GLStateManager& stateMngr)
     }
     else if (numDrawBuffers_ > 1)
     {
-        #ifdef GL_ARB_draw_buffers_blend
+        #if LLGL_GLEXT_DRAW_BUFFERS_BLEND
         if (HasExtension(GLExt::ARB_draw_buffers_blend))
         {
             /* Bind blend states for respective draw buffers directly via extension */
@@ -147,7 +147,7 @@ void GLBlendState::BindDrawBufferStates(GLStateManager& stateMngr)
                 BindIndexedDrawBufferState(drawBuffers_[i], i);
         }
         else
-        #endif // /GL_ARB_draw_buffers_blend
+        #endif // /LLGL_GLEXT_DRAW_BUFFERS_BLEND
         {
             /* Bind blend states with emulated draw buffer setting */
             for_range(i, numDrawBuffers_)
@@ -172,7 +172,7 @@ void GLBlendState::BindDrawBufferColorMasks(GLStateManager& stateMngr)
     }
     else if (numDrawBuffers_ > 1)
     {
-        #ifdef GL_EXT_draw_buffers2
+        #if GL_EXT_draw_buffers2
         if (HasExtension(GLExt::EXT_draw_buffers2))
         {
             /* Bind color mask for respective draw buffers directly via extension */

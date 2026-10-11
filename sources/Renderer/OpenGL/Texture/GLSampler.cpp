@@ -9,6 +9,7 @@
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/Exception.h"
 #include "../../../Core/CoreUtils.h"
@@ -60,9 +61,8 @@ void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
     /* Set filter states */
     glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, GLTypes::ToSamplerMinFilter(desc));
     glSamplerParameteri(id_, GL_TEXTURE_MAG_FILTER, GLTypes::Map(desc.magFilter));
-    #ifdef LLGL_OPENGL
-    glSamplerParameterf(id_, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<float>(desc.maxAnisotropy));
-    #endif
+    if (HasExtension(GLExt::EXT_texture_filter_anisotropic))
+        glSamplerParameterf(id_, GL_TEXTURE_MAX_ANISOTROPY, static_cast<float>(desc.maxAnisotropy));
 
     /* Set MIP-map level selection */
     glSamplerParameterf(id_, GL_TEXTURE_MIN_LOD, desc.minLOD);

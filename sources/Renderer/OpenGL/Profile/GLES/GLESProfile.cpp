@@ -114,7 +114,7 @@ static_assert(LLGL_MAX_NUM_COLOR_ATTACHMENTS <= 16, "GLES profile can only handl
 
 void DrawBuffer(GLenum buf)
 {
-    if (buf >= GL_COLOR_ATTACHMENT0 && buf <= GL_COLOR_ATTACHMENT0 + LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+    if (buf >= GL_COLOR_ATTACHMENT0 && buf < GL_COLOR_ATTACHMENT0 + LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         /*
         GL_COLOR_ATTACHMENT(i) must only be used at the i-th binding point in GLES/WebGL,

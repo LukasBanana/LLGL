@@ -1,16 +1,17 @@
 /*
- * MacOSGLExt.h
- * 
+ * GLExtensionConstants.h
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_MACOS_GL_EXT_H
-#define LLGL_MACOS_GL_EXT_H
+#ifndef LLGL_GL_EXTENSION_CONSTANTS_H
+#define LLGL_GL_EXTENSION_CONSTANTS_H
 
 
-#include "../../OpenGL.h"
-#include "../../Ext/GLExtensions.h"
+#if !defined(GL_TRUE) || !defined(GL_FALSE)
+#   error GL_TRUE or GL_FALSE are not defined. Make sure <GL/GL.h> is included before including GLConstants.h!
+#endif
 
 
 #ifndef GL_MIRROR_CLAMP_TO_EDGE
@@ -71,6 +72,10 @@
 
 #ifndef GL_TEXTURE_MAX_ANISOTROPY
 #define GL_TEXTURE_MAX_ANISOTROPY                       ( 0x84FE )
+#endif
+
+#ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY                   ( 0x84FF )
 #endif
 
 #ifndef GL_CLIP_ORIGIN

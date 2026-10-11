@@ -243,14 +243,14 @@ static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outConten
             /* Allocate internal container and optional NUL-terminator */
             if (isNULTerminated)
             {
-                outContent = DynamicByteArray{ assetSize + 1, UninitializeTag{} };
+                outContent = DynamicByteArray{ static_cast<std::size_t>(assetSize + 1), UninitializeTag{} };
                 outContent[assetSize] = '\0';
             }
             else
-                outContent = DynamicByteArray{ assetSize, UninitializeTag{} };
+                outContent = DynamicByteArray{ static_cast<std::size_t>(assetSize), UninitializeTag{} };
 
             /* Read entire asset content */
-            AAsset_read(asset, outContent.data(), static_cast<size_t>(assetSize));
+            AAsset_read(asset, outContent.data(), static_cast<std::size_t>(assetSize));
         }
         AAsset_close(asset);
         return true;
@@ -315,7 +315,8 @@ Blob Blob::CreateFromFile(const char* filename, bool isTextFile)
 {
     if (filename != nullptr && *filename != '\0')
     {
-        #if LLGL_MOBILE_PLATFORM
+        //TODO: this might not be necessary anymore; Re-evaluate on iOS
+        #if LLGL_OS_IOS
         /* Substitute filename with its absolute path for mobile platforms. */
         const UTF8String fullFilePath = Path::GetAbsolutePath(filename);
         filename = fullFilePath.c_str();

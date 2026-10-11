@@ -8,6 +8,7 @@
 #include "GLEmulatedSampler.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/MacroUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
@@ -131,9 +132,8 @@ void GLEmulatedSampler::BindTexParameters(GLenum target, const GLEmulatedSampler
         GLChangeTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR_, prevSampler->wrapR_);
         GLChangeTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilter_, prevSampler->minFilter_);
         GLChangeTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilter_, prevSampler->magFilter_);
-        #if LLGL_OPENGL
-        GLChangeTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_, prevSampler->maxAnisotropy_);
-        #endif
+        if (HasExtension(GLExt::EXT_texture_filter_anisotropic))
+            GLChangeTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_, prevSampler->maxAnisotropy_);
         GLChangeTexParameterf(target, GL_TEXTURE_MIN_LOD, minLod_, prevSampler->minLod_);
         GLChangeTexParameterf(target, GL_TEXTURE_MAX_LOD, maxLod_, prevSampler->maxLod_);
         #if LLGL_OPENGL
@@ -155,9 +155,8 @@ void GLEmulatedSampler::BindTexParameters(GLenum target, const GLEmulatedSampler
         GLSetTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR_);
         GLSetTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilter_);
         GLSetTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilter_);
-        #if LLGL_OPENGL
-        GLSetTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_);
-        #endif
+        if (HasExtension(GLExt::EXT_texture_filter_anisotropic))
+            GLSetTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_);
         GLSetTexParameterf(target, GL_TEXTURE_MIN_LOD, minLod_);
         GLSetTexParameterf(target, GL_TEXTURE_MAX_LOD, maxLod_);
         #if LLGL_OPENGL

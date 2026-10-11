@@ -33,6 +33,16 @@
 #define LLGL_GLEXT_VERTEX_ARRAY_OBJECT 1
 #define LLGL_GLEXT_FRAMEBUFFER_OBJECT 1
 #define LLGL_GLEXT_SHADER_OBJECTS_30 1
+#define LLGL_GLEXT_DRAW_BUFFERS_BLEND 1
+
+#define glEnablei(...)                  glEnableiOES(__VA_ARGS__)
+#define glDisablei(...)                 glDisableiOES(__VA_ARGS__)
+#define glBlendEquationi(...)           glBlendEquationiOES(__VA_ARGS__)
+#define glBlendEquationSeparatei(...)   glBlendEquationSeparateiOES(__VA_ARGS__)
+#define glBlendFunci(...)               glBlendFunciOES(__VA_ARGS__)
+#define glBlendFuncSeparatei(...)       glBlendFuncSeparateiOES(__VA_ARGS__)
+#define glColorMaski(...)               glColorMaskiOES(__VA_ARGS__)
+//#define glIsEnabledi(...)               glIsEnablediOES(__VA_ARGS__) // Not supported in WebGL
 
 #else // LLGL_WEBGL
 

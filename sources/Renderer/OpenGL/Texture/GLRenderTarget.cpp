@@ -158,8 +158,10 @@ static void SetGLDrawBuffers(const SmallVector<GLenum, 2>& drawBuffers)
         GLProfile::DrawBuffer(GL_NONE);
     else if (drawBuffers.size() == 1)
         GLProfile::DrawBuffer(drawBuffers.front());
-    else
+    else if (HasExtension(GLExt::ARB_draw_buffers))
         glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
+    else
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_draw_buffers");
 }
 
 void GLRenderTarget::SetDrawBuffers()

@@ -136,7 +136,7 @@ DECL_GLPROC(PFNGLTEXSTORAGE3DMULTISAMPLEPROC,           glTexStorage3DMultisampl
 
 #endif // /GL_ES_VERSION_3_2
 
-#endif // /__APPLE__
+#endif // /!GL_GLEXT_PROTOTYPES
 
 
 

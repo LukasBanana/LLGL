@@ -104,12 +104,15 @@ enum class GLExt
     EXT_copy_texture,                   // GL 1.2
     EXT_draw_buffers2,
     EXT_gpu_shader4,                    // GL 2.0
-    EXT_stencil_two_side,               //ATI_separate_stencil,
+    EXT_stencil_two_side,               // ATI_separate_stencil
     EXT_texture3D,                      // GL 1.2
     EXT_texture_array,                  // no procedures
     EXT_transform_feedback,             // GL 3.0
+    EXT_texture_filter_anisotropic,
+    EXT_color_buffer_float,             // WebGL 2.0
+    EXT_color_buffer_half_float,        // WebGL 2.0
 
-    /* OpenGLES specific extensions (GLES) */
+    /* OpenGLES/WebGL specific extensions */
     OES_tessellation_shader,            // GLES 3.2
 
     /* NVIDIA specific extensions (NV) */

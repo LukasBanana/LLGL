@@ -35,7 +35,7 @@
 #       include <OpenGL/gl.h>
 #   endif
 #   include <OpenGL/glext.h>
-#   include "../../Platform/MacOS/MacOSGLExt.h"
+#   include "../../Ext/GLExtensions.h"
 #else
 #   error Unsupported platform for OpenGL
 #endif

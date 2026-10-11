@@ -81,6 +81,7 @@ struct ApplicationDescriptor
 \brief Structure for a Vulkan renderer specific configuration.
 \remarks The nomenclature here is "Renderer" instead of "RenderSystem" since the configuration is renderer specific
 and does not denote a configuration of the entire system.
+\todo Move this to LLGL::Vulkan::RendererConfiguration and into folder include/LLGL/Backend/Vulkan/.
 */
 struct RendererConfigurationVulkan
 {
@@ -138,6 +139,7 @@ struct RendererConfigurationVulkan
 /**
 \brief OpenGL/OpenGLES profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
+\todo Move this to LLGL::OpenGL::RendererConfiguration and into folder include/LLGL/Backend/OpenGL/.
 */
 struct RendererConfigurationOpenGL
 {

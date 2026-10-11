@@ -1023,7 +1023,7 @@ static GLExtensionMap           g_OpenGLExtensionsMap;
 static std::set<const char*>    g_supportedOpenGLExtensions;
 static std::set<const char*>    g_loadedOpenGLExtensions;
 
-bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
+bool LoadSupportedOpenGLExtensions(GLContext& /*context*/, bool isCoreProfile, bool abortOnFailure)
 {
     /* Only load GL extensions once */
     if (g_OpenGLExtensionsLoaded)
@@ -1244,6 +1244,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( ARB_seamless_cubemap_per_texture );
     ENABLE_GLEXT( ARB_ES3_compatibility            );
     ENABLE_GLEXT( EXT_texture_array                );
+    ENABLE_GLEXT( EXT_texture_filter_anisotropic   );
     ENABLE_GLEXT( INTEL_conservative_rasterization );
     ENABLE_GLEXT( NV_conservative_raster           );
     ENABLE_GLEXT( ARB_texture_compression_bptc     );
