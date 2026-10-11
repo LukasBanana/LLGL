@@ -267,6 +267,11 @@ class ColorPalette
     std::vector<LLGL::ColorRGBAub>  colors;
     int                             firstTransparentIndex   = 0xFF;
 
+    static int ColorToRank(LLGL::ColorRGBAub col)
+    {
+        return col.a * 255*6 + (col.r*2 + col.g*3 + col.b);
+    };
+
 public:
 
     static constexpr int            maxNumColors            = 32;
@@ -310,25 +315,22 @@ public:
 
     int FindClosestColorIndex(LLGL::ColorRGBAub inColor) const
     {
-        auto ColorToRank = [](LLGL::ColorRGBAub col) -> int
-        {
-            return col.a * 255*3 + (col.r + col.g + col.b);
-        };
-
         const int inColorRank = ColorToRank(inColor);
-        int prevRank = INT32_MAX;
 
-        std::size_t i = 0;
-        while (i < colors.size())
+        std::size_t lowestRankDiffIndex = 0;
+        int lowestRankDiff = INT32_MAX;
+
+        for_range(i, colors.size())
         {
-            int currentRank = std::abs(ColorToRank(colors[i]) - inColorRank);
-            if (prevRank < currentRank)
-                break;
-            prevRank = currentRank;
-            ++i;
+            int rankDiff = std::abs(ColorToRank(colors[i]) - inColorRank);
+            if (lowestRankDiff > rankDiff)
+            {
+                lowestRankDiffIndex = i;
+                lowestRankDiff = rankDiff;
+            }
         }
 
-        return std::max(0, static_cast<int>(i) - 1);
+        return static_cast<int>(lowestRankDiffIndex);
     }
 
     void Insert(LLGL::ColorRGBAub color)
@@ -336,7 +338,7 @@ public:
         colors.push_back(color);
     }
 
-    // Finalizes the color palette by sorting them from brightest to darkest and opaque to transparent.
+    // Finalizes the color palette by sorting them from opaque to transparent.
     void Finalize()
     {
         std::sort(
@@ -344,15 +346,7 @@ public:
             colors.end(),
             [](const LLGL::ColorRGBAub& lhs, const LLGL::ColorRGBAub& rhs) -> bool
             {
-                // First sort by opaque and transparent
-                if (lhs.a > rhs.a) { return true;  }
-                if (lhs.a < rhs.a) { return false; }
-
-                // Next sort by very crude brightness comparison. We don't care about luminance here, just use sum of all components
-                int lhsSum = lhs.r + lhs.g + lhs.b;
-                int rhsSum = rhs.r + rhs.g + rhs.b;
-
-                return lhsSum > rhsSum;
+                return (lhs.a > rhs.a);
             }
         );
 

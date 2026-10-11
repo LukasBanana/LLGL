@@ -36,14 +36,6 @@ class Example_BrickPlay : public ExampleBase
     #define foreach_dimension(X, Y, Z, VEC) \
         for_range(Z, (VEC).z) for_range(Y, (VEC).y) for_range(X, (VEC).x)
 
-    #if 0//LLGL_OS_WASM
-    // WebGL cannot render into floating-point texture formats :-(
-    static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA32UInt;
-    #else
-    // High precision format for transparency accumulation texture. Set this to either RGBA16Float or RGBA32Float.
-    static constexpr LLGL::Format   transparencyAccumFormat         = LLGL::Format::RGBA16Float;
-    #endif
-
     struct Options
     {
         std::string                 sceneFilename                   = "Scenes/Bricks.scene.txt";
@@ -264,15 +256,6 @@ class Example_BrickPlay : public ExampleBase
         LLGL::RenderPass*       renderPass      = nullptr;
     }
     transparency;
-
-    // Brick vertex strucutre for brick instances. They are untextured, solid-colored bricks, so they don't need texture coordinates.
-    struct BrickVertex
-    {
-        Gs::Vector3f position;
-        Gs::Vector3f normal;
-    };
-
-    std::vector<BrickVertex> brickVertices;
 
     // Determines what mode to use to render the highlighting of a selected scene object.
     enum class SelectionRenderMode
@@ -601,24 +584,12 @@ private:
         LLGL_LOG("Load brick model: %s\n", filename);
 
         const std::vector<TexturedVertex> intermediateVertices = Load3DModel(filename);
-        if (intermediateVertices.empty())
-            return false;
-
-        outMesh.firstVertex = static_cast<std::uint32_t>(brickVertices.size());
-        outMesh.numVertices = static_cast<std::uint32_t>(intermediateVertices.size());
-
-        brickVertices.resize(brickVertices.size() + intermediateVertices.size());
-
-        auto ConvertVertex = [](BrickVertex& dst, const TexturedVertex& src) -> void
+        if (!intermediateVertices.empty())
         {
-            dst.position    = src.position;
-            dst.normal      = src.normal;
-        };
-
-        for_range(i, outMesh.numVertices)
-            ConvertVertex(brickVertices[outMesh.firstVertex + i], intermediateVertices[i]);
-
-        return true;
+            BrickDictionary::Get().ImportMesh(outMesh, intermediateVertices);
+            return true;
+        }
+        return false;
     }
 
     // If the configuration file fails to load, this is the last attempt to load some known hard-coded brick models.
@@ -683,13 +654,6 @@ private:
     {
         KDTreeNode::InitBoundingVolume(boundingVolume);
 
-        // Store grid boundaries as positive minimum and negative maximum so the shader can evaluate it in a single vector operation (see fragment shader 'PSPlane')
-        sceneView.gridBounds[0] = +KDTreeNode::rootAABB.bbMin.x;
-        sceneView.gridBounds[1] = +KDTreeNode::rootAABB.bbMin.z;
-
-        sceneView.gridBounds[2] = -KDTreeNode::rootAABB.bbMax.x;
-        sceneView.gridBounds[3] = -KDTreeNode::rootAABB.bbMax.z;
-
         LLGL_LOG(
             "Scene bounding volume extent: %d x %d x %d\n",
             boundingVolume[0], boundingVolume[1], boundingVolume[2]
@@ -723,20 +687,35 @@ private:
         else
             selectionRenderMode = SelectionRenderMode::Simplified;
 
-        // Import configurations and finalize color palette
-        if (!ImportConfigs(options.configFilename.c_str()))
+        // Only initialize static fields once. When Android apps are paused and resumed,
+        // the project's *.so file remains in memory and static fields are not destructed.
+        static bool isConfigImported = false;
+        if (!isConfigImported)
         {
-            ColorPalette::Get().InitDefault();
-            LoadAllDefaultBrickModels();
-        }
-        ColorPalette::Get().Finalize();
+            isConfigImported = true;
 
-        // Store root AABB of kd-Tree
-        std::vector<int> boundingVolumeOverride;
-        if (ParseArgument("-grid", boundingVolumeOverride, 'x') && boundingVolumeOverride.size() == 3)
-            InitSceneBoundingVolume(boundingVolumeOverride);
-        else
-            InitSceneBoundingVolume(options.sceneBoundingVolume);
+            // Import configurations and finalize color palette
+            if (!ImportConfigs(options.configFilename.c_str()))
+            {
+                ColorPalette::Get().InitDefault();
+                LoadAllDefaultBrickModels();
+            }
+            ColorPalette::Get().Finalize();
+
+            // Store root AABB of kd-Tree
+            std::vector<int> boundingVolumeOverride;
+            if (ParseArgument("-grid", boundingVolumeOverride, 'x') && boundingVolumeOverride.size() == 3)
+                InitSceneBoundingVolume(boundingVolumeOverride);
+            else
+                InitSceneBoundingVolume(options.sceneBoundingVolume);
+        }
+
+        // Store grid boundaries as positive minimum and negative maximum so the shader can evaluate it in a single vector operation (see fragment shader 'PSPlane')
+        sceneView.gridBounds[0] = +KDTreeNode::rootAABB.bbMin.x;
+        sceneView.gridBounds[1] = +KDTreeNode::rootAABB.bbMin.z;
+
+        sceneView.gridBounds[2] = -KDTreeNode::rootAABB.bbMax.x;
+        sceneView.gridBounds[3] = -KDTreeNode::rootAABB.bbMax.z;
 
         // Explicitly disable combined vertex/index buffers for WebGL backend
         canCombineVertexAndIndexBuffers = (renderer->GetRendererID() != LLGL::RendererID::WebGL);
@@ -945,7 +924,7 @@ private:
             texDesc.debugName       = "Transparency.AccumulationTexture";
             texDesc.extent.width    = resolution.width;
             texDesc.extent.height   = resolution.height;
-            texDesc.format          = transparencyAccumFormat;
+            texDesc.format          = LLGL::Format::RGBA16Float;
             texDesc.mipLevels       = 1;
             texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
         }
@@ -991,14 +970,14 @@ private:
         LLGL::BufferDescriptor vertexBufferDesc;
         {
             vertexBufferDesc.debugName = "BrickVertexBuffer";
-            vertexBufferDesc.size      = sizeof(BrickVertex) * brickVertices.size() + sizeof(Instance);
+            vertexBufferDesc.size      = sizeof(BrickVertex) * BrickDictionary::Get().GetBrickVertices().size() + sizeof(Instance);
             vertexBufferDesc.stride    = sizeof(BrickVertex);
             vertexBufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
         }
         vertexAndPreviewInstanceBuffer  = renderer->CreateBuffer(vertexBufferDesc);
-        previewInstanceBufferOffset     = sizeof(BrickVertex) * brickVertices.size();
+        previewInstanceBufferOffset     = sizeof(BrickVertex) * BrickDictionary::Get().GetBrickVertices().size();
 
-        renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, brickVertices.data(), previewInstanceBufferOffset);
+        renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, 0, BrickDictionary::Get().GetBrickVertices().data(), previewInstanceBufferOffset);
         renderer->WriteBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &previewInstance, sizeof(previewInstance));
 
         // Create scene view and color palette constant buffers
@@ -1092,7 +1071,7 @@ private:
             transparencyPassDesc.debugName                      = "Transparency.RenderPass";
             transparencyPassDesc.samples                        = GetSampleCount();
 
-            transparencyPassDesc.colorAttachments[0].format     = transparencyAccumFormat;
+            transparencyPassDesc.colorAttachments[0].format     = LLGL::Format::RGBA16Float;
             transparencyPassDesc.colorAttachments[0].loadOp     = LLGL::AttachmentLoadOp::Clear;
             transparencyPassDesc.colorAttachments[0].storeOp    = LLGL::AttachmentStoreOp::Store;
 
@@ -1500,10 +1479,6 @@ private:
     {
         // Write header
         file << "# Scene file for LLGL's example 'BrickPlay'" << std::endl;
-        file << "# Current brick type: 'b <DIMENSIONS>' e.g. 'b 2x2x3', supported dimensions are 2x2x3, 4x2x3, 4x2x1" << std::endl;
-        file << "# New brick instance: 'i X Y Z ROTATE RGBA' e.g. 'i 10 0 -3 90 FFFF00FF', ROTATE must be 0 or 90" << std::endl;
-        file << "# Camera posiotion: 'c X Y Z PITCH YAW' e.g. 'i 10.2 5.7 -15.02 25.2 -15.1'" << std::endl;
-        file << "# Current offset: 'o X Y Z' e.g. 'o 10 0 0' moves all subsequent bricks +10 on the X-axis" << std::endl;
 
         // Write camera position
         file
@@ -2714,6 +2689,9 @@ private:
         }
         uiState.menuBarRight.UpdateScrolling(dt, uiState.scrH);
 
+        uiState.trash.center.x = uiLayout.trashIconOffset + uiState.menuBarLeft.width;
+        uiState.trash.center.y = uiState.scrH - uiLayout.trashIconOffset;
+
         if (options.useMobileView)
         {
             // Update thumbstick positions
@@ -2789,8 +2767,8 @@ private:
     unsigned DrawUITrashbin()
     {
         // Draw this at the same position as the left thumbstick. Either thumbsticks or the trash bin are visible, not both at the same time.
-        const int posX = uiState.thumbstickLeft.center.x;
-        const int posY = uiState.thumbstickLeft.center.y;
+        const int posX = uiState.trash.center.x;
+        const int posY = uiState.trash.center.y;
 
         int radius = uiLayout.trashIconSize/2;
         unsigned pointerId = FindInputPointerInCircle(posX, posY, radius);
@@ -3313,6 +3291,11 @@ private:
             // Place brick at new location. If brick was moved to trash bin, simply transition back to default mode (this effectively deletes the brick).
             if (!isBrickOverTrash)
                 NewBrickEvent();
+            hand.action = HandAction::None;
+        }
+        else if (input.KeyPressed(LLGL::Key::Delete))
+        {
+            // Reset hand action without placing a brick. This will delete the brick as it was transferred to the preview brick, which is now reset.
             hand.action = HandAction::None;
         }
     }

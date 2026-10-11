@@ -12,6 +12,7 @@
 #include <Gauss/Vector3.h>
 #include <Gauss/Equals.h> // For Vector3 == operator
 #include <GeometryUtils.h>
+#include <LLGL/Utils/ForRange.h>
 #include <string>
 #include <cstdint>
 #include <map>
@@ -47,6 +48,13 @@ enum BrickGroup : std::uint32_t
     BrickGroup_Invisible,   // Not rendered at all, for bricks that are blocked from all sides
 
     BrickGroup_Num,
+};
+
+// Brick vertex strucutre for brick instances. They are untextured, solid-colored bricks, so they don't need texture coordinates.
+struct BrickVertex
+{
+    Gs::Vector3f position;
+    Gs::Vector3f normal;
 };
 
 struct BrickMesh
@@ -115,6 +123,7 @@ inline BrickGroup GroupIdToBrickGroup(std::uint32_t groupId)
 class BrickDictionary
 {
 
+    std::vector<BrickVertex>        brickVertices;
     std::vector<BrickInfo>          brickInfos;
     std::map<std::string, BrickId>  labelToBrickId;
 
@@ -247,6 +256,30 @@ public:
                 return id;
         }
         return INVALID_BRICK_ID; // No such brick found
+    }
+
+    // Imports the specified vertices and assigned them to the output mesh.
+    void ImportMesh(BrickMesh& outMesh, const std::vector<TexturedVertex>& inVertices)
+    {
+        outMesh.firstVertex = static_cast<std::uint32_t>(brickVertices.size());
+        outMesh.numVertices = static_cast<std::uint32_t>(inVertices.size());
+
+        brickVertices.resize(brickVertices.size() + inVertices.size());
+
+        auto ConvertVertex = [](BrickVertex& dst, const TexturedVertex& src) -> void
+        {
+            dst.position    = src.position;
+            dst.normal      = src.normal;
+        };
+
+        for_range(i, outMesh.numVertices)
+            ConvertVertex(brickVertices[outMesh.firstVertex + i], inVertices[i]);
+    }
+
+    // Returns the entire container of all brick vertices.
+    const std::vector<BrickVertex>& GetBrickVertices() const
+    {
+        return brickVertices;
     }
 
 };

@@ -10,10 +10,13 @@ p 202522 # Dark gray
 p FFF03A # Bright light yellow
 p 73DCA1 # Medium green
 p 62FA78 # Bright green
+p 78BFEA # Royal blue
 p 2032B0 # Dark blue
 p FF698F # Coral
 p 923978 # Magenta
 p D54040 # Bright red
+p DDC48E # Reddish brown
+p 692E14 # Dark brown
 p FFFFFF90 # Glass
 
 # Describe all brick types
