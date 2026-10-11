@@ -770,7 +770,7 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
 
 static void GLQueryFragmentAttributes(GLuint program, ShaderReflection& reflection)
 {
-    const GLenum props[3] = { GL_LOCATION, GL_LOCATION_INDEX, GL_TYPE };
+    const GLenum props[2] = { GL_LOCATION, GL_TYPE };
 
     GLint numFragAttribs = 0;
     GLint maxNameLength = 0;
@@ -780,8 +780,8 @@ static void GLQueryFragmentAttributes(GLuint program, ShaderReflection& reflecti
 
     for_range(resourceIndex, static_cast<GLuint>(numFragAttribs))
     {
-        GLint params[3] = { -1, -1, 0 };
-        if (!GLGetProgramResourceProperties(program, GL_PROGRAM_OUTPUT, resourceIndex, 3, props, params) || params[0] == -1)
+        GLint params[2] = { -1, 0 };
+        if (!GLGetProgramResourceProperties(program, GL_PROGRAM_OUTPUT, resourceIndex, 2, props, params) || params[0] == -1)
             return;
 
         FragmentAttribute fragAttrib;
@@ -792,7 +792,7 @@ static void GLQueryFragmentAttributes(GLuint program, ShaderReflection& reflecti
             fragAttrib.name = StringView(blockName.data(), static_cast<std::size_t>(nameLength));
 
             /* Ignore matrix types; only use format, not rows */
-            fragAttrib.format = UnmapAttribType(static_cast<GLenum>(params[2])).format;
+            fragAttrib.format = UnmapAttribType(static_cast<GLenum>(params[1])).format;
 
             /* Take 'layout(location)'-property as output location */
             fragAttrib.location = static_cast<std::uint32_t>(params[0]);

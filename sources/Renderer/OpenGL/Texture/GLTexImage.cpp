@@ -167,7 +167,7 @@ static bool IsSecondaryCubeFaceTarget(GLenum target)
 
 /* ----- Back-end OpenGL functions ----- */
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 static void GLTexImage1DBase(
     GLenum          target,
@@ -267,7 +267,7 @@ static void GLTexImage2DBase(
         /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage2D>) */
         if (mipLevels > 1)
         {
-            #ifdef LLGL_OPENGL
+            #if LLGL_OPENGL
             if (target == GL_TEXTURE_1D_ARRAY || target == GL_PROXY_TEXTURE_1D_ARRAY)
             {
                 for_subrange(mipLevel, 1, mipLevels)
@@ -382,10 +382,14 @@ static void GLTexImage2DMultisampleBase(
     }
     else
     #endif
+    #if LLGL_OPENGL
     {
         /* Allocate mutable texture storage */
         glTexImage2DMultisample(target, sampleCount, internalFormat, sx, sy, fixedSampleLocations);
     }
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_texture_storage_multisample");
+    #endif
 }
 
 static void GLTexImage3DMultisampleBase(
@@ -412,17 +416,21 @@ static void GLTexImage3DMultisampleBase(
     }
     else
     #endif
+    #if LLGL_OPENGL
     {
         /* Allocate mutable texture storage */
         glTexImage3DMultisample(target, sampleCount, internalFormat, sx, sy, sz, fixedSampleLocations);
     }
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_texture_storage_multisample");
+    #endif
 }
 
 #endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 /* ----- Wrapper functions ----- */
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 static void GLTexImage1D(
     std::uint32_t   mipLevels,
@@ -479,7 +487,7 @@ static void GLTexImageCube(
     GLTexImage2DBase(GLTypes::ToTextureCubeMap(cubeFaceIndex), mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 static void GLTexImage1DArray(
     std::uint32_t   mipLevels,
@@ -549,7 +557,7 @@ static void GLTexImage2DMultisampleArray(
 
 #endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageView)
 {
@@ -893,7 +901,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     }
 }
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
@@ -1154,7 +1162,7 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
 
     switch (desc.type)
     {
-        #ifdef LLGL_OPENGL
+        #if LLGL_OPENGL
         case TextureType::Texture1D:
             GLTexImage1D(desc, imageView);
             break;
@@ -1172,7 +1180,7 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
             GLTexImageCube(desc, imageView);
             break;
 
-        #if LLGL_GLEXT_TEXTURE_MULTISAMPLE
+        #if LLGL_OPENGL && LLGL_GLEXT_TEXTURE_MULTISAMPLE
         case TextureType::Texture1DArray:
             GLTexImage1DArray(desc, imageView);
             break;
