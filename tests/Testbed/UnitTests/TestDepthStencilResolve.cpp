@@ -175,26 +175,30 @@ DEF_TEST( DepthStencilResolve )
 
     sceneConstants.vpMatrix = projection * vMatrix;
 
-    auto DrawScene = [&](RenderTarget* target, PipelineState* pso, long clearFlags)
+    auto DrawScene = [&](RenderTarget* target, PipelineState* pso, long clearFlags, const char* debugLabel)
     {
-        cmdBuffer->BeginRenderPass(*target);
+        cmdBuffer->PushDebugGroup(debugLabel);
         {
-            cmdBuffer->Clear(clearFlags);
-            cmdBuffer->SetPipelineState(*pso);
-            cmdBuffer->SetViewport(resolution);
-            cmdBuffer->SetVertexBuffer(*meshBuffer);
-            cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, models[ModelCube].indexBufferOffset);
-            cmdBuffer->SetResource(0, *sceneCbuffer);
-            cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
+            cmdBuffer->BeginRenderPass(*target);
+            {
+                cmdBuffer->Clear(clearFlags);
+                cmdBuffer->SetPipelineState(*pso);
+                cmdBuffer->SetViewport(resolution);
+                cmdBuffer->SetVertexBuffer(*meshBuffer);
+                cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, models[ModelCube].indexBufferOffset);
+                cmdBuffer->SetResource(0, *sceneCbuffer);
+                cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
+            }
+            cmdBuffer->EndRenderPass();
         }
-        cmdBuffer->EndRenderPass();
+        cmdBuffer->PopDebugGroup();
     };
 
     BEGIN();
     {
         cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-        DrawScene(refTarget, refPSO, ClearFlags::Depth);
-        DrawScene(msTarget, msPSO, ClearFlags::ColorDepth);
+        DrawScene(refTarget, refPSO, ClearFlags::Depth, "RefTarget");
+        DrawScene(msTarget, msPSO, ClearFlags::ColorDepth, "MSTarget");
     }
     END();
 
@@ -255,19 +259,25 @@ DEF_TEST( DepthStencilResolve )
     constexpr float perTexelTolerance   = 0.001f;
     constexpr float maxMismatchFraction = 0.05f;
 
+    float diffRange[2] = { +FLT_MAX, -FLT_MAX };
     std::size_t numMismatches = 0;
     for_range(i, numTexels)
     {
-        if (std::abs(refDepth[i] - resolvedDepth[i]) > perTexelTolerance)
+        float depthDiff = std::abs(refDepth[i] - resolvedDepth[i]);
+        if (depthDiff > perTexelTolerance)
+        {
             ++numMismatches;
+            diffRange[0] = std::min(diffRange[0], depthDiff);
+            diffRange[1] = std::max(diffRange[1], depthDiff);
+        }
     }
 
     const float mismatchFraction = static_cast<float>(numMismatches) / static_cast<float>(numTexels);
     if (mismatchFraction > maxMismatchFraction)
     {
         Log::Errorf(
-            "DepthStencilResolve: %zu of %zu texels (%.2f%%) differ from the non-multi-sampled reference by more than %f\n",
-            numMismatches, numTexels, mismatchFraction * 100.0f, perTexelTolerance
+            "DepthStencilResolve: %zu of %zu texels (%.2f%%) differ from the non-multi-sampled reference by more than %f; Diff range=[%f, %f]\n",
+            numMismatches, numTexels, mismatchFraction * 100.0f, perTexelTolerance, diffRange[0], diffRange[1]
         );
         result = TestResult::FailedMismatch;
     }

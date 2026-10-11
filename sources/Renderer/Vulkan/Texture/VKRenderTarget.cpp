@@ -247,13 +247,17 @@ void VKRenderTarget::CreateRenderPass(
 
         InitVkAttachmentDesc(attachmentDescs[numTargetAttachments + numColorAttachments_], format, GetAttachmentBindFlags(depthStencilResolveAttachment), VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 
-        /* Same reasoning as the color resolve above: the multi-sampled depth is resolved into the attachment and
-           never read after the pass, so it need not be written out -- again only for the DONT_CARE variant, since
-           the secondary pass reloads what it would be discarding. */
-        if (attachmentsLoadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
+        if (desc.depthStencilAttachment.texture == nullptr)
         {
-            attachmentDescs[numColorAttachments_].storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachmentDescs[numColorAttachments_].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            /* Same reasoning as the color resolve above: the multi-sampled depth is resolved into the attachment and
+               never read after the pass (if `depthStencilAttachment.texture` is null),
+               so it need not be written out -- again only for the DONT_CARE variant, since
+               the secondary pass reloads what it would be discarding. */
+            if (attachmentsLoadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
+            {
+                attachmentDescs[numColorAttachments_].storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachmentDescs[numColorAttachments_].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            }
         }
     }
 
