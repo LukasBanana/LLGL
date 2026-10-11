@@ -331,6 +331,15 @@ generate_app_project()
         copy_build_to_jnilibs "$CURRENT_PROJECT" "$APP_ROOT" "$ANDROID_ABI" 0 $NEEDS_OPENXR_LOADER
     fi
 
+    # Replace default app icon if present
+    APP_ICON_TYPES=(hdpi mdpi xhdpi xxhdpi xxxhdpi)
+    for ICON_TYPE in ${APP_ICON_TYPES[@]}; do
+        PROJECT_SOURCE_ICON="$PROJECT_SOURCE_DIR/Platform/Android/mipmap-$ICON_TYPE/ic_launcher.png"
+        if [ -f "$PROJECT_SOURCE_ICON" ]; then
+            cp "$PROJECT_SOURCE_ICON" "$APP_ROOT/app/src/main/res/mipmap-$ICON_TYPE/ic_launcher.png"
+        fi
+    done
+
     # Replace meta data
     sed -i "s/LLGL_PROJECT_NAME/Example_${CURRENT_PROJECT}/g" "$APP_ROOT/app/src/main/AndroidManifest.xml"
     sed -i "s/LLGL_APP_NAME/${CURRENT_PROJECT}/g" "$APP_ROOT/app/src/main/res/values/strings.xml"

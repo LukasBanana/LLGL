@@ -285,12 +285,13 @@ class Example_BrickPlay : public ExampleBase
     SelectionRenderMode selectionRenderMode = SelectionRenderMode::Simplified;
 
     // Height field and perlin noise generator parameters. See PerlinNoise::Noise().
+    // Don't initialize those fields, or we have to provide a constructor to initalize them in `CreateDefaultScene()`.
     struct HeightFieldParameters
     {
-        int             yRange[2]   = { -15, 20 };  // Y-coordinate grid range for auto-generated height fields
-        std::uint32_t   frequency   = 5;
-        std::uint32_t   octaves     = 5;
-        float           persistence = 0.5f;
+        int             yRange[2];      // Y-coordinate grid range for auto-generated height fields (common range = [-15, 20])
+        std::uint32_t   frequency;      // Perlin noise frequency (common value = 5)
+        std::uint32_t   octaves;        // Perlin noise octaves (common value = 5)
+        float           persistence;    // Perlin noise persistence (common value = 0.5)
     };
 
     // To track what action captures mouse/touch input, in other words, the user's hands that operate the app.
@@ -377,6 +378,13 @@ public:
 
         // Render all bricks into thumbnail render-targets for the UI
         InitializeAllBrickThumbnails(Cfg::uiThumbnailDefaultRotation);
+
+        std::string outputThumbnail;
+        if (ParseArgument("-thumbnail", outputThumbnail))
+        {
+            if (!RenderThumbnailAndSaveToFiles(outputThumbnail.c_str()))
+                LLGL_ERROR("Failed to save thumbnail '%s'\n", outputThumbnail.c_str());
+        }
 
         // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
@@ -607,7 +615,7 @@ private:
             dst.normal      = src.normal;
         };
 
-        for (std::uint32_t i = 0; i < outMesh.numVertices; ++i)
+        for_range(i, outMesh.numVertices)
             ConvertVertex(brickVertices[outMesh.firstVertex + i], intermediateVertices[i]);
 
         return true;
@@ -1253,7 +1261,7 @@ private:
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
 
-        if (!options.useMobileView)
+        if (!IsRunningOnMobileDevice())
         {
             psoDesc.debugName               = "Scene.Opaque.Wireframe.PSO";
             psoDesc.rasterizer.polygonMode  = LLGL::PolygonMode::Wireframe;
@@ -1291,7 +1299,7 @@ private:
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
 
-        if (!options.useMobileView)
+        if (!IsRunningOnMobileDevice())
         {
             psoTransparentDesc.debugName                        = "Scene.Transparent.Wireframe.PSO";
             psoTransparentDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
@@ -1428,11 +1436,15 @@ private:
         };
         psoPlane[0] = renderer->CreatePipelineState(psoPlaneDesc);
         REPORT_PSO_ERRORS(psoPlane[0]);
+
+        if (!IsRunningOnMobileDevice())
         {
+            psoPlaneDesc.debugName                      = "Plane.Wireframe.PSO";
             psoPlaneDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
+
+            psoPlane[1] = renderer->CreatePipelineState(psoPlaneDesc);
+            REPORT_PSO_ERRORS(psoPlane[1]);
         }
-        psoPlane[1] = renderer->CreatePipelineState(psoPlaneDesc);
-        REPORT_PSO_ERRORS(psoPlane[1]);
 
         // Create PSO for skybox rendering
         psoSkyLayout = renderer->CreatePipelineLayout(
@@ -2307,8 +2319,7 @@ private:
 
         commands->BeginRenderPass(renderTarget);
         {
-            const std::uint32_t thumbnailSize = static_cast<std::uint32_t>(uiLayout.brickThumbnailSize);
-            commands->SetViewport(LLGL::Extent2D{ thumbnailSize, thumbnailSize });
+            commands->SetViewport(renderTarget.GetResolution());
             commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{});
 
             // Draw current thumbnail brick from default group
@@ -2376,7 +2387,7 @@ private:
         }
     }
 
-    void RenderAllBrickThumbnails(GridRotation thumbnailRotation, float viewRotation = 45.0f)
+    void PrepareThumbnailPreviewAndBindPSOStates(GridRotation thumbnailRotation, float viewRotation)
     {
         // Reset preview instance to default
         Instance thumbnailInstance = {};
@@ -2386,6 +2397,11 @@ private:
         commands->UpdateBuffer(*vertexAndPreviewInstanceBuffer, previewInstanceBufferOffset, &thumbnailInstance, sizeof(thumbnailInstance));
 
         BindPreviewBrickPSOStates();
+    }
+
+    void RenderAllBrickThumbnails(GridRotation thumbnailRotation, float viewRotation = 45.0f)
+    {
+        PrepareThumbnailPreviewAndBindPSOStates(thumbnailRotation, viewRotation);
 
         commands->PushDebugGroup("RenderBrickThumbnails");
         {
@@ -2423,6 +2439,83 @@ private:
         }
         commands->End();
         commandQueue->Submit(*commands);
+    }
+
+    void RenderThumbnailAndSaveToFileForSize(BrickId brickId, const char* outputFilename, std::uint32_t imageSize, GridRotation thumbnailRotation, float viewRotation)
+    {
+        if (brickId == INVALID_BRICK_ID)
+            return;
+
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.debugName       = "ThumbnailOutputTexture";
+            texDesc.extent.width    = imageSize;
+            texDesc.extent.height   = imageSize;
+            texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+        }
+        LLGL::Texture* tex = renderer->CreateTexture(texDesc);
+
+        LLGL::RenderTargetDescriptor targetDesc;
+        {
+            targetDesc.debugName                = "ThumbnailOutputTarget";
+            targetDesc.resolution.width         = imageSize;
+            targetDesc.resolution.height        = imageSize;
+            targetDesc.samples                  = Cfg::outputThumbnailSamples;
+            targetDesc.colorAttachments[0]      = texDesc.format;
+            targetDesc.resolveAttachments[0]    = tex;
+            targetDesc.depthStencilAttachment   = swapChain->GetDepthStencilFormat();
+        }
+        LLGL::RenderTarget* target = renderer->CreateRenderTarget(targetDesc);
+
+        // Render brick thumbnail for specified size into the texture target
+        commands->Begin();
+        {
+            PrepareThumbnailPreviewAndBindPSOStates(thumbnailRotation, viewRotation);
+
+            const std::string debugLabel = "RenderThumbnail{" + std::to_string(imageSize) + "x" + std::to_string(imageSize) + "}_" + BrickDictionary::Get().TypeToString(brickId);
+            commands->PushDebugGroup(debugLabel.c_str());
+            {
+                RenderBrickThumnail(*target, brickId, thumbnailRotation, viewRotation);
+            }
+            commands->PopDebugGroup();
+        }
+        commands->End();
+        commandQueue->Submit(*commands);
+
+        // Save texture to file and release intermediate resources
+        SaveTexture(*tex, outputFilename);
+
+        renderer->Release(*tex);
+        renderer->Release(*target);
+    }
+
+    // Renders a single brick thumbnail and saves it to a PNG file. This is only used for desktop to update the app icon in various sizes.
+    bool RenderThumbnailAndSaveToFiles(const char* brickLabel, GridRotation thumbnailRotation = GridRotation_0, float viewRotation = 45.0f)
+    {
+        struct AppIconInfo
+        {
+            const char*     suffix;
+            std::uint32_t   imageSize;
+        };
+        const AppIconInfo appIconInfos_Android[] =
+        {
+            AppIconInfo{ "mdpi", 48 }, AppIconInfo{ "hdpi", 72 }, AppIconInfo{ "xhdpi", 96 }, AppIconInfo{ "xxhdpi", 144 }, AppIconInfo{ "xxxhdpi", 192 },
+        };
+
+        BrickId brickId = BrickDictionary::Get().TypeFromString(brickLabel);
+        if (brickId == INVALID_BRICK_ID)
+        {
+            LLGL_ERROR("Could not find brick with label '%s'\n", brickLabel);
+            return false;
+        }
+
+        for (AppIconInfo iconInfo : appIconInfos_Android)
+        {
+            const std::string outputFilename = "Platform/Android/mipmap-" + std::string(iconInfo.suffix) + "/ic_launcher.png";
+            RenderThumbnailAndSaveToFileForSize(brickId, outputFilename.c_str(), iconInfo.imageSize, thumbnailRotation, viewRotation);
+        }
+
+        return true;
     }
 
     unsigned NumInputPointers() const
@@ -2703,7 +2796,12 @@ private:
         unsigned pointerId = FindInputPointerInCircle(posX, posY, radius);
         bool isSelected = (pointerId > 0);
 
-        uiRenderer.Draw2DImage(posX, posY, uiTrashTextureAtlas, isSelected ? 1 : 0, {}, UIRenderFlags_Center | UIRenderFlags_LinearSampling);
+        uiRenderer.Draw2DImage(
+            posX, posY,
+            uiLayout.trashIconSize, uiLayout.trashIconSize,
+            uiTrashTextureAtlas, isSelected ? 1 : 0, {},
+            UIRenderFlags_Center | UIRenderFlags_LinearSampling
+        );
 
         return pointerId;
     }

@@ -113,7 +113,6 @@ sources:
       macros:
         ENABLE_PARALLAX_OCCLUSION: 1
         COMPILE_FOR_GL: 1
-        EMULATE_RGBA32FLOAT_RTV: 0
         MAX_NUM_PARALLAX_LAYERS: 6
     entries:
       - entry: "PSBrickTransparent"
