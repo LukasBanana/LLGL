@@ -19,6 +19,7 @@
 // For WebGL extensions like GL_OES_draw_buffers_indexed,
 // we need to include the GLES2 extension header but can't use the prototype declarations.
 #   undef GL_GLEXT_PROTOTYPES
+#   undef EGL_EGLEXT_PROTOTYPES
 #   include <GLES2/gl2ext.h>
 #else
 #   error Unsupported platform for WebGL

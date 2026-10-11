@@ -8,8 +8,6 @@
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
 
-#if !GL_GLEXT_PROTOTYPES
-
 #ifndef DECL_GLPROC
 #error Missing definition of macro DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS)
 #endif
@@ -24,8 +22,6 @@ DECL_GLPROC(OES_draw_buffers_indexed, PFNGLBLENDFUNCIOESPROC,               glBl
 DECL_GLPROC(OES_draw_buffers_indexed, PFNGLBLENDFUNCSEPARATEIOESPROC,       glBlendFuncSeparateiOES,        void,       (GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha), (buf, srcRGB, dstRGB, srcAlpha, dstAlpha));
 DECL_GLPROC(OES_draw_buffers_indexed, PFNGLCOLORMASKIOESPROC,               glColorMaskiOES,                void,       (GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a), (index, r, g, b, a));
 //DECL_GLPROC(OES_draw_buffers_indexed, PFNGLISENABLEDIOESPROC,               glIsEnablediOES,                GLboolean,  (GLenum target, GLuint index), (target, index));
-
-#endif // /!GL_GLEXT_PROTOTYPES
 
 
 

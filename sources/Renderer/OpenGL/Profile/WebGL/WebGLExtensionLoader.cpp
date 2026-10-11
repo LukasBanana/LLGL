@@ -7,6 +7,7 @@
 
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../Ext/GLExtensionRegistry.h"
+#include "../../Ext/GLExtensions.h"
 #include "../../Platform/Wasm/WasmGLContext.h"
 #include "../../GLCore.h"
 #include "../../../CheckedCast.h"
