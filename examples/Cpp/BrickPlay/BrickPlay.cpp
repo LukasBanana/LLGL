@@ -187,8 +187,9 @@ class Example_BrickPlay : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickId         id              = static_cast<BrickId>(0); // Previews brick with instance index 0.
-        bool            isBlocked       = false;
+        BrickId         id              = static_cast<BrickId>(0);  // Previews brick with instance index 0.
+        bool            isBlocked       = false;                    // Preview brick is blocked and cannot be placed into the scene
+        bool            isDithered      = false;                    // Highlight preview brick as dithered, when it's blocked or otherwise highlighted in that way
         std::int32_t    gridOffset      = 0;
     };
 
@@ -682,7 +683,7 @@ private:
 
         if (caps.limits.lineWidthRange[1] >= 2.0f)
             selectionRenderMode = SelectionRenderMode::NativeLineWidth;
-        else if (caps.features.hasGeometryShaders)
+        else if (caps.features.hasGeometryShaders && !IsOpenGL()) // Geometry shaders are not provided for GL backends
             selectionRenderMode = SelectionRenderMode::EmulatedLineWidth;
         else
             selectionRenderMode = SelectionRenderMode::Simplified;
@@ -2801,7 +2802,7 @@ private:
         // Draw thumbsticks on mobile devices
         if (options.useMobileView)
         {
-            if (AllHandAction(HandAction::None) || AnyHandAction(HandAction::Mobile_MoveCamera) || AnyHandAction(HandAction::Mobile_TurnCamera))
+            if (!AnyHandAction(HandAction::MoveBrick))
             {
                 DrawUIThumbstick(uiState.thumbstickLeft);
                 DrawUIThumbstick(uiState.thumbstickRight);
@@ -3272,13 +3273,10 @@ private:
     void ProcessInputPointerBrickMovement(UserHand& hand, const LLGL::InputPointer& inputPointer, unsigned pointerIndex)
     {
         // Reset blocked state of the preview brick, then update its grid position by pointing into the scene
-        viewOptions.previewBrick.isBlocked = false;
-
         PickGridPosForPreviewBrick(inputPointer);
 
         const bool isBrickOverTrash = (uiState.trash.activePointerId == (pointerIndex + 1));
-        if (isBrickOverTrash)
-            viewOptions.previewBrick.isBlocked = true;
+        viewOptions.previewBrick.isDithered = isBrickOverTrash || viewOptions.previewBrick.isBlocked;
 
         if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
         {
@@ -3579,7 +3577,7 @@ private:
 
         // Update preview shader states
       //sceneView.worldOffsetY      = previewBlockOffsetY;
-        sceneView.isDithering       = (viewOptions.previewBrick.isBlocked ? 1 : 0);
+        sceneView.isDithering       = (viewOptions.previewBrick.isDithered ? 1 : 0);
 
         // Update outline shader states
         const LLGL::Extent2D& viewportSize = swapChain->GetResolution();

@@ -96,7 +96,7 @@ References:
 
 ### Platform Differences
 
-*Mention layout for desktop vs. mobile controls*
+*Mention layout for desktop vs. mobile controls, Android quirks with static fields that are not destructed because the project's .so file remains in memory*
 
 
 ## Camera Controls

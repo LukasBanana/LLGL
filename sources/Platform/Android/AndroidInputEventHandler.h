@@ -9,6 +9,7 @@
 #define LLGL_ANDROID_INPUT_EVENT_HANDLER_H
 
 
+#include <LLGL/Constants.h>
 #include <android_native_app_glue.h>
 #include <vector>
 #include <mutex>
@@ -40,13 +41,20 @@ class AndroidInputEventHandler
 
     private:
 
+        struct MotionEvent
+        {
+            float prevPosition[2] = { -FLT_MAX, -FLT_MAX };
+        };
+
+    private:
+
         AndroidInputEventHandler() = default;
 
     private:
 
         std::mutex                  lock_;
         std::vector<AndroidCanvas*> canvases_;
-        float                       prevMotionPos_[2] = { -FLT_MAX, -FLT_MAX };
+        MotionEvent                 motionEvents_[LLGL_MAX_NUM_INPUT_POINTERS];
 
 };
 
