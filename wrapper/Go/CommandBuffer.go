@@ -144,7 +144,10 @@ func (self commandBufferImpl) SetViewport(viewport Viewport) {
 }
 
 func (self commandBufferImpl) SetViewports(viewports []Viewport) {
-	nativeViewports := (*C.LLGLViewport)(unsafe.Pointer(&viewports))
+	var nativeViewports *C.LLGLViewport
+	if len(viewports) > 0 {
+		nativeViewports = (*C.LLGLViewport)(unsafe.Pointer(&viewports[0]))
+	}
 	C.llglSetViewports(C.uint32_t(len(viewports)), nativeViewports)
 }
 
@@ -154,7 +157,10 @@ func (self commandBufferImpl) SetScissor(scissor Scissor) {
 }
 
 func (self commandBufferImpl) SetScissors(scissors []Scissor) {
-	nativeScissors := (*C.LLGLScissor)(unsafe.Pointer(&scissors))
+	var nativeScissors *C.LLGLScissor
+	if len(scissors) > 0 {
+		nativeScissors = (*C.LLGLScissor)(unsafe.Pointer(&scissors[0]))
+	}
 	C.llglSetScissors(C.uint32_t(len(scissors)), nativeScissors)
 }
 
