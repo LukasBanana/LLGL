@@ -39,7 +39,7 @@ elseif(LLGL_ANDROID_PLATFORM)
     list(APPEND FilesExampleBaseAll ${FilesExampleBaseAndroid})
 endif()
 
-find_project_source_files( FilesExample_BrickPlay           "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay"         )
+#find_project_source_files( FilesExample_BrickPlay           "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay"         ) # Temporarily disabled until it is finished
 find_project_source_files( FilesExample_ClothPhysics        "${EXAMPLE_CPP_PROJECTS_DIR}/ClothPhysics"      )
 find_project_source_files( FilesExample_Fonts               "${EXAMPLE_CPP_PROJECTS_DIR}/Fonts"             )
 find_project_source_files( FilesExample_HelloGame           "${EXAMPLE_CPP_PROJECTS_DIR}/HelloGame"         )
@@ -121,7 +121,7 @@ if(LLGL_BUILD_EXAMPLES)
     if(LLGL_UWP_PLATFORM)
         add_llgl_example_project(Example_HelloUWP           CXX "${FilesExample_HelloUWP}"              "${EXAMPLE_PROJECT_LIBS}")
     else()
-        add_llgl_example_project(Example_BrickPlay          CXX "${FilesExample_BrickPlay}"             "${EXAMPLE_PROJECT_LIBS}")
+        #add_llgl_example_project(Example_BrickPlay          CXX "${FilesExample_BrickPlay}"             "${EXAMPLE_PROJECT_LIBS}") # Temporarily disabled until it is finished
         add_llgl_example_project(Example_ClothPhysics       CXX "${FilesExample_ClothPhysics}"          "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_Fonts              CXX "${FilesExample_Fonts}"                 "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_HelloGame          CXX "${FilesExample_HelloGame}"             "${EXAMPLE_PROJECT_LIBS}")

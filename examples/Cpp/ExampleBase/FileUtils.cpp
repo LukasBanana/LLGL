@@ -81,8 +81,12 @@ static std::string FindAssetFilename(const std::string& name)
 
     #elif defined LLGL_OS_ANDROID
 
-    // Handle filename resolution with AAssetManager on Android
-    return name;
+    // Read asset files for examples from asset folder without any subfolders
+    const std::size_t subPathStart = name.find_last_of('/');
+    if (subPathStart != std::string::npos)
+        return name.substr(subPathStart + 1);
+    else
+        return name;
 
     #elif defined LLGL_OS_WASM
 
@@ -154,7 +158,7 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     FILE* file = fopen(filename.c_str(), "rb");
     if (file == nullptr)
     {
-        LLGL::Log::Errorf("failed to load asset: %s\n", filename.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load asset: %s\n", filename.c_str());
         return {};
     }
 
@@ -179,7 +183,7 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     std::ifstream file{ filename, std::ios_base::binary };
     if (!file.good())
     {
-        LLGL::Log::Errorf("failed to load asset: %s\n", name.c_str());
+        LLGL::Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to load asset: %s\n", name.c_str());
         return {};
     }
 
