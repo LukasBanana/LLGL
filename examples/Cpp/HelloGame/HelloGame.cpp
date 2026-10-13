@@ -705,9 +705,11 @@ class Example_HelloGame : public ExampleBase
 
         void Init(const LLGL::RenderingCapabilities& caps)
         {
-            // SSBOs are not supported in ESSL for instance, so when storage buffers are not supported,
-            // we use a uniform buffer (aka constant buffer) for instances
-            isCbuffer   = !caps.features.hasStorageBuffers;
+            const bool isESSLSupported = (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), LLGL::ShadingLanguage::ESSL) != caps.shadingLanguages.end());
+
+            // SSBOs are not supported in WebGL, so when storage buffers are not supported,
+            // we use a uniform buffer (aka constant buffer) for instances.
+            isCbuffer   = isESSLSupported;
             bufferLimit = (isCbuffer ? caps.limits.maxConstantBufferSize : caps.limits.maxBufferSize);
 
             #if ENABLE_VERBOSE_LOGS
@@ -733,8 +735,9 @@ class Example_HelloGame : public ExampleBase
             const std::uint64_t bufferSize = sizeof(Instance) * numInstances;
 
             sizePerSegment = std::min<std::uint64_t>(bufferLimit, (isCbuffer ? sizeof(Instance) * cbufferNumInstances : bufferSize));
-            const std::uint64_t numSegments = (bufferSize + sizePerSegment - 1) / sizePerSegment;
+            LLGL_VERIFY(sizePerSegment >= sizeof(Instance));
 
+            const std::uint64_t numSegments = (bufferSize + sizePerSegment - 1) / sizePerSegment;
             segments.resize(static_cast<std::size_t>(numSegments));
 
             for_range(i, segments.size())

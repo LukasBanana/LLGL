@@ -38,10 +38,11 @@ See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
 #endif
 #include <inttypes.h>
 
-#if defined LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 #   include "Android/AppUtils.h"
+#   include "Platform/Android/AndroidUtils.h"
 #   include <android/native_activity.h>
-#elif defined LLGL_OS_WASM
+#elif LLGL_OS_WASM
 #   include <emscripten.h>
 #   include <emscripten/html5.h>
 #endif
@@ -171,7 +172,7 @@ static const char* GetDefaultRendererModule()
     #elif defined LLGL_OS_IOS
     return "Metal";
     #elif defined LLGL_OS_ANDROID
-    return "Vulkan";//"OpenGLES3";
+    return "OpenGLES3";
     #elif defined LLGL_OS_WASM
     return "WebGL";
     #else
@@ -433,7 +434,7 @@ bool ExampleBase::ShaderIncludeHandler::Include(const LLGL::UTF8String& inFilena
 #   define LLGL_EXAMPLE_MULTISAMPLING ( 8 )
 #endif
 
-#if LLGL_OS_WASM
+#if LLGL_OS_ANDROID || LLGL_OS_WASM
 #   define LLGL_EXAMPLE_IMMEDIATECONTEXT ( true )
 #else
 #   define LLGL_EXAMPLE_IMMEDIATECONTEXT ( false )
@@ -456,7 +457,7 @@ struct ExampleConfig
 
 static ExampleConfig g_Config;
 
-#ifdef LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 android_app* ExampleBase::androidApp_ = nullptr;
 #endif
 
@@ -588,7 +589,7 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.flags |= LLGL::RenderSystemFlags::SoftwareDevice;
 }
 
-#if defined LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 
 void ExampleBase::SetAndroidApp(android_app* androidApp)
 {
@@ -617,11 +618,11 @@ int ExampleBase::Run()
 {
     initialResolution_ = swapChain->GetResolution();
 
-    #ifndef LLGL_MOBILE_PLATFORM
+    #if !LLGL_MOBILE_PLATFORM
     LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
     #endif
 
-    #ifdef LLGL_OS_WASM
+    #if LLGL_OS_WASM
 
     // Receives a function to call and some user data to provide it.
     emscripten_set_main_loop_arg(ExampleBase::MainLoopWrapper, this, 0, 1);
@@ -630,7 +631,7 @@ int ExampleBase::Run()
 
     while (LLGL::Surface::ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
     {
-        #ifndef LLGL_MOBILE_PLATFORM
+        #if !LLGL_MOBILE_PLATFORM
         // On desktop platforms, we also want to quit the app if the close button has been pressed
         if (window.HasQuit())
             break;
@@ -643,9 +644,9 @@ int ExampleBase::Run()
             continue;
         }
 
-        #ifdef LLGL_OS_ANDROID
+        #if LLGL_OS_ANDROID
         if (input.KeyDown(LLGL::Key::BrowserBack))
-            ANativeActivity_finish(ExampleBase::androidApp_->activity);
+            ANativeActivity_finish(ExampleBase::GetAndroidApp()->activity);
         #endif
 
         MainLoop();
@@ -729,11 +730,11 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
     // Set up renderer descriptor
     LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
 
-    #if defined LLGL_OS_ANDROID
+    #if LLGL_OS_ANDROID
 
     LLGL::RendererConfigurationOpenGL cfgGL;
 
-    if (android_app* app = ExampleBase::androidApp_)
+    if (android_app* app = ExampleBase::GetAndroidApp())
     {
         rendererDesc.platformContext     = app;
         rendererDesc.platformContextSize = sizeof(*app);
@@ -763,6 +764,10 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
     LLGL::Report report;
     rendererDesc.flags |= g_Config.flags;
     renderer = LLGL::RenderSystem::Load(rendererDesc, &report);
+
+    #if LLGL_OS_ANDROID
+    Android_HideSystemUI(ExampleBase::GetAndroidApp()->activity);
+    #endif
 
     // Fallback to null device if selected renderer cannot be loaded
     if (!renderer)

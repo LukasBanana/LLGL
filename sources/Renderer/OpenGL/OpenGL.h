@@ -229,8 +229,8 @@
 
 #endif // /LLGL_WEBGL
 
-// GL on macOS, GLES on iOS, and WebGL always require a fragment shader in a shader program.
-#if defined __APPLE__ || LLGL_WEBGL
+// GL on macOS, GLES, and WebGL always require a fragment shader in a shader program.
+#if defined __APPLE__ || LLGL_OPENGLES3 || LLGL_WEBGL
 #   define LLGL_USE_NULL_FRAGMENT_SHADER 1
 #endif
 

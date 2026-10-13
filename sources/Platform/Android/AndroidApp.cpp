@@ -148,8 +148,8 @@ Extent2D AndroidApp::GetContentRectSize(android_app* appState)
     {
         return Extent2D
         {
-            static_cast<std::uint32_t>(appState->contentRect.right - appState->contentRect.left),
-            static_cast<std::uint32_t>(appState->contentRect.bottom - appState->contentRect.top)
+            static_cast<std::uint32_t>(ANativeWindow_getWidth(appState->window)),
+            static_cast<std::uint32_t>(ANativeWindow_getHeight(appState->window))
         };
     }
     return Extent2D{};

@@ -68,12 +68,7 @@ void AndroidInputEventHandler::BroadcastCommand(android_app* app, int32_t cmd)
 
         case APP_CMD_WINDOW_RESIZED:
         {
-            const Extent2D contentSize
-            {
-                static_cast<std::uint32_t>(ANativeWindow_getWidth(app->window)),
-                static_cast<std::uint32_t>(ANativeWindow_getHeight(app->window))
-            };
-            FOREACH_CANVAS_CALL(PostResize(contentSize));
+            FOREACH_CANVAS_CALL(PostResize(AndroidApp::GetContentRectSize(app)));
         }
         break;
 
