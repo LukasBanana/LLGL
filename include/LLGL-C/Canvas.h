@@ -62,9 +62,9 @@ LLGL_C_EXPORT void llglPostCanvasTapGesture(LLGLCanvas sender, LLGLOffset2D posi
 LLGL_C_EXPORT void llglPostCanvasPanGesture(LLGLCanvas sender, LLGLOffset2D position, uint32_t touchIndex, uint32_t numTouches, float dX, float dY, LLGLEventAction action);
 LLGL_C_EXPORT void llglPostCanvasKeyDown(LLGLCanvas sender, LLGLKey keyCode);
 LLGL_C_EXPORT void llglPostCanvasKeyUp(LLGLCanvas sender, LLGLKey keyCode);
-LLGL_C_EXPORT void llglPostDoubleClick(LLGLCanvas sender, LLGLKey keyCode);
-LLGL_C_EXPORT void llglPostWheelMotion(LLGLCanvas sender, float dX, float dY);
-LLGL_C_EXPORT void llglPostMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY);
+LLGL_C_EXPORT void llglPostCanvasDoubleClick(LLGLCanvas sender, LLGLKey keyCode);
+LLGL_C_EXPORT void llglPostCanvasWheelMotion(LLGLCanvas sender, float dX, float dY);
+LLGL_C_EXPORT void llglPostCanvasMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY);
 
 
 #endif

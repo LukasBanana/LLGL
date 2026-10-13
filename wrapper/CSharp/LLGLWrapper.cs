@@ -4840,14 +4840,14 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglPostCanvasKeyUp", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasKeyUp(Canvas sender, Key keyCode);
 
-        [DllImport(DllName, EntryPoint="llglPostDoubleClick", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostDoubleClick(Canvas sender, Key keyCode);
+        [DllImport(DllName, EntryPoint="llglPostCanvasDoubleClick", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasDoubleClick(Canvas sender, Key keyCode);
 
-        [DllImport(DllName, EntryPoint="llglPostWheelMotion", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostWheelMotion(Canvas sender, float dX, float dY);
+        [DllImport(DllName, EntryPoint="llglPostCanvasWheelMotion", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasWheelMotion(Canvas sender, float dX, float dY);
 
-        [DllImport(DllName, EntryPoint="llglPostMouseMotion", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void PostMouseMotion(Canvas sender, Offset2D position, float dX, float dY);
+        [DllImport(DllName, EntryPoint="llglPostCanvasMouseMotion", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasMouseMotion(Canvas sender, Offset2D position, float dX, float dY);
 
         [DllImport(DllName, EntryPoint="llglBegin", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Begin(CommandBuffer commandBuffer);

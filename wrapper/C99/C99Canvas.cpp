@@ -222,17 +222,17 @@ LLGL_C_EXPORT void llglPostCanvasKeyUp(LLGLCanvas sender, LLGLKey keyCode)
     LLGL_PTR(Canvas, sender)->PostKeyUp((Key)keyCode);
 }
 
-LLGL_C_EXPORT void llglPostDoubleClick(LLGLCanvas sender, LLGLKey keyCode)
+LLGL_C_EXPORT void llglPostCanvasDoubleClick(LLGLCanvas sender, LLGLKey keyCode)
 {
     LLGL_PTR(Canvas, sender)->PostDoubleClick((Key)keyCode);
 }
 
-LLGL_C_EXPORT void llglPostWheelMotion(LLGLCanvas sender, float dX, float dY)
+LLGL_C_EXPORT void llglPostCanvasWheelMotion(LLGLCanvas sender, float dX, float dY)
 {
     LLGL_PTR(Canvas, sender)->PostWheelMotion(dX, dY);
 }
 
-LLGL_C_EXPORT void llglPostMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY)
+LLGL_C_EXPORT void llglPostCanvasMouseMotion(LLGLCanvas sender, LLGLOffset2D position, float dX, float dY)
 {
     LLGL_PTR(Canvas, sender)->PostMouseMotion(Offset2D{ position.x, position.y }, dX, dY);
 }
