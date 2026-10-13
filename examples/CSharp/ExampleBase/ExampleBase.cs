@@ -6,9 +6,60 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace LLGLExamples
 {
+    public class IndexedTriangelMesh<TVertex, TIndex>
+    {
+        public List<TVertex> Vertices { get; set; } = new List<TVertex>();
+        public List<TIndex> Indices { get; set; } = new List<TIndex>();
+    };
+
+    public class Transform
+    {
+        public Vector3 Position { get; set; } = Vector3.Zero;
+        public Quaternion Rotation { get; set; } = Quaternion.Identity;
+        public Vector3 Scale { get; set; } = Vector3.One;
+
+        public void Move(float x, float y, float z)
+        {
+            Position = Position + new Vector3(x, y, z);
+        }
+
+        public void Turn(float pitch, float yaw, float roll)
+        {
+            Rotation = Rotation * Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+        }
+
+        public void Turn(Vector3 axis, float angle)
+        {
+            Rotation = Rotation * Quaternion.CreateFromAxisAngle(Vector3.Normalize(axis), angle);
+        }
+
+        public Matrix4x4 Matrix
+        {
+            get
+            {
+                Matrix4x4 outMatrix = Matrix4x4.CreateFromQuaternion(Rotation);
+                outMatrix.Translation = Position;
+                return outMatrix * Matrix4x4.CreateScale(Scale);
+            }
+        }
+    };
+
+    public class Entity
+    {
+        public Transform Transform { get; set; } = new Transform();
+    };
+
+    public class Model : Entity
+    {
+        public int NumVertices { get; set; }
+        public int NumIndices { get; set; }
+    };
+
     public abstract class ExampleBase
     {
         sealed class MyEventListener : LLGL.Window.EventListener
@@ -40,6 +91,14 @@ namespace LLGLExamples
             }
         };
 
+        public static Matrix4x4 CreatePerspectiveFieldOfViewLeftHanded(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
+        {
+            Matrix4x4 outMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance);
+            outMatrix.M33 = -outMatrix.M33;
+            outMatrix.M34 = -outMatrix.M34;
+            return outMatrix;
+        }
+
         protected static readonly LLGL.Color bgColor = new LLGL.Color(0.1f, 0.1f, 0.2f);
         protected static readonly LLGL.Extent2D initialResolution = new LLGL.Extent2D(800, 600);
 
@@ -70,13 +129,13 @@ namespace LLGLExamples
             {
                 switch (arg)
                 {
-                    case "d3d11": return "Direct3D11";
                     case "d3d12": return "Direct3D12";
+                    case "d3d11": return "Direct3D11";
                     case "gl": return "OpenGL";
                     case "vk": return "Vulkan";
                 }
             }
-            return "Direct3D11";
+            return "Direct3D12";
         }
 
         public int Run(string title, string[] args)

@@ -30,10 +30,15 @@ if(LLGL_BUILD_EXAMPLES AND LLGL_BUILD_WRAPPER_CSHARP)
     set_target_properties(ExampleBase_CSharp PROPERTIES LINKER_LANGUAGE CSharp DEBUG_POSTFIX "D")
     target_link_libraries(ExampleBase_CSharp LLGL.NET)
     set_target_properties(ExampleBase_CSharp PROPERTIES FOLDER "Examples (CSharp)")
+    set_target_properties(ExampleBase_CSharp PROPERTIES VS_DOTNET_REFERENCES "System;System.Numerics")
     
     # C# wrapper examples
     add_llgl_example_project(Example_CSharp_HelloTriangle CSharp "${FilesExampleCSharp_HelloTriangle}" LLGL.NET)
     add_llgl_example_project(Example_CSharp_Texturing     CSharp "${FilesExampleCSharp_Texturing}"     ExampleBase_CSharp)
+
+    set_target_properties(
+        Example_CSharp_Texturing PROPERTIES VS_DOTNET_REFERENCES
+        "System;System.Numerics;System.Net;System.Net.Http;System.Drawing;System.IO")
 endif()
 
 
