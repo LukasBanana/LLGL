@@ -54,14 +54,33 @@ AssetReader::operator bool () const
  * Global helper functions
  */
 
-static bool FileExists(const std::string& filename)
+bool FileExists(const std::string& filename)
 {
+    #if LLGL_OS_ANDROID
+
+    // Load asset from compressed APK package via AAssetManager if file path doesn't start with an absolute path
+    if (!filename.empty() && filename[0] != '/')
+    {
+        if (FILE* file = fopen(filename.c_str(), "rb"))
+        {
+            fclose(file);
+            return true;
+        }
+        return false;
+    }
+
+    #endif
+
     std::ifstream file{ filename };
     return file.good();
 };
 
 static std::string FindAssetFilename(const std::string& name)
 {
+    // Return input name if it's a valid filename
+    if (FileExists(name))
+        return name;
+
     #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
 
     // Returns filename for resource from main NSBundle.
@@ -99,10 +118,6 @@ static std::string FindAssetFilename(const std::string& name)
 
     #else
 
-    // Return input name if it's a valid filename
-    if (FileExists(name))
-        return name;
-
     // Search file in known asset folders
     const std::string assetsRoot = "../../Shared/Assets/";
 
@@ -121,28 +136,14 @@ static std::string FindAssetFilename(const std::string& name)
 bool FindAsset(const std::string& name, std::string* outFullPath)
 {
     // Get full filename for asset
-    const std::string filename = FindAssetFilename(name);
-
-    #if defined LLGL_OS_ANDROID
-
-    // Load asset from compressed APK package via AAssetManager
-    FILE* file = fopen(filename.c_str(), "rb");
-    if (file == nullptr)
-        return false;
-    fclose(file);
-
-    #else
-
-    std::ifstream file{ filename };
-    if (!file.good())
-        return false;
-
-    #endif
-
-    if (outFullPath != nullptr)
-        *outFullPath = filename;
-
-    return true;
+    std::string filename = FindAssetFilename(name);
+    if (FileExists(filename))
+    {
+        if (outFullPath != nullptr)
+            *outFullPath = std::move(filename);
+        return true;
+    }
+    return false;
 }
 
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)

@@ -113,6 +113,9 @@ class AssetReader
 
 };
 
+// Returns true if the specified file can be read.
+bool FileExists(const std::string& filename);
+
 // Returns true if the specified asset exists and resolves the output path.
 bool FindAsset(const std::string& name, std::string* outFullPath = nullptr);
 

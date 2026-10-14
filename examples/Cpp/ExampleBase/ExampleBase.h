@@ -110,6 +110,10 @@ public:
     static bool ParseArgument(LLGL::StringView arg, std::string& outValue);
     static bool ParseArgument(LLGL::StringView arg, std::vector<int>& outValues, char separator = ',');
 
+    // Returns the path for user generated content in the current example.
+    // This is mainly used for mobile platforms, but all other platforms just use the working directory, i.e. ".".
+    static std::string GetUserPath();
+
 public:
 
     #if defined LLGL_OS_ANDROID

@@ -380,8 +380,29 @@ public:
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
         if (options.scenePresetNo < 0)
         {
+            // On Android, try to load the scene from the user directory for this app first
+            #if LLGL_OS_ANDROID
+
+            std::string userSceneFilename = ExampleBase::GetUserPath() + "/Bricks.user.txt";
+            if (FileExists(userSceneFilename))
+            {
+                options.sceneFilename = std::move(userSceneFilename);
+                if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
+                    hasLoadedScene = true;
+            }
+            else
+            {
+                if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
+                    hasLoadedScene = true;
+                options.sceneFilename = std::move(userSceneFilename);
+            }
+
+            #else
+
             if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
                 hasLoadedScene = true;
+
+            #endif
         }
         else
         {

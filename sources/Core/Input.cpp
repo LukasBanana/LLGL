@@ -85,7 +85,7 @@ struct EventListenerSurfacePair
 };
 
 // Returns the input value with zeroing out the integral part.
-static float ZeroIntegralPart(float val)
+static float GetFractionalPart(float val)
 {
     return (val < 0.0f ? val + ::floorf(-val) : val - ::floorf(val));
 }
@@ -118,13 +118,13 @@ struct Input::Pimpl
     void Reset()
     {
         /* Reset all input states to make room for next recordings */
-        ZeroIntegralPart(wheelMotion[0]);
-        ZeroIntegralPart(wheelMotion[1]);
+        wheelMotion[0] = GetFractionalPart(wheelMotion[0]);
+        wheelMotion[1] = GetFractionalPart(wheelMotion[1]);
 
         for_range(i, numInputPointers)
         {
-            inputPointers[i].dX = ZeroIntegralPart(inputPointers[i].dX);
-            inputPointers[i].dY = ZeroIntegralPart(inputPointers[i].dY);
+            inputPointers[i].dX = GetFractionalPart(inputPointers[i].dX);
+            inputPointers[i].dY = GetFractionalPart(inputPointers[i].dY);
 
             if (inputPointers[i].state == InputState::Activate)
                 inputPointers[i].state = InputState::Active;

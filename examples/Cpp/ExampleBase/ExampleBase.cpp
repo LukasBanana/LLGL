@@ -522,6 +522,21 @@ bool ExampleBase::ParseArgument(LLGL::StringView arg, std::vector<int>& outValue
     return false;
 }
 
+std::string ExampleBase::GetUserPath()
+{
+    #if LLGL_OS_ANDROID
+    if (android_app* appState = ExampleBase::GetAndroidApp())
+    {
+        if (appState->activity != nullptr)
+        {
+            if (const char* userPath = appState->activity->internalDataPath)
+                return std::string(userPath);
+        }
+    }
+    #endif
+    return "."; // Current working directory
+}
+
 static bool ParseWindowSize(LLGL::Extent2D& size)
 {
     std::vector<int> values;

@@ -226,9 +226,36 @@ Blob Blob::CreateStrongRef(std::string&& str)
     return blob;
 }
 
+static bool ReadBufferFromFileStream(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
+{
+    /* Read file as binary */
+    std::ifstream file{ filename, (std::ios::in | std::ios::binary) };
+    if (!file.good())
+        return false;
+
+    /* Determine file size */
+    file.seekg(0, std::ios::end);
+    const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
+    file.seekg(0, std::ios::beg);
+
+    /* Allocate internal container and optional NUL-terminator */
+    if (isNULTerminated)
+    {
+        outContent = DynamicByteArray{ fileSize + 1, UninitializeTag{} };
+        outContent[fileSize] = '\0';
+    }
+    else
+        outContent = DynamicByteArray{ fileSize, UninitializeTag{} };
+
+    /* Read entire file into output content */
+    file.read(outContent.data(), fileSize);
+
+    return true;
+}
+
 #if LLGL_OS_ANDROID
 
-static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
+static bool ReadBufferFromAssetManager(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
 {
     AAssetManager* assetMngr = AndroidApp::Get().GetContext().assetManager;
     LLGL_ASSERT(assetMngr != nullptr, "AndroidContext::assetManager must be set to read files by path");
@@ -258,36 +285,23 @@ static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outConten
     return false;
 }
 
+static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
+{
+    /* When filename has an absolute path, read file directly from file stream. Otherwise, read file from AssetManager. */
+    if (filename != nullptr && filename[0] == '/')
+        return ReadBufferFromFileStream(filename, outContent, isNULTerminated);
+    else
+        return ReadBufferFromAssetManager(filename, outContent, isNULTerminated);
+}
+
 #else // LLGL_OS_ANDROID
 
 static bool ReadBufferFromFile(const char* filename, DynamicByteArray& outContent, bool isNULTerminated)
 {
-    /* Read file as binary */
-    std::ifstream file{ filename, (std::ios::in | std::ios::binary) };
-    if (!file.good())
-        return false;
-
-    /* Determine file size */
-    file.seekg(0, std::ios::end);
-    const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
-
-    /* Allocate internal container and optional NUL-terminator */
-    if (isNULTerminated)
-    {
-        outContent = DynamicByteArray{ fileSize + 1, UninitializeTag{} };
-        outContent[fileSize] = '\0';
-    }
-    else
-        outContent = DynamicByteArray{ fileSize, UninitializeTag{} };
-
-    /* Read entire file into output content */
-    file.read(outContent.data(), fileSize);
-
-    return true;
+    return ReadBufferFromFileStream(filename, outContent, isNULTerminated);
 }
 
-#endif // /LLGL_OS_ANDROID
+#endif // LLGL_OS_ANDROID
 
 // Consolidates combined newline characters consisting of carriage return '\r' and newline '\n' which are common on Windows systems.
 static Blob::Pimpl* MakeInternalBlobAndSanitizeNewlineChars(DynamicByteArray&& buffer)
