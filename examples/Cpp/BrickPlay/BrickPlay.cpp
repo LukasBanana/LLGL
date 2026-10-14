@@ -562,7 +562,7 @@ private:
     }
 
     // Projects the specified screen coordinate into a ray originating from the camera view to pick elements in the scene.
-    Ray3f ProjectScreenPosToViewRay(LLGL::Offset2D screenPos)
+    Ray3f ProjectScreenPosToViewRay(LLGL::Offset2D screenPos) const
     {
         const LLGL::Viewport viewport{ swapChain->GetResolution() };
 
@@ -3103,20 +3103,11 @@ private:
         user.pickedBrick = {};
     }
 
-    Brick SelectBrickFromScene(const LLGL::InputPointer& inputPointer)
+    bool SelectBrickFromScene(const LLGL::InputPointer& inputPointer, RayIntersection& outContact) const
     {
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(inputPointer.position);
-
-        RayIntersection contact;
-        if (currentScene->PickScene(pickerRay, contact))
-        {
-            // Highlight new picked brick
-            user.pickedBrick = contact.brick;
-            return contact.brick;
-        }
-
-        return Brick{};
+        return currentScene->PickScene(pickerRay, outContact);
     }
 
     void ClampBrickGridOffset(BrickId brickId, std::int32_t& offset)
@@ -3130,6 +3121,85 @@ private:
         }
         else
             offset = 0;
+    }
+
+    // Tries to unblock a brick with the specified dimension and position. Returns true if the grid position has been updated.
+    bool TryUnblockBrick(GridVec3i& gridPos, const BrickDimensions& brickDim, const GridVec3i& contactNormal)
+    {
+        if (contactNormal.y == 0)
+        {
+            // Try to unblock in Y direction
+            bool fitsTop = currentScene->BrickFitsInGridTop(gridPos, brickDim);
+            bool fitsBottom = currentScene->BrickFitsInGridBottom(gridPos, brickDim);
+
+            if (!fitsTop && fitsBottom)
+            {
+                // Top is blocked and bottom is free -> move downwards
+                gridPos.y -= 1;
+                return true;
+            }
+            else if (fitsTop && !fitsBottom)
+            {
+                // Bottom is blocked and top is free -> move upwards
+                gridPos.y += 1;
+                return true;
+            }
+        }
+        else
+        {
+            auto TryUnblockBrickXAxis = [this, &gridPos, &brickDim]() -> bool
+            {
+                bool fitsLeft = currentScene->BrickFitsInGridLeft(gridPos, brickDim);
+                bool fitsRight = currentScene->BrickFitsInGridRight(gridPos, brickDim);
+
+                if (!fitsLeft && fitsRight)
+                {
+                    // Left is blocked and right is free -> move to the right
+                    gridPos.x += 1;
+                    return true;
+                }
+                else if (fitsLeft && !fitsRight)
+                {
+                    // Right is blocked and left is free -> move to the left
+                    gridPos.x -= 1;
+                    return true;
+                }
+                return false;
+            };
+
+            auto TryUnblockBrickZAxis = [this, &gridPos, &brickDim]() -> bool
+            {
+                bool fitsFront = currentScene->BrickFitsInGridFront(gridPos, brickDim);
+                bool fitsBack = currentScene->BrickFitsInGridBack(gridPos, brickDim);
+
+                if (!fitsFront && fitsBack)
+                {
+                    // Front is blocked and back is free -> move to the back
+                    gridPos.z += 1;
+                    return true;
+                }
+                else if (fitsFront && !fitsBack)
+                {
+                    // Back is blocked and front is free -> move to the front
+                    gridPos.z -= 1;
+                    return true;
+                }
+                return false;
+            };
+
+            // Try to unblock in X and Z direction
+            if (brickDim.extent.x > brickDim.extent.z)
+            {
+                // Try to unblock in Z direction first
+                return TryUnblockBrickZAxis() || TryUnblockBrickXAxis();
+            }
+            else
+            {
+                // Try to unblock in X direction first
+                return TryUnblockBrickXAxis() || TryUnblockBrickZAxis();
+            }
+        }
+        return false;
     }
 
     void PickGridPosForPreviewBrick(const LLGL::InputPointer& inputPointer)
@@ -3159,11 +3229,11 @@ private:
         const Ray3f pickerRay = ProjectScreenPosToViewRay(inputPointer.position);
         GridVec3i newPreviewGridPos = previewInstance.GetPos();
 
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickId, newPreviewRotation);
+
         RayIntersection contact;
         if (currentScene->PickScene(pickerRay, contact))
         {
-            const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickId, newPreviewRotation);
-
             // Find a potential grid position for the preview brick
             auto ApplyNormalOffset = [](std::int32_t& gridPos, int normal, int brickOffset, int brickExtent) -> void
             {
@@ -3201,7 +3271,26 @@ private:
             previewInstance.gridRotation    != newPreviewRotation   ||
             previewBrick.id                 != newBrickId)
         {
-            previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newBrickId, newPreviewGridPos, newPreviewRotation);
+            // If preview brick is blocked in new position, try to move it out to unblock it
+            const GridVec3i initialGridPos = newPreviewGridPos;
+            {
+                auto UpdateBlockedStatus = [&]() -> bool
+                {
+                    previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newBrickId, newPreviewGridPos, newPreviewRotation);
+                    return previewBrick.isBlocked;
+                };
+
+                int unblockAttempts = 0;
+                while (UpdateBlockedStatus() && unblockAttempts < 2 && TryUnblockBrick(newPreviewGridPos, brickDim, contact.normal))
+                {
+                    ++unblockAttempts;
+                }
+            }
+            if (previewBrick.isBlocked)
+            {
+                // If unblocking was unsuccessful, reset grid position to the initial picked position
+                newPreviewGridPos = initialGridPos;
+            }
 
             // Update brick position and rotation
             previewBrick.id = newBrickId;
@@ -3294,34 +3383,62 @@ private:
         }
     }
 
+    int GetPreviewBrickOffset(const Gs::Vector3f& pickedBrickOffset, BrickId brickId, GridRotation gridRotation) const
+    {
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, gridRotation);
+
+        auto GetPreviewBrickOffsetForAxis = [this, &brickDim, &pickedBrickOffset](int axis) -> int
+        {
+            float baseOffset = static_cast<float>(brickDim.offset[axis]) + static_cast<float>(brickDim.extent[axis]) * 0.5f;
+            return static_cast<int>(baseOffset - pickedBrickOffset[axis]);
+        };
+
+        if (brickDim.extent.x > 2)
+            return GetPreviewBrickOffsetForAxis(0);
+        if (brickDim.extent.z > 2)
+            return GetPreviewBrickOffsetForAxis(2);
+
+        return 0;
+    }
+
     void ProcessInputPointerBrickSelection(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
-        if (Brick selectedBrick = SelectBrickFromScene(inputPointer))
+        RayIntersection contact;
+        if (SelectBrickFromScene(inputPointer, contact) && contact.brick)
         {
+            user.pickedBrick = contact.brick;
+
             if (IsInputDown(inputPointer))
             {
                 // Pick up brick for editing so the user can place it somewhere else
-                if (const Instance* selectedInstance = currentScene->GetBrickInstance(selectedBrick))
+                if (const Instance* selectedInstance = currentScene->GetBrickInstance(contact.brick))
                 {
                     ResetPreviouslySelectedBrick();
 
+                    // Save current brick information in case the newly placed location is blocked and this brick is set back to its previous position
+                    user.backupInstance = *selectedInstance;
+
                     // Prepare new preview brick
-                    viewOptions.previewBrick.id     = selectedBrick.GetId();
+                    viewOptions.previewBrick.id     = contact.brick.GetId();
+
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
+                    user.pickedColorPaletteIndex    = selectedInstance->colorIndex;
+
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
                     user.menuGridRotation           = selectedInstance->gridRotation;
 
-                    // Also save current brick information in case the newly placed location is blocked and this brick is set back to its previous position
-                    user.backupInstance = *selectedInstance;
+                    // Store offset from where the user picked up the brick. This prevents movement when the user hasn't moved the input pointer.
+                    const Gs::Vector3f pickedBrickOffset = contact.point - selectedInstance->GetScaledPos();
+                    viewOptions.previewBrick.gridOffset = GetPreviewBrickOffset(pickedBrickOffset, viewOptions.previewBrick.id, previewInstance.gridRotation);
 
-                    // Change to edit mode that allows the user to move the selected brick around.
+                    // Remove selected brick before picking the scene again. Otherwise, we're picking against the brick itself.
+                    DestroyBrickEvent(contact.brick);
+
+                    // Change to move-brick mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
                     hand.action = HandAction::MoveBrick;
                     PickGridPosForPreviewBrick(inputPointer);
                 }
-
-                // Remove selected brick
-                DestroyBrickEvent(selectedBrick);
             }
         }
     }
@@ -3410,9 +3527,11 @@ private:
         }
         else if (inputPointer.position.x < uiState.scrW - uiState.menuBarRight.width)
         {
-            // Initialize grid position to move brick
+            // Reset preview brick attributes and initialize grid position to move brick
             hand.action = HandAction::MoveBrick;
             hand.isAddingNewBrick = true;
+            viewOptions.previewBrick.gridOffset = 0;
+
             PickGridPosForPreviewBrick(inputPointer);
         }
     }

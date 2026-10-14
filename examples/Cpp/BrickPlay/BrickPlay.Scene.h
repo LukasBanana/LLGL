@@ -31,16 +31,26 @@ struct Instance
     GridRotation    gridRotation;
     std::uint8_t    colorIndex;
 
-    inline GridVec3i GetPos() const
+    GridVec3i GetPos() const
     {
         return GridVec3i{ gridPos[0], gridPos[1], gridPos[2] };
     }
 
-    inline void SetPos(const GridVec3i& pos)
+    void SetPos(const GridVec3i& pos)
     {
         gridPos[0] = pos[0];
         gridPos[1] = pos[1];
         gridPos[2] = pos[2];
+    }
+
+    Gs::Vector3f GetScaledPos() const
+    {
+        return Gs::Vector3f
+        {
+            KDTreeNode::gridScale[0] * static_cast<float>(gridPos[0]),
+            KDTreeNode::gridScale[1] * static_cast<float>(gridPos[1]),
+            KDTreeNode::gridScale[2] * static_cast<float>(gridPos[2])
+        };
     }
 };
 
@@ -346,6 +356,60 @@ public:
         }
 
         return true;
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the top of such a brick.
+    bool BrickFitsInGridTop(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset + GridVec3i{ 0, brickDim.extent.y - 1, 0 },
+            GridVec3i{ brickDim.extent.x, 1, brickDim.extent.z }
+        );
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the bottom of such a brick.
+    bool BrickFitsInGridBottom(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset,
+            GridVec3i{ brickDim.extent.x, 1, brickDim.extent.z }
+        );
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the left side of such a brick.
+    bool BrickFitsInGridLeft(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset,
+            GridVec3i{ 1, brickDim.extent.y, brickDim.extent.z }
+        );
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the right side of such a brick.
+    bool BrickFitsInGridRight(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset + GridVec3i{ brickDim.extent.x - 1, 0, 0 },
+            GridVec3i{ 1, brickDim.extent.y, brickDim.extent.z }
+        );
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the left side of such a brick.
+    bool BrickFitsInGridFront(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset,
+            GridVec3i{ brickDim.extent.x, brickDim.extent.y, 1 }
+        );
+    }
+
+    // Returns true if a brick with the specified position and dimension can fit into the grid at the right side of such a brick.
+    bool BrickFitsInGridBack(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
+    {
+        return !IsCellSliceOccupied(
+            gridPos + brickDim.offset + GridVec3i{ 0, 0, brickDim.extent.z - 1 },
+            GridVec3i{ brickDim.extent.x, brickDim.extent.y, 1 }
+        );
     }
 
     bool PickScene(const Ray3f& ray, RayIntersection& outContact)
@@ -658,6 +722,19 @@ private:
         return true;
     }
 
+    // Returns true if the specified slice of cells in the grid is occupied by at least one cell.
+    bool IsCellSliceOccupied(const GridVec3i& offset, const GridVec3i& extent) const
+    {
+        return !grid.ForEachCell(
+            offset, extent,
+            [](Brick brick, const GridVec3i& cellPos) -> bool
+            {
+                return !brick; // Continue searching if leaf is empty
+            },
+            /*iterateThroughLeavesOnly:*/ true
+        );
+    }
+
     // Returns true if the specified brick is blocking the view of other bricks. False for transparent bricks.
     bool IsBrickBlocking(Brick brick) const
     {
@@ -669,7 +746,7 @@ private:
         return false;
     }
 
-    bool IsBrickVolumeBlockedTopAndBottom(const GridVec3i& gridPos, const BrickDimensions& brickDim)
+    bool IsBrickVolumeBlockedTopAndBottom(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
     {
         const GridVec3i alignedGridPos = gridPos + brickDim.offset;
         for_range(yi, 2)
@@ -695,7 +772,7 @@ private:
         return true;
     }
 
-    bool IsBrickVolumeBlockedSideways(const GridVec3i& gridPos, const BrickDimensions& brickDim)
+    bool IsBrickVolumeBlockedSideways(const GridVec3i& gridPos, const BrickDimensions& brickDim) const
     {
         const GridVec3i alignedGridPos = gridPos + brickDim.offset;
 
@@ -845,7 +922,7 @@ private:
 
     // Returns true if the specified cell (position relative to brick, not to the grid) is excluded from the brick type.
     // This is used for a few select bricks that don't cover a full bounding box, like the roof tile.
-    bool IsBrickCellExcluded(BrickId brickId, GridRotation brickRotation, const GridVec3i& cellPos)
+    bool IsBrickCellExcluded(BrickId brickId, GridRotation brickRotation, const GridVec3i& cellPos) const
     {
         const BrickInfo& brickInfo = BrickDictionary::Get().GetInfo(brickId);
         if (!brickInfo.excludedCells.empty())
@@ -1115,6 +1192,7 @@ struct History
         else
             return nullptr;
     }
+
 };
 
 
