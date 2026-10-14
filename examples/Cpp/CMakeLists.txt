@@ -24,7 +24,7 @@ if(APPLE)
         find_source_files(FilesExampleBaseMacOS OBJC "${SHARED_PLATFORM_DIR}/macOS")
     endif()
 elseif(LLGL_ANDROID_PLATFORM)
-    find_source_files(FilesExampleBaseAndroid CXX "${SHARED_PLATFORM_DIR}/Android")
+    find_source_files(FilesExampleBaseAndroid CXX "${SHARED_PLATFORM_DIR}/Android" "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase/Platform/Android")
 endif()
 
 set(FilesExampleBaseAll ${FilesExampleBase})
