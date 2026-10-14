@@ -401,11 +401,6 @@ public:
         return sizeof(LLGL::ColorRGBAub) * colors.size();
     }
 
-    int HighlightColorIndex() const
-    {
-        return 0;
-    }
-
 };
 
 

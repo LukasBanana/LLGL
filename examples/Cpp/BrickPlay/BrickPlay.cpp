@@ -302,15 +302,22 @@ class Example_BrickPlay : public ExampleBase
     // Just another name for user input pointer :-)
     struct UserHand
     {
-        HandAction      action          = HandAction::None;
-        LLGL::Offset2D  capturePos;             // Input pointer position when the capture started
-        float           captureScroll   = 0.0f; // Captured menu bar scroll position
-        bool            isOverMenu      = false;
+        HandAction      action              = HandAction::None;
+        LLGL::Offset2D  capturePos;                     // Input pointer position when the capture started
+        float           captureScroll       = 0.0f;     // Captured menu bar scroll position
+        bool            isOverMenu          = false;
+        bool            isAddingNewBrick    = false;    // True if this hand is adding a new brick from the palette. Otherwise, it's just moving an existing brick from the scene.
 
         void Capture(HandAction newAction, LLGL::Offset2D pos)
         {
             action = newAction;
             capturePos = pos;
+        }
+
+        void ResetAction()
+        {
+            action = HandAction::None;
+            isAddingNewBrick = false;
         }
     };
 
@@ -327,7 +334,6 @@ class Example_BrickPlay : public ExampleBase
         LLGL::Offset2D      lastCursorPos;
 
         Brick               pickedBrick;
-        int                 pickedInstanceColorIndex    = 0; // Color palette index of lasted picked brick
 
         Instance            backupInstance              = {};
 
@@ -2996,7 +3002,7 @@ private:
     void StopDesktopCameraMode()
     {
         // Show cursor and restore its last position when ending camera movement mode
-        user.hand[0].action = HandAction::None;
+        user.hand[0].ResetAction();
         LLGL::Display::SetCursorPosition(user.lastCursorPos);
         LLGL::Display::ShowCursor(true);
     }
@@ -3092,16 +3098,9 @@ private:
     }
 
     // Resets the previously picked brick and returns its instance.
-    Instance* ResetPreviouslySelectedBrick()
+    void ResetPreviouslySelectedBrick()
     {
-        // Reset previously picked brick
-        if (Instance* oldBrickInstance = currentScene->GetMutableBrickInstance(user.pickedBrick))
-        {
-            oldBrickInstance->colorIndex = user.pickedInstanceColorIndex;
-            user.pickedBrick = {};
-            return oldBrickInstance;
-        }
-        return nullptr;
+        user.pickedBrick = {};
     }
 
     Brick SelectBrickFromScene(const LLGL::InputPointer& inputPointer)
@@ -3113,13 +3112,7 @@ private:
         if (currentScene->PickScene(pickerRay, contact))
         {
             // Highlight new picked brick
-            if (Instance* newBrickInstance = currentScene->GetMutableBrickInstance(contact.brick))
-            {
-                user.pickedInstanceColorIndex   = newBrickInstance->colorIndex;
-                user.pickedBrick                = contact.brick;
-
-                newBrickInstance->colorIndex = ColorPalette::Get().HighlightColorIndex();
-            }
+            user.pickedBrick = contact.brick;
             return contact.brick;
         }
 
@@ -3217,11 +3210,11 @@ private:
         }
     }
 
-    bool NewBrickAndRegister(BrickId brickId, Instance brickInstance)
+    bool NewBrickAndRegister(BrickId brickId, Instance brickInstance, bool tryMergeWithPrevEvent = false)
     {
         if (currentScene->NewBrick(brickId, brickInstance.GetPos(), brickInstance.gridRotation, brickInstance.colorIndex))
         {
-            history.Register(History::Event{ brickId, brickInstance, INVALID_BRICK_ID, {} });
+            history.Register(History::Event{ brickId, brickInstance, INVALID_BRICK_ID, {} }, tryMergeWithPrevEvent);
             return true;
         }
         return false;
@@ -3238,9 +3231,9 @@ private:
     }
 
     // Event when the user adds a new brick. This is recorded in the event history so the user can revert it via undo/redo.
-    void NewBrickEvent()
+    void NewBrickEvent(bool tryMergeWithPrevEvent = false)
     {
-        if (!NewBrickAndRegister(viewOptions.previewBrick.id, previewInstance))
+        if (!NewBrickAndRegister(viewOptions.previewBrick.id, previewInstance, tryMergeWithPrevEvent))
             CancelBrickMoveEvent();
     }
 
@@ -3282,19 +3275,22 @@ private:
         {
             // Place brick back to its previous location and transition back to 'select' mode
             CancelBrickMoveEvent();
-            hand.action = HandAction::None;
+            hand.ResetAction();
         }
         else if (IsInputUp(inputPointer))
         {
             // Place brick at new location. If brick was moved to trash bin, simply transition back to default mode (this effectively deletes the brick).
             if (!isBrickOverTrash)
-                NewBrickEvent();
-            hand.action = HandAction::None;
+            {
+                const bool tryMergeWithPrevEvent = !hand.isAddingNewBrick;
+                NewBrickEvent(tryMergeWithPrevEvent);
+            }
+            hand.ResetAction();
         }
         else if (input.KeyPressed(LLGL::Key::Delete))
         {
             // Reset hand action without placing a brick. This will delete the brick as it was transferred to the preview brick, which is now reset.
-            hand.action = HandAction::None;
+            hand.ResetAction();
         }
     }
 
@@ -3318,10 +3314,6 @@ private:
                     // Also save current brick information in case the newly placed location is blocked and this brick is set back to its previous position
                     user.backupInstance = *selectedInstance;
 
-                    // Try to find picked color in color palette. If not found, it was edited externally and we keep the color picker unchanged.
-                    if (selectedInstance->colorIndex < ColorPalette::Get().Count())
-                        user.pickedColorPaletteIndex = selectedInstance->colorIndex;
-
                     // Change to edit mode that allows the user to move the selected brick around.
                     // Immediately update picking position of the preview brick before it is rendered with a stale position.
                     hand.action = HandAction::MoveBrick;
@@ -3329,8 +3321,6 @@ private:
                 }
 
                 // Remove selected brick
-                if (user.pickedBrick == selectedBrick)
-                    ResetPreviouslySelectedBrick();
                 DestroyBrickEvent(selectedBrick);
             }
         }
@@ -3422,6 +3412,7 @@ private:
         {
             // Initialize grid position to move brick
             hand.action = HandAction::MoveBrick;
+            hand.isAddingNewBrick = true;
             PickGridPosForPreviewBrick(inputPointer);
         }
     }
@@ -3436,7 +3427,7 @@ private:
             float remainingScrollDist = menuBar.scrollTarget - menuBar.scroll.position;
             menuBar.scroll.AddForces(remainingScrollDist * 5.0f / (dt * 60.0f));
             menuBar.scrollTarget = -1.0f;
-            hand.action = HandAction::None;
+            hand.ResetAction();
         }
     }
 
@@ -3455,7 +3446,7 @@ private:
 
         if (IsInputUp(inputPointer))
         {
-            hand.action = HandAction::None;
+            hand.ResetAction();
             return false;
         }
 
@@ -3507,7 +3498,7 @@ private:
                 ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarLeft, dt);
                 break;
             case HandAction::LeftMenu_Select:
-                hand.action = HandAction::None;
+                hand.ResetAction();
                 break;
 
             case HandAction::RightMenu_Capture:
@@ -3545,22 +3536,12 @@ private:
         if (!IsRunningOnMobileDevice())
             DesktopInputControls(dt);
 
-        Instance* oldBrickInstance = ResetPreviouslySelectedBrick();
+        ResetPreviouslySelectedBrick();
 
         for_range(pointerIndex, NumInputPointers())
             ProcessInputPointer(pointerIndex, dt);
 
         camera.ApplyForces(dt, currentScene.get());
-
-        #if KDTREE_DEBUG_LEVEL >= 1
-        if (currentScene->GetBrickInstance(user.pickedBrick) != oldBrickInstance)
-        {
-            LLGL_LOG(
-                "Selected brick (type=%u, instance=%u): %u Ray/AABB tests\n",
-                user.pickedBrick.groupId, user.pickedBrick.groupInstance, KDTreeNode::numAABBTests
-            );
-        }
-        #endif
     }
 
     void UpdateSceneView()
@@ -3743,7 +3724,6 @@ private:
         if (hasLoadedScene)
         {
             // Ensure previoulsy selected brick retains its original color
-            ResetPreviouslySelectedBrick();
             if (currentScene->HasUnsavedChanges() && !options.discardEdits)
                 SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
         }

@@ -212,17 +212,6 @@ public:
         return (instanceIndex < instances.size() ? &(instances[instanceIndex]) : nullptr);
     }
 
-    Instance* GetMutableBrickInstance(Brick brick)
-    {
-        const std::size_t instanceIndex = BrickToInstance(brick);
-        if (instanceIndex < instances.size())
-        {
-            MarkInstanceDirty(instanceIndex);
-            return &(instances[instanceIndex]);
-        }
-        return nullptr;
-    }
-
     bool NewBrick(BrickId brickId, const GridVec3i& gridPos, GridRotation gridRotation = GridRotation_0, int colorIndex = 0)
     {
         if (!BrickFitsInGrid(brickId, gridPos, gridRotation))
@@ -1081,8 +1070,26 @@ struct History
         return eventIter == events.end();
     }
 
-    void Register(Event&& event)
+    void Register(Event&& event, bool tryMergeWithPrevEvent = false)
     {
+        // Check if new event can be merged with previous event
+        if (tryMergeWithPrevEvent && !events.empty())
+        {
+            Event& prevEvent = events.back();
+            if (event.addedBrickId != INVALID_BRICK_ID && prevEvent.addedBrickId == INVALID_BRICK_ID)
+            {
+                prevEvent.addedBrickId = event.addedBrickId;
+                prevEvent.addedInstance = event.addedInstance;
+                return;
+            }
+            else if (event.destroyedBrickId != INVALID_BRICK_ID && prevEvent.destroyedBrickId == INVALID_BRICK_ID)
+            {
+                prevEvent.destroyedBrickId = event.destroyedBrickId;
+                prevEvent.destroyedInstance = event.destroyedInstance;
+                return;
+            }
+        }
+
         // If there are too many events in the queue, drop the oldest one
         if (events.size() >= Cfg::maxHistoryLength)
             events.pop_front();
