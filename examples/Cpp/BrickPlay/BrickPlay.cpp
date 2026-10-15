@@ -29,6 +29,12 @@
 // Enables parallax occlusion displacement for rendering the plane studs.
 #define ENABLE_PARALLAX_OCCLUSION 1
 
+#if LLGL_OS_WASM
+#define BRICKPLAY_SCENE_FILENAME "/savefiles/BrickPlay.scene.txt"
+#else
+#define BRICKPLAY_SCENE_FILENAME "Scenes/Bricks.scene.txt"
+#endif
+
 
 class Example_BrickPlay : public ExampleBase
 {
@@ -38,9 +44,10 @@ class Example_BrickPlay : public ExampleBase
 
     struct Options
     {
-        std::string                 sceneFilename                   = "Scenes/Bricks.scene.txt";
+        std::string                 sceneFilename                   = BRICKPLAY_SCENE_FILENAME;
         std::string                 configFilename                  = "BrickPlay.config.txt";
         bool                        discardEdits                    = false;    // Don't save edited scene
+        bool                        autoSaveEdits                   = false;    // Auto-save scene after every editing change
         bool                        useMobileView                   = false;    // Intended for mobile only, but can be enabled on desktop via `-mobile`
         int                         scenePresetNo                   = -1;       // Auto-generate preset scene
         int                         sceneBoundingVolume[3]          = { 100, 60, 100 };
@@ -431,6 +438,17 @@ public:
 
         #if LLGL_OS_WASM
 
+        // Always auto-save edits in the web browser, so we can recover the scene after the browser tab terminated unexpectedly
+        options.autoSaveEdits = true;
+
+        // Initialize Emscripten's virtual file system for the web browser's IndexedDB, so we can store the scene in the user device's cache.
+        InitIDBFS(
+            [this]() -> void
+            {
+                user.pendingSceneFilename = options.sceneFilename;
+            }
+        );
+
         // Append special event handler just for the upload button on the web app
         if (IsRunningOnMobileDevice())
             LLGL::CastTo<LLGL::Canvas>(swapChain->GetSurface()).AddEventListener(std::make_shared<UploadButtonEventHandler>(user));
@@ -757,6 +775,7 @@ private:
 
         options.discardEdits = HasArgument("-discard");
         options.useMobileView = IsRunningOnMobileDevice() || HasArgument("-mobile");
+        options.autoSaveEdits = HasArgument("-autosave");
 
         // Use a longer far plane for this example, since the user can pan the camera around
         projectionParams.zNear  = 1.0f;
@@ -1695,9 +1714,23 @@ private:
         if (SaveSceneToStream(scene, file))
         {
             LLGL_LOG("Saved scene to file: %s\n", filename);
+
+            #if LLGL_OS_WASM
+            // Synchronize IndexedDB filesystem to ensure changes to Emscripten's virtual filesystem are written to the web browser's cache.
+            SyncIDBFS();
+            #endif
+
             return true;
         }
         return false;
+    }
+
+    bool SaveSceneWithUnsavedChanges()
+    {
+        if (currentScene->HasUnsavedChanges() && !options.discardEdits)
+            return SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
+        else
+            return false;
     }
 
     bool LoadSceneFromStream(BrickScene& scene, std::istream& file, const char* filename)
@@ -3089,6 +3122,14 @@ private:
 
     //////////////////// USER INPUT HANDLING ////////////////////
 
+    void PostEdit()
+    {
+        if (options.autoSaveEdits)
+        {
+            SaveSceneWithUnsavedChanges();
+        }
+    }
+
     void Undo()
     {
         if (const History::Event* event = history.Undo())
@@ -3105,6 +3146,8 @@ private:
             {
                 currentScene->NewBrick(event->destroyedBrickId, event->destroyedInstance.GetPos(), event->destroyedInstance.gridRotation, event->destroyedInstance.colorIndex);
             }
+
+            PostEdit();
         }
     }
 
@@ -3124,6 +3167,8 @@ private:
             {
                 currentScene->NewBrick(event->addedBrickId, event->addedInstance.GetPos(), event->addedInstance.gridRotation, event->addedInstance.colorIndex);
             }
+
+            PostEdit();
         }
     }
 
@@ -3510,6 +3555,7 @@ private:
                 const bool tryMergeWithPrevEvent = !hand.isAddingNewBrick;
                 NewBrickEvent(tryMergeWithPrevEvent);
             }
+            PostEdit();
             hand.ResetAction();
         }
         else if (input.KeyPressed(LLGL::Key::Delete))
@@ -3838,10 +3884,17 @@ private:
     void FlushPendingScene()
     {
         // Load scene if there is new file content scheduled
-        if (!user.pendingSceneFileContent.empty())
+        if (!user.pendingSceneFilename.empty())
         {
-            std::stringstream sceneContentStream{ user.pendingSceneFileContent };
-            LoadSceneFromStream(*currentScene, sceneContentStream, user.pendingSceneFilename.c_str());
+            if (!user.pendingSceneFileContent.empty())
+            {
+                std::stringstream sceneContentStream{ user.pendingSceneFileContent };
+                LoadSceneFromStream(*currentScene, sceneContentStream, user.pendingSceneFilename.c_str());
+            }
+            else
+            {
+                LoadSceneFromFile(*currentScene, user.pendingSceneFilename.c_str());
+            }
 
             user.pendingSceneFileContent.clear();
             user.pendingSceneFilename.clear();
@@ -3984,13 +4037,8 @@ private:
 
     void OnExit() override
     {
-        // Only save file if it was loaded successfully.
         // We don't want to override an existing file with an empty scene because something went wrong at startup.
-        #if !LLGL_OS_WASM
-        // Ensure previoulsy selected brick retains its original color
-        if (currentScene->HasUnsavedChanges() && !options.discardEdits)
-            SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
-        #endif
+        (void)SaveSceneWithUnsavedChanges();
         currentScene.reset();
     }
 

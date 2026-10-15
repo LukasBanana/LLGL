@@ -24,12 +24,14 @@
 using FileUploadCallback = std::function<void(const char* filename, LLGL::StringView content)>;
 using SubmitFormCallback = std::function<void(LLGL::StringView title)>;
 using CanceledCallback = std::function<void()>;
+using IDBFSLoadedCallback = std::function<void()>;
 
 struct WasmContext
 {
     FileUploadCallback  fileUploadCallback  = nullptr;
     SubmitFormCallback  submitFormCallback  = nullptr;
     CanceledCallback    canceledCallback    = nullptr;
+    IDBFSLoadedCallback idbfsLoadedCallback = nullptr;
 };
 
 static WasmContext g_wasmContext;
@@ -40,6 +42,8 @@ extern "C"
     void BrickPlay_PromptFileUpload();
     void BrickPlay_PromptSubmitForm();
     void BrickPlay_UploadToDatabase(const char* title, int titleLen, const char* content, int contentLen);
+    void BrickPlay_InitIDBFS();
+    void BrickPlay_SyncIDBFS();
 }
 
 // Prompts the user to download a text file to their device.
@@ -99,6 +103,28 @@ static void PromptSubmitForm(const SubmitFormCallback& submitFormCallback, const
 static void UploadToDatabase(LLGL::StringView title, LLGL::StringView content)
 {
     BrickPlay_UploadToDatabase(title.data(), title.size(), content.data(), content.size());
+}
+
+// Extern "C" function that JavaScript can invoke once the file is read
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnIDBFSLoaded()
+{
+    if (g_wasmContext.idbfsLoadedCallback)
+    {
+        g_wasmContext.idbfsLoadedCallback();
+        g_wasmContext.idbfsLoadedCallback = nullptr; // Reset callback
+    }
+}
+
+static void InitIDBFS(const IDBFSLoadedCallback& idbfsLoadedCallback)
+{
+    g_wasmContext.idbfsLoadedCallback = idbfsLoadedCallback;
+    BrickPlay_InitIDBFS();
+}
+
+static void SyncIDBFS()
+{
+    BrickPlay_SyncIDBFS();
 }
 
 #endif // /LLGL_OS_WASM

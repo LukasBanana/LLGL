@@ -688,6 +688,9 @@ if(EMSCRIPTEN)
     # TODO: Emscripten file system pulls in a large amount of code. Consider limiting file system support to examples and tests.
     add_link_options("SHELL:-s FORCE_FILESYSTEM") # For examples
 
+    # Include Emscripten IndexedDB file system support (used by BrickPlay WebApp)
+    add_link_options("SHELL:-lidbfs.js")
+
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")

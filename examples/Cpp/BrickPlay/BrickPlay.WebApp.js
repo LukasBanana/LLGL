@@ -138,5 +138,30 @@ addToLibrary({
             }
         })();
     },
+
+    // Run this once when your application initializes
+    BrickPlay_InitIDBFS: function() {
+        FS.mkdir('/savefiles'); // Create a directory for your persistent files
+        FS.mount(IDBFS, {}, '/savefiles');
+
+        // Synchronize data from IndexedDB into the memory file system (load phase)
+        FS.syncfs(true, function (err) {
+            if (err) {
+                console.error("Error loading from IndexedDB:", err);
+            } else {
+                console.log("IndexedDB loaded successfully into memory.");
+                _OnIDBFSLoaded(); // Notify C++ that IDBFS has been loaded
+            }
+        });
+    },
+
+    BrickPlay_SyncIDBFS: function() {
+        // Synchronize data from the memory file system back to IndexedDB (save phase)
+        FS.syncfs(false, function (err) {
+            if (err) {
+                console.error("Error saving to IndexedDB:", err);
+            }
+        });
+    }
 });
 
