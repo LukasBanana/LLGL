@@ -11,7 +11,7 @@ using System.Numerics;
 
 namespace LLGLExamples
 {
-    public class IndexedTriangelMesh<TVertex, TIndex>
+    public class IndexedTriangleMesh<TVertex, TIndex>
     {
         public List<TVertex> Vertices { get; set; } = new List<TVertex>();
         public List<TIndex> Indices { get; set; } = new List<TIndex>();

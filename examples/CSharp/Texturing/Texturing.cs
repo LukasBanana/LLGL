@@ -96,9 +96,9 @@ namespace LLGLExamples
         LLGL.PipelineState PSO { get; set; }
         LLGL.VertexAttribute[] VertexAttribs { get; set; }
 
-        static IndexedTriangelMesh<Vertex, UInt16> CreateCubeMesh(float r)
+        static IndexedTriangleMesh<Vertex, UInt16> CreateCubeMesh(float r)
         {
-            var mesh = new IndexedTriangelMesh<Vertex, UInt16>();
+            var mesh = new IndexedTriangleMesh<Vertex, UInt16>();
 
             mesh.Vertices.AddRange(new Vertex[]{
                 // front
