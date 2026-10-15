@@ -33,10 +33,6 @@ class UWPWindow final : public Window
 
     private:
 
-        HWND CreateWindowHandle(const WindowDescriptor& desc);
-
-    private:
-
         winrt::Windows::UI::Core::CoreWindow window_ = nullptr;
 
 };

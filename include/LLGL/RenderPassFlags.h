@@ -53,15 +53,36 @@ enum class AttachmentStoreOp
     */
     Undefined,
 
-    //! Store the outcome into the respective render target attachment.
+    //! Store the outcome into the respective render-target attachment.
     Store,
 
 #if 0 //TODO: not implemented yet
     /**
-    \brief Store the outcome into the respective render target attachment and if it's a multi-sampled render target, resolve it into its respective resolve attachment.
+    \brief Store and resolve the average sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \remarks This can only be used with non-integer attachment formats, e.g. Format::R32Float, Format::RGBA8UNorm etc.
+    Use ResolveMin, ResolveMax, and ResolveSample0 for integer attachment formats, e.g. Format::R32UInt.
+    \see RenderTargetDescriptor::resolveAttachments
+    \see IsIntegerFormat
+    */
+//  Resolve,
+
+    /**
+    \brief Store and resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \see RenderTargetDescriptor::resolveAttachments
     */
-    Resolve,
+//  ResolveMin,
+
+    /**
+    \brief Store and resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+//  ResolveMax,
+
+    /**
+    \brief Store and resolve sample 0 of a multi-sampled render-target attachment into its respective resolve attachment.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+//  ResolveSample0,
 #endif
 };
 

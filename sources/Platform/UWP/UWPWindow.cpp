@@ -124,16 +124,6 @@ void UWPWindow::SetDesc(const WindowDescriptor& desc)
 }
 
 
-/*
- * ======= Private: =======
- */
-
-HWND UWPWindow::CreateWindowHandle(const WindowDescriptor& desc)
-{
-    return 0; //todo
-}
-
-
 } // /namespace LLGL
 
 

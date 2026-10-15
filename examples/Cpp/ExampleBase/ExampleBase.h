@@ -471,7 +471,7 @@ protected:
 };
 
 
-#if defined LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 
 #define LLGL_ANDROID_STDERR(...) \
     ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))
@@ -501,7 +501,7 @@ void RunExample(android_app* state)
         return RunExample<CLASS>(state);    \
     }
 
-#elif defined LLGL_OS_IOS
+#elif LLGL_OS_IOS
 
 extern std::unique_ptr<ExampleBase> InstantiateExample();
 
