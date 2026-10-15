@@ -65,60 +65,6 @@ static void PromptFileDownload(LLGL::StringView filename, LLGL::StringView conte
     );
 }
 
-static void UploadToDatabase(LLGL::StringView title, LLGL::StringView content)
-{
-    EM_ASM_INT(
-        {
-            // Convert WebAssembly memory views to JavaScript strings and Uint8Arrays
-            const title = UTF8ToString($0, $1);
-            const contentBytes = new Uint8Array(Module.HEAPU8.buffer, $2, $3);
-
-            (async () => {
-                try {
-                    // 1. Compress content using browser-native Gzip compression
-                    const stream = new Blob([contentBytes]).stream().pipeThrough(new CompressionStream('gzip'));
-                    const compressedBlob = await new Response(stream).blob();
-                    const compressedBuffer = new Uint8Array(await compressedBlob.arrayBuffer());
-
-                    // 2. Convert Uint8Array to PostgreSQL hex format for BYTEA columns
-                    let hexString = '\\\\x';
-                    for (let i = 0; i < compressedBuffer.length; i++) {
-                        hexString += compressedBuffer[i].toString(16).padStart(2, '0');
-                    }
-
-                    // 3. Send to Supabase via REST API (using 'anon' key)
-                    const SUPABASE_URL = 'https://ydbljrnnedmofzqkuyeo.supabase.co';
-                    const SUPABASE_ANON_KEY = 'sb_publishable_rE6ZlsOGjgpdCYWKZNq0-g_UFR1KWW6';
-
-                    const response = await fetch(`${SUPABASE_URL}/rest/v1/worlds`, {
-                        method: 'POST',
-                            headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify({
-                            title: title,
-                            world_data: hexString
-                        })
-                    });
-
-                    if (!response.ok) {
-                        const errText = await response.text();
-                        console.error("Failed to upload '${title}' to Supabase:", errText);
-                    } else {
-                        console.log("Successfully uploaded '${title}' to Supabase!");
-                    }
-                } catch (err) {
-                    console.error("Exception while uploading '${title}' to Supabase:", err);
-                }
-            })();
-        },
-        title.data(), title.size(), content.data(), content.size()
-    );
-}
-
 // Extern "C" function that JavaScript can invoke once the file is read
 extern "C" EMSCRIPTEN_KEEPALIVE
 void OnFileLoadedFromJS(const char* filenamePtr, const char* contentPtr, int contentLength)
@@ -224,6 +170,60 @@ static void PromptSubmitForm(const SubmitFormCallback& submitFormCallback, const
                 document.getElementById('es-name-input').focus();
             }
         }
+    );
+}
+
+static void UploadToDatabase(LLGL::StringView title, LLGL::StringView content)
+{
+    EM_ASM_INT(
+        {
+            // Convert WebAssembly memory views to JavaScript strings and Uint8Arrays
+            const title = UTF8ToString($0, $1);
+            const contentBytes = new Uint8Array(Module.HEAPU8.buffer, $2, $3);
+
+            (async () => {
+                try {
+                    // 1. Compress content using browser-native Gzip compression
+                    const stream = new Blob([contentBytes]).stream().pipeThrough(new CompressionStream('gzip'));
+                    const compressedBlob = await new Response(stream).blob();
+                    const compressedBuffer = new Uint8Array(await compressedBlob.arrayBuffer());
+
+                    // 2. Convert Uint8Array to PostgreSQL hex format for BYTEA columns
+                    let hexString = '\\\\x';
+                    for (let i = 0; i < compressedBuffer.length; i++) {
+                        hexString += compressedBuffer[i].toString(16).padStart(2, '0');
+                    }
+
+                    // 3. Send to Supabase via REST API (using 'anon' key)
+                    const SUPABASE_URL = 'https://ydbljrnnedmofzqkuyeo.supabase.co';
+                    const SUPABASE_ANON_KEY = 'sb_publishable_rE6ZlsOGjgpdCYWKZNq0-g_UFR1KWW6';
+
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/worlds`, {
+                        method: 'POST',
+                            headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            title: title,
+                            world_data: hexString
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        console.error("Failed to upload '${title}' to Supabase:", errText);
+                    } else {
+                        console.log("Successfully uploaded '${title}' to Supabase!");
+                    }
+                } catch (err) {
+                    console.error("Exception while uploading '${title}' to Supabase:", err);
+                }
+            })();
+        },
+        title.data(), title.size(), content.data(), content.size()
     );
 }
 

@@ -347,6 +347,10 @@ class Example_BrickPlay : public ExampleBase
         // When user opens a file from their device, this schedules the scene file content for the next frame, since we can't re-construct the scene mid-frame.
         std::string         pendingSceneFilename;
         std::string         pendingSceneFileContent;
+
+        // Stores the state of whether the user touched the 'file upload' button.
+        // This is a workaround to properly trigger this event and prevent security restrictions in the web app.
+        bool                isFileUploadSelected        = false;
     }
     user;
 
@@ -355,6 +359,49 @@ class Example_BrickPlay : public ExampleBase
         // Don't use multi-sampled swap-chain on mobile devices, it's too slow for high-resolution phones and tablets.
         return IsRunningOnMobileDevice() ? 1 : 0;
     }
+
+    #if LLGL_OS_WASM
+
+    // Extra event handler for web app to prevent security restrictions on opening a file picker.
+    // The 'open file' modal in iOS needs to be triggered during the touch event handling, not outside that scope.
+    class UploadButtonEventHandler : public LLGL::Canvas::EventListener
+    {
+
+        User& user;
+
+    public:
+
+        UploadButtonEventHandler(User& user) :
+            user { user }
+        {
+        }
+
+        bool IsConsumeEventsEnabled() const override
+        {
+            return false;
+        }
+
+        void OnPanGesture(
+            LLGL::Canvas& /*sender*/, LLGL::Offset2D /*position*/,
+            std::uint32_t /*touchIndex*/, std::uint32_t /*numTouches*/,
+            float /*dX*/, float /*dY*/, LLGL::EventAction action) override
+        {
+            if (action == LLGL::EventAction::Ended && user.isFileUploadSelected)
+            {
+                PromptFileUpload(
+                    [this](const char* filename, LLGL::StringView content)
+                    {
+                        user.pendingSceneFilename       = filename;
+                        user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
+                    }
+                );
+                user.isFileUploadSelected = false;
+            }
+        }
+
+    };
+
+    #endif
 
 public:
 
@@ -382,7 +429,13 @@ public:
 
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
 
-        #if !LLGL_OS_WASM
+        #if LLGL_OS_WASM
+
+        // Append special event handler just for the upload button on the web app
+        if (IsRunningOnMobileDevice())
+            LLGL::CastTo<LLGL::Canvas>(swapChain->GetSurface()).AddEventListener(std::make_shared<UploadButtonEventHandler>(user));
+
+        #else
 
         // Load previoulsy saved scene or create default initial scene on failure.
         if (options.scenePresetNo >= 0)
@@ -2655,7 +2708,7 @@ private:
         return MaskPointerId_ForInputDown(pointerId);
     }
 
-    bool DrawUIMenuItem(UIMenuItem menuItem, bool canSelect, bool isHighlighted = false, bool isDisabled = false)
+    bool DrawUIMenuItem(UIMenuItem menuItem, bool canSelect, bool isHighlighted = false, bool isDisabled = false, bool isTriggerdOnPushDown = false)
     {
         int w = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
         int h = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
@@ -2682,7 +2735,7 @@ private:
         if (menuInfo.endsWithSeparator)
             uiState.x += uiLayout.mainMenuSeparatorSize;
 
-        return (MaskPointerId_ForInputUp(pointerId) != 0);
+        return (isTriggerdOnPushDown ? MaskPointerId_ForInputDown(pointerId) != 0 : MaskPointerId_ForInputUp(pointerId) != 0);
     }
 
     void InitUILayoutForElementSize(int uiElementSize, int thumbstickSize, int thumbstickBgSize, int trashIconSize)
@@ -2933,6 +2986,7 @@ private:
         uiState.advance = uiLayout.mainMenuBaseAdvance;
 
         #if LLGL_OS_WASM
+
         if (DrawUIMenuItem(UIMenuItem_Save, canSelectMainMenu))
         {
             const std::string timePointFormat = FormatTimePoint(std::chrono::system_clock::now());
@@ -2941,20 +2995,34 @@ private:
                 PromptFileDownload("BrickPlay_" + timePointFormat + ".txt", sceneContentStream.str());
         }
 
-        if (DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu))
+        if (IsRunningOnMobileDevice())
         {
-            PromptFileUpload(
-                [this](const char* filename, LLGL::StringView content)
-                {
-                    user.pendingSceneFilename       = filename;
-                    user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
-                }
-            );
+            // Use workaround on mobile devices to prevent security restriction for 'file open' modal
+            if (DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu, false, false, /*isTriggerdOnPushDown:*/ true))
+            {
+                user.isFileUploadSelected = true;
+            }
         }
-        #else
+        else
+        {
+            if (DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu))
+            {
+                PromptFileUpload(
+                    [this](const char* filename, LLGL::StringView content)
+                    {
+                        user.pendingSceneFilename       = filename;
+                        user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
+                    }
+                );
+            }
+        }
+
+        #else // LLGL_OS_WASM
+
         (void)DrawUIMenuItem(UIMenuItem_Save, canSelectMainMenu, false, true);
         (void)DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu, false, true);
-        #endif
+
+        #endif // /LLGL_OS_WASM
 
         if (DrawUIMenuItem(UIMenuItem_Undo, canSelectMainMenu, false, history.IsAtBegining()))
             Undo();
@@ -2967,6 +3035,9 @@ private:
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation - 1, GridRotation_Num));
 
         #if LLGL_OS_WASM
+
+        // Only show the share button in the web app. This allows the user to contribute their creation to the project.
+        // It's only available in the web app as it uses JavaScript to upload the scene via the REST interface to a PostgreSQL database.
         const bool isEnoughBricksAddedToShare = (currentScene->NumBricks() >= Cfg::numAddedBricksUntilSharing);
         if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu, false, !isEnoughBricksAddedToShare))
         {
@@ -2989,7 +3060,8 @@ private:
                 }
             );
         }
-        #endif
+
+        #endif // /LLGL_OS_WASM
 
         // Draw trash bin when bricks are being moved
         if (AnyHandAction(HandAction::MoveBrick))
