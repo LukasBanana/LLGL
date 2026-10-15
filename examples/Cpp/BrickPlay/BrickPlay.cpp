@@ -51,11 +51,15 @@ class Example_BrickPlay : public ExampleBase
 
     enum BrickPSO
     {
+        // Standard brick instance PSO
         BrickPSO_Default = 0,
         BrickPSO_Default_Wireframe,
         BrickPSO_Transparent,
         BrickPSO_Transparent_Wireframe,
-        BrickPSO_Preview,               // With dithering to indicate blocked position
+
+        // Preview brick PSOs: with free transform and dithering to indicate blocked position
+        BrickPSO_Preview,               
+        BrickPSO_Preview_Transparent,
 
         BrickPSO_Num,
     };
@@ -66,6 +70,7 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Shader*                   fsBrickTransparent              = nullptr;
     LLGL::Shader*                   vsBrickPreview                  = nullptr;
     LLGL::Shader*                   fsBrickPreview                  = nullptr;
+    LLGL::Shader*                   fsBrickTrnsPreview              = nullptr;
     LLGL::Shader*                   vsTransparentComposite          = nullptr;
     LLGL::Shader*                   fsTransparentComposite          = nullptr;
     LLGL::Shader*                   vsOverlay                       = nullptr;
@@ -651,7 +656,7 @@ private:
             if ((flags & (Model_IsWallOptimized | Model_IsWallOptimizedExt)) != 0)
             {
                 // Load either standard or extended model specialization that only renders its walls.
-                // These are rendered when the brick is blocked above and below to improve performance by rendering less triangels and pixels.
+                // These are rendered when the brick is blocked above and below to improve performance by rendering less triangles and pixels.
                 std::string basenameWallsOnly = std::string(basename) + "_WallsOnly";
                 if (Cfg::useWaterTightBrickOptimization && (flags & Model_IsWallOptimizedExt) != 0)
                     basenameWallsOnly += "Ext";
@@ -1206,6 +1211,7 @@ private:
         fsBrickTransparent      = LoadFragmentShader("BrickPlay", "PSBrickTransparent", fsTransparentMacros);
         vsBrickPreview          = LoadVertexShader  ("BrickPlay", "VSBrickPreview", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsBrickPreview          = LoadFragmentShader("BrickPlay", "PSBrickPreview");
+        fsBrickTrnsPreview      = LoadFragmentShader("BrickPlay", "PSBrickPreviewTransparent");
         vsTransparentComposite  = LoadVertexShader  ("BrickPlay", "VSTransparentComposite");
         fsTransparentComposite  = LoadFragmentShader("BrickPlay", "PSTransparentComposite");
         vsOverlay               = LoadVertexShader  ("BrickPlay", "VSOverlay");
@@ -1258,58 +1264,63 @@ private:
             psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
         };
 
+        auto SetTransparentPSODefaults = [&](LLGL::GraphicsPipelineDescriptor& psoDesc) -> void
+        {
+            SetPSODefaults(psoDesc);
+
+            psoDesc.renderPass                      = transparency.renderPass;
+
+            psoDesc.depth.writeEnabled              = false;
+            psoDesc.blend.independentBlendEnabled   = true;
+
+            psoDesc.blend.targets[0].blendEnabled   = true;
+            psoDesc.blend.targets[0].srcColor       = LLGL::BlendOp::One;
+            psoDesc.blend.targets[0].srcAlpha       = LLGL::BlendOp::One;
+            psoDesc.blend.targets[0].dstColor       = LLGL::BlendOp::One;
+            psoDesc.blend.targets[0].dstAlpha       = LLGL::BlendOp::One;
+
+            psoDesc.blend.targets[1].blendEnabled   = true;
+            psoDesc.blend.targets[1].srcColor       = LLGL::BlendOp::Zero;
+            psoDesc.blend.targets[1].srcAlpha       = LLGL::BlendOp::Zero;
+            psoDesc.blend.targets[1].dstColor       = LLGL::BlendOp::InvSrcColor;
+            psoDesc.blend.targets[1].dstAlpha       = LLGL::BlendOp::Zero;
+            psoDesc.blend.targets[1].colorMask      = LLGL::ColorMaskFlags::R;
+        };
+
         LLGL::GraphicsPipelineDescriptor psoDesc;
         {
             SetPSODefaults(psoDesc);
-            psoDesc.debugName               = "Scene.Opaque.PSO";
-            psoDesc.vertexShader            = vsBrick;
-            psoDesc.fragmentShader          = fsBrick;
+            psoDesc.debugName                   = "Scene.Opaque.PSO";
+            psoDesc.vertexShader                = vsBrick;
+            psoDesc.fragmentShader              = fsBrick;
         }
         pso[BrickPSO_Default] = renderer->CreatePipelineState(psoDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Default]);
 
         if (!IsRunningOnMobileDevice())
         {
-            psoDesc.debugName               = "Scene.Opaque.Wireframe.PSO";
-            psoDesc.rasterizer.polygonMode  = LLGL::PolygonMode::Wireframe;
+            psoDesc.debugName                   = "Scene.Opaque.Wireframe.PSO";
+            psoDesc.rasterizer.polygonMode      = LLGL::PolygonMode::Wireframe;
 
-            pso[BrickPSO_Default_Wireframe] = renderer->CreatePipelineState(psoDesc);
+            pso[BrickPSO_Default_Wireframe]     = renderer->CreatePipelineState(psoDesc);
             REPORT_PSO_ERRORS(pso[BrickPSO_Default_Wireframe]);
         }
 
         // Create PSO for transparent bricks
         LLGL::GraphicsPipelineDescriptor psoTransparentDesc;
         {
-            SetPSODefaults(psoTransparentDesc);
-
-            psoTransparentDesc.debugName                        = "Scene.Transparent.PSO";
-            psoTransparentDesc.renderPass                       = transparency.renderPass;
-            psoTransparentDesc.vertexShader                     = vsBrick;
-            psoTransparentDesc.fragmentShader                   = fsBrickTransparent;
-
-            psoTransparentDesc.depth.writeEnabled               = false;
-            psoTransparentDesc.blend.independentBlendEnabled    = true;
-
-            psoTransparentDesc.blend.targets[0].blendEnabled    = true;
-            psoTransparentDesc.blend.targets[0].srcColor        = LLGL::BlendOp::One;
-            psoTransparentDesc.blend.targets[0].srcAlpha        = LLGL::BlendOp::One;
-            psoTransparentDesc.blend.targets[0].dstColor        = LLGL::BlendOp::One;
-            psoTransparentDesc.blend.targets[0].dstAlpha        = LLGL::BlendOp::One;
-
-            psoTransparentDesc.blend.targets[1].blendEnabled    = true;
-            psoTransparentDesc.blend.targets[1].srcColor        = LLGL::BlendOp::Zero;
-            psoTransparentDesc.blend.targets[1].srcAlpha        = LLGL::BlendOp::Zero;
-            psoTransparentDesc.blend.targets[1].dstColor        = LLGL::BlendOp::InvSrcColor;
-            psoTransparentDesc.blend.targets[1].dstAlpha        = LLGL::BlendOp::Zero;
-            psoTransparentDesc.blend.targets[1].colorMask       = LLGL::ColorMaskFlags::R;
+            SetTransparentPSODefaults(psoTransparentDesc);
+            psoTransparentDesc.debugName        = "Scene.Transparent.PSO";
+            psoTransparentDesc.vertexShader     = vsBrick;
+            psoTransparentDesc.fragmentShader   = fsBrickTransparent;
         }
         pso[BrickPSO_Transparent] = renderer->CreatePipelineState(psoTransparentDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Transparent]);
 
         if (!IsRunningOnMobileDevice())
         {
-            psoTransparentDesc.debugName                        = "Scene.Transparent.Wireframe.PSO";
-            psoTransparentDesc.rasterizer.polygonMode           = LLGL::PolygonMode::Wireframe;
+            psoTransparentDesc.debugName                = "Scene.Transparent.Wireframe.PSO";
+            psoTransparentDesc.rasterizer.polygonMode   = LLGL::PolygonMode::Wireframe;
 
             pso[BrickPSO_Transparent_Wireframe] = renderer->CreatePipelineState(psoTransparentDesc);
             REPORT_PSO_ERRORS(pso[BrickPSO_Transparent_Wireframe]);
@@ -1327,6 +1338,19 @@ private:
         }
         pso[BrickPSO_Preview] = renderer->CreatePipelineState(psoPreviewDesc);
         REPORT_PSO_ERRORS(pso[BrickPSO_Preview]);
+
+        // Create PSO for transparent bricks
+        LLGL::GraphicsPipelineDescriptor psoTrnsPrvwDesc;
+        {
+            SetTransparentPSODefaults(psoTrnsPrvwDesc);
+            psoTrnsPrvwDesc.debugName                           = "Scene.Transparent.Preview.PSO";
+            psoTrnsPrvwDesc.vertexShader                        = vsBrickPreview;
+            psoTrnsPrvwDesc.fragmentShader                      = fsBrickTrnsPreview;
+            psoTrnsPrvwDesc.rasterizer.polygonMode              = LLGL::PolygonMode::Fill;
+            psoTrnsPrvwDesc.rasterizer.depthBias.constantFactor = -100.0f;
+        }
+        pso[BrickPSO_Preview_Transparent] = renderer->CreatePipelineState(psoTrnsPrvwDesc);
+        REPORT_PSO_ERRORS(pso[BrickPSO_Preview_Transparent]);
 
         if (selectionRenderMode != SelectionRenderMode::Simplified)
         {
@@ -2193,9 +2217,9 @@ private:
         commands->PopDebugGroup();
     }
 
-    void BindPreviewBrickPSOStates()
+    void BindPreviewBrickPSOStates(bool isTransparent = false)
     {
-        commands->SetPipelineState(*pso[BrickPSO_Preview]);
+        commands->SetPipelineState(*pso[isTransparent ? BrickPSO_Preview_Transparent : BrickPSO_Preview]);
         commands->SetResource(0, *sceneViewCbuffer);
         commands->SetResource(1, *colorPaletteCbuffer);
         commands->SetResource(2, *skyboxCubemap);
@@ -2913,13 +2937,13 @@ private:
             const std::string timePointFormat = FormatTimePoint(std::chrono::system_clock::now());
             std::stringstream sceneContentStream;
             if (SaveSceneToStream(*currentScene, sceneContentStream))
-                PromptFileDownload(sceneContentStream.str(), "BrickPlay_" + timePointFormat + ".txt");
+                PromptFileDownload("BrickPlay_" + timePointFormat + ".txt", sceneContentStream.str());
         }
 
         if (DrawUIMenuItem(UIMenuItem_Load, canSelectMainMenu))
         {
             PromptFileUpload(
-                [this](LLGL::StringView content, const char* filename)
+                [this](const char* filename, LLGL::StringView content)
                 {
                     user.pendingSceneFilename       = filename;
                     user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
@@ -2944,7 +2968,24 @@ private:
         #if LLGL_OS_WASM
         if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu))
         {
-            //TODO
+            input.SetInputHandling(LLGL::InputHandling::Ignore);
+            PromptSubmitForm(
+                [this](LLGL::StringView name)
+                {
+                    std::stringstream sceneContentStream;
+                    if (SaveSceneToStream(*currentScene, sceneContentStream))
+                    {
+                        UploadToDatabase(name, sceneContentStream.str());
+                        LLGL_LOG("Content submitted: '%.*s'\n", static_cast<int>(name.size()), name.data());
+                    }
+                    input.SetInputHandling(LLGL::InputHandling::ProcessAndConsume);
+                },
+                [this]()
+                {
+                    LLGL_LOG("Content submission canceled\n");
+                    input.SetInputHandling(LLGL::InputHandling::ProcessAndConsume);
+                }
+            );
         }
         #endif
 
@@ -3748,6 +3789,7 @@ private:
         UpdateSceneView();
 
         const bool isPreviewBrickVisible = IsPreviewBrickVisible();
+        const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(user.pickedColorPaletteIndex);
 
         commands->Begin();
         {
@@ -3790,11 +3832,11 @@ private:
                 }
                 commands->PopDebugGroup();
 
-                if (isPreviewBrickVisible)
+                if (isPreviewBrickVisible && !isPreviewBrickTransparent)
                 {
                     commands->PushDebugGroup("RenderPreviewBrick");
                     {
-                        BindPreviewBrickPSOStates();
+                        BindPreviewBrickPSOStates(false);
                         RenderPreviewBrick(viewOptions.previewBrick);
                     }
                     commands->PopDebugGroup();
@@ -3812,6 +3854,16 @@ private:
                     RenderTransparentBrickInstances(*currentScene);
                 }
                 commands->PopDebugGroup();
+
+                if (isPreviewBrickVisible && isPreviewBrickTransparent)
+                {
+                    commands->PushDebugGroup("RenderTransparentPreviewBrick");
+                    {
+                        BindPreviewBrickPSOStates(true);
+                        RenderPreviewBrick(viewOptions.previewBrick);
+                    }
+                    commands->PopDebugGroup();
+                }
             }
             commands->EndRenderPass();
 

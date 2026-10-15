@@ -112,11 +112,11 @@ copy_example_to_target()
     fi
 
     echo "Copy $NAME from '$(realpath --relative-to "$LLGL_ROOT" "$SOURCE_FOLDER")' to $TARGET_FOLDER"
-    cp "$SOURCE_FOLDER/$NAME.data" "$TARGET_FOLDER/$NAME.data"
-    cp "$SOURCE_FOLDER/$NAME.data.js" "$TARGET_FOLDER/$NAME.data.js"
-    cp "$SOURCE_FOLDER/$NAME.js" "$TARGET_FOLDER/$NAME.js"
-    cp "$SOURCE_FOLDER/$NAME.wasm" "$TARGET_FOLDER/$NAME.wasm"
-    cp "$SOURCE_FOLDER/index.html" "$TARGET_FOLDER/index.html"
+    for FILE in "$SOURCE_FOLDER"/*; do
+        if [ -f "$FILE" ]; then
+            cp "$SOURCE_FOLDER/$(basename $FILE)" "$TARGET_FOLDER/$(basename $FILE)"
+        fi
+    done
     copy_example_thumbnail_to_target "$BASENAME" "$TARGET_FOLDER"
 }
 

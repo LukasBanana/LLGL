@@ -19,6 +19,9 @@ sources:
       - entry: "PSBrickPreview"
         profile: "ps_4_0"
         targets: [spirv, metal]
+      - entry: "PSBrickPreviewTransparent"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
       - entry: "VSTransparentComposite"
         profile: "vs_4_0"
         targets: [spirv, metal]
@@ -72,6 +75,9 @@ sources:
         profile: "vs_4_0"
         targets: [glsl140core, glsl300es]
       - entry: "PSBrickPreview"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es]
+      - entry: "PSBrickPreviewTransparent"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es]
       - entry: "VSTransparentComposite"

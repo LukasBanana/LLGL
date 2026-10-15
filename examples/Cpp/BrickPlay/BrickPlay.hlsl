@@ -21,6 +21,10 @@
 #define COMPILE_FOR_GL 0
 #endif
 
+#ifndef NUM_LIGHTS
+#define NUM_LIGHTS 2
+#endif
+
 // For transparent objects, flip the normal vector to simulate light passing through and shading the face from the opposite side
 #ifndef ENABLE_DUAL_SIDED_LIGHTING
 #define ENABLE_DUAL_SIDED_LIGHTING 0
@@ -44,8 +48,8 @@ cbuffer SceneView : register(b2)
     float3      viewPos;
     float       skyboxDiffuseLOD;       // Maximum level of detail (LOD) for the skybox's diffuse reflection (default to 6.0)
     float4      ambientLight;
-    float4      diffuseLight[2];
-    float4      lightDir[2];
+    float4      diffuseLight[NUM_LIGHTS];
+    float4      lightDir[NUM_LIGHTS];
 
     // Preview shaders only
     float       worldOffsetY;       // Y-axis for preview world offset
@@ -192,18 +196,23 @@ float3 ComputeLighting(float3 worldPos, float3 normal)
     float3 lighting = ambientLight.rgb;
 
     [unroll]
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < NUM_LIGHTS; ++i)
         lighting += BlinnPhongShading(worldPos, normal, lightDir[i].xyz, diffuseLight[i].xyz);
 
     return lighting;
 }
 
-EARLYDEPTHSTENCIL
-float4 PSBrick(VertexOut inp) : SV_Target
+float4 ComputeLightingPixel(VertexOut inp)
 {
     // Apply simple lighting
     float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
     return float4(inp.color.rgb * lighting, inp.color.a);
+}
+
+EARLYDEPTHSTENCIL
+float4 PSBrick(VertexOut inp) : SV_Target
+{
+    return ComputeLightingPixel(inp);
 }
 
 struct TransparentPixelOut
@@ -228,19 +237,21 @@ float ComputeWeight(float4 color, float z)
     );
 }
 
-// Adopted from https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
-EARLYDEPTHSTENCIL
-void PSBrickTransparent(VertexOut inp, out TransparentPixelOut outp)
+void BrickTransparentPixelMain(VertexOut inp, out TransparentPixelOut outp)
 {
-    // Apply simple lighting
-    float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
-    float4 outputColor = float4(inp.color.rgb * lighting, inp.color.a);
+    float4 outputColor = ComputeLightingPixel(inp);
 
     // Output weighted color to accumulation buffer
     float weight = ComputeWeight(outputColor, inp.position.z);
 
     outp.accum = float4(outputColor.rgb * outputColor.a, outputColor.a) * weight;
     outp.reveal = outputColor.a;
+}
+
+EARLYDEPTHSTENCIL
+void PSBrickTransparent(VertexOut inp, out TransparentPixelOut outp)
+{
+    BrickTransparentPixelMain(inp, outp);
 }
 
 
@@ -309,19 +320,26 @@ void VSBrickPreview(VertexIn inp, out VertexOut outp)
     outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
 }
 
+void ClipDitheringPixel(uint2 screenPos)
+{
+    if (isDithering != 0)
+        clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
+}
+
 EARLYDEPTHSTENCIL
 float4 PSBrickPreview(VertexOut inp) : SV_Target
 {
-    if (isDithering != 0)
-    {
-        uint2 screenPos = (uint2)inp.position.xy;
-        clip((screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2) ? -1.0 : +1.0);
-    }
+    ClipDitheringPixel((uint2)inp.position.xy);
+    return ComputeLightingPixel(inp);
+}
 
-    // Apply simple lighting
-    float3 lighting = ComputeLighting(inp.worldPos, normalize(inp.normal));
-    return float4(inp.color.rgb * lighting, inp.color.a);
-};
+EARLYDEPTHSTENCIL
+void PSBrickPreviewTransparent(VertexOut inp, out TransparentPixelOut outp)
+{
+    ClipDitheringPixel((uint2)inp.position.xy);
+    BrickTransparentPixelMain(inp, outp);
+}
+
 
 ////////////////////// SILHOUETTE SHADERS //////////////////////
 

@@ -1,0 +1,192 @@
+#emscripten-form-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(10, 12, 20, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: 9999;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    animation: es-fade-in 0.15s ease-out;
+}
+
+#emscripten-form-overlay.hidden {
+    display: none !important;
+}
+
+#emscripten-form-overlay *,
+#emscripten-form-overlay *::before,
+#emscripten-form-overlay *::after {
+    box-sizing: border-box;
+}
+
+.emscripten-modal {
+    position: relative;
+    width: min(400px, 100%);
+    background: #ffffff;
+    color: #1f2328;
+    padding: 28px 24px 24px;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15);
+    text-align: left;
+    animation: es-pop-in 0.18s ease-out;
+}
+
+.emscripten-modal h3 {
+    margin: 0 28px 20px 0; /* leave room for the close button */
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.emscripten-modal form {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.emscripten-modal label {
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #57606a;
+}
+
+.emscripten-modal input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 0 0 20px;
+    font: inherit;
+    font-size: 1rem;
+    color: inherit;
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.emscripten-modal input[type="text"]:focus {
+    background: #ffffff;
+    border-color: #0969da;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.25);
+}
+
+.emscripten-modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.emscripten-modal-buttons button {
+    padding: 9px 18px;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.05s;
+}
+
+.emscripten-modal-buttons button:active {
+    transform: translateY(1px);
+}
+
+.emscripten-modal-buttons button:focus-visible,
+.emscripten-close-x:focus-visible {
+    outline: 2px solid #0969da;
+    outline-offset: 2px;
+}
+
+.emscripten-btn-submit {
+    background-color: #0969da;
+    color: #ffffff;
+}
+
+.emscripten-btn-submit:hover {
+    background-color: #0757b5;
+}
+
+.emscripten-btn-cancel {
+    background-color: #eaeef2;
+    color: #1f2328;
+}
+
+.emscripten-btn-cancel:hover {
+    background-color: #dde2e7;
+}
+
+.emscripten-close-x {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #6e7781;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.emscripten-close-x:hover {
+    background-color: #eaeef2;
+    color: #1f2328;
+}
+
+@media (prefers-color-scheme: dark) {
+    .emscripten-modal {
+        background: #1f2329;
+        color: #e6edf3;
+    }
+    .emscripten-modal label {
+        color: #9198a1;
+    }
+    .emscripten-modal input[type="text"],
+    .emscripten-modal input[type="text"]:focus {
+        background: #0d1117;
+        border-color: #3d444d;
+    }
+    .emscripten-modal input[type="text"]:focus {
+        border-color: #4493f8;
+        box-shadow: 0 0 0 3px rgba(68, 147, 248, 0.3);
+    }
+    .emscripten-btn-cancel {
+        background-color: #2f353d;
+        color: #e6edf3;
+    }
+    .emscripten-btn-cancel:hover,
+    .emscripten-close-x:hover {
+        background-color: #3d444d;
+        color: #e6edf3;
+    }
+}
+
+@keyframes es-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes es-pop-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #emscripten-form-overlay,
+    .emscripten-modal {
+        animation: none;
+    }
+}

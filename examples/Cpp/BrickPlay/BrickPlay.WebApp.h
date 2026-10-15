@@ -17,10 +17,25 @@
 #endif
 
 
+// This is where most of the Emscripten/JavaScript glue code lives
+
 #if LLGL_OS_WASM
 
+using FileUploadCallback = std::function<void(const char* filename, LLGL::StringView content)>;
+using SubmitFormCallback = std::function<void(LLGL::StringView title)>;
+using CanceledCallback = std::function<void()>;
+
+struct WasmContext
+{
+    FileUploadCallback  fileUploadCallback  = nullptr;
+    SubmitFormCallback  submitFormCallback  = nullptr;
+    CanceledCallback    canceledCallback    = nullptr;
+};
+
+static WasmContext g_wasmContext;
+
 // Prompts the user to download a text file to their device.
-static void PromptFileDownload(LLGL::StringView content, LLGL::StringView filename)
+static void PromptFileDownload(LLGL::StringView filename, LLGL::StringView content)
 {
     EM_ASM(
         {
@@ -50,25 +65,75 @@ static void PromptFileDownload(LLGL::StringView content, LLGL::StringView filena
     );
 }
 
-using FileUploadCallback = std::function<void(LLGL::StringView content, const char* filename)>;
+static void UploadToDatabase(LLGL::StringView title, LLGL::StringView content)
+{
+    EM_ASM_INT(
+        {
+            // Convert WebAssembly memory views to JavaScript strings and Uint8Arrays
+            const title = UTF8ToString($0, $1);
+            const contentBytes = new Uint8Array(Module.HEAPU8.buffer, $2, $3);
 
-static FileUploadCallback g_fileUploadCallback = nullptr;
+            (async () => {
+                try {
+                    // 1. Compress content using browser-native Gzip compression
+                    const stream = new Blob([contentBytes]).stream().pipeThrough(new CompressionStream('gzip'));
+                    const compressedBlob = await new Response(stream).blob();
+                    const compressedBuffer = new Uint8Array(await compressedBlob.arrayBuffer());
+
+                    // 2. Convert Uint8Array to PostgreSQL hex format for BYTEA columns
+                    let hexString = '\\\\x';
+                    for (let i = 0; i < compressedBuffer.length; i++) {
+                        hexString += compressedBuffer[i].toString(16).padStart(2, '0');
+                    }
+
+                    // 3. Send to Supabase via REST API (using 'anon' key)
+                    const SUPABASE_URL = 'https://ydbljrnnedmofzqkuyeo.supabase.co';
+                    const SUPABASE_ANON_KEY = 'sb_publishable_rE6ZlsOGjgpdCYWKZNq0-g_UFR1KWW6';
+
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/worlds`, {
+                        method: 'POST',
+                            headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            title: title,
+                            world_data: hexString
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        console.error("Failed to upload '${title}' to Supabase:", errText);
+                    } else {
+                        console.log("Successfully uploaded '${title}' to Supabase!");
+                    }
+                } catch (err) {
+                    console.error("Exception while uploading '${title}' to Supabase:", err);
+                }
+            })();
+        },
+        title.data(), title.size(), content.data(), content.size()
+    );
+}
 
 // Extern "C" function that JavaScript can invoke once the file is read
 extern "C" EMSCRIPTEN_KEEPALIVE
-void OnFileLoadedFromJS(const char* contentPtr, int contentLength, const char* filenamePtr)
+void OnFileLoadedFromJS(const char* filenamePtr, const char* contentPtr, int contentLength)
 {
-    if (g_fileUploadCallback)
+    if (g_wasmContext.fileUploadCallback)
     {
-        g_fileUploadCallback(LLGL::StringView{ contentPtr, static_cast<std::size_t>(contentLength) }, filenamePtr);
-        g_fileUploadCallback = nullptr; // Reset callback
+        g_wasmContext.fileUploadCallback(filenamePtr, LLGL::StringView{ contentPtr, static_cast<std::size_t>(contentLength) });
+        g_wasmContext.fileUploadCallback = nullptr; // Reset callback
     }
 }
 
 // Prompts the user to upload a text file from their device.
 static void PromptFileUpload(const FileUploadCallback& fileUploadCallback)
 {
-    g_fileUploadCallback = fileUploadCallback;
+    g_wasmContext.fileUploadCallback = fileUploadCallback;
 
     EM_ASM(
         {
@@ -107,7 +172,7 @@ static void PromptFileUpload(const FileUploadCallback& fileUploadCallback)
                     stringToUTF8(file.name, filenamePtr, filenameLength);
 
                     // Call exported C++ function
-                    _OnFileLoadedFromJS(ptr, uint8Array.length, filenamePtr);
+                    _OnFileLoadedFromJS(filenamePtr, ptr, uint8Array.length);
 
                     // Free allocated C++ heap memory
                     _free(ptr);
@@ -119,6 +184,45 @@ static void PromptFileUpload(const FileUploadCallback& fileUploadCallback)
 
             // 3. Trigger file open dialog
             input.click();
+        }
+    );
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnFormSubmitted(const char* name)
+{
+    if (g_wasmContext.submitFormCallback)
+        g_wasmContext.submitFormCallback(LLGL::StringView{ name });
+
+    // Reset callback
+    g_wasmContext.submitFormCallback = nullptr;
+    g_wasmContext.canceledCallback = nullptr;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnFormCancelled()
+{
+    if (g_wasmContext.canceledCallback)
+        g_wasmContext.canceledCallback();
+
+    // Reset callbacks
+    g_wasmContext.submitFormCallback = nullptr;
+    g_wasmContext.canceledCallback = nullptr;
+}
+
+// Call this from C++ whenever you want to display the form overlay
+static void PromptSubmitForm(const SubmitFormCallback& submitFormCallback, const CanceledCallback& canceledCallback)
+{
+    g_wasmContext.submitFormCallback = submitFormCallback;
+    g_wasmContext.canceledCallback = canceledCallback;
+
+    EM_ASM(
+        {
+            const overlay = document.getElementById('emscripten-form-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                document.getElementById('es-name-input').focus();
+            }
         }
     );
 }

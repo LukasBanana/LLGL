@@ -87,10 +87,20 @@ generate_html5_page()
         cp "$BIN_ROOT/$BASE_FILENAME.worker.js" "$HTML5_ROOT/$BASE_FILENAME.worker.js"
     fi
 
-    # Replace meta data
-    sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
-        -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
-        "$SOURCE_DIR/examples/Shared/Platform/Wasm/index.html" > "$HTML5_ROOT/index.html"
+    # Determine which index.html file to copy (from shared folder or project-specific folder)
+    if [ -f "$PROJECT_SOURCE_DIR/Platform/Wasm/index.html" ]; then
+        # Copy all files from the Wasm project-specific folder
+        for FILE in "$PROJECT_SOURCE_DIR/Platform/Wasm/"*; do
+            if [ -f "$FILE" ]; then
+                cp "$FILE" "$HTML5_ROOT/$(basename $FILE)"
+            fi
+        done
+    else
+        # Copy index.html template and Replace meta data
+        sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
+            -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
+            "$SOURCE_DIR/examples/Shared/Platform/Wasm/index.html" > "$HTML5_ROOT/index.html"
+    fi
 
     # Find all required assets in *.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$HTML5_ROOT/assets"
