@@ -8,6 +8,8 @@
     justify-content: center;
     align-items: center;
     padding: 16px;
+    /* Keep clear of the notch/home indicator (requires viewport-fit=cover) */
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     box-sizing: border-box;
     z-index: 9999;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,6 +29,12 @@
 .emscripten-modal {
     position: relative;
     width: min(400px, 100%);
+    /* Never exceed the viewport; scroll inside the card instead of overflowing top and bottom */
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     background: #ffffff;
     color: #1f2328;
     padding: 28px 24px 24px;
@@ -112,6 +120,11 @@
     background-color: #0757b5;
 }
 
+.emscripten-btn-submit:disabled {
+    background-color: #8c959f;
+    cursor: not-allowed;
+}
+
 .emscripten-btn-cancel {
     background-color: #eaeef2;
     color: #1f2328;
@@ -144,6 +157,41 @@
 .emscripten-close-x:hover {
     background-color: #eaeef2;
     color: #1f2328;
+}
+
+/* Compact layout for short viewports, e.g. phones in landscape orientation */
+@media (max-height: 500px) {
+    #emscripten-form-overlay {
+        padding-top: max(8px, env(safe-area-inset-top));
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .emscripten-modal {
+        width: min(600px, 100%);
+        padding: 14px 18px 14px;
+    }
+    .emscripten-modal h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    .emscripten-modal p {
+        margin: 0 0 8px;
+        font-size: 0.8rem;
+        line-height: 1.35;
+    }
+    .emscripten-modal label {
+        margin-bottom: 4px;
+    }
+    .emscripten-modal input[type="text"] {
+        padding: 7px 10px;
+        margin-bottom: 10px;
+    }
+    .emscripten-modal-buttons button {
+        padding: 7px 16px;
+    }
+    .emscripten-close-x {
+        top: 8px;
+        right: 8px;
+    }
 }
 
 @media (prefers-color-scheme: dark) {

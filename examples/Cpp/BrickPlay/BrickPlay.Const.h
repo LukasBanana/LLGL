@@ -52,6 +52,8 @@ struct Cfg
 
     static constexpr std::size_t    maxHistoryLength                = 50;       // Maxmimum number of steps to undo
 
+    static constexpr int            numAddedBricksUntilSharing      = 20;       // Users need to add at least this many bricks before they can share their creation
+
     // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
     // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
     // This can be turned off for mobile platforms where this flaw is virtually invisible

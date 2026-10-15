@@ -94,6 +94,7 @@ private:
     KDTreeNode                      grid;
 
     bool                            hasUnsavedChanges           = false;
+    int                             numBricks                   = 0;
 
 public:
 
@@ -250,7 +251,13 @@ public:
 
         // Insert brick without notification first, so its instance is fully initialized before neighbors can rearrange the groups
         constexpr bool notifyNeighbors = true;
-        return AddInstanceToGroup(groupId, gridPos, gridRotation, colorIndex, notifyNeighbors);
+        if (!AddInstanceToGroup(groupId, gridPos, gridRotation, colorIndex, notifyNeighbors))
+            return false;
+
+        // Keep track of how many bricks were added to and removed from the scene
+        ++numBricks;
+
+        return true;
     }
 
     // Adds new bricks to the scene to fill up the specified AABB and returns the number of bricks that were added.
@@ -305,8 +312,13 @@ public:
     void DestroyBrick(Brick brick)
     {
         constexpr bool notifyNeighbors = true;
-        RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, nullptr, notifyNeighbors);
-        hasUnsavedChanges = true;
+        if (RemoveInstanceFromGroup(brick.groupId, brick.groupInstance, nullptr, notifyNeighbors))
+        {
+            hasUnsavedChanges = true;
+
+            // Keep track of how many bricks were added to and removed from the scene
+            --numBricks;
+        }
     }
 
     void ResetScene()
@@ -523,6 +535,14 @@ public:
                 ResolveContact(brick, closestPoint);
             }
         }
+    }
+
+    // Returns the number of bricks. This uses an internal counter to keep track of bricks being added and removed to
+    // quickly query the number of bricks in the scene. Use NumTotalInstances() to guarnatee no brick was miscounted.
+    // This function does not make strong guarantees as it's just a fast way to query whether the share button on the web app is meant to be enabled or not.
+    int NumBricks() const
+    {
+        return numBricks;
     }
 
     std::size_t NumTotalInstances() const

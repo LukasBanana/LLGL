@@ -4,11 +4,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('es-name-input');
     const cancelBtn = document.getElementById('es-cancel-btn');
     const closeBtn = document.getElementById('es-close-btn');
+    const submitBtn = form.querySelector('.emscripten-btn-submit');
+
+    function updateSubmitButton() {
+        submitBtn.disabled = nameInput.value.trim().length === 0;
+    }
 
     function hideForm() {
         overlay.classList.add('hidden');
         nameInput.value = '';
+        updateSubmitButton();
     }
+
+    nameInput.addEventListener('input', updateSubmitButton);
+    updateSubmitButton();
 
     // Called from C++, e.g. EM_ASM(showSubmitForm()); or emscripten_run_script("showSubmitForm()");
     window.showSubmitForm = () => {
@@ -19,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const nameVal = nameInput.value;
+        if (nameVal.trim().length === 0) {
+            updateSubmitButton();
+            return;
+        }
+
         hideForm();
 
         // Pass data back to C++ if Module is loaded and functions are exported

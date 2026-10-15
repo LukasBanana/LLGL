@@ -370,6 +370,11 @@ ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app) :
 {
 }
 
+bool ExampleBase::CanvasEventHandler::IsConsumeEventsEnabled() const
+{
+    return false; // Does not handle input events, so don't consume them
+}
+
 void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 {
     app_.DrawFrame();

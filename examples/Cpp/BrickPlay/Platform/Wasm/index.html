@@ -24,13 +24,17 @@
     <div id="emscripten-form-overlay" class="hidden">
         <div class="emscripten-modal">
             <button type="button" class="emscripten-close-x" id="es-close-btn" title="Cancel">&times;</button>
-            <h3>Would you like to share your creation with the creator of the LLGL project to help improve it?</h3>
+            <h3>Would you like to share your creation?</h3>
+            <p>Sharing is optional. If you submit, your creation title and 3D world will be stored
+            in a private database and reviewed by the creator of <a href="https://github.com/LukasBanana/LLGL">LLGL</a>
+            to help improve this open-source library. Your contribution may be included in a curated collection in the future.</p>
+            <p>Please <b>don't include personal or identifying information</b> in your title or build!</p>
             <form id="es-user-form">
-                <label for="es-name-input">Name:</label>
-                <input type="text" id="es-name-input" placeholder="Name your creation..." required autocomplete="off">
+                <label for="es-name-input">Title:</label>
+                <input type="text" id="es-name-input" placeholder="Give your creation a title..." maxlength="40" required autocomplete="off">
                 <div class="emscripten-modal-buttons">
                     <button type="button" class="emscripten-btn-cancel" id="es-cancel-btn">Cancel</button>
-                    <button type="submit" class="emscripten-btn-submit">Submit</button>
+                    <button type="submit" class="emscripten-btn-submit" disabled>Submit</button>
                 </div>
             </form>
         </div>

@@ -173,6 +173,7 @@ private:
 
             CanvasEventHandler(ExampleBase& app);
 
+            bool IsConsumeEventsEnabled() const override;
             void OnDraw(LLGL::Canvas& sender) override;
             void OnResize(LLGL::Canvas& sender, const LLGL::Extent2D& clientAreaSize) override;
 

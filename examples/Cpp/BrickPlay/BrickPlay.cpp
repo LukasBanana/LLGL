@@ -116,7 +116,6 @@ class Example_BrickPlay : public ExampleBase
     LLGL::Texture*                  skyboxCubemap                   = nullptr;
 
     bool                            hasOffsetInstancing             = false;
-    bool                            hasLoadedScene                  = false;
 
     //TODO: make this a member of LLGL::RenderingFeatures or a bitmask in LLGL::RenderingLimits
     bool                            canCombineVertexAndIndexBuffers = false; // WebGL 2 cannot combine vertex and index buffers
@@ -381,9 +380,17 @@ public:
                 LLGL_ERROR("Failed to save thumbnail '%s'\n", outputThumbnail.c_str());
         }
 
-        // Load previoulsy saved scene or create default initial scene on failure.
         currentScene = std::unique_ptr<BrickScene>(new BrickScene(*renderer));
-        if (options.scenePresetNo < 0)
+
+        #if !LLGL_OS_WASM
+
+        // Load previoulsy saved scene or create default initial scene on failure.
+        if (options.scenePresetNo >= 0)
+        {
+            // Generate a heightfield preset
+            GeneratePresetScene(*currentScene, options.scenePresetNo);
+        }
+        else
         {
             // On Android, try to load the scene from the user directory for this app first
             #if LLGL_OS_ANDROID
@@ -392,33 +399,27 @@ public:
             if (FileExists(userSceneFilename))
             {
                 options.sceneFilename = std::move(userSceneFilename);
-                if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
-                    hasLoadedScene = true;
+                LoadSceneFromFile(*currentScene, options.sceneFilename.c_str());
             }
             else
             {
-                if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
-                    hasLoadedScene = true;
+                LoadSceneFromFile(*currentScene, options.sceneFilename.c_str());
                 options.sceneFilename = std::move(userSceneFilename);
             }
 
             #else
 
-            if (LoadSceneFromFile(*currentScene, options.sceneFilename.c_str()))
-                hasLoadedScene = true;
+            LoadSceneFromFile(*currentScene, options.sceneFilename.c_str());
 
             #endif
-        }
-        else
-        {
-            CreateDefaultScene(*currentScene, options.scenePresetNo);
-            hasLoadedScene = true;
         }
 
         currentScene->PrintInfo();
 
         // Resolve initial scene collision with camera
         currentScene->ResolveCollision(camera.position, Cfg::cameraCollisionRadius);
+
+        #endif // /!LLGL_OS_WASM
 
         // Print info
         LLGL_LOG(
@@ -1871,7 +1872,7 @@ private:
         }
     }
 
-    void CreateDefaultScene(BrickScene& scene, int presetNo)
+    void GeneratePresetScene(BrickScene& scene, int presetNo)
     {
         // Measure time to generate height field
         auto startTime = std::chrono::system_clock::now();
@@ -2966,7 +2967,8 @@ private:
             user.menuGridRotation = static_cast<GridRotation>(ModuloSignInt(user.menuGridRotation - 1, GridRotation_Num));
 
         #if LLGL_OS_WASM
-        if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu))
+        const bool isEnoughBricksAddedToShare = (currentScene->NumBricks() >= Cfg::numAddedBricksUntilSharing);
+        if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu, false, !isEnoughBricksAddedToShare))
         {
             input.SetInputHandling(LLGL::InputHandling::Ignore);
             PromptSubmitForm(
@@ -3913,12 +3915,9 @@ private:
         // Only save file if it was loaded successfully.
         // We don't want to override an existing file with an empty scene because something went wrong at startup.
         #if !LLGL_OS_WASM
-        if (hasLoadedScene)
-        {
-            // Ensure previoulsy selected brick retains its original color
-            if (currentScene->HasUnsavedChanges() && !options.discardEdits)
-                SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
-        }
+        // Ensure previoulsy selected brick retains its original color
+        if (currentScene->HasUnsavedChanges() && !options.discardEdits)
+            SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
         #endif
         currentScene.reset();
     }
