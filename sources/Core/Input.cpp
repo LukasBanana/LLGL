@@ -109,6 +109,8 @@ struct Input::Pimpl
     unsigned        anyKeyCount             = 0;
     UTF8String      chars;
 
+    InputHandling   inputHandling           = InputHandling::ProcessAndConsume;
+
     std::vector<EventListenerSurfacePair<WindowEventListener>>
                     windowEventListeners;
 
@@ -324,13 +326,24 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
+        #define EXIT_IF_IGNORED() \
+            if (data_.inputHandling == InputHandling::Ignore) return
+
+        bool IsConsumeEventsEnabled() const override
+        {
+            return (data_.inputHandling == InputHandling::ProcessAndConsume);
+        }
+
         void OnTapGesture(Canvas& /*sender*/, Offset2D position, std::uint32_t touchIndex, std::uint32_t /*numTouches*/) override
         {
+            EXIT_IF_IGNORED();
             data_.SetPointerPosition(touchIndex, position);
         }
 
         void OnPanGesture(Canvas& /*sender*/, Offset2D position, std::uint32_t touchIndex, std::uint32_t /*numTouches*/, float dX, float dY, EventAction action) override
         {
+            EXIT_IF_IGNORED();
+
             data_.SetPointerPosition(touchIndex, position);
 
             const bool interpretAsLButton = (touchIndex == 0);
@@ -356,16 +369,19 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
         void OnKeyDown(Canvas& /*sender*/, Key keyCode) override
         {
+            EXIT_IF_IGNORED();
             data_.OnKeyDown(keyCode);
         }
 
         void OnKeyUp(Canvas& /*sender*/, Key keyCode) override
         {
+            EXIT_IF_IGNORED();
             data_.OnKeyUp(keyCode);
         }
 
         void OnDoubleClick(Canvas& /*sender*/, Key keyCode) override
         {
+            EXIT_IF_IGNORED();
             switch (keyCode)
             {
                 case Key::LButton:
@@ -384,15 +400,19 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
         void OnWheelMotion(Canvas& /*sender*/, float dX, float dY) override
         {
+            EXIT_IF_IGNORED();
             data_.wheelMotion[0] += dX;
             data_.wheelMotion[1] += dY;
         }
 
         void OnMouseMotion(Canvas& /*sender*/, Offset2D position, float dX, float dY) override
         {
+            EXIT_IF_IGNORED();
             data_.SetPointerPosition(0, position);
             data_.SetPointerMotionVector(0, dX, dY);
         }
+
+        #undef EXIT_IF_IGNORED
 
     private:
 
@@ -569,6 +589,16 @@ const UTF8String& Input::GetEnteredChars() const
 unsigned Input::GetAnyKeyCount() const
 {
     return pimpl_->anyKeyCount;
+}
+
+void Input::SetInputHandling(InputHandling inputHandling)
+{
+    pimpl_->inputHandling = inputHandling;
+}
+
+InputHandling Input::GetInputHandling() const
+{
+    return pimpl_->inputHandling;
 }
 
 #undef KEY_IDX

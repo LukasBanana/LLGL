@@ -13,8 +13,6 @@
 #include "../../Core/CoreUtils.h"
 #include <cmath>
 
-#include <LLGL/Log.h> //TEST
-
 
 namespace LLGL
 {
@@ -178,16 +176,24 @@ EM_BOOL WasmCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* 
 
     Key key = MapEmscriptenKeyCode(event->code);
 
+    EM_BOOL isEventHandled = EM_FALSE;
+
     if (eventType == 2)
-        canvas->PostKeyDown(key);
+    {
+        if (canvas->PostKeyDown(key))
+            isEventHandled = EM_TRUE;
+    }
     else if (eventType == 3)
-        canvas->PostKeyUp(key);
+    {
+        if (canvas->PostKeyUp(key))
+            isEventHandled = EM_TRUE;
+    }
 
     /* Don't consume function key events as they are reserved by the browser */
     if (key >= Key::F1 && key <= Key::F12)
         return EM_FALSE;
 
-	return EM_TRUE;
+	return isEventHandled;
 }
 
 static Key EmscriptenMouseButtonToKeyCode(unsigned short button)
@@ -205,25 +211,30 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
 {
     WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
 
+    EM_BOOL isEventHandled = EM_FALSE;
+
     switch (eventType)
     {
         case EMSCRIPTEN_EVENT_MOUSEDOWN:
         {
-            canvas->PostKeyDown(EmscriptenMouseButtonToKeyCode(event->button));
+            if (canvas->PostKeyDown(EmscriptenMouseButtonToKeyCode(event->button)))
+                isEventHandled = EM_TRUE;
         }
-        return EM_TRUE;
+        break;
 
         case EMSCRIPTEN_EVENT_MOUSEUP:
         {
-            canvas->PostKeyUp(EmscriptenMouseButtonToKeyCode(event->button));
+            if (canvas->PostKeyUp(EmscriptenMouseButtonToKeyCode(event->button)))
+                isEventHandled = EM_TRUE;
         }
-        return EM_TRUE;
+        break;
 
         case EMSCRIPTEN_EVENT_DBLCLICK:
         {
-            canvas->PostDoubleClick(EmscriptenMouseButtonToKeyCode(event->button));
+            if (canvas->PostDoubleClick(EmscriptenMouseButtonToKeyCode(event->button)))
+                isEventHandled = EM_TRUE;
         }
-        return EM_TRUE;
+        break;
 
         case EMSCRIPTEN_EVENT_MOUSEMOVE:
         {
@@ -232,20 +243,23 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
             const Offset2D position = canvas->ClientToCanvasPosition(canvasRect, event->clientX, event->clientY);
             const float motionX = static_cast<float>(event->movementX * canvas->pixelRatio_);
             const float motionY = static_cast<float>(event->movementY * canvas->pixelRatio_);
-            canvas->PostMouseMotion(position, motionX, motionY);
+            if (canvas->PostMouseMotion(position, motionX, motionY))
+                isEventHandled = EM_TRUE;
         }
-        return EM_TRUE;
+        break;
 
         default:
         break;
     }
 
-    return EM_FALSE;
+    return isEventHandled;
 }
 
 EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent* event, void* userData)
 {
     WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
+
+    EM_BOOL isEventHandled = EM_FALSE;
 
     switch (eventType)
     {
@@ -253,12 +267,13 @@ EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent* e
         {
             const float motionX = static_cast<float>(event->deltaX);
             const float motionY = static_cast<float>(event->deltaY);
-            canvas->PostWheelMotion(motionX, motionY);
+            if (canvas->PostWheelMotion(motionX, motionY))
+                isEventHandled = EM_TRUE;
         }
-        return EM_TRUE;
+        break;
     }
 
-    return EM_FALSE;
+    return isEventHandled;
 }
 
 static EventAction EmscriptenTouchEventToAction(int eventType)
@@ -286,6 +301,8 @@ EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* e
         return canvas->ClientToCanvasPosition(canvasRect, event->touches[touchIndex].clientX, event->touches[touchIndex].clientY);
     };
 
+    EM_BOOL isEventHandled = EM_FALSE;
+
     switch (eventType)
     {
         case EMSCRIPTEN_EVENT_TOUCHSTART:
@@ -294,10 +311,11 @@ EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* e
             {
                 const Offset2D position = TranslateTouchPosition(touchIndex);
                 canvas->prevTouchPoint_[touchIndex] = position;
-                canvas->PostPanGesture(position, touchIndex, numTouches, 0.0f, 0.0f, EventAction::Began);
+                if (canvas->PostPanGesture(position, touchIndex, numTouches, 0.0f, 0.0f, EventAction::Began))
+                    isEventHandled = EM_TRUE;
             }
         }
-        return EM_TRUE;
+        break;
 
         case EMSCRIPTEN_EVENT_TOUCHEND:
         case EMSCRIPTEN_EVENT_TOUCHMOVE:
@@ -309,18 +327,19 @@ EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* e
                 const float motionX = static_cast<float>(position.x - canvas->prevTouchPoint_[touchIndex].x);
                 const float motionY = static_cast<float>(position.y - canvas->prevTouchPoint_[touchIndex].y);
                 canvas->prevTouchPoint_[touchIndex] = position;
-                canvas->PostPanGesture(position, touchIndex, numTouches, motionX, motionY, action);
+                if (canvas->PostPanGesture(position, touchIndex, numTouches, motionX, motionY, action))
+                    isEventHandled = EM_TRUE;
             }
             if (eventType == EMSCRIPTEN_EVENT_TOUCHEND)
-                return EM_FALSE; // Return false to indicate that the touchend event was not fully handled
+                isEventHandled = EM_FALSE; // Return false to indicate that the touchend event was not fully handled
         }
-        return EM_TRUE;
+        break;
 
         default:
         break;
     }
 
-    return EM_FALSE;
+    return isEventHandled;
 }
 
 void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)

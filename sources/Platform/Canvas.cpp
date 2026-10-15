@@ -33,6 +33,11 @@ Canvas::~Canvas()
 
 /* ----- Canvas EventListener class ----- */
 
+bool Canvas::EventListener::IsConsumeEventsEnabled() const
+{
+    return true; // All events are consumed by default
+}
+
 void Canvas::EventListener::OnInit(Canvas& sender)
 {
     // dummy
@@ -107,8 +112,18 @@ LLGL_DEPRECATED_IGNORE_POP()
 
 /* ----- Window class ----- */
 
-#define FOREACH_LISTENER_CALL(FUNC) \
-    for (const auto& lst : pimpl_->eventListeners) { lst->FUNC; }
+#define FOREACH_LISTENER_CALL(FUNC)                     \
+    [&]() -> bool                                       \
+    {                                                   \
+        bool isConsumed = false;                        \
+        for (const auto& lst : pimpl_->eventListeners)  \
+        {                                               \
+            lst->FUNC;                                  \
+            if (lst->IsConsumeEventsEnabled())          \
+                isConsumed = true;                      \
+        }                                               \
+        return isConsumed;                              \
+    }()
 
 #ifndef LLGL_MOBILE_PLATFORM
 
@@ -171,39 +186,39 @@ void Canvas::PostResize(const Extent2D& clientAreaSize)
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }
 
-void Canvas::PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches)
+bool Canvas::PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches)
 {
-    FOREACH_LISTENER_CALL( OnTapGesture(*this, position, touchIndex, numTouches) );
+    return FOREACH_LISTENER_CALL( OnTapGesture(*this, position, touchIndex, numTouches) );
 }
 
-void Canvas::PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action)
+bool Canvas::PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action)
 {
-    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, touchIndex, numTouches, dx, dy, action) );
+    return FOREACH_LISTENER_CALL( OnPanGesture(*this, position, touchIndex, numTouches, dx, dy, action) );
 }
 
-void Canvas::PostKeyDown(Key keyCode)
+bool Canvas::PostKeyDown(Key keyCode)
 {
-    FOREACH_LISTENER_CALL( OnKeyDown(*this, keyCode) );
+    return FOREACH_LISTENER_CALL( OnKeyDown(*this, keyCode) );
 }
 
-void Canvas::PostKeyUp(Key keyCode)
+bool Canvas::PostKeyUp(Key keyCode)
 {
-    FOREACH_LISTENER_CALL( OnKeyUp(*this, keyCode) );
+    return FOREACH_LISTENER_CALL( OnKeyUp(*this, keyCode) );
 }
 
-void Canvas::PostDoubleClick(Key keyCode)
+bool Canvas::PostDoubleClick(Key keyCode)
 {
-    FOREACH_LISTENER_CALL( OnDoubleClick(*this, keyCode) );
+    return FOREACH_LISTENER_CALL( OnDoubleClick(*this, keyCode) );
 }
 
-void Canvas::PostWheelMotion(float dx, float dy)
+bool Canvas::PostWheelMotion(float dx, float dy)
 {
-    FOREACH_LISTENER_CALL( OnWheelMotion(*this, dx, dy) );
+    return FOREACH_LISTENER_CALL( OnWheelMotion(*this, dx, dy) );
 }
 
-void Canvas::PostMouseMotion(Offset2D position, float dx, float dy)
+bool Canvas::PostMouseMotion(Offset2D position, float dx, float dy)
 {
-    FOREACH_LISTENER_CALL( OnMouseMotion(*this, position, dx, dy) );
+    return FOREACH_LISTENER_CALL( OnMouseMotion(*this, position, dx, dy) );
 }
 
 

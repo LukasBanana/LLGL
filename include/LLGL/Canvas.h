@@ -44,6 +44,13 @@ class LLGL_EXPORT Canvas : public Surface
 
                 friend class Canvas;
 
+                /**
+                \brief Returns true if this event listener consumes its input events. By default true.
+                \remarks This is primarily used for WebAssembly where the canvas can decide to consume or forward all input events to the browser.
+                By default, all events are consumed by the event listeners to prevent unintentional browser scrolling, text selection etc.
+                */
+                virtual bool IsConsumeEventsEnabled() const;
+
                 //! Sent when the canvas is initialized or re-initialized.
                 virtual void OnInit(Canvas& sender);
 
@@ -186,48 +193,55 @@ class LLGL_EXPORT Canvas : public Surface
 
         /**
         \brief Posts a tap gesture event to all event listeners.
+        \return True if the event was consumed by at least one registered event handler.
         \see EventListener::OnTapGesture
         */
-        void PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches);
+        bool PostTapGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches);
 
         /**
         \brief Posts a pan gesture event to all event listeners.
+        \return True if the event was consumed by at least one registered event handler.
         \see EventListener::OnPanGesture
         */
-        void PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action);
+        bool PostPanGesture(Offset2D position, std::uint32_t touchIndex, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
         /**
         \brief Posts a keycode event from a device button that has been pushed down.
+        \return True if the event was consumed by at least one registered event handler.
         \see EventListener::OnKeyDown
         */
-        void PostKeyDown(Key keyCode);
+        bool PostKeyDown(Key keyCode);
 
         /**
         \brief Posts a keycode event from a device button that has been released.
+        \return True if the event was consumed by at least one registered event handler.
         \see EventListener::OnKeyUp
         */
-        void PostKeyUp(Key keyCode);
+        bool PostKeyUp(Key keyCode);
 
         /**
         \brief Posts a double click event to this canvas.
+        \return True if the event was consumed by at least one registered event handler.
         \note Only supported on: WebAssembly.
         \see EventListener::OnDoubleClick
         */
-        void PostDoubleClick(Key keyCode);
+        bool PostDoubleClick(Key keyCode);
 
         /**
         \brief Posts a mouse wheel motion event to this canvas.
+        \return True if the event was consumed by at least one registered event handler.
         \note Only supported on: WebAssembly.
         \see EventListener::OnWheelMotion
         */
-        void PostWheelMotion(float dx, float dy);
+        bool PostWheelMotion(float dx, float dy);
 
         /**
         \brief Posts a local mouse motion event to this canvas.
+        \return True if the event was consumed by at least one registered event handler.
         \note Only supported on: WebAssembly.
         \see EventListener::OnMouseMotion
         */
-        void PostMouseMotion(Offset2D position, float dx, float dy);
+        bool PostMouseMotion(Offset2D position, float dx, float dy);
 
         /**
         \deprecated Since 0.05b; Use new version with `touchIndex` parameter.

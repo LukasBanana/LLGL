@@ -52,6 +52,18 @@ enum class InputState
 };
 
 /**
+\brief Enumeration for input event handling modes.
+\remarks
+\see Input::SetInputHandling
+*/
+enum class InputHandling
+{
+    Ignore,
+    Process,
+    ProcessAndConsume,
+};
+
+/**
 \brief Input pointer (mouse or touch input) structure for generic event handling.
 \see Input::GetPointer
 */
@@ -161,6 +173,18 @@ class LLGL_EXPORT Input : public Interface
 
         //! Returns the number of any keys being pressed.
         unsigned GetAnyKeyCount() const;
+
+        /**
+        \brief Sets the input event handling mode. By default InputHandling::ProcessAndConsume.
+        \see Canvas::EventListener::IsConsumeEventsEnabled
+        */
+        void SetInputHandling(InputHandling inputHandling);
+
+        /**
+        \brief Returnst the input event handling mode.
+        \see Canvas::EventListener::IsConsumeEventsEnabled
+        */
+        InputHandling GetInputHandling() const;
 
     private:
 
