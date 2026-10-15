@@ -152,6 +152,13 @@ if(LLGL_BUILD_EXAMPLES)
         if(LLGL_BUILD_XR_OPENXR)
             add_llgl_example_project(Example_HelloOpenXR    CXX "${FilesExample_HelloOpenXR}"           "LLGL_XR_OpenXR;${EXAMPLE_PROJECT_LIBS}")
         endif()
+
+        # WebAssembly specific examples
+        #if(LLGL_WASM_PLATFORM)
+        #    set(BRICKPLAY_JS_LIB "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay/BrickPlay.WebApp.js")
+        #    target_link_options(Example_BrickPlay PRIVATE "SHELL:--js-library ${BRICKPLAY_JS_LIB}")
+        #    set_property(TARGET Example_BrickPlay APPEND PROPERTY LINK_DEPENDS "${BRICKPLAY_JS_LIB}")
+        #endif()
     endif()
 endif(LLGL_BUILD_EXAMPLES)
 
