@@ -38,6 +38,29 @@ struct UIMenuInfo
     bool    endsWithSeparator;  // If true, add `uiState.layout.mainMenuSeparatorSize` to the next position
 };
 
+inline bool IsPointInsideRect(LLGL::Offset2D point, UIRect rect)
+{
+    return (point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h);
+}
+
+enum class UIAlign
+{
+    Left,
+    Right,
+    Top,
+    Bottom,
+};
+
+inline bool IsUIAlignVertical(UIAlign align)
+{
+    return (align == UIAlign::Left || align == UIAlign::Right);
+}
+
+inline bool IsUIAlignHorizontal(UIAlign align)
+{
+    return (align == UIAlign::Top || align == UIAlign::Bottom);
+}
+
 struct UILayout
 {
     static constexpr int    defaultElementSize  = 32; // 32 for standard displays, 64 for high-resolution displays
@@ -118,21 +141,20 @@ struct UIState
 
     struct MenuBar
     {
-        MenuBar(bool isRightAligned) :
-            isRightAligned { isRightAligned }
+        MenuBar()
         {
             scroll.SetMass(scrollBarMass);
         }
 
+        UIAlign             align           = UIAlign::Left; // Alignment of the menu bar
         int                 width           = 0;
         int                 height          = 0;
-        bool                isRightAligned  = false;
         float               scrollTarget    = -1.0f; // < 0 means inactive target
         RigidBody<float>    scroll;
 
-        void UpdateScrolling(float dt, int scrH)
+        void UpdateScrolling(float dt, int scrW, int scrH)
         {
-            const int scrollMax = height - scrH;
+            const int scrollMax = (IsUIAlignHorizontal(align) ? width - scrW : height - scrH);
             if (scrollMax > 0)
             {
                 if (scrollTarget >= 0.0f)
@@ -177,8 +199,8 @@ struct UIState
         unsigned        activePointerId  = 0;
     };
 
-    MenuBar     menuBarLeft     = { false };
-    MenuBar     menuBarRight    = { true  };
+    MenuBar     menuBarColors;
+    MenuBar     menuBarBricks;
     MenuBar*    currentMenuBar  = nullptr;
     Trash       trash;
 
@@ -198,6 +220,17 @@ struct UIState
     {
         scrW = static_cast<int>(resolution.width);
         scrH = static_cast<int>(resolution.height);
+
+        if (scrW > scrH)
+        {
+            menuBarColors.align = UIAlign::Left;
+            menuBarBricks.align = UIAlign::Right;
+        }
+        else
+        {
+            menuBarColors.align = UIAlign::Top;
+            menuBarBricks.align = UIAlign::Bottom;
+        }
     }
 
     void ResetToMenuBar(const UILayout& layout, MenuBar& menuBar, int uiElementSize, bool enableScrolling = false)
@@ -207,8 +240,17 @@ struct UIState
 
         advance = uiElementSize + UILayout::buttonFrameSize*2 + UILayout::buttonMargin;
 
-        x = (currentMenuBar->isRightAligned ? scrW - (UILayout::buttonOffset[0] + uiElementSize + UILayout::buttonFrameSize*2) : UILayout::buttonOffset[0]);
-        y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - static_cast<int>(menuBar.scroll.position) : UILayout::buttonOffset[1]);
+        const int marginRightOrBottom = UILayout::buttonOffset[0] + uiElementSize + UILayout::buttonFrameSize*2;
+        if (IsUIAlignVertical(currentMenuBar->align))
+        {
+            x = currentMenuBar->align == UIAlign::Right ? scrW - marginRightOrBottom : UILayout::buttonOffset[0];
+            y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - static_cast<int>(menuBar.scroll.position) : UILayout::buttonOffset[1]);
+        }
+        else
+        {
+            x = (isScrollEnabled ? UILayout::buttonOffset[1] - static_cast<int>(menuBar.scroll.position) : UILayout::buttonOffset[1]);
+            y = currentMenuBar->align == UIAlign::Bottom ? scrH - marginRightOrBottom : layout.mainMenuSize + UILayout::buttonOffset[1];
+        }
 
         columns = 1;
     }
@@ -216,41 +258,87 @@ struct UIState
     void FinalizeMenuBar(const UILayout& layout, int numElements, int maxColumns)
     {
         LLGL_VERIFY(currentMenuBar != nullptr);
+
+        auto SizeForCells = [this](int axis, int count) -> int
+        {
+            return UILayout::buttonOffset[axis]*2 - UILayout::buttonMargin + count * advance;
+        };
+
         if (columns > maxColumns)
         {
             const int maxNumElementsPerPage = (numElements / maxColumns + (numElements % maxColumns > 0 ? 1 : 0));
 
-            currentMenuBar->width   = UILayout::buttonOffset[0]*2 - UILayout::buttonMargin + maxColumns * advance;
-            currentMenuBar->height  = advance * maxNumElementsPerPage + layout.mainMenuSize + UILayout::buttonOffset[1]*2 - UILayout::buttonMargin;
+            if (IsUIAlignVertical(currentMenuBar->align))
+            {
+                currentMenuBar->width   = SizeForCells(0, maxColumns);
+                currentMenuBar->height  = advance * maxNumElementsPerPage + layout.mainMenuSize + UILayout::buttonOffset[1]*2 - UILayout::buttonMargin;
+            }
+            else
+            {
+                currentMenuBar->width   = advance * maxNumElementsPerPage + UILayout::buttonOffset[1]*2 - UILayout::buttonMargin;
+                currentMenuBar->height  = SizeForCells(1, maxColumns);
+            }
         }
         else
         {
-            currentMenuBar->width   = UILayout::buttonOffset[0]*2 - UILayout::buttonMargin + columns * advance;
-            currentMenuBar->height  = scrH;
+            if (IsUIAlignVertical(currentMenuBar->align))
+            {
+                currentMenuBar->width   = SizeForCells(0, columns);
+                currentMenuBar->height  = scrH;
+            }
+            else
+            {
+                currentMenuBar->width   = scrW;
+                currentMenuBar->height  = SizeForCells(1, columns);
+            }
         }
     }
 
     void AdvanceColumn(const UILayout& layout)
     {
-        const int yScroll = static_cast<int>(currentMenuBar->scroll.position);
-        if (y + yScroll + advance > (isScrollEnabled ? currentMenuBar->height : scrH))
+        LLGL_VERIFY(currentMenuBar != nullptr);
+
+        const int scroll = static_cast<int>(currentMenuBar->scroll.position);
+        if (IsUIAlignVertical(currentMenuBar->align))
         {
-            // Move to next color picker column
-            x += (currentMenuBar->isRightAligned ? -advance : advance);
-            y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - yScroll : UILayout::buttonOffset[1]);
-            ++columns;
+            if (y + scroll + advance > (isScrollEnabled ? currentMenuBar->height : scrH))
+            {
+                // Move to next color picker column
+                x += (currentMenuBar->align == UIAlign::Right ? -advance : advance);
+                y = layout.mainMenuSize + (isScrollEnabled ? UILayout::buttonOffset[1] - scroll : UILayout::buttonOffset[1]);
+                ++columns;
+            }
+        }
+        else
+        {
+            if (x + scroll + advance > (isScrollEnabled ? currentMenuBar->width : scrW))
+            {
+                // Move to next color picker column
+                x = (isScrollEnabled ? UILayout::buttonOffset[1] - scroll : UILayout::buttonOffset[1]);
+                y += (currentMenuBar->align == UIAlign::Bottom ? -advance : advance);
+                ++columns;
+            }
         }
     }
 
     void AdvanceRow()
     {
+        LLGL_VERIFY(currentMenuBar != nullptr);
+
         // Move to next UI element position
-        y += advance;
+        if (IsUIAlignVertical(currentMenuBar->align))
+            y += advance;
+        else
+            x += advance;
     }
 
     bool IsVisible() const
     {
-        return y + advance > 0 && y < scrH;
+        LLGL_VERIFY(currentMenuBar != nullptr);
+        if (IsUIAlignVertical(currentMenuBar->align))
+            return y + advance > 0 && y < scrH;
+        else
+            return x + advance > 0 && x < scrW;
     }
 };
 

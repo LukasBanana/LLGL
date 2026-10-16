@@ -325,6 +325,12 @@ class Example_BrickPlay : public ExampleBase
             capturePos = pos;
         }
 
+        void CaptureScrolling(HandAction newAction, UIState::MenuBar& menuBar)
+        {
+            action = newAction;
+            captureScroll = menuBar.scroll.position + static_cast<float>(IsUIAlignHorizontal(menuBar.align) ? capturePos.x : capturePos.y);
+        }
+
         void ResetAction()
         {
             action = HandAction::None;
@@ -2638,13 +2644,8 @@ private:
         return IsRunningOnMobileDevice() ? 2 : 1;
     }
 
-    unsigned FindInputPointerInRect(int x, int y, int w, int h, bool canSelect = true, bool ignoreMainMenu = false) const
+    unsigned FindInputPointerInRect(UIRect rect, bool canSelect = true, bool ignoreMainMenu = false) const
     {
-        auto IsPointInRect = [&](LLGL::Offset2D point) -> bool
-        {
-            return (point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h);
-        };
-
         auto IsInputPointerActiveInRect = [&](unsigned pointerIndex) -> bool
         {
             const LLGL::InputPointer& inputPointer = input.GetPointer(pointerIndex);
@@ -2652,7 +2653,7 @@ private:
             (
                 canSelect && inputPointer.state != LLGL::InputState::Inactive &&
                 (!ignoreMainMenu || inputPointer.position.y > uiLayout.mainMenuSize) &&
-                IsPointInRect(inputPointer.position)
+                IsPointInsideRect(inputPointer.position, rect)
             );
         };
 
@@ -2700,7 +2701,7 @@ private:
         const int colorPickerSize = uiLayout.colorPickerSize;
         int w = colorPickerSize + UILayout::buttonFrameSize*2;
         int h = colorPickerSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, canSelect, true);
+        const unsigned pointerId = FindInputPointerInRect(UIRect{ x, y, w, h }, canSelect, true);
 
         LLGL::ColorRGBAub color = ColorPalette::Get()[paletteIndex];
         const UIRenderMode render = (color.a < 255 ? UIRenderMode_Dithered : UIRenderMode_Solid);
@@ -2725,7 +2726,7 @@ private:
         const int thumbnailSize = uiLayout.brickThumbnailSize;
         int w = thumbnailSize + UILayout::buttonFrameSize*2;
         int h = thumbnailSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = FindInputPointerInRect(x, y, w, h, canSelect, true);
+        const unsigned pointerId = FindInputPointerInRect(UIRect{ x, y, w, h }, canSelect, true);
 
         const LLGL::ColorRGBAub brickColor = ColorPalette::Get()[user.pickedColorPaletteIndex];
 
@@ -2745,7 +2746,7 @@ private:
     {
         int w = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
         int h = uiLayout.mainMenuItemSize + UILayout::buttonFrameSize*2;
-        const unsigned pointerId = (isDisabled ? 0 : FindInputPointerInRect(uiState.x, uiState.y, w, h, canSelect));
+        const unsigned pointerId = (isDisabled ? 0 : FindInputPointerInRect(UIRect{ uiState.x, uiState.y, w, h }, canSelect));
 
         if (pointerId != 0 || isHighlighted)
         {
@@ -2785,12 +2786,24 @@ private:
         }
     }
 
+    UIRect GetMenuBarRect(const UIState::MenuBar& menuBar) const
+    {
+        switch (menuBar.align)
+        {
+            case UIAlign::Left:     return { 0, uiLayout.mainMenuSize, menuBar.width, uiState.scrH - uiLayout.mainMenuSize };
+            case UIAlign::Right:    return { uiState.scrW - menuBar.width, uiLayout.mainMenuSize, menuBar.width, uiState.scrH - uiLayout.mainMenuSize };
+            case UIAlign::Top:      return { 0, uiLayout.mainMenuSize, uiState.scrW, menuBar.height };
+            case UIAlign::Bottom:   return { 0, uiState.scrH - menuBar.height, uiState.scrW, menuBar.height };
+        }
+        return {};
+    }
+
     void UpdateUILayout(float dt)
     {
         // Determine number of menu columns before drawing them, to allow scrolling
         uiState.UpdateScreenSize(swapChain->GetResolution());
 
-        uiState.ResetToMenuBar(uiLayout, uiState.menuBarLeft, uiLayout.colorPickerSize);
+        uiState.ResetToMenuBar(uiLayout, uiState.menuBarColors, uiLayout.colorPickerSize);
         {
             for_range(i, ColorPalette::Get().Count())
             {
@@ -2802,7 +2815,7 @@ private:
         }
         uiState.FinalizeMenuBar(uiLayout, ColorPalette::Get().Count(), options.uiMaxLeftColumns);
 
-        uiState.ResetToMenuBar(uiLayout, uiState.menuBarRight, uiLayout.brickThumbnailSize);
+        uiState.ResetToMenuBar(uiLayout, uiState.menuBarBricks, uiLayout.brickThumbnailSize);
         {
             for_range(brickId, BrickDictionary::Get().NumBrickTypes())
             {
@@ -2816,31 +2829,51 @@ private:
 
         // Update scrolling
         const float scrollDir = static_cast<float>(-input.GetWheelMotion()) * Cfg::uiScrollSpeed;
-        if (unsigned pointerIndex = FindInputPointerInRect(0, uiLayout.mainMenuSize, uiState.menuBarLeft.width, uiState.scrH - uiLayout.mainMenuSize))
+        if (unsigned pointerIndex = FindInputPointerInRect(GetMenuBarRect(uiState.menuBarColors)))
         {
-            uiState.menuBarLeft.scroll.AddForces(scrollDir);
+            uiState.menuBarColors.scroll.AddForces(scrollDir);
         }
-        uiState.menuBarLeft.UpdateScrolling(dt, uiState.scrH);
+        uiState.menuBarColors.UpdateScrolling(dt, uiState.scrW, uiState.scrH);
 
-        if (unsigned pointerIndex = FindInputPointerInRect(uiState.scrW - uiState.menuBarRight.width, uiLayout.mainMenuSize, uiState.menuBarRight.width, uiState.scrH - uiLayout.mainMenuSize))
+        if (unsigned pointerIndex = FindInputPointerInRect(GetMenuBarRect(uiState.menuBarBricks)))
         {
-            uiState.menuBarRight.scroll.AddForces(scrollDir);
+            uiState.menuBarBricks.scroll.AddForces(scrollDir);
         }
-        uiState.menuBarRight.UpdateScrolling(dt, uiState.scrH);
+        uiState.menuBarBricks.UpdateScrolling(dt, uiState.scrW, uiState.scrH);
 
-        uiState.trash.center.x = uiLayout.trashIconOffset + uiState.menuBarLeft.width;
-        uiState.trash.center.y = uiState.scrH - uiLayout.trashIconOffset;
+        const bool isMenuBarHorizontal = IsUIAlignHorizontal(uiState.menuBarColors.align);
+        if (isMenuBarHorizontal)
+        {
+            uiState.trash.center.x = uiLayout.trashIconOffset;
+            uiState.trash.center.y = uiState.scrH - (uiLayout.trashIconOffset + uiState.menuBarBricks.height);
+        }
+        else
+        {
+            uiState.trash.center.x = uiLayout.trashIconOffset + uiState.menuBarColors.width;
+            uiState.trash.center.y = uiState.scrH - uiLayout.trashIconOffset;
+        }
 
         if (options.useMobileView)
         {
             // Update thumbstick positions
             const int thumbstickCenterY = uiState.scrH - uiLayout.thumbstickOffset;
 
-            uiState.thumbstickLeft.center.x = uiLayout.thumbstickOffset + uiState.menuBarLeft.width;
-            uiState.thumbstickLeft.center.y = thumbstickCenterY;
+            if (isMenuBarHorizontal)
+            {
+                uiState.thumbstickLeft.center.x = uiLayout.thumbstickOffset;
+                uiState.thumbstickLeft.center.y = thumbstickCenterY - uiState.menuBarBricks.height;
 
-            uiState.thumbstickRight.center.x = uiState.scrW - uiLayout.thumbstickOffset - uiState.menuBarRight.width;
-            uiState.thumbstickRight.center.y = thumbstickCenterY;
+                uiState.thumbstickRight.center.x = uiState.scrW - uiLayout.thumbstickOffset;
+                uiState.thumbstickRight.center.y = thumbstickCenterY - uiState.menuBarBricks.height;
+            }
+            else
+            {
+                uiState.thumbstickLeft.center.x = uiLayout.thumbstickOffset + uiState.menuBarColors.width;
+                uiState.thumbstickLeft.center.y = thumbstickCenterY;
+
+                uiState.thumbstickRight.center.x = uiState.scrW - uiLayout.thumbstickOffset - uiState.menuBarBricks.width;
+                uiState.thumbstickRight.center.y = thumbstickCenterY;
+            }
 
             // Make thumbsticks drift bounce back when inactive
             auto BounceThumbstickBack = [dt](UIState::Thumbstick& thumbstick) -> void
@@ -2857,30 +2890,53 @@ private:
         }
     }
 
-    void DrawScrollIndicator(const UIState::MenuBar& menuBar)
+    void DrawScrollIndicatorHorizontal(const UIState::MenuBar& menuBar, const LLGL::ColorRGBAub fadeColor)
     {
-        const int xOffset = (menuBar.isRightAligned ? uiState.scrW - menuBar.width : 0);
+        const int xOffset = 0;
+        const int yOffset = (menuBar.align == UIAlign::Bottom ? uiState.scrH - menuBar.height : uiLayout.mainMenuSize);
+
+        const int xScroll = static_cast<int>(menuBar.scroll.position);
+        const int xScrollMax = menuBar.width - uiState.scrW;
+
+        if (xScroll > 0)
+        {
+            const LLGL::ColorRGBAub gradients[4] = { uiLayout.mainMenuColor[1], fadeColor, fadeColor, uiLayout.mainMenuColor[1] };
+            uiRenderer.Draw2DRectGradient(xOffset, yOffset, uiLayout.scrollIndicatorSize, menuBar.height, gradients);
+        }
+        if (xScroll < xScrollMax)
+        {
+            const LLGL::ColorRGBAub gradients[4] = { fadeColor, uiLayout.mainMenuColor[1], uiLayout.mainMenuColor[1], fadeColor };
+            uiRenderer.Draw2DRectGradient(uiState.scrW - uiLayout.scrollIndicatorSize, yOffset, uiLayout.scrollIndicatorSize, menuBar.height, gradients);
+        }
+    }
+
+    void DrawScrollIndicatorVertical(const UIState::MenuBar& menuBar, const LLGL::ColorRGBAub fadeColor)
+    {
+        const int xOffset = (menuBar.align == UIAlign::Right ? uiState.scrW - menuBar.width : 0);
         const int yOffset = uiLayout.mainMenuSize;
 
         const int yScroll = static_cast<int>(menuBar.scroll.position);
         const int yScrollMax = menuBar.height - uiState.scrH;
 
-        const LLGL::ColorRGBAub fadeColor{ uiLayout.mainMenuColor[0].ToRGB(), 0 };
-
         if (yScroll > 0)
         {
-            uiRenderer.Draw2DRectGradient(
-                xOffset, yOffset, menuBar.width, uiLayout.scrollIndicatorSize,
-                uiLayout.mainMenuColor[1], fadeColor
-            );
+            const LLGL::ColorRGBAub gradients[4] = { uiLayout.mainMenuColor[1], uiLayout.mainMenuColor[1], fadeColor, fadeColor };
+            uiRenderer.Draw2DRectGradient(xOffset, yOffset, menuBar.width, uiLayout.scrollIndicatorSize, gradients);
         }
         if (yScroll < yScrollMax)
         {
-            uiRenderer.Draw2DRectGradient(
-                xOffset, uiState.scrH - uiLayout.scrollIndicatorSize, menuBar.width, uiLayout.scrollIndicatorSize,
-                fadeColor, uiLayout.mainMenuColor[1]
-            );
+            const LLGL::ColorRGBAub gradients[4] = { fadeColor, fadeColor, uiLayout.mainMenuColor[1], uiLayout.mainMenuColor[1] };
+            uiRenderer.Draw2DRectGradient(xOffset, uiState.scrH - uiLayout.scrollIndicatorSize, menuBar.width, uiLayout.scrollIndicatorSize, gradients);
         }
+    }
+
+    void DrawScrollIndicator(const UIState::MenuBar& menuBar)
+    {
+        const LLGL::ColorRGBAub fadeColor{ uiLayout.mainMenuColor[0].ToRGB(), 0 };
+        if (IsUIAlignHorizontal(menuBar.align))
+            DrawScrollIndicatorHorizontal(menuBar, fadeColor);
+        else
+            DrawScrollIndicatorVertical(menuBar, fadeColor);
     }
 
     void DrawUIThumbstick(const UIState::Thumbstick& thumbstick)
@@ -2948,17 +3004,11 @@ private:
         }
 
         // Draw mouse dead zone as transparent background for the UI
-        uiRenderer.Draw2DRect(
-            /*position:*/   0, uiLayout.mainMenuSize,
-            /*size:*/       uiState.menuBarLeft.width, uiState.scrH - uiLayout.mainMenuSize,
-            /*color:*/      Cfg::uiSideMenuColor);
-        uiRenderer.Draw2DRect(
-            /*position:*/   uiState.scrW - uiState.menuBarRight.width, uiLayout.mainMenuSize,
-            /*size:*/       uiState.menuBarRight.width, uiState.scrH - uiLayout.mainMenuSize,
-            /*color:*/      Cfg::uiSideMenuColor);
+        uiRenderer.Draw2DRect(GetMenuBarRect(uiState.menuBarColors), Cfg::uiSideMenuColor);
+        uiRenderer.Draw2DRect(GetMenuBarRect(uiState.menuBarBricks), Cfg::uiSideMenuColor);
 
         // Draw entire color palette for the user to choose from on the left of the overlay
-        uiState.ResetToMenuBar(uiLayout, uiState.menuBarLeft, uiLayout.colorPickerSize, true);
+        uiState.ResetToMenuBar(uiLayout, uiState.menuBarColors, uiLayout.colorPickerSize, true);
 
         const bool canSelectLeftMenu = AllHandAction(HandAction::None) || AnyHandAction(HandAction::LeftMenu_Capture) || AnyHandAction(HandAction::LeftMenu_Select);
 
@@ -2983,10 +3033,10 @@ private:
             uiState.AdvanceRow();
         }
 
-        DrawScrollIndicator(uiState.menuBarLeft);
+        DrawScrollIndicator(uiState.menuBarColors);
 
         // Draw brick thumbnails for the user to choose from on the right of the overlay
-        uiState.ResetToMenuBar(uiLayout, uiState.menuBarRight, uiLayout.brickThumbnailSize, true);
+        uiState.ResetToMenuBar(uiLayout, uiState.menuBarBricks, uiLayout.brickThumbnailSize, true);
 
         const bool canSelectRightMenu = AllHandAction(HandAction::None) || AnyHandAction(HandAction::RightMenu_Capture);
 
@@ -3006,12 +3056,13 @@ private:
             uiState.AdvanceRow();
         }
 
-        DrawScrollIndicator(uiState.menuBarRight);
+        DrawScrollIndicator(uiState.menuBarBricks);
 
         // Draw main menu bar
         const bool canSelectMainMenu = (user.hand[0].action == HandAction::None && user.hand[1].action == HandAction::None);
 
-        uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiLayout.mainMenuSize, uiLayout.mainMenuColor[0], uiLayout.mainMenuColor[1]);
+        const LLGL::ColorRGBAub mainMenuGradients[4] = { uiLayout.mainMenuColor[0], uiLayout.mainMenuColor[0], uiLayout.mainMenuColor[1], uiLayout.mainMenuColor[1] };
+        uiRenderer.Draw2DRectGradient(0, 0, uiState.scrW, uiLayout.mainMenuSize, mainMenuGradients);
 
         uiState.x = (uiState.scrW - uiState.mainMenuWidth)/2;
         uiState.y = (uiLayout.mainMenuSize - uiLayout.mainMenuItemSize - UILayout::buttonMargin)/2;
@@ -3388,13 +3439,12 @@ private:
         PreviewBrick& previewBrick = viewOptions.previewBrick;
 
         // Allow user to turn and change type of preview brick while picking the scene
-        GridRotation newPreviewRotation = user.menuGridRotation;
+        GridRotation newPreviewRotation = previewInstance.gridRotation;
         if (input.KeyDown(LLGL::Key::Space))
         {
             const bool turnCW = input.KeyPressed(LLGL::Key::Shift);
             newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation + (turnCW ? +1 : -1), GridRotation_Num));
         }
-        user.menuGridRotation = newPreviewRotation;
 
         BrickId newBrickId = previewBrick.id;
         if (input.KeyDownRepeated(LLGL::Key::PageUp))
@@ -3602,12 +3652,8 @@ private:
 
                     // Prepare new preview brick
                     viewOptions.previewBrick.id     = contact.brick.GetId();
-
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
-                    user.pickedColorPaletteIndex    = selectedInstance->colorIndex;
-
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
-                    user.menuGridRotation           = selectedInstance->gridRotation;
 
                     // Store offset from where the user picked up the brick. This prevents movement when the user hasn't moved the input pointer.
                     const Gs::Vector3f pickedBrickOffset = contact.point - selectedInstance->GetScaledPos();
@@ -3625,25 +3671,37 @@ private:
         }
     }
 
+    bool IsPointOverMenuBar(const UIState::MenuBar& menuBar, LLGL::Offset2D point) const
+    {
+        switch (menuBar.align)
+        {
+            case UIAlign::Left:     return (point.x <= menuBar.width);
+            case UIAlign::Right:    return (point.x >= uiState.scrW - menuBar.width);
+            case UIAlign::Top:      return (point.y <= uiLayout.mainMenuSize + menuBar.height);
+            case UIAlign::Bottom:   return (point.y >= uiState.scrH - menuBar.height);
+        }
+        return false;
+    }
+
     bool IsPointerOverMenu(const LLGL::InputPointer& inputPointer) const
     {
         return viewOptions.showMenu &&
-            ( inputPointer.position.y <= uiLayout.mainMenuSize      ||
-              inputPointer.position.x < uiState.menuBarLeft.width   ||
-              inputPointer.position.x > uiState.scrW - uiState.menuBarRight.width );
+            ( inputPointer.position.y <= uiLayout.mainMenuSize          ||
+              IsPointOverMenuBar(uiState.menuBarColors, inputPointer.position) ||
+              IsPointOverMenuBar(uiState.menuBarBricks, inputPointer.position) );
     }
 
     void ProcessInputPointerStartPhase(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
         if (inputPointer.position.y > uiLayout.mainMenuSize)
         {
-            if (inputPointer.position.x <= uiState.menuBarLeft.width)
+            if (IsPointOverMenuBar(uiState.menuBarColors, inputPointer.position))
             {
                 // Start input capture for left menu bar
                 if (IsInputDown(inputPointer))
                     hand.Capture(HandAction::LeftMenu_Capture, inputPointer.position);
             }
-            else if (inputPointer.position.x >= uiState.scrW - uiState.menuBarRight.width)
+            else if (IsPointOverMenuBar(uiState.menuBarBricks, inputPointer.position))
             {
                 // Start input capture for right menu bar
                 if (IsInputDown(inputPointer))
@@ -3680,15 +3738,25 @@ private:
         }
     }
 
-    // Decides whether the user intends to scroll the menu bar or pick a color
-    void ProcessInputPointerDecideLeftMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    bool IsInputPointerScrollingRecognized(const UserHand& hand, const LLGL::InputPointer& inputPointer, const UIState::MenuBar& menuBar, bool recognizeScrollDir = false) const
     {
-        float moveVecY = static_cast<float>(inputPointer.position.y - hand.capturePos.y);
+        float moveVec0 = static_cast<float>(inputPointer.position.x - hand.capturePos.x);
+        float moveVec1 = static_cast<float>(inputPointer.position.y - hand.capturePos.y);
 
-        if (std::abs(moveVecY) >= uiLayout.menuBarTriggerDist)
+        // When menu bar is horizontal, swap the motion vector axes, so that scrolling is recognized in the correct direction.
+        const bool isHorizontal = IsUIAlignHorizontal(uiState.menuBarBricks.align);
+        if (isHorizontal)
+            std::swap(moveVec0, moveVec1);
+
+        return (std::abs(moveVec1) >= uiLayout.menuBarTriggerDist && (!recognizeScrollDir || std::abs(moveVec1) > std::abs(moveVec0)*2.0f));
+    }
+
+    // Decides whether the user intends to scroll the menu bar or pick a color
+    void ProcessInputPointerDecideColorsMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    {
+        if (IsInputPointerScrollingRecognized(hand, inputPointer, uiState.menuBarColors))
         {
-            hand.action = HandAction::LeftMenu_Scroll;
-            hand.captureScroll = uiState.menuBarLeft.scroll.position + static_cast<float>(hand.capturePos.y);
+            hand.CaptureScrolling(HandAction::LeftMenu_Scroll, uiState.menuBarColors);
         }
         else if (IsInputUp(inputPointer))
         {
@@ -3696,23 +3764,27 @@ private:
         }
     }
 
-    void ProcessInputPointerDecideRightMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
+    void ProcessInputPointerDecideBricksMenuAction(UserHand& hand, const LLGL::InputPointer& inputPointer)
     {
-        float moveVecX = static_cast<float>(inputPointer.position.x - hand.capturePos.x);
-        float moveVecY = static_cast<float>(inputPointer.position.y - hand.capturePos.y);
-
-        // Prioritize pulling bricks out of the palette, so make sure Y-axis is clearly loinger than X-axis in the motion vector
-        if (std::abs(moveVecY) >= uiLayout.menuBarTriggerDist && std::abs(moveVecY) > std::abs(moveVecX)*2.0f)
+        // Prioritize pulling bricks out of the palette, so make sure Y-axis is clearly longer than X-axis in the motion vector (recognizeScrollDir=true)
+        if (IsInputPointerScrollingRecognized(hand, inputPointer, uiState.menuBarBricks, /*recognizeScrollDir:*/ true))
         {
-            hand.action = HandAction::RightMenu_Scroll;
-            hand.captureScroll = uiState.menuBarRight.scroll.position + static_cast<float>(hand.capturePos.y);
+            hand.CaptureScrolling(HandAction::RightMenu_Scroll, uiState.menuBarBricks);
         }
-        else if (inputPointer.position.x < uiState.scrW - uiState.menuBarRight.width)
+        else if (IsInputUp(inputPointer))
+        {
+            hand.action = HandAction::None;
+        }
+        else if (!IsPointOverMenuBar(uiState.menuBarBricks, inputPointer.position))
         {
             // Reset preview brick attributes and initialize grid position to move brick
             hand.action = HandAction::MoveBrick;
             hand.isAddingNewBrick = true;
+
             viewOptions.previewBrick.gridOffset = 0;
+
+            previewInstance.colorIndex      = user.pickedColorPaletteIndex;
+            previewInstance.gridRotation    = user.menuGridRotation;
 
             PickGridPosForPreviewBrick(inputPointer);
         }
@@ -3720,7 +3792,8 @@ private:
 
     void ProcessInputPointerMenuScroll(UserHand& hand, const LLGL::InputPointer& inputPointer, UIState::MenuBar& menuBar, float dt)
     {
-        menuBar.scrollTarget = std::max(0.0f, hand.captureScroll - static_cast<float>(inputPointer.position.y));
+        int scrollPos = IsUIAlignHorizontal(menuBar.align) ? inputPointer.position.x : inputPointer.position.y;
+        menuBar.scrollTarget = std::max(0.0f, hand.captureScroll - static_cast<float>(scrollPos));
 
         if (IsInputUp(inputPointer))
         {
@@ -3793,20 +3866,20 @@ private:
                 break; // ignore here
 
             case HandAction::LeftMenu_Capture:
-                ProcessInputPointerDecideLeftMenuAction(hand, inputPointer);
+                ProcessInputPointerDecideColorsMenuAction(hand, inputPointer);
                 break;
             case HandAction::LeftMenu_Scroll:
-                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarLeft, dt);
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarColors, dt);
                 break;
             case HandAction::LeftMenu_Select:
                 hand.ResetAction();
                 break;
 
             case HandAction::RightMenu_Capture:
-                ProcessInputPointerDecideRightMenuAction(hand, inputPointer);
+                ProcessInputPointerDecideBricksMenuAction(hand, inputPointer);
                 break;
             case HandAction::RightMenu_Scroll:
-                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarRight, dt);
+                ProcessInputPointerMenuScroll(hand, inputPointer, uiState.menuBarBricks, dt);
                 break;
 
             case HandAction::MoveBrick:
@@ -3916,7 +3989,7 @@ private:
         UpdateSceneView();
 
         const bool isPreviewBrickVisible = IsPreviewBrickVisible();
-        const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(user.pickedColorPaletteIndex);
+        const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(previewInstance.colorIndex);
 
         commands->Begin();
         {
