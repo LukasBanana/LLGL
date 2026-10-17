@@ -167,8 +167,11 @@ class AnimatedTransform : RigidBody<Gs::Vector3f>
         yRotation.AddTorque(yRotationSpin, invMass);
     }
 
-    void AdvanceLiftUpAndSettleDownAnimation(float dt, const Gs::Vector3f& moveVec, float spin)
+    // Advances the lift-up/settle-down state machine and returns true if the brick should be moved towards its target in this frame.
+    bool AdvanceLiftUpAndSettleDownAnimation(float dt, const Gs::Vector3f& moveVec, float spin)
     {
+        bool isMotionEnabled = false;
+
         auto HasPositionOrRotationChanged = [](const Gs::Vector3f& vec, float angle) -> bool
         {
             constexpr float moveThreshold = 0.001f;
@@ -200,8 +203,7 @@ class AnimatedTransform : RigidBody<Gs::Vector3f>
 
             case AnimState::WaitToRest:
                 // Advance animation of position and rotation
-                AnimatePosition(moveVec);
-                AnimateRotation(spin);
+                isMotionEnabled = true;
 
                 // Once movement and rotation has stopped, delay the animation to settle the brick back down
                 if (hasPositionOrRotationChanged || HasPositionOrRotationChanged(velocity, yRotation.velocity))
@@ -227,6 +229,26 @@ class AnimatedTransform : RigidBody<Gs::Vector3f>
                 }
                 break;
         }
+
+        return isMotionEnabled;
+    }
+
+    // Moves the brick towards its target in substeps to keep the stiff spring stable at low frame rates.
+    // The spring force is re-evaluated for every substep, since that is what keeps the integration stable.
+    void ApplyMotionInSubsteps(float dt, const Gs::Vector3f& targetPosition, float targetRotationY, bool isMotionEnabled)
+    {
+        const int numSubsteps = Gs::Clamp(static_cast<int>(std::ceil(dt / Cfg::animMaxTimeStep)), 1, Cfg::animMaxSubsteps);
+        const float subDt = std::min<float>(dt / static_cast<float>(numSubsteps), Cfg::animMaxTimeStep);
+
+        for_range(i, numSubsteps)
+        {
+            if (isMotionEnabled)
+            {
+                AnimatePosition(targetPosition - position);
+                AnimateRotation(AngleDiff(yRotation.angle, targetRotationY));
+            }
+            ApplyForces(subDt);
+        }
     }
 
 public:
@@ -241,11 +263,12 @@ public:
         const Gs::Vector3f moveVec = targetPosition - position;
         const float spin = AngleDiff(yRotation.angle, targetRotationY);
 
+        bool isMotionEnabled = false;
+
         if (isAnimRestricted)
         {
             // Advance animation of position and rotation
-            AnimatePosition(moveVec);
-            AnimateRotation(spin);
+            isMotionEnabled = true;
 
             // Reset restricted animation states
             yLiftAnimState = AnimState::Idle;
@@ -257,7 +280,7 @@ public:
         else
         {
             // Advance the animation of lifting the brick up and down
-            AdvanceLiftUpAndSettleDownAnimation(dt, moveVec, spin);
+            isMotionEnabled = AdvanceLiftUpAndSettleDownAnimation(dt, moveVec, spin);
 
             auto MotionToTilt = [](float motion) -> float
             {
@@ -270,7 +293,7 @@ public:
             zTilt = MotionToTilt(moveVec.z);
         }
 
-        ApplyForces(dt);
+        ApplyMotionInSubsteps(dt, targetPosition, targetRotationY, isMotionEnabled);
 
         return Cfg::animLiftYAxis * yLiftAnimPhase;
     }

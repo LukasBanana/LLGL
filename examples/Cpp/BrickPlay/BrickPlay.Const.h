@@ -59,6 +59,11 @@ struct Cfg
     static constexpr float          animTimeToSettleDown            = 0.1f;     // Time (in seconds) for the preview brick to settle down.
     static constexpr float          animLiftYAxis                   = 0.3f;     // Units to lift up the preview brick (Y-axis).
 
+    // The preview brick motion is a stiff damped spring integrated with semi-implicit Euler, which is only stable for small time steps.
+    // Larger frame times are split into substeps of at most this duration (in seconds). Since 60 FPS frames never need to be split, their behavior is unchanged.
+    static constexpr float          animMaxTimeStep                 = 1.0f/50.0f;
+    static constexpr int            animMaxSubsteps                 = 16;       // Upper bound of substeps per frame. Beyond this, the animation slows down instead of becoming unstable.
+
     // Logarithm slows higher motion down quickly, but is still open ended. So this constant is just a target upper value, not a hard limit.
     static constexpr float          animMotionTargetAngle           = 8.0f;
 
