@@ -59,6 +59,9 @@ struct Cfg
     static constexpr float          animTimeToSettleDown            = 0.1f;     // Time (in seconds) for the preview brick to settle down.
     static constexpr float          animLiftYAxis                   = 0.3f;     // Units to lift up the preview brick (Y-axis).
 
+    // Logarithm slows higher motion down quickly, but is still open ended. So this constant is just a target upper value, not a hard limit.
+    static constexpr float          animMotionTargetAngle           = 8.0f;
+
     // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
     // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
     // This can be turned off for mobile platforms where this flaw is virtually invisible

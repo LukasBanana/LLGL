@@ -746,13 +746,17 @@ private:
     bool IsCellSliceOccupied(const GridVec3i& offset, const GridVec3i& extent) const
     {
         // Consider any cell coordinate outside the grid's bounding volume to be occupied
-        return !IsAABBInsideAABB(AABB3i{ offset, offset + extent }, KDTreeNode::rootAABB) || !grid.ForEachCell(
-            offset, extent,
-            [](Brick brick, const GridVec3i& cellPos) -> bool
-            {
-                return !brick; // Continue searching if leaf is empty
-            },
-            /*iterateThroughLeavesOnly:*/ true
+        return
+        (
+            !IsAABBInsideAABB(AABB3i{ offset, offset + extent }, KDTreeNode::rootAABB) ||
+            !grid.ForEachCell(
+                offset, extent,
+                [](Brick brick, const GridVec3i& cellPos) -> bool
+                {
+                    return !brick; // Continue searching if leaf is empty
+                },
+                /*iterateThroughLeavesOnly:*/ true
+            )
         );
     }
 

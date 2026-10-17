@@ -202,7 +202,7 @@ class Example_BrickPlay : public ExampleBase
         bool                isBlockedTop    = false;
         bool                isBlockedBottom = false;
         bool                isDithered      = false;                    // Highlight preview brick as dithered, when it's blocked or otherwise highlighted in that way
-        std::int32_t        gridOffset      = 0;
+        LLGL::Offset2D      gridOffset;                                 // Offset where to grab the brick in X and Z direction (Offset2D.y used as Z)
         AnimatedTransform   transform;
 
         void PutAt(const Instance& instance)
@@ -2429,8 +2429,7 @@ private:
 
         // Use orthogonal projection for brick thumbnails
         const Gs::Vector3f brickExtentScaled = brickDim.extent.Cast<float>() * KDTreeNode::gridScale;
-        const float maxBrickExtent = std::max(brickExtentScaled.x, std::max(brickExtentScaled.y, brickExtentScaled.z));
-        const float volumeSize = std::max(Cfg::uiThumbnailMinVolumeSize, maxBrickExtent + 1.0f);
+        const float volumeSize = std::max(Cfg::uiThumbnailMinVolumeSize, brickExtentScaled.Length());
 
         const Gs::Matrix4f thumbnailProjection = OrthogonalProjection(volumeSize, volumeSize, 0.1f, dist*2.0f);
         outView.vpMatrix = thumbnailProjection * vMatrix;
@@ -3349,17 +3348,20 @@ private:
         return currentScene->PickScene(pickerRay, outContact);
     }
 
-    void ClampBrickGridOffset(BrickId brickId, std::int32_t& offset)
+    void ClampBrickGridOffset(const GridVec3i& brickExtent, LLGL::Offset2D& offset)
     {
-        const GridVec3i brickExtent = BrickDictionary::Get().GetExtent(brickId);
-        const std::int32_t maxWidthOrDepth = std::max(brickExtent.x, brickExtent.z);
-        if (maxWidthOrDepth > 2)
+        auto ClampBrickGridOffsetAxis = [&brickExtent](std::int32_t value, int axis) -> std::int32_t
         {
-            const std::int32_t maxOffset = (maxWidthOrDepth + 1)/2 - 1;
-            offset = Gs::Clamp(offset, -maxOffset, +maxOffset);
-        }
-        else
-            offset = 0;
+            if (brickExtent[axis] > 2)
+            {
+                const std::int32_t maxOffset = (brickExtent[axis] + 1)/2 - 1;
+                return Gs::Clamp(value, -maxOffset, +maxOffset);
+            }
+            return 0;
+        };
+
+        offset.x = ClampBrickGridOffsetAxis(offset.x, 0); // X-axis index 0 (Offset2D.x)
+        offset.y = ClampBrickGridOffsetAxis(offset.y, 2); // Z-axis index 2 (Offset2D.y)
     }
 
     // Tries to unblock a brick with the specified dimension and position. Returns true if the grid position has been updated.
@@ -3443,14 +3445,16 @@ private:
 
     void PickGridPosForPreviewBrick(const LLGL::InputPointer& inputPointer)
     {
+        const bool isControlFlipped = input.KeyPressed(LLGL::Key::Shift);
+
         PreviewBrick& previewBrick = viewOptions.previewBrick;
 
         // Allow user to turn and change type of preview brick while picking the scene
         GridRotation newPreviewRotation = previewInstance.gridRotation;
         if (input.KeyDown(LLGL::Key::Space))
         {
-            const bool turnCW = input.KeyPressed(LLGL::Key::Shift);
-            newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation + (turnCW ? +1 : -1), GridRotation_Num));
+            newPreviewRotation = static_cast<GridRotation>(ModuloSignInt(newPreviewRotation + (isControlFlipped ? +1 : -1), GridRotation_Num));
+            std::swap(previewBrick.gridOffset.x, previewBrick.gridOffset.y);
         }
 
         BrickId newBrickId = previewBrick.id;
@@ -3459,15 +3463,19 @@ private:
         if (input.KeyDownRepeated(LLGL::Key::PageDown))
             newBrickId = static_cast<BrickId>(ModuloSignInt(newBrickId - 1, BrickDictionary::Get().NumBrickTypes()));
 
-        previewBrick.gridOffset += input.GetWheelMotion();
+        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickId, newPreviewRotation);
 
-        ClampBrickGridOffset(newBrickId, previewBrick.gridOffset);
+        const bool isGridOffsetXDominant = (brickDim.extent.x > brickDim.extent.z);
+        if (isGridOffsetXDominant != isControlFlipped)
+            previewBrick.gridOffset.x += input.GetWheelMotion();
+        else
+            previewBrick.gridOffset.y += input.GetWheelMotion();
+
+        ClampBrickGridOffset(brickDim.extent, previewBrick.gridOffset);
 
         // Pick scene objects with the mouse pointer
         const Ray3f pickerRay = ProjectScreenPosToViewRay(inputPointer.position);
         GridVec3i newPreviewGridPos = previewInstance.GetPos();
-
-        const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(newBrickId, newPreviewRotation);
 
         RayIntersection contact;
         if (currentScene->PickScene(pickerRay, contact))
@@ -3492,16 +3500,10 @@ private:
             }
 
             // Offset by user input to allow placing bricks on ledges
-            if (brickDim.extent.z > brickDim.extent.x)
-            {
-                if (contact.normal.z == 0)
-                    newPreviewGridPos.z += previewBrick.gridOffset;
-            }
-            else
-            {
-                if (contact.normal.x == 0)
-                    newPreviewGridPos.x += previewBrick.gridOffset;
-            }
+            if (contact.normal.x == 0)
+                newPreviewGridPos.x += previewBrick.gridOffset.x;
+            if (contact.normal.z == 0)
+                newPreviewGridPos.z += previewBrick.gridOffset.y;
         }
 
         // If grid position changed, re-evaluate whether that position is blocked for the preview brick
@@ -3628,7 +3630,7 @@ private:
         }
     }
 
-    int GetPreviewBrickOffset(const Gs::Vector3f& pickedBrickOffset, BrickId brickId, GridRotation gridRotation) const
+    LLGL::Offset2D GetPreviewBrickOffset(const Gs::Vector3f& pickedBrickOffset, BrickId brickId, GridRotation gridRotation) const
     {
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, gridRotation);
 
@@ -3638,12 +3640,14 @@ private:
             return static_cast<int>(baseOffset - pickedBrickOffset[axis]);
         };
 
-        if (brickDim.extent.x > 2)
-            return GetPreviewBrickOffsetForAxis(0);
-        if (brickDim.extent.z > 2)
-            return GetPreviewBrickOffsetForAxis(2);
-
-        return 0;
+        LLGL::Offset2D offset;
+        {
+            if (brickDim.extent.x > 2)
+                offset.x = GetPreviewBrickOffsetForAxis(0);
+            if (brickDim.extent.z > 2)
+                offset.y = GetPreviewBrickOffsetForAxis(2);
+        }
+        return offset;
     }
 
     void ProcessInputPointerBrickSelection(UserHand& hand, const LLGL::InputPointer& inputPointer)
@@ -3796,7 +3800,7 @@ private:
             hand.action = HandAction::MoveBrick;
             hand.isAddingNewBrick = true;
 
-            viewOptions.previewBrick.gridOffset = 0;
+            viewOptions.previewBrick.gridOffset = {};
 
             previewInstance.colorIndex      = user.pickedColorPaletteIndex;
             previewInstance.gridRotation    = user.menuGridRotation;
@@ -3944,9 +3948,9 @@ private:
 
         wMatrix.LoadIdentity();
         Gs::Translate(wMatrix, transform.GetPosition() + Gs::Vector3f{ 0.0f, yLift, 0.0f });
-        Gs::RotateX(wMatrix, Gs::Deg2Rad(transform.GetXTilt()));
-        Gs::RotateZ(wMatrix, Gs::Deg2Rad(transform.GetZTilt()));
-        Gs::RotateY(wMatrix, Gs::Deg2Rad(transform.GetYRotation()));
+        Gs::RotateZ(wMatrix, transform.GetXTilt());
+        Gs::RotateX(wMatrix, transform.GetZTilt());
+        Gs::RotateY(wMatrix, transform.GetYRotation());
     }
 
     void AnimateCamera(float dt)

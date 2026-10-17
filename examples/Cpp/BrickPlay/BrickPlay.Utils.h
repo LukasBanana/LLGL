@@ -146,8 +146,8 @@ class AnimatedTransform : RigidBody<Gs::Vector3f>
     float               yLiftAnimPhase  = 0.0f;             // Animation phase from 0.0 (not lifted up) to 1.0 (fully lifted up)
     float               yLiftTimer      = 0.0f;             // Multi-purpose timer for the different animation states
     AnimatedRotation    yRotation;                          // Yaw
-    AnimatedRotation    xTilt;                              // Pitch
-    AnimatedRotation    zTilt;                              // Roll
+    float               xTilt           = 0.0f;             // Pitch
+    float               zTilt           = 0.0f;             // Roll
 
     void ApplyForces(float dt, float dampingCoeff = 0.99f)
     {
@@ -167,7 +167,7 @@ class AnimatedTransform : RigidBody<Gs::Vector3f>
         yRotation.AddTorque(yRotationSpin, invMass);
     }
 
-    void AdvanceUnrestrictedAnimation(float dt, const Gs::Vector3f& moveVec, float spin)
+    void AdvanceLiftUpAndSettleDownAnimation(float dt, const Gs::Vector3f& moveVec, float spin)
     {
         auto HasPositionOrRotationChanged = [](const Gs::Vector3f& vec, float angle) -> bool
         {
@@ -247,11 +247,27 @@ public:
             AnimatePosition(moveVec);
             AnimateRotation(spin);
 
+            // Reset restricted animation states
+            yLiftAnimState = AnimState::Idle;
             yLiftAnimPhase = 0.0f;
+
+            xTilt = 0.0f;
+            zTilt = 0.0f;
         }
         else
         {
-            AdvanceUnrestrictedAnimation(dt, moveVec, spin);
+            // Advance the animation of lifting the brick up and down
+            AdvanceLiftUpAndSettleDownAnimation(dt, moveVec, spin);
+
+            auto MotionToTilt = [](float motion) -> float
+            {
+                float tiltAbs = Gs::Deg2Rad(std::logf(std::abs(motion) + 1.0f) * Cfg::animMotionTargetAngle);
+                return (motion > 0.0f ? tiltAbs : -tiltAbs);
+            };
+
+            // Animate tilting the brick depending on motion
+            xTilt = MotionToTilt(moveVec.x);
+            zTilt = MotionToTilt(moveVec.z);
         }
 
         ApplyForces(dt);
@@ -266,17 +282,17 @@ public:
 
     float GetXTilt() const
     {
-        return xTilt.angle;
+        return xTilt;
     }
 
     float GetZTilt() const
     {
-        return zTilt.angle;
+        return zTilt;
     }
 
     float GetYRotation() const
     {
-        return yRotation.angle;
+        return Gs::Deg2Rad(yRotation.angle);
     }
 
     void PutAt(const Gs::Vector3f& inPosition, float inYRotation)
