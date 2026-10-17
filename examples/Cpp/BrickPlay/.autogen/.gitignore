@@ -1,0 +1,7 @@
+# Don't keep auto-generated shaders in the repository for this project. This produces a lot of commit noise.
+# Only provide the shader in HLSL for D3D on Windows and let the user generate them if they want to run the example on other platforms.
+# This can be achieved by running `./BuildLinux.sh --compile-shaders` on Linux or `./BuildMacOS.command --compile-shaders` on Mac.
+*.spv
+*.vert
+*.frag
+*.metal
