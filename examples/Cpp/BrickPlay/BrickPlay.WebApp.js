@@ -83,10 +83,8 @@ addToLibrary({
     },
 
     BrickPlay_PromptSubmitForm: function() {
-        const overlay = document.getElementById('emscripten-form-overlay');
-        if (overlay) {
-            overlay.classList.remove('hidden');
-            document.getElementById('es-name-input').focus();
+        if (window.showSubmitForm) {
+            window.showSubmitForm();
         }
     },
 

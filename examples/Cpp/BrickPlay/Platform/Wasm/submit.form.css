@@ -84,6 +84,17 @@
     box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.25);
 }
 
+.emscripten-modal .emscripten-cooldown {
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #bc4c00;
+}
+
+.emscripten-cooldown[hidden] {
+    display: none;
+}
+
 .emscripten-modal-buttons {
     display: flex;
     justify-content: flex-end;
