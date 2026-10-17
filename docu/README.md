@@ -72,7 +72,7 @@ Use `$ ./BuildMsys2.sh -h` in a command prompt for more details.
 
 *- This is in an experimental state -*
 
-LLGL can be built for the web using [Emscripten](https://emscripten.org/), [WebAssembly](https://webassembly.org/), and [WebGL 2](https://www.khronos.org/webgl/).
+LLGL can be built for the web using [Emscripten](https://emscripten.org/) 3.1.4x or later, [WebAssembly](https://webassembly.org/), and [WebGL 2](https://www.khronos.org/webgl/).
 When building on Windows, it is recommended to use the [Windows Subsystem for Linux (WSL)](https://ubuntu.com/desktop/wsl) to run the *BuildWasm.sh* bash script.
 The generated example projects can be tested by running a local web server from the output folder, for instance with [Node.js](https://nodejs.org/) or Python `http.server` module:
 ```

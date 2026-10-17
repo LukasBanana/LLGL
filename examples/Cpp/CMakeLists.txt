@@ -39,7 +39,7 @@ elseif(LLGL_ANDROID_PLATFORM)
     list(APPEND FilesExampleBaseAll ${FilesExampleBaseAndroid})
 endif()
 
-#find_project_source_files( FilesExample_BrickPlay           "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay"         ) # Temporarily disabled until it is finished
+find_project_source_files( FilesExample_BrickPlay           "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay"         )
 find_project_source_files( FilesExample_ClothPhysics        "${EXAMPLE_CPP_PROJECTS_DIR}/ClothPhysics"      )
 find_project_source_files( FilesExample_Fonts               "${EXAMPLE_CPP_PROJECTS_DIR}/Fonts"             )
 find_project_source_files( FilesExample_HelloGame           "${EXAMPLE_CPP_PROJECTS_DIR}/HelloGame"         )
@@ -121,7 +121,7 @@ if(LLGL_BUILD_EXAMPLES)
     if(LLGL_UWP_PLATFORM)
         add_llgl_example_project(Example_HelloUWP           CXX "${FilesExample_HelloUWP}"              "${EXAMPLE_PROJECT_LIBS}")
     else()
-        #add_llgl_example_project(Example_BrickPlay          CXX "${FilesExample_BrickPlay}"             "${EXAMPLE_PROJECT_LIBS}") # Temporarily disabled until it is finished
+        add_llgl_example_project(Example_BrickPlay          CXX "${FilesExample_BrickPlay}"             "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_ClothPhysics       CXX "${FilesExample_ClothPhysics}"          "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_Fonts              CXX "${FilesExample_Fonts}"                 "${EXAMPLE_PROJECT_LIBS}")
         add_llgl_example_project(Example_HelloGame          CXX "${FilesExample_HelloGame}"             "${EXAMPLE_PROJECT_LIBS}")
@@ -154,11 +154,12 @@ if(LLGL_BUILD_EXAMPLES)
         endif()
 
         # WebAssembly specific examples
-        #if(LLGL_WASM_PLATFORM)
-        #    set(BRICKPLAY_JS_LIB "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay/BrickPlay.WebApp.js")
-        #    target_link_options(Example_BrickPlay PRIVATE "SHELL:--js-library ${BRICKPLAY_JS_LIB}")
-        #    set_property(TARGET Example_BrickPlay APPEND PROPERTY LINK_DEPENDS "${BRICKPLAY_JS_LIB}")
-        #endif()
+        if(TARGET Example_BrickPlay AND LLGL_WASM_PLATFORM)
+            #TODO: Make this part of `add_llgl_example_project` so that the JS library is automatically linked for WebAssembly targets
+            set(BRICKPLAY_JS_LIB "${EXAMPLE_CPP_PROJECTS_DIR}/BrickPlay/BrickPlay.WebApp.js")
+            target_link_options(Example_BrickPlay PRIVATE "SHELL:--js-library ${BRICKPLAY_JS_LIB}")
+            set_property(TARGET Example_BrickPlay APPEND PROPERTY LINK_DEPENDS "${BRICKPLAY_JS_LIB}")
+        endif()
     endif()
 endif(LLGL_BUILD_EXAMPLES)
 
