@@ -496,6 +496,12 @@ inline bool IsPointInsideAABB(const GridVec3i& point, const AABB3i& aabb)
     );
 }
 
+// Returns true if `aabbInner` is completely inside `aabbOuter`.
+inline bool IsAABBInsideAABB(const AABB3i& aabbInner, const AABB3i& aabbOuter)
+{
+    return (IsPointInsideAABB(aabbInner.bbMin, aabbOuter) && IsPointInsideAABB(aabbInner.bbMax, aabbOuter));
+}
+
 
 #endif // /LLGL_EXAMPLE_BRICKPLAY_KDTREE_H
 

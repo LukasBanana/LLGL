@@ -153,17 +153,19 @@ class Example_BrickPlay : public ExampleBase
 
     struct alignas(16) SceneView
     {
-        Gs::Matrix4f        vpMatrix;                                               // View-projection matrix
+        Gs::Matrix4f        vpMatrix;                                       // View-projection matrix
         Gs::Matrix4f        vpMatrixInv;
         Gs::Matrix4f        vpMatrixInvNoViewPos;
+        Gs::Matrix4f        wMatrixPreviewBrick;                            // Preview brick model-to-world transformation
 
         Gs::Vector3f        gridScale               = Gs::Vector3f{ 1.0f };
-        float               specularPower           = 90.0f;                        // Specular exponent for blinn-phone shading model
+        float               specularPower           = 90.0f;                // Specular exponent for blinn-phone shading model
 
-        Gs::Vector3f        viewPos;                                                // Camera view position (in world space)
+        Gs::Vector3f        viewPos;                                        // Camera view position (in world space)
         float               skyboxDiffuseLOD        = 6.0f;
 
-        Gs::Vector4f        ambientLight            = { 0.2f, 0.2f, 0.2f, 0.0f };
+        Gs::Vector3f        ambientLight            = { 0.2f, 0.2f, 0.2f };
+        std::int32_t        isDithering             = 0;                    // Use dithering in preview shaders
         Gs::Vector4f        diffuseLight[2]         =
         {
             Gs::Vector4f{ 0.8f, 0.8f, 0.8f, 1.0f },
@@ -177,12 +179,9 @@ class Example_BrickPlay : public ExampleBase
             Gs::Vector4f{ 0.0f, -0.2f, +1.0f, 0.0f }.Normalized()
         };
 
-        // Preview shaders only
-        float               worldOffsetY            = 0.0f;
-        std::int32_t        isDithering             = 0;
-
         // Outline shaders only
         float               viewportSize[2]         = {};
+        float               pad0[2]                 = {};
         float               outlineColor[3]         = { Cfg::silhouetteColor[0], Cfg::silhouetteColor[1], Cfg::silhouetteColor[2] };
         float               outlineWidth            = Cfg::silhouetteWidth;
 
@@ -198,17 +197,25 @@ class Example_BrickPlay : public ExampleBase
 
     struct PreviewBrick
     {
-        BrickId         id              = static_cast<BrickId>(0);  // Previews brick with instance index 0.
-        bool            isBlocked       = false;                    // Preview brick is blocked and cannot be placed into the scene
-        bool            isDithered      = false;                    // Highlight preview brick as dithered, when it's blocked or otherwise highlighted in that way
-        std::int32_t    gridOffset      = 0;
+        BrickId             id              = static_cast<BrickId>(0);  // Previews brick with instance index 0.
+        bool                isBlocked       = false;                    // Preview brick is blocked and cannot be placed into the scene
+        bool                isBlockedTop    = false;
+        bool                isBlockedBottom = false;
+        bool                isDithered      = false;                    // Highlight preview brick as dithered, when it's blocked or otherwise highlighted in that way
+        std::int32_t        gridOffset      = 0;
+        AnimatedTransform   transform;
+
+        void PutAt(const Instance& instance)
+        {
+            transform.PutAt(instance.GetScaledPos(), ToDegrees(instance.gridRotation));
+        }
     };
 
     struct ViewOptions
     {
-        bool            showWireframe       = false;
-        bool            showMenu            = true;
-        PreviewBrick    previewBrick;
+        bool                showWireframe   = false;
+        bool                showMenu        = true;
+        PreviewBrick        previewBrick;
     }
     viewOptions;
 
@@ -2310,9 +2317,9 @@ private:
         commands->PopDebugGroup();
     }
 
-    void BindPreviewBrickPSOStates(bool isTransparent = false)
+    void BindPreviewBrickPSOStates(bool isFreeTransform = false, bool isTransparent = false)
     {
-        commands->SetPipelineState(*pso[isTransparent ? BrickPSO_Preview_Transparent : BrickPSO_Preview]);
+        commands->SetPipelineState(*pso[isFreeTransform ? (isTransparent ? BrickPSO_Preview_Transparent : BrickPSO_Preview) : BrickPSO_Default]);
         commands->SetResource(0, *sceneViewCbuffer);
         commands->SetResource(1, *colorPaletteCbuffer);
         commands->SetResource(2, *skyboxCubemap);
@@ -3504,26 +3511,32 @@ private:
         {
             // If preview brick is blocked in new position, try to move it out to unblock it
             const GridVec3i initialGridPos = newPreviewGridPos;
-            {
-                auto UpdateBlockedStatus = [&]() -> bool
-                {
-                    previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newBrickId, newPreviewGridPos, newPreviewRotation);
-                    return previewBrick.isBlocked;
-                };
 
-                int unblockAttempts = 0;
-                while (UpdateBlockedStatus() && unblockAttempts < 2 && TryUnblockBrick(newPreviewGridPos, brickDim, contact.normal))
-                {
-                    ++unblockAttempts;
-                }
+            auto UpdateBlockedStatus = [&]() -> bool
+            {
+                previewBrick.isBlocked = !currentScene->BrickFitsInGrid(newBrickId, newPreviewGridPos, newPreviewRotation);
+                return previewBrick.isBlocked;
+            };
+
+            constexpr int maxAttempts = 3;
+            int unblockAttempts = 0;
+            while (UpdateBlockedStatus() && unblockAttempts < maxAttempts && TryUnblockBrick(newPreviewGridPos, brickDim, contact.normal))
+            {
+                ++unblockAttempts;
             }
+
             if (previewBrick.isBlocked)
             {
                 // If unblocking was unsuccessful, reset grid position to the initial picked position
                 newPreviewGridPos = initialGridPos;
             }
+            else
+            {
+                previewBrick.isBlockedTop       = !currentScene->BrickFitsInGridTop   (newPreviewGridPos + GridVec3i{ 0, +1, 0}, brickDim);
+                previewBrick.isBlockedBottom    = !currentScene->BrickFitsInGridBottom(newPreviewGridPos + GridVec3i{ 0, -1, 0}, brickDim);
+            }
 
-            // Update brick position and rotation
+            // Update target position and rotation for preview brick. Its rendered transformation is animated towards this target.
             previewBrick.id = newBrickId;
             previewInstance.SetPos(newPreviewGridPos);
             previewInstance.gridRotation = newPreviewRotation;
@@ -3651,9 +3664,11 @@ private:
                     user.backupInstance = *selectedInstance;
 
                     // Prepare new preview brick
-                    viewOptions.previewBrick.id     = contact.brick.GetId();
                     previewInstance.colorIndex      = selectedInstance->colorIndex;
                     previewInstance.gridRotation    = selectedInstance->gridRotation;
+
+                    viewOptions.previewBrick.id = contact.brick.GetId();
+                    viewOptions.previewBrick.PutAt(*selectedInstance);
 
                     // Store offset from where the user picked up the brick. This prevents movement when the user hasn't moved the input pointer.
                     const Gs::Vector3f pickedBrickOffset = contact.point - selectedInstance->GetScaledPos();
@@ -3786,7 +3801,9 @@ private:
             previewInstance.colorIndex      = user.pickedColorPaletteIndex;
             previewInstance.gridRotation    = user.menuGridRotation;
 
+            // First pick a position from the scene, then initialize the preview brick with it
             PickGridPosForPreviewBrick(inputPointer);
+            viewOptions.previewBrick.PutAt(previewInstance);
         }
     }
 
@@ -3905,6 +3922,38 @@ private:
             ProcessInputPointerUpdatePhase(hand, inputPointer, pointerIndex, dt);
     }
 
+    // Updates the transformation and rotation of the preview brick by animating it towards the target location stored in `previewInstance`
+    void AnimatePreviewBrick(float dt)
+    {
+        PreviewBrick& previewBrick = viewOptions.previewBrick;
+        AnimatedTransform& transform = previewBrick.transform;
+
+        Gs::Vector3f targetPosition = previewInstance.GetPos().Cast<float>() * KDTreeNode::gridScale;
+        float targetRotationY = ToDegrees(previewInstance.gridRotation);
+
+        // Advance the preview brick animation, specifically lifting it up.
+        // Restrict this animation when the brick is free floating (not blocked at top or bottom) or completely blocked (unable to place into scene)
+        const bool isAnimRestricted = (previewBrick.isBlocked || previewBrick.isBlockedTop == previewBrick.isBlockedBottom);
+        float yLift = transform.AdvanceAnimation(dt, targetPosition, targetRotationY, isAnimRestricted);
+
+        if (previewBrick.isBlockedTop)
+            yLift = -yLift;
+
+        // Update model-to-world matrix for preview brick
+        Gs::Matrix4f& wMatrix = sceneView.wMatrixPreviewBrick;
+
+        wMatrix.LoadIdentity();
+        Gs::Translate(wMatrix, transform.GetPosition() + Gs::Vector3f{ 0.0f, yLift, 0.0f });
+        Gs::RotateX(wMatrix, Gs::Deg2Rad(transform.GetXTilt()));
+        Gs::RotateZ(wMatrix, Gs::Deg2Rad(transform.GetZTilt()));
+        Gs::RotateY(wMatrix, Gs::Deg2Rad(transform.GetYRotation()));
+    }
+
+    void AnimateCamera(float dt)
+    {
+        camera.ApplyForces(dt, currentScene.get());
+    }
+
     void ProcessUserInput(float dt)
     {
         if (!IsRunningOnMobileDevice())
@@ -3914,8 +3963,6 @@ private:
 
         for_range(pointerIndex, NumInputPointers())
             ProcessInputPointer(pointerIndex, dt);
-
-        camera.ApplyForces(dt, currentScene.get());
     }
 
     void UpdateSceneView()
@@ -3986,9 +4033,14 @@ private:
 
         UpdateUILayout(dt);
         ProcessUserInput(dt);
-        UpdateSceneView();
+        AnimateCamera(dt);
 
         const bool isPreviewBrickVisible = IsPreviewBrickVisible();
+        if (isPreviewBrickVisible)
+            AnimatePreviewBrick(dt);
+
+        UpdateSceneView();
+
         const bool isPreviewBrickTransparent = ColorPalette::Get().IsTransparent(previewInstance.colorIndex);
 
         commands->Begin();
@@ -4036,7 +4088,7 @@ private:
                 {
                     commands->PushDebugGroup("RenderPreviewBrick");
                     {
-                        BindPreviewBrickPSOStates(false);
+                        BindPreviewBrickPSOStates(/*isFreeTransform:*/ true, /*isTransparent:*/ false);
                         RenderPreviewBrick(viewOptions.previewBrick);
                     }
                     commands->PopDebugGroup();
@@ -4059,7 +4111,7 @@ private:
                 {
                     commands->PushDebugGroup("RenderTransparentPreviewBrick");
                     {
-                        BindPreviewBrickPSOStates(true);
+                        BindPreviewBrickPSOStates(/*isFreeTransform:*/ true, /*isTransparent:*/ true);
                         RenderPreviewBrick(viewOptions.previewBrick);
                     }
                     commands->PopDebugGroup();

@@ -745,7 +745,8 @@ private:
     // Returns true if the specified slice of cells in the grid is occupied by at least one cell.
     bool IsCellSliceOccupied(const GridVec3i& offset, const GridVec3i& extent) const
     {
-        return !grid.ForEachCell(
+        // Consider any cell coordinate outside the grid's bounding volume to be occupied
+        return !IsAABBInsideAABB(AABB3i{ offset, offset + extent }, KDTreeNode::rootAABB) || !grid.ForEachCell(
             offset, extent,
             [](Brick brick, const GridVec3i& cellPos) -> bool
             {

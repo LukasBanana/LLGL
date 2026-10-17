@@ -15,8 +15,11 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 #include <ctime> // to format std::chrono::time_point
+
+#include <FileUtils.h> //TEST
 
 
 // Formats std::time_point to string with strict C++11 code (no std::format).
@@ -40,6 +43,28 @@ inline std::string FormatTimePoint(const std::chrono::time_point<TClock>& timePo
         return std::string(buffer);
 
     return "";
+}
+
+template <typename T, bool UseAcceleration = true>
+T IntegrateForces(T& velocity, T& forces, float invMass, float dt, float dampingCoeff)
+{
+    if (UseAcceleration)
+    {
+        // Apply forces to velocity
+        const T damping = -velocity * dampingCoeff;
+        const T acceleration = (forces + damping) * invMass;
+        velocity += acceleration * dt;
+    }
+    else
+    {
+        // Without physics integration, simply set velocity to input forces
+        velocity = forces;
+    }
+
+    // Reset forces
+    forces = {};
+
+    return velocity * dt;
 }
 
 // Generic struct for simple physics integration. Used for camera movement and smooth menu bar scrolling.
@@ -69,23 +94,195 @@ struct RigidBody
     // Helper function for simple physics integration.
     T IntegrateForces(float dt, float dampingCoeff = 0.99f)
     {
-        if (UseAcceleration)
+        return ::IntegrateForces<T, UseAcceleration>(velocity, forces, invMass, dt, dampingCoeff);
+    }
+};
+
+// Shortest signed rotation (in degrees) from `lhs` angle to `rhs` angle, in the range [-180, 180).
+// Think of it as `rhs - lhs` but wrapping around, e.g. AngleDiff(350, 10) = 20 and AngleDiff(10, 350) = -20.
+inline float AngleDiff(float lhs, float rhs)
+{
+    float diff = std::fmod(rhs - lhs + 180.0f, 360.0f);
+    if (diff < 0.0f)
+        diff += 360.0f;
+
+    // Adding 360 to a tiny negative value can round up to exactly 360 in float precision
+    if (diff >= 360.0f)
+        diff = 0.0f;
+
+    return diff - 180.0f;
+}
+
+struct AnimatedRotation
+{
+    float angle     = 0.0f;
+    float velocity  = 0.0f; // Angular velocity
+    float torque    = 0.0f; // Angular force
+
+    float IntegrateForces(float invMass, float dt, float dampingCoeff = 0.99f)
+    {
+        return ::IntegrateForces<float>(velocity, torque, invMass, dt, dampingCoeff);
+    }
+
+    void AddTorque(float inTorque, float invMass)
+    {
+        torque += inTorque * invMass;
+    }
+};
+
+// Free transformation, not bound by grid
+class AnimatedTransform : RigidBody<Gs::Vector3f>
+{
+    enum class AnimState
+    {
+        Idle,
+        LiftUp,
+        WaitToRest,
+        DelaySettleDown,
+        SettleDown,
+    };
+
+    AnimState           yLiftAnimState  = AnimState::Idle;  // State of the animation to lift up and settle down the preview brick
+    float               yLiftAnimPhase  = 0.0f;             // Animation phase from 0.0 (not lifted up) to 1.0 (fully lifted up)
+    float               yLiftTimer      = 0.0f;             // Multi-purpose timer for the different animation states
+    AnimatedRotation    yRotation;                          // Yaw
+    AnimatedRotation    xTilt;                              // Pitch
+    AnimatedRotation    zTilt;                              // Roll
+
+    void ApplyForces(float dt, float dampingCoeff = 0.99f)
+    {
+        position += IntegrateForces(dt, dampingCoeff);
+        yRotation.angle += yRotation.IntegrateForces(invMass, dt, dampingCoeff);
+    }
+
+    void AnimatePosition(const Gs::Vector3f& moveVec)
+    {
+        const float brickMoveCoefficient = 0.5f;
+        AddForces(moveVec * brickMoveCoefficient);
+    }
+
+    void AnimateRotation(float yRotationSpin)
+    {
+        // Animate Y-rotation
+        yRotation.AddTorque(yRotationSpin, invMass);
+    }
+
+    void AdvanceUnrestrictedAnimation(float dt, const Gs::Vector3f& moveVec, float spin)
+    {
+        auto HasPositionOrRotationChanged = [](const Gs::Vector3f& vec, float angle) -> bool
         {
-            // Apply forces to velocity
-            const T damping = -velocity * dampingCoeff;
-            const T acceleration = (forces + damping) * invMass;
-            velocity += acceleration * dt;
+            constexpr float moveThreshold = 0.001f;
+            constexpr float spinThreshold = 0.1f;
+            return (vec.Length() > moveThreshold || std::abs(angle) > spinThreshold);
+        };
+
+        // When the target position or rotation changes, always reset the animation state to lifting up.
+        const bool hasPositionOrRotationChanged = HasPositionOrRotationChanged(moveVec, spin);
+        if (yLiftAnimState != AnimState::LiftUp && yLiftAnimState != AnimState::WaitToRest && hasPositionOrRotationChanged)
+        {
+            yLiftAnimState  = AnimState::LiftUp;
+            yLiftTimer      = 0.0f;
+        }
+
+        switch (yLiftAnimState)
+        {
+            case AnimState::Idle:
+                break;
+
+            case AnimState::LiftUp:
+                yLiftAnimPhase += dt / Cfg::animTimeToLiftUp;
+                if (yLiftAnimPhase < 1.0f)
+                    break;
+
+                yLiftAnimPhase = 1.0f;
+                yLiftAnimState = AnimState::WaitToRest;
+                // [[fallthrough]]
+
+            case AnimState::WaitToRest:
+                // Advance animation of position and rotation
+                AnimatePosition(moveVec);
+                AnimateRotation(spin);
+
+                // Once movement and rotation has stopped, delay the animation to settle the brick back down
+                if (hasPositionOrRotationChanged || HasPositionOrRotationChanged(velocity, yRotation.velocity))
+                    break;
+
+                yLiftAnimState = AnimState::DelaySettleDown;
+                // [[fallthrough]]
+
+            case AnimState::DelaySettleDown:
+                yLiftTimer += dt;
+                if (yLiftTimer < Cfg::animDelayBeforeSettleDown)
+                    break;
+
+                yLiftAnimState = AnimState::SettleDown;
+                // [[fallthrough]]
+
+            case AnimState::SettleDown:
+                yLiftAnimPhase -= dt / Cfg::animTimeToSettleDown;
+                if (yLiftAnimPhase <= 0.0f)
+                {
+                    yLiftAnimPhase = 0.0f;
+                    yLiftAnimState = AnimState::Idle;
+                }
+                break;
+        }
+    }
+
+public:
+
+    AnimatedTransform()
+    {
+        SetMass(0.025f);
+    }
+
+    float AdvanceAnimation(float dt, const Gs::Vector3f& targetPosition, float targetRotationY, bool isAnimRestricted)
+    {
+        const Gs::Vector3f moveVec = targetPosition - position;
+        const float spin = AngleDiff(yRotation.angle, targetRotationY);
+
+        if (isAnimRestricted)
+        {
+            // Advance animation of position and rotation
+            AnimatePosition(moveVec);
+            AnimateRotation(spin);
+
+            yLiftAnimPhase = 0.0f;
         }
         else
         {
-            // Without physics integration, simply set velocity to input forces
-            velocity = forces;
+            AdvanceUnrestrictedAnimation(dt, moveVec, spin);
         }
 
-        // Reset forces
-        forces = {};
+        ApplyForces(dt);
 
-        return velocity * dt;
+        return Cfg::animLiftYAxis * yLiftAnimPhase;
+    }
+
+    const Gs::Vector3f& GetPosition() const
+    {
+        return position;
+    }
+
+    float GetXTilt() const
+    {
+        return xTilt.angle;
+    }
+
+    float GetZTilt() const
+    {
+        return zTilt.angle;
+    }
+
+    float GetYRotation() const
+    {
+        return yRotation.angle;
+    }
+
+    void PutAt(const Gs::Vector3f& inPosition, float inYRotation)
+    {
+        position        = inPosition;
+        yRotation.angle = inYRotation;
     }
 };
 

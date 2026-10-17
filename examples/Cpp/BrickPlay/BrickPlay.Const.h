@@ -54,6 +54,11 @@ struct Cfg
 
     static constexpr int            numAddedBricksUntilSharing      = 20;       // Users need to add at least this many bricks before they can share their creation
 
+    static constexpr float          animTimeToLiftUp                = 0.1f;     // Time (in seconds) for the preview brick to lift up. This should feel almost instantaneous.
+    static constexpr float          animDelayBeforeSettleDown       = 0.15f;    // Time (in seconds) before the animation for the preview brick to settle down begins.
+    static constexpr float          animTimeToSettleDown            = 0.1f;     // Time (in seconds) for the preview brick to settle down.
+    static constexpr float          animLiftYAxis                   = 0.3f;     // Units to lift up the preview brick (Y-axis).
+
     // Whether to use extended brick models for their optimized versions (*_WallsOnlyExt.obj).
     // If false, covered bricks can show tiny holes due to beveled edges of bricks sitting above and below them.
     // This can be turned off for mobile platforms where this flaw is virtually invisible

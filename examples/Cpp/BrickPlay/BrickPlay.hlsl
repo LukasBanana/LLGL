@@ -40,25 +40,25 @@
 // General purpose scene view constant buffer. Shared across all shaders in this file.
 cbuffer SceneView : register(b2)
 {
+    // Common scene view parameters
     float4x4    vpMatrix;
     float4x4    vpMatrixInv;            // Inverse view-projection matrix to displace depth values for parallax occlusion displacement
     float4x4    vpMatrixInvNoViewPos;   // Inverse view-projection matrix without view position to transform a view ray
+    float4x4    wMatrixPreviewBrick;    // Preview shaders only
     float3      gridScale;
-    float       specularPower;      // Blinn-phong specular exponent (usual values between 16 and 90)
+    float       specularPower;          // Blinn-phong specular exponent (usual values between 16 and 90)
     float3      viewPos;
     float       skyboxDiffuseLOD;       // Maximum level of detail (LOD) for the skybox's diffuse reflection (default to 6.0)
-    float4      ambientLight;
+    float3      ambientLight;
+    int         isDithering;            // Use dithering in preview shaders
     float4      diffuseLight[NUM_LIGHTS];
     float4      lightDir[NUM_LIGHTS];
 
-    // Preview shaders only
-    float       worldOffsetY;       // Y-axis for preview world offset
-    int         isDithering;        // Use dithering in preview shaders
-
     // Outline shaders only
-    float2      viewportSize;       // Viewport size in pixels; converts outlineWidth into NDC space
-    float3      outlineColor;       // Color used for silhouette outlines
-    float       outlineWidth;       // Thickness silhouettes outlines
+    float2      viewportSize;           // Viewport size in pixels; converts outlineWidth into NDC space
+    float2      pad0;
+    float3      outlineColor;           // Color used for silhouette outlines
+    float       outlineWidth;           // Thickness silhouettes outlines
 
     // Plane shaders only
     int4        gridBounds;             // XY: minimum grid bounds, ZW: maximum grid bounds (negated for easier comparison)
@@ -143,27 +143,32 @@ float4 ColorFromPalette(uint colorIndex)
     return UnpackColorRGBA8UNorm(packedColor);
 }
 
-void BrickBaseTransform(VertexIn inp, out VertexOut outp, float3 worldOffset)
+float3x3 GetBrickRotation(int inPackedData)
 {
     // Unpack W component from packed instanced data
-    uint packedInstanceW = asuint(inp.packedInstance.w);
+    uint packedDataU32 = asuint(inPackedData);
+    uint rotationMode = packedDataU32 & 0xFF;
+    return BrickRotation(rotationMode);
+}
 
-    int3 gridPos = inp.packedInstance.xyz;
-    uint rotationMode = packedInstanceW & 0xFF;
-    uint colorIndex = packedInstanceW >> 8;
-
-    float3x3 rotation = BrickRotation(rotationMode);
-
-    // Transform vertex position from local space to world space based on instance's rotation and grid position
-    outp.worldPos = mul(rotation, inp.position) + (float3)gridPos * gridScale + worldOffset;
-    outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
-    outp.normal   = mul(rotation, inp.normal);
-    outp.color    = ColorFromPalette(colorIndex);
+float4 GetBrickColor(int inPackedData)
+{
+    // Unpack W component from packed instanced data
+    uint packedDataU32 = asuint(inPackedData);
+    uint colorIndex = packedDataU32 >> 8;
+    return ColorFromPalette(colorIndex);
 }
 
 void VSBrick(VertexIn inp, out VertexOut outp)
 {
-    BrickBaseTransform(inp, outp, (float3)0.0);
+    int3 gridPos = inp.packedInstance.xyz;
+    float3x3 rotation = GetBrickRotation(inp.packedInstance.w);
+
+    // Transform vertex position from model space to world space based on instance's rotation and grid position
+    outp.worldPos   = mul(rotation, inp.position) + (float3)gridPos * gridScale;
+    outp.position   = mul(vpMatrix, float4(outp.worldPos, 1.0));
+    outp.normal     = mul(rotation, inp.normal);
+    outp.color      = GetBrickColor(inp.packedInstance.w);
 }
 
 float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3 color)
@@ -193,7 +198,7 @@ float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3
 
 float3 ComputeLighting(float3 worldPos, float3 normal)
 {
-    float3 lighting = ambientLight.rgb;
+    float3 lighting = ambientLight;
 
     [unroll]
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -315,9 +320,11 @@ float4 PSTransparentComposite(float4 screenPos : SV_Position) : SV_Target
 
 void VSBrickPreview(VertexIn inp, out VertexOut outp)
 {
-    BrickBaseTransform(inp, outp, float3(0.0, worldOffsetY, 0.0));
-    outp.worldPos.y += worldOffsetY;
-    outp.position = mul(vpMatrix, float4(outp.worldPos, 1.0));
+    // Transform vertex position from model space to world space based on instance's rotation and grid position
+    outp.worldPos   = mul(wMatrixPreviewBrick, float4(inp.position, 1.0)).xyz;
+    outp.position   = mul(vpMatrix, float4(outp.worldPos, 1.0));
+    outp.normal     = mul((float3x3)wMatrixPreviewBrick, inp.normal);
+    outp.color      = GetBrickColor(inp.packedInstance.w);
 }
 
 void ClipDitheringPixel(uint2 screenPos)
@@ -351,14 +358,10 @@ struct OutlineVertexOut
 void VSBrickOutline(VertexIn inp, out OutlineVertexOut outp)
 {
     // Unpack W component from packed instanced data
-    uint packedInstanceW = asuint(inp.packedInstance.w);
-
     int3 gridPos = inp.packedInstance.xyz;
-    uint rotationMode = packedInstanceW & 0xFF;
+    float3x3 rotation = GetBrickRotation(inp.packedInstance.w);
 
-    float3x3 rotation = BrickRotation(rotationMode);
-
-    // Transform vertex position from local space to world space based on instance's rotation and grid position
+    // Transform vertex position from model space to world space based on instance's rotation and grid position
     float3 worldPos = mul(rotation, inp.position) + (float3)gridPos * gridScale;
     outp.position = mul(vpMatrix, float4(worldPos, 1.0));
 }

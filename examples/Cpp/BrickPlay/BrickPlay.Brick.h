@@ -38,6 +38,11 @@ enum GridRotation : std::uint8_t
     GridRotation_Num,
 };
 
+inline float ToDegrees(GridRotation gridRotation)
+{
+    return static_cast<float>(gridRotation * 90);
+}
+
 using BrickId = std::uint32_t;
 
 enum BrickGroup : std::uint32_t
