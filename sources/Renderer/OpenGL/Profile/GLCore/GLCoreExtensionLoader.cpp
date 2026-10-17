@@ -972,7 +972,8 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
 
 #ifndef __APPLE__
 
-// Includes all GL extensions that are considered default for core profiles
+// Includes all GL extensions that are considered default for core profiles.
+// Some GL implementations filter these out since they are considered implied in core profiles.
 static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
 {
     static const char* coreProfileDefaultExtensions[] =
@@ -982,6 +983,7 @@ static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
         "GL_ARB_shader_objects",
         "GL_ARB_shader_objects_21",
         "GL_ARB_shader_objects_30",
+        "GL_ARB_texture_cube_map",      // GL 1.3
         "GL_ARB_vertex_buffer_object",
         "GL_ARB_vertex_shader",
         "GL_EXT_blend_func_separate",   // GL 2.0
@@ -1112,7 +1114,7 @@ bool LoadSupportedOpenGLExtensions(GLContext& /*context*/, bool isCoreProfile, b
         {
             if (extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ false))
             {
-                /* Enable extension in registry */
+                /* Enable extension in registry and mark extension as supported in string-to-bool map */
                 RegisterExtension(extensionID);
                 it->second = true;
             }
@@ -1132,8 +1134,13 @@ bool LoadSupportedOpenGLExtensions(GLContext& /*context*/, bool isCoreProfile, b
     auto EnableExtension = [&](const std::string& extName, GLExt extensionID) -> void
     {
         /* Try to enable OpenGL extension */
-        if (g_OpenGLExtensionsMap.find(extName) != g_OpenGLExtensionsMap.end())
+        auto it = g_OpenGLExtensionsMap.find(extName);
+        if (it != g_OpenGLExtensionsMap.end())
+        {
+            /* Enable extension in registry and mark extension as supported in string-to-bool map */
             RegisterExtension(extensionID);
+            it->second = true;
+        }
     };
 
     #define LOAD_GLEXT(NAME) \
