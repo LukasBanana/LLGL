@@ -103,9 +103,9 @@ if ! command -v spirv-opt &> /dev/null; then
 fi
 
 # Run the build command for compiling shaders
-if [ $VERBOSE -eq 1 ]; then
+if [ $VERBOSE -ne 0 ]; then
     cmake --build "$OUTPUT_DIR" --target COMPILE_SHADERS
     echo "DONE"
 else
-    cmake --build "$OUTPUT_DIR" --target COMPILE_SHADERS --log-level ERROR
+    cmake --build "$OUTPUT_DIR" --target COMPILE_SHADERS
 fi

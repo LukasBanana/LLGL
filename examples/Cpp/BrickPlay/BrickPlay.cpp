@@ -4179,8 +4179,9 @@ int                 KDTreeNode::numAABBTests = 0;
 AABB3i              KDTreeNode::rootAABB;
 
 // Static member definitions for Cfg class - required for ODR-used values prior to C++17
-constexpr float Cfg::silhouetteColor[3];
-constexpr float Cfg::uiThumbnailMinVolumeSize;
+constexpr float         Cfg::silhouetteColor[3];
+constexpr float         Cfg::uiThumbnailMinVolumeSize;
+constexpr std::uint8_t  Cfg::uiThumbstickBgOpacity;
 
 
 LLGL_IMPLEMENT_EXAMPLE(Example_BrickPlay);

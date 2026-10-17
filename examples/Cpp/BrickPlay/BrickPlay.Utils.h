@@ -261,7 +261,7 @@ public:
 
             auto MotionToTilt = [](float motion) -> float
             {
-                float tiltAbs = Gs::Deg2Rad(std::logf(std::abs(motion) + 1.0f) * Cfg::animMotionTargetAngle);
+                float tiltAbs = Gs::Deg2Rad(std::log(std::abs(motion) + 1.0f) * Cfg::animMotionTargetAngle);
                 return (motion > 0.0f ? tiltAbs : -tiltAbs);
             };
 
