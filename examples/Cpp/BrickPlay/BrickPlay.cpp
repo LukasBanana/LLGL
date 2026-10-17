@@ -4178,10 +4178,12 @@ const Gs::Vector3f  KDTreeNode::gridScale    = { 1.0f, 0.5f, 1.0f };
 int                 KDTreeNode::numAABBTests = 0;
 AABB3i              KDTreeNode::rootAABB;
 
-// Static member definitions for Cfg class - required for ODR-used values prior to C++17
+// Static member definitions required for ODR-used values prior to C++17
 constexpr float         Cfg::silhouetteColor[3];
 constexpr float         Cfg::uiThumbnailMinVolumeSize;
 constexpr std::uint8_t  Cfg::uiThumbstickBgOpacity;
+
+constexpr int           UILayout::buttonOffset[2];
 
 
 LLGL_IMPLEMENT_EXAMPLE(Example_BrickPlay);
