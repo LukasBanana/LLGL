@@ -4182,6 +4182,8 @@ AABB3i              KDTreeNode::rootAABB;
 constexpr float         Cfg::silhouetteColor[3];
 constexpr float         Cfg::uiThumbnailMinVolumeSize;
 constexpr std::uint8_t  Cfg::uiThumbstickBgOpacity;
+constexpr float         Cfg::animMaxTimeStep;
+constexpr int           Cfg::animMaxSubsteps;
 
 constexpr int           UILayout::buttonOffset[2];
 

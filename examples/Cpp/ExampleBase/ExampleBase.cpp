@@ -16,7 +16,7 @@
 
 #if _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 6262)
+#pragma warning(disable : 6262) // Ignore warning about stack size in stb_image.h
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
