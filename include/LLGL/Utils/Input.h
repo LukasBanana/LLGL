@@ -58,8 +58,25 @@ enum class InputState
 */
 enum class InputHandling
 {
+    /**
+    \brief Ignore input events.
+    \remarks This effectively disables all \c EventListener callbacks.
+    */
     Ignore,
+
+    /**
+    \brief Process input events but don't consume them.
+    \remarks This is mostly relevant for the web platform where the web browser can still respond to all input events,
+    e.g. when a popup prompts the user to type in information.
+    */
     Process,
+
+    /**
+    \brief Process input events and consume them. This is the default value.
+    \remarks For a web build, this will prevent the web browser from recognizing input events, so the app has the input focus all for itself.
+    An exception to this are all function keys as they are always forwarded to the browser.
+    Otherwise, the user would not be able to hit F5 to refresh the web page for instance.
+    */
     ProcessAndConsume,
 };
 

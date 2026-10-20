@@ -862,9 +862,9 @@ private:
             cubeTexDesc.extent.height       = 1;
             cubeTexDesc.arrayLayers         = 6;
             cubeTexDesc.clearValue.color[0] = 1.0f;
-            cubeTexDesc.clearValue.color[0] = 1.0f;
-            cubeTexDesc.clearValue.color[0] = 1.0f;
-            cubeTexDesc.clearValue.color[0] = 1.0f;
+            cubeTexDesc.clearValue.color[1] = 1.0f;
+            cubeTexDesc.clearValue.color[2] = 1.0f;
+            cubeTexDesc.clearValue.color[3] = 1.0f;
         }
         return renderer->CreateTexture(cubeTexDesc);
     }
@@ -2047,7 +2047,7 @@ private:
     {
         if (hasOffsetInstancing)
         {
-            // Draw all group instances
+            // Draw all group instances with instance offset (firstInstance)
             commands->DrawInstanced(mesh.numVertices, mesh.firstVertex, group.numInstances, group.firstInstance);
         }
         else

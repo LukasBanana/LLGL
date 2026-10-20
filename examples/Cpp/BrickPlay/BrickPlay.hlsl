@@ -512,7 +512,7 @@ float3 ParallaxOffset(float2 texCoord, float3 viewDir, float2 dx, float2 dy)
     float2 offset = viewDir.xy / viewDir.z * studHeight;
     float2 deltaTexCoords = offset * layerDepth;
 
-    // Initial values
+    // Initial values: start sampling at the top layer of the height map
     float2 currentTexCoords = texCoord - offset;
     float currentHeight = SampleHeightMap(currentTexCoords, dx, dy);
 

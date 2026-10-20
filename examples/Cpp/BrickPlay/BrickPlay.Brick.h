@@ -79,7 +79,7 @@ struct InstanceGroup
     // Number of instances to render for this group
     std::uint32_t   numInstances      = 0;
 
-    // Zero-based index to the first instance into the global `instances` container for this group. Instance 0 is reserved for the preview instance.
+    // Zero-based index to the first instance into the global `instances` container for this group.
     std::uint32_t   firstInstance     = 0;
 
     // Number of instances allocated for this group in the global `instances` container. This must always be greater than or equal to `numInstances`.
