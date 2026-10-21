@@ -4064,6 +4064,12 @@ private:
         FlushPendingScene();
 
         #if KDTREE_DEBUG_LEVEL
+        static int prevNumAABBTests;
+        if (prevNumAABBTests != KDTreeNode::numAABBTests)
+        {
+            prevNumAABBTests = KDTreeNode::numAABBTests;
+            LLGL_LOG("DEBUG: Number of Ray/AABB tests: %d\n", KDTreeNode::numAABBTests);
+        }
         KDTreeNode::numAABBTests = 0;
         #endif
 

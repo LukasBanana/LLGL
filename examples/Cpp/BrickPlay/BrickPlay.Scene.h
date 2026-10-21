@@ -363,7 +363,8 @@ public:
         // Check if there is any blocking brick
         foreach_dimension(x, y, z, brickDim.extent)
         {
-            if (grid.GetLeaf(alignedGridPos + GridVec3i{ x, y, z }))
+            const GridVec3i cellPos{ x, y, z };
+            if (!IsBrickCellExcluded(brickId, rotation, cellPos) && grid.GetLeaf(alignedGridPos + cellPos))
                 return false;
         }
 
@@ -997,7 +998,7 @@ private:
                 NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, brick);
 
             #if KDTREE_DEBUG_LEVEL >= 2
-            LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
+            LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeaves());
             #endif
 
             return true;
@@ -1024,7 +1025,7 @@ private:
             NotifyBrickChangeToNeighbors(alignedGridPos, brickDim.extent, Brick{});
 
         #if KDTREE_DEBUG_LEVEL >= 2
-        LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeafs());
+        LLGL::Log::Printf("kd-Tree debug info: Nodes=%u, Leafs=%u\n", grid.NumNodes(), grid.NumLeaves());
         #endif
     }
 
@@ -1033,10 +1034,14 @@ private:
         // Get brick dimension and apply rotation
         const BrickDimensions brickDim = BrickDictionary::Get().GetBrickDimensions(brickId, instance.gridRotation);
 
-        // Remove brick entries from grid
+        // Update brick entries in grid
         const GridVec3i alignedGridPos = instance.GetPos() + brickDim.offset;
         foreach_dimension(x, y, z, brickDim.extent)
-            grid.UpdateLeaf(alignedGridPos + GridVec3i{ x, y, z }, groupInstance);
+        {
+            const GridVec3i cellPos{ x, y, z };
+            if (!IsBrickCellExcluded(brickId, instance.gridRotation, cellPos))
+                grid.UpdateLeaf(alignedGridPos + cellPos, groupInstance);
+        }
     }
 
     void KeepColliderInsidePlayArea(Gs::Vector3f& colliderPoint, float colliderRadius) const
@@ -1222,5 +1227,4 @@ struct History
 
 
 #endif // /LLGL_EXAMPLE_BRICKPLAY_BRICKSCENE_H
-
 
