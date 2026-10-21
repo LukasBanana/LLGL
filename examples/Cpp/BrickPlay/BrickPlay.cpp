@@ -108,6 +108,8 @@ class Example_BrickPlay : public ExampleBase
     LLGL::PipelineLayout*           psoCompositeLayout              = nullptr;
     LLGL::PipelineState*            psoComposite                    = nullptr;
 
+    LLGL::RenderPass*               swapChainRenderPass             = nullptr;
+
     LLGL::Buffer*                   sceneViewCbuffer                = nullptr;
     LLGL::Buffer*                   colorPaletteCbuffer             = nullptr;
     LLGL::Buffer*                   vertexAndPreviewInstanceBuffer  = nullptr; // Encodes vertices of all meshes and the preview instance
@@ -140,6 +142,7 @@ class Example_BrickPlay : public ExampleBase
     struct UIBrickThumbnails
     {
         LLGL::Texture*                      arrayTexture    = nullptr;
+        LLGL::RenderPass*                   renderPass      = nullptr;
         std::vector<LLGL::RenderTarget*>    renderTargets;
 
         struct Cache
@@ -1204,6 +1207,23 @@ private:
             transparencyPassDesc.depthAttachment.storeOp        = LLGL::AttachmentStoreOp::Undefined;
         }
         transparency.renderPass = renderer->CreateRenderPass(transparencyPassDesc);
+
+        // Create render pass to only clear the stencil buffer for the swap-chain.
+        // The swap-chain render pass only renders post-processors and 2D graphics, so no depth or color buffer needs to be cleared.
+        LLGL::RenderPassDescriptor swapChainRenderPassDesc;
+        {
+            swapChainRenderPassDesc.debugName                   = "SwapChain.RenderPass";
+            swapChainRenderPassDesc.samples                     = swapChain->GetSamples();
+
+            swapChainRenderPassDesc.colorAttachments[0].format  = swapChain->GetColorFormat();
+            swapChainRenderPassDesc.colorAttachments[0].loadOp  = LLGL::AttachmentLoadOp::Undefined;
+            swapChainRenderPassDesc.colorAttachments[0].storeOp = LLGL::AttachmentStoreOp::Store;
+
+            swapChainRenderPassDesc.stencilAttachment.format    = swapChain->GetDepthStencilFormat();
+            swapChainRenderPassDesc.stencilAttachment.loadOp    = LLGL::AttachmentLoadOp::Clear;
+            swapChainRenderPassDesc.stencilAttachment.storeOp   = LLGL::AttachmentStoreOp::Store;
+        }
+        swapChainRenderPass = renderer->CreateRenderPass(swapChainRenderPassDesc);
     }
 
     // Loads UI textures and initializes UI layouts
@@ -1740,7 +1760,7 @@ private:
 
     bool SaveSceneWithUnsavedChanges()
     {
-        if (currentScene->HasUnsavedChanges() && !options.discardEdits)
+        if (currentScene && currentScene->HasUnsavedChanges() && !options.discardEdits)
             return SaveSceneToFile(*currentScene, options.sceneFilename.c_str());
         else
             return false;
@@ -2380,9 +2400,6 @@ private:
         };
         commands->SetVertexBuffers(2, vertexBufferViews);
 
-        // Clear stencil buffer for silhouette rendering
-        commands->Clear(LLGL::ClearFlags::Stencil);
-
         // First render stencil reference to mask out pixels inside the silhouette. This is the regular brick model.
         commands->PushDebugGroup("RenderSilhouetteStencil");
         {
@@ -2443,10 +2460,9 @@ private:
         TransformSceneViewForThumbnail(brickId, gridRotation, viewRotation, thumbnailSceneView);
         commands->UpdateBuffer(*sceneViewCbuffer, 0, &thumbnailSceneView, sizeof(thumbnailSceneView));
 
-        commands->BeginRenderPass(renderTarget);
+        commands->BeginRenderPass(renderTarget, uiBrickThumbnails.renderPass);
         {
             commands->SetViewport(renderTarget.GetResolution());
-            commands->Clear(LLGL::ClearFlags::ColorDepth, LLGL::ClearValue{});
 
             // Draw current thumbnail brick from default group
             const BrickMesh mesh = BrickDictionary::Get().GetMesh(brickId);
@@ -2483,6 +2499,22 @@ private:
         }
         uiBrickThumbnails.arrayTexture = renderer->CreateTexture(texArrayDesc);
 
+        // Create render pass for all thumbnail render-targets to clear the color and depth buffers
+        LLGL::RenderPassDescriptor renderPassDesc;
+        {
+            renderPassDesc.debugName                    = "BrickThumbnail.RenderPass";
+            renderPassDesc.samples                      = GetSampleCount();
+
+            renderPassDesc.colorAttachments[0].format   = LLGL::Format::RGBA8UNorm;
+            renderPassDesc.colorAttachments[0].loadOp   = LLGL::AttachmentLoadOp::Clear;
+            renderPassDesc.colorAttachments[0].storeOp  = LLGL::AttachmentStoreOp::Store;
+
+            renderPassDesc.depthAttachment.format       = swapChain->GetDepthStencilFormat();
+            renderPassDesc.depthAttachment.loadOp       = LLGL::AttachmentLoadOp::Clear;
+            renderPassDesc.depthAttachment.storeOp      = LLGL::AttachmentStoreOp::Store;
+        }
+        uiBrickThumbnails.renderPass = renderer->CreateRenderPass(renderPassDesc);
+
         // Create intermediate render-targets, one for each array layer
         uiBrickThumbnails.renderTargets.resize(numBrickTypes);
 
@@ -2492,6 +2524,7 @@ private:
             LLGL::RenderTargetDescriptor rtDesc;
             {
                 rtDesc.debugName                        = rtLabel.c_str();
+                rtDesc.renderPass                       = uiBrickThumbnails.renderPass;
                 rtDesc.resolution                       = { thumbnailSize, thumbnailSize };
                 rtDesc.samples                          = GetSampleCount();
                 rtDesc.depthStencilAttachment.format    = swapChain->GetDepthStencilFormat();   // Use same depth format for thumbnails as for swap-chain (to make PSOs happy)
@@ -3982,7 +4015,6 @@ private:
         sceneView.lightDir[0]       = Gs::Vector4f{ -0.2f, +0.4f, -1.0f, 0.0f }.Normalized();
 
         // Update preview shader states
-      //sceneView.worldOffsetY      = previewBlockOffsetY;
         sceneView.isDithering       = (viewOptions.previewBrick.isDithered ? 1 : 0);
 
         // Update outline shader states
@@ -4124,7 +4156,7 @@ private:
             commands->EndRenderPass();
 
             // Draw overlay and UI elements
-            commands->BeginRenderPass(*swapChain);
+            commands->BeginRenderPass(*swapChain, swapChainRenderPass);
             {
                 commands->SetViewport(fullViewport);
 

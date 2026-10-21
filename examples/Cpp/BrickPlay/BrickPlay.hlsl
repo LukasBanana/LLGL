@@ -9,12 +9,12 @@
 #define MAX_NUM_PARALLAX_LAYERS 16
 #endif
 
-#ifndef MAX_NUM_COLOR_PALETTE
-#define MAX_NUM_COLOR_PALETTE 32
+#ifndef ENABLE_PARALLAX_OCCLUSION
+#define ENABLE_PARALLAX_OCCLUSION (MAX_NUM_PARALLAX_LAYERS > 0)
 #endif
 
-#ifndef ENABLE_PARALLAX_OCCLUSION
-#define ENABLE_PARALLAX_OCCLUSION 0
+#ifndef MAX_NUM_COLOR_PALETTE
+#define MAX_NUM_COLOR_PALETTE 32
 #endif
 
 #ifndef COMPILE_FOR_GL
@@ -28,6 +28,10 @@
 // For transparent objects, flip the normal vector to simulate light passing through and shading the face from the opposite side
 #ifndef ENABLE_DUAL_SIDED_LIGHTING
 #define ENABLE_DUAL_SIDED_LIGHTING 0
+#endif
+
+#ifndef ENABLE_ENVIRONMENT_MAPPING
+#define ENABLE_ENVIRONMENT_MAPPING 1
 #endif
 
 // Disable early depth-stencil for OpenGL, as it it required higher GLSL versions than 140.
@@ -171,14 +175,13 @@ void VSBrick(VertexIn inp, out VertexOut outp)
     outp.color      = GetBrickColor(inp.packedInstance.w);
 }
 
-float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3 color)
+float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 viewDir, float3 lightVec, float3 color)
 {
     #if ENABLE_DUAL_SIDED_LIGHTING
     normal = lerp(-normal, normal, step(0.0, dot(normal, lightVec)));
     #endif
 
     // Compute light reflection vectors
-    float3 viewDir = normalize(viewPos - worldPos);
     float3 halfVec = normalize(lightVec + viewDir);
     float NdotL = saturate(dot(normal, lightVec));
     float NdotH = saturate(dot(normal, halfVec));
@@ -187,6 +190,8 @@ float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3
     float diffuse = NdotL;
     float specular = pow(NdotH, specularPower) * NdotL;
 
+    #if ENABLE_ENVIRONMENT_MAPPING
+
     // Sample environment map for specular highlights
     float3 reflectVec = reflect(-viewDir, normal);
     float envmapLOD = skyboxDiffuseLOD * (1.0 - specular);
@@ -194,15 +199,22 @@ float3 BlinnPhongShading(float3 worldPos, float3 normal, float3 lightVec, float3
 
     // Compute final shading
     return color * (diffuse * lerp(1.0, envmapReflection, 0.2) + specular);
+
+    #else
+
+    return color * (diffuse + specular);
+    
+    #endif
 }
 
 float3 ComputeLighting(float3 worldPos, float3 normal)
 {
     float3 lighting = ambientLight;
+    float3 viewDir = normalize(viewPos - worldPos);
 
     [unroll]
     for (int i = 0; i < NUM_LIGHTS; ++i)
-        lighting += BlinnPhongShading(worldPos, normal, lightDir[i].xyz, diffuseLight[i].xyz);
+        lighting += BlinnPhongShading(worldPos, normal, viewDir, lightDir[i].xyz, diffuseLight[i].xyz);
 
     return lighting;
 }
@@ -636,7 +648,8 @@ float4 PSSkybox(SkyVertexOut inp) : SV_Target
 
 cbuffer UIView : register(b1)
 {
-    float4x4 pMatrix;
+    float4x4    pMatrix;
+    uint        patternSize; // Size (in pixels) of the dityhering pattern
 }
 
 struct UIVertexIn
@@ -665,10 +678,8 @@ void VSOverlay(UIVertexIn inp, out UIVertexOut outp)
 Texture2DArray uiTexture : register(t2);
 SamplerState uiTextureSampler : register(s3);
 
-static bool DitheredPattern(uint2 screenPos)
+bool DitheredPattern(uint2 screenPos)
 {
-    const uint patternSize = 2;
-    //return (screenPos.x % 4 >= 2) != (screenPos.y % 4 >= 2);
     return (screenPos.x % (patternSize*2) >= patternSize) != (screenPos.y % (patternSize*2) >= patternSize);
 }
 

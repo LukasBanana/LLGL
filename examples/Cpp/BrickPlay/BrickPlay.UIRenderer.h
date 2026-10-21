@@ -58,7 +58,9 @@ class UIRenderer
 
     struct alignas(16) UIView
     {
-        Gs::Matrix4f pMatrix;
+        Gs::Matrix4f    pMatrix;
+        std::uint32_t   patternSize = 2;
+        std::uint32_t   pad0[3]     = {};
     }
     uiView;
 
@@ -260,6 +262,9 @@ public:
         renderer = inRenderer;
 
         // Create UI view constant buffer
+        if (LLGL::Display* display = LLGL::Display::GetPrimary())
+            uiView.patternSize = 2 * static_cast<std::uint32_t>(display->GetScale() + 0.5f);
+
         LLGL::BufferDescriptor viewCbufferDesc;
         {
             viewCbufferDesc.debugName   = "UIViewCbuffer";
@@ -287,7 +292,7 @@ public:
         // Create PSO to render an overlay with simple UI elements
         psoUILayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "cbuffer(UIView@1):vert,"
+                "cbuffer(UIView@1):vert:frag,"
                 "texture(uiTexture@2):frag,"
                 "sampler(uiTextureSampler@3):frag,"
 

@@ -1,16 +1,10 @@
 sources:
   - source: "BrickPlay.hlsl"
-    permutation:
-      macros:
-        ENABLE_PARALLAX_OCCLUSION: 1
     entries:
       - entry: "VSBrick"
         profile: "vs_4_0"
         targets: [spirv, metal]
       - entry: "PSBrick"
-        profile: "ps_4_0"
-        targets: [spirv, metal]
-      - entry: "PSBrickTransparent"
         profile: "ps_4_0"
         targets: [spirv, metal]
       - entry: "VSBrickPreview"
@@ -59,7 +53,15 @@ sources:
   - source: "BrickPlay.hlsl"
     permutation:
       macros:
-        ENABLE_PARALLAX_OCCLUSION: 1
+        ENABLE_DUAL_SIDED_LIGHTING: 1
+    entries:
+      - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
+
+  - source: "BrickPlay.hlsl"
+    permutation:
+      macros:
         COMPILE_FOR_GL: 1
     entries:
       - entry: "VSBrick"
@@ -68,9 +70,6 @@ sources:
       - entry: "PSBrick"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es]
-      - entry: "PSBrickTransparent"
-        profile: "ps_4_0"
-        targets: [glsl140core]
       - entry: "VSBrickPreview"
         profile: "vs_4_0"
         targets: [glsl140core, glsl300es]
@@ -85,7 +84,7 @@ sources:
         targets: [glsl140core, glsl300es]
       - entry: "PSTransparentComposite"
         profile: "ps_4_0"
-        targets: [glsl140core]
+        targets: [glsl140core, glsl300es]
       - entry: "VSOverlay"
         profile: "vs_4_0"
         targets: [glsl140core, glsl300es]
@@ -117,16 +116,19 @@ sources:
   - source: "BrickPlay.hlsl"
     permutation:
       macros:
-        ENABLE_PARALLAX_OCCLUSION: 1
         COMPILE_FOR_GL: 1
         MAX_NUM_PARALLAX_LAYERS: 6
     entries:
-      - entry: "PSBrickTransparent"
-        profile: "ps_4_0"
-        targets: [glsl300es]
-      - entry: "PSTransparentComposite"
-        profile: "ps_4_0"
-        targets: [glsl300es]
       - entry: "PSPlane"
         profile: "ps_4_0"
         targets: [glsl300es]
+
+  - source: "BrickPlay.hlsl"
+    permutation:
+      macros:
+        COMPILE_FOR_GL: 1
+        ENABLE_DUAL_SIDED_LIGHTING: 1
+    entries:
+      - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es]
