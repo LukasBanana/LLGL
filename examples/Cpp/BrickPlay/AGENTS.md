@@ -41,6 +41,15 @@ These are the configuration file commands:
   RGB value (e.g. `00FF00` for green), or RGBA value (e.g. `FFFF0080` for transparent yellow). They *must* be written as hex codes.
   They will appear as coloring options to the user but are independent of the color palettes defined in the scene file format.
 
+3D models must match the dimensions specified in the configuration file.
+Their bounding volumes always conform to the following formula (in pseudocode):
+```
+min = (X := -floor(W/2), Y := 0, Z := -floor(D/2))
+max = (X := ceil(W/2), Y := H, Z := ceil(D/2))
+```
+Slopes must always fall from a smaller to higher value in each dimension, e.g. the '2x2_roof_c' brick, which looks like a corner piece for a roof,
+has its highest point in the 3D model at (X := -1, Z := -1) and the lowest point at (X := +1, Z := +1).
+
 ### Scene File Format
 
 User generated worlds are saved/loaded from the *Scenes/* subfolder.

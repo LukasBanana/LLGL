@@ -25,6 +25,23 @@ Tutorial how to integrate ImGui into an LLGL project for UI rendering and event 
 <p align="center"><img src="../../docu/Tutorials/ImGui/LLGL_ImGui_Thumbnail.png" style="width:auto;height:225px;"/></p>
 
 
+### [BrickPlay](BrickPlay/README.md)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_BrickPlay/index.html)
+
+Comprehensive tutorial to a concise example of a 3D toy that allows players to create worlds out of building blocks.
+This tutorial goes into depth how to render such a 3D presentation, how to make it cross-platform with LLGL,
+and illustrates how it can be used as a foundation for modifications or your own games.
+The following techniques are highlighted in this tutorial:
+- *Parallax Occlusion Mapping* for the infinite ground plane
+- *Weighted-Blended Order Independent Transparency* for glass bricks
+- *Hardware Instancing* with dynamically changing groups for optimized rendering
+- *Batched Draw Calls* for UI elements
+- *Silhouette Rendering* for object selection (uses Geometry Shaders in D3D)
+- *kd-Tree* construction and traversal for CPU-based ray casting, collision detection, and brick placement
+
+<p align="center"><img src="BrickPlay/BrickPlay.png" style="width:auto;height:225px;"/></p>
+
+
 ## Examples
 
 ### [Texturing](Texturing)
