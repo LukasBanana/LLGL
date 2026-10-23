@@ -198,7 +198,7 @@ class LLGL_EXPORT Input : public Interface
         void SetInputHandling(InputHandling inputHandling);
 
         /**
-        \brief Returnst the input event handling mode.
+        \brief Returns the input event handling mode.
         \see Canvas::EventListener::IsConsumeEventsEnabled
         */
         InputHandling GetInputHandling() const;

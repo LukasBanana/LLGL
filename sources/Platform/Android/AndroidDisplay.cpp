@@ -80,7 +80,7 @@ Offset2D AndroidDisplay::GetOffset() const
 
 float AndroidDisplay::GetScale() const
 {
-    /* Calcualte display scaling by Android screen density, normalized to low density (ACONFIGURATION_DENSITY_LOW) */
+    /* Calculate display scaling by Android screen density, normalized to low density (ACONFIGURATION_DENSITY_LOW) */
     if (android_app* app = AndroidApp::Get().GetState())
     {
         if (app->config != nullptr)

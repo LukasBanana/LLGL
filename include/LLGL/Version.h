@@ -53,9 +53,9 @@ struct VersionInfo
 
 /**
 \briefs Compares the two VersionInfo arguments.
-\returns 0 if both arguemnts are equal,
+\returns 0 if both arguments are equal,
 < 0 if \c lhs is considered an earlier version than \c rhs,
-or > 0 if \c lhs is considered a newer version than \c ths.
+or > 0 if \c lhs is considered a newer version than \c rhs.
 */
 LLGL_EXPORT int Compare(VersionInfo lhs, VersionInfo rhs);
 
@@ -76,7 +76,7 @@ LLGL_EXPORT const char* ToString(VersionInfo info);
 \param[in] bufferSize Specifies the size (in number of characters) of the output buffer. This size includes the NUL-terminator.
 \param[out] buffer Pointer to the output buffer to write the string representation to.
 This buffer \b must point to a memory block of at least \c bufferSize characters.
-This may also be null, in which case only the \c outMinBufferSize is used to write out the requird buffer size.
+This may also be null, in which case only the \c outMinBufferSize is used to write out the required buffer size.
 \param[out] outMinBufferSize Optional pointer the function can write the required buffer size to.
 \return Same value as \c buffer parameter for convenient use in \c printf style functions.
 \see ToString(VersionInfo)

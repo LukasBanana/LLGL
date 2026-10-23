@@ -74,8 +74,8 @@ enum class ShadingRate
     Size1x2, //!< Reduce vertical resolution by 2x.
     Size2x1, //!< Reduce horizontal resolution by 2x.
     Size2x2, //!< Reduce horizontal and vertical resolution by 2x.
-    Size2x4, //!< Reduce horizontal resolution by 2x and vertical resolition by 4x.
-    Size4x2, //!< Reduce horizontal resolution by 4x and vertical resolition by 2x.
+    Size2x4, //!< Reduce horizontal resolution by 2x and vertical resolution by 4x.
+    Size4x2, //!< Reduce horizontal resolution by 4x and vertical resolution by 2x.
     Size4x4, //!< Reduce horizontal and vertical resolution by 4x.
 };
 

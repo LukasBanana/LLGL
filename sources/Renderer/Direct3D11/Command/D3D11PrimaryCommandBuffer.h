@@ -88,7 +88,7 @@ class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );
 
-        void DispatchBuiltinCS(D3D11BuiltinShader bultinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
+        void DispatchBuiltinCS(D3D11BuiltinShader builtinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
 
     private:
 

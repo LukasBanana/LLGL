@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_C99_DEPRECATED_FALLBACL_H
-#define LLGL_C99_DEPRECATED_FALLBACL_H
+#ifndef LLGL_C99_DEPRECATED_FALLBACK_H
+#define LLGL_C99_DEPRECATED_FALLBACK_H
 
 
 #include <LLGL-C/Canvas.h>

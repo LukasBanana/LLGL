@@ -344,7 +344,7 @@ struct ComputeShaderAttributes
 */
 struct ShaderDescriptor
 {
-    //TODO: remove these delcaration once deprecation has ended {
+    //TODO: remove these declaration once deprecation has ended {
     LLGL_DEPRECATED_IGNORE_PUSH()
     ShaderDescriptor(const ShaderDescriptor&) = default;
     ShaderDescriptor(ShaderDescriptor&&) = default;

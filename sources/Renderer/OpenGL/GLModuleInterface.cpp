@@ -12,7 +12,7 @@
 
 /*
 Use indirection to solve macro expansion dependency.
-LLGL_OPENGL_PROFILE nees to be expanded before begin passed to LLGL_IMPLEMENT_RENDERER_MODULE().
+LLGL_OPENGL_PROFILE needs to be expanded before begin passed to LLGL_IMPLEMENT_RENDERER_MODULE().
 */
 #define LLGL_IMPLEMENT_RENDERER_MODULE_OPENGL(PROFILE) \
     LLGL_IMPLEMENT_RENDERER_MODULE(PROFILE, LLGL::GLProfile::GetRendererName(), LLGL::GLProfile::GetRendererID(), LLGL::GLRenderSystem, 100)

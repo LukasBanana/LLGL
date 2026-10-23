@@ -43,7 +43,7 @@ class GLStagingBufferPool
         void BufferSubData(GLStateManager& stateMngr, GLBuffer& buffer, GLintptr offset, GLsizeiptr size, const void* data);
 
         // Releases all staging buffers.
-        // This must only be called when the GL context is about to be deleted since this function doesn't notify the GLStateManager about relased buffers.
+        // This must only be called when the GL context is about to be deleted since this function doesn't notify the GLStateManager about released buffers.
         void Clear();
 
         // Resets all staging buffer offsets to be ready for the next frame.

@@ -34,7 +34,7 @@ class GLVertexArrayCache
         // Returns the instance of this cache.
         static GLVertexArrayCache& Get();
 
-        // Releaes all VAOs and resets all cache entries.
+        // Releases all VAOs and resets all cache entries.
         void Clear();
 
         /*

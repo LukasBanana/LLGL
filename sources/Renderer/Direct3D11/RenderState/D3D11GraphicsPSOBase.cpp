@@ -120,7 +120,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
     ID3DBlob* streamOutputShaderByteCode = nullptr;
     if (auto* geometryShaderD3D = LLGL_CAST(const D3D11Shader*, desc.geometryShader))
     {
-        /* Use geometry shader as potential stream-outpout byte code */
+        /* Use geometry shader as potential stream-output byte code */
         streamOutputShaderByteCode = geometryShaderD3D->GetByteCode();
     }
     else if (auto* domainShaderD3D = LLGL_CAST(const D3D11DomainShader*, desc.tessEvaluationShader))

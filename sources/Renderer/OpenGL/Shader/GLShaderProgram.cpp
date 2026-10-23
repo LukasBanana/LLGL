@@ -249,7 +249,7 @@ struct GLShaderAttributeMap
     {
         /*
         Link shader program prematurely. Otherwise, there won't be any active attributes.
-        Linking can happen mutliple times, so this is only for reflecting vertex attributes.
+        Linking can happen multiple times, so this is only for reflecting vertex attributes.
         The final linking happens at the end of GLShaderProgram::BuildProgramBinary().
         */
         GLShaderProgram::LinkProgram(program);

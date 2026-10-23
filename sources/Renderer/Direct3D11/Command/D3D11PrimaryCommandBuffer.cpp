@@ -1219,9 +1219,9 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
     }
 }
 
-void D3D11PrimaryCommandBuffer::DispatchBuiltinCS(D3D11BuiltinShader bultinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
+void D3D11PrimaryCommandBuffer::DispatchBuiltinCS(D3D11BuiltinShader builtinComputeShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
 {
-    ID3D11ComputeShader* cs = sharedDeviceObjects_->builtinShaderFactory.GetBulitinComputeShader(bultinComputeShader);
+    ID3D11ComputeShader* cs = sharedDeviceObjects_->builtinShaderFactory.GetBulitinComputeShader(builtinComputeShader);
     GetStateManager().DispatchBuiltinCS(cs, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
