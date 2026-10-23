@@ -1317,7 +1317,7 @@ private:
         fsBrickTransparent      = LoadFragmentShader("BrickPlay", "PSBrickTransparent", fsTransparentMacros);
         vsBrickPreview          = LoadVertexShader  ("BrickPlay", "VSBrickPreview", nullptr, LLGL::ShaderCompileFlags::PatchClippingOrigin);
         fsBrickPreview          = LoadFragmentShader("BrickPlay", "PSBrickPreview");
-        fsBrickTrnsPreview      = LoadFragmentShader("BrickPlay", "PSBrickPreviewTransparent");
+        fsBrickTrnsPreview      = LoadFragmentShader("BrickPlay", "PSBrickPreviewTransparent", fsTransparentMacros);
         vsTransparentComposite  = LoadVertexShader  ("BrickPlay", "VSTransparentComposite");
         fsTransparentComposite  = LoadFragmentShader("BrickPlay", "PSTransparentComposite");
         vsOverlay               = LoadVertexShader  ("BrickPlay", "VSOverlay");

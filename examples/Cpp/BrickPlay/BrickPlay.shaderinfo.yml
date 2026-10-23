@@ -13,9 +13,6 @@ sources:
       - entry: "PSBrickPreview"
         profile: "ps_4_0"
         targets: [spirv, metal]
-      - entry: "PSBrickPreviewTransparent"
-        profile: "ps_4_0"
-        targets: [spirv, metal]
       - entry: "VSTransparentComposite"
         profile: "vs_4_0"
         targets: [spirv, metal]
@@ -58,6 +55,9 @@ sources:
       - entry: "PSBrickTransparent"
         profile: "ps_4_0"
         targets: [spirv, metal]
+      - entry: "PSBrickPreviewTransparent"
+        profile: "ps_4_0"
+        targets: [spirv, metal]
 
   - source: "BrickPlay.hlsl"
     permutation:
@@ -74,9 +74,6 @@ sources:
         profile: "vs_4_0"
         targets: [glsl140core, glsl300es]
       - entry: "PSBrickPreview"
-        profile: "ps_4_0"
-        targets: [glsl140core, glsl300es]
-      - entry: "PSBrickPreviewTransparent"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es]
       - entry: "VSTransparentComposite"
@@ -130,5 +127,8 @@ sources:
         ENABLE_DUAL_SIDED_LIGHTING: 1
     entries:
       - entry: "PSBrickTransparent"
+        profile: "ps_4_0"
+        targets: [glsl140core, glsl300es]
+      - entry: "PSBrickPreviewTransparent"
         profile: "ps_4_0"
         targets: [glsl140core, glsl300es]

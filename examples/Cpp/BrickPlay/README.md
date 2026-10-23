@@ -58,7 +58,7 @@ Storing the instance data for all bricks is split into two vertex buffers:
 2. `BrickScene::instanceBuffer` stores the instance data for all bricks.
    This is organized via 'instance groups' so that bricks can be rendered in optimized ways, for example bricks that are completely covered top and bottom
    can be rendered with a simplified mesh that is open at the top and bottom (see <a href="#figure-wallsonly">Figure 1</a>), omitting the larger amount of vertices that visualize the studs.
-   Bricks that are covered entirely and won't be visibile to the user don't have to be rendered at all.
+   Bricks that are covered entirely and won't be visible to the user don't have to be rendered at all.
    While `BrickScene` holds the GPU vertex buffer for instances, the `BrickDictionary` class uses the [singleton design pattern](https://www.geeksforgeeks.org/system-design/singleton-design-pattern/)
    to store the CPU data of vertices and holds the instance groups data, like how many instances are in each group,
    how much capacity until the GPU instance buffer has to be resized (similarly to how C++'s `std::vector::resize` works in most STL implementations),
@@ -75,7 +75,7 @@ The singleton `BrickDictionary` allows for project-wide lookup of information ab
 which is loaded from [BrickPlay.config.txt](BrickPlay.config.txt) via a custom text-based file format similar to Wavefront Object files (more about that in [AGENTS.md](AGENTS.md)).
 
 Since bricks are only rendered with a solid color and no texturing, the vertex structure only needs a 3D coordinate and a normal vector for basic lighting.
-The instance structure is organized in a compact 8 bytes layout: 16-bit signed integer for X/Y/Z coordinates that place the bricks within the grid which is then scaled in the vetex shader,
+The instance structure is organized in a compact 8 bytes layout: 16-bit signed integer for X/Y/Z coordinates that place the bricks within the grid which is then scaled in the vertex shader,
 8-bit integer to encode the rotation (0-3) which is multiplied by 90 degrees in the shader, and another 8-bit to encode the index for the color palette.
 Since the user can only pick from a small set of colors and the app doesn't provide a full color wheel, we don't have to encode full RGB per instance.
 All instance attributes are encoded into a single `Format::RGBA16SInt` vertex attribute, so rotation and color index need to be unpacked in the shader.
@@ -128,7 +128,7 @@ To render a large number of bricks with different shapes is composed of two conc
    ```cpp
    enum BrickGroup {
        BrickGroup_Default,     // Default opaque brick rendering
-       BrickGroup_WallsOnly,   // Bricks rendered with an optimzied version, when blocked from above and below
+       BrickGroup_WallsOnly,   // Bricks rendered with an optimized version, when blocked from above and below
        BrickGroup_Transparent, // Render bricks with different shaders to achieve order-independent-transparency (OIT)
        BrickGroup_Invisible,   // Not rendered at all, for bricks that are blocked from all sides
    };
@@ -225,7 +225,7 @@ This is implemented via the `Brick` structure that stores the group ID and the i
 Since we're storing an index and not a pointer, resizing the global `instances` buffer does not invalidate those indices whereas any pointer that points to those entries would get invalidated.
 
 The tree hierarchy is being used by the `BrickScene` class for the following purposes:
-1. Store where bricks are being placed to detect whether a cell is alread occupied.
+1. Store where bricks are being placed to detect whether a cell is already occupied.
 2. Check whether bricks are visually being blocked by other bricks, either entirely around them (to detect whether they don't have to be rendered at all),
    or above and below them, in which case they can be rendered with a simplified 3D model that only renders its walls.
 3. Ray-casting so that the user can pick up a brick by pointing at it.
@@ -275,7 +275,7 @@ Each tree node consists of these fields:
 The aforementioned bounding-volume is implemented as axis-aligned bounding-boxes (AABB) which makes calculations very straightforward.
 This is once again a benefit of working with already axis-aligned concepts like the bricks themselves and the restriction that they can only be rotated by multiples of 90 degrees.
 We can also continue to take advantage of the restrictions of the grid being discrete and do most of our calculations,
-like splitting the space, with signed integer arithmetic, which requries less CPU cycles than floating-point math.
+like splitting the space, with signed integer arithmetic, which requires less CPU cycles than floating-point math.
 With each traversal down the tree hierarchy, we pass the node's AABB into the intersection function (here `FindIntersectionWithLeaf()`) recursively.
 
 Once we are ready to test our ray against an AABB, we scale the integer AABB to a floating-point AABB using our grid scale factors.
@@ -347,7 +347,7 @@ This render-pass also defines that both color attachments will be cleared right 
 This is more efficient, especially in modern rendering APIs, instead of calling `Clear()` or `ClearAttachments()` afterwards.
 The depth attachment loads the contents from a previous render pass which renders the opaque scene.
 The transparent objects will only read the depth attachment but not write to it since they are not meant to occlude each other.
-The pipeline state object (PSO) for this render-pass makes use of target-indenpendent blending:
+The pipeline state object (PSO) for this render-pass makes use of target-independent blending:
 ```cpp
 LLGL::GraphicsPipelineDescriptor psoTransparentDesc{
     ...
@@ -399,7 +399,7 @@ and make it appear like a plane that goes all the way to the horizon - or Z-far 
 The vertex coordinates are updated every frame as they need to be re-aligned against the camera's view-frustum, which is implemented in `UpdatePlaneGeometryForViewFrustum()`.
 
 It is worth noting that the initial implementation consolidated the vertex and index data into a single GPU buffer to be more resource efficient.
-This needed accomodation in the WebGL backend, because WebGL does not allow index buffers to be shared with any other GPU data for security reasons.
+This needed accommodation in the WebGL backend, because WebGL does not allow index buffers to be shared with any other GPU data for security reasons.
 The code communicates this with the `canCombineVertexAndIndexBuffers` field.
 
 
@@ -624,7 +624,7 @@ Draw2DRect(x, y, width, height):
   vertices[1] := (x + width, y)
   vertices[2] := (x + width, y + height)
 
-  # Trinagle B
+  # Triangle B
   vertices[3] := (x, y)
   vertices[4] := (x + width, y + height)
   vertices[5] := (x, y + height)
@@ -647,7 +647,7 @@ Here are some key differences between those environments:
   - You pull a *new* brick out of the palette and place it into the scene by letting go.
   - You pick up a brick from the scene, *move* it around, and place it back into the scene by letting go again.
   - You *delete* a brick by moving the picked up brick over the icon in the UI that looks like a trash can (courtesy of https://www.flaticon.com/).
-- On the **Web**, some JavaScript code is connected to a few extra menu buttons to accomodate for limitations regarding saving the edits a user made.
+- On the **Web**, some JavaScript code is connected to a few extra menu buttons to accommodate for limitations regarding saving the edits a user made.
   Some JavaScript code makes use of the browser's [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) to cache what the user is building in the scene.
   This helps to preserve the scene when the user accidentally hits the *back* button in the browser. Since this data will still get lost when the browser cache is cleared,
   the web version also provides menu items to explicitly save and load the scene to and from the device.
@@ -657,7 +657,7 @@ Here are some key differences between those environments:
   This requirement is satisfied via the `UploadButtonEventHandler` class that handles the touch input from the `LLGL::Canvas::EventListener` interface
   and invokes the glue code that bridges between Emscripten/C++ and JavaScript.
 
-Some quirks with Android apps based on the [NativeAcivity](https://developer.android.com/reference/android/app/NativeActivity),
+Some quirks with Android apps based on the [NativeActivity](https://developer.android.com/reference/android/app/NativeActivity),
 is that they are loaded from a shared library (Linux *.so* file) which is not unloaded and reloaded as you might expect.
 When the app closes, the code goes through its exit routine but that doesn't mean the shared library is unloaded.
 That means all your static variables remain initialized and won't be initialized the next time your code starts from the top.
@@ -680,7 +680,7 @@ If you struggled with integrals in math, I have good and bad news:
 
 That's because the camera movement is unpredictable, we don't know ahead of time where the user is going to move, so we have to integrate it numerically - meaning it's going to be an approximation.
 And that approximation heavily depends on our frame rate. If the frame rate goes down (especially likely to happen on mobile devices),
-we have to integrate the physics simulation in multiple steps and reduce the step size. Otherwise, the approximation becomes to unprecise and can quickly look very wrong.
+we have to integrate the physics simulation in multiple steps and reduce the step size. Otherwise, the approximation becomes to imprecise and can quickly look very wrong.
 We also have to run repeated steps in smaller step sizes for the collision detection. If the camera moved farther between two frames than its collision radius,
 we're risking to miss a collision and the camera can potentially move through a solid object.
 
@@ -755,7 +755,7 @@ One of those generated scenes can be seen in <a href="#figure-gpt5_6_luna">Figur
 Please note that this is not a fair comparison between the two LLM models and it wasn't intended as such.
 I will leave such experiments to someone who is much more enthusiastic about spending millions of LLM tokens on a daily basis :p
 
-I'll leave it up to you to decide whether this leads to better quality or just more quanitity of content in the future,
+I'll leave it up to you to decide whether this leads to better quality or just more quantity of content in the future,
 but it's undeniable IMO that this is a massive productivity boost, especially for prototyping.
 Perhaps this isn't even a question anymore for a long while, but I'm still trying to wrap my head around where this can be used
 to truly make my experience and workload as a software developer better, more productive, and also ethical since
@@ -767,7 +767,7 @@ I solemnly admit that I'm no expert on web development and generating the style 
 that bridges the Emscripten/C++ code with a small database ([Supabase](https://supabase.com/) to be precise) to let users share their creations
 to provide a form of feedback, has been an interesting learning experience.
 One notable piece of C++ code I generated with LLMs was a small standalone application that would reproduce a
-driver bug (as I am conviced), which is now tagged as such in LLGL
+driver bug (as I am convinced), which is now tagged as such in LLGL
 (see commit [dbb594d](https://github.com/LukasBanana/LLGL/commit/dbb594d342522aa44b2fe39eeeeae5663ee2f8fb)).
 
 That's all folks :-)
