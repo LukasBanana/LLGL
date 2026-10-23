@@ -52,7 +52,7 @@ struct Cfg
 
     static constexpr std::size_t    maxHistoryLength                = 50;       // Maxmimum number of steps to undo
 
-    static constexpr int            numAddedBricksUntilSharing      = 20;       // Users need to add at least this many bricks before they can share their creation
+    static constexpr int            minRequiredEditsBeforeSharing   = 20;       // Users need to make at least this many edits before they can share their creation
 
     static constexpr float          animTimeToLiftUp                = 0.1f;     // Time (in seconds) for the preview brick to lift up. This should feel almost instantaneous.
     static constexpr float          animDelayBeforeSettleDown       = 0.15f;    // Time (in seconds) before the animation for the preview brick to settle down begins.

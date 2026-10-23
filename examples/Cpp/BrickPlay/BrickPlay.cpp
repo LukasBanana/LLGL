@@ -348,6 +348,20 @@ class Example_BrickPlay : public ExampleBase
         }
     };
 
+    struct PendingScene
+    {
+        std::string filename;
+        std::string content;
+        bool        hasPendingContent = false;
+
+        void Clear()
+        {
+            filename.clear();
+            content.clear();
+            hasPendingContent = true;
+        }
+    };
+
     // State tracking for user controls such as picking scene objects with the mouse pointer.
     struct User
     {
@@ -368,12 +382,21 @@ class Example_BrickPlay : public ExampleBase
         GridRotation        menuGridRotation            = GridRotation_90;
 
         // When user opens a file from their device, this schedules the scene file content for the next frame, since we can't re-construct the scene mid-frame.
-        std::string         pendingSceneFilename;
-        std::string         pendingSceneFileContent;
+        PendingScene        pendingScene;
+
+        // Allow user to share their creation only after they made a certain amount of edits.
+        int                 numEditsMade                = 0;
 
         // Stores the state of whether the user touched the 'file upload' button.
         // This is a workaround to properly trigger this event and prevent security restrictions in the web app.
         bool                isFileUploadSelected        = false;
+
+        void QueueSceneFile(const char* filename, LLGL::StringView content)
+        {
+            pendingScene.filename           = filename;
+            pendingScene.content            = std::string{ content.begin(), content.end() };
+            pendingScene.hasPendingContent  = true;
+        }
     }
     user;
 
@@ -414,8 +437,7 @@ class Example_BrickPlay : public ExampleBase
                 PromptFileUpload(
                     [this](const char* filename, LLGL::StringView content)
                     {
-                        user.pendingSceneFilename       = filename;
-                        user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
+                        user.QueueSceneFile(filename, content);
                     }
                 );
                 user.isFileUploadSelected = false;
@@ -461,7 +483,19 @@ public:
         InitIDBFS(
             [this]() -> void
             {
-                user.pendingSceneFilename = options.sceneFilename;
+                auto LoadCachedScene = [this]()
+                {
+                    user.pendingScene.filename = options.sceneFilename;
+                };
+                bool hasSceneLoadedFromURL = LoadSceneFromURL(
+                    [this](const char* filename, LLGL::StringView content)
+                    {
+                        user.QueueSceneFile(filename, content);
+                    },
+                    LoadCachedScene
+                );
+                if (!hasSceneLoadedFromURL)
+                    LoadCachedScene();
             }
         );
 
@@ -3133,8 +3167,7 @@ private:
                 PromptFileUpload(
                     [this](const char* filename, LLGL::StringView content)
                     {
-                        user.pendingSceneFilename       = filename;
-                        user.pendingSceneFileContent    = std::string{ content.begin(), content.end() };
+                        user.QueueSceneFile(filename, content);
                     }
                 );
             }
@@ -3159,10 +3192,11 @@ private:
 
         #if LLGL_OS_WASM
 
-        // Only show the share button in the web app. This allows the user to contribute their creation to the project.
+        // Only show the share button in the web version. This allows the user to contribute their creation to the project.
         // It's only available in the web app as it uses JavaScript to upload the scene via the REST interface to a PostgreSQL database.
-        const bool isEnoughBricksAddedToShare = (currentScene->NumBricks() >= Cfg::numAddedBricksUntilSharing);
-        if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu, false, !isEnoughBricksAddedToShare))
+        const bool isSharingDisabled = (user.numEditsMade < Cfg::minRequiredEditsBeforeSharing);
+
+        if (DrawUIMenuItem(UIMenuItem_Share, canSelectMainMenu, false, isSharingDisabled))
         {
             input.SetInputHandling(LLGL::InputHandling::Ignore);
             PromptSubmitForm(
@@ -3583,6 +3617,7 @@ private:
         if (currentScene->NewBrick(brickId, brickInstance.GetPos(), brickInstance.gridRotation, brickInstance.colorIndex))
         {
             history.Register(History::Event{ brickId, brickInstance, INVALID_BRICK_ID, {} }, tryMergeWithPrevEvent);
+            user.numEditsMade++;
             return true;
         }
         return false;
@@ -3608,9 +3643,11 @@ private:
     void DestroyBrickEvent(Brick brick)
     {
         if (const Instance* brickInstance = currentScene->GetBrickInstance(brick))
+        {
             history.Register(History::Event{ INVALID_BRICK_ID, {}, brick.GetId(), *brickInstance });
-
-        currentScene->DestroyBrick(brick);
+            currentScene->DestroyBrick(brick);
+            user.numEditsMade++;
+        }
     }
 
     bool IsInputDown(const LLGL::InputPointer& inputPointer) const
@@ -4040,20 +4077,18 @@ private:
     void FlushPendingScene()
     {
         // Load scene if there is new file content scheduled
-        if (!user.pendingSceneFilename.empty())
+        if (!user.pendingScene.filename.empty())
         {
-            if (!user.pendingSceneFileContent.empty())
+            if (user.pendingScene.hasPendingContent)
             {
-                std::stringstream sceneContentStream{ user.pendingSceneFileContent };
-                LoadSceneFromStream(*currentScene, sceneContentStream, user.pendingSceneFilename.c_str());
+                std::stringstream sceneContentStream{ user.pendingScene.content };
+                LoadSceneFromStream(*currentScene, sceneContentStream, user.pendingScene.filename.c_str());
             }
             else
             {
-                LoadSceneFromFile(*currentScene, user.pendingSceneFilename.c_str());
+                LoadSceneFromFile(*currentScene, user.pendingScene.filename.c_str());
             }
-
-            user.pendingSceneFileContent.clear();
-            user.pendingSceneFilename.clear();
+            user.pendingScene.Clear();
         }
     }
 
@@ -4227,6 +4262,4 @@ constexpr int           UILayout::buttonOffset[2];
 
 
 LLGL_IMPLEMENT_EXAMPLE(Example_BrickPlay);
-
-
 

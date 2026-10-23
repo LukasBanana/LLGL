@@ -22,16 +22,19 @@
 #if LLGL_OS_WASM
 
 using FileUploadCallback = std::function<void(const char* filename, LLGL::StringView content)>;
+using FileLoadFailedCallback = std::function<void()>;
 using SubmitFormCallback = std::function<void(LLGL::StringView title)>;
 using CanceledCallback = std::function<void()>;
 using IDBFSLoadedCallback = std::function<void()>;
 
 struct WasmContext
 {
-    FileUploadCallback  fileUploadCallback  = nullptr;
-    SubmitFormCallback  submitFormCallback  = nullptr;
-    CanceledCallback    canceledCallback    = nullptr;
-    IDBFSLoadedCallback idbfsLoadedCallback = nullptr;
+    FileUploadCallback      fileUploadCallback      = nullptr;
+    FileUploadCallback      sceneURLCallback        = nullptr;
+    FileLoadFailedCallback  sceneURLFailedCallback  = nullptr;
+    SubmitFormCallback      submitFormCallback      = nullptr;
+    CanceledCallback        canceledCallback        = nullptr;
+    IDBFSLoadedCallback     idbfsLoadedCallback     = nullptr;
 };
 
 static WasmContext g_wasmContext;
@@ -40,6 +43,7 @@ extern "C"
 {
     void BrickPlay_PromptFileDownload(const char* content, int contentLen, const char* filename, int filenameLen);
     void BrickPlay_PromptFileUpload();
+    int BrickPlay_LoadSceneFromURL();
     void BrickPlay_PromptSubmitForm();
     void BrickPlay_UploadToDatabase(const char* title, int titleLen, const char* content, int contentLen);
     void BrickPlay_InitIDBFS();
@@ -68,6 +72,39 @@ static void PromptFileUpload(const FileUploadCallback& fileUploadCallback)
 {
     g_wasmContext.fileUploadCallback = fileUploadCallback;
     BrickPlay_PromptFileUpload();
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnSceneURLLoadedFromJS(const char* filenamePtr, const char* contentPtr, int contentLength)
+{
+    if (g_wasmContext.sceneURLCallback)
+        g_wasmContext.sceneURLCallback(filenamePtr, LLGL::StringView{ contentPtr, static_cast<std::size_t>(contentLength) });
+
+    g_wasmContext.sceneURLCallback = nullptr;
+    g_wasmContext.sceneURLFailedCallback = nullptr;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE
+void OnSceneURLLoadFailedFromJS()
+{
+    if (g_wasmContext.sceneURLFailedCallback)
+        g_wasmContext.sceneURLFailedCallback();
+
+    g_wasmContext.sceneURLCallback = nullptr;
+    g_wasmContext.sceneURLFailedCallback = nullptr;
+}
+
+// Returns false if no non-empty scene URL was specified.
+static bool LoadSceneFromURL(const FileUploadCallback& callback, const FileLoadFailedCallback& failedCallback)
+{
+    g_wasmContext.sceneURLCallback = callback;
+    g_wasmContext.sceneURLFailedCallback = failedCallback;
+    if (BrickPlay_LoadSceneFromURL())
+        return true;
+
+    g_wasmContext.sceneURLCallback = nullptr;
+    g_wasmContext.sceneURLFailedCallback = nullptr;
+    return false;
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE
@@ -131,5 +168,3 @@ static void SyncIDBFS()
 
 
 #endif // /LLGL_EXAMPLE_BRICKPLAY_WEBAPP_H
-
-

@@ -39,6 +39,7 @@ They are only intended to convey the concept.
 - [User Interface](#user-interface)
   - [Batched Draw Calls](#batched-draw-calls)
   - [Platform Differences](#platform-differences)
+    - [Opening a Scene from a Web URL](#opening-a-scene-from-a-web-url)
 - [Camera Controls](#camera-controls)
 - [Extensibility](#extensibility)
 - [Appendix: In the Age of AI](#appendix-in-the-age-of-ai)
@@ -663,6 +664,21 @@ When the app closes, the code goes through its exit routine but that doesn't mea
 That means all your static variables remain initialized and won't be initialized the next time your code starts from the top.
 That caused some weird bugs where I made wrong assumptions about that and I had to make some changes so that any code that has to reload data at the start of the app
 doesn't rely on static initialized variables. That applies specifically for the classes that follow the singleton design pattern.
+
+
+#### Opening a Scene from a Web URL
+
+The web version accepts an optional `scene` query parameter, similar to the desktop `-file=FILE` argument:
+
+```text
+index.html?scene=Bricks.scene.txt
+index.html?scene=Scenes/Bricks.House1.txt
+index.html?scene=https%3A%2F%2Fexample.com%2Fworld.txt
+```
+
+Relative URLs resolve against the web page's base URL, not the Emscripten virtual filesystem.
+Browsers do not allow a link to read arbitrary local-device paths automatically.
+Use the existing upload button to select a local file with the user's permission.
 
 
 ## Camera Controls

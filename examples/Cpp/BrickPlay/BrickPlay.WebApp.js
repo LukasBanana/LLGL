@@ -31,7 +31,54 @@ addToLibrary({
         setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
     },
 
-    BrickPlay_PromptFileUpload__deps: ['malloc', 'free', '$lengthBytesUTF8', '$stringToUTF8'],
+    $BrickPlay_DeliverFile__deps: ['malloc', 'free', '$lengthBytesUTF8', '$stringToUTF8'],
+    $BrickPlay_DeliverFile: function(filename, arrayBuffer, callback) {
+        var bytes = new Uint8Array(arrayBuffer);
+        var filenameLength = lengthBytesUTF8(filename) + 1;
+        var ptr = 0;
+        var filenamePtr = 0;
+        try {
+            ptr = _malloc(Math.max(bytes.length, 1));
+            filenamePtr = _malloc(filenameLength);
+            if (!ptr || !filenamePtr)
+                throw new Error('Not enough WebAssembly memory to load the scene');
+
+            HEAPU8.set(bytes, ptr);
+            stringToUTF8(filename, filenamePtr, filenameLength);
+            callback(filenamePtr, ptr, bytes.length);
+        } finally {
+            _free(ptr);
+            _free(filenamePtr);
+        }
+    },
+
+    BrickPlay_LoadSceneFromURL__deps: ['$BrickPlay_DeliverFile', 'OnSceneURLLoadedFromJS', 'OnSceneURLLoadFailedFromJS'],
+    BrickPlay_LoadSceneFromURL: function() {
+        var scene = new URLSearchParams(window.location.search).get('scene');
+        if (!scene || !scene.trim())
+            return 0;
+
+        (async function() {
+            try {
+                var url = new URL(scene, document.baseURI);
+                if (url.protocol !== 'http:' && url.protocol !== 'https:')
+                    throw new Error('Scene URLs must use HTTP or HTTPS; use the upload button for local files');
+
+                var response = await fetch(url.href);
+                if (!response.ok)
+                    throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+
+                var content = await response.arrayBuffer();
+                BrickPlay_DeliverFile(url.href, content, _OnSceneURLLoadedFromJS);
+            } catch (err) {
+                console.error("Failed to load scene URL '" + scene + "':", err);
+                _OnSceneURLLoadFailedFromJS();
+            }
+        })();
+        return 1;
+    },
+
+    BrickPlay_PromptFileUpload__deps: ['$BrickPlay_DeliverFile', 'OnFileLoadedFromJS'],
     BrickPlay_PromptFileUpload: function() {
         // Create an invisible file input element
         var input = document.createElement('input');
@@ -55,24 +102,14 @@ addToLibrary({
 
             var reader = new FileReader();
             reader.onload = function(evt) {
-                var arrayBuffer = evt.target.result;
-                var uint8Array = new Uint8Array(arrayBuffer);
-
-                // Allocate temporary WebAssembly memory for the buffer
-                var ptr = _malloc(uint8Array.length);
-                HEAPU8.set(uint8Array, ptr);
-
-                // Pass null-terminated filename
-                var filenameLength = lengthBytesUTF8(file.name) + 1;
-                var filenamePtr = _malloc(filenameLength);
-                stringToUTF8(file.name, filenamePtr, filenameLength);
-
-                // Call exported C++ function
-                _OnFileLoadedFromJS(filenamePtr, ptr, uint8Array.length);
-
-                // Free allocated C++ heap memory
-                _free(ptr);
-                _free(filenamePtr);
+                try {
+                    BrickPlay_DeliverFile(file.name, evt.target.result, _OnFileLoadedFromJS);
+                } catch (err) {
+                    console.error("Failed to load scene file '" + file.name + "':", err);
+                }
+            };
+            reader.onerror = function() {
+                console.error("Failed to read scene file '" + file.name + "':", reader.error);
             };
 
             reader.readAsArrayBuffer(file);
@@ -148,8 +185,8 @@ addToLibrary({
                 console.error("Error loading from IndexedDB:", err);
             } else {
                 console.log("IndexedDB loaded successfully into memory.");
-                _OnIDBFSLoaded(); // Notify C++ that IDBFS has been loaded
             }
+            _OnIDBFSLoaded(); // Continue startup even when browser storage is unavailable
         });
     },
 
@@ -162,4 +199,3 @@ addToLibrary({
         });
     }
 });
-
