@@ -38,9 +38,9 @@ void D3D11BindingTable::SetVertexBuffer(
     {
         EvictAllOutputBindings(locator);
         PutVertexBuffer(locator, startSlot);
+        vbCount_ = std::max<UINT>(vbCount_, startSlot + 1);
     }
     context_->IASetVertexBuffers(startSlot, 1, &buffer, &stride, &offset);
-    vbCount_ = startSlot + 1;
 }
 
 void D3D11BindingTable::SetVertexBuffers(
@@ -62,9 +62,9 @@ void D3D11BindingTable::SetVertexBuffers(
                 PutVertexBuffer(locators[i], startSlot + i);
             }
         }
+        vbCount_ = std::max<UINT>(vbCount_, startSlot + count);
     }
     context_->IASetVertexBuffers(startSlot, count, buffers, strides, offsets);
-    vbCount_ = count;
 }
 
 void D3D11BindingTable::SetIndexBuffer(
@@ -90,7 +90,10 @@ void D3D11BindingTable::SetStreamOutputBuffers(
     if (locators != nullptr)
     {
         for_range(i, count)
+        {
+            EvictAllBindings(locators[i]);
             PutStreamOutputBuffer(locators[i], i);
+        }
         for_subrange(i, count, soCount_)
             RemoveWholeResourceOutput(so_.locators, D3D11BindingLocator::D3DOutput_SO, i);
         soCount_ = count;

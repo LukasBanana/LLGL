@@ -33,6 +33,8 @@ D3D11_BIND_CONSTANT_BUFFER must not be combined with any other binding flag and 
 This class also does not evict RTVs and the DSV, because those will always be unbound at the end of a render pass.
 Moreover, depth textures can potentially be read from a shader while also bound as DSV during a render pass as long as depth-writing is disabled.
 
+Tracking is handled via D3D11BindingLocator per resource. These parameters are optional since resources created as read-only can never be used as UAVs.
+
 Note that this class is *NOT* thread-safe.
 */
 class D3D11BindingTable
