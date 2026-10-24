@@ -1,17 +1,18 @@
 // HLSL model shader
 
-cbuffer Settings : register(b1)
+cbuffer SceneView : register(b1)
 {
     float4x4    wMatrix;
     float4x4    vpMatrix;
-    float4      lightDir;
+    float3      lightDir;
+    float       reflectionFading;
     float4      diffuse;
 };
 
 
 // VERTEX SHADER STENCIL-BUFFER
 
-float4 VStencil(float3 position : POSITION) : SV_Position
+float4 VSStencil(float3 position : POSITION) : SV_Position
 {
 	return mul(vpMatrix, mul(wMatrix, float4(position, 1)));
 }
@@ -28,28 +29,37 @@ struct InputVScene
 struct OutputVScene
 {
 	float4 position : SV_Position;
-	float4 normal   : NORMAL;
+	float3 normal   : NORMAL;
 };
 
-OutputVScene VScene(InputVScene inp)
+OutputVScene VSScene(InputVScene inp)
 {
 	OutputVScene outp;
 	outp.position	= mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
-	outp.normal		= mul(wMatrix, float4(inp.normal, 0));
+	outp.normal		= mul(wMatrix, float4(inp.normal, 0)).xyz;
 	return outp;
 }
 
 
 // PIXEL SHADER SCENE
 
-float4 PScene(OutputVScene inp) : SV_Target
+float4 ComputeLighting(float4 albedo, float3 normal)
 {
-    // Compute lighting
-    float3 normal = normalize(inp.normal.xyz);
-    float NdotL = max(0.2, dot(normal, -lightDir.xyz));
+    normal = normalize(normal);
+    float NdotL = max(0.2, dot(normal, -lightDir));
+    return float4(albedo.rgb * NdotL, albedo.a);
+}
 
-    // Set final output color
-    return float4(diffuse.rgb * NdotL, 1.0);
+float4 PSScene(OutputVScene inp) : SV_Target
+{
+    return ComputeLighting(diffuse, inp.normal);
+}
+
+float4 PSReflection(OutputVScene inp) : SV_Target
+{
+    float4 floorColor = ComputeLighting((float4)1, float3(0, 1, 0));
+    float4 meshColor = ComputeLighting(diffuse, inp.normal);
+    return lerp(meshColor, floorColor, reflectionFading);
 }
 
 

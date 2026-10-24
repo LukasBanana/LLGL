@@ -1,17 +1,17 @@
-#version 300 es
+#version 330
 
-layout(std140) uniform Settings
+layout(std140) uniform SceneView
 {
     layout(row_major) mat4 wMatrix;
     layout(row_major) mat4 vpMatrix;
-    vec4 lightDir;
+    vec3 lightDir;
+    float reflectionFading;
     vec4 diffuse;
 };
 
 layout(location = 0) in vec3 POSITION;
 
-highp mat4 spvWorkaroundRowMajor(highp mat4 wrap) { return wrap; }
-mediump mat4 spvWorkaroundRowMajorMP(mediump mat4 wrap) { return wrap; }
+mat4 spvWorkaroundRowMajor(mat4 wrap) { return wrap; }
 
 void main()
 {

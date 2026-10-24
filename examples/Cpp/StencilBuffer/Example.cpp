@@ -11,20 +11,24 @@
 class Example_StencilBuffer : public ExampleBase
 {
 
-    LLGL::PipelineLayout*       pipelineLayout          = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout              = nullptr;
 
-    LLGL::Shader*               vsScene                 = nullptr;
-    LLGL::Shader*               fsScene                 = nullptr;
-    LLGL::Shader*               vsStencil               = nullptr;
+    LLGL::Shader*               vsScene                     = nullptr;
+    LLGL::Shader*               fsScene                     = nullptr;
+    LLGL::Shader*               fsReflection                = nullptr;
+    LLGL::Shader*               vsStencil                   = nullptr;
 
-    LLGL::PipelineState*        pipelineScene           = nullptr;
-    LLGL::PipelineState*        pipelineStencilWrite    = nullptr;
-    LLGL::PipelineState*        pipelineStencilRead     = nullptr;
+    LLGL::PipelineState*        psoBaseScene                = nullptr;
+    LLGL::PipelineState*        psoWriteVisibleStencil      = nullptr;
+    LLGL::PipelineState*        psoWriteInvisibleStencil    = nullptr; // Renders a stencil without emitting pixel colors
+    LLGL::PipelineState*        psoPortalScene              = nullptr;
+    LLGL::PipelineState*        psoPlanarReflection         = nullptr;
 
-    LLGL::Buffer*               vertexBuffer            = nullptr;
-    LLGL::Buffer*               viewCbuffer             = nullptr;
+    LLGL::Buffer*               vertexBuffer                = nullptr;
+    LLGL::Buffer*               viewCbuffer                 = nullptr;
 
-    TriangleMesh                meshScene;
+    TriangleMesh                meshFloor;
+    TriangleMesh                meshFrame;
     TriangleMesh                meshPortal;
     TriangleMesh                meshObject1;
     TriangleMesh                meshObject2;
@@ -32,14 +36,15 @@ class Example_StencilBuffer : public ExampleBase
     float                       viewDistanceToCenter    = 8.0f;
     Gs::Vector2f                viewRotation;
 
-    struct Settings
+    struct alignas(16) SceneView
     {
-        alignas(16) Gs::Matrix4f        wMatrix;
-        alignas(16) Gs::Matrix4f        vpMatrix;
-        alignas(16) Gs::Vector3f        lightDir    = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
-        alignas(16) LLGL::ColorRGBAf    diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f };
+        Gs::Matrix4f        wMatrix;
+        Gs::Matrix4f        vpMatrix;
+        Gs::Vector3f        lightDir            = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        float               reflectionFading    = 0.8f;
+        LLGL::ColorRGBAf    diffuse             = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
-    settings;
+    sceneView;
 
 public:
 
@@ -52,7 +57,7 @@ public:
         CreatePipelines();
 
         // Update vectors for projection
-        settings.lightDir.z *= GetProjectionZAxis();
+        sceneView.lightDir.z *= GetProjectionZAxis();
     }
 
 private:
@@ -61,7 +66,8 @@ private:
     {
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshScene   = Load3DModel(vertices, "Portal-Scene.obj");
+        meshFloor   = Load3DModel(vertices, "Portal-Floor.obj");
+        meshFrame   = Load3DModel(vertices, "Portal-Frame.obj");
         meshPortal  = Load3DModel(vertices, "Portal-Stencil.obj");
         meshObject1 = Load3DModel(vertices, "WiredBox.obj");
         meshObject2 = Load3DModel(vertices, "Pyramid.obj");
@@ -71,22 +77,23 @@ private:
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, sizeof(TexturedVertex));
-        viewCbuffer = CreateConstantBuffer(settings);
+        viewCbuffer = CreateConstantBuffer(sceneView);
     }
 
     void LoadShaders()
     {
         // Load shader program
-        vsScene = LoadVertexShader("Example", "VScene");
-        fsScene = LoadFragmentShader("Example", "PScene");
-        vsStencil = LoadVertexShader("Example", "VStencil");
+        vsScene = LoadVertexShader("Example", "VSScene");
+        fsScene = LoadFragmentShader("Example", "PSScene");
+        fsReflection = LoadFragmentShader("Example", "PSReflection");
+        vsStencil = LoadVertexShader("Example", "VSStencil");
     }
 
     void CreatePipelines()
     {
         // Create pipeline layouts for shadow-map and scene rendering
         pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse( "cbuffer(Settings@1):frag:vert" )
+            LLGL::Parse( "cbuffer(SceneView@1):frag:vert" )
         );
 
         // Specify vertex format
@@ -96,69 +103,121 @@ private:
             LLGL::VertexAttribute{ "normal",   LLGL::Format::RGB32Float, 1, offsetof(TexturedVertex, normal  ), sizeof(TexturedVertex) },
         };
 
-        // Create graphics pipeline for scene rendering
+        // Create graphics PSO for rendering the base scene
         {
-            LLGL::GraphicsPipelineDescriptor pipelineDesc;
+            LLGL::GraphicsPipelineDescriptor psoDesc;
             {
-                pipelineDesc.inputVertexAttribs             = vertexAttribs;
-                pipelineDesc.vertexShader                   = vsScene;
-                pipelineDesc.fragmentShader                 = fsScene;
-                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout                 = pipelineLayout;
-                pipelineDesc.depth.testEnabled              = true;
-                pipelineDesc.depth.writeEnabled             = true;
-                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+                psoDesc.debugName                       = "BaseScene.PSO";
+                psoDesc.inputVertexAttribs              = vertexAttribs;
+                psoDesc.vertexShader                    = vsScene;
+                psoDesc.fragmentShader                  = fsScene;
+                psoDesc.renderPass                      = swapChain->GetRenderPass();
+                psoDesc.pipelineLayout                  = pipelineLayout;
+                psoDesc.depth.testEnabled               = true;
+                psoDesc.depth.writeEnabled              = true;
+                psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+                psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
             }
-            pipelineScene = renderer->CreatePipelineState(pipelineDesc);
-            ReportPSOErrors(pipelineScene);
+            psoBaseScene = renderer->CreatePipelineState(psoDesc);
+            ReportPSOErrors(psoBaseScene);
+        }
+
+        // Create graphics PSO for rendering the scene + writing stencil values
+        {
+            LLGL::GraphicsPipelineDescriptor psoDesc;
+            {
+                psoDesc.debugName                       = "WriteVisibleStencil.PSO";
+                psoDesc.inputVertexAttribs              = vertexAttribs;
+                psoDesc.vertexShader                    = vsScene;
+                psoDesc.fragmentShader                  = fsScene;
+                psoDesc.renderPass                      = swapChain->GetRenderPass();
+                psoDesc.pipelineLayout                  = pipelineLayout;
+                psoDesc.depth.testEnabled               = true;
+                psoDesc.depth.writeEnabled              = false;                            // Don't write depth so we can render the planar reflections more easily
+                psoDesc.stencil.testEnabled             = true;
+                psoDesc.stencil.referenceDynamic        = true;                             // Change stencil reference independently of PSO
+                psoDesc.stencil.front.depthPassOp       = LLGL::StencilOp::Replace;
+                psoDesc.stencil.front.compareOp         = LLGL::CompareOp::AlwaysPass;
+                psoDesc.stencil.front.readMask          = 0u;                               // Read no stencil bits
+                psoDesc.stencil.front.writeMask         = ~0u;                              // Write all stencil bits
+                psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+                psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
+            }
+            psoWriteVisibleStencil = renderer->CreatePipelineState(psoDesc);
+            ReportPSOErrors(psoWriteVisibleStencil);
         }
 
         // Create graphics pipeline for stencil-write rendering
         {
-            LLGL::GraphicsPipelineDescriptor pipelineDesc;
+            LLGL::GraphicsPipelineDescriptor psoDesc;
             {
-                pipelineDesc.inputVertexAttribs             = vertexAttribs;
-                pipelineDesc.vertexShader                   = vsStencil;
-                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout                 = pipelineLayout;
-                pipelineDesc.depth.testEnabled              = true;                             // Read all depth bits
-                pipelineDesc.depth.writeEnabled             = false;                            // Write no depth bits
-                pipelineDesc.stencil.testEnabled            = true;                             // Enable stencil test, even though we only write the stencil bits
-                pipelineDesc.stencil.front.depthPassOp      = LLGL::StencilOp::Replace;
-                pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::AlwaysPass;
-                pipelineDesc.stencil.front.reference        = 1;
-                pipelineDesc.stencil.front.readMask         = 0u;                               // Read no stencil bits
-                pipelineDesc.stencil.front.writeMask        = ~0u;                              // Write all stencil bits
-                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-                pipelineDesc.blend.targets[0].colorMask     = 0x0;                              // Write no color bits
+                psoDesc.debugName                       = "WriteInvisibleStencil.PSO";
+                psoDesc.inputVertexAttribs              = vertexAttribs;
+                psoDesc.vertexShader                    = vsStencil;
+                psoDesc.renderPass                      = swapChain->GetRenderPass();
+                psoDesc.pipelineLayout                  = pipelineLayout;
+                psoDesc.depth.testEnabled               = true;                             // Read all depth bits
+                psoDesc.depth.writeEnabled              = false;                            // Write no depth bits
+                psoDesc.stencil.testEnabled             = true;                             // Enable stencil test, even though we only write the stencil bits
+                psoDesc.stencil.front.depthPassOp       = LLGL::StencilOp::Replace;
+                psoDesc.stencil.front.reference         = 1;
+                psoDesc.stencil.front.compareOp         = LLGL::CompareOp::AlwaysPass;
+                psoDesc.stencil.front.readMask          = 0u;                               // Read no stencil bits
+                psoDesc.stencil.front.writeMask         = ~0u;                              // Write all stencil bits
+                psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+                psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
+                psoDesc.blend.targets[0].colorMask      = 0x0;                              // Write no color bits
             }
-            pipelineStencilWrite = renderer->CreatePipelineState(pipelineDesc);
-            ReportPSOErrors(pipelineStencilWrite);
+            psoWriteInvisibleStencil = renderer->CreatePipelineState(psoDesc);
+            ReportPSOErrors(psoWriteInvisibleStencil);
         }
 
-        // Create graphics pipeline for stencil-read rendering
+        // Create graphics PSO for rendering scene objects between the portal
         {
-            LLGL::GraphicsPipelineDescriptor pipelineDesc;
+            LLGL::GraphicsPipelineDescriptor psoDesc;
             {
-                pipelineDesc.inputVertexAttribs             = vertexAttribs;
-                pipelineDesc.vertexShader                   = vsScene;
-                pipelineDesc.fragmentShader                 = fsScene;
-                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout                 = pipelineLayout;
-                pipelineDesc.depth.testEnabled              = true;
-                pipelineDesc.depth.writeEnabled             = true;                             // Write all depth bits
-                pipelineDesc.stencil.testEnabled            = true;
-                pipelineDesc.stencil.referenceDynamic       = true;                             // Change stencil reference independently of PSO
-                pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::Equal;
-                pipelineDesc.stencil.front.readMask         = ~0u;                              // Read all stencil bits
-                pipelineDesc.stencil.front.writeMask        = 0u;                               // Write no stencil bits
-                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+                psoDesc.debugName                       = "SceneBetweenPortal.PSO";
+                psoDesc.inputVertexAttribs              = vertexAttribs;
+                psoDesc.vertexShader                    = vsScene;
+                psoDesc.fragmentShader                  = fsScene;
+                psoDesc.renderPass                      = swapChain->GetRenderPass();
+                psoDesc.pipelineLayout                  = pipelineLayout;
+                psoDesc.depth.testEnabled               = true;
+                psoDesc.depth.writeEnabled              = true;                             // Write all depth bits
+                psoDesc.stencil.testEnabled             = true;
+                psoDesc.stencil.referenceDynamic        = true;                             // Change stencil reference independently of PSO
+                psoDesc.stencil.front.compareOp         = LLGL::CompareOp::Equal;
+                psoDesc.stencil.front.readMask          = ~0u;                              // Read all stencil bits
+                psoDesc.stencil.front.writeMask         = 0u;                               // Write no stencil bits
+                psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+                psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
             }
-            pipelineStencilRead = renderer->CreatePipelineState(pipelineDesc);
-            ReportPSOErrors(pipelineStencilRead);
+            psoPortalScene = renderer->CreatePipelineState(psoDesc);
+            ReportPSOErrors(psoPortalScene);
+        }
+
+        // Create graphics PSO for rendering planar reflections between the portal
+        {
+            LLGL::GraphicsPipelineDescriptor psoDesc;
+            {
+                psoDesc.debugName                       = "PlanarReflection.PSO";
+                psoDesc.inputVertexAttribs              = vertexAttribs;
+                psoDesc.vertexShader                    = vsScene;
+                psoDesc.fragmentShader                  = fsReflection;
+                psoDesc.renderPass                      = swapChain->GetRenderPass();
+                psoDesc.pipelineLayout                  = pipelineLayout;
+                psoDesc.depth.testEnabled               = true;
+                psoDesc.depth.writeEnabled              = true;                             // Write all depth bits
+                psoDesc.stencil.testEnabled             = true;
+                psoDesc.stencil.referenceDynamic        = true;                             // Change stencil reference independently of PSO
+                psoDesc.stencil.front.compareOp         = LLGL::CompareOp::Equal;
+                psoDesc.stencil.front.readMask          = ~0u;                              // Read all stencil bits
+                psoDesc.stencil.front.writeMask         = 0u;                               // Write no stencil bits
+                psoDesc.rasterizer.cullMode             = LLGL::CullMode::Back;
+                psoDesc.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
+            }
+            psoPlanarReflection = renderer->CreatePipelineState(psoDesc);
+            ReportPSOErrors(psoPlanarReflection);
         }
     }
 
@@ -195,44 +254,66 @@ private:
         Gs::RotateFree(meshObject2.transform, Gs::Vector3f{ 0, 1, 0 }, Gs::pi + Gs::Deg2Rad(animation * projZAxis));
 
         // Update view transformation
-        settings.vpMatrix.LoadIdentity();
-        //Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::pi*0.5f);
-        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y * projZAxis));
-        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x * projZAxis));
-        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter * projZAxis });
-        settings.vpMatrix.MakeInverse();
-        settings.vpMatrix = projection * settings.vpMatrix;
+        sceneView.vpMatrix.LoadIdentity();
+        //Gs::RotateFree(sceneView.vpMatrix, { 1, 0, 0 }, Gs::pi*0.5f);
+        Gs::RotateFree(sceneView.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y * projZAxis));
+        Gs::RotateFree(sceneView.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x * projZAxis));
+        Gs::Translate(sceneView.vpMatrix, { 0, 0, -viewDistanceToCenter * projZAxis });
+        sceneView.vpMatrix.MakeInverse();
+        sceneView.vpMatrix = projection * sceneView.vpMatrix;
     }
 
     void RenderMesh(const TriangleMesh& mesh)
     {
-        settings.wMatrix = mesh.transform;
-        settings.diffuse = mesh.color;
-        commands->UpdateBuffer(*viewCbuffer, 0, &settings, sizeof(settings));
+        sceneView.wMatrix = mesh.transform;
+        sceneView.diffuse = mesh.color;
+
+        commands->UpdateBuffer(*viewCbuffer, 0, &sceneView, sizeof(sceneView));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
-    void RenderScene()
+    void RenderMeshReflection(const TriangleMesh& mesh, float centerPosY)
+    {
+        sceneView.wMatrix = mesh.transform;
+        Gs::Scale(sceneView.wMatrix, Gs::Vector3f{ -1.0f, -1.0f, 1.0f });
+        Gs::Translate(sceneView.wMatrix, Gs::Vector3f{ 0.0f, centerPosY*2.0f, 0.0f });
+
+        sceneView.diffuse = mesh.color;
+
+        commands->UpdateBuffer(*viewCbuffer, 0, &sceneView, sizeof(sceneView));
+        commands->Draw(mesh.numVertices, mesh.firstVertex);
+    }
+
+    void RenderBaseScene()
     {
         // Clear entire framebuffer, i.e. color, depth, and stencil buffers
         commands->Clear(LLGL::ClearFlags::All, backgroundColor);
 
         // Render scene background
-        commands->SetPipelineState(*pipelineScene);
+        commands->SetPipelineState(*psoWriteVisibleStencil);
         commands->SetResource(0, *viewCbuffer);
-        RenderMesh(meshScene);
+
+        commands->SetStencilReference(0);
+        RenderMesh(meshFloor);
+
+        commands->SetPipelineState(*psoBaseScene);
+        commands->SetResource(0, *viewCbuffer);
+        RenderMesh(meshFrame);
     }
 
     void RenderPortalStencil()
     {
         // Render portal stencil (no color is written)
-        commands->SetPipelineState(*pipelineStencilWrite);
+        commands->SetPipelineState(*psoWriteInvisibleStencil);
         RenderMesh(meshPortal);
+
+        RenderMeshReflection(meshPortal, 2.0f);
     }
 
     void RenderSceneBetweenPortal()
     {
-        commands->SetPipelineState(*pipelineStencilRead);
+        commands->SetPipelineState(*psoPortalScene);
+        commands->SetResource(0, *viewCbuffer);
 
         // Render scene objects outside portal (stencil = 0)
         commands->SetStencilReference(0);
@@ -241,6 +322,23 @@ private:
         // Render scene objects inside portal (stencil = 1)
         commands->SetStencilReference(1);
         RenderMesh(meshObject2);
+    }
+
+    void RenderPlanarReflectionBetweenPortal()
+    {
+        commands->SetPipelineState(*psoPlanarReflection);
+        commands->SetResource(0, *viewCbuffer);
+
+        // Render scene objects outside portal (stencil = 0)
+        // Frame must be visible inside and outside the portal
+        commands->SetStencilReference(0);
+        RenderMeshReflection(meshObject1, 1.0f);
+        RenderMeshReflection(meshFrame, 2.0f);
+
+        // Render scene objects inside portal (stencil = 1)
+        commands->SetStencilReference(1);
+        RenderMeshReflection(meshObject2, 1.0f);
+        RenderMeshReflection(meshFrame, 2.0f);
     }
 
     void OnDrawFrame(float dt) override
@@ -260,7 +358,7 @@ private:
 
                 // Draw scene, then draw the portal into the stencil buffer, and finally draw the hidden object inside the portal
                 commands->PushDebugGroup("Scene Pass (Render Background)");
-                RenderScene();
+                RenderBaseScene();
                 commands->PopDebugGroup();
 
                 commands->PushDebugGroup("Stencil Write Pass (Render Portal)");
@@ -269,6 +367,10 @@ private:
 
                 commands->PushDebugGroup("Stencil Read Pass (Between Portal)");
                 RenderSceneBetweenPortal();
+                commands->PopDebugGroup();
+
+                commands->PushDebugGroup("Stencil Read Pass (Planar Reflection)");
+                RenderPlanarReflectionBetweenPortal();
                 commands->PopDebugGroup();
             }
             commands->EndRenderPass();
