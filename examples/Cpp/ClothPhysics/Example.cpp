@@ -7,41 +7,44 @@
 
 #include <ExampleBase.h>
 
-// Enables storage textures instead of typed buffers for physics particles (i.e. RWTexture2D instead of RWBuffer in HLSL for instance).
-// This requires to run the COMPILE_SHADERS build target locally (or run scripts/TranslateShaders.py manually),
-// as shader permutations for the examples are intentionally stripped from the repository to reduce commit noise.
-#define ENABLE_STORAGE_TEXTURES 0
-
 // Enable wireframe polygon mode
-#define ENABLE_WIREFRAME        0
+#define ENABLE_WIREFRAME 0
 
-
-#if ENABLE_STORAGE_TEXTURES
-const LLGL::ShaderMacro g_shaderMacros[] = { { "ENABLE_STORAGE_TEXTURES", "1" }, {} };
-#else
-const LLGL::ShaderMacro g_shaderMacros[] = { {} };
-#endif
 
 class Example_ClothPhysics : public ExampleBase
 {
 
-    enum ComputeShader
+    enum class ComputeMode
     {
-        CSForces = 0,
-        CSStretchConstraints,
-        CSRelaxation,
-        NumComputeShaders
+        ComputeRWTextures,      // Run physics simulation in compute shaders with RW textures for better cache utilization (Preferred pipeline for performance).
+        ComputeRWBuffers,       // If the RW texture pipeline is not supported, use RW buffers in compute shaders instead.
+        StreamOutputBuffers,    // If compute shaders are not supported, use stream-output buffers to run physics simulation on the GPU (WebGL, GLES 3.0).
+    };
+
+    enum PhysicsShader
+    {
+        Shader_Forces = 0,
+        Shader_StretchConstraints,
+        Shader_Relaxation,
+
+        NumPhysicsShaders
     };
 
     enum ParticleAttribute
     {
-        AttribBase = 0, // Original position, UV coordinates, inverse mass: float4[2] per particle
-        AttribCurrPos,  // Current position: float4 per particle
-        AttribNextPos,  // Next position: float4 per particle
-        AttribPrevPos,  // Previous position: float4 per particle
-        AttribVelocity, // Velocity vector: float4 per particle
-        AttribNormal,   // Surface normal: float4 per particle
-        NumAttribs
+        Attrib_Base = 0, // Original position, UV coordinates, inverse mass: float4[2] per particle
+        Attrib_CurrPos,  // Current position: float4 per particle
+        Attrib_NextPos,  // Next position: float4 per particle
+        Attrib_PrevPos,  // Previous position: float4 per particle
+        Attrib_Velocity, // Velocity vector: float4 per particle
+        Attrib_Normal,   // Surface normal: float4 per particle
+
+        NumAttribsCS,
+
+        Attrib_VelocitySwap = NumAttribsCS,
+        Attrib_NormalSwap,
+
+        NumAttribsSO,
     };
 
     const std::uint32_t     numSolverIterations                 = 8;    // Number of integration steps to resolve stretching constraints between particles, good values are in [1, 10]
@@ -53,20 +56,17 @@ class Example_ClothPhysics : public ExampleBase
     float                   stiffnessFactor                     = 1.0f; // Should be in [0, 1]
     const Gs::Vector3f      viewPos                             = { 0, -0.75f, -5 };
 
+    const char*             physicsPSODebugNames[3]             = { "Forces.PSO", "StretchConstraints.PSO", "Relaxation.PSO" };
+
+    ComputeMode             computeMode                         = ComputeMode::ComputeRWTextures;
+
     LLGL::Buffer*           constantBuffer                      = nullptr;
     LLGL::Buffer*           indexBuffer                         = nullptr;
 
-    #if ENABLE_STORAGE_TEXTURES
-
     LLGL::Buffer*           vertexBufferNull                    = nullptr;
-    LLGL::Texture*          particleBuffers[NumAttribs]         = {};
-
-    #else
 
     LLGL::BufferArray*      vertexBufferArray                   = nullptr;
-    LLGL::Buffer*           particleBuffers[NumAttribs]         = {};
-
-    #endif // /ENABLE_STORAGE_TEXTURES
+    LLGL::Resource*         particleBuffers[NumAttribsSO]       = {};
 
     LLGL::Texture*          colorMap                            = nullptr;
     LLGL::Sampler*          linearSampler                       = nullptr;
@@ -74,8 +74,9 @@ class Example_ClothPhysics : public ExampleBase
     LLGL::PipelineLayout*   computeLayout                       = nullptr;
     LLGL::ResourceHeap*     computeResourceHeap                 = nullptr; // Contains two descriptor sets for a swap-buffer fashion
 
-    LLGL::Shader*           computeShaders[NumComputeShaders]   = {};
-    LLGL::PipelineState*    computePipelines[NumComputeShaders] = {};
+    LLGL::Shader*           physicsShaders[NumPhysicsShaders]   = {};
+    LLGL::PipelineLayout*   physicsLayout[NumPhysicsShaders]    = {};
+    LLGL::PipelineState*    physicsPipelines[NumPhysicsShaders] = {};
 
     ShaderPipeline          graphicsShaderPipeline;
     LLGL::PipelineLayout*   graphicsLayout                      = nullptr;
@@ -85,8 +86,9 @@ class Example_ClothPhysics : public ExampleBase
     std::uint32_t           numClothVertices                    = 0;
     std::uint32_t           numClothIndices                     = 0;
     std::uint32_t           swapBufferIndex                     = 0; // Index to swap particle buffer heaps
+    bool                    swapVelocityBuffer                  = false;
 
-    struct SceneState
+    struct alignas(16) SceneState
     {
         Gs::Matrix4f    wvpMatrix;
         Gs::Matrix4f    wMatrix;
@@ -113,27 +115,42 @@ public:
     Example_ClothPhysics() :
         ExampleBase { "LLGL Example: Cloth Physics" }
     {
-        // Check if samplers are supported
+        // Check if compute pipeline is supported
         const auto& renderCaps = renderer->GetRenderingCaps();
-        LLGL_VERIFY(renderCaps.features.hasComputeShaders);
+        /*if (renderCaps.features.hasComputeShaders)
+            computeMode = (IsDirect3D() ? ComputeMode::ComputeRWTextures : ComputeMode::ComputeRWBuffers);
+        else*/
+            computeMode = ComputeMode::StreamOutputBuffers;
 
-        if (!MinimumShaderModel(/*hlsl:*/ "5.0", /*glsl:*/ "430", /*essl:*/ "310", /*metal:*/ "2.0"))
-            return;
+        if (computeMode != ComputeMode::StreamOutputBuffers)
+        {
+            if (!MinimumShaderModel(/*hlsl:*/ "5.0", /*glsl:*/ "430", /*essl:*/ "310", /*metal:*/ "2.0"))
+                computeMode = ComputeMode::StreamOutputBuffers;
+        }
+
+        if (computeMode == ComputeMode::StreamOutputBuffers)
+        {
+            if (!MinimumShaderModel(/*hlsl:*/ "4.0", /*glsl:*/ "330", /*essl:*/ "300", /*metal:*/ "1.0"))
+                return;
+        }
+
+        const char* computeModeLabel[] =
+        {
+            "ComputeRWTextures",
+            "ComputeRWBuffers",
+            "StreamOutputBuffers",
+        };
+        LLGL::Log::Printf("-> COMPUTE MODE: %s\n\n", computeModeLabel[static_cast<int>(computeMode)]);
 
         // Create all graphics objects
         CreateBuffers();
         CreateTexture();
         CreateSampler();
-        CreateComputePipeline();
+        if (computeMode == ComputeMode::StreamOutputBuffers)
+            CreateStreamOutputPipeline();
+        else
+            CreateComputePipeline();
         CreateGraphicsPipeline();
-
-        // Label objects
-        particleBuffers[AttribBase    ]->SetDebugName("Particles.Base");
-        particleBuffers[AttribCurrPos ]->SetDebugName("Particles.CurrentPosition");
-        particleBuffers[AttribNextPos ]->SetDebugName("Particles.NextPosition");
-        particleBuffers[AttribPrevPos ]->SetDebugName("Particles.PreviousPosition");
-        particleBuffers[AttribVelocity]->SetDebugName("Particles.Velocity");
-        particleBuffers[AttribNormal  ]->SetDebugName("Particles.Normal");
 
         // Update vectors for projection
         sceneState.lightVec.z *= GetProjectionZAxis();
@@ -214,58 +231,65 @@ public:
     // Creates and initializes the particle buffer specified by <attrib>
     void CreateParticleBuffer(
         ParticleAttribute       attrib,
+        const char*             debugName,
         LLGL::StorageBufferType storageType,
         const void*             initialData     = nullptr,
         std::uint32_t           vertexStride    = 0)
     {
-        #if ENABLE_STORAGE_TEXTURES
-
-        // Initialize binding flags
-        long bindFlags = LLGL::BindFlags::Sampled;
-        if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
-            bindFlags |= LLGL::BindFlags::Storage;
-
-        // Create particle buffers as texture
-        LLGL::TextureDescriptor texDesc;
+        if (computeMode == ComputeMode::ComputeRWTextures)
         {
-            texDesc.bindFlags       = bindFlags;
-            texDesc.format          = LLGL::Format::RGBA32Float;
-            texDesc.extent.width    = clothSegmentsU + 1;
-            texDesc.extent.height   = clothSegmentsV + 1;
-            texDesc.mipLevels       = 1;
+            // Initialize binding flags
+            long bindFlags = LLGL::BindFlags::Sampled;
+            if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
+                bindFlags |= LLGL::BindFlags::Storage;
+
+            // Create particle buffers as texture
+            LLGL::TextureDescriptor texDesc;
+            {
+                texDesc.debugName       = debugName;
+                texDesc.bindFlags       = bindFlags;
+                texDesc.format          = LLGL::Format::RGBA32Float;
+                texDesc.extent.width    = clothSegmentsU + 1;
+                texDesc.extent.height   = clothSegmentsV + 1;
+                texDesc.mipLevels       = 1;
+            }
+            LLGL::ImageView imageView;
+            {
+                imageView.format    = LLGL::ImageFormat::RGBA;
+                imageView.dataType  = LLGL::DataType::Float32;
+                imageView.dataSize  = sizeof(Gs::Vector4f) * numClothVertices;
+                imageView.data      = initialData;
+            }
+            particleBuffers[attrib] = renderer->CreateTexture(texDesc, &imageView);
         }
-        LLGL::ImageView imageView;
+        else
         {
-            imageView.format    = LLGL::ImageFormat::RGBA;
-            imageView.dataType  = LLGL::DataType::Float32;
-            imageView.dataSize  = sizeof(Gs::Vector4f) * numClothVertices;
-            imageView.data      = initialData;
+            // Initialize binding flags
+            long bindFlags = 0;
+            if (vertexStride != 0)
+                bindFlags |= LLGL::BindFlags::VertexBuffer;
+
+            if (storageType == LLGL::StorageBufferType::TypedBuffer)
+                bindFlags |= LLGL::BindFlags::Sampled;
+            else if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
+            {
+                if (computeMode == ComputeMode::StreamOutputBuffers)
+                    bindFlags |= (LLGL::BindFlags::StreamOutputBuffer | LLGL::BindFlags::Sampled | LLGL::BindFlags::CopyDst | LLGL::BindFlags::CopySrc);
+                else
+                    bindFlags |= LLGL::BindFlags::Storage;
+            }
+
+            // Create particle buffers
+            LLGL::BufferDescriptor bufferDesc;
+            {
+                bufferDesc.debugName    = debugName;
+                bufferDesc.size         = sizeof(Gs::Vector4f) * numClothVertices;
+                bufferDesc.stride       = vertexStride;
+                bufferDesc.bindFlags    = bindFlags;
+                bufferDesc.format       = LLGL::Format::RGBA32Float;
+            }
+            particleBuffers[attrib] = renderer->CreateBuffer(bufferDesc, initialData);
         }
-        particleBuffers[attrib] = renderer->CreateTexture(texDesc, &imageView);
-
-        #else
-
-        // Initialize binding flags
-        long bindFlags = 0;
-        if (vertexStride != 0)
-            bindFlags |= LLGL::BindFlags::VertexBuffer;
-
-        if (storageType == LLGL::StorageBufferType::TypedBuffer)
-            bindFlags |= LLGL::BindFlags::Sampled;
-        else if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
-            bindFlags |= LLGL::BindFlags::Storage;
-
-        // Create particle buffers
-        LLGL::BufferDescriptor bufferDesc;
-        {
-            bufferDesc.size         = sizeof(Gs::Vector4f) * numClothVertices;
-            bufferDesc.stride       = vertexStride;//(storageType == LLGL::StorageBufferType::TypedBuffer || storageType == LLGL::StorageBufferType::RWTypedBuffer ? vertexStride : 0);
-            bufferDesc.bindFlags    = bindFlags;
-            bufferDesc.format       = LLGL::Format::RGBA32Float;
-        }
-        particleBuffers[attrib] = renderer->CreateBuffer(bufferDesc, initialData);
-
-        #endif // /ENABLE_STORAGE_TEXTURES
     }
 
     void CreateBuffers()
@@ -287,14 +311,18 @@ public:
         constantBuffer = CreateConstantBuffer(sceneState);
 
         // Create particle buffers for each attribute
-        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::TypedBuffer,   verticesBase.data(), sizeof(ParticleBase));
-        CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
-        CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
-        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data(), sizeof(Gs::Vector4f));
-        CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
-        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), sizeof(Gs::Vector4f));
+        CreateParticleBuffer(Attrib_Base,     "Particles.Base",             LLGL::StorageBufferType::TypedBuffer,   verticesBase.data(), sizeof(ParticleBase));
+        CreateParticleBuffer(Attrib_CurrPos,  "Particles.CurrentPosition",  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
+        CreateParticleBuffer(Attrib_NextPos,  "Particles.NextPosition",     LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
+        CreateParticleBuffer(Attrib_PrevPos,  "Particles.PreviousPosition", LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data(), sizeof(Gs::Vector4f));
+        CreateParticleBuffer(Attrib_Velocity, "Particles.Velocity",         LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
+        CreateParticleBuffer(Attrib_Normal,   "Particles.Normal",           LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), sizeof(Gs::Vector4f));
 
-        #if ENABLE_STORAGE_TEXTURES
+        if (computeMode == ComputeMode::StreamOutputBuffers)
+        {
+            CreateParticleBuffer(Attrib_VelocitySwap, "Particles.VelocitySwap", LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
+            CreateParticleBuffer(Attrib_NormalSwap,   "Particles.NormalSwap",   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), sizeof(Gs::Vector4f));
+        }
 
         // Create dummy vertex buffer
         LLGL::BufferDescriptor vbNullDesc;
@@ -305,19 +333,18 @@ public:
         }
         vertexBufferNull = renderer->CreateBuffer(vbNullDesc);
 
-        #else
-
-        // Create vertex buffer array for rendering
-        const LLGL::VertexBufferView bufferViews[3] =
+        if (computeMode != ComputeMode::ComputeRWTextures)
         {
-            particleBuffers[AttribPrevPos], // Read "pos" from last written position (i.e. "prevPos") from last compute shader invocation
-            particleBuffers[AttribNormal],  // Read "normal"
-            particleBuffers[AttribBase]     // Read "texCoord" from .xy
-        };
-        vertexBufferArray = renderer->CreateBufferArray(bufferViews);
-        vertexBufferArray->SetDebugName("BufferArray.Vertices");
-
-        #endif
+            // Create vertex buffer array for rendering
+            const LLGL::VertexBufferView bufferViews[3] =
+            {
+                LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_PrevPos]), // Read "pos" from last written position (i.e. "prevPos") from last compute shader invocation
+                LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_Normal]),  // Read "normal"
+                LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_Base])     // Read "texCoord" from .xy
+            };
+            vertexBufferArray = renderer->CreateBufferArray(bufferViews);
+            vertexBufferArray->SetDebugName("BufferArray.Vertices");
+        }
 
         // Create index buffer
         LLGL::BufferDescriptor indexBufferDesc;
@@ -347,147 +374,257 @@ public:
         linearSampler = renderer->CreateSampler(samplerDesc);
     }
 
+    const LLGL::ShaderMacro* GetShaderMacros() const
+    {
+        static const LLGL::ShaderMacro k_shaderMacrosTextures[] = { { "ENABLE_STORAGE_TEXTURES", "1" }, {} };
+        static const LLGL::ShaderMacro k_shaderMacrosBuffers[] = { {} };
+        return (computeMode == ComputeMode::ComputeRWTextures ? k_shaderMacrosTextures : k_shaderMacrosBuffers);
+    }
+
     void CreateComputePipeline()
     {
         // Create compute shader
-        #if ENABLE_STORAGE_TEXTURES
-        if (!Supported(LLGL::ShadingLanguage::HLSL))
+        if (computeMode == ComputeMode::ComputeRWTextures && !Supported(LLGL::ShadingLanguage::HLSL))
         {
-            computeShaders[0] = LoadComputeShader("Example.RWTextures", "CSForces",             g_shaderMacros);
-            computeShaders[1] = LoadComputeShader("Example.RWTextures", "CSStretchConstraints", g_shaderMacros);
-            computeShaders[2] = LoadComputeShader("Example.RWTextures", "CSRelaxation",         g_shaderMacros);
+            physicsShaders[0] = LoadComputeShader("Example.RWTextures", "CSForces",             GetShaderMacros());
+            physicsShaders[1] = LoadComputeShader("Example.RWTextures", "CSStretchConstraints", GetShaderMacros());
+            physicsShaders[2] = LoadComputeShader("Example.RWTextures", "CSRelaxation",         GetShaderMacros());
         }
         else
-        #endif
         {
-            computeShaders[0] = LoadStandardComputeShader("CSForces",             g_shaderMacros);
-            computeShaders[1] = LoadStandardComputeShader("CSStretchConstraints", g_shaderMacros);
-            computeShaders[2] = LoadStandardComputeShader("CSRelaxation",         g_shaderMacros);
+            physicsShaders[0] = LoadComputeShader("Example", "CSForces",             GetShaderMacros());
+            physicsShaders[1] = LoadComputeShader("Example", "CSStretchConstraints", GetShaderMacros());
+            physicsShaders[2] = LoadComputeShader("Example", "CSRelaxation",         GetShaderMacros());
         }
 
         // Create compute pipeline layout
-        computeLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse(
-                "heap{"
-                "cbuffer(SceneState@0):comp,"
-                #if ENABLE_STORAGE_TEXTURES
-                "texture(parBase@1):comp,"
-                "rwtexture(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
-                "},"
-                "barriers{rwtexture},"
-                #else
-                "tbuffer(parBase@1):comp,"
-                "rwtbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
-                "},"
-                "barriers{rwbuffer},"
-                #endif // /ENABLE_STORAGE_TEXTURES
-            )
-        );
-
-        // Create resource heaps for compute pipeline
-        const LLGL::ResourceViewDescriptor resourceViewsCompute[] =
+        if (computeMode == ComputeMode::ComputeRWTextures)
         {
-            constantBuffer,
-            particleBuffers[AttribBase],
-            particleBuffers[AttribCurrPos],
-            particleBuffers[AttribNextPos],
-            particleBuffers[AttribPrevPos],
-            particleBuffers[AttribVelocity],
-            particleBuffers[AttribNormal],
-
-            constantBuffer,
-            particleBuffers[AttribBase],
-            particleBuffers[AttribNextPos], // Swap pos with next-pos
-            particleBuffers[AttribCurrPos], // Swap next-pos with pos
-            particleBuffers[AttribPrevPos],
-            particleBuffers[AttribVelocity],
-            particleBuffers[AttribNormal],
-        };
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout     = computeLayout;
-            resourceHeapDesc.numResourceViews   = sizeof(resourceViewsCompute) / sizeof(resourceViewsCompute[0]);
+            computeLayout = renderer->CreatePipelineLayout(
+                LLGL::Parse(
+                    "heap{"
+                    "cbuffer(SceneState@7):comp,"
+                    "texture(parBase@1):comp,"
+                    "rwtexture(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
+                    "},"
+                    "barriers{rwtexture},"
+                )
+            );
         }
-        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViewsCompute);
+        else
+        {
+            computeLayout = renderer->CreatePipelineLayout(
+                LLGL::Parse(
+                    "heap{"
+                    "cbuffer(SceneState@7):comp,"
+                    "tbuffer(parBase@1):comp,"
+                    "rwtbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp,"
+                    "},"
+                    "barriers{rwbuffer},"
+                )
+            );
+        }
 
         // Create compute pipeline
-        const char* psoDebugNames[3] = { "CSForces.PSO", "CSStretchConstraints.PSO", "CSRelaxation.PSO" };
         for (int i = 0; i < 3; ++i)
         {
             LLGL::ComputePipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.debugName      = psoDebugNames[i];
+                pipelineDesc.debugName      = physicsPSODebugNames[i];
                 pipelineDesc.pipelineLayout = computeLayout;
-                pipelineDesc.computeShader  = computeShaders[i];
+                pipelineDesc.computeShader  = physicsShaders[i];
             }
-            computePipelines[i] = renderer->CreatePipelineState(pipelineDesc);
-            ReportPSOErrors(computePipelines[i]);
+            physicsPipelines[i] = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(physicsPipelines[i]);
+        }
+
+        // Create resource heaps for compute pipeline
+        const LLGL::ResourceViewDescriptor resourceViews[] =
+        {
+            constantBuffer,
+            particleBuffers[Attrib_Base],
+            particleBuffers[Attrib_CurrPos],
+            particleBuffers[Attrib_NextPos],
+            particleBuffers[Attrib_PrevPos],
+            particleBuffers[Attrib_Velocity],
+            particleBuffers[Attrib_Normal],
+
+            constantBuffer,
+            particleBuffers[Attrib_Base],
+            particleBuffers[Attrib_NextPos], // Swap pos with next-pos
+            particleBuffers[Attrib_CurrPos], // Swap next-pos with pos
+            particleBuffers[Attrib_PrevPos],
+            particleBuffers[Attrib_Velocity],
+            particleBuffers[Attrib_Normal],
+        };
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        {
+            resourceHeapDesc.pipelineLayout     = computeLayout;
+            resourceHeapDesc.numResourceViews   = sizeof(resourceViews) / sizeof(resourceViews[0]);
+        }
+        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViews);
+    }
+
+    void CreateStreamOutputPipeline()
+    {
+        // Create vertex shaders with stream-output
+        physicsShaders[0] = LoadVertexShader("ClothPhysics.StreamOutput", "VSForces"            );
+        physicsShaders[1] = LoadVertexShader("ClothPhysics.StreamOutput", "VSStretchConstraints");
+        physicsShaders[2] = LoadVertexShader("ClothPhysics.StreamOutput", "VSRelaxation"        );
+
+        // Create physics pipeline layouts
+        physicsLayout[Shader_Forces] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneState@7):vert,"
+                "tbuffer(parBase@1, parCurrPos@2, parVelocity@5):vert,"
+            )
+        );
+
+        physicsLayout[Shader_StretchConstraints] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneState@7):vert,"
+                "tbuffer(parBase@1, parCurrPos@2, parNormal@6):vert,"
+            )
+        );
+
+        physicsLayout[Shader_Relaxation] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneState@7):vert,"
+                "tbuffer(parNextPos@3, parPrevPos@4):vert,"
+            )
+        );
+
+        // Create vertex pipelines with stream-outputs
+        std::vector<std::vector<LLGL::VertexAttribute>> vertexAttribs;
+
+        if (IsDirect3D())
+        {
+            vertexAttribs =
+            {
+                // VSForces
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "currPos",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                },
+
+                // VSStretchConstraints
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "nextPos",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                    LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, 1, 0, sizeof(Gs::Vector4f), 1 },
+                },
+
+                // VSRelaxation
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "currPos",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                    LLGL::VertexAttribute{ "velocity", LLGL::Format::RGBA32Float, 1, 0, sizeof(Gs::Vector4f), 1 },
+                },
+            };
+        }
+        else
+        {
+            vertexAttribs =
+            {
+                // VSForces
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "v_CURRPOS",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                },
+
+                // VSStretchConstraints
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "v_NEXTPOS",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                    LLGL::VertexAttribute{ "v_NORMAL",   LLGL::Format::RGBA32Float, 1, 0, sizeof(Gs::Vector4f), 1 },
+                },
+
+                // VSRelaxation
+                std::vector<LLGL::VertexAttribute>
+                {
+                    LLGL::VertexAttribute{ "v_CURRPOS",  LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+                    LLGL::VertexAttribute{ "v_VELOCITY", LLGL::Format::RGBA32Float, 1, 0, sizeof(Gs::Vector4f), 1 },
+                },
+            };
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+            LLGL::GraphicsPipelineDescriptor pipelineDesc;
+            {
+                pipelineDesc.debugName                  = physicsPSODebugNames[i];
+                pipelineDesc.pipelineLayout             = physicsLayout[i];
+                pipelineDesc.outputVertexAttribs        = vertexAttribs[i];
+                pipelineDesc.vertexShader               = physicsShaders[i];
+                pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::PointList;
+                pipelineDesc.rasterizer.discardEnabled  = true; // Don't rasterize anything with this PSO, only write to stream-outputs
+                pipelineDesc.blend.targets[0].colorMask = 0x00;
+            }
+            physicsPipelines[i] = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(physicsPipelines[i]);
         }
     }
 
     void CreateGraphicsPipeline()
     {
         // Create graphics shader
-        #if ENABLE_STORAGE_TEXTURES
-        if (!Supported(LLGL::ShadingLanguage::HLSL))
+        if (computeMode == ComputeMode::ComputeRWTextures && !Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsShaderPipeline.vs = LoadVertexShader          ("Example.RWTextures", "VS", g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadStandardFragmentShader(                      "PS", g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadVertexShader          ("Example.RWTextures", "VS", GetShaderMacros());
+            graphicsShaderPipeline.ps = LoadStandardFragmentShader(                      "PS", GetShaderMacros());
         }
         else
-        #endif
         {
-            graphicsShaderPipeline.vs = LoadStandardVertexShader  ("VS", g_shaderMacros);
-            graphicsShaderPipeline.ps = LoadStandardFragmentShader("PS", g_shaderMacros);
+            graphicsShaderPipeline.vs = LoadStandardVertexShader  ("VS", GetShaderMacros());
+            graphicsShaderPipeline.ps = LoadStandardFragmentShader("PS", GetShaderMacros());
         }
 
         // Create graphics pipeline layout
-        #if ENABLE_STORAGE_TEXTURES
+        std::vector<LLGL::VertexAttribute> vertexAttribs;
 
-        graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse(
-                "heap{"
-                "cbuffer(SceneState@0):vert:frag,"
-                "texture(colorMap@4):frag,"
-                "sampler(linearSampler@5):frag,"
-                "texture(vertexBase@1,vertexPos@2,vertexNormal@6):vert"
-                "},"
-                "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
-                "barriers{rwtexture},"
-            )
-        );
-
-        #else
-
-        // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
-        const LLGL::VertexAttribute vertexAttribs[] =
+        if (computeMode == ComputeMode::ComputeRWTextures)
         {
-            LLGL::VertexAttribute{ "pos",      LLGL::Format::RGBA32Float, /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, /*location:*/ 1, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 1 },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   /*location:*/ 2, /*offset:*/ 0, /*stride:*/ sizeof(ParticleBase), /*slot:*/ 2 },
-        };
+            graphicsLayout = renderer->CreatePipelineLayout(
+                LLGL::Parse(
+                    "heap{"
+                    "cbuffer(SceneState@7):vert:frag,"
+                    "texture(colorMap@4):frag,"
+                    "sampler(linearSampler@5):frag,"
+                    "texture(vertexBase@1,vertexPos@2,vertexNormal@6):vert"
+                    "},"
+                    "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
+                    "barriers{rwtexture},"
+                )
+            );
+        }
+        else
+        {
+            // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
+            vertexAttribs =
+            {
+                LLGL::VertexAttribute{ "pos",      LLGL::Format::RGBA32Float, /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 0 },
+                LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, /*location:*/ 1, /*offset:*/ 0, /*stride:*/ sizeof(Gs::Vector4f), /*slot:*/ 1 },
+                LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   /*location:*/ 2, /*offset:*/ 0, /*stride:*/ sizeof(ParticleBase), /*slot:*/ 2 },
+            };
 
-        graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse(
-                "heap{"
-                "cbuffer(SceneState@0):vert:frag,"
-                "texture(colorMap@4):frag,"
-                "sampler(linearSampler@5):frag"
-                "},"
-                "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
-            )
-        );
-
-        #endif // /ENABLE_STORAGE_TEXTURES
+            graphicsLayout = renderer->CreatePipelineLayout(
+                LLGL::Parse(
+                    "heap{"
+                    "cbuffer(SceneState@7):vert:frag,"
+                    "texture(colorMap@4):frag,"
+                    "sampler(linearSampler@5):frag"
+                    "},"
+                    "sampler<colorMap, linearSampler>(s_colorMaplinearSampler@4),"
+                )
+            );
+        }
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.debugName                      = "Scene.PSO";
             pipelineDesc.pipelineLayout                 = graphicsLayout;
-            #if !ENABLE_STORAGE_TEXTURES
             pipelineDesc.inputVertexAttribs             = vertexAttribs;
-            #endif
             pipelineDesc.vertexShader                   = graphicsShaderPipeline.vs;
             pipelineDesc.fragmentShader                 = graphicsShaderPipeline.ps;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
@@ -510,18 +647,18 @@ public:
             constantBuffer,
             colorMap,
             linearSampler,
-            #if ENABLE_STORAGE_TEXTURES
-            particleBuffers[AttribBase],
-            particleBuffers[AttribCurrPos],
-            particleBuffers[AttribNormal],
-            #endif
+
+            // Only for ComputeRWTextures pipeline
+            particleBuffers[Attrib_Base],
+            particleBuffers[Attrib_CurrPos],
+            particleBuffers[Attrib_Normal],
         };
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        const LLGL::ArrayView<LLGL::ResourceViewDescriptor> resourceViewsGraphicsArray
         {
-            resourceHeapDesc.pipelineLayout     = graphicsLayout;
-            resourceHeapDesc.numResourceViews   = sizeof(resourceViewsGraphics) / sizeof(resourceViewsGraphics[0]);
-        }
-        graphicsResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViewsGraphics);
+            resourceViewsGraphics,
+            (computeMode == ComputeMode::ComputeRWTextures ? 6u : 3u)
+        };
+        graphicsResourceHeap = renderer->CreateResourceHeap(graphicsLayout, resourceViewsGraphicsArray);
     }
 
 private:
@@ -564,6 +701,158 @@ private:
         sceneState.wvpMatrix = projection * vMatrix * sceneState.wMatrix;
     }
 
+    void DispatchParticleWorkGoups()
+    {
+        const std::uint32_t numWorkGroupsX = clothSegmentsU + 1;
+        const std::uint32_t numWorkGroupsY = clothSegmentsV + 1;
+
+        if (computeMode != ComputeMode::StreamOutputBuffers)
+        {
+            // Run compute shader invocations for work groups
+            commands->Dispatch(numWorkGroupsX, numWorkGroupsY, 1);
+        }
+        else
+        {
+            // Simulate work groups by writing to stream-output in vertex shader invocations
+            commands->Draw(numWorkGroupsX*numWorkGroupsY, 0);
+        }
+    }
+
+    void RunPhysicsSimulationWithComputePipeline()
+    {
+        // Run compute shader to apply particle forces
+        commands->PushDebugGroup("Forces");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_Forces]);
+            commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
+            DispatchParticleWorkGoups();
+        }
+        commands->PopDebugGroup();
+
+        // Run compute shader to apply stretch constraints with number of integration steps
+        commands->PushDebugGroup("StretchConstraints");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_StretchConstraints]);
+
+            for (std::uint32_t i = 0; i < numSolverIterations; ++i)
+            {
+                if (i > 0)
+                    swapBufferIndex = (swapBufferIndex + 1) % 2;
+                commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
+                DispatchParticleWorkGoups();
+            }
+        }
+        commands->PopDebugGroup();
+
+        // Run compute shader to adjust velocity of particles
+        commands->PushDebugGroup("Relaxation");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_Relaxation]);
+            commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
+            DispatchParticleWorkGoups();
+        }
+        commands->PopDebugGroup();
+    }
+
+    LLGL::Buffer* GetParticleBufferCurrPos() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[swapBufferIndex == 0 ? Attrib_CurrPos : Attrib_NextPos]);
+    }
+
+    LLGL::Buffer* GetParticleBufferNextPos() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[swapBufferIndex == 0 ? Attrib_NextPos : Attrib_CurrPos]);
+    }
+
+    LLGL::Buffer* GetParticleBufferNormalIn() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[swapBufferIndex == 0 ? Attrib_Normal : Attrib_NormalSwap]);
+    }
+
+    LLGL::Buffer* GetParticleBufferNormalOut() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[swapBufferIndex == 0 ? Attrib_NormalSwap : Attrib_Normal]);
+    }
+
+    LLGL::Buffer* GetParticleBufferVelocityIn() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[!swapVelocityBuffer ? Attrib_Velocity : Attrib_VelocitySwap]);
+    }
+
+    LLGL::Buffer* GetParticleBufferVelocityOut() const
+    {
+        return LLGL::CastTo<LLGL::Buffer>(particleBuffers[!swapVelocityBuffer ? Attrib_VelocitySwap : Attrib_Velocity]);
+    }
+
+    void RunPhysicsSimulationWithStreamOutputs()
+    {
+        commands->SetVertexBuffer(*vertexBufferNull);
+
+        // Run compute shader to apply particle forces
+        commands->PushDebugGroup("VSForces");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_Forces]);
+            commands->SetResource(0, *constantBuffer);
+            commands->SetResource(1, *particleBuffers[Attrib_Base]);
+            commands->SetResource(2, *particleBuffers[Attrib_PrevPos]);
+            commands->SetResource(3, *GetParticleBufferVelocityIn());
+
+            LLGL::Buffer* soBuffers[] = { GetParticleBufferCurrPos() };
+            commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
+            {
+                DispatchParticleWorkGoups();
+            }
+            commands->EndStreamOutput();
+        }
+        commands->PopDebugGroup();
+
+        // Run compute shader to apply stretch constraints with number of integration steps
+        commands->PushDebugGroup("VSStretchConstraints");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_StretchConstraints]);
+            commands->SetResource(0, *constantBuffer);
+            commands->SetResource(1, *particleBuffers[Attrib_Base]);
+
+            for (std::uint32_t i = 0; i < numSolverIterations; ++i)
+            {
+                if (i > 0)
+                    swapBufferIndex = (swapBufferIndex + 1) % 2;
+
+                commands->SetResource(2, *GetParticleBufferCurrPos());
+                commands->SetResource(3, *GetParticleBufferNormalIn());
+
+                LLGL::Buffer* soBuffers[] = { GetParticleBufferNextPos(), GetParticleBufferNormalOut() };
+                commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
+                {
+                    DispatchParticleWorkGoups();
+                }
+                commands->EndStreamOutput();
+            }
+        }
+        commands->PopDebugGroup();
+
+        // Run compute shader to adjust velocity of particles
+        commands->PushDebugGroup("VSRelaxation");
+        {
+            commands->SetPipelineState(*physicsPipelines[Shader_Relaxation]);
+            commands->SetResource(0, *constantBuffer);
+            commands->SetResource(1, *GetParticleBufferNextPos());
+            commands->SetResource(2, *particleBuffers[Attrib_PrevPos]);
+
+            LLGL::Buffer* soBuffers[] = { GetParticleBufferCurrPos(), GetParticleBufferVelocityOut() };
+            commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
+            {
+                DispatchParticleWorkGoups();
+            }
+            commands->EndStreamOutput();
+
+            commands->CopyBuffer(*LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_PrevPos]), 0, *GetParticleBufferNextPos(), 0, sizeof(Gs::Vector4f) * numClothVertices);
+        }
+        commands->PopDebugGroup();
+
+        swapVelocityBuffer = !swapVelocityBuffer;
+    }
+
     void OnDrawFrame(float dt) override
     {
         UpdateScene(dt);
@@ -574,38 +863,8 @@ private:
             // Update scene state constant buffer
             commands->UpdateBuffer(*constantBuffer, 0, &sceneState, sizeof(sceneState));
 
-            // Run compute shader to apply particle forces
-            commands->PushDebugGroup("CSForces");
-            {
-                commands->SetPipelineState(*computePipelines[CSForces]);
-                commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-                commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
-            }
-            commands->PopDebugGroup();
-
-            // Run compute shader to apply stretch constraints with number of integration steps
-            commands->PushDebugGroup("CSStretchConstraints");
-            {
-                commands->SetPipelineState(*computePipelines[CSStretchConstraints]);
-
-                for (std::uint32_t i = 0; i < numSolverIterations; ++i)
-                {
-                    if (i > 0)
-                        swapBufferIndex = (swapBufferIndex + 1) % 2;
-                    commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-                    commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
-                }
-            }
-            commands->PopDebugGroup();
-
-            // Run compute shader to adjust velocity of particles
-            commands->PushDebugGroup("CSRelaxation");
-            {
-                commands->SetPipelineState(*computePipelines[CSRelaxation]);
-                commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-                commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
-            }
-            commands->PopDebugGroup();
+            if (computeMode != ComputeMode::StreamOutputBuffers)
+                RunPhysicsSimulationWithComputePipeline();
 
             // Draw scene
             commands->BeginRenderPass(*swapChain);
@@ -614,12 +873,14 @@ private:
                 commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
+                if (computeMode == ComputeMode::StreamOutputBuffers)
+                    RunPhysicsSimulationWithStreamOutputs();
+
                 // Set vertex and index buffers
-                #if ENABLE_STORAGE_TEXTURES
-                commands->SetVertexBuffer(*vertexBufferNull);
-                #else
-                commands->SetVertexBufferArray(*vertexBufferArray);
-                #endif
+                if (computeMode == ComputeMode::ComputeRWTextures)
+                    commands->SetVertexBuffer(*vertexBufferNull);
+                else
+                    commands->SetVertexBufferArray(*vertexBufferArray);
 
                 commands->SetIndexBuffer(*indexBuffer);
 

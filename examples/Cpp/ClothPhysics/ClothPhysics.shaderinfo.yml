@@ -10,14 +10,14 @@ sources:
 
       - entry: "CSForces"
         profile: "cs_5_0"
-        targets: [glsl430core, glsl310es, metal, spirv]
+        targets: [glsl430core, glsl310es, spirv, metal]
       - entry: "CSStretchConstraints"
         optimize: 0 # Disable optimization for CSStretchConstraints to improve readability
         profile: "cs_5_0"
-        targets: [glsl430core, glsl310es, metal, spirv]
+        targets: [glsl430core, glsl310es, spirv, metal]
       - entry: "CSRelaxation"
         profile: "cs_5_0"
-        targets: [glsl430core, glsl310es, metal, spirv]
+        targets: [glsl430core, glsl310es, spirv, metal]
 
   - source: "Example.hlsl"
     permutation:
@@ -31,11 +31,37 @@ sources:
 
       - entry: "CSForces"
         profile: "cs_5_0"
-        targets: [glsl430core, metal, spirv]
+        targets: [glsl430core, spirv, metal]
       - entry: "CSStretchConstraints"
-        optimize: 0 # Disable optimization for CSStretchConstraints to improve readability
         profile: "cs_5_0"
-        targets: [glsl430core, metal, spirv]
+        targets: [glsl430core, spirv, metal]
       - entry: "CSRelaxation"
         profile: "cs_5_0"
-        targets: [glsl430core, metal, spirv]
+        targets: [glsl430core, spirv, metal]
+
+  - source: "ClothPhysics.StreamOutput.hlsl"
+    entries:
+      - entry: "VSForces"
+        profile: "vs_5_0"
+        targets: [glsl330core, spirv]
+      - entry: "VSStretchConstraints"
+        profile: "vs_5_0"
+        targets: [glsl330core, spirv]
+      - entry: "VSRelaxation"
+        profile: "vs_5_0"
+        targets: [glsl330core, spirv]
+
+  - source: "ClothPhysics.StreamOutput.hlsl"
+    permutation:
+      macros:
+        IS_TARGET_300ES: 1
+    entries:
+      - entry: "VSForces"
+        profile: "vs_5_0"
+        targets: [glsl300es]
+      - entry: "VSStretchConstraints"
+        profile: "vs_5_0"
+        targets: [glsl300es]
+      - entry: "VSRelaxation"
+        profile: "vs_5_0"
+        targets: [glsl300es]

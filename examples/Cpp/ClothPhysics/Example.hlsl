@@ -6,7 +6,9 @@
 #define ENABLE_STORAGE_TEXTURES 0
 #endif
 
-cbuffer SceneState : register(b0)
+// Use bindig slot 3 for this cbuffer. The cross-compiled Metal shader uses the same slot
+// and reserves the same binding space for its 3 vertex buffers (binding slots 0-2).
+cbuffer SceneState : register(b7)
 {
     float4x4    wvpMatrix;
     float4x4    wMatrix;
@@ -40,6 +42,8 @@ RWTexture2D<float4> parPrevPos  : register(u4);
 RWTexture2D<float4> parVelocity : register(u5);
 RWTexture2D<float4> parNormal   : register(u6);
 
+#define DECL_GRIDPOS_INDEX(IDX, POS) uint2 IDX = (uint2)(POS)
+
 #else
 
 Buffer<float4>      parBase     : register(t1); // UV (.xy) and inverse mass (.z)
@@ -49,13 +53,15 @@ RWBuffer<float4>    parPrevPos  : register(u4);
 RWBuffer<float4>    parVelocity : register(u5);
 RWBuffer<float4>    parNormal   : register(u6);
 
-#endif // /ENABLE_STORAGE_TEXTURES
-
 // Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
 {
     return (gridPos.y * gridSize.x + gridPos.x);
 }
+
+#define DECL_GRIDPOS_INDEX(IDX, POS) uint IDX = GridPosToIndex((uint2)(POS))
+
+#endif // /ENABLE_STORAGE_TEXTURES
 
 // Converts the specified grid UV coordinates to the original vertex coordinates.
 // Only distance between those coordinates are important.
@@ -73,11 +79,7 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
     }
 
     // Read neighbor particle
-    #if ENABLE_STORAGE_TEXTURES
-    uint2 idx = (uint2)neighborGridPos;
-    #else
-    uint idx = GridPosToIndex((uint2)neighborGridPos);
-    #endif // /ENABLE_STORAGE_TEXTURES
+    DECL_GRIDPOS_INDEX(idx, neighborGridPos);
 
     float4 otherCurrPos = parCurrPos[idx];
     float4 otherOrigPos = UVToOrigPos(parBase[idx].xy);
@@ -97,11 +99,8 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
 
 float3 ReadParticlePos(uint2 gridPos)
 {
-    #if ENABLE_STORAGE_TEXTURES
-    return parCurrPos[gridPos].xyz;
-    #else
-    return parCurrPos[GridPosToIndex(gridPos)].xyz;
-    #endif // /ENABLE_STORAGE_TEXTURES
+    DECL_GRIDPOS_INDEX(idx, gridPos);
+    return parCurrPos[idx].xyz;
 }
 
 void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout float4 normal)
@@ -154,11 +153,7 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
 [numthreads(1, 1, 1)]
 void CSForces(uint2 threadID : SV_DispatchThreadID)
 {
-    #if ENABLE_STORAGE_TEXTURES
-    uint2 idx = threadID;
-    #else
-    uint idx = GridPosToIndex(threadID);
-    #endif // /ENABLE_STORAGE_TEXTURES
+    DECL_GRIDPOS_INDEX(idx, threadID);
 
     // Accumulate force and multiply by inverse mass
     float invMass = parBase[idx].z;
@@ -166,20 +161,16 @@ void CSForces(uint2 threadID : SV_DispatchThreadID)
     force *= invMass;
 
     // Apply velocity and damping
-    parVelocity[idx] += force * dTime * damping;
+    float4 velocity = parVelocity[idx] + force * dTime * damping;
 
     // Apply position based physics simulation
-    parCurrPos[idx] += float4(parVelocity[idx].xyz, 0.0) * dTime;
+    parCurrPos[idx] += float4(velocity.xyz, 0.0) * dTime;
 }
 
 [numthreads(1, 1, 1)]
 void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 {
-    #if ENABLE_STORAGE_TEXTURES
-    uint2 idx = threadID;
-    #else
-    uint idx = GridPosToIndex(threadID);
-    #endif // /ENABLE_STORAGE_TEXTURES
+    DECL_GRIDPOS_INDEX(idx, threadID);
 
     // Read particle
     ParticleView par;
@@ -200,11 +191,7 @@ void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
 {
-    #if ENABLE_STORAGE_TEXTURES
-    uint2 idx = threadID;
-    #else
-    uint idx = GridPosToIndex(threadID);
-    #endif // /ENABLE_STORAGE_TEXTURES
+    DECL_GRIDPOS_INDEX(idx, threadID);
 
     // Adjust velocity and store current and previous position
     parCurrPos[idx] = parNextPos[idx];
