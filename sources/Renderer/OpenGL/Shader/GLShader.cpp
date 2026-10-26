@@ -32,7 +32,7 @@ GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
 {
     ReserveAttribs(desc);
     GLShader::BuildVertexInputLayout(desc.vertex.inputAttribs, shaderAttribs_, shaderAttribNames_);
-    GLShader::BuildTransformFeedbackVaryings(desc.vertex.outputAttribs, transformFeedbackVaryings_, shaderAttribNames_);
+    GLShader::BuildTransformFeedbackVaryings(desc.vertex.outputAttribs, transformFeedbackVaryings_, shaderAttribNames_, transformFeedbackBufferMode_, &report_);
     GLShader::BuildFragmentOutputLayout(desc.fragment.outputAttribs, shaderAttribs_, shaderAttribNames_);
 }
 
@@ -261,17 +261,59 @@ void GLShader::BuildFragmentOutputLayout(
     }
 }
 
-void GLShader::BuildTransformFeedbackVaryings(
+// Returns true if all vertex attributes are in unique binding slots.
+static bool AreAllAttributesInUniqueSlots(ArrayView<VertexAttribute> attribs)
+{
+    for_range(i, attribs.size())
+    {
+        for_subrange(j, i + 1, attribs.size())
+        {
+            if (attribs[i].slot == attribs[j].slot)
+                return false;
+        }
+    }
+    return true;
+}
+
+bool GLShader::BuildTransformFeedbackVaryings(
     ArrayView<VertexAttribute>      inVaryings,
     std::vector<const char*>&       outGLTransformFeedbackVaryings,
-    LinearStringContainer&          outGLAttribNames)
+    LinearStringContainer&          outGLAttribNames,
+    GLenum&                         outGLBufferMode,
+    Report*                         report)
 {
     if (inVaryings.empty())
-        return;
+        return true;
+
+    /*
+    If all vertex attributes have unique slots, use separate attribute buffer mode for transform feedback.
+    Otherwise, fall back to interleaved attributes. These can still have separate binding slots, but only for Desktop GL, not GLES nor WebGL.
+    */
+    outGLBufferMode = (AreAllAttributesInUniqueSlots(inVaryings) ? GL_SEPARATE_ATTRIBS : GL_INTERLEAVED_ATTRIBS);
 
     outGLTransformFeedbackVaryings.reserve(inVaryings.size());
+
+    std::uint32_t prevSlot = inVaryings.front().slot;
     for (const VertexAttribute& attr : inVaryings)
     {
+        /* If binding slot changes for interleaved attribute buffer mode, inject special varying "gl_NextBuffer", but report error for non Desktop GL */
+        if (outGLBufferMode == GL_INTERLEAVED_ATTRIBS && attr.slot != prevSlot)
+        {
+            #if LLGL_OPENGL
+            outGLTransformFeedbackVaryings.push_back("gl_NextBuffer");
+            prevSlot = attr.slot;
+            #else
+            if (report != nullptr)
+            {
+                report->Errorf(
+                    "Vertex output attribute '%s' (location=%u, slot=%u): Mixing interleaved and separate transform-feedback attributes is only supported on Desktop OpenGL\n",
+                    attr.name.c_str(), attr.location, attr.slot
+                );
+            }
+            return false;
+            #endif
+        }
+
         /*
         Always assume vertex shader type here;
         This parameter only matters for `gl_FragCoord` for fragment shaders, but transform feedback does not matter to fragment shaders.
@@ -281,6 +323,8 @@ void GLShader::BuildTransformFeedbackVaryings(
         else
             outGLTransformFeedbackVaryings.push_back(outGLAttribNames.CopyString(attr.name));
     }
+
+    return true;
 }
 
 

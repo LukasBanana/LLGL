@@ -46,7 +46,8 @@ class GLPipelineSignature
             ArrayView<VertexAttribute>  inputVertexAttribs,
             ArrayView<VertexAttribute>  outputVertexAttribs,
             GLShader::Permutation       permutation,
-            void*                       /*pipelineCache*/ = nullptr
+            void*                       /*pipelineCache*/   = nullptr,
+            void*                       /*report*/          = nullptr
         );
 
         /*

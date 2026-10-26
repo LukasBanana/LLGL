@@ -42,7 +42,7 @@ GLPipelineState::GLPipelineState(
         {
             /* Create shader pipeline for current permutation */
             shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(
-                shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCacheGL
+                shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCacheGL, &report_
             );
 
             /* Query information log and stop linking shader pipelines if the default permutation has errors */

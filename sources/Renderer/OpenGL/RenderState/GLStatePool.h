@@ -73,7 +73,8 @@ class GLStatePool
             ArrayView<VertexAttribute>  inputVertexAttribs  = {},
             ArrayView<VertexAttribute>  outputVertexAttribs = {},
             GLShader::Permutation       permutation         = GLShader::PermutationDefault,
-            GLPipelineCache*            pipelineCache       = nullptr
+            GLPipelineCache*            pipelineCache       = nullptr,
+            Report*                     report              = nullptr
         );
         void ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline);
 

@@ -75,7 +75,8 @@ GLPipelineSignature::GLPipelineSignature(
     ArrayView<VertexAttribute>  inputVertexAttribs,
     ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation,
-    void*                       /*pipelineCache*/)
+    void*                       /*pipelineCache*/,
+    void*                       /*report*/)
 {
     //TODO: integrate vertex attributes
     Build(ArrayView<const Shader*>{ shaders.data(), shaders.size() }, permutation);

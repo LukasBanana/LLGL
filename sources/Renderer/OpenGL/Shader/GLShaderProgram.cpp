@@ -88,7 +88,8 @@ GLShaderProgram::GLShaderProgram(
     ArrayView<VertexAttribute>  inputVertexAttribs,
     ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation,
-    GLPipelineCache*            pipelineCache)
+    GLPipelineCache*            pipelineCache,
+    Report*                     report)
 :
     GLShaderPipeline { glCreateProgram() }
 {
@@ -97,12 +98,12 @@ GLShaderProgram::GLShaderProgram(
     {
         if (!(pipelineCache->HasProgramBinary(permutation) && pipelineCache->ProgramBinary(permutation, GetID())))
         {
-            BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation);
-            pipelineCache->GetProgramBinary(permutation, GetID());
+            if (BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation, report))
+                pipelineCache->GetProgramBinary(permutation, GetID());
         }
     }
     else
-        BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation);
+        (void)BuildProgramBinary(shaders, inputVertexAttribs, outputVertexAttribs, permutation, report);
 
     /* Build pipeline signature */
     BuildSignature(shaders, permutation);
@@ -113,7 +114,8 @@ GLShaderProgram::GLShaderProgram(
     ArrayView<VertexAttribute>  inputVertexAttribs,
     ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation,
-    GLPipelineCache*            pipelineCache)
+    GLPipelineCache*            pipelineCache,
+    Report*                     report)
 :
     GLShaderProgram
     {
@@ -121,7 +123,8 @@ GLShaderProgram::GLShaderProgram(
         inputVertexAttribs,
         outputVertexAttribs,
         permutation,
-        pipelineCache
+        pipelineCache,
+        report
     }
 {
 }
@@ -317,7 +320,7 @@ void GLShaderProgram::BindFragDataLocations(GLuint program, ArrayView<GLShaderAt
     #endif
 }
 
-static void BuildTransformFeedbackVaryingsEXT(GLuint program, ArrayView<const char*> varyings)
+static void BuildTransformFeedbackVaryingsEXT(GLuint program, ArrayView<const char*> varyings, GLenum bufferMode)
 {
     #if !LLGL_GL_ENABLE_OPENGL2X
 
@@ -329,7 +332,7 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, ArrayView<const ch
         program,
         static_cast<GLsizei>(varyings.size()),
         reinterpret_cast<const GLchar* const*>(varyings.data()),
-        GL_INTERLEAVED_ATTRIBS
+        bufferMode
     );
 
     #endif // /!LLGL_GL_ENABLE_OPENGL2X
@@ -337,7 +340,17 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, ArrayView<const ch
 
 #if GL_NV_transform_feedback
 
-static void BuildTransformFeedbackVaryingsNV(GLuint program, ArrayView<const char*> varyings)
+static GLenum MapBufferModeToNVExtension(GLenum bufferMode)
+{
+    switch (bufferMode)
+    {
+        case GL_INTERLEAVED_ATTRIBS:    return GL_INTERLEAVED_ATTRIBS_NV;
+        case GL_SEPARATE_ATTRIBS:       return GL_SEPARATE_ATTRIBS_NV;
+        default:                        return bufferMode;
+    }
+}
+
+static void BuildTransformFeedbackVaryingsNV(GLuint program, ArrayView<const char*> varyings, GLenum bufferMode)
 {
     if (varyings.empty())
         return;
@@ -362,13 +375,13 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, ArrayView<const cha
         program,
         static_cast<GLsizei>(varyingLocations.size()),
         varyingLocations.data(),
-        GL_INTERLEAVED_ATTRIBS_NV
+        MapBufferModeToNVExtension(bufferMode)
     );
 }
 
 #endif // /GL_NV_transform_feedback
 
-void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings)
+void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings, GLenum bufferMode)
 {
     /* Check if transform-feedback varyings must be specified (before or after shader linking) */
     if (!varyings.empty())
@@ -378,7 +391,7 @@ void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, A
         if (HasExtension(GLExt::EXT_transform_feedback))
         #endif
         {
-            BuildTransformFeedbackVaryingsEXT(program, varyings);
+            BuildTransformFeedbackVaryingsEXT(program, varyings, bufferMode);
             glLinkProgram(program);
             return;
         }
@@ -388,7 +401,7 @@ void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, A
         if (HasExtension(GLExt::NV_transform_feedback))
         {
             glLinkProgram(program);
-            BuildTransformFeedbackVaryingsNV(program, varyings);
+            BuildTransformFeedbackVaryingsNV(program, varyings, bufferMode);
             return;
         }
         #endif
@@ -1145,11 +1158,12 @@ static void ReserveAttribNames(
         attribNames.Reserve(attr.name.size());
 }
 
-void GLShaderProgram::BuildProgramBinary(
+bool GLShaderProgram::BuildProgramBinary(
     ArrayView<const Shader*>    shaders,
     ArrayView<VertexAttribute>  inputVertexAttribs,
     ArrayView<VertexAttribute>  outputVertexAttribs,
-    GLShader::Permutation       permutation)
+    GLShader::Permutation       permutation,
+    Report*                     report)
 {
     GLOrderedShaders orderedShaders;
 
@@ -1187,7 +1201,6 @@ void GLShaderProgram::BuildProgramBinary(
 
     if (const GLShader* vs = orderedShaders.vertexShader)
     {
-
         if (!inputVertexAttribs.empty())
         {
             std::vector<GLShaderAttribute> inputGLVertexAttribs;
@@ -1209,8 +1222,10 @@ void GLShaderProgram::BuildProgramBinary(
     if (!outputVertexAttribs.empty())
     {
         std::vector<const char*> varyings;
-        GLShader::BuildTransformFeedbackVaryings(outputVertexAttribs, varyings, attribNames);
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
+        GLenum bufferMode = GL_INTERLEAVED_ATTRIBS;
+        if (!GLShader::BuildTransformFeedbackVaryings(outputVertexAttribs, varyings, attribNames, bufferMode, report))
+            return false;
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings, bufferMode);
     }
     else
     {
@@ -1237,11 +1252,14 @@ void GLShaderProgram::BuildProgramBinary(
         if (shaderWithVaryings != nullptr)
         {
             const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
-            GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings);
+            const GLenum bufferMode = shaderWithVaryings->GetTransformFeedbackBufferMode();
+            GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings, bufferMode);
         }
         else
             GLShaderProgram::LinkProgram(GetID());
     }
+
+    return true;
 }
 
 

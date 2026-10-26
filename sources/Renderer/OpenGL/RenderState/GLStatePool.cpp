@@ -217,7 +217,8 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
     ArrayView<VertexAttribute>  inputVertexAttribs,
     ArrayView<VertexAttribute>  outputVertexAttribs,
     GLShader::Permutation       permutation,
-    GLPipelineCache*            pipelineCache)
+    GLPipelineCache*            pipelineCache,
+    Report*                     report)
 {
     #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(shaders))
@@ -233,7 +234,7 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
     {
         return std::static_pointer_cast<GLShaderPipeline>(
             CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(
-                shaderPipelines_, shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCache
+                shaderPipelines_, shaders, inputVertexAttribs, outputVertexAttribs, permutation, pipelineCache, report
             )
         );
     }

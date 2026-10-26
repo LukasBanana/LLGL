@@ -66,6 +66,12 @@ class GLShader : public Shader
             return transformFeedbackVaryings_;
         }
 
+        // Returns the transform feedback buffer mode (GL_INTERLEAVED_ATTRIBS or GL_SEPARATE_ATTRIBS).
+        inline GLenum GetTransformFeedbackBufferMode() const
+        {
+            return transformFeedbackBufferMode_;
+        }
+
         // Returns the native shader ID. Can be either from glCreateShader or glCreateShaderProgramv.
         inline GLuint GetID(Permutation permutation) const
         {
@@ -134,10 +140,12 @@ class GLShader : public Shader
             LinearStringContainer&          outGLAttribNames
         );
 
-        static void BuildTransformFeedbackVaryings(
+        static bool BuildTransformFeedbackVaryings(
             ArrayView<VertexAttribute>      inVaryings,
             std::vector<const char*>&       outGLTransformFeedbackVaryings,
-            LinearStringContainer&          outGLAttribNames
+            LinearStringContainer&          outGLAttribNames,
+            GLenum&                         outGLBufferMode,
+            Report*                         report                          = nullptr
         );
 
     protected:
@@ -162,14 +170,15 @@ class GLShader : public Shader
         const bool                      isSeparable_;
         const bool                      hasCaseInvensitiveAttribs_;
 
-        GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
+        GLuint                          id_[PermutationCount]           = {}; // ID from either glCreateShader or glCreateShaderProgramv
         Report                          report_;
 
         //DEPRECATED {
         LinearStringContainer           shaderAttribNames_;
         std::vector<GLShaderAttribute>  shaderAttribs_;
-        std::size_t                     numVertexAttribs_           = 0;
+        std::size_t                     numVertexAttribs_               = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
+        GLenum                          transformFeedbackBufferMode_    = GL_INTERLEAVED_ATTRIBS;
         std::vector<GLVertexAttribute>  vertexAttribs_; // Needed for backwards compatibility to build vertex input layout as fallback
         // }
 

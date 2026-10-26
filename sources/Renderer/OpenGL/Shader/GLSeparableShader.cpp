@@ -118,7 +118,7 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     /* Build transform feedback varyings for vertex or geometry shader and link program */
     const auto& varyings = GetTransformFeedbackVaryings();
     if (!varyings.empty())
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(program, varyings);
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(program, varyings, GL_INTERLEAVED_ATTRIBS);
     else
         GLShaderProgram::LinkProgram(program);
 

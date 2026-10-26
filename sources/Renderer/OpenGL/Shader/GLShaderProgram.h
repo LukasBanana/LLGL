@@ -43,7 +43,8 @@ class GLShaderProgram final : public GLShaderPipeline
             ArrayView<VertexAttribute>  inputVertexAttribs  = {},
             ArrayView<VertexAttribute>  outputVertexAttribs = {},
             GLShader::Permutation       permutation         = GLShader::PermutationDefault,
-            GLPipelineCache*            pipelineCache       = nullptr
+            GLPipelineCache*            pipelineCache       = nullptr,
+            Report*                     report              = nullptr
         );
 
         // Wrapper for mutable shaders array view.
@@ -52,7 +53,8 @@ class GLShaderProgram final : public GLShaderPipeline
             ArrayView<VertexAttribute>  inputVertexAttribs  = {},
             ArrayView<VertexAttribute>  outputVertexAttribs = {},
             GLShader::Permutation       permutation         = GLShader::PermutationDefault,
-            GLPipelineCache*            pipelineCache       = nullptr
+            GLPipelineCache*            pipelineCache       = nullptr,
+            Report*                     report              = nullptr
         );
 
         ~GLShaderProgram();
@@ -72,7 +74,7 @@ class GLShaderProgram final : public GLShaderPipeline
         static void BindFragDataLocations(GLuint program, ArrayView<GLShaderAttribute> fragmentAttribs);
 
         // Links the specified GL program and binds the transform feedback varyings.
-        static void LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings);
+        static void LinkProgramWithTransformFeedbackVaryings(GLuint program, ArrayView<const char*> varyings, GLenum bufferMode);
 
         // Simply links the GL program.
         static void LinkProgram(GLuint program);
@@ -86,11 +88,12 @@ class GLShaderProgram final : public GLShaderPipeline
     private:
 
         // Main function for constructor to attach shaders, build attributes, and link program.
-        void BuildProgramBinary(
+        bool BuildProgramBinary(
             ArrayView<const Shader*>    shaders,
             ArrayView<VertexAttribute>  inputVertexAttribs,
             ArrayView<VertexAttribute>  outputVertexAttribs,
-            GLShader::Permutation       permutation
+            GLShader::Permutation       permutation,
+            Report*                     report
         );
 
     private:
