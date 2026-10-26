@@ -1225,6 +1225,9 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "compute PSO must be bound outside a render pass");
         }
 
+        if (states_.streamOutputBusy)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "PSO must not be changed inside stream-output section");
+
         ResetBindingTable(bindings_.pipelineState->pipelineLayout);
     }
 
@@ -1418,6 +1421,8 @@ void DbgCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const
         /* Validate stream-outputs are currently not active */
         if (states_.streamOutputBusy)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output is already busy");
+        else if (bindings_.pipelineState == nullptr || !bindings_.pipelineState->isGraphicsPSO)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot start stream-output section without graphics PSO");
         states_.streamOutputBusy = true;
     }
     else

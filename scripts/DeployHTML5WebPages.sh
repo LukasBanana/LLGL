@@ -3,6 +3,7 @@
 # Deployment configuration
 declare -ar EXAMPLES=(
     "Example_BrickPlay"
+    "Example_ClothPhysics"
     "Example_Fonts"
     "Example_HelloGame"
     "Example_Instancing"
@@ -72,6 +73,8 @@ copy_example_thumbnail_to_target()
         cp "$LLGL_ROOT/examples/Cpp/$NAME/$NAME.gif" "$TARGET_FOLDER/Example.gif"
     elif [ -f "$LLGL_ROOT/examples/Cpp/$NAME/$NAME.png" ]; then
         cp "$LLGL_ROOT/examples/Cpp/$NAME/$NAME.png" "$TARGET_FOLDER/Example.png"
+    elif [ -f "$LLGL_ROOT/examples/Cpp/$NAME/Example.gif" ]; then
+        cp "$LLGL_ROOT/examples/Cpp/$NAME/Example.gif" "$TARGET_FOLDER/Example.gif"
     elif [ -f "$LLGL_ROOT/examples/Cpp/$NAME/Example.png" ]; then
         cp "$LLGL_ROOT/examples/Cpp/$NAME/Example.png" "$TARGET_FOLDER/Example.png"
     else

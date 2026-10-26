@@ -77,7 +77,7 @@ void D3D11GraphicsPSOBase::BuildInputLayout(
 static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
     const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = src.slot; // Stream refers to the HLSL output stream, but LLGL does not make such a distinction
+    dst.Stream          = 0; // Stream refers to the HLSL output stream, but LLGL does not make such a distinction
     dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
     dst.SemanticIndex   = src.semanticIndex;
     dst.StartComponent  = 0;
@@ -160,7 +160,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(ID3D11Device* device, const GraphicsP
             DXThrowIfFailed(hr, "failed to create D3D11 input layout");
         }
 
-        if (!desc.outputVertexAttribs.empty())
+        if (!desc.outputVertexAttribs.empty() && streamOutputShaderByteCode != nullptr)
         {
             // FIXME: https://github.com/LukasBanana/LLGL/pull/257#discussion_r3784385726
             /* Create geometry shader with stream-output declaration */

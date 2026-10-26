@@ -28,12 +28,14 @@ UINT DXGetBufferBindFlags(long bindFlags)
         flagsD3D |= D3D11_BIND_VERTEX_BUFFER;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
         flagsD3D |= D3D11_BIND_INDEX_BUFFER;
+
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D11_BIND_STREAM_OUTPUT;
+    else if ((bindFlags & (BindFlags::Storage | BindFlags::CopyDst)) != 0)
+        flagsD3D |= D3D11_BIND_UNORDERED_ACCESS; // Cannot be used with stream-output
+
     if ((bindFlags & (BindFlags::Sampled | BindFlags::CopySrc)) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
-    if ((bindFlags & (BindFlags::Storage | BindFlags::CopyDst)) != 0)
-        flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
 
     return flagsD3D;
 }

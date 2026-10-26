@@ -12,7 +12,7 @@
 // Enable multi-sampling
 #define NUM_MULTISAMPLES 8
 
-#ifdef LLGL_OS_ANDROID
+#if LLGL_OS_ANDROID
 #define EXIT(VAL) return
 void android_main(android_app* androidApp)
 #else
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     // Let the user choose an available renderer
     LLGL::RenderSystemDescriptor rendererDesc;
 
-    #ifdef LLGL_OS_ANDROID
+    #if LLGL_OS_ANDROID
     rendererDesc.moduleName = "OpenGLES3";
     rendererDesc.platformContext     = androidApp;
     rendererDesc.platformContextSize = sizeof(*androidApp);

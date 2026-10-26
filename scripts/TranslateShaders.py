@@ -128,7 +128,7 @@ class CompileContext:
             "--combined-samplers-inherit-bindings",
             "--no-support-nonzero-baseinstance",
             input_spirv
-        ]
+        ] #TODO: maybe add `--relax-nan-checks`
 
         target_match = GLSL_TARGET_PATTERN.fullmatch(target)
         if target_match:
