@@ -1,0 +1,13 @@
+@import url("./style.webapp.shared.css");
+
+canvas {
+    height: 100%;
+    aspect-ratio: auto;
+}
+.canvas-container {
+    width: 100%;
+    height: 100%;
+}
+body > div {
+    height: 100%;
+}

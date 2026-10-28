@@ -82,7 +82,7 @@ copy_example_thumbnail_to_target()
     fi
 }
 
-# This substitutes the href to the stylesheet for the given example to the appropriate one (fullscreen or regular)
+# Substitutes the href to the stylesheet for the given example to the fullscreen one
 substitute_stylesheet()
 {
     BASENAME="$1"

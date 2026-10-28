@@ -1,0 +1,10 @@
+@import url("./style.webapp.shared.css");
+
+canvas {
+    aspect-ratio: 4 / 3;
+}
+.canvas-container {
+    width: min(100%, 98vh * 4 / 3);
+    /* dvh excludes browser toolbars; vh above is the fallback for older browsers */
+    width: min(100%, (100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 0.98 * 4 / 3);
+}

@@ -2685,16 +2685,6 @@ private:
     // Renders a single brick thumbnail and saves it to a PNG file. This is only used for desktop to update the app icon in various sizes.
     bool RenderThumbnailAndSaveToFiles(const char* brickLabel, GridRotation thumbnailRotation = GridRotation_0, float viewRotation = 45.0f)
     {
-        struct AppIconInfo
-        {
-            const char*     suffix;
-            std::uint32_t   imageSize;
-        };
-        const AppIconInfo appIconInfos_Android[] =
-        {
-            AppIconInfo{ "mdpi", 48 }, AppIconInfo{ "hdpi", 72 }, AppIconInfo{ "xhdpi", 96 }, AppIconInfo{ "xxhdpi", 144 }, AppIconInfo{ "xxxhdpi", 192 },
-        };
-
         BrickId brickId = BrickDictionary::Get().TypeFromString(brickLabel);
         if (brickId == INVALID_BRICK_ID)
         {
@@ -2702,10 +2692,27 @@ private:
             return false;
         }
 
-        for (AppIconInfo iconInfo : appIconInfos_Android)
+        // Save Android app icons
+        struct AndroidIconInfo
+        {
+            const char*     suffix;
+            std::uint32_t   imageSize;
+        };
+        const AndroidIconInfo appIconInfos_Android[] =
+        {
+            AndroidIconInfo{ "mdpi", 48 }, AndroidIconInfo{ "hdpi", 72 }, AndroidIconInfo{ "xhdpi", 96 }, AndroidIconInfo{ "xxhdpi", 144 }, AndroidIconInfo{ "xxxhdpi", 192 },
+        };
+        for (AndroidIconInfo iconInfo : appIconInfos_Android)
         {
             const std::string outputFilename = "Platform/Android/mipmap-" + std::string(iconInfo.suffix) + "/ic_launcher.png";
             RenderThumbnailAndSaveToFileForSize(brickId, outputFilename.c_str(), iconInfo.imageSize, thumbnailRotation, viewRotation);
+        }
+
+        // Save webOS app icons
+        {
+            const std::string outputPath = "Platform/Wasm/webOS/";
+            RenderThumbnailAndSaveToFileForSize(brickId, (outputPath + "icon80px.png" ).c_str(),  80, thumbnailRotation, viewRotation);
+            RenderThumbnailAndSaveToFileForSize(brickId, (outputPath + "icon130px.png").c_str(), 130, thumbnailRotation, viewRotation);
         }
 
         return true;

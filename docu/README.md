@@ -77,6 +77,7 @@ The generated example projects can be tested by running a local web server from 
 $ python -m http.server
 ```
 Then launch your web browser of choice and open the URL http://localhost:8000/.
+The *scripts/DeployHTML5WebPages.sh* script can simplify the build and bundle steps.
 
 <p align="center">
     <img src="Showcase/Showcase_Build_Wasm.png" alt="Screenshot missing: HTML5 Example Showcase" style="max-width:600px;width:70%;height:auto;">

@@ -1,0 +1,11 @@
+{
+  "id": "LLGL_WEBAPP_ID",
+  "version": "1.0.0",
+  "vendor": "LLGLProject",
+  "type": "web",
+  "main": "index.html",
+  "title": "LLGL-HelloGame",
+  "icon": "icon80px.png",
+  "largeIcon": "icon130px.png",
+  "requiredACG": []
+}
