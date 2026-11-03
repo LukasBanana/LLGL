@@ -1,7 +1,8 @@
-#version 430
+#version 310 es
+#extension GL_EXT_texture_buffer : require
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-layout(binding = 0, std140) uniform SceneState
+layout(binding = 7, std140) uniform SceneState
 {
     layout(row_major) mat4 wvpMatrix;
     layout(row_major) mat4 wMatrix;
@@ -15,10 +16,10 @@ layout(binding = 0, std140) uniform SceneState
     vec4 lightVec;
 };
 
-layout(binding = 2, rgba32f) uniform imageBuffer parCurrPos;
-layout(binding = 3, rgba32f) uniform readonly imageBuffer parNextPos;
-layout(binding = 4, rgba32f) uniform imageBuffer parPrevPos;
-layout(binding = 5, rgba32f) uniform writeonly imageBuffer parVelocity;
+layout(binding = 2, rgba32f) uniform highp imageBuffer parCurrPos;
+layout(binding = 3, rgba32f) uniform readonly highp imageBuffer parNextPos;
+layout(binding = 4, rgba32f) uniform highp imageBuffer parPrevPos;
+layout(binding = 5, rgba32f) uniform writeonly highp imageBuffer parVelocity;
 
 void main()
 {

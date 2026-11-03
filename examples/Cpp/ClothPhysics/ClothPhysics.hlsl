@@ -1,5 +1,16 @@
+/*
+ * HLSL cloth physics shader
+ */
 
-#if __spirv__ && !IS_TARGET_300ES
+#define COMPUTE_MODE_RWBUFFERS      0
+#define COMPUTE_MODE_RWTEXTURES     1
+#define COMPUTE_MODE_STREAMOUTPUT   2
+
+#ifndef COMPUTE_MODE
+#define COMPUTE_MODE COMPUTE_MODE_RWBUFFERS
+#endif
+
+#if __spirv__ && !GL_ES
 
 #   define VK_XFB_OFFSET 35
 #   define VK_XFB_BUFFER 36
@@ -23,7 +34,8 @@
 
 #endif
 
-
+// Use bindig slot 3 for this cbuffer. The cross-compiled Metal shader uses the same slot
+// and reserves the same binding space for its 3 vertex buffers (binding slots 0-2).
 cbuffer SceneState : register(b7)
 {
     float4x4    wvpMatrix;
@@ -38,6 +50,7 @@ cbuffer SceneState : register(b7)
     float4      lightVec;
 };
 
+// Sub view of a particle
 struct ParticleView
 {
     float4 currPos;
@@ -47,6 +60,31 @@ struct ParticleView
     float invMass;
 };
 
+// Particle buffers
+#if COMPUTE_MODE == COMPUTE_MODE_RWTEXTURES
+
+Texture2D<float4>   parBase     : register(t1); // UV (.xy) and inverse mass (.z)
+RWTexture2D<float4> parCurrPos  : register(u2);
+RWTexture2D<float4> parNextPos  : register(u3);
+RWTexture2D<float4> parPrevPos  : register(u4);
+RWTexture2D<float4> parVelocity : register(u5);
+RWTexture2D<float4> parNormal   : register(u6);
+
+#define DECL_GRIDPOS_INDEX(IDX, POS) uint2 IDX = (uint2)(POS)
+
+#else
+
+#   if COMPUTE_MODE == COMPUTE_MODE_RWBUFFERS
+
+Buffer<float4>      parBase     : register(t1); // UV (.xy) and inverse mass (.z)
+RWBuffer<float4>    parCurrPos  : register(u2);
+RWBuffer<float4>    parNextPos  : register(u3);
+RWBuffer<float4>    parPrevPos  : register(u4);
+RWBuffer<float4>    parVelocity : register(u5);
+RWBuffer<float4>    parNormal   : register(u6);
+
+#   else
+
 Buffer<float4> parBase     : register(t1);
 Buffer<float4> parCurrPos  : register(t2);
 Buffer<float4> parNextPos  : register(t3);
@@ -54,28 +92,20 @@ Buffer<float4> parPrevPos  : register(t4);
 Buffer<float4> parVelocity : register(t5);
 Buffer<float4> parNormal   : register(t6);
 
-struct ForcesOut
-{
-    STREAM_OUTPUT(0) float4 currPos  : CURRPOS;
-};
+#   endif
 
-struct StretchConstraintsOut
-{
-    STREAM_OUTPUT(0) float4 nextPos : NEXTPOS;
-    STREAM_OUTPUT(1) float4 normal  : NORMAL;
-};
-
-struct RelaxationOut
-{
-    STREAM_OUTPUT(0) float4 currPos  : CURRPOS;
-    STREAM_OUTPUT(1) float4 velocity : VELOCITY;
-};
-
+// Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
 {
     return (gridPos.y * gridSize.x + gridPos.x);
 }
 
+#define DECL_GRIDPOS_INDEX(IDX, POS) uint IDX = GridPosToIndex((uint2)(POS))
+
+#endif // /ENABLE_STORAGE_TEXTURES
+
+// Converts the specified grid UV coordinates to the original vertex coordinates.
+// Only distance between those coordinates are important.
 float4 UVToOrigPos(float2 uv)
 {
     return float4(uv.x * 2.0 - 1.0, 0.0, uv.y * -2.0, 1.0);
@@ -89,24 +119,29 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
         return;
     }
 
-    uint idx = GridPosToIndex((uint2)neighborGridPos);
+    // Read neighbor particle
+    DECL_GRIDPOS_INDEX(idx, neighborGridPos);
 
     float4 otherCurrPos = parCurrPos[idx];
     float4 otherOrigPos = UVToOrigPos(parBase[idx].xy);
     float otherInvMass = parBase[idx].z;
 
+    // Compute edge distance between particle and its neighbor
     float3 dPos = (par.nextPos - otherCurrPos).xyz;
     float currDist = length(dPos);
     float edgeDist = distance(par.origPos, otherOrigPos);
 
+    // Compute stretch constraint
     dPos = normalize(dPos) * ((currDist - edgeDist) / (par.invMass + otherInvMass));
 
+    // Adjust position
     dCorrection += (dPos * -par.invMass);
 }
 
 float3 ReadParticlePos(uint2 gridPos)
 {
-    return parCurrPos[GridPosToIndex(gridPos)].xyz;
+    DECL_GRIDPOS_INDEX(idx, gridPos);
+    return parCurrPos[idx].xyz;
 }
 
 void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout float4 normal)
@@ -132,6 +167,7 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
         return;
     }
 
+    // Apply stretch constraints
     float3 dPos = (float3)0;
     AccumulateStretchConstraints(par, gridPos + int2( 0, -1), dPos);
     AccumulateStretchConstraints(par, gridPos + int2( 0, +1), dPos);
@@ -143,6 +179,7 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
     AccumulateStretchConstraints(par, gridPos + int2(+1, +1), dPos);
     dPos /= 8.0;
 
+    // Compute normal
     float4 normal = (float4)0;
     AccumulateSurfaceNormal(par.currPos, gridPos + int2( 0, +1), gridPos + int2(+1,  0), normal);
     AccumulateSurfaceNormal(par.currPos, gridPos + int2(+1,  0), gridPos + int2( 0, -1), normal);
@@ -150,8 +187,28 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
     AccumulateSurfaceNormal(par.currPos, gridPos + int2(-1,  0), gridPos + int2( 0, +1), normal);
     par.normal = normal / 4.0;
 
+    // Adjust position by correction vector
     par.nextPos.xyz += dPos * dStiffness;
 }
+
+#if COMPUTE_MODE == COMPUTE_MODE_STREAMOUTPUT
+
+struct ForcesOut
+{
+    STREAM_OUTPUT(0) float4 currPos  : CURRPOS;
+};
+
+struct StretchConstraintsOut
+{
+    STREAM_OUTPUT(0) float4 nextPos : NEXTPOS;
+    STREAM_OUTPUT(1) float4 normal  : NORMAL;
+};
+
+struct RelaxationOut
+{
+    STREAM_OUTPUT(0) float4 currPos  : CURRPOS;
+    STREAM_OUTPUT(1) float4 velocity : VELOCITY;
+};
 
 void VSForces(uint id : SV_VertexID, out ForcesOut outp)
 {
@@ -192,12 +249,86 @@ void VSRelaxation(uint id : SV_VertexID, out RelaxationOut outp)
     outp.velocity = (outp.currPos - parPrevPos[id]) / dTime;
 }
 
+#else // COMPUTE_MODE
+
+[numthreads(1, 1, 1)]
+void CSForces(uint2 threadID : SV_DispatchThreadID)
+{
+    DECL_GRIDPOS_INDEX(idx, threadID);
+
+    // Accumulate force and multiply by inverse mass
+    float invMass = parBase[idx].z;
+    float4 force = mul(gravity, wMatrix);
+    force *= invMass;
+
+    // Apply velocity and damping
+    float4 velocity = parVelocity[idx] + force * dTime * damping;
+
+    // Apply position based physics simulation
+    parCurrPos[idx] += float4(velocity.xyz, 0.0) * dTime;
+}
+
+[numthreads(1, 1, 1)]
+void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
+{
+    DECL_GRIDPOS_INDEX(idx, threadID);
+
+    // Read particle
+    ParticleView par;
+    par.currPos = parCurrPos[idx];
+    par.nextPos = par.currPos;
+    par.origPos = UVToOrigPos(parBase[idx].xy);
+    par.normal  = parNormal[idx];
+    par.invMass = parBase[idx].z;
+
+    // Apply stretch constraints
+    ApplyStretchConstraints(par, (int2)threadID);
+
+    // Write next position back to swap-buffer
+    parNextPos[idx] = par.nextPos;
+    parNormal[idx] = par.normal;
+}
+
+[numthreads(1, 1, 1)]
+void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
+{
+    DECL_GRIDPOS_INDEX(idx, threadID);
+
+    // Adjust velocity and store current and previous position
+    parCurrPos[idx] = parNextPos[idx];
+    parVelocity[idx] = (parCurrPos[idx] - parPrevPos[idx]) / dTime;
+    parPrevPos[idx] = parCurrPos[idx];
+}
+
+#endif // /COMPUTE_MODE
+
+
+/*
+ * HLSL vertex shader
+ */
+
 struct VOut
 {
     float4 position : SV_Position;
     float4 normal   : NORMAL;
     float2 texCoord : TEXCOORD;
 };
+
+#if ENABLE_STORAGE_TEXTURES
+
+Texture2D<float4> vertexBase    : register(t1); // UV (.xy) and inverse mass (.z)
+Texture2D<float4> vertexPos     : register(t2);
+Texture2D<float4> vertexNormal  : register(t6);
+
+void VS(uint id : SV_VertexID, out VOut outp)
+{
+    uint2 idx = uint2(id % gridSize.x, id / gridSize.x);
+    outp.position   = mul(wvpMatrix, vertexPos[idx]);
+    outp.normal     = mul(wMatrix, vertexNormal[idx]);
+    outp.texCoord   = vertexBase[idx].xy;
+}
+
+#else // ENABLE_STORAGE_TEXTURES
 
 struct VIn
 {
@@ -213,19 +344,29 @@ void VS(in VIn inp, out VOut outp)
     outp.texCoord   = inp.texCoord;
 }
 
+#endif // /ENABLE_STORAGE_TEXTURES
+
+
+/*
+ * HLSL pixel shader
+ */
+
 Texture2D colorMap : register(t4);
 SamplerState linearSampler : register(s5);
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {
+    // Compute lighting
     float3 normal = normalize(inp.normal.xyz);
     normal *= lerp(1.0, -1.0, frontFace);
 
     float NdotL = lerp(0.2, 1.0, max(0.0, dot(normal, -lightVec.xyz)));
 
+    // Sample color texture
     float4 color = colorMap.Sample(linearSampler, inp.texCoord);
 
     color.rgb = lerp(color.rgb, float3(inp.texCoord, 1.0), 0.5);
 
     return float4(color.rgb * NdotL, color.a);
 }
+

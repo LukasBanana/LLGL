@@ -1,5 +1,5 @@
 sources:
-  - source: "Example.hlsl"
+  - source: "ClothPhysics.hlsl"
     entries:
       - entry: "VS"
         profile: "vs_5_0"
@@ -19,11 +19,11 @@ sources:
         profile: "cs_5_0"
         targets: [glsl430core, glsl310es, spirv, metal]
 
-  - source: "Example.hlsl"
+  - source: "ClothPhysics.hlsl"
     permutation:
       override: "RWTextures"
       macros:
-        ENABLE_STORAGE_TEXTURES: 1
+        COMPUTE_MODE: 1
     entries:
       - entry: "VS"
         profile: "vs_5_0"
@@ -39,7 +39,11 @@ sources:
         profile: "cs_5_0"
         targets: [glsl430core, spirv, metal]
 
-  - source: "ClothPhysics.StreamOutput.hlsl"
+  - source: "ClothPhysics.hlsl"
+    permutation:
+      override: "StreamOutput"
+      macros:
+        COMPUTE_MODE: 2
     entries:
       - entry: "VSForces"
         profile: "vs_5_0"
@@ -51,10 +55,12 @@ sources:
         profile: "vs_5_0"
         targets: [glsl330core, spirv]
 
-  - source: "ClothPhysics.StreamOutput.hlsl"
+  - source: "ClothPhysics.hlsl"
     permutation:
+      override: "StreamOutput"
       macros:
-        IS_TARGET_300ES: 1
+        COMPUTE_MODE: 2
+        GL_ES: 1
     entries:
       - entry: "VSForces"
         profile: "vs_5_0"

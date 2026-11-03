@@ -11,7 +11,7 @@ struct ParticleView
     float invMass;
 };
 
-layout(binding = 0, std140) uniform SceneState
+layout(binding = 7, std140) uniform SceneState
 {
     layout(row_major) mat4 wvpMatrix;
     layout(row_major) mat4 wMatrix;
@@ -79,7 +79,8 @@ void AccumulateStretchConstraints(ParticleView par, ivec2 neighborGridPos, inout
 vec3 ReadParticlePos(uvec2 gridPos)
 {
     uvec2 param_var_gridPos = gridPos;
-    return imageLoad(parCurrPos, int(GridPosToIndex(param_var_gridPos))).xyz;
+    uint idx = GridPosToIndex(param_var_gridPos);
+    return imageLoad(parCurrPos, int(idx)).xyz;
 }
 
 void AccumulateSurfaceNormal(vec4 pos, ivec2 gridPos0, ivec2 gridPos1, inout vec4 normal)

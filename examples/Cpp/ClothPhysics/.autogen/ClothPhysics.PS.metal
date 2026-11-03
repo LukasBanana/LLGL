@@ -28,7 +28,7 @@ struct PS_in
     float2 in_var_TEXCOORD [[user(locn1)]];
 };
 
-fragment PS_out PS(PS_in in [[stage_in]], constant type_SceneState& SceneState [[buffer(0)]], texture2d<float> colorMap [[texture(4)]], sampler linearSampler [[sampler(5)]], bool gl_FrontFacing [[front_facing]])
+fragment PS_out PS(PS_in in [[stage_in]], constant type_SceneState& SceneState [[buffer(7)]], texture2d<float> colorMap [[texture(4)]], sampler linearSampler [[sampler(5)]], bool gl_FrontFacing [[front_facing]])
 {
     PS_out out = {};
     float4 _60 = colorMap.sample(linearSampler, in.in_var_TEXCOORD);

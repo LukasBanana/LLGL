@@ -12,9 +12,6 @@ uint2 spvTexelBufferCoord(uint tc)
     return uint2(tc % 4096, tc / 4096);
 }
 
-template <typename ImageT>
-void spvImageFence(ImageT img) { img.fence(); }
-
 struct type_SceneState
 {
     float4x4 wvpMatrix;
@@ -89,7 +86,8 @@ static inline __attribute__((always_inline))
 float3 ReadParticlePos(thread const uint2& gridPos, constant type_SceneState& SceneState, texture2d<float> parCurrPos)
 {
     uint2 param_var_gridPos = gridPos;
-    return parCurrPos.read(spvTexelBufferCoord(GridPosToIndex(param_var_gridPos, SceneState))).xyz;
+    uint idx = GridPosToIndex(param_var_gridPos, SceneState);
+    return parCurrPos.read(spvTexelBufferCoord(idx)).xyz;
 }
 
 static inline __attribute__((always_inline))
@@ -207,7 +205,6 @@ void src_CSStretchConstraints(thread const uint2& threadID, constant type_SceneS
     par.nextPos = par.currPos;
     float2 param_var_uv = parBase.read(spvTexelBufferCoord(idx)).xy;
     par.origPos = UVToOrigPos(param_var_uv);
-    spvImageFence(parNormal);
     par.normal = parNormal.read(spvTexelBufferCoord(idx));
     par.invMass = parBase.read(spvTexelBufferCoord(idx)).z;
     int2 param_var_gridPos_1 = int2(threadID);
@@ -216,7 +213,7 @@ void src_CSStretchConstraints(thread const uint2& threadID, constant type_SceneS
     parNormal.write(par.normal, spvTexelBufferCoord(idx));
 }
 
-kernel void CSStretchConstraints(constant type_SceneState& SceneState [[buffer(0)]], texture2d<float> parBase [[texture(1)]], texture2d<float> parCurrPos [[texture(2)]], texture2d<float, access::write> parNextPos [[texture(3)]], texture2d<float, access::read_write> parNormal [[texture(6)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+kernel void CSStretchConstraints(constant type_SceneState& SceneState [[buffer(7)]], texture2d<float> parBase [[texture(1)]], texture2d<float> parCurrPos [[texture(2)]], texture2d<float, access::write> parNextPos [[texture(3)]], texture2d<float, access::read_write> parNormal [[texture(6)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
 {
     uint2 param_var_threadID = gl_GlobalInvocationID.xy;
     src_CSStretchConstraints(param_var_threadID, SceneState, parBase, parCurrPos, parNextPos, parNormal);

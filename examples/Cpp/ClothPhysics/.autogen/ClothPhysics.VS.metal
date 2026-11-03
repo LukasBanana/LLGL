@@ -31,7 +31,7 @@ struct VS_in
     float2 in_var_TEXCOORD [[attribute(2)]];
 };
 
-vertex VS_out VS(VS_in in [[stage_in]], constant type_SceneState& SceneState [[buffer(0)]])
+vertex VS_out VS(VS_in in [[stage_in]], constant type_SceneState& SceneState [[buffer(7)]])
 {
     VS_out out = {};
     out.gl_Position = SceneState.wvpMatrix * in.in_var_POS;

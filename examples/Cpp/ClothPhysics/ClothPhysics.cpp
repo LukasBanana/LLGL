@@ -1,5 +1,5 @@
 /*
- * Example.cpp (Example_ClothPhysics)
+ * ClothPhysics.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -117,9 +117,9 @@ public:
     {
         // Check if compute pipeline is supported
         const auto& renderCaps = renderer->GetRenderingCaps();
-        /*if (renderCaps.features.hasComputeShaders)
+        if (renderCaps.features.hasComputeShaders)
             computeMode = (IsDirect3D() ? ComputeMode::ComputeRWTextures : ComputeMode::ComputeRWBuffers);
-        else*/
+        else
             computeMode = ComputeMode::StreamOutputBuffers;
 
         if (computeMode != ComputeMode::StreamOutputBuffers)
@@ -143,9 +143,7 @@ public:
         LLGL::Log::Printf("-> COMPUTE MODE: %s\n\n", computeModeLabel[static_cast<int>(computeMode)]);
 
         // Create all graphics objects
-        CreateBuffers();
-        CreateTexture();
-        CreateSampler();
+        CreateResources();
         if (computeMode == ComputeMode::StreamOutputBuffers)
             CreateStreamOutputPipeline();
         else
@@ -292,7 +290,7 @@ public:
         }
     }
 
-    void CreateBuffers()
+    void CreateResources()
     {
         // Generate vertex and index data and store number of vertices and indices for draw commands
         std::vector<ParticleBase> verticesBase;
@@ -355,16 +353,10 @@ public:
             indexBufferDesc.format      = LLGL::Format::R32UInt;
         }
         indexBuffer = renderer->CreateBuffer(indexBufferDesc, indices.data());
-    }
 
-    void CreateTexture()
-    {
         // Load color map from file
         colorMap = LoadTexture("Logos/Logo_LLGL.png");
-    }
 
-    void CreateSampler()
-    {
         // Create sampler state with linear interpolation (default configuration)
         LLGL::SamplerDescriptor samplerDesc;
         {
@@ -386,15 +378,15 @@ public:
         // Create compute shader
         if (computeMode == ComputeMode::ComputeRWTextures && !Supported(LLGL::ShadingLanguage::HLSL))
         {
-            physicsShaders[0] = LoadComputeShader("Example.RWTextures", "CSForces",             GetShaderMacros());
-            physicsShaders[1] = LoadComputeShader("Example.RWTextures", "CSStretchConstraints", GetShaderMacros());
-            physicsShaders[2] = LoadComputeShader("Example.RWTextures", "CSRelaxation",         GetShaderMacros());
+            physicsShaders[0] = LoadComputeShader("ClothPhysics.RWTextures", "CSForces",             GetShaderMacros());
+            physicsShaders[1] = LoadComputeShader("ClothPhysics.RWTextures", "CSStretchConstraints", GetShaderMacros());
+            physicsShaders[2] = LoadComputeShader("ClothPhysics.RWTextures", "CSRelaxation",         GetShaderMacros());
         }
         else
         {
-            physicsShaders[0] = LoadComputeShader("Example", "CSForces",             GetShaderMacros());
-            physicsShaders[1] = LoadComputeShader("Example", "CSStretchConstraints", GetShaderMacros());
-            physicsShaders[2] = LoadComputeShader("Example", "CSRelaxation",         GetShaderMacros());
+            physicsShaders[0] = LoadComputeShader("ClothPhysics", "CSForces",             GetShaderMacros());
+            physicsShaders[1] = LoadComputeShader("ClothPhysics", "CSStretchConstraints", GetShaderMacros());
+            physicsShaders[2] = LoadComputeShader("ClothPhysics", "CSRelaxation",         GetShaderMacros());
         }
 
         // Create compute pipeline layout
@@ -570,13 +562,13 @@ public:
         // Create graphics shader
         if (computeMode == ComputeMode::ComputeRWTextures && !Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsShaderPipeline.vs = LoadVertexShader          ("Example.RWTextures", "VS", GetShaderMacros());
-            graphicsShaderPipeline.ps = LoadStandardFragmentShader(                      "PS", GetShaderMacros());
+            graphicsShaderPipeline.vs = LoadVertexShader  ("ClothPhysics.RWTextures", "VS", GetShaderMacros());
+            graphicsShaderPipeline.ps = LoadFragmentShader("ClothPhysics",            "PS", GetShaderMacros());
         }
         else
         {
-            graphicsShaderPipeline.vs = LoadStandardVertexShader  ("VS", GetShaderMacros());
-            graphicsShaderPipeline.ps = LoadStandardFragmentShader("PS", GetShaderMacros());
+            graphicsShaderPipeline.vs = LoadVertexShader  ("ClothPhysics", "VS", GetShaderMacros());
+            graphicsShaderPipeline.ps = LoadFragmentShader("ClothPhysics", "PS", GetShaderMacros());
         }
 
         // Create graphics pipeline layout
@@ -701,7 +693,7 @@ private:
         sceneState.wvpMatrix = projection * vMatrix * sceneState.wMatrix;
     }
 
-    void DispatchParticleWorkGoups()
+    void DispatchParticleWorkGroups()
     {
         const std::uint32_t numWorkGroupsX = clothSegmentsU + 1;
         const std::uint32_t numWorkGroupsY = clothSegmentsV + 1;
@@ -725,7 +717,7 @@ private:
         {
             commands->SetPipelineState(*physicsPipelines[Shader_Forces]);
             commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-            DispatchParticleWorkGoups();
+            DispatchParticleWorkGroups();
         }
         commands->PopDebugGroup();
 
@@ -739,7 +731,7 @@ private:
                 if (i > 0)
                     swapBufferIndex = (swapBufferIndex + 1) % 2;
                 commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-                DispatchParticleWorkGoups();
+                DispatchParticleWorkGroups();
             }
         }
         commands->PopDebugGroup();
@@ -749,7 +741,7 @@ private:
         {
             commands->SetPipelineState(*physicsPipelines[Shader_Relaxation]);
             commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
-            DispatchParticleWorkGoups();
+            DispatchParticleWorkGroups();
         }
         commands->PopDebugGroup();
     }
@@ -800,7 +792,7 @@ private:
             LLGL::Buffer* soBuffers[] = { GetParticleBufferCurrPos() };
             commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
             {
-                DispatchParticleWorkGoups();
+                DispatchParticleWorkGroups();
             }
             commands->EndStreamOutput();
         }
@@ -824,7 +816,7 @@ private:
                 LLGL::Buffer* soBuffers[] = { GetParticleBufferNextPos(), GetParticleBufferNormalOut() };
                 commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
                 {
-                    DispatchParticleWorkGoups();
+                    DispatchParticleWorkGroups();
                 }
                 commands->EndStreamOutput();
             }
@@ -842,7 +834,7 @@ private:
             LLGL::Buffer* soBuffers[] = { GetParticleBufferCurrPos(), GetParticleBufferVelocityOut() };
             commands->BeginStreamOutput(sizeof(soBuffers)/sizeof(soBuffers[0]), soBuffers);
             {
-                DispatchParticleWorkGoups();
+                DispatchParticleWorkGroups();
             }
             commands->EndStreamOutput();
 
