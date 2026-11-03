@@ -161,10 +161,11 @@ Example of generating perlin noise into 3D texture with a glitter effect and vol
 
 
 ### [Cloth Physics](ClothPhysics)
+##### Try it with [WebGL](https://llgl.sourceforge.io/Example_ClothPhysics/index.html)
 
 Practical example of multiple compute shaders for position based dynamics.
 
-<p align="center"><img src="ClothPhysics/Example.gif" style="width:auto;height:225px;"/></p>
+<p align="center"><img src="ClothPhysics/ClothPhysics.gif" style="width:auto;height:225px;"/></p>
 
 
 ### [HelloGame](HelloGame)
