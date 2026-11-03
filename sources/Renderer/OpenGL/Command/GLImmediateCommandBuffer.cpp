@@ -706,6 +706,16 @@ void GLImmediateCommandBuffer::EndStreamOutput()
 
     GLBufferWithXFB::EndTransformFeedback(*stateMngr_);
 
+    #if LLGL_WEBGL
+    /*
+    From WebGL implementation ANGLE (glTexSubImage2DRobustANGLE):
+    "It is undefined behavior to use a pixel unpack buffer that is bound for transform feedback".
+    So always unbind all potential transform feedback buffers at the end of stream output section.
+    */
+    const GLuint nullBuffers[LLGL_MAX_NUM_SO_BUFFERS] = {};
+    stateMngr_->BindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, 0, LLGL_MAX_NUM_SO_BUFFERS, nullBuffers);
+    #endif
+
     #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 

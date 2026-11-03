@@ -416,7 +416,7 @@ void GLDeferredCommandBuffer::BindResource(GLResourceType type, GLuint slot, std
         case GLResourceType_UBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            BindBufferBase(GLBufferTarget::UniformBuffer, bufferGL, slot);
+            BindBufferBase(GLBufferTarget::UniformBuffer, bufferGL.GetID(), slot);
         }
         break;
 
@@ -431,7 +431,7 @@ void GLDeferredCommandBuffer::BindResource(GLResourceType type, GLuint slot, std
             {
                 case GLBufferInterface_SSBO:
                 {
-                    BindBufferBase(GLBufferTarget::ShaderStorageBuffer, bufferGL, slot);
+                    BindBufferBase(GLBufferTarget::ShaderStorageBuffer, bufferGL.GetID(), slot);
                     #if LLGL_GLEXT_MEMORY_BARRIERS
                     InvalidateMemoryBarriersForStorageResource(bufferGL.GetBindFlags(), GL_SHADER_STORAGE_BARRIER_BIT);
                     #endif
@@ -782,7 +782,7 @@ void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer
 
 void GLDeferredCommandBuffer::EndStreamOutput()
 {
-    #ifdef __APPLE__
+    #if __APPLE__
     AllocOpcode(GLOpcodeEndTransformFeedback);
     #else
     if (HasExtension(GLExt::EXT_transform_feedback))
@@ -792,7 +792,17 @@ void GLDeferredCommandBuffer::EndStreamOutput()
     else
         LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED();
     #endif
+
     AllocOpcode(GLOpcodeEndBufferXfb);
+
+    #if LLGL_WEBGL
+    /*
+    From WebGL implementation ANGLE (glTexSubImage2DRobustANGLE):
+    "It is undefined behavior to use a pixel unpack buffer that is bound for transform feedback".
+    So always unbind all potential transform feedback buffers at the end of stream output section.
+    */
+    BindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, 0, LLGL_MAX_NUM_SO_BUFFERS, nullptr);
+    #endif
 }
 
 /* ----- Drawing ----- */
@@ -1119,13 +1129,13 @@ bool GLDeferredCommandBuffer::IsPrimary() const
  * ======= Private: =======
  */
 
-void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, GLuint id, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindBufferBase>(GLOpcodeBindBufferBase);
     {
         cmd->target = bufferTarget;
         cmd->index  = slot;
-        cmd->id     = bufferGL.GetID();
+        cmd->id     = id;
     }
 }
 
@@ -1139,19 +1149,34 @@ void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget,
             cmd->target = bufferTarget;
             cmd->first  = first;
             cmd->count  = static_cast<GLsizei>(count);
-            auto bufferIDs = reinterpret_cast<GLuint*>(cmd + 1);
-            for (std::uint32_t i = 0; i < count; ++i)
+            GLuint* bufferIDs = reinterpret_cast<GLuint*>(cmd + 1);
+            if (buffers != nullptr)
             {
-                auto bufferGL = LLGL_CAST(const GLBuffer*, buffers[i]);
-                bufferIDs[i] = bufferGL->GetID();
+                for_range(i, count)
+                {
+                    if (buffers[i] != nullptr)
+                    {
+                        auto* bufferGL = LLGL_CAST(const GLBuffer*, buffers[i]);
+                        bufferIDs[i] = bufferGL->GetID();
+                    }
+                    else
+                        bufferIDs[i] = 0;
+                }
             }
+            else
+                Memory::Memset(bufferIDs, 0u, count);
         }
     }
     else if (count == 1)
     {
         /* Encode as single binding with <BindBufferBase> */
-        auto bufferGL = LLGL_CAST(const GLBuffer*, buffers[0]);
-        BindBufferBase(bufferTarget, *bufferGL, first);
+        if (buffers != nullptr && buffers[0] != nullptr)
+        {
+            auto* bufferGL = LLGL_CAST(const GLBuffer*, buffers[0]);
+            BindBufferBase(bufferTarget, bufferGL->GetID(), first);
+        }
+        else
+            BindBufferBase(bufferTarget, 0, first);
     }
 }
 

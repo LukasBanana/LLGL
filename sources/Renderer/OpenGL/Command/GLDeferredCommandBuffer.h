@@ -69,7 +69,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindResource(GLResourceType type, GLuint slot, std::uint32_t descriptor, Resource& resource);
         void BindCombinedResource(GLResourceType type, const GLuint* slots, std::uint32_t numSlots, Resource& resource);
 
-        void BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot);
+        void BindBufferBase(const GLBufferTarget bufferTarget, GLuint id, std::uint32_t slot);
         void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, const Buffer *const *const buffers);
         void BindTexture(GLTexture& textureGL, std::uint32_t slot);
         void BindTextureNative(GLuint texID, GLTextureTarget target, std::uint32_t slot);

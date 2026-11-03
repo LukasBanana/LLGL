@@ -70,11 +70,7 @@ RWTexture2D<float4> parPrevPos  : register(u4);
 RWTexture2D<float4> parVelocity : register(u5);
 RWTexture2D<float4> parNormal   : register(u6);
 
-#define DECL_GRIDPOS_INDEX(IDX, POS) uint2 IDX = (uint2)(POS)
-
-#else
-
-#   if COMPUTE_MODE == COMPUTE_MODE_RWBUFFERS
+#elif COMPUTE_MODE == COMPUTE_MODE_RWBUFFERS
 
 Buffer<float4>      parBase     : register(t1); // UV (.xy) and inverse mass (.z)
 RWBuffer<float4>    parCurrPos  : register(u2);
@@ -83,16 +79,18 @@ RWBuffer<float4>    parPrevPos  : register(u4);
 RWBuffer<float4>    parVelocity : register(u5);
 RWBuffer<float4>    parNormal   : register(u6);
 
-#   else
+#else
 
-Buffer<float4> parBase     : register(t1);
-Buffer<float4> parCurrPos  : register(t2);
-Buffer<float4> parNextPos  : register(t3);
-Buffer<float4> parPrevPos  : register(t4);
-Buffer<float4> parVelocity : register(t5);
-Buffer<float4> parNormal   : register(t6);
+Texture2D<float4> parBase     : register(t1);
+Texture2D<float4> parCurrPos  : register(t2);
+Texture2D<float4> parNextPos  : register(t3);
+Texture2D<float4> parPrevPos  : register(t4);
+Texture2D<float4> parVelocity : register(t5);
+Texture2D<float4> parNormal   : register(t6);
 
-#   endif
+#endif
+
+#if COMPUTE_MODE == COMPUTE_MODE_RWBUFFERS
 
 // Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
@@ -102,7 +100,11 @@ uint GridPosToIndex(uint2 gridPos)
 
 #define DECL_GRIDPOS_INDEX(IDX, POS) uint IDX = GridPosToIndex((uint2)(POS))
 
-#endif // /ENABLE_STORAGE_TEXTURES
+#else
+
+#define DECL_GRIDPOS_INDEX(IDX, POS) uint2 IDX = (uint2)(POS)
+
+#endif // /COMPUTE_MODE
 
 // Converts the specified grid UV coordinates to the original vertex coordinates.
 // Only distance between those coordinates are important.
@@ -214,12 +216,15 @@ void VSForces(uint id : SV_VertexID, out ForcesOut outp)
 {
     EXECUTION_MODE_XFB;
 
-    float invMass = parBase[id].z;
+    uint2 gridPos = uint2(id % gridSize.x, id / gridSize.x);
+    DECL_GRIDPOS_INDEX(idx, gridPos);
+
+    float invMass = parBase[idx].z;
     float4 force = mul(gravity, wMatrix);
     force *= invMass;
 
-    float4 velocity = parVelocity[id] + force * dTime * damping;
-    outp.currPos = parCurrPos[id] + float4(velocity.xyz, 0.0) * dTime;
+    float4 velocity = parVelocity[idx] + force * dTime * damping;
+    outp.currPos = parCurrPos[idx] + float4(velocity.xyz, 0.0) * dTime;
 }
 
 void VSStretchConstraints(uint id : SV_VertexID, out StretchConstraintsOut outp)
@@ -227,13 +232,14 @@ void VSStretchConstraints(uint id : SV_VertexID, out StretchConstraintsOut outp)
     EXECUTION_MODE_XFB;
 
     uint2 gridPos = uint2(id % gridSize.x, id / gridSize.x);
+    DECL_GRIDPOS_INDEX(idx, gridPos);
 
     ParticleView par;
-    par.currPos = parCurrPos[id];
+    par.currPos = parCurrPos[idx];
     par.nextPos = par.currPos;
-    par.origPos = UVToOrigPos(parBase[id].xy);
-    par.normal  = parNormal[id];
-    par.invMass = parBase[id].z;
+    par.origPos = UVToOrigPos(parBase[idx].xy);
+    par.normal  = parNormal[idx];
+    par.invMass = parBase[idx].z;
 
     ApplyStretchConstraints(par, (int2)gridPos);
 
@@ -245,8 +251,11 @@ void VSRelaxation(uint id : SV_VertexID, out RelaxationOut outp)
 {
     EXECUTION_MODE_XFB;
 
-    outp.currPos = parNextPos[id];
-    outp.velocity = (outp.currPos - parPrevPos[id]) / dTime;
+    uint2 gridPos = uint2(id % gridSize.x, id / gridSize.x);
+    DECL_GRIDPOS_INDEX(idx, gridPos);
+
+    outp.currPos = parNextPos[idx];
+    outp.velocity = (outp.currPos - parPrevPos[idx]) / dTime;
 }
 
 #else // COMPUTE_MODE
