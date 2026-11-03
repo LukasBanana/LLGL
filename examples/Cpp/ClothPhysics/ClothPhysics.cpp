@@ -495,6 +495,11 @@ public:
             LLGL::Parse(
                 "cbuffer(SceneState@7):vert,"
                 "texture(parBase@1, parCurrPos@2, parVelocity@5):vert,"
+
+                #if LLGL_OS_WASM
+                // Set nearest sampler on WebGL, even though texelFetch() should not require a sampler state
+                "sampler(1,2,5){filter=nearest,filter.mip=none}:vert,"
+                #endif
             )
         );
 
@@ -502,6 +507,11 @@ public:
             LLGL::Parse(
                 "cbuffer(SceneState@7):vert,"
                 "texture(parBase@1, parCurrPos@2, parNormal@6):vert,"
+
+                #if LLGL_OS_WASM
+                // Set nearest sampler on WebGL, even though texelFetch() should not require a sampler state
+                "sampler(1,2,6){filter=nearest,filter.mip=none}:vert,"
+                #endif
             )
         );
 
@@ -509,6 +519,11 @@ public:
             LLGL::Parse(
                 "cbuffer(SceneState@7):vert,"
                 "texture(parNextPos@3, parPrevPos@4):vert,"
+
+                #if LLGL_OS_WASM
+                // Set nearest sampler on WebGL, even though texelFetch() should not require a sampler state
+                "sampler(3,4){filter=nearest,filter.mip=none}:vert,"
+                #endif
             )
         );
 
@@ -894,9 +909,6 @@ private:
             commands->CopyBuffer(*LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_PrevPos]), 0, *soBuffers[0], 0, sizeof(Gs::Vector4f) * numClothVertices);
             CopyParticleBufferToTexture(Attrib_PrevPos);
 
-            if (swapNormalBuffer)
-                commands->CopyBuffer(*LLGL::CastTo<LLGL::Buffer>(particleBuffers[Attrib_Normal]), 0, *GetParticleBufferNormalIn(), 0, sizeof(Gs::Vector4f) * numClothVertices);
-
             SwapVelocityBuffer();
             SwapPositionBuffer();
         }
@@ -915,8 +927,6 @@ private:
 
             if (computeMode != ComputeMode::StreamOutputBuffers)
                 RunPhysicsSimulationWithComputePipeline();
-            else
-                RunPhysicsSimulationWithStreamOutputs();
 
             // Draw scene
             commands->BeginRenderPass(*swapChain);
@@ -924,6 +934,9 @@ private:
                 // Clear color buffer and set viewport
                 commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
+
+                if (computeMode == ComputeMode::StreamOutputBuffers)
+                    RunPhysicsSimulationWithStreamOutputs();
 
                 // Set vertex and index buffers
                 if (computeMode == ComputeMode::ComputeRWTextures)

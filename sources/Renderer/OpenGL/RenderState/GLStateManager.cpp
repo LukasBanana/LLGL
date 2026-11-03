@@ -60,7 +60,8 @@ static const GLenum g_stateCapsEnum[] =
     GL_DITHER,
     GL_POLYGON_OFFSET_FILL,
 
-    #ifdef GL_PRIMITIVE_RESTART_FIXED_INDEX
+    // GL_PRIMITIVE_RESTART_FIXED_INDEX is not supported on WebGL, but Emscripten defines this through <GLES3/gl3.h>.
+    #if defined(GL_PRIMITIVE_RESTART_FIXED_INDEX) && !LLGL_WEBGL
     GL_PRIMITIVE_RESTART_FIXED_INDEX,
     #else
     0,

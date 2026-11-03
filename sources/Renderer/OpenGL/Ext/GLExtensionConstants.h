@@ -26,10 +26,6 @@
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS                     ( 0x8242 )
 #endif
 
-#ifndef GL_PRIMITIVE_RESTART_FIXED_INDEX
-#define GL_PRIMITIVE_RESTART_FIXED_INDEX                ( 0x8D69 )
-#endif
-
 #ifndef GL_ATOMIC_COUNTER_BUFFER
 #define GL_ATOMIC_COUNTER_BUFFER                        ( 0x92C0 )
 #endif
