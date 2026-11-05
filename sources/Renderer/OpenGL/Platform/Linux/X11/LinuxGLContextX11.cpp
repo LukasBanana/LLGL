@@ -59,7 +59,7 @@ LinuxGLContextX11::LinuxGLContextX11(
         CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
 
     surface_ = &surface;
-    
+
     DetermineDeviceVendor();
 }
 
@@ -231,7 +231,7 @@ void LinuxGLContextX11::CreateGLXContext(
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateGLXContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
+        glc_ = CreateGLXContextCoreProfile(visual, glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
     }
 
     if (glc_)
@@ -264,7 +264,7 @@ void LinuxGLContextX11::DeleteGLXContext()
     glXDestroyContext(display_, glc_);
 }
 
-GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
+GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(XVisualInfo* visual, GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
 {
     /* Query supported GL versions */
     if (major == 0 && minor == 0)
@@ -306,10 +306,8 @@ GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, 
             None
         };
 
-        int screen = DefaultScreen(display_);
-
         int fbCount = 0;
-        GLXFBConfig* fbcList = glXChooseFBConfig(display_, screen, fbAttribs, &fbCount);
+        GLXFBConfig* fbcList = glXChooseFBConfig(display_, visual->screen, fbAttribs, &fbCount);
 
         if (fbcList != nullptr && fbCount > 0)
         {
@@ -322,11 +320,23 @@ GLXContext LinuxGLContextX11::CreateGLXContextCoreProfile(GLXContext glcShared, 
                 None
             };
 
-            GLXContext glc = glXCreateContextAttribsARB(display_, fbcList[0], glcShared, True, contextAttribs);
+            /* Find framebuffer configuration that matches the input visuals */
+            GLXContext glc = nullptr;
+            for (int fbIndex = 0; fbIndex < fbCount; ++fbIndex)
+            {
+                int visualID = 0;
+                if (glXGetFBConfigAttrib(display_, fbcList[fbIndex], GLX_VISUAL_ID, &visualID) == Success &&
+                    static_cast<VisualID>(visualID) == visual->visualid)
+                {
+                    glc = glXCreateContextAttribsARB(display_, fbcList[fbIndex], glcShared, True, contextAttribs);
+                    break;
+                }
+            }
 
             XFree(fbcList);
 
-            return glc;
+            if (glc != nullptr)
+                return glc;
         }
     }
 

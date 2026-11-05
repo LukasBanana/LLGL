@@ -70,7 +70,7 @@ class LinuxGLContextX11 : public LinuxGLContext
 
         void DeleteGLXContext();
 
-        GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
+        GLXContext CreateGLXContextCoreProfile(XVisualInfo* visual, GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
 
         void CreateProxyContext(
