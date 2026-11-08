@@ -855,7 +855,7 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum number of vertex buffer input slots that is supported by the graphics device.
-    \remarks
+    \remarks Most backends support at least 16 vertex buffer input slots.
     \see RenderSystem::CreateBufferArray
     \see CommandBuffer::SetVertexBuffers
     */

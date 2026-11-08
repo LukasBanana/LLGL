@@ -2721,7 +2721,7 @@ private:
     unsigned NumInputPointers() const
     {
         // This app recognizes up to 2 touch inputs on mobile. Only 1 mouse input for desktop. Ignore `options.useMobileView` here!
-        return IsRunningOnMobileDevice() ? 2 : 1;
+        return IsTouchInputSupported() ? 2 : 1;
     }
 
     unsigned FindInputPointerInRect(UIRect rect, bool canSelect = true, bool ignoreMainMenu = false) const
@@ -3661,8 +3661,8 @@ private:
     {
         return
         (
-            (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::LButton)) ||
-            (IsRunningOnMobileDevice() && inputPointer.state == LLGL::InputState::Activate)
+            (!IsTouchInputSupported() && input.KeyDown(LLGL::Key::LButton)) ||
+            (IsTouchInputSupported() && inputPointer.state == LLGL::InputState::Activate)
         );
     }
 
@@ -3670,8 +3670,8 @@ private:
     {
         return
         (
-            (!IsRunningOnMobileDevice() && input.KeyUp(LLGL::Key::LButton)) ||
-            (IsRunningOnMobileDevice() && inputPointer.state == LLGL::InputState::Deactivate)
+            (!IsTouchInputSupported() && input.KeyUp(LLGL::Key::LButton)) ||
+            (IsTouchInputSupported() && inputPointer.state == LLGL::InputState::Deactivate)
         );
     }
 
@@ -3683,7 +3683,7 @@ private:
         const bool isBrickOverTrash = (uiState.trash.activePointerId == (pointerIndex + 1));
         viewOptions.previewBrick.isDithered = isBrickOverTrash || viewOptions.previewBrick.isBlocked;
 
-        if (!IsRunningOnMobileDevice() && input.KeyDown(LLGL::Key::RButton))
+        if (!IsTouchInputSupported() && input.KeyDown(LLGL::Key::RButton))
         {
             // Place brick back to its previous location and transition back to 'select' mode
             CancelBrickMoveEvent();

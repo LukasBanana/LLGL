@@ -202,9 +202,20 @@ static bool QueryIsRunningOnMobileDevice()
 {
     return EM_ASM_INT({
         const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        const isMobileUA = /Android|web[O0]S|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
         const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         return (isMobileUA || hasTouch) ? 1 : 0;
+    }) != 0;
+}
+
+static bool QueryIsTouchInputSupported()
+{
+    return EM_ASM_INT({
+        return (
+            ('ontouchstart' in window) || 
+            (navigator.maxTouchPoints >= 2) || 
+            (navigator.msMaxTouchPoints >= 2)
+        ) ? 1 : 0;
     }) != 0;
 }
 
@@ -219,6 +230,11 @@ static bool QueryIsRunningOnMobileDevice()
     #endif
 }
 
+static bool QueryIsTouchInputSupported()
+{
+    return QueryIsRunningOnMobileDevice();
+}
+
 #endif // /LLGL_OS_WASM
 
 bool IsRunningOnMobileDevice()
@@ -228,12 +244,18 @@ bool IsRunningOnMobileDevice()
     return isMobileDevice;
 }
 
+bool IsTouchInputSupported()
+{
+    static const bool isTouchInputSupported = QueryIsTouchInputSupported();
+    return isTouchInputSupported;
+}
+
 
 /*
  * TrackballRotationModel struct
  */
 
-// Returns a 3D unit vector from a 2D coordinate that is centered around the speified viewport.
+// Returns a 3D unit vector from a 2D coordinate that is centered around the specified viewport.
 static Gs::Vector3f Unit3DVectorFrom2DPosition(const LLGL::Viewport& viewport, LLGL::Offset2D coord, float projZAxis, float sphereRadius = 1.0f)
 {
     /* Convert 2D coordinate into NDC space */
@@ -742,7 +764,7 @@ static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const
         return res;
 }
 
-ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamles)
+ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamples)
 {
     // Set report callback to standard output if not already done
     LLGL::Log::RegisterCallbackStd(LLGL::Log::StdOutFlags::Colored);
@@ -808,7 +830,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
         swapChainDesc.debugName     = "SwapChain";
         swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
 
-        if (overrideSwapChainSamles == 0)
+        if (overrideSwapChainSamples == 0)
         {
             #ifdef LLGL_OS_WASM
             swapChainDesc.samples   = g_Config.samples; //TODO: workaround to avoid intermediate WebGL context
@@ -817,7 +839,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSw
             #endif
         }
         else
-            swapChainDesc.samples   = overrideSwapChainSamles;
+            swapChainDesc.samples   = overrideSwapChainSamples;
 
         swapChainDesc.swapBuffers   = g_Config.swapBuffers;
         swapChainDesc.resizable     = true;
@@ -1245,7 +1267,7 @@ LLGL::Shader* ExampleBase::LoadShaderForTargetLanguage(
             {
                 // If the source was not found and the basename contains a permutation suffix (e.g. "Example.RWTextures"),
                 // Search again in current directory without the suffix, i.e. only for the input shader,
-                // not for the auto-generatd ones as they need to contain the suffix.
+                // not for the auto-generated ones as they need to contain the suffix.
                 if (const char* basenameSuffix = std::strchr(basename, '.'))
                 {
                     const std::string basenameNoSuffix = std::string(basename).substr(0, basenameSuffix - basename);

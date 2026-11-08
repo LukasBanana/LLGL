@@ -61,6 +61,9 @@ inline int ModuloSignInt(int a, int b)
 // WebAssembly needs to determine this at runtime, since it can run either in a desktop or mobile browser.
 bool IsRunningOnMobileDevice();
 
+// Returns true if this example is running on a device with touch input support.
+bool IsTouchInputSupported();
+
 
 /*
  * Example base class
@@ -273,8 +276,8 @@ protected:
 protected:
 
     // Initializes the render system, swap-chain, and primary command buffer.
-    // @param overrideSwapChainSamles If non-zero, this overrides the user's configured multisamples if the app needs a specific number.
-    ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamles = 0);
+    // @param overrideSwapChainSamples If non-zero, this overrides the user's configured multisamples if the app needs a specific number.
+    ExampleBase(const LLGL::UTF8String& title, std::uint32_t overrideSwapChainSamples = 0);
 
     // Callback to draw each frame
     virtual void OnDrawFrame(float deltaTime) = 0;

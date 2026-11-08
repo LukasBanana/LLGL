@@ -52,7 +52,7 @@ struct VersionInfo
 };
 
 /**
-\briefs Compares the two VersionInfo arguments.
+\brief Compares the two VersionInfo arguments.
 \returns 0 if both arguments are equal,
 < 0 if \c lhs is considered an earlier version than \c rhs,
 or > 0 if \c lhs is considered a newer version than \c rhs.

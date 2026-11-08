@@ -77,7 +77,7 @@ struct BindFlags
         /**
         \brief The resource can be used to bind a stream of indices.
         \remarks This can only be used for Buffer resources.
-        \note On WebGL 2, this must \e not be combined with any other bind flags except for CopySrc and CopyDst.
+        \note On WebGL 2, this must \e not be combined with any other bind flags except for BindFlags::CopySrc and BindFlags::CopyDst.
         This means WebGL 2 does not support sharing vertex with index data in the same buffer.
         \see CommandBuffer::SetIndexBuffer
         */
@@ -85,13 +85,13 @@ struct BindFlags
 
         /**
         \brief The resource can be used to bind a set of constants.
-        \remarks This can only be used for Buffer resources and must \e not be combined with any other bind flags except for CopySrc and CopyDst.
+        \remarks This can only be used for Buffer resources and must \e not be combined with any other bind flags except for BindFlags::CopySrc and BindFlags::CopyDst.
         */
         ConstantBuffer          = (1 << 2),
 
         /**
         \brief The resource can be used to bind an output stream buffer (also referred to as "transform feedback").
-        \remarks This can only be used for Buffer resources.
+        \remarks This can only be used for Buffer resources and must \e not be combined with BindFlags::Storage bind flag.
         \see CommandBuffer::BeginStreamOutput
         */
         StreamOutputBuffer      = (1 << 3),

@@ -138,7 +138,7 @@ class LLGL_EXPORT Input : public Interface
 
         /**
         \brief Resets the internal state.
-        remarks This should be called once \e before Surface::ProcessEvents is invoked.
+        \remarks This should be called once \e before Surface::ProcessEvents is invoked.
         \see Surface::ProcessEvents
         \todo Rename to Tick() or something else to indicate this needs to be called once a frame.
         */

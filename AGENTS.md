@@ -22,6 +22,8 @@ When making changes, prefer solutions that are:
 - Prefer explicit, readable code over clever or condensed code.
 - Maintain compatibility with the project’s existing C++ style and header organization.
 - Do not introduce dependencies unless they are clearly needed and justified.
+- Keep commit messages short and to the point; The headline should start with a `[TOPIC]` prefix,
+  e.g. `[GL] Fixed swap interval in OpenGL backend.`; Optional remarks are separated by a blank line after the headline.
 
 ## C++ language standard policy
 
