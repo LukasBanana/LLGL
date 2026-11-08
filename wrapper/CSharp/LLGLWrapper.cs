@@ -626,6 +626,16 @@ namespace LLGL
         Store,
     }
 
+    public enum ResolveMode
+    {
+        None,
+        Min,
+        Max,
+        Average,
+        SampleZero,
+        Optimal,
+    }
+
     public enum ShadingLanguage
     {
         GLSL           = (0x10000),
@@ -2228,18 +2238,20 @@ namespace LLGL
 
     public class AttachmentFormatDescriptor
     {
-        public Format            Format { get; set; }  = Format.Undefined;
-        public AttachmentLoadOp  LoadOp { get; set; }  = AttachmentLoadOp.Undefined;
-        public AttachmentStoreOp StoreOp { get; set; } = AttachmentStoreOp.Undefined;
+        public Format            Format { get; set; }      = Format.Undefined;
+        public AttachmentLoadOp  LoadOp { get; set; }      = AttachmentLoadOp.Undefined;
+        public AttachmentStoreOp StoreOp { get; set; }     = AttachmentStoreOp.Undefined;
+        public ResolveMode       ResolveMode { get; set; } = ResolveMode.Optimal;
 
         internal NativeLLGL.AttachmentFormatDescriptor Native
         {
             get
             {
                 var native = new NativeLLGL.AttachmentFormatDescriptor();
-                native.format  = Format;
-                native.loadOp  = LoadOp;
-                native.storeOp = StoreOp;
+                native.format      = Format;
+                native.loadOp      = LoadOp;
+                native.storeOp     = StoreOp;
+                native.resolveMode = ResolveMode;
                 return native;
             }
         }
@@ -4334,9 +4346,10 @@ namespace LLGL
 
         public unsafe struct AttachmentFormatDescriptor
         {
-            public Format            format;  /* = Format.Undefined */
-            public AttachmentLoadOp  loadOp;  /* = AttachmentLoadOp.Undefined */
-            public AttachmentStoreOp storeOp; /* = AttachmentStoreOp.Undefined */
+            public Format            format;      /* = Format.Undefined */
+            public AttachmentLoadOp  loadOp;      /* = AttachmentLoadOp.Undefined */
+            public AttachmentStoreOp storeOp;     /* = AttachmentStoreOp.Undefined */
+            public ResolveMode       resolveMode; /* = ResolveMode.Optimal */
         }
 
         public unsafe struct RenderSystemDescriptor

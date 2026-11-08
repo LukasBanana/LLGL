@@ -153,6 +153,7 @@ class D3D12CommandBuffer final : public CommandBufferTier1
 
         D3D12SwapChain*                         boundSwapChain_                             = nullptr;
         D3D12RenderTarget*                      boundRenderTarget_                          = nullptr;
+        const D3D12RenderPass*                  boundRenderPass_                            = nullptr;
         const D3D12PipelineLayout*              boundPipelineLayout_                        = nullptr;
         D3D12PipelineState*                     boundPipelineState_                         = nullptr;
         D3D12Buffer*                            boundSOBuffers_[LLGL_MAX_NUM_SO_BUFFERS]    = {};

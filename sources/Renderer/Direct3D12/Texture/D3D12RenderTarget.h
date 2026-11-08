@@ -42,7 +42,7 @@ class D3D12RenderTarget final : public RenderTarget
         D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc);
 
         void TransitionToOutputMerger(D3D12CommandContext& commandContext);
-        void ResolveSubresources(D3D12CommandContext& commandContext);
+        void ResolveSubresources(D3D12CommandContext& commandContext, const D3D12RenderPass* renderPass = nullptr);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
@@ -137,13 +137,16 @@ class D3D12RenderTarget final : public RenderTarget
             DXGI_FORMAT     format;
         };
 
-        // Only the depth plane is resolved, since NVIDIA drivers leave the stencil plane untouched
         struct DepthStencilResolveTarget
         {
             D3D12Resource*  resolveDstTexture           = nullptr;
-            UINT            resolveDstSubresource       = 0;
-            UINT            multiSampledSrcSubresource  = 0;
             DXGI_FORMAT     format                      = DXGI_FORMAT_UNKNOWN;
+
+            UINT            depthDstSubresource         = 0;
+            UINT            depthSrcSubresource         = 0;
+
+            UINT            stencilDstSubresource       = 0;
+            UINT            stencilSrcSubresource       = 0;
         };
 
     private:

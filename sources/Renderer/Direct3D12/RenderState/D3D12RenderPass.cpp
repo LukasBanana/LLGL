@@ -16,6 +16,7 @@
 #include "../../../Core/Exception.h"
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <algorithm>
 
 
@@ -23,9 +24,19 @@ namespace LLGL
 {
 
 
+D3D12RenderPass::D3D12RenderPass() :
+    numColorAttachments_ { 0                   },
+    numViews_            { 1                   },
+    clearFlagsDSV_       { 0                   },
+    attachmentFlagsDSV_  { D3D12_DSV_FLAG_NONE }
+{
+}
+
 D3D12RenderPass::D3D12RenderPass(
     const D3D12Device& device,
     const RenderPassDescriptor& desc)
+:
+    D3D12RenderPass{}
 {
     BuildAttachments(device, desc);
 }
@@ -35,22 +46,23 @@ void D3D12RenderPass::BuildAttachments(
     const RenderPassDescriptor& desc)
 {
     /* Check which color attachment must be cleared */
-    numColorAttachments_    = NumEnabledColorAttachments(desc);
-    clearFlagsDSV_          = 0;
+    numColorAttachments_ = NumEnabledColorAttachments(desc);
 
     FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
 
-    /* Check if depth attachment must be cleared */
+    /* Check if depth-stencil attachment must be cleared */
+    clearFlagsDSV_ = 0;
     if (desc.depthAttachment.loadOp == AttachmentLoadOp::Clear)
         clearFlagsDSV_ |= D3D12_CLEAR_FLAG_DEPTH;
-
-    /* Check if stencil attachment must be cleared */
     if (desc.stencilAttachment.loadOp == AttachmentLoadOp::Clear)
         clearFlagsDSV_ |= D3D12_CLEAR_FLAG_STENCIL;
 
     /* Store native color formats */
     for_range(i, numColorAttachments_)
+    {
         SetRTVFormat(DXTypes::ToDXGIFormat(desc.colorAttachments[i].format), i);
+        resolveModes_[i] = MapResolveMode(desc.colorAttachments[i]);
+    }
     for_subrange(i, numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         SetRTVFormat(DXGI_FORMAT_UNKNOWN, i);
 
@@ -59,7 +71,10 @@ void D3D12RenderPass::BuildAttachments(
         desc.depthAttachment.format   != Format::Undefined             &&
         desc.stencilAttachment.format != Format::Undefined)
     {
-        LLGL_TRAP("mismatch between depth and stencil attachment formats");
+        LLGL_TRAP(
+            "mismatch between depth (%s) and stencil (%s) attachment formats",
+            ToString(desc.depthAttachment.format), ToString(desc.stencilAttachment.format)
+        );
     }
 
     if (desc.depthAttachment.format != Format::Undefined)
@@ -69,7 +84,11 @@ void D3D12RenderPass::BuildAttachments(
     else
         SetDSVFormat(DXGI_FORMAT_UNKNOWN);
 
+    resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS    ] = MapResolveMode(desc.depthAttachment);
+    resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1] = MapResolveMode(desc.stencilAttachment);
+
     /* If we don't care about storing depth/stencil values, append flag to only read those values */
+    attachmentFlagsDSV_ = D3D12_DSV_FLAG_NONE;
     if (desc.depthAttachment.storeOp == AttachmentStoreOp::Undefined && IsDepthFormat(desc.depthAttachment.format))
         attachmentFlagsDSV_ |= D3D12_DSV_FLAG_READ_ONLY_DEPTH;
     if (desc.stencilAttachment.storeOp == AttachmentStoreOp::Undefined && IsStencilFormat(desc.stencilAttachment.format))
@@ -96,10 +115,16 @@ void D3D12RenderPass::BuildAttachments(
     /* Store color attachment formats */
     numColorAttachments_ = numColorFormats;
     for_range(i, numColorFormats)
+    {
         SetRTVFormat(colorFormats[i], i);
+        resolveModes_[i] = ResolveMode::Average;
+    }
 
     /* Store depth-stencil attachment format */
     SetDSVFormat(depthStencilFormat);
+
+    resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS    ] = ResolveMode::Min;
+    resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1] = ResolveMode::Min;
 
     /* Store sample descriptor */
     sampleDesc_ = sampleDesc;

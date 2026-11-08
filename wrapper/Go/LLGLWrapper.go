@@ -628,6 +628,16 @@ const (
     AttachmentStoreOpStore
 )
 
+type ResolveMode int
+const (
+    ResolveModeNone ResolveMode = iota
+    ResolveModeMin
+    ResolveModeMax
+    ResolveModeAverage
+    ResolveModeSampleZero
+    ResolveModeOptimal
+)
+
 type ShadingLanguage int
 const (
     ShadingLanguageGLSL           = (0x10000)
@@ -1425,9 +1435,10 @@ type FrameProfile struct {
 }
 
 type AttachmentFormatDescriptor struct {
-    Format  Format            /* = FormatUndefined */
-    LoadOp  AttachmentLoadOp  /* = AttachmentLoadOpUndefined */
-    StoreOp AttachmentStoreOp /* = AttachmentStoreOpUndefined */
+    Format      Format            /* = FormatUndefined */
+    LoadOp      AttachmentLoadOp  /* = AttachmentLoadOpUndefined */
+    StoreOp     AttachmentStoreOp /* = AttachmentStoreOpUndefined */
+    ResolveMode ResolveMode       /* = ResolveModeOptimal */
 }
 
 type RenderSystemDescriptor struct {

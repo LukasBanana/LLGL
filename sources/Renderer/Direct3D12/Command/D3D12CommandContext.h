@@ -17,6 +17,7 @@
 #include "../Buffer/D3D12StagingBufferPool.h"
 #include "../Buffer/D3D12IntermediateBufferPool.h"
 #include "../../../Core/CompilerExtensions.h"
+#include <LLGL/RenderPassFlags.h>
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -111,20 +112,9 @@ class D3D12CommandContext
             UINT            dstSubresource,
             D3D12Resource&  srcResource,
             UINT            srcSubresource,
-            DXGI_FORMAT     format
+            DXGI_FORMAT     format,
+            ResolveMode     resolveMode     = ResolveMode::Average
         );
-
-        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        // Resolves the entire subresource with the specified mode. Requires ID3D12GraphicsCommandList1.
-        void ResolveSubresourceRegion(
-            D3D12Resource&      dstResource,
-            UINT                dstSubresource,
-            D3D12Resource&      srcResource,
-            UINT                srcSubresource,
-            DXGI_FORMAT         format,
-            D3D12_RESOLVE_MODE  resolveMode
-        );
-        #endif
 
         void CopyTextureRegion(
             D3D12Resource&      dstResource,

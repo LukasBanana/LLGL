@@ -55,35 +55,49 @@ enum class AttachmentStoreOp
 
     //! Store the outcome into the respective render-target attachment.
     Store,
+};
 
-#if 0 //TODO: not implemented yet
+/**
+\brief Enumeration of modes how to resolve multi-sampled render-target attachments into their single-sampled resolve attachments.
+\note Only supported with: Direct3D 12.
+\see AttachmentFormatDescriptor::resolveMode
+\todo Support more backend
+*/
+enum class ResolveMode
+{
     /**
-    \brief Store and resolve the average sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \brief No resolve mode.
+    \remarks Use this to render into a multi-sampled render-target with multiple render-passes
+    where only the last one resolves the final result into a single-sampled render-target.
+    */
+    None,
+
+    /**
+    \brief Resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+    Min,
+
+    /**
+    \brief Resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \see RenderTargetDescriptor::resolveAttachments
+    */
+    Max,
+
+    /**
+    \brief Resolve the average sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \remarks This can only be used with non-integer attachment formats, e.g. Format::R32Float, Format::RGBA8UNorm etc.
-    Use ResolveMin, ResolveMax, and ResolveSample0 for integer attachment formats, e.g. Format::R32UInt.
+    Use Min, Max, and SampleZero for integer attachment formats, e.g. Format::R32UInt or Format::D24UNormS8UInt.
     \see RenderTargetDescriptor::resolveAttachments
     \see IsIntegerFormat
     */
-//  Resolve,
+    Average,
 
     /**
-    \brief Store and resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
-    \see RenderTargetDescriptor::resolveAttachments
+    \brief Use the resolve mode that is optimal for the respective attachment format.
+    \remarks If the respective attachment has an integer format, this resolve mode maps to ResolveMode::Min. Otherwise, it maps to ResolveMode::Average.
     */
-//  ResolveMin,
-
-    /**
-    \brief Store and resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
-    \see RenderTargetDescriptor::resolveAttachments
-    */
-//  ResolveMax,
-
-    /**
-    \brief Store and resolve sample 0 of a multi-sampled render-target attachment into its respective resolve attachment.
-    \see RenderTargetDescriptor::resolveAttachments
-    */
-//  ResolveSample0,
-#endif
+    Optimal,
 };
 
 
@@ -101,12 +115,14 @@ struct AttachmentFormatDescriptor
     //! Constructor to initialize the format and optionally the load and store operations.
     inline AttachmentFormatDescriptor(
         const Format            format,
-        const AttachmentLoadOp  loadOp  = AttachmentLoadOp::Load,
-        const AttachmentStoreOp storeOp = AttachmentStoreOp::Store)
+        const AttachmentLoadOp  loadOp      = AttachmentLoadOp::Load,
+        const AttachmentStoreOp storeOp     = AttachmentStoreOp::Store,
+        const ResolveMode       resolveMode = ResolveMode::Optimal)
     :
-        format  { format  },
-        loadOp  { loadOp  },
-        storeOp { storeOp }
+        format      { format      },
+        loadOp      { loadOp      },
+        storeOp     { storeOp     },
+        resolveMode { resolveMode }
     {
     }
 
@@ -119,20 +135,31 @@ struct AttachmentFormatDescriptor
     \see SwapChain::GetColorFormat
     \see SwapChain::GetDepthStencilFormat
     */
-    Format                  format  = Format::Undefined;
+    Format                  format      = Format::Undefined;
 
     /**
     \brief Specifies the load operation of the previous attachment content. By default AttachmentLoadOp::Undefined.
     \remarks If the attachment is meant to be cleared when a render pass begins, set this to AttachmentLoadOp::Clear.
     \see AttachmentLoadOp
     */
-    AttachmentLoadOp        loadOp  = AttachmentLoadOp::Undefined;
+    AttachmentLoadOp        loadOp      = AttachmentLoadOp::Undefined;
 
     /**
     \brief Specifies the store operation of the outcome for the respective attachment content. By default AttachmentStoreOp::Undefined.
     \see AttachmentStoreOp
     */
-    AttachmentStoreOp       storeOp = AttachmentStoreOp::Undefined;
+    AttachmentStoreOp       storeOp     = AttachmentStoreOp::Undefined;
+
+    /**
+    \brief Specifies the mode with which multi-sampled attachments will be resolved into their single-sampled attachments. By default ResolveMode::Optimal.
+    \remarks This field is ignored if:
+    - The render-pass has a sample count that is \e not greater than 1.
+    - The respective resolve attachment in the render-target does \e not have a texture assigned.
+    \see RenderPassDescriptor::samples
+    \see RenderTargetDescriptor::resolveAttachments
+    \see RenderTargetDescriptor::depthStencilResolveAttachment
+    */
+    ResolveMode             resolveMode = ResolveMode::Optimal;
 };
 
 /**
@@ -166,15 +193,15 @@ struct RenderPassDescriptor
 
     /**
     \brief Specifies the depth attachment used within the render pass.
-    \remarks The depth attachment and stencil attachment usually share the same format (e.g. Format::D24UNormS8UInt).
-    They are separated here to specify different load and store operations.
+    \remarks The depth and stencil attachments \b must have the same format unless one of them is Format::Undefined.
+    They are listed separated here to specify independent load and store operations as well as resolve modes.
     */
     AttachmentFormatDescriptor  depthAttachment;
 
     /**
     \brief Specifies the stencil attachment used within the render pass.
-    \remarks The depth attachment and stencil attachment usually share the same format (e.g. Format::D24UNormS8UInt).
-    They are separated here to specify different load and store operations.
+    \remarks The depth and stencil attachments \b must have the same format unless one of them is Format::Undefined.
+    They are listed separated here to specify independent load and store operations as well as resolve modes.
     */
     AttachmentFormatDescriptor  stencilAttachment;
 

@@ -109,12 +109,15 @@ struct RenderTargetDescriptor
     const char*             debugName   = nullptr;
 
     /**
-    \brief Optional render pass object that will be used with the render target. By default null.
-    \remarks If this is null, a default render pass is created for the render target.
-    The default render pass determines the attachment formats by the render target attachments and keeps the load and store operations at its default values.
+    \brief Optional render pass object that determines color and depth-stencil properties for the render target. By default null.
+    \remarks If this is null, a default render pass configuration is used which.
+    Note that the default configuration defines the depth-stencil attachment (if assigned) to be read and written,
+    which means it cannot be sampled in a shader while the render-target acts as the active framebuffer (i.e. between \c BeginRenderPass and \c EndRenderPass).
+    \remarks The AttachmentFormatDescriptor::resolveMode field of this render pass object is ignored here,
+    because if a render pass object is specified, it must be compatible with the one specified in \c BeginRenderPass, which will always override the resolve mode anyway.
+    \see AttachmentFormatDescriptor
     \see RenderSystem::CreateRenderPass
-    \see AttachmentFormatDescriptor::loadOp
-    \see AttachmentFormatDescriptor::storeOp
+    \see CommandBuffer::BeginRenderPass
     */
     const RenderPass*       renderPass  = nullptr;
 

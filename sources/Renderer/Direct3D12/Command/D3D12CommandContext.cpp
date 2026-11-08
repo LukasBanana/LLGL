@@ -15,6 +15,7 @@
 #include "../RenderState/D3D12Fence.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
@@ -341,12 +342,26 @@ void D3D12CommandContext::FlushResourceBarriers()
     }
 }
 
+#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+static D3D12_RESOLVE_MODE ToD3D12ResolveMode(ResolveMode mode)
+{
+    switch (mode)
+    {
+        case ResolveMode::Min:  return D3D12_RESOLVE_MODE_MIN;
+        case ResolveMode::Max:  return D3D12_RESOLVE_MODE_MAX;
+        default:                break;
+    }
+    LLGL_TRAP_DX_MAP(ResolveMode, mode, D3D12_RESOLVE_MODE);
+}
+#endif
+
 void D3D12CommandContext::ResolveSubresource(
     D3D12Resource&  dstResource,
     UINT            dstSubresource,
     D3D12Resource&  srcResource,
     UINT            srcSubresource,
-    DXGI_FORMAT     format)
+    DXGI_FORMAT     format,
+    ResolveMode     resolveMode)
 {
     /* Transition both resources */
     const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.currentState;
@@ -356,58 +371,45 @@ void D3D12CommandContext::ResolveSubresource(
     TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, true);
 
     /* Resolve multi-sampled render targets */
-    commandList_->ResolveSubresource(
-        dstResource.native.Get(),
-        dstSubresource,
-        srcResource.native.Get(),
-        srcSubresource,
-        format
-    );
+    if (resolveMode == ResolveMode::Average)
+    {
+        commandList_->ResolveSubresource(
+            dstResource.native.Get(),
+            dstSubresource,
+            srcResource.native.Get(),
+            srcSubresource,
+            format
+        );
+    }
+    else
+    {
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        if (commandList1_)
+        {
+            commandList1_->ResolveSubresourceRegion(
+                dstResource.native.Get(),
+                dstSubresource,
+                0,
+                0,
+                srcResource.native.Get(),
+                srcSubresource,
+                nullptr,
+                format,
+                ToD3D12ResolveMode(resolveMode)
+            );
+        }
+        else
+        #endif // /LLGL_D3D12_ENABLE_FEATURELEVEL
+        {
+            //TODO: use built-in shader
+            LLGL_TRAP_NOT_IMPLEMENTED("ResolveMode::Min/Max does not yet have a fallback in D3D12 backend when ID3D12GraphicsCommandList1 is not available");
+        }
+    }
 
     /* Transition both resources */
     TransitionResource(dstResource, dstResourceOldState);
     TransitionResource(srcResource, srcResourceOldState);
 }
-
-#if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-
-void D3D12CommandContext::ResolveSubresourceRegion(
-    D3D12Resource&      dstResource,
-    UINT                dstSubresource,
-    D3D12Resource&      srcResource,
-    UINT                srcSubresource,
-    DXGI_FORMAT         format,
-    D3D12_RESOLVE_MODE  resolveMode)
-{
-    if (!commandList1_)
-        return;
-
-    /* Transition both resources */
-    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.currentState;
-    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.currentState;
-
-    TransitionResource(dstResource, D3D12_RESOURCE_STATE_RESOLVE_DEST);
-    TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, true);
-
-    /* Resolve entire subresource */
-    commandList1_->ResolveSubresourceRegion(
-        dstResource.native.Get(),
-        dstSubresource,
-        0,
-        0,
-        srcResource.native.Get(),
-        srcSubresource,
-        nullptr,
-        format,
-        resolveMode
-    );
-
-    /* Transition both resources */
-    TransitionResource(dstResource, dstResourceOldState);
-    TransitionResource(srcResource, srcResourceOldState);
-}
-
-#endif // /LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
 
 void D3D12CommandContext::CopyTextureRegion(
     D3D12Resource&      dstResource,

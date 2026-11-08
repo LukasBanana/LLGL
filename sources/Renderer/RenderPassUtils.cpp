@@ -61,6 +61,14 @@ LLGL_EXPORT std::uint32_t FillClearColorAttachmentIndices(
     return numColorAttachmentsToClear;
 }
 
+ResolveMode MapResolveMode(ResolveMode resolveMode, Format attachmentFormat)
+{
+    if (resolveMode == ResolveMode::Optimal)
+        return (IsIntegerFormat(attachmentFormat) ? ResolveMode::Min : ResolveMode::Average);
+    else
+        return resolveMode;
+}
+
 
 } // /namespace LLGL
 

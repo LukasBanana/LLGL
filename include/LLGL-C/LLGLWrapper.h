@@ -657,6 +657,17 @@ typedef enum LLGLAttachmentStoreOp
 }
 LLGLAttachmentStoreOp;
 
+typedef enum LLGLResolveMode
+{
+    LLGLResolveModeNone,
+    LLGLResolveModeMin,
+    LLGLResolveModeMax,
+    LLGLResolveModeAverage,
+    LLGLResolveModeSampleZero,
+    LLGLResolveModeOptimal,
+}
+LLGLResolveMode;
+
 typedef enum LLGLShadingLanguage
 {
     LLGLShadingLanguageGLSL           = (0x10000),
@@ -1582,9 +1593,10 @@ LLGLFrameProfile;
 
 typedef struct LLGLAttachmentFormatDescriptor
 {
-    LLGLFormat            format;  /* = LLGLFormatUndefined */
-    LLGLAttachmentLoadOp  loadOp;  /* = LLGLAttachmentLoadOpUndefined */
-    LLGLAttachmentStoreOp storeOp; /* = LLGLAttachmentStoreOpUndefined */
+    LLGLFormat            format;      /* = LLGLFormatUndefined */
+    LLGLAttachmentLoadOp  loadOp;      /* = LLGLAttachmentLoadOpUndefined */
+    LLGLAttachmentStoreOp storeOp;     /* = LLGLAttachmentStoreOpUndefined */
+    LLGLResolveMode       resolveMode; /* = LLGLResolveModeOptimal */
 }
 LLGLAttachmentFormatDescriptor;
 

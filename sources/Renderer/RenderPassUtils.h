@@ -37,6 +37,15 @@ LLGL_EXPORT std::uint32_t FillClearColorAttachmentIndices(
     const RenderPassDescriptor& renderPassDesc
 );
 
+// Maps ResolveMode::Optimal for the specified attachment format. Any other resolve mode is simply passed through.
+LLGL_EXPORT ResolveMode MapResolveMode(ResolveMode resolveMode, Format attachmentFormat);
+
+// Maps ResolveMode::Optimal for the specified attachment format. Any other resolve mode is simply passed through.
+inline ResolveMode MapResolveMode(const AttachmentFormatDescriptor& desc)
+{
+    return MapResolveMode(desc.resolveMode, desc.format);
+}
+
 
 } // /namespace LLGL
 

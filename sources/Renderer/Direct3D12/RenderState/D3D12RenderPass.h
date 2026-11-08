@@ -10,11 +10,14 @@
 
 
 #include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Constants.h>
+#include <LLGL/Container/ArrayView.h>
 #include <cstdint>
 #include <cstddef>
 #include <d3d12.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -28,11 +31,11 @@ class D3D12RenderPass final : public RenderPass
 
     public:
 
-        D3D12RenderPass() = default;
+        D3D12RenderPass();
 
         // Constructs the render pass with the specified descriptor and uses the device to find a suitable sample descriptor (i.e DXGI_SAMPLE_DESC).
         D3D12RenderPass(
-            const D3D12Device& device,
+            const D3D12Device&          device,
             const RenderPassDescriptor& desc
         );
 
@@ -72,7 +75,7 @@ class D3D12RenderPass final : public RenderPass
         // Returns a bitwise OR combination of D3D12_DSV_FLAGS entries.
         inline D3D12_DSV_FLAGS GetAttachmentFlagsDSV() const
         {
-            return attachmentFlagsDSV_;
+            return static_cast<D3D12_DSV_FLAGS>(attachmentFlagsDSV_);
         }
 
         // Returns the array of native color formats.
@@ -99,6 +102,24 @@ class D3D12RenderPass final : public RenderPass
             return numViews_;
         }
 
+        // Returns the resolve modes for all color attachments.
+        inline ArrayView<ResolveMode> GetColorResolveModes() const
+        {
+            return ArrayView<ResolveMode>{ resolveModes_, numColorAttachments_ };
+        }
+
+        // Returns the resolve mode for the depth attachment.
+        inline ResolveMode GetDepthResolveMode() const
+        {
+            return resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+        }
+
+        // Returns the resolve mode for the stencil attachment.
+        inline ResolveMode GetStencilResolveMode() const
+        {
+            return resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1];
+        }
+
     private:
 
         void SetDSVFormat(DXGI_FORMAT format);
@@ -106,20 +127,46 @@ class D3D12RenderPass final : public RenderPass
 
     private:
 
-        UINT                numColorAttachments_                                    = 0;
+        UINT                numColorAttachments_    : 20;
+        UINT                numViews_               :  8;
+        UINT                clearFlagsDSV_          :  2;
+        UINT                attachmentFlagsDSV_     :  2;
 
-        UINT                clearFlagsDSV_                                          = 0;
         std::uint8_t        clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
-        D3D12_DSV_FLAGS     attachmentFlagsDSV_                                     = D3D12_DSV_FLAG_NONE;
 
         DXGI_FORMAT         rtvFormats_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]             = {};
         DXGI_FORMAT         dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
 
+        ResolveMode         resolveModes_[LLGL_MAX_NUM_COLOR_ATTACHMENTS + 2]       = {};
+
         DXGI_SAMPLE_DESC    sampleDesc_                                             = { 1, 0 };
 
-        UINT                numViews_                                               = 1;
-
 };
+
+inline D3D12_DSV_FLAGS GetD3D12RenderPassAttachmentFlagsDSV(const D3D12RenderPass* renderPassD3D)
+{
+    return (renderPassD3D != nullptr ? renderPassD3D->GetAttachmentFlagsDSV() : D3D12_DSV_FLAG_NONE);
+}
+
+inline ResolveMode GetD3D12RenderPassColorResolveMode(const D3D12RenderPass* renderPassD3D, std::size_t colorAttachmentIndex)
+{
+    return (renderPassD3D != nullptr ? renderPassD3D->GetColorResolveModes()[colorAttachmentIndex] : ResolveMode::Average);
+}
+
+inline ResolveMode GetD3D12RenderPassDepthResolveMode(const D3D12RenderPass* renderPassD3D)
+{
+    return (renderPassD3D != nullptr ? renderPassD3D->GetDepthResolveMode() : ResolveMode::Min);
+}
+
+inline ResolveMode GetD3D12RenderPassStencilResolveMode(const D3D12RenderPass* renderPassD3D)
+{
+    return (renderPassD3D != nullptr ? renderPassD3D->GetStencilResolveMode() : ResolveMode::Min);
+}
+
+inline UINT GetD3D12RenderPassNumViewsOrDefault(const D3D12RenderPass* renderPassD3D, UINT numViewsByDefault)
+{
+    return (renderPassD3D != nullptr ? renderPassD3D->GetNumViews() : std::max<UINT>(1u, numViewsByDefault));
+}
 
 
 } // /namespace LLGL

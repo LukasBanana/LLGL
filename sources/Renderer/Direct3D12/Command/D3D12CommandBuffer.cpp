@@ -803,9 +803,11 @@ void D3D12CommandBuffer::BeginRenderPass(
     /* Clear attachments */
     if (renderPass)
     {
-        auto* renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
-        ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
+        boundRenderPass_ = LLGL_CAST(const D3D12RenderPass*, renderPass);
+        ClearAttachmentsWithRenderPass(*boundRenderPass_, numClearValues, clearValues);
     }
+    else
+        boundRenderPass_ = nullptr;
 }
 
 void D3D12CommandBuffer::EndRenderPass()
@@ -814,7 +816,7 @@ void D3D12CommandBuffer::EndRenderPass()
     if (boundSwapChain_ != nullptr)
         boundSwapChain_->ResolveSubresources(commandContext_, currentColorBuffer_);
     else if (boundRenderTarget_ != nullptr)
-        boundRenderTarget_->ResolveSubresources(commandContext_);
+        boundRenderTarget_->ResolveSubresources(commandContext_, boundRenderPass_);
 }
 
 /* ----- Pipeline States ----- */
@@ -1641,6 +1643,7 @@ void D3D12CommandBuffer::ResetBindingStates()
     numSOBuffers_           = 0;
     soBufferIASlot0_        = nullptr;
     boundRenderTarget_      = nullptr;
+    boundRenderPass_        = nullptr;
     boundSwapChain_         = nullptr;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;

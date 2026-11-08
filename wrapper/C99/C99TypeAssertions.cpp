@@ -1115,6 +1115,7 @@ LLGL_STATIC_ASSERT_SIZE(AttachmentFormatDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, format);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, loadOp);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, storeOp);
+LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, resolveMode);
 
 LLGL_STATIC_ASSERT_SIZE(RenderPassDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, debugName);

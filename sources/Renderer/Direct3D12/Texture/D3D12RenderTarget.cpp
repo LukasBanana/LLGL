@@ -36,10 +36,7 @@ static const D3D12RenderPass* GetD3DRenderPass(const RenderPass* renderPass)
 static UINT ResolveNumViews(const RenderTargetDescriptor& desc)
 {
     /* An explicit render pass carries the view count; otherwise it comes from RenderTargetDescriptor::views */
-    if (auto* renderPassD3D = GetD3DRenderPass(desc.renderPass))
-        return renderPassD3D->GetNumViews();
-    else
-        return (desc.views > 1 ? desc.views : 1);
+    return GetD3D12RenderPassNumViewsOrDefault(GetD3DRenderPass(desc.renderPass), desc.views);
 }
 
 D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc) :
@@ -108,35 +105,55 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
     commandContext.FlushResourceBarriers();
 }
 
-void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
+void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext, const D3D12RenderPass* renderPass)
 {
     if (HasMultiSampling())
     {
-        for (const ResolveTarget& target : resolveTargets_)
+        for_range(targetIndex, resolveTargets_.size())
         {
-            commandContext.ResolveSubresource(
-                *target.resolveDstTexture,
-                target.resolveDstSubresource,
-                *target.multiSampledSrcTexture,
-                0,
-                target.format
-            );
+            const ResolveTarget& target = resolveTargets_[targetIndex];
+            const ResolveMode colorResolveMode = GetD3D12RenderPassColorResolveMode(renderPass, targetIndex);
+            if (colorResolveMode != ResolveMode::None)
+            {
+                commandContext.ResolveSubresource(
+                    *target.resolveDstTexture,
+                    target.resolveDstSubresource,
+                    *target.multiSampledSrcTexture,
+                    0,
+                    target.format,
+                    colorResolveMode
+                );
+            }
         }
 
-        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
-        /* Resolve depth plane; D3D12 has no resolve mode that takes a single sample, so take the minimum */
         if (depthStencilResolveTarget_.resolveDstTexture != nullptr)
         {
-            commandContext.ResolveSubresourceRegion(
-                *depthStencilResolveTarget_.resolveDstTexture,
-                depthStencilResolveTarget_.resolveDstSubresource,
-                *depthStencil_,
-                depthStencilResolveTarget_.multiSampledSrcSubresource,
-                depthStencilResolveTarget_.format,
-                D3D12_RESOLVE_MODE_MIN
-            );
+            const ResolveMode depthResolveMode = GetD3D12RenderPassDepthResolveMode(renderPass);
+            if (depthResolveMode != ResolveMode::None)
+            {
+                commandContext.ResolveSubresource(
+                    *depthStencilResolveTarget_.resolveDstTexture,
+                    depthStencilResolveTarget_.depthDstSubresource,
+                    *depthStencil_,
+                    depthStencilResolveTarget_.depthSrcSubresource,
+                    depthStencilResolveTarget_.format,
+                    depthResolveMode
+                );
+            }
+
+            const ResolveMode stencilResolveMode = GetD3D12RenderPassStencilResolveMode(renderPass);
+            if (stencilResolveMode != ResolveMode::None)
+            {
+                commandContext.ResolveSubresource(
+                    *depthStencilResolveTarget_.resolveDstTexture,
+                    depthStencilResolveTarget_.stencilDstSubresource,
+                    *depthStencil_,
+                    depthStencilResolveTarget_.stencilSrcSubresource,
+                    depthStencilResolveTarget_.format,
+                    stencilResolveMode
+                );
+            }
         }
-        #endif
     }
     else
     {
@@ -280,10 +297,11 @@ void D3D12RenderTarget::CreateAttachments(
             cpuDescHandle.ptr += rtvDescSize;
         }
     }
+
     if (dsvDescHeap_)
     {
-        auto* renderPassD3D = GetD3DRenderPass(desc.renderPass);
-        const D3D12_DSV_FLAGS dsvFlags = (renderPassD3D != nullptr ? renderPassD3D->GetAttachmentFlagsDSV() : D3D12_DSV_FLAG_NONE);
+        const D3D12RenderPass* renderPassD3D = GetD3DRenderPass(desc.renderPass);
+        const D3D12_DSV_FLAGS dsvFlags = GetD3D12RenderPassAttachmentFlagsDSV(renderPassD3D);
         CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart(), dsvFlags, numViews);
         if (HasMultiSampling() && desc.depthStencilResolveAttachment.texture != nullptr)
             CreateDepthStencilResolveTarget(desc.depthStencilAttachment, desc.depthStencilResolveAttachment);
@@ -572,6 +590,23 @@ void D3D12RenderTarget::CreateResolveTarget(
     resolveTargets_.push_back(resolveTarget);
 }
 
+static constexpr UINT k_depthPlaneSlice     = 0;
+static constexpr UINT k_stencilPlaneSlice   = 1;
+
+static UINT DXCalcSubresourceOrDefault(const AttachmentDescriptor& attachmentDesc, UINT planeSlice)
+{
+    if (Texture* texture = attachmentDesc.texture)
+    {
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
+        return textureD3D.CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.arrayLayer, planeSlice);
+    }
+    else
+    {
+        /* Internal depth-stencil buffers have a single MIP-map and array layer */
+        return D3D12CalcSubresource(0, 0, planeSlice, 1, 1);
+    }
+}
+
 void D3D12RenderTarget::CreateDepthStencilResolveTarget(
     const AttachmentDescriptor& depthStencilAttachment,
     const AttachmentDescriptor& resolveAttachment)
@@ -582,18 +617,19 @@ void D3D12RenderTarget::CreateDepthStencilResolveTarget(
     ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
     auto& resolveTextureD3D = LLGL_CAST(D3D12Texture&, *resolveAttachment.texture);
 
-    depthStencilResolveTarget_.resolveDstTexture        = &(resolveTextureD3D.GetResource());
-    depthStencilResolveTarget_.resolveDstSubresource    = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer);
-
-    /* Internal depth-stencil buffers have a single MIP-map and array layer */
-    if (Texture* texture = depthStencilAttachment.texture)
-    {
-        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
-        depthStencilResolveTarget_.multiSampledSrcSubresource = textureD3D.CalcSubresource(depthStencilAttachment.mipLevel, depthStencilAttachment.arrayLayer);
-    }
+    depthStencilResolveTarget_.resolveDstTexture = &(resolveTextureD3D.GetResource());
 
     /* WARP removes the device when resolving with DXGI_FORMAT_D32_FLOAT, so resolve the depth plane as DXGI_FORMAT_R32_FLOAT */
     depthStencilResolveTarget_.format = (depthStencilFormat_ == DXGI_FORMAT_D32_FLOAT ? DXGI_FORMAT_R32_FLOAT : depthStencilFormat_);
+
+    depthStencilResolveTarget_.depthDstSubresource = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, k_depthPlaneSlice);
+    depthStencilResolveTarget_.depthSrcSubresource = DXCalcSubresourceOrDefault(depthStencilAttachment, k_depthPlaneSlice);
+
+    if (DXTypes::HasStencilComponent(depthStencilFormat_))
+    {
+        depthStencilResolveTarget_.stencilDstSubresource = resolveTextureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, k_stencilPlaneSlice);
+        depthStencilResolveTarget_.stencilSrcSubresource = DXCalcSubresourceOrDefault(depthStencilAttachment, k_stencilPlaneSlice);
+    }
 }
 
 
