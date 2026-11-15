@@ -632,7 +632,6 @@ namespace LLGL
         Min,
         Max,
         Average,
-        SampleZero,
         Optimal,
     }
 

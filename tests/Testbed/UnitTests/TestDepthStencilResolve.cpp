@@ -140,6 +140,16 @@ DEF_TEST( DepthStencilResolve )
     }
     CREATE_RENDER_TARGET(msTarget, msTargetDesc, "dsResolve.msTarget");
 
+    RenderPassDescriptor resolvePassDesc;
+    resolvePassDesc.samples = numSamples;
+    resolvePassDesc.colorAttachments[0].format = Format::RGBA8UNorm;
+    resolvePassDesc.colorAttachments[0].storeOp = AttachmentStoreOp::Store;
+    resolvePassDesc.colorAttachments[0].resolveMode = ResolveMode::Optimal;
+    resolvePassDesc.depthAttachment.format = Format::D32Float;
+    resolvePassDesc.depthAttachment.storeOp = AttachmentStoreOp::Store;
+    resolvePassDesc.depthAttachment.resolveMode = ResolveMode::Optimal;
+    RenderPass* resolvePass = renderer->CreateRenderPass(resolvePassDesc);
+
     /* --- Pipelines: depth-only rasterization, as in TestDepthBuffer --- */
     auto MakePSO = [&](RenderTarget* target, bool multiSampled) -> GraphicsPipelineDescriptor
     {
@@ -160,6 +170,7 @@ DEF_TEST( DepthStencilResolve )
     CREATE_GRAPHICS_PSO(refPSO, refPSODesc, "dsResolve.refPSO");
 
     GraphicsPipelineDescriptor msPSODesc = MakePSO(msTarget, true);
+    msPSODesc.renderPass = resolvePass;
     CREATE_GRAPHICS_PSO(msPSO, msPSODesc, "dsResolve.msPSO");
 
     /* --- Identical scene for both passes --- */
@@ -176,11 +187,11 @@ DEF_TEST( DepthStencilResolve )
 
     sceneConstants.vpMatrix = projection * vMatrix;
 
-    auto DrawScene = [&](RenderTarget* target, PipelineState* pso, long clearFlags, const char* debugLabel)
+    auto DrawScene = [&](RenderTarget* target, PipelineState* pso, long clearFlags, const char* debugLabel, const RenderPass* renderPass = nullptr)
     {
         cmdBuffer->PushDebugGroup(debugLabel);
         {
-            cmdBuffer->BeginRenderPass(*target);
+            cmdBuffer->BeginRenderPass(*target, renderPass);
             {
                 cmdBuffer->Clear(clearFlags);
                 cmdBuffer->SetPipelineState(*pso);
@@ -199,7 +210,7 @@ DEF_TEST( DepthStencilResolve )
     {
         cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
         DrawScene(refTarget, refPSO, ClearFlags::Depth, "RefTarget");
-        DrawScene(msTarget, msPSO, ClearFlags::ColorDepth, "MSTarget");
+        DrawScene(msTarget, msPSO, ClearFlags::ColorDepth, "MSTarget", resolvePass);
     }
     END();
 
@@ -295,6 +306,7 @@ DEF_TEST( DepthStencilResolve )
     renderer->Release(*msPSO);
     renderer->Release(*refPSO);
     renderer->Release(*msTarget);
+    renderer->Release(*resolvePass);
     renderer->Release(*refTarget);
     renderer->Release(*resolveDepthTex);
     renderer->Release(*resolveColorTex);

@@ -25,6 +25,7 @@ namespace LLGL
 
 class VKTexture;
 class VKCommandContext;
+class VKPhysicalDevice;
 
 class VKRenderTarget final : public RenderTarget
 {
@@ -36,6 +37,7 @@ class VKRenderTarget final : public RenderTarget
     public:
 
         VKRenderTarget(
+            const VKPhysicalDevice&         physicalDevice,
             VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const RenderTargetDescriptor&   desc
@@ -83,14 +85,15 @@ class VKRenderTarget final : public RenderTarget
         bool HasDepthStencilResolve(const RenderTargetDescriptor& desc) const;
 
         void CreateRenderPass(
+            const VKPhysicalDevice&         physicalDevice,
             VkDevice                        device,
             const RenderTargetDescriptor&   desc,
             VKRenderPass&                   renderPass,
             VkAttachmentLoadOp              attachmentsLoadOp
         );
 
-        void CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
-        void CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
+        void CreateDefaultRenderPass(const VKPhysicalDevice& physicalDevice, VkDevice device, const RenderTargetDescriptor& desc);
+        void CreateSecondaryRenderPass(const VKPhysicalDevice& physicalDevice, VkDevice device, const RenderTargetDescriptor& desc);
 
         VkImageView CreateAttachmentImageView(
             VkDevice                    device,

@@ -40,6 +40,9 @@ struct VKPhysicalDevicePropertiesExt : VkPhysicalDeviceProperties
     #if VK_KHR_multiview
     VkPhysicalDeviceMultiviewPropertiesKHR                  multiview;
     #endif
+    #if VK_KHR_depth_stencil_resolve
+    VkPhysicalDeviceDepthStencilResolvePropertiesKHR        depthStencilResolve;
+    #endif
     #if VK_KHR_fragment_shading_rate
     VkPhysicalDeviceFragmentShadingRatePropertiesKHR        fragmentShadingRate;
     #endif

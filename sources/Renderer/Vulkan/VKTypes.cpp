@@ -477,6 +477,23 @@ VkPipelineStageFlags ToVkStageFlags(long stageFlags)
     return bitmask;
 }
 
+#if VK_KHR_depth_stencil_resolve
+
+VkResolveModeFlagBitsKHR ToVkRenderMode(ResolveMode mode)
+{
+    switch (mode)
+    {
+        case ResolveMode::None:      return VK_RESOLVE_MODE_NONE_KHR;
+        case ResolveMode::Min:       return VK_RESOLVE_MODE_MIN_BIT_KHR;
+        case ResolveMode::Max:       return VK_RESOLVE_MODE_MAX_BIT_KHR;
+        case ResolveMode::Average:   return VK_RESOLVE_MODE_AVERAGE_BIT_KHR;
+        case ResolveMode::Optimal:   return VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR;
+    }
+    LLGL_TRAP_VK_MAP(ResolveMode, mode, VkResolveModeFlagBitsKHR);
+}
+
+#endif // /VK_KHR_depth_stencil_resolve
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

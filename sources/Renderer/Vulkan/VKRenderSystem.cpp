@@ -744,7 +744,7 @@ void VKRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return renderTargets_.emplace<VKRenderTarget>(device_, *deviceMemoryMngr_, renderTargetDesc);
+    return renderTargets_.emplace<VKRenderTarget>(physicalDevice_, device_, *deviceMemoryMngr_, renderTargetDesc);
 }
 
 void VKRenderSystem::Release(RenderTarget& renderTarget)

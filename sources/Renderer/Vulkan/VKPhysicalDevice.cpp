@@ -721,6 +721,11 @@ void VKPhysicalDevice::QueryDeviceProperties()
         ChainDescriptor(&(properties_.multiview), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR);
     #endif
 
+    #if VK_KHR_depth_stencil_resolve
+    if (SupportsExtension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME))
+        ChainDescriptor(&(properties_.depthStencilResolve), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES_KHR);
+    #endif
+
     #if VK_EXT_mesh_shader
     if (SupportsExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
         ChainDescriptor(&(properties_.meshShader), VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT);

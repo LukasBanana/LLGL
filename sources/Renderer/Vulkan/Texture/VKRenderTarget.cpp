@@ -7,6 +7,7 @@
 
 #include "VKRenderTarget.h"
 #include "VKTexture.h"
+#include "../VKPhysicalDevice.h"
 #include "../Command/VKCommandContext.h"
 #include "../Ext/VKExtensionRegistry.h"
 #include "../Memory/VKDeviceMemoryManager.h"
@@ -26,6 +27,7 @@ namespace LLGL
 
 
 VKRenderTarget::VKRenderTarget(
+    const VKPhysicalDevice&         physicalDevice,
     VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const RenderTargetDescriptor&   desc)
@@ -53,10 +55,10 @@ VKRenderTarget::VKRenderTarget(
         COLOR_ATTACHMENT_OPTIMAL), which is what offscreen/XR images need -- unlike a swap-chain-style render pass.
         */
         numViews_ = (desc.views > 1 ? desc.views : 1);
-        CreateDefaultRenderPass(device, desc);
+        CreateDefaultRenderPass(physicalDevice, device, desc);
         renderPass_ = (&defaultRenderPass_);
     }
-    CreateSecondaryRenderPass(device, desc);
+    CreateSecondaryRenderPass(physicalDevice, device, desc);
     CreateFramebuffer(device, deviceMemoryMngr, desc);
 }
 
@@ -179,6 +181,7 @@ bool VKRenderTarget::HasDepthStencilResolve(const RenderTargetDescriptor& desc) 
 }
 
 void VKRenderTarget::CreateRenderPass(
+    const VKPhysicalDevice&         physicalDevice,
     VkDevice                        device,
     const RenderTargetDescriptor&   desc,
     VKRenderPass&                   renderPass,
@@ -242,6 +245,9 @@ void VKRenderTarget::CreateRenderPass(
     const bool hasDepthStencilResolve = HasDepthStencilResolve(desc);
     if (hasDepthStencilResolve)
     {
+        if (renderPass_ != nullptr)
+            renderPass_->ValidateDepthStencilResolveModes(physicalDevice.GetProperties(), GetAttachmentFormat(desc.depthStencilAttachment));
+
         const AttachmentDescriptor& depthStencilResolveAttachment = desc.depthStencilResolveAttachment;
         VkFormat format = GetDepthStencilVkFormat(GetAttachmentFormat(depthStencilResolveAttachment));
 
@@ -262,17 +268,27 @@ void VKRenderTarget::CreateRenderPass(
     }
 
     /* Create native Vulkan render pass with attachment descriptors (multiview view count must match the framebuffer image views) */
-    renderPass.CreateVkRenderPassWithDescriptors(device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_, numViews_, hasDepthStencilResolve);
+    ResolveMode colorResolveModes[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    for_range(i, numColorAttachments_)
+        colorResolveModes[i] = (renderPass_ != nullptr ? renderPass_->GetColorResolveMode(i) : ResolveMode::Optimal);
+
+    const ResolveMode depthResolveMode = (renderPass_ != nullptr ? renderPass_->GetDepthResolveMode() : ResolveMode::Optimal);
+    const ResolveMode stencilResolveMode = (renderPass_ != nullptr ? renderPass_->GetStencilResolveMode() : ResolveMode::Optimal);
+
+    renderPass.CreateVkRenderPassWithDescriptors(
+        device, numTargetAttachments, numColorAttachments_, attachmentDescs, sampleCountBits_, numViews_, hasDepthStencilResolve,
+        colorResolveModes, depthResolveMode, stencilResolveMode
+    );
 }
 
-void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
+void VKRenderTarget::CreateDefaultRenderPass(const VKPhysicalDevice& physicalDevice, VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, defaultRenderPass_, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    CreateRenderPass(physicalDevice, device, desc, defaultRenderPass_, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 }
 
-void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
+void VKRenderTarget::CreateSecondaryRenderPass(const VKPhysicalDevice& physicalDevice, VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, secondaryRenderPass_, VK_ATTACHMENT_LOAD_OP_LOAD);
+    CreateRenderPass(physicalDevice, device, desc, secondaryRenderPass_, VK_ATTACHMENT_LOAD_OP_LOAD);
 }
 
 VkImageView VKRenderTarget::CreateAttachmentImageView(

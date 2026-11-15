@@ -59,9 +59,9 @@ enum class AttachmentStoreOp
 
 /**
 \brief Enumeration of modes how to resolve multi-sampled render-target attachments into their single-sampled resolve attachments.
-\note Only supported with: Direct3D 12.
+\note Only supported with: Direct3D 12 and Vulkan. Vulkan color resolves do not support Min/Max, and Vulkan depth-stencil modes depend on device support.
 \see AttachmentFormatDescriptor::resolveMode
-\todo Support more backend
+\todo Support Metal backend.
 */
 enum class ResolveMode
 {
@@ -74,12 +74,14 @@ enum class ResolveMode
 
     /**
     \brief Resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Min,
 
     /**
     \brief Resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
+    \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Max,
@@ -87,15 +89,19 @@ enum class ResolveMode
     /**
     \brief Resolve the average sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \remarks This can only be used with non-integer attachment formats, e.g. Format::R32Float, Format::RGBA8UNorm etc.
-    Use Min, Max, and SampleZero for integer attachment formats, e.g. Format::R32UInt or Format::D24UNormS8UInt.
+    Use Min, Max, or Optimal for integer attachment formats, e.g. Format::R32UInt or Format::D24UNormS8UInt.
+    Vulkan color resolves use their native format-dependent behavior; explicit Average is not supported for integer color formats.
     \see RenderTargetDescriptor::resolveAttachments
     \see IsIntegerFormat
     */
     Average,
 
     /**
-    \brief Use the resolve mode that is optimal for the respective attachment format.
-    \remarks If the respective attachment has an integer format, this resolve mode maps to ResolveMode::Min. Otherwise, it maps to ResolveMode::Average.
+    \brief Use the resolve mode that is optimal for the respective attachment format and rendering backend.
+    \remarks If the respective attachment has a non-integer format (e.g. Format::R32Float, Format::RGBA8UNorm etc.),
+    this resolve mode maps to ResolveMode::Average. Otherwise, the resolve mode is implementation dependent.
+    For integer formats, the backend might resolve only sample 0 (Vulkan, Metal), use the minimum or maximum (Direct3D 12),
+    or use an implementation dependent sample (OpenGL). For depth-stencil resolves, Vulkan uses sample 0 and Direct3D 12 uses Min.
     */
     Optimal,
 };

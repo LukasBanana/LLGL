@@ -190,9 +190,9 @@ struct RenderTargetDescriptor
     the texture must have 1 sample, must have the same size as specified by RenderTargetDescriptor::resolution,
     must have the same depth and stencil components as the depth-stencil attachment,
     and must have been created with the binding flag BindFlags::DepthStencilAttachment.
-    \remarks Unlike a color resolve, which averages the samples, a depth-stencil resolve takes sample 0 unmodified:
-    averaging depth is not meaningful, and taking a single sample is the only mode every implementation supports.
-    Direct3D 12.1 has no resolve mode that takes a single sample, so it takes the minimum of all samples instead.
+    \remarks The resolve mode specified by the render pass passed to CommandBuffer::BeginRenderPass determines how this attachment is resolved.
+    Vulkan's Optimal mode takes sample 0; Direct3D 12's Optimal mode takes the minimum of all samples.
+    Other depth-stencil modes are backend- and device-dependent.
     It also only resolves the depth plane, since NVIDIA drivers leave the stencil plane untouched, so the stencil plane of the resolve target is undefined.
     \remarks Requires RenderingFeatures::hasDepthStencilResolve. Leave this attachment disabled if the multi-sampled
     depth buffer is only used for depth testing within the pass, which lets the backend keep it in tile memory.

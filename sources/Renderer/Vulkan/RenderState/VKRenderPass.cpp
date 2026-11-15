@@ -6,6 +6,7 @@
  */
 
 #include "VKRenderPass.h"
+#include "../VKPhysicalDevice.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../Ext/VKExtensionRegistry.h"
@@ -21,7 +22,10 @@ namespace LLGL
 
 
 VKRenderPass::VKRenderPass(VkDevice device) :
-    renderPass_ { device, vkDestroyRenderPass }
+    renderPass_          { device, vkDestroyRenderPass },
+    colorResolveBitmask_ { 0                           },
+    depthResolveMode_    { ResolveMode::Optimal        },
+    stencilResolveMode_  { ResolveMode::Optimal        }
 {
 }
 
@@ -113,7 +117,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
 
     /* Initialize attachment descriptors */
     const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
-    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1];
 
     if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
     {
@@ -170,8 +174,35 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
         );
     }
 
+    const bool hasDepthStencilResolve =
+    (
+        sampleCountBits > VK_SAMPLE_COUNT_1_BIT &&
+        hasDepthStencil &&
+        (desc.depthAttachment.resolveMode != ResolveMode::None || desc.stencilAttachment.resolveMode != ResolveMode::None)
+    );
+    if (hasDepthStencilResolve)
+    {
+        AttachmentFormatDescriptor resolveDepthDesc = desc.depthAttachment;
+        AttachmentFormatDescriptor resolveStencilDesc = desc.stencilAttachment;
+        resolveDepthDesc.loadOp = AttachmentLoadOp::Undefined;
+        resolveStencilDesc.loadOp = AttachmentLoadOp::Undefined;
+        InitDepthStencilVkAttachmentDesc(
+            attachmentDescs[numAttachments + numColorAttachments],
+            resolveDepthDesc,
+            resolveStencilDesc,
+            VK_SAMPLE_COUNT_1_BIT
+        );
+    }
+
     /* Create render pass with native attachment descriptors */
-    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits, desc.views);
+    ResolveMode colorResolveModes[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    for_range(i, numColorAttachments)
+        colorResolveModes[i] = desc.colorAttachments[i].resolveMode;
+
+    CreateVkRenderPassWithDescriptors(
+        device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits, desc.views, hasDepthStencilResolve, colorResolveModes,
+        desc.depthAttachment.resolveMode, desc.stencilAttachment.resolveMode
+    );
 }
 
 #if VK_KHR_create_renderpass2 && VK_KHR_depth_stencil_resolve
@@ -225,6 +256,8 @@ static VkResult CreateVkRenderPass2WithDepthStencilResolve(
     const VkAttachmentReference&    depthStencilResolveAttachmentRef,
     const VkSubpassDependency&      subpassDep,
     std::uint32_t                   viewMask,
+    ResolveMode                     depthResolveMode,
+    ResolveMode                     stencilResolveMode,
     VkRenderPass*                   outRenderPass)
 {
     /* Convert the version-1 descriptors and references this class builds into their version-2 counterparts */
@@ -245,20 +278,15 @@ static VkResult CreateVkRenderPass2WithDepthStencilResolve(
     const VkAttachmentReference2KHR depthStencilResolveAttachmentRef2   = ToVkAttachmentReference2(depthStencilResolveAttachmentRef);
 
     /*
-    Resolve by taking sample 0 rather than averaging: an averaged depth does not correspond to any surface that
-    was rasterized, and a compositor reprojecting from it would warp against geometry that never existed.
-    SAMPLE_ZERO is also the only mode the specification requires every implementation to support.
-
-    Both aspects deliberately use the same mode. Resolving one aspect but not the other requires
-    VkPhysicalDeviceDepthStencilResolveProperties::independentResolveNone, whereas identical modes are always
-    permitted; the stencil mode is simply ignored when the format carries no stencil aspect.
+    Resolving one aspect but not the other requires VkPhysicalDeviceDepthStencilResolveProperties::independentResolveNone,
+    whereas identical modes are always permitted; This is validated in ValidateDepthStencilResolveModes().
     */
     VkSubpassDescriptionDepthStencilResolveKHR depthStencilResolve = {};
     {
         depthStencilResolve.sType                           = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR;
         depthStencilResolve.pNext                           = nullptr;
-        depthStencilResolve.depthResolveMode                = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR;
-        depthStencilResolve.stencilResolveMode              = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR;
+        depthStencilResolve.depthResolveMode                = VKTypes::ToVkRenderMode(depthResolveMode);
+        depthStencilResolve.stencilResolveMode              = VKTypes::ToVkRenderMode(stencilResolveMode);
         depthStencilResolve.pDepthStencilResolveAttachment  = (&depthStencilResolveAttachmentRef2);
     }
 
@@ -319,7 +347,10 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     const VkAttachmentDescription*  attachmentDescs,
     VkSampleCountFlagBits           sampleCountBits,
     std::uint32_t                   numViews,
-    bool                            hasDepthStencilResolve)
+    bool                            hasDepthStencilResolve,
+    const ResolveMode*              colorResolveModes,
+    ResolveMode                     depthResolveMode,
+    ResolveMode                     stencilResolveMode)
 {
     LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -336,6 +367,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     sampleCountBits_        = sampleCountBits;
     numColorAttachments_    = static_cast<std::uint8_t>(numColorAttachments);
     numViews_               = (numViews > 1 ? numViews : 1);
+    depthResolveMode_       = depthResolveMode;
+    stencilResolveMode_     = stencilResolveMode;
 
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
@@ -368,17 +401,36 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     const bool hasMultiSampling = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
     std::uint32_t resolveAttachmentIndex = numAttachments;
 
+    /* Reset bitmask for encoded color attachment resolve modes */
+    colorResolveBitmask_ = 0;
+
     if (hasMultiSampling)
     {
         for_range(i, numColorAttachments)
         {
+            /* Encode color resolve mode into bitmask as color attachments only support Average (maps to 0x1) or None (maps to 0x0) modes */
+            const ResolveMode resolveMode = (colorResolveModes != nullptr ? colorResolveModes[i] : ResolveMode::Optimal);
+            if (resolveMode == ResolveMode::Average || resolveMode == ResolveMode::Optimal)
+                colorResolveBitmask_ |= (0x1u << i);
+
             if (attachmentDescs[numAttachments + i].format == VK_FORMAT_UNDEFINED)
             {
                 resolveAttachmentsRefs[i].attachment    = VK_ATTACHMENT_UNUSED;
                 resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_UNDEFINED;
             }
+            else if (resolveMode == ResolveMode::None)
+            {
+                resolveAttachmentsRefs[i].attachment    = VK_ATTACHMENT_UNUSED;
+                resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_UNDEFINED;
+                ++resolveAttachmentIndex;
+                sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + i]);
+            }
             else
             {
+                if (resolveMode == ResolveMode::Min || resolveMode == ResolveMode::Max)
+                    LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vulkan render passes do not support Min/Max color resolve modes");
+                if (resolveMode == ResolveMode::Average && IsIntegerFormat(VKTypes::Unmap(attachmentDescs[i].format)))
+                    LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vulkan color resolve Average mode is not supported for integer formats");
                 resolveAttachmentsRefs[i].attachment    = resolveAttachmentIndex++;
                 resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + i]);
@@ -391,13 +443,18 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     color-only. It needs VkSubpassDescriptionDepthStencilResolve, and that only chains into a version-2 sub-pass
     description -- hence the separate creation path below.
     */
-    const bool resolvesDepthStencil = (hasDepthStencilResolve && hasMultiSampling && hasDepthStencil);
-    if (resolvesDepthStencil)
+    const bool hasDepthStencilResolveAttachment = (hasDepthStencilResolve && hasMultiSampling && hasDepthStencil);
+    if (hasDepthStencilResolveAttachment)
     {
         depthStencilResolveAttachmentRef.attachment = resolveAttachmentIndex++;
         depthStencilResolveAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + numColorAttachments]);
     }
+    const bool resolvesDepthStencil =
+    (
+        hasDepthStencilResolveAttachment &&
+        (GetDepthResolveMode() != ResolveMode::None || GetStencilResolveMode() != ResolveMode::None)
+    );
 
     /* Initialize sub-pass descriptor */
     VkSubpassDescription subpassDesc;
@@ -457,6 +514,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
                 depthStencilResolveAttachmentRef,
                 subpassDep,
                 viewMask,
+                depthResolveMode,
+                stencilResolveMode,
                 renderPass_.ReleaseAndGetAddressOf()
             );
             VKThrowIfFailed(result, "failed to create Vulkan render pass with depth-stencil resolve");
@@ -498,6 +557,49 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     }
     VkResult result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan render pass");
+}
+
+void VKRenderPass::ValidateDepthStencilResolveModes(const VKPhysicalDevicePropertiesExt& physicalDeviceProperties, Format format) const
+{
+    const bool hasDepth   = IsDepthFormat(format);
+    const bool hasStencil = IsStencilFormat(format);
+
+    #if VK_KHR_depth_stencil_resolve
+
+    const VkResolveModeFlagBitsKHR depthMode = VKTypes::ToVkRenderMode(GetDepthResolveMode());
+    const VkResolveModeFlagBitsKHR stencilMode = VKTypes::ToVkRenderMode(GetStencilResolveMode());
+
+    if (hasDepth && GetDepthResolveMode() != ResolveMode::None && GetDepthResolveMode() != ResolveMode::Optimal &&
+        (physicalDeviceProperties.depthStencilResolve.supportedDepthResolveModes & depthMode) == 0)
+    {
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("requested Vulkan depth resolve mode is not supported by this device");
+    }
+    if (hasStencil && GetStencilResolveMode() != ResolveMode::None && GetStencilResolveMode() != ResolveMode::Optimal &&
+        (physicalDeviceProperties.depthStencilResolve.supportedStencilResolveModes & stencilMode) == 0)
+    {
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("requested Vulkan stencil resolve mode is not supported by this device");
+    }
+
+    if (hasDepth && hasStencil && depthMode != stencilMode)
+    {
+        if (depthMode == VK_RESOLVE_MODE_NONE_KHR || stencilMode == VK_RESOLVE_MODE_NONE_KHR)
+        {
+            if (physicalDeviceProperties.depthStencilResolve.independentResolveNone == VK_FALSE)
+                LLGL_TRAP_FEATURE_NOT_SUPPORTED("independent Vulkan depth/stencil resolve with a None mode is not supported by this device");
+        }
+        else if (physicalDeviceProperties.depthStencilResolve.independentResolve == VK_FALSE)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("independent Vulkan depth/stencil resolve modes are not supported by this device");
+    }
+
+    #else // VK_KHR_depth_stencil_resolve
+
+    if ((hasDepth   && GetDepthResolveMode  () != ResolveMode::None && GetDepthResolveMode  () != ResolveMode::Optimal) ||
+        (hasStencil && GetStencilResolveMode() != ResolveMode::None && GetStencilResolveMode() != ResolveMode::Optimal))
+    {
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vulkan depth/stencil resolve modes other than Optimal require VK_KHR_depth_stencil_resolve");
+    }
+
+    #endif // /VK_KHR_depth_stencil_resolve
 }
 
 

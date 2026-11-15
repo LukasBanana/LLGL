@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
 #include "../Vulkan.h" // Configures the platform surface extension before <vulkan/vulkan.h> is pulled in
 #include "../VKPtr.h"
 #include <cstdint>
@@ -20,6 +21,7 @@ namespace LLGL
 
 
 struct RenderPassDescriptor;
+struct VKPhysicalDevicePropertiesExt;
 
 class VKRenderPass final : public RenderPass
 {
@@ -48,8 +50,13 @@ class VKRenderPass final : public RenderPass
             const VkAttachmentDescription*  attachmentDescs,
             VkSampleCountFlagBits           sampleCountBits,
             std::uint32_t                   numViews = 1,
-            bool                            hasDepthStencilResolve = false
+            bool                            hasDepthStencilResolve = false,
+            const ResolveMode*              colorResolveModes = nullptr,
+            ResolveMode                     depthResolveMode = ResolveMode::Optimal,
+            ResolveMode                     stencilResolveMode = ResolveMode::Optimal
         );
+
+        void ValidateDepthStencilResolveModes(const VKPhysicalDevicePropertiesExt& physicalDeviceProperties, Format format) const;
 
         // Returns the Vulkan render pass object.
         inline VkRenderPass GetVkRenderPass() const
@@ -84,6 +91,24 @@ class VKRenderPass final : public RenderPass
             return numColorAttachments_;
         }
 
+        // Returns the resolve mode for the specified color attachment. For Vulkan, color attachments can only have ResolveMode::Average or ResolveMode::None.
+        inline ResolveMode GetColorResolveMode(std::uint32_t index) const
+        {
+            return ((((colorResolveBitmask_ >> index) & 0x1) != 0) ? ResolveMode::Average : ResolveMode::None);
+        }
+
+        // Returns the resolve mode for the depth attachment.
+        inline ResolveMode GetDepthResolveMode() const
+        {
+            return depthResolveMode_;
+        }
+
+        // Returns the resolve mode for the stencil attachment.
+        inline ResolveMode GetStencilResolveMode() const
+        {
+            return stencilResolveMode_;
+        }
+
         // Returns the sample count flag bits for this render pass.
         inline VkSampleCountFlagBits GetSampleCountBits() const
         {
@@ -106,6 +131,10 @@ class VKRenderPass final : public RenderPass
         std::uint8_t            numColorAttachments_    = 0;
         VkSampleCountFlagBits   sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;
         std::uint32_t           numViews_               = 1;
+
+        std::uint32_t           colorResolveBitmask_    : 24;
+        ResolveMode             depthResolveMode_       : 4;
+        ResolveMode             stencilResolveMode_     : 4;
 
 };
 

@@ -634,7 +634,6 @@ const (
     ResolveModeMin
     ResolveModeMax
     ResolveModeAverage
-    ResolveModeSampleZero
     ResolveModeOptimal
 )
 

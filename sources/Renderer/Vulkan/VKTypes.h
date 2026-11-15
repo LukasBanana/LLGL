@@ -58,6 +58,10 @@ VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
 VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
 VkPipelineStageFlags    ToVkStageFlags(long stageFlags);
 
+#if VK_KHR_depth_stencil_resolve
+VkResolveModeFlagBitsKHR ToVkRenderMode(ResolveMode mode);
+#endif
+
 Format Unmap( const VkFormat format );
 
 bool IsVkFormatDepthStencil(const VkFormat format);

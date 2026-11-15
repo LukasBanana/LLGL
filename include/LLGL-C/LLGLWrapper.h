@@ -663,7 +663,6 @@ typedef enum LLGLResolveMode
     LLGLResolveModeMin,
     LLGLResolveModeMax,
     LLGLResolveModeAverage,
-    LLGLResolveModeSampleZero,
     LLGLResolveModeOptimal,
 }
 LLGLResolveMode;
