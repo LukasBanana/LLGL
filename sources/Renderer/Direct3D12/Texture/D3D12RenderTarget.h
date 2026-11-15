@@ -118,7 +118,8 @@ class D3D12RenderTarget final : public RenderTarget
         void CreateResolveTarget(
             const AttachmentDescriptor& resolveAttachment,
             DXGI_FORMAT                 format,
-            D3D12Resource*              multiSampledSrcTexture
+            D3D12Resource*              multiSampledSrcTexture,
+            const AttachmentDescriptor& colorAttachment
         );
 
         void CreateDepthStencilResolveTarget(
@@ -132,8 +133,10 @@ class D3D12RenderTarget final : public RenderTarget
         struct ResolveTarget
         {
             D3D12Resource*  resolveDstTexture;
-            UINT            resolveDstSubresource;
             D3D12Resource*  multiSampledSrcTexture;
+            UINT            resolveDstSubresource;
+            UINT            multiSampledSrcSubresource;
+            UINT8           colorAttachmentIndex;
             DXGI_FORMAT     format;
         };
 
@@ -153,6 +156,7 @@ class D3D12RenderTarget final : public RenderTarget
 
         Extent2D                        resolution_;
         DXGI_SAMPLE_DESC                sampleDesc_         = { 1, 0 };
+        UINT                            numResolveLayers_   = 1;
 
         // Objects:
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;

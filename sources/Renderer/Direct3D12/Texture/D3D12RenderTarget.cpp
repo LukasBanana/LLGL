@@ -49,6 +49,7 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
     // RenderTargetDescriptor::views. The render target always exposes its own default render pass, so that pass
     // carries the view count for the view-instanced PSO, and the RTVs/DSVs expose that many array layers.
     const UINT numViews = ResolveNumViews(desc);
+    numResolveLayers_ = numViews;
 
     CreateDescriptorHeaps(device.GetNative(), numColorFormats);
     CreateAttachments(device.GetNative(), desc, colorFormats, numViews);
@@ -112,17 +113,20 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
         for_range(targetIndex, resolveTargets_.size())
         {
             const ResolveTarget& target = resolveTargets_[targetIndex];
-            const ResolveMode colorResolveMode = GetD3D12RenderPassColorResolveMode(renderPass, targetIndex);
+            const ResolveMode colorResolveMode = GetD3D12RenderPassColorResolveMode(renderPass, target.colorAttachmentIndex);
             if (colorResolveMode != ResolveMode::None)
             {
-                commandContext.ResolveSubresource(
-                    *target.resolveDstTexture,
-                    target.resolveDstSubresource,
-                    *target.multiSampledSrcTexture,
-                    0,
-                    target.format,
-                    colorResolveMode
-                );
+                for_range(layer, numResolveLayers_)
+                {
+                    commandContext.ResolveSubresource(
+                        *target.resolveDstTexture,
+                        target.resolveDstSubresource + layer * target.resolveDstTexture->Get()->GetDesc().MipLevels,
+                        *target.multiSampledSrcTexture,
+                        target.multiSampledSrcSubresource + layer,
+                        target.format,
+                        colorResolveMode
+                    );
+                }
             }
         }
 
@@ -131,27 +135,33 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
             const ResolveMode depthResolveMode = GetD3D12RenderPassDepthResolveMode(renderPass);
             if (depthResolveMode != ResolveMode::None)
             {
-                commandContext.ResolveSubresource(
-                    *depthStencilResolveTarget_.resolveDstTexture,
-                    depthStencilResolveTarget_.depthDstSubresource,
-                    *depthStencil_,
-                    depthStencilResolveTarget_.depthSrcSubresource,
-                    depthStencilResolveTarget_.format,
-                    depthResolveMode
-                );
+                for_range(layer, numResolveLayers_)
+                {
+                    commandContext.ResolveSubresource(
+                        *depthStencilResolveTarget_.resolveDstTexture,
+                        depthStencilResolveTarget_.depthDstSubresource + layer * depthStencilResolveTarget_.resolveDstTexture->Get()->GetDesc().MipLevels,
+                        *depthStencil_,
+                        depthStencilResolveTarget_.depthSrcSubresource + layer,
+                        depthStencilResolveTarget_.format,
+                        depthResolveMode
+                    );
+                }
             }
 
             const ResolveMode stencilResolveMode = GetD3D12RenderPassStencilResolveMode(renderPass);
             if (stencilResolveMode != ResolveMode::None)
             {
-                commandContext.ResolveSubresource(
-                    *depthStencilResolveTarget_.resolveDstTexture,
-                    depthStencilResolveTarget_.stencilDstSubresource,
-                    *depthStencil_,
-                    depthStencilResolveTarget_.stencilSrcSubresource,
-                    depthStencilResolveTarget_.format,
-                    stencilResolveMode
-                );
+                for_range(layer, numResolveLayers_)
+                {
+                    commandContext.ResolveSubresource(
+                        *depthStencilResolveTarget_.resolveDstTexture,
+                        depthStencilResolveTarget_.stencilDstSubresource + layer * depthStencilResolveTarget_.resolveDstTexture->Get()->GetDesc().MipLevels,
+                        *depthStencil_,
+                        depthStencilResolveTarget_.stencilSrcSubresource + layer,
+                        depthStencilResolveTarget_.format,
+                        stencilResolveMode
+                    );
+                }
             }
         }
     }
@@ -350,7 +360,7 @@ void D3D12RenderTarget::CreateColorAttachment(
 
     /* Create resolve target entry if multi-sampling is enabled */
     if (HasMultiSampling() && resolveAttachment.texture != nullptr)
-        CreateResolveTarget(resolveAttachment, format, colorBuffer);
+        CreateResolveTarget(resolveAttachment, format, colorBuffer, colorAttachment);
 
     LLGL_ASSERT_PTR(colorBuffer);
     LLGL_ASSERT_PTR(colorBuffer->native.Get());
@@ -573,7 +583,8 @@ void D3D12RenderTarget::CreateDepthStencilView(
 void D3D12RenderTarget::CreateResolveTarget(
     const AttachmentDescriptor& resolveAttachment,
     DXGI_FORMAT                 format,
-    D3D12Resource*              multiSampledSrcTexture)
+    D3D12Resource*              multiSampledSrcTexture,
+    const AttachmentDescriptor& colorAttachment)
 {
     LLGL_ASSERT_PTR(resolveAttachment.texture);
 
@@ -585,6 +596,16 @@ void D3D12RenderTarget::CreateResolveTarget(
         resolveTarget.resolveDstTexture         = &(textureD3D.GetResource());
         resolveTarget.resolveDstSubresource     = textureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer);
         resolveTarget.multiSampledSrcTexture    = multiSampledSrcTexture;
+
+        if (colorAttachment.texture != nullptr)
+        {
+            auto& sourceTextureD3D = LLGL_CAST(D3D12Texture&, *colorAttachment.texture);
+            resolveTarget.multiSampledSrcSubresource = sourceTextureD3D.CalcSubresource(colorAttachment.mipLevel, colorAttachment.arrayLayer);
+        }
+        else
+            resolveTarget.multiSampledSrcSubresource = 0;
+
+        resolveTarget.colorAttachmentIndex      = static_cast<UINT8>(colorBuffers_.size());
         resolveTarget.format                    = format;
     }
     resolveTargets_.push_back(resolveTarget);
