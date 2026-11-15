@@ -70,7 +70,7 @@ enum class ResolveMode
     \remarks Use this to render into a multi-sampled render-target with multiple render-passes
     where only the last one resolves the final result into a single-sampled render-target.
     */
-    None,
+    Disabled,
 
     /**
     \brief Resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.

@@ -659,7 +659,7 @@ LLGLAttachmentStoreOp;
 
 typedef enum LLGLResolveMode
 {
-    LLGLResolveModeNone,
+    LLGLResolveModeDisabled,
     LLGLResolveModeMin,
     LLGLResolveModeMax,
     LLGLResolveModeAverage,

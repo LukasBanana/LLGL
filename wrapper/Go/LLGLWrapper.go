@@ -630,7 +630,7 @@ const (
 
 type ResolveMode int
 const (
-    ResolveModeNone ResolveMode = iota
+    ResolveModeDisabled ResolveMode = iota
     ResolveModeMin
     ResolveModeMax
     ResolveModeAverage

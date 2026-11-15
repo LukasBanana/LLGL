@@ -59,6 +59,7 @@ VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
 VkPipelineStageFlags    ToVkStageFlags(long stageFlags);
 
 #if VK_KHR_depth_stencil_resolve
+// Returns VK_RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR for ResolveMode::Optimal and should therefore only be used for depth-stencil attachments.
 VkResolveModeFlagBitsKHR ToVkRenderMode(ResolveMode mode);
 #endif
 

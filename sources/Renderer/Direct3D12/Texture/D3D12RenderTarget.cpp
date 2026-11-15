@@ -114,7 +114,7 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
         {
             const ResolveTarget& target = resolveTargets_[targetIndex];
             const ResolveMode colorResolveMode = GetD3D12RenderPassColorResolveMode(renderPass, target.colorAttachmentIndex);
-            if (colorResolveMode != ResolveMode::None)
+            if (colorResolveMode != ResolveMode::Disabled)
             {
                 for_range(layer, numResolveLayers_)
                 {
@@ -133,7 +133,7 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
         if (depthStencilResolveTarget_.resolveDstTexture != nullptr)
         {
             const ResolveMode depthResolveMode = GetD3D12RenderPassDepthResolveMode(renderPass);
-            if (depthResolveMode != ResolveMode::None)
+            if (depthResolveMode != ResolveMode::Disabled)
             {
                 for_range(layer, numResolveLayers_)
                 {
@@ -149,7 +149,7 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
             }
 
             const ResolveMode stencilResolveMode = GetD3D12RenderPassStencilResolveMode(renderPass);
-            if (stencilResolveMode != ResolveMode::None)
+            if (stencilResolveMode != ResolveMode::Disabled)
             {
                 for_range(layer, numResolveLayers_)
                 {

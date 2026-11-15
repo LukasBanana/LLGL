@@ -628,7 +628,7 @@ namespace LLGL
 
     public enum ResolveMode
     {
-        None,
+        Disabled,
         Min,
         Max,
         Average,

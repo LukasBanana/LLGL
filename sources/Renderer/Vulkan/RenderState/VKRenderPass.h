@@ -94,7 +94,7 @@ class VKRenderPass final : public RenderPass
         // Returns the resolve mode for the specified color attachment. For Vulkan, color attachments can only have ResolveMode::Average or ResolveMode::None.
         inline ResolveMode GetColorResolveMode(std::uint32_t index) const
         {
-            return ((((colorResolveBitmask_ >> index) & 0x1) != 0) ? ResolveMode::Average : ResolveMode::None);
+            return ((((colorResolveBitmask_ >> index) & 0x1) != 0) ? ResolveMode::Average : ResolveMode::Disabled);
         }
 
         // Returns the resolve mode for the depth attachment.

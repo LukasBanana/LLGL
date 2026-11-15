@@ -178,7 +178,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     (
         sampleCountBits > VK_SAMPLE_COUNT_1_BIT &&
         hasDepthStencil &&
-        (desc.depthAttachment.resolveMode != ResolveMode::None || desc.stencilAttachment.resolveMode != ResolveMode::None)
+        (desc.depthAttachment.resolveMode != ResolveMode::Disabled || desc.stencilAttachment.resolveMode != ResolveMode::Disabled)
     );
     if (hasDepthStencilResolve)
     {
@@ -418,7 +418,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
                 resolveAttachmentsRefs[i].attachment    = VK_ATTACHMENT_UNUSED;
                 resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_UNDEFINED;
             }
-            else if (resolveMode == ResolveMode::None)
+            else if (resolveMode == ResolveMode::Disabled)
             {
                 resolveAttachmentsRefs[i].attachment    = VK_ATTACHMENT_UNUSED;
                 resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -453,7 +453,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     const bool resolvesDepthStencil =
     (
         hasDepthStencilResolveAttachment &&
-        (GetDepthResolveMode() != ResolveMode::None || GetStencilResolveMode() != ResolveMode::None)
+        (GetDepthResolveMode() != ResolveMode::Disabled || GetStencilResolveMode() != ResolveMode::Disabled)
     );
 
     /* Initialize sub-pass descriptor */
@@ -569,12 +569,12 @@ void VKRenderPass::ValidateDepthStencilResolveModes(const VKPhysicalDeviceProper
     const VkResolveModeFlagBitsKHR depthMode = VKTypes::ToVkRenderMode(GetDepthResolveMode());
     const VkResolveModeFlagBitsKHR stencilMode = VKTypes::ToVkRenderMode(GetStencilResolveMode());
 
-    if (hasDepth && GetDepthResolveMode() != ResolveMode::None && GetDepthResolveMode() != ResolveMode::Optimal &&
+    if (hasDepth && GetDepthResolveMode() != ResolveMode::Disabled && GetDepthResolveMode() != ResolveMode::Optimal &&
         (physicalDeviceProperties.depthStencilResolve.supportedDepthResolveModes & depthMode) == 0)
     {
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("requested Vulkan depth resolve mode is not supported by this device");
     }
-    if (hasStencil && GetStencilResolveMode() != ResolveMode::None && GetStencilResolveMode() != ResolveMode::Optimal &&
+    if (hasStencil && GetStencilResolveMode() != ResolveMode::Disabled && GetStencilResolveMode() != ResolveMode::Optimal &&
         (physicalDeviceProperties.depthStencilResolve.supportedStencilResolveModes & stencilMode) == 0)
     {
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("requested Vulkan stencil resolve mode is not supported by this device");
@@ -593,8 +593,8 @@ void VKRenderPass::ValidateDepthStencilResolveModes(const VKPhysicalDeviceProper
 
     #else // VK_KHR_depth_stencil_resolve
 
-    if ((hasDepth   && GetDepthResolveMode  () != ResolveMode::None && GetDepthResolveMode  () != ResolveMode::Optimal) ||
-        (hasStencil && GetStencilResolveMode() != ResolveMode::None && GetStencilResolveMode() != ResolveMode::Optimal))
+    if ((hasDepth   && GetDepthResolveMode  () != ResolveMode::Disabled && GetDepthResolveMode  () != ResolveMode::Optimal) ||
+        (hasStencil && GetStencilResolveMode() != ResolveMode::Disabled && GetStencilResolveMode() != ResolveMode::Optimal))
     {
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vulkan depth/stencil resolve modes other than Optimal require VK_KHR_depth_stencil_resolve");
     }
