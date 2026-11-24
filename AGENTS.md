@@ -20,6 +20,8 @@ When making changes, prefer solutions that are:
 - Avoid unnecessary stylistic churn in unrelated files.
 - Keep platform-specific code isolated where possible.
 - Prefer explicit, readable code over clever or condensed code.
+- Keep complex logic readable with small, focused private helpers; use short local comments for non-obvious test steps.
+- Avoid introducing traps for previously supported behavior without considering compatible fallbacks; discuss limitations if no suitable fallback exists.
 - Maintain compatibility with the project’s existing C++ style and header organization.
 - Do not introduce dependencies unless they are clearly needed and justified.
 - Keep commit messages short and to the point; The headline should start with a `[TOPIC]` prefix,
@@ -121,12 +123,16 @@ The test setups are gated by `LLGL_BUILD_TESTS`:
   - `Testbed` — all available backends.
   - `Testbed vk` / `gl` / `gl330` / `d3d11` / `d3d12` / `mt` — specific backend (optional GL version).
   - `-run=TestName1,TestName2` — run only the named tests.
-  - `-f` fast mode, `-g` greedy (don't stop on first failure), `-d gpu+cpu` enable debug layers,
+  - `-f` fast mode, `-g` greedy (don't stop on first failure), `-d=gpu+cpu` enable debug layers,
     `-p` pedantic (disable diff threshold), `-v` verbose. Single-char flags combine: `-cdf`.
   - New unit tests live in `tests/Testbed/UnitTests/Test*.cpp` and are registered in `DeclTests.inl`.
 - **`tests/Test_*.cpp`** — standalone, often interactive manual tests for a single backend/feature.
   These are deprecated and no longer maintained. They served as temporary tests during development
   of new backends.
+
+Prefer backend-neutral regression tests where practical, and isolate backend-specific cases when necessary.
+Distinguish syntax checks from backend execution. Validate Metal changes on macOS, ideally including an
+older supported system; Windows syntax checks do not replace an Apple SDK build or GPU test.
 
 #### Testbed gotchas (each has cost real debugging time)
 
@@ -141,9 +147,9 @@ The test setups are gated by `LLGL_BUILD_TESTS`:
   just `Testbed`, which changes nothing and looks like the fix failed. With it on the whole
   Vulkan suite passes; NativeHandle, ByteBuffer, CombinedTexSamplers and OffscreenC99 skip by
   design.
-- **Reach for `-d gpu+cpu` early.** It is what surfaces the real message above. A near-total
+- **Reach for `-d=gpu+cpu` early.** It is what surfaces the real message above. A near-total
   image mismatch was once mistaken for a regression and chased across three worktrees before
-  debug layers named it.
+  debug layers named it. Use `=`: a separate `gpu+cpu` argument is interpreted as a renderer name.
 - The Testbed prompts for a keypress at startup; feed it `</dev/null` in scripted runs.
 
 ## Architecture
