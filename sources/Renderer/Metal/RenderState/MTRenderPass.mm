@@ -37,6 +37,8 @@ static void ConvertAttachmentFormat(MTAttachmentFormat& dst, const AttachmentFor
     dst.pixelFormat = MTTypes::ToMTLPixelFormat(src.format);
     dst.loadAction  = MTTypes::ToMTLLoadAction(src.loadOp);
     dst.storeAction = MTTypes::ToMTLStoreAction(src.storeOp);
+    dst.resolveMode = src.resolveMode;
+    dst.isInteger   = IsIntegerFormat(src.format);
 }
 
 static MTAttachmentFormat MakeMTAttachmentFormat(const Format format)
@@ -47,6 +49,7 @@ static MTAttachmentFormat MakeMTAttachmentFormat(const Format format)
         fmt.pixelFormat = MTTypes::ToMTLPixelFormat(format);
         fmt.loadAction  = MTLLoadActionDontCare;
         fmt.storeAction = MTLStoreActionStore;
+        fmt.isInteger   = IsIntegerFormat(format);
     }
     return fmt;
 }
@@ -75,6 +78,10 @@ MTRenderPass::MTRenderPass(id<MTLDevice> device, const RenderTargetDescriptor& d
         colorAttachments_   = renderPassMT->GetColorAttachments();
         depthAttachment_    = renderPassMT->GetDepthAttachment();
         stencilAttachment_  = renderPassMT->GetStencilAttachment();
+        for (auto& attachment : colorAttachments_)
+            attachment.resolveMode = ResolveMode::Optimal;
+        depthAttachment_.resolveMode   = ResolveMode::Optimal;
+        stencilAttachment_.resolveMode = ResolveMode::Optimal;
     }
     else
     {
@@ -234,6 +241,91 @@ static void SetMTStencilAttachmentClearValue(
     dst.clearStencil    = clearValue.stencil;
 }
 
+static bool HasMTResolveAttachment(MTLRenderPassAttachmentDescriptor* attachment, NSUInteger sampleCount)
+{
+    return (sampleCount > 1 && attachment.texture != nil && attachment.resolveTexture != nil);
+}
+
+static MTLStoreAction GetMTAttachmentStoreAction(
+    MTLRenderPassAttachmentDescriptor* attachment,
+    const MTAttachmentFormat&          format,
+    NSUInteger                         sampleCount)
+{
+    if (HasMTResolveAttachment(attachment, sampleCount) && format.resolveMode != ResolveMode::Disabled)
+    {
+        if (format.storeAction == MTLStoreActionStore)
+        {
+            if (!MTDevice::SupportsStoreAndResolve(attachment.texture.device))
+                LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal storing and resolving multisample attachments is not supported by this device");
+            if (@available(macOS 10.12, iOS 10.0, *))
+                return MTLStoreActionStoreAndMultisampleResolve;
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal storing and resolving multisample attachments requires macOS 10.12 or iOS 10.0");
+        }
+        return MTLStoreActionMultisampleResolve;
+    }
+    return format.storeAction;
+}
+
+static void UpdateMTColorResolve(
+    MTLRenderPassColorAttachmentDescriptor* attachment,
+    const MTAttachmentFormat&               format,
+    NSUInteger                              sampleCount)
+{
+    if (HasMTResolveAttachment(attachment, sampleCount))
+    {
+        if (format.resolveMode == ResolveMode::Min || format.resolveMode == ResolveMode::Max)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal does not support Min/Max color resolve modes");
+        if (format.resolveMode == ResolveMode::Average && format.isInteger)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal color resolve Average mode is not supported for integer formats");
+        if (format.resolveMode == ResolveMode::Optimal && format.isInteger && !MTDevice::SupportsIntegerColorResolve(attachment.texture.device))
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal integer color resolve is not supported by this device");
+    }
+    attachment.storeAction = GetMTAttachmentStoreAction(attachment, format, sampleCount);
+}
+
+static void UpdateMTDepthResolve(
+    MTLRenderPassDepthAttachmentDescriptor* attachment,
+    const MTAttachmentFormat&               format,
+    NSUInteger                              sampleCount)
+{
+    if (HasMTResolveAttachment(attachment, sampleCount) && format.resolveMode != ResolveMode::Disabled)
+    {
+        if (format.resolveMode == ResolveMode::Average)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal does not support Average depth resolve mode");
+        if (!MTDevice::SupportsDepthResolve(attachment.texture.device))
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal depth resolve is not supported by this device");
+        if (@available(macOS 10.14, iOS 9.0, *))
+        {
+            switch (format.resolveMode)
+            {
+                case ResolveMode::Min: attachment.depthResolveFilter = MTLMultisampleDepthResolveFilterMin; break;
+                case ResolveMode::Max: attachment.depthResolveFilter = MTLMultisampleDepthResolveFilterMax; break;
+                default:               attachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0; break;
+            }
+        }
+        else if (format.resolveMode != ResolveMode::Optimal)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal depth resolve filters are unavailable on this OS");
+    }
+    attachment.storeAction = GetMTAttachmentStoreAction(attachment, format, sampleCount);
+}
+
+static void UpdateMTStencilResolve(
+    MTLRenderPassStencilAttachmentDescriptor* attachment,
+    const MTAttachmentFormat&                 format,
+    NSUInteger                                sampleCount)
+{
+    if (HasMTResolveAttachment(attachment, sampleCount) && format.resolveMode != ResolveMode::Disabled)
+    {
+        if (format.resolveMode != ResolveMode::Optimal)
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal only supports Optimal stencil resolve mode");
+        if (!MTDevice::SupportsStencilResolve(attachment.texture.device))
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("Metal stencil resolve is not supported by this device");
+        if (@available(macOS 10.14, iOS 12.0, *))
+            attachment.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
+    }
+    attachment.storeAction = GetMTAttachmentStoreAction(attachment, format, sampleCount);
+}
+
 std::uint32_t MTRenderPass::UpdateNativeRenderPass(
     MTLRenderPassDescriptor*    nativeRenderPass,
     std::uint32_t               numClearValues,
@@ -251,11 +343,10 @@ std::uint32_t MTRenderPass::UpdateNativeRenderPass(
     {
         const MTAttachmentFormat& attachment = colorAttachments_[i];
 
+        nativeRenderPass.colorAttachments[i].loadAction = attachment.loadAction;
+        UpdateMTColorResolve(nativeRenderPass.colorAttachments[i], attachment, sampleCount_);
         if (attachment.loadAction != MTLLoadActionDontCare)
         {
-            nativeRenderPass.colorAttachments[i].loadAction = attachment.loadAction;
-            //nativeRenderPass.colorAttachments[i].storeAction = attachment.storeAction;
-
             /* Clear color attachment with input or default value */
             if (attachment.loadAction == MTLLoadActionClear)
             {
@@ -273,11 +364,10 @@ std::uint32_t MTRenderPass::UpdateNativeRenderPass(
     /* Update clear value for depth attachment */
     std::uint32_t numDepthStencilAttachments = 0;
 
+    nativeRenderPass.depthAttachment.loadAction = depthAttachment_.loadAction;
+    UpdateMTDepthResolve(nativeRenderPass.depthAttachment, depthAttachment_, sampleCount_);
     if (depthAttachment_.loadAction != MTLLoadActionDontCare)
     {
-        nativeRenderPass.depthAttachment.loadAction = depthAttachment_.loadAction;
-        //nativeRenderPass.depthAttachment.storeAction = depthAttachment_.storeAction;
-
         if (depthAttachment_.loadAction == MTLLoadActionClear)
         {
             /* Clear depth attachment with input or default value */
@@ -292,11 +382,10 @@ std::uint32_t MTRenderPass::UpdateNativeRenderPass(
     }
 
     /* Update clear value for stencil attachment */
+    nativeRenderPass.stencilAttachment.loadAction = stencilAttachment_.loadAction;
+    UpdateMTStencilResolve(nativeRenderPass.stencilAttachment, stencilAttachment_, sampleCount_);
     if (stencilAttachment_.loadAction != MTLLoadActionDontCare)
     {
-        nativeRenderPass.stencilAttachment.loadAction = stencilAttachment_.loadAction;
-        //nativeRenderPass.stencilAttachment.storeAction = stencilAttachment_.storeAction;
-
         if (stencilAttachment_.loadAction == MTLLoadActionClear)
         {
             /* Clear stencil attachment with input or default value */

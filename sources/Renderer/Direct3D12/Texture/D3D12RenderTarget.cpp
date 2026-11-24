@@ -149,7 +149,7 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext,
             }
 
             const ResolveMode stencilResolveMode = GetD3D12RenderPassStencilResolveMode(renderPass);
-            if (stencilResolveMode != ResolveMode::Disabled)
+            if (HasStencilAttachment() && stencilResolveMode != ResolveMode::Disabled)
             {
                 for_range(layer, numResolveLayers_)
                 {

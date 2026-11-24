@@ -42,8 +42,6 @@ enum class AttachmentLoadOp
 /**
 \brief Enumeration for render pass attachment store operations.
 \see AttachmentFormatDescriptor
-\todo Add new field `Resolve` to allow users to control whether the end of a render-pass should immediately resolve multi-sampled render targets or not.
-This way multiple render-passes can render into the same multi-sampled render-targets while only the last one resolves them into the standard textures.
 */
 enum class AttachmentStoreOp
 {
@@ -59,9 +57,8 @@ enum class AttachmentStoreOp
 
 /**
 \brief Enumeration of modes how to resolve multi-sampled render-target attachments into their single-sampled resolve attachments.
-\note Only supported with: Direct3D 12 and Vulkan. Vulkan color resolves do not support Min/Max, and Vulkan depth-stencil modes depend on device support.
+\note Only supported with: Direct3D 12, Vulkan, and Metal. Supported modes depend on the backend, attachment type, and device.
 \see AttachmentFormatDescriptor::resolveMode
-\todo Support Metal backend.
 */
 enum class ResolveMode
 {
@@ -75,6 +72,7 @@ enum class ResolveMode
     /**
     \brief Resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
+    \note Metal supports this mode only for depth attachments on supported devices.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Min,
@@ -82,6 +80,7 @@ enum class ResolveMode
     /**
     \brief Resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
+    \note Metal supports this mode only for depth attachments on supported devices.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Max,
@@ -91,6 +90,7 @@ enum class ResolveMode
     \remarks This can only be used with non-integer attachment formats, e.g. Format::R32Float, Format::RGBA8UNorm etc.
     Use Min, Max, or Optimal for integer attachment formats, e.g. Format::R32UInt or Format::D24UNormS8UInt.
     Vulkan color resolves use their native format-dependent behavior; explicit Average is not supported for integer color formats.
+    Metal supports this mode only for non-integer color attachments.
     \see RenderTargetDescriptor::resolveAttachments
     \see IsIntegerFormat
     */
@@ -98,10 +98,11 @@ enum class ResolveMode
 
     /**
     \brief Use the resolve mode that is optimal for the respective attachment format and rendering backend.
-    \remarks If the respective attachment has a non-integer format (e.g. Format::R32Float, Format::RGBA8UNorm etc.),
-    this resolve mode maps to ResolveMode::Average. Otherwise, the resolve mode is implementation dependent.
-    For integer formats, the backend might resolve only sample 0 (Vulkan, Metal), use the minimum or maximum (Direct3D 12),
-    or use an implementation dependent sample (OpenGL). For depth-stencil resolves, Vulkan uses sample 0 and Direct3D 12 uses Min.
+    \remarks For non-integer color formats (e.g. Format::R32Float, Format::RGBA8UNorm etc.), this maps to ResolveMode::Average.
+    For integer color formats, the result is backend-dependent: Vulkan may select sample 0,
+    Direct3D 12 may use the minimum or maximum, and OpenGL may select an implementation-dependent sample.
+    Metal integer color resolves depend on device and format support.
+    Depth-stencil resolves are an exception: Vulkan and Metal use sample 0, while Direct3D 12 uses Min.
     */
     Optimal,
 };

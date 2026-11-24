@@ -70,7 +70,7 @@ class MTCommandContext
         void Reset(id<MTLCommandBuffer> cmdBuffer);
 
         // Ends the currently bound command encoder.
-        void Flush();
+        void Flush(bool isEndingRenderPass = false);
 
         void BeginRenderPass(
             RenderTarget*       renderTarget,
@@ -232,7 +232,11 @@ class MTCommandContext
 
     private:
 
+        void SubmitDeferredStoreActions(bool isEndingRenderPass);
         void BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT);
+        bool NeedsFallbackResolve() const;
+        void EncodeFallbackResolve();
+        MTLRenderPassDescriptor* ConfigureRenderPassStoreActions(MTLRenderPassDescriptor* renderPassDesc);
         void BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc);
         void PauseRenderEncoder();
         void ResumeRenderEncoder();
@@ -327,27 +331,31 @@ class MTCommandContext
 
     private:
 
-        id<MTLCommandBuffer>            cmdBuffer_              = nil;
+        id<MTLCommandBuffer>            cmdBuffer_                  = nil;
 
-        id<MTLRenderCommandEncoder>     renderEncoder_  	    = nil;
-        id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
-        id<MTLBlitCommandEncoder>       blitEncoder_            = nil;
+        id<MTLRenderCommandEncoder>     renderEncoder_              = nil;
+        id<MTLComputeCommandEncoder>    computeEncoder_             = nil;
+        id<MTLBlitCommandEncoder>       blitEncoder_                = nil;
 
-        MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
+        MTLRenderPassDescriptor*        renderPassDesc_             = nullptr;
         MTRenderEncoderState            renderEncoderState_;
         MTComputeEncoderState           computeEncoderState_;
         MTContextState                  contextState_;
 
-        bool                            isRenderEncoderPaused_  = false;
+        bool                            isRenderEncoderPaused_      = false;
+        bool                            hasDeferredStoreActions_    = false;
+        MTLStoreAction                  colorStoreActions_[LLGL_MAX_NUM_COLOR_ATTACHMENTS] = {};
+        MTLStoreAction                  depthStoreAction_           = MTLStoreActionDontCare;
+        MTLStoreAction                  stencilStoreAction_         = MTLStoreActionDontCare;
         MTDescriptorCache               descriptorCache_;
         MTConstantsCache                constantsCache_;
         MTIntermediateBuffer            tessFactorBuffer_;
-        const NSUInteger                maxThreadgroupSizeX_    = 1;
+        const NSUInteger                maxThreadgroupSizeX_        = 1;
 
-        std::uint32_t                   renderDirtyBits_        = 0;
-        std::uint32_t                   computeDirtyBits_       = 0;
+        std::uint32_t                   renderDirtyBits_            = 0;
+        std::uint32_t                   computeDirtyBits_           = 0;
 
-        MTSwapChain*                    boundSwapChain_         = nullptr;
+        MTSwapChain*                    boundSwapChain_             = nullptr;
 
 };
 

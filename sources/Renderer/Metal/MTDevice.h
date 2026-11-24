@@ -31,6 +31,12 @@ class MTDevice
         */
         static NSUInteger FindSuitableSampleCountOr1(id<MTLDevice> device, NSUInteger samples);
 
+        static bool SupportsDeferredStoreActions(id<MTLDevice> device);
+        static bool SupportsStoreAndResolve(id<MTLDevice> device);
+        static bool SupportsIntegerColorResolve(id<MTLDevice> device);
+        static bool SupportsDepthResolve(id<MTLDevice> device);
+        static bool SupportsStencilResolve(id<MTLDevice> device);
+
 };
 
 

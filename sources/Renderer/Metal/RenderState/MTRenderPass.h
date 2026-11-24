@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Container/SmallVector.h>
@@ -28,6 +29,8 @@ struct MTAttachmentFormat
     MTLPixelFormat  pixelFormat = MTLPixelFormatInvalid;
     MTLLoadAction   loadAction  = MTLLoadActionDontCare;
     MTLStoreAction  storeAction = MTLStoreActionDontCare;
+    ResolveMode     resolveMode = ResolveMode::Optimal;
+    bool            isInteger   = false;
 };
 
 using MTColorAttachmentFormatVector = SmallVector<MTAttachmentFormat, LLGL_MAX_NUM_COLOR_ATTACHMENTS>;

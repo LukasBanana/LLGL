@@ -6,6 +6,7 @@
  */
 
 #include "MTCommandContext.h"
+#include "../MTDevice.h"
 #include "../Buffer/MTBuffer.h"
 #include "../RenderState/MTDescriptorCache.h"
 #include "../RenderState/MTConstantsCache.h"
@@ -33,6 +34,44 @@ namespace LLGL
 
 static constexpr NSUInteger g_tessFactorBufferAlignment = (sizeof(MTLQuadTessellationFactorsHalf) * 256);
 
+static bool HasMTResolveStoreAction(MTLRenderPassAttachmentDescriptor* attachment)
+{
+    if (attachment.texture != nil && attachment.resolveTexture != nil)
+    {
+        if (attachment.storeAction == MTLStoreActionMultisampleResolve)
+            return true;
+        if (@available(macOS 10.12, iOS 10.0, *))
+            return (attachment.storeAction == MTLStoreActionStoreAndMultisampleResolve);
+    }
+    return false;
+}
+
+static void RemoveMTInactiveResolveTexture(MTLRenderPassAttachmentDescriptor* attachment)
+{
+    if (attachment.storeAction == MTLStoreActionStore || attachment.storeAction == MTLStoreActionDontCare)
+        attachment.resolveTexture = nil;
+}
+
+static void SetMTAttachmentStoreAction(MTLRenderPassAttachmentDescriptor* attachment)
+{
+    if (attachment.texture != nil)
+    {
+        attachment.storeAction = MTLStoreActionStore;
+        attachment.resolveTexture = nil;
+    }
+}
+
+static bool HasMTAttachmentStoreAction(MTLRenderPassAttachmentDescriptor* attachment)
+{
+    return (attachment.texture == nil || (attachment.storeAction == MTLStoreActionStore && attachment.resolveTexture == nil));
+}
+
+static void SetMTAttachmentLoadAction(MTLRenderPassAttachmentDescriptor* attachment)
+{
+    if (attachment.texture != nil)
+        attachment.loadAction = MTLLoadActionLoad;
+}
+
 MTCommandContext::MTCommandContext(id<MTLDevice> device) :
     tessFactorBuffer_    { device,
                            MTLResourceStorageModePrivate,
@@ -44,10 +83,11 @@ MTCommandContext::MTCommandContext(id<MTLDevice> device) :
 void MTCommandContext::Reset()
 {
     /* Reset all dirty bits */
-    renderDirtyBits_        = ~0u;
-    computeDirtyBits_       = ~0u;
-    isRenderEncoderPaused_  = false;
-    boundSwapChain_         = nullptr;
+    renderDirtyBits_            = ~0u;
+    computeDirtyBits_           = ~0u;
+    isRenderEncoderPaused_      = false;
+    hasDeferredStoreActions_    = false;
+    boundSwapChain_             = nullptr;
     ResetRenderEncoderState();
     ResetComputeEncoderState();
     ResetContextState();
@@ -59,10 +99,13 @@ void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
     cmdBuffer_ = cmdBuffer;
 }
 
-void MTCommandContext::Flush()
+void MTCommandContext::Flush(bool isEndingRenderPass)
 {
     if (renderEncoder_ != nil)
     {
+        /* TODO: Memoryless attachments cannot be stored and reloaded across encoder interruptions. */
+        if (hasDeferredStoreActions_)
+            SubmitDeferredStoreActions(isEndingRenderPass);
         [renderEncoder_ endEncoding];
         [renderEncoder_ release];
         renderEncoder_ = nil;
@@ -101,10 +144,9 @@ void MTCommandContext::BeginRenderPass(
     {
         /* Get render pass descriptor from render target */
         auto* renderTargetMT = LLGL_CAST(MTRenderTarget*, renderTarget);
-        if (renderPassMT != nullptr)
-            BeginRenderPassWithDescriptor(renderTargetMT->GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), nullptr);
-        else
-            BeginRenderPassWithDescriptor(renderTargetMT->GetNativeRenderPass(), nullptr);
+        if (renderPassMT == nullptr)
+            renderPassMT = LLGL_CAST(const MTRenderPass*, renderTargetMT->GetRenderPass());
+        BeginRenderPassWithDescriptor(renderTargetMT->GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), nullptr);
     }
 }
 
@@ -112,14 +154,26 @@ void MTCommandContext::UpdateRenderPass(MTLRenderPassDescriptor* renderPassDesc)
 {
     LLGL_ASSERT_PTR(renderPassDesc);
     if (contextState_.isInsideRenderPass)
+    {
+        if (isRenderEncoderPaused_)
+            ResumeRenderEncoder();
         BindRenderEncoderWithDescriptor(renderPassDesc);
+    }
 }
 
 void MTCommandContext::EndRenderPass()
 {
     if (contextState_.isInsideRenderPass)
     {
-        Flush();
+        /* Execute load and final store/resolve actions even if no encoder was created or a blit interrupted the pass. */
+        if (renderEncoder_ == nil)
+            BindRenderEncoder();
+
+        const bool needsResolve = NeedsFallbackResolve();
+        Flush(true);
+        if (needsResolve)
+            EncodeFallbackResolve();
+
         contextState_.isInsideRenderPass = false;
         [renderPassDesc_ release];
     }
@@ -220,7 +274,20 @@ id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
 
 MTLRenderPassDescriptor* MTCommandContext::CopyRenderPassDesc()
 {
-    return (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
+    MTLRenderPassDescriptor* renderPassDesc = (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
+    if (renderEncoder_ != nil || isRenderEncoderPaused_)
+    {
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        {
+            if (renderPassDesc.colorAttachments[i].texture != nil)
+                renderPassDesc.colorAttachments[i].loadAction = MTLLoadActionLoad;
+        }
+        if (renderPassDesc.depthAttachment.texture != nil)
+            renderPassDesc.depthAttachment.loadAction = MTLLoadActionLoad;
+        if (renderPassDesc.stencilAttachment.texture != nil)
+            renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
+    }
+    return renderPassDesc;
 }
 
 MTLRenderPassDescriptor* MTCommandContext::RetainRenderPassDescOrNull()
@@ -576,9 +643,20 @@ MTKView* MTCommandContext::GetCurrentDrawableView() const
  * ======= Private: =======
  */
 
-static MTLStoreAction PromoteMTStoreAction(MTLStoreAction action)
+void MTCommandContext::SubmitDeferredStoreActions(bool isEndingRenderPass)
 {
-    return (action == MTLStoreActionMultisampleResolve ? MTLStoreActionStoreAndMultisampleResolve : MTLStoreActionStore);
+    if (@available(macOS 10.12, iOS 10.0, *))
+    {
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        {
+            if (renderPassDesc_.colorAttachments[i].texture != nil)
+                [renderEncoder_ setColorStoreAction:(isEndingRenderPass ? colorStoreActions_[i] : MTLStoreActionStore) atIndex:i];
+        }
+        if (renderPassDesc_.depthAttachment.texture != nil)
+            [renderEncoder_ setDepthStoreAction:(isEndingRenderPass ? depthStoreAction_ : MTLStoreActionStore)];
+        if (renderPassDesc_.stencilAttachment.texture != nil)
+            [renderEncoder_ setStencilStoreAction:(isEndingRenderPass ? stencilStoreAction_ : MTLStoreActionStore)];
+    }
 }
 
 void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT)
@@ -589,23 +667,96 @@ void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* re
     {
         renderPassDesc_ = (MTLRenderPassDescriptor*)[renderPassDesc copy];
 
-        /* Update store actions for swap-chains since render passes can be interrupted at any time to update buffers */
-        if (swapChainMT != nullptr)
-        {
-            const Format depthStencilFormat = swapChainMT->GetDepthStencilFormat();
-
-            if (IsDepthFormat(depthStencilFormat))
-                renderPassDesc_.depthAttachment.storeAction = PromoteMTStoreAction(renderPassDesc_.depthAttachment.storeAction);
-
-            if (IsStencilFormat(depthStencilFormat))
-                renderPassDesc_.stencilAttachment.storeAction = PromoteMTStoreAction(renderPassDesc_.stencilAttachment.storeAction);
-
-            renderPassDesc_.colorAttachments[0].storeAction = PromoteMTStoreAction(renderPassDesc_.colorAttachments[0].storeAction);
-        }
-
         contextState_.isInsideRenderPass = true;
         boundSwapChain_ = swapChainMT;
     }
+}
+
+bool MTCommandContext::NeedsFallbackResolve() const
+{
+    if (!hasDeferredStoreActions_)
+    {
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        {
+            if (HasMTResolveStoreAction(renderPassDesc_.colorAttachments[i]))
+                return true;
+        }
+        if (HasMTResolveStoreAction(renderPassDesc_.depthAttachment))
+            return true;
+        if (HasMTResolveStoreAction(renderPassDesc_.stencilAttachment))
+            return true;
+    }
+    return false;
+}
+
+void MTCommandContext::EncodeFallbackResolve()
+{
+    MTLRenderPassDescriptor* resolveDesc = [renderPassDesc_ copy];
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        SetMTAttachmentLoadAction(resolveDesc.colorAttachments[i]);
+    SetMTAttachmentLoadAction(resolveDesc.depthAttachment);
+    SetMTAttachmentLoadAction(resolveDesc.stencilAttachment);
+    id<MTLRenderCommandEncoder> resolveEncoder = [cmdBuffer_ renderCommandEncoderWithDescriptor:resolveDesc];
+    [resolveEncoder endEncoding];
+    [resolveDesc release];
+}
+
+MTLRenderPassDescriptor* MTCommandContext::ConfigureRenderPassStoreActions(MTLRenderPassDescriptor* renderPassDesc)
+{
+    hasDeferredStoreActions_ = false;
+    if (@available(macOS 10.12, iOS 10.0, *))
+    {
+        if (MTDevice::SupportsDeferredStoreActions(cmdBuffer_.device))
+        {
+            MTLRenderPassDescriptor* encoderDesc = [renderPassDesc copy];
+            for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+            {
+                if (encoderDesc.colorAttachments[i].texture != nil)
+                {
+                    colorStoreActions_[i] = encoderDesc.colorAttachments[i].storeAction;
+                    RemoveMTInactiveResolveTexture(encoderDesc.colorAttachments[i]);
+                    encoderDesc.colorAttachments[i].storeAction = MTLStoreActionUnknown;
+                }
+            }
+            if (encoderDesc.depthAttachment.texture != nil)
+            {
+                depthStoreAction_ = encoderDesc.depthAttachment.storeAction;
+                RemoveMTInactiveResolveTexture(encoderDesc.depthAttachment);
+                encoderDesc.depthAttachment.storeAction = MTLStoreActionUnknown;
+            }
+            if (encoderDesc.stencilAttachment.texture != nil)
+            {
+                stencilStoreAction_ = encoderDesc.stencilAttachment.storeAction;
+                RemoveMTInactiveResolveTexture(encoderDesc.stencilAttachment);
+                encoderDesc.stencilAttachment.storeAction = MTLStoreActionUnknown;
+            }
+            hasDeferredStoreActions_ = true;
+            return encoderDesc;
+        }
+    }
+
+    bool needsCopy = false;
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+    {
+        if (!HasMTAttachmentStoreAction(renderPassDesc.colorAttachments[i]))
+        {
+            needsCopy = true;
+            break;
+        }
+    }
+    needsCopy = (needsCopy || !HasMTAttachmentStoreAction(renderPassDesc.depthAttachment) || !HasMTAttachmentStoreAction(renderPassDesc.stencilAttachment));
+    if (!needsCopy)
+    {
+        [renderPassDesc retain];
+        return renderPassDesc;
+    }
+
+    MTLRenderPassDescriptor* encoderDesc = [renderPassDesc copy];
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        SetMTAttachmentStoreAction(encoderDesc.colorAttachments[i]);
+    SetMTAttachmentStoreAction(encoderDesc.depthAttachment);
+    SetMTAttachmentStoreAction(encoderDesc.stencilAttachment);
+    return encoderDesc;
 }
 
 void MTCommandContext::BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc)
@@ -613,7 +764,9 @@ void MTCommandContext::BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* 
     Flush();
     @autoreleasepool
     {
-        renderEncoder_ = [[cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc] retain];
+        MTLRenderPassDescriptor* encoderDesc = ConfigureRenderPassStoreActions(renderPassDesc);
+        renderEncoder_ = [[cmdBuffer_ renderCommandEncoderWithDescriptor:encoderDesc] retain];
+        [encoderDesc release];
     }
 
     /* A new render command encoder forces all pipeline states to be reset */

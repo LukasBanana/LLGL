@@ -63,8 +63,10 @@ LLGL_EXPORT std::uint32_t FillClearColorAttachmentIndices(
 
 ResolveMode MapResolveMode(ResolveMode resolveMode, Format attachmentFormat)
 {
-    if (resolveMode == ResolveMode::Optimal)
-        return (IsIntegerFormat(attachmentFormat) ? ResolveMode::Min : ResolveMode::Average);
+    if (attachmentFormat == Format::Undefined)
+        return ResolveMode::Disabled;
+    else if (resolveMode == ResolveMode::Optimal)
+        return (IsIntegerFormat(attachmentFormat) || IsDepthOrStencilFormat(attachmentFormat) ? ResolveMode::Min : ResolveMode::Average);
     else
         return resolveMode;
 }
