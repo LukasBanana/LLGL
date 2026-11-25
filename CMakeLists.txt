@@ -1156,5 +1156,9 @@ if (LLGL_BUILD_TESTS AND LLGL_BUILD_RENDERER_VULKAN AND NOT LLGL_VK_ENABLE_SPIRV
     message(WARNING "Vulkan shader reflection is disabled (LLGL_VK_ENABLE_SPIRV_REFLECT), but is required for Vulkan tests (LLGL_BUILD_TESTS).")
 endif()
 
+if(NOT LLGL_D3D12_ENABLE_DXCOMPILER AND NOT ${LLGL_D3D12_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 12.0")
+    message(WARNING "${LLGL_D3D12_ENABLE_FEATURELEVEL} may require the DXCompiler, but LLGL_D3D12_ENABLE_DXCOMPILER is disabled.")
+endif()
+
 message(STATUS "~~~~~~~~~~~~~~~~~~~~~")
 
