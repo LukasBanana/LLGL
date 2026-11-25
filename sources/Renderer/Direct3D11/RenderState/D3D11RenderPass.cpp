@@ -7,14 +7,40 @@
 
 #include "D3D11RenderPass.h"
 #include "../../RenderPassUtils.h"
+#include "../../../Core/Exception.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
+// Returns true if the color attachment is meant to be resolved; ResolveSubresource() only averages non-integer formats.
+static bool IsD3D11ColorResolveEnabled(const AttachmentFormatDescriptor& desc, std::uint32_t samples)
+{
+    if (desc.resolveMode != ResolveMode::Disabled)
+    {
+        if (samples > 1 && desc.format != Format::Undefined)
+        {
+            if (desc.resolveMode == ResolveMode::Min || desc.resolveMode == ResolveMode::Max)
+                LLGL_TRAP_FEATURE_NOT_SUPPORTED("Direct3D 11 does not support Min/Max resolve modes");
+            if (desc.resolveMode == ResolveMode::Average && IsIntegerFormat(desc.format))
+                LLGL_TRAP_FEATURE_NOT_SUPPORTED("Direct3D 11 supports Average resolve mode only for non-integer color formats");
+        }
+        return true;
+    }
+    return false;
+}
+
 D3D11RenderPass::D3D11RenderPass(const RenderPassDescriptor& desc)
 {
+    /* Determine which color attachments must be resolved at the end of a render pass */
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+    {
+        if (IsD3D11ColorResolveEnabled(desc.colorAttachments[i], desc.samples))
+            resolveColorMask_ |= (1u << i);
+    }
+
     /* Check which color attachment must be cleared */
     FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
 

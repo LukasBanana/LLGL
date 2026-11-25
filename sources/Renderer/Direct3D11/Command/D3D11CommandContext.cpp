@@ -63,6 +63,7 @@ D3D11CommandContext::D3D11CommandContext(
 void D3D11CommandContext::ResetBindingStates()
 {
     boundRenderTarget_      = nullptr;
+    boundRenderPass_        = nullptr;
     boundSwapChain_         = nullptr;
     hasDepthAttachment_     = false;
     hasStencilAttachment_   = false;
@@ -80,10 +81,11 @@ void D3D11CommandContext::BindSwapChainRenderTargets(D3D11SwapChain& swapChainD3
     hasStencilAttachment_   = IsStencilFormat(dsFormat);
 }
 
-void D3D11CommandContext::BindOffscreenRenderTargets(D3D11RenderTarget& renderTargetD3D)
+void D3D11CommandContext::BindOffscreenRenderTargets(D3D11RenderTarget& renderTargetD3D, const D3D11RenderPass* renderPassD3D)
 {
     SetRenderTargets(renderTargetD3D.GetRenderTargetHandles());
     boundRenderTarget_      = &renderTargetD3D;
+    boundRenderPass_        = renderPassD3D;
     hasDepthAttachment_     = renderTargetD3D.HasDepthAttachment();
     hasStencilAttachment_   = renderTargetD3D.HasStencilAttachment();
 }
@@ -95,8 +97,9 @@ void D3D11CommandContext::ResolveAndUnbindRenderTargets()
 
     if (boundRenderTarget_ != nullptr)
     {
-        boundRenderTarget_->ResolveSubresources(context_.Get());
+        boundRenderTarget_->ResolveSubresources(context_.Get(), boundRenderPass_);
         boundRenderTarget_ = nullptr;
+        boundRenderPass_ = nullptr;
     }
     else if (boundSwapChain_ != nullptr)
     {

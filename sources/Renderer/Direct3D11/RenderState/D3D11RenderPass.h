@@ -45,11 +45,18 @@ class D3D11RenderPass final : public RenderPass
             return attachmentFlagsDSV_;
         }
 
+        // Returns the bitmask of color attachments that are meant to be resolved (bit 0 for the first color attachment).
+        inline std::uint32_t GetResolveColorMask() const
+        {
+            return resolveColorMask_;
+        }
+
     private:
 
         UINT            clearFlagsDSV_                                          = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
         UINT            attachmentFlagsDSV_                                     = 0;
+        std::uint32_t   resolveColorMask_                                       = 0;
 
 };
 

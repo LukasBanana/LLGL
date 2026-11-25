@@ -29,6 +29,7 @@ class D3D11PipelineState;
 class D3D11ConstantsCache;
 class D3D11SwapChain;
 class D3D11RenderTarget;
+class D3D11RenderPass;
 class D3D11RenderTargetHandles;
 
 class D3D11CommandContext
@@ -44,7 +45,7 @@ class D3D11CommandContext
         void ResetBindingStates();
 
         void BindSwapChainRenderTargets(D3D11SwapChain& swapChainD3D);
-        void BindOffscreenRenderTargets(D3D11RenderTarget& renderTargetD3D);
+        void BindOffscreenRenderTargets(D3D11RenderTarget& renderTargetD3D, const D3D11RenderPass* renderPassD3D = nullptr);
 
         void ResolveAndUnbindRenderTargets();
 
@@ -173,6 +174,7 @@ class D3D11CommandContext
         bool                                hasDepthAttachment_     = false;
         bool                                hasStencilAttachment_   = false;
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
+        const D3D11RenderPass*              boundRenderPass_        = nullptr;
         D3D11SwapChain*                     boundSwapChain_         = nullptr;
         const D3D11PipelineLayout*          boundPipelineLayout_    = nullptr;
         D3D11PipelineState*                 boundPipelineState_     = nullptr;

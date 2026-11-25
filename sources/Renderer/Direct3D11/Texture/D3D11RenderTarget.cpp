@@ -50,6 +50,7 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
                 device,
                 desc.colorAttachments[i],
                 desc.resolveAttachments[i],
+                i,
                 bindingLocator,
                 subresourceRange
             );
@@ -138,10 +139,20 @@ const RenderPass* D3D11RenderTarget::GetRenderPass() const
     return renderPass_;
 }
 
-void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
+void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context, const D3D11RenderPass* renderPass)
 {
+    const std::uint32_t resolveColorMask = (renderPass != nullptr ? renderPass->GetResolveColorMask() : ~0u);
+
+    /* Early exit if no color attachments must be resolved */
+    if (resolveColorMask == 0)
+        return;
+
     for (const ResolveTarget& target : resolveTargets_)
     {
+        /* Skip target if render-pass doesn't resolve this attachment */
+        if ((resolveColorMask & (1u << target.colorTarget)) == 0)
+            continue;
+
         context->ResolveSubresource(
             target.resolveDstTexture,
             target.resolveDstSubresource,
@@ -337,6 +348,7 @@ ComPtr<ID3D11RenderTargetView> D3D11RenderTarget::CreateRenderTargetView(
     ID3D11Device*               device,
     const AttachmentDescriptor& colorAttachment,
     const AttachmentDescriptor& resolveAttachment,
+    std::uint32_t               colorTargetIndex,
     D3D11BindingLocator*&       outBindingLocator,
     D3D11SubresourceRange&      outSubresourceRange)
 {
@@ -392,7 +404,7 @@ ComPtr<ID3D11RenderTargetView> D3D11RenderTarget::CreateRenderTargetView(
 
     /* Create resolve target if a resolve texture is specified */
     if (resolveAttachment.texture != nullptr && HasMultiSampling())
-        CreateResolveTarget(device, resolveAttachment, colorFormat, colorTarget);
+        CreateResolveTarget(device, resolveAttachment, colorFormat, colorTarget, colorTargetIndex);
 
     return rtv;
 }
@@ -448,7 +460,8 @@ void D3D11RenderTarget::CreateResolveTarget(
     ID3D11Device*               device,
     const AttachmentDescriptor& resolveAttachment,
     DXGI_FORMAT                 format,
-    ID3D11Resource*             multiSampledSrcTexture)
+    ID3D11Resource*             multiSampledSrcTexture,
+    std::uint32_t               colorTarget)
 {
     LLGL_ASSERT_PTR(resolveAttachment.texture);
 
@@ -461,6 +474,7 @@ void D3D11RenderTarget::CreateResolveTarget(
         resolveTarget.resolveDstSubresource     = D3D11CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, textureD3D->GetNumMipLevels());
         resolveTarget.multiSampledSrcTexture    = multiSampledSrcTexture;
         resolveTarget.format                    = format;
+        resolveTarget.colorTarget               = colorTarget;
     }
     resolveTargets_.push_back(resolveTarget);
 }

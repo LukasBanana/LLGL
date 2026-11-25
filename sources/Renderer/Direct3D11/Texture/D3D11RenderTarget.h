@@ -42,8 +42,8 @@ class D3D11RenderTarget final : public RenderTarget
         // Constructs the D3D11 render target with all attachments.
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
-        // Resolves all multi-sampled subresources.
-        void ResolveSubresources(ID3D11DeviceContext* context);
+        // Resolves all multi-sampled subresources. Attachments whose resolve mode is disabled in the optional render pass are skipped.
+        void ResolveSubresources(ID3D11DeviceContext* context, const D3D11RenderPass* renderPass = nullptr);
 
         // Returns the render-target handles container.
         inline const D3D11RenderTargetHandles& GetRenderTargetHandles() const
@@ -95,6 +95,7 @@ class D3D11RenderTarget final : public RenderTarget
             ID3D11Device*               device,
             const AttachmentDescriptor& colorAttachment,
             const AttachmentDescriptor& resolveAttachment,
+            std::uint32_t               colorTargetIndex,
             D3D11BindingLocator*&       outBindingLocator,
             D3D11SubresourceRange&      outSubresourceRange
         );
@@ -111,7 +112,8 @@ class D3D11RenderTarget final : public RenderTarget
             ID3D11Device*               device,
             const AttachmentDescriptor& resolveAttachment,
             DXGI_FORMAT                 format,
-            ID3D11Resource*             multiSampledSrcTexture
+            ID3D11Resource*             multiSampledSrcTexture,
+            std::uint32_t               colorTarget
         );
 
     private:
@@ -123,6 +125,7 @@ class D3D11RenderTarget final : public RenderTarget
             UINT            resolveDstSubresource;
             ID3D11Resource* multiSampledSrcTexture;
             DXGI_FORMAT     format;
+            std::uint32_t   colorTarget;
         };
 
     private:

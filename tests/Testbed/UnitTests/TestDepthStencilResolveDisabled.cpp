@@ -19,21 +19,10 @@ untouched at the end of a multi-sampled render pass, and that the default render
 explicit ResolveMode::Optimal render pass.
 
 The resolve target is first cleared to a sentinel value via a separate single-sampled render target.
-Skipped on backends without resolve mode support and devices without RenderingFeatures::hasDepthStencilResolve.
+Skipped on devices without RenderingFeatures::hasDepthStencilResolve.
 */
 DEF_TEST( DepthStencilResolveDisabled )
 {
-    const int rendererID = renderer->GetRendererID();
-    if (rendererID != RendererID::Vulkan     &&
-        rendererID != RendererID::Direct3D12 &&
-        rendererID != RendererID::Metal      &&
-        rendererID != RendererID::OpenGL     &&
-        rendererID != RendererID::OpenGLES   &&
-        rendererID != RendererID::WebGL)
-    {
-        return TestResult::Skipped;
-    }
-
     if (!caps.features.hasDepthStencilResolve)
         return TestResult::Skipped;
 

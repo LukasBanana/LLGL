@@ -866,7 +866,7 @@ void D3D11PrimaryCommandBuffer::BeginRenderPass(
     else
     {
         auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
-        context_.BindOffscreenRenderTargets(renderTargetD3D);
+        context_.BindOffscreenRenderTargets(renderTargetD3D, LLGL_CAST(const D3D11RenderPass*, renderPass));
     }
 
     /* Clear attachments */

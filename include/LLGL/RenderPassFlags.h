@@ -57,7 +57,7 @@ enum class AttachmentStoreOp
 
 /**
 \brief Enumeration of modes how to resolve multi-sampled render-target attachments into their single-sampled resolve attachments.
-\note Only supported with: Direct3D 12, Vulkan, and Metal. Supported modes depend on the backend, attachment type, and device.
+\note Supported with: Direct3D 11, Direct3D 12, Vulkan, Metal, and OpenGL. Supported modes depend on the backend, attachment type, and device.
 \see AttachmentFormatDescriptor::resolveMode
 */
 enum class ResolveMode
@@ -73,6 +73,7 @@ enum class ResolveMode
     \brief Resolve the minimum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
     \note Metal supports this mode only for depth attachments on supported devices.
+    \note Not supported with OpenGL and Direct3D 11.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Min,
@@ -81,6 +82,7 @@ enum class ResolveMode
     \brief Resolve the maximum sample value of a multi-sampled render-target attachment into its respective resolve attachment.
     \note Vulkan supports this mode only for depth-stencil attachments and only when reported by the device.
     \note Metal supports this mode only for depth attachments on supported devices.
+    \note Not supported with OpenGL and Direct3D 11.
     \see RenderTargetDescriptor::resolveAttachments
     */
     Max,
@@ -90,7 +92,7 @@ enum class ResolveMode
     \remarks This can only be used with non-integer attachment formats, e.g. Format::R32Float, Format::RGBA8UNorm etc.
     Use Min, Max, or Optimal for integer attachment formats, e.g. Format::R32UInt or Format::D24UNormS8UInt.
     Vulkan color resolves use their native format-dependent behavior; explicit Average is not supported for integer color formats.
-    Metal supports this mode only for non-integer color attachments.
+    Metal, OpenGL, and Direct3D 11 support this mode only for non-integer color attachments.
     \see RenderTargetDescriptor::resolveAttachments
     \see IsIntegerFormat
     */
@@ -102,7 +104,7 @@ enum class ResolveMode
     For integer color formats, the result is backend-dependent: Vulkan may select sample 0,
     Direct3D 12 may use the minimum or maximum, and OpenGL may select an implementation-dependent sample.
     Metal integer color resolves depend on device and format support.
-    Depth-stencil resolves are an exception: Vulkan and Metal use sample 0, while Direct3D 12 uses Min.
+    Depth-stencil resolves are an exception: Vulkan and Metal use sample 0, Direct3D 12 uses Min, and OpenGL selects an implementation-dependent sample.
     */
     Optimal,
 };
