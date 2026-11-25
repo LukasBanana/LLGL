@@ -5,9 +5,13 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#define TESTBED_DISABLE_USING_NAMESPACE_LLGL 1
-#include "Testbed.h"
-#undef TESTBED_DISABLE_USING_NAMESPACE_LLGL
+#if !LLGL_UNITY_BUILD
+#   define TESTBED_DISABLE_USING_NAMESPACE_LLGL 1
+#   include "Testbed.h"
+#   undef TESTBED_DISABLE_USING_NAMESPACE_LLGL
+#else
+#   include "Testbed.h"
+#endif
 
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/Parse.h>
