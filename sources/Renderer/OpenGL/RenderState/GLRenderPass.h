@@ -44,9 +44,23 @@ class GLRenderPass final : public RenderPass
             return clearColorAttachments_;
         }
 
+        // Returns the bitmask of color attachments that are meant to be resolved (bit 0 for the first color attachment).
+        inline std::uint32_t GetResolveColorMask() const
+        {
+            return resolveColorMask_;
+        }
+
+        // Returns the bitmask for glBlitFramebuffer of depth-stencil buffers that are meant to be resolved.
+        inline GLbitfield GetResolveDepthStencilMask() const
+        {
+            return resolveDepthStencilMask_;
+        }
+
     private:
 
         GLbitfield      clearMask_                                              = 0;
+        std::uint32_t   resolveColorMask_                                       = 0;
+        GLbitfield      resolveDepthStencilMask_                                = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
         std::uint8_t    numColorAttachments_                                    = 0;
 

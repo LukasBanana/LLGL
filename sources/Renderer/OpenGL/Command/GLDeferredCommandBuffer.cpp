@@ -579,7 +579,10 @@ void GLDeferredCommandBuffer::BeginRenderPass(
     {
         auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
         if (renderTargetGL.CanResolveMultisampledFBO())
-            renderTargetToResolve_ = &renderTargetGL;
+        {
+            renderTargetToResolve_  = &renderTargetGL;
+            renderPassToResolve_    = LLGL_CAST(const GLRenderPass*, renderPass);
+        }
     }
 }
 
@@ -589,9 +592,11 @@ void GLDeferredCommandBuffer::EndRenderPass()
     {
         auto cmd = AllocCommand<GLCmdResolveRenderTarget>(GLOpcodeResolveRenderTarget);
         {
-            cmd->renderTarget = renderTargetToResolve_;
+            cmd->renderTarget   = renderTargetToResolve_;
+            cmd->renderPass     = renderPassToResolve_;
         }
-        renderTargetToResolve_ = nullptr;
+        renderTargetToResolve_  = nullptr;
+        renderPassToResolve_    = nullptr;
     }
 }
 

@@ -24,6 +24,7 @@ namespace LLGL
 
 
 class GLStateManager;
+class GLRenderPass;
 
 class GLRenderTarget final : public RenderTarget
 {
@@ -44,8 +45,8 @@ class GLRenderTarget final : public RenderTarget
         // Returns true if this render-target can resolve its multi-sampled FBO into a single sampled FBO.
         bool CanResolveMultisampledFBO() const;
 
-        // Blits the multi-sample framebuffer onto the default framebuffer.
-        void ResolveMultisampled(GLStateManager& stateMngr);
+        // Blits the multi-sample framebuffer onto the default framebuffer. Attachments whose resolve mode is disabled in the optional render pass are skipped.
+        void ResolveMultisampled(GLStateManager& stateMngr, const GLRenderPass* renderPass = nullptr);
 
         // Blits the specified color attachment from the framebuffer onto the screen.
         void ResolveMultisampledIntoBackbuffer(GLStateManager& stateMngr, std::uint32_t colorTarget);

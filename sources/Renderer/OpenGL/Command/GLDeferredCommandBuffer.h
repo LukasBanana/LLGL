@@ -95,6 +95,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         long                    flags_                  = 0;
         GLVirtualCommandBuffer  buffer_;
         GLRenderTarget*         renderTargetToResolve_  = nullptr;
+        const GLRenderPass*     renderPassToResolve_    = nullptr;
 
 };
 

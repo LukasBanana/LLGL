@@ -16,8 +16,15 @@ Skipped on backends without resolve mode support and devices without multisampli
 DEF_TEST( ResolveModes )
 {
     const int rendererID = renderer->GetRendererID();
-    if (rendererID != RendererID::Vulkan && rendererID != RendererID::Direct3D12 && rendererID != RendererID::Metal)
+    if (rendererID != RendererID::Vulkan     &&
+        rendererID != RendererID::Direct3D12 &&
+        rendererID != RendererID::Metal      &&
+        rendererID != RendererID::OpenGL     &&
+        rendererID != RendererID::OpenGLES   &&
+        rendererID != RendererID::WebGL)
+    {
         return TestResult::Skipped;
+    }
 
     const std::uint32_t numSamples = std::min<std::uint32_t>(4u, caps.limits.maxColorBufferSamples);
     if (numSamples < 2)

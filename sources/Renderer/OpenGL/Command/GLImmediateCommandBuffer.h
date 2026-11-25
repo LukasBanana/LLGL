@@ -48,7 +48,8 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        GLStateManager* stateMngr_ = nullptr;
+        GLStateManager*     stateMngr_  = nullptr;
+        const GLRenderPass* renderPass_ = nullptr;
 
 };
 

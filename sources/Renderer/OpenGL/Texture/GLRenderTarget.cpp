@@ -10,6 +10,7 @@
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
+#include "../RenderState/GLRenderPass.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
@@ -90,10 +91,13 @@ bool GLRenderTarget::CanResolveMultisampledFBO() const
     return (framebufferResolve_.Valid() && (!drawBuffersResolve_.empty() || resolveDepthStencilMask_ != 0));
 }
 
-void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
+void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr, const GLRenderPass* renderPass)
 {
     if (CanResolveMultisampledFBO())
     {
+        const std::uint32_t resolveColorMask        = (renderPass != nullptr ? renderPass->GetResolveColorMask() : ~0u);
+        const GLbitfield    resolveDepthStencilMask = resolveDepthStencilMask_ & (renderPass != nullptr ? renderPass->GetResolveDepthStencilMask() : ~0u);
+
         stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebufferResolve_.GetID());
         stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, framebuffer_.GetID());
 
@@ -104,6 +108,9 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
             LLGL_ASSERT(resolveAttachments_.size() == drawBuffersResolve_.size());
             for_range(i, drawBuffersResolve_.size())
             {
+                if ((resolveColorMask & (1u << (drawBuffersResolve_[i] - GL_COLOR_ATTACHMENT0))) == 0)
+                    continue;
+
                 glReadBuffer(drawBuffersResolve_[i]);
 
                 const GLFramebufferAttachment& attachment = resolveAttachments_[i];
@@ -117,6 +124,9 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
         {
             for (GLenum buf : drawBuffersResolve_)
             {
+                if ((resolveColorMask & (1u << (buf - GL_COLOR_ATTACHMENT0))) == 0)
+                    continue;
+
                 glReadBuffer(buf);
                 GLProfile::DrawBuffer(buf);
                 GLFramebuffer::Blit(resolution_[0], resolution_[1], GL_COLOR_BUFFER_BIT);
@@ -124,8 +134,8 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
         }
 
         /* Resolve depth-stencil by taking a single sample; depth and stencil must use GL_NEAREST */
-        if (resolveDepthStencilMask_ != 0)
-            GLFramebuffer::Blit(resolution_[0], resolution_[1], resolveDepthStencilMask_);
+        if (resolveDepthStencilMask != 0)
+            GLFramebuffer::Blit(resolution_[0], resolution_[1], resolveDepthStencilMask);
 
         stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, 0);
         stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);

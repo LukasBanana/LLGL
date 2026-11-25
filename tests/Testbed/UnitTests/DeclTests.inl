@@ -59,6 +59,7 @@ LLGL_UNIT_TEST( ByteBuffer );
 LLGL_UNIT_TEST( BarrierReadAfterWrite );
 LLGL_UNIT_TEST( Multiview );
 LLGL_UNIT_TEST( DepthStencilResolve );
+LLGL_UNIT_TEST( DepthStencilResolveDisabled );
 LLGL_UNIT_TEST( ResolveModes );
 
 // Rendering tests - these are meant to render to the Testbed output window.

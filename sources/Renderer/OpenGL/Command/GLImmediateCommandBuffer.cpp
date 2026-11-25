@@ -530,18 +530,17 @@ void GLImmediateCommandBuffer::BeginRenderPass(
     stateMngr_ = nextStateMngr;
 
     /* Clear render target attachments with render pass */
-    if (renderPass != nullptr)
-    {
-        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
-        stateMngr_->ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues);
-    }
+    renderPass_ = LLGL_CAST(const GLRenderPass*, renderPass);
+    if (renderPass_ != nullptr)
+        stateMngr_->ClearAttachmentsWithRenderPass(*renderPass_, numClearValues, clearValues);
 }
 
 void GLImmediateCommandBuffer::EndRenderPass()
 {
     /* Resolve previously bound render target */
     if (GLRenderTarget* renderTarget = stateMngr_->GetBoundRenderTarget())
-        renderTarget->ResolveMultisampled(*stateMngr_);
+        renderTarget->ResolveMultisampled(*stateMngr_, renderPass_);
+    renderPass_ = nullptr;
 }
 
 void GLImmediateCommandBuffer::Clear(long flags, const ClearValue& clearValue)

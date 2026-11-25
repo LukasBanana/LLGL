@@ -182,7 +182,8 @@ struct GLCmdClearBuffers
 
 struct GLCmdResolveRenderTarget
 {
-    GLRenderTarget* renderTarget;
+    GLRenderTarget*     renderTarget;
+    const GLRenderPass* renderPass;
 };
 
 struct GLCmdBindVertexArray

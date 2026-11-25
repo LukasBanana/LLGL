@@ -191,7 +191,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeResolveRenderTarget:
         {
             auto cmd = static_cast<const GLCmdResolveRenderTarget*>(pc);
-            cmd->renderTarget->ResolveMultisampled(*stateMngr);
+            cmd->renderTarget->ResolveMultisampled(*stateMngr, cmd->renderPass);
             return sizeof(*cmd);
         }
         case GLOpcodeBindVertexArray:
